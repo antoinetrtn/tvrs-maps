@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GlobeMap from './GlobeMap.jsx';
 import GameHUD from './GameHUD.jsx';
+import HomeScreen from './HomeScreen.jsx';
 import './App.css';
 import { normalizeString as rawNormalize, countryDataMap } from './gameData';
 
@@ -24,6 +25,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, theme }) => (
 );
 
 function App() {
+  const [currentScreen, setCurrentScreen] = useState('home'); // 'home' or 'game'
   const [mode, setMode] = useState('countries'); // 'countries' or 'capitals'
   const [foundList, setFoundList] = useState([]);
   const [score, setScore] = useState(0);
@@ -153,6 +155,16 @@ function App() {
     setSelectedCountry(null);
     setMenuOpen(false);
   }, []);
+
+  const startGame = useCallback((selectedMode) => {
+    resetGame(selectedMode);
+    setCurrentScreen('game');
+  }, [resetGame]);
+
+  const goHome = useCallback(() => {
+    resetGame(mode);
+    setCurrentScreen('home');
+  }, [resetGame, mode]);
 
   useEffect(() => {
     if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= Object.keys(countryDataMap).length) {
@@ -350,70 +362,77 @@ function App() {
 
   return (
     <div className={`app-container ${theme}`} data-theme={theme}>
-      <GameHUD 
-        mode={mode} 
-        onModeSwitch={(newMode) => handleCustomConfirm(
-          lang === 'fr' ? "Changer de mode réinitialise la partie. Continuer ?" : "Changing modes resets the game. Continue?",
-          () => resetGame(newMode)
-        )}
-        lang={lang}
-        setLang={setLang}
-        score={score} 
-        totalPossible={totalPossible}
-        timeLeft={timeLeft}
-        onInput={() => {}} 
-        onEnter={(val) => {
-          let res;
-          if (selectedCountry) {
-             res = specificCountryGuess(val);
-          } else {
-             res = handleInput(val);
-             if (res === "ALREADY_FOUND") {
-                setPopupWarning(true);
-                setTimeout(() => setPopupWarning(false), 500);
-             } else if (res === "ERROR") {
-                setPopupError(true);
-                setTimeout(() => setPopupError(false), 500);
-             }
-          }
-          // Return true to clear the input field in GameHUD for any terminal result
-          return res === "SUCCESS" || res === true || res === "ERROR" || res === "ALREADY_FOUND";
-        }}
-        isPlaying={isPlaying}
-        isGameOver={isGameOver}
-        onStop={stopGame}
-        onInfo={() => setShowInfoModal(true)}
-        isFocusedCountry={!!selectedCountry}
-        onClearFocus={() => setSelectedCountry(null)}
-        onNavigateFocus={navigateFocus}
-        inputError={popupError}
-        inputWarning={popupWarning}
-        inputSuccess={popupSuccess}
-        extInputRef={extInputRef}
-        foundList={foundList}
-        countryDataMap={countryDataMap}
-        theme={theme}
-        setTheme={setTheme}
-        viewport={viewport}
-        setLastInteractionType={setLastInteractionType}
-        menuOpen={menuOpen}
-        setMenuOpen={setMenuOpen}
-        hudSide={hudSide}
-        setHudSide={setHudSide}
-        isKeyboardMode={isKeyboardMode}
-      />
+      {currentScreen === 'home' ? (
+        <HomeScreen onStartGame={startGame} theme={theme} />
+      ) : (
+        <GameHUD 
+          mode={mode} 
+          onModeSwitch={(newMode) => handleCustomConfirm(
+            lang === 'fr' ? "Changer de mode réinitialise la partie. Continuer ?" : "Changing modes resets the game. Continue?",
+            () => resetGame(newMode)
+          )}
+          onGoHome={goHome}
+          lang={lang}
+          setLang={setLang}
+          score={score} 
+          totalPossible={totalPossible}
+          timeLeft={timeLeft}
+          onInput={() => {}} 
+          onEnter={(val) => {
+            let res;
+            if (selectedCountry) {
+               res = specificCountryGuess(val);
+            } else {
+               res = handleInput(val);
+               if (res === "ALREADY_FOUND") {
+                  setPopupWarning(true);
+                  setTimeout(() => setPopupWarning(false), 500);
+               } else if (res === "ERROR") {
+                  setPopupError(true);
+                  setTimeout(() => setPopupError(false), 500);
+               }
+            }
+            // Return true to clear the input field in GameHUD for any terminal result
+            return res === "SUCCESS" || res === true || res === "ERROR" || res === "ALREADY_FOUND";
+          }}
+          isPlaying={isPlaying}
+          isGameOver={isGameOver}
+          onStop={stopGame}
+          onInfo={() => setShowInfoModal(true)}
+          isFocusedCountry={!!selectedCountry}
+          onClearFocus={() => setSelectedCountry(null)}
+          onNavigateFocus={navigateFocus}
+          inputError={popupError}
+          inputWarning={popupWarning}
+          inputSuccess={popupSuccess}
+          extInputRef={extInputRef}
+          foundList={foundList}
+          countryDataMap={countryDataMap}
+          theme={theme}
+          setTheme={setTheme}
+          viewport={viewport}
+          setLastInteractionType={setLastInteractionType}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          hudSide={hudSide}
+          setHudSide={setHudSide}
+          isKeyboardMode={isKeyboardMode}
+        />
+      )}
+      
       <GlobeMap  
         mode={mode} 
         countriesData={countriesData} 
         foundList={foundList} 
         selectedCountry={selectedCountry}
-        shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
+        shouldAutoRotate={(shouldAutoRotate || currentScreen === 'home') && perfProfile.enableAutoRotate}
         onCountrySelect={handleCountrySelect}
         theme={theme}
         viewport={viewport}
         isError={popupError}
         hasActiveFeedback={popupError || popupSuccess}
         perfProfile={perfProfile}
+        isHomeScreen={currentScreen === 'home'}
       />
 
       {(isGameOver || showInfoModal) && (

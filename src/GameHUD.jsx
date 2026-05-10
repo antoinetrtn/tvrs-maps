@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Sun, Moon, Mic, MicOff, Menu, Layout } from 'lucide-react';
+import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Sun, Moon, Mic, MicOff, Camera, Menu, Home } from 'lucide-react';
 import './GameHUD.css';
 
 // Check for Speech Recognition API support
@@ -8,7 +8,7 @@ const SpeechRecognition = typeof window !== 'undefined'
   : null;
 
 const GameHUD = ({
-  mode, onModeSwitch, lang, setLang, score, totalPossible, timeLeft,
+  mode, onModeSwitch, onGoHome, lang, setLang, score, totalPossible, timeLeft,
   onInput, onEnter, isPlaying, isGameOver, onStop, onInfo,
   isFocusedCountry, onClearFocus, onNavigateFocus, inputError, inputSuccess, inputWarning, extInputRef,
   foundList, countryDataMap, theme, setTheme, viewport, setLastInteractionType,
@@ -227,21 +227,18 @@ const GameHUD = ({
           {menuOpen && !isKeyboardMode && (
             <div className="top-menu-dropdown glass-panel animation-fade-in">
               <div className="settings-section">
-                <div className="mode-toggle wide">
-                  <button className={`toggle-btn ${mode === 'countries' ? 'active' : ''}`} onClick={() => onModeSwitch('countries')}>
-                    <Globe size={16} /> {lang === 'fr' ? 'Pays' : 'Countries'}
-                  </button>
-                  <button className={`toggle-btn ${mode === 'capitals' ? 'active' : ''}`} onClick={() => onModeSwitch('capitals')}>
-                    <MapPin size={16} /> {lang === 'fr' ? 'Capitales' : 'Capitals'}
-                  </button>
-                </div>
-
                 <div className="util-btns">
+                  <button className="toggle-btn" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
+                    <Home size={18} />
+                  </button>
                   <button className="toggle-btn lang-toggle" onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}>
                     {lang.toUpperCase()}
                   </button>
                   <button className="toggle-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                     {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                  </button>
+                  <button className={`toggle-btn ${globeVisualTheme === 'satellite' ? 'active' : ''}`} onClick={() => setGlobeVisualTheme(globeVisualTheme === 'satellite' ? 'minimalist' : 'satellite')}>
+                    <Camera size={18} />
                   </button>
                   <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
                     <Info size={18} />

@@ -79,7 +79,8 @@ const GlobeMap = ({
   viewport,
   isError,
   hasActiveFeedback,
-  perfProfile
+  perfProfile,
+  isHomeScreen
 }) => {
   const globeEl = useRef();
   const tapRef = useRef(null);
@@ -145,7 +146,7 @@ const GlobeMap = ({
     if (selectedCountry && globeEl.current) {
       const data = countryDataMap[selectedCountry];
       if (data && data.lat !== undefined) {
-        const isMobile = window.innerWidth < 768;
+        const isMobile = viewport.width < 768;
         const zoomAlt = isMobile ? 1.8 : 0.8;
         // To push the country UP on the screen (above the keyboard), 
         // we must point the camera slightly SOUTH of the country (negative offset).
@@ -153,8 +154,10 @@ const GlobeMap = ({
         const latOffset = isKeyboardOpen ? -25 : (isMobile ? -10 : 0);
         globeEl.current.pointOfView({ lat: data.lat + latOffset, lng: data.lng, altitude: zoomAlt }, perfProfile?.isMobile ? 250 : 400);
       }
+    } else if (isHomeScreen && globeEl.current) {
+      globeEl.current.pointOfView({ altitude: 2.5 }, 1000);
     }
-  }, [selectedCountry, viewport.height, perfProfile?.isMobile]);
+  }, [selectedCountry, viewport.height, isHomeScreen, perfProfile]);
 
   const isLight = theme === 'light';
 
