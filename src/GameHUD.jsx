@@ -278,7 +278,7 @@ const GameHUD = ({
         style={window.innerWidth < 1024 ? {
           position: 'absolute',
           bottom: 'auto',
-          top: (viewport.top + viewport.height) - (window.innerWidth < 600 ? 12 : 24),
+          top: (viewport.top + viewport.height) - 24,
           transform: `translate(-50%, -100%)`,
           left: viewport.left + (viewport.width / 2)
         } : {}}
