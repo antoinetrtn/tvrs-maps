@@ -128,12 +128,19 @@ const GameHUD = ({
           }
         } else {
           let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
-          if (targetMatch && normalizeString(targetMatch).includes(normalizedInput)) {
-            // Very strict in game mode: only suggest if we have a lot of letters or it's a compound name
-            const isCompound = targetMatch.includes(' ') || targetMatch.includes('-');
-            const isSignificantMatch = val.length / targetMatch.length >= 0.7;
+          if (targetMatch && normalizeString(targetMatch).startsWith(normalizedInput)) {
+            const ratio = val.length / targetMatch.length;
+            const hasSeparator = val.includes(' ') || val.includes('-');
+            const isTargetCompound = targetMatch.includes(' ') || targetMatch.includes('-');
+            
+            // Logic for game mode:
+            // 1. If single word: must be at least 80% finished (e.g. "Franc" -> "France")
+            // 2. If compound: must have a separator AND started the second word (e.g. "Sainte-H" -> "Sainte-Hélène")
+            const parts = val.split(/[ -]/).filter(s => s.length > 0);
+            const isSignificantCompoundMatch = isTargetCompound && hasSeparator && parts.length >= 2;
+            const isAlmostFinishedSingle = !isTargetCompound && ratio >= 0.8;
 
-            if (isSignificantMatch || (isCompound && val.length >= 5)) {
+            if (isAlmostFinishedSingle || isSignificantCompoundMatch) {
               newSuggestions.push({ 
                 key: adminKey, 
                 display: targetMatch, 
