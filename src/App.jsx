@@ -412,7 +412,7 @@ function App() {
   }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, effectiveKeyboardMode]);
 
   const handleCountrySelect = useCallback((c) => {
-    if (c === selectedCountry) {
+    if (c === selectedCountry && c !== null) {
       setPopupError(false);
       return;
     }
@@ -421,7 +421,7 @@ function App() {
     resetNavigationTrail(c);
     setPopupError(false);
     // Assert focus when clicking a country on the globe
-    if (extInputRef.current) {
+    if (c && extInputRef.current) {
       setTimeout(() => extInputRef.current.focus(), 50);
     }
   }, [selectedCountry, resetNavigationTrail]);
