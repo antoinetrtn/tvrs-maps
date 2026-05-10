@@ -476,6 +476,7 @@ function App() {
         hasActiveFeedback={popupError || popupSuccess}
         perfProfile={perfProfile}
         isHomeScreen={currentScreen === 'home'}
+        isKeyboardMode={isKeyboardMode}
       />
 
       {(isGameOver || showInfoModal) && (

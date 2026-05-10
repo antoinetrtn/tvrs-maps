@@ -164,8 +164,12 @@ const GameHUD = ({
 
   return (
     <>
-      {!isKeyboardMode && (
-        <div className="top-hud-bar">
+      <div
+        className={`top-hud-bar ${isKeyboardMode ? 'keyboard-mode' : ''}`}
+        style={window.innerWidth < 1024 ? {
+          top: (viewport?.top || 0) + (isKeyboardMode ? 10 : 24)
+        } : {}}
+      >
           <div className="hud-top-left">
             <button className="hud-btn-circular glass-panel" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
               <Home size={18} />
@@ -225,12 +229,10 @@ const GameHUD = ({
               );
             })}
           </div>
-        </div>
-      )}
+      </div>
 
       {/* Desktop Only Gauges in Bottom Right */}
-      {!isKeyboardMode && (
-        <div className="hud-bottom-right desktop-only">
+      <div className={`hud-bottom-right desktop-only ${isKeyboardMode ? 'keyboard-mode' : ''}`}>
           <div className="island-sub-gauges animation-fade-in">
             {CONTINENT_ORDER.map(reg => {
               const isActive = activeContinent === reg;
@@ -252,8 +254,7 @@ const GameHUD = ({
           <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
             <Info size={18} />
           </button>
-        </div>
-      )}
+      </div>
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
       {isFocusedCountry && (

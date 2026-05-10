@@ -81,7 +81,8 @@ const GlobeMap = ({
   isError,
   hasActiveFeedback,
   perfProfile,
-  isHomeScreen
+  isHomeScreen,
+  isKeyboardMode
 }) => {
   const globeEl = useRef();
   const tapRef = useRef(null);
@@ -155,8 +156,8 @@ const GlobeMap = ({
         const zoomAlt = isMobile ? 1.8 : 0.8;
         // To push the country UP on the screen (above the keyboard), 
         // we must point the camera slightly SOUTH of the country (negative offset).
-        const isKeyboardOpen = isMobile && viewport.height < window.innerHeight * 0.85;
-        const latOffset = isKeyboardOpen ? -25 : (isMobile ? -10 : 0);
+        const isKeyboardOpen = isMobile && isKeyboardMode;
+        const latOffset = isKeyboardOpen ? -8 : (isMobile ? -10 : 0);
         globeEl.current.pointOfView({ lat: data.lat + latOffset, lng: data.lng, altitude: zoomAlt }, perfProfile?.isMobile ? 250 : 400);
       }
     } else if (isHomeScreen && globeEl.current) {
@@ -306,15 +307,15 @@ const GlobeMap = ({
     return new THREE.MeshBasicMaterial({ color: isLight ? '#a5c9f5' : '#0a1a3a' });
   }, [isLight]);
 
-  const isMobileKeyboardOpen = viewport.width < 1024 && viewport.height < layoutViewportRef.current.height * 0.85;
+  const isMobileKeyboardOpen = viewport.width < 1024 && isKeyboardMode;
   if (!isMobileKeyboardOpen) {
     layoutViewportRef.current = {
       width: window.innerWidth,
       height: window.innerHeight
     };
   }
-  const globeWidth = layoutViewportRef.current.width;
-  const globeHeight = layoutViewportRef.current.height;
+  const globeWidth = isMobileKeyboardOpen ? viewport.width : layoutViewportRef.current.width;
+  const globeHeight = isMobileKeyboardOpen ? viewport.height : layoutViewportRef.current.height;
 
   const polygonSideColor = useCallback((d) => {
     const admin = d.properties.ADMIN;
@@ -366,12 +367,13 @@ const GlobeMap = ({
       onPointerCancel={() => { tapRef.current = null; }}
       style={{ 
         position: 'fixed', 
-        top: 0, 
-        left: 0, 
+        top: isMobileKeyboardOpen ? viewport.top : 0, 
+        left: isMobileKeyboardOpen ? viewport.left : 0, 
         width: globeWidth,
         height: globeHeight,
         zIndex: 0, 
         overflow: 'hidden',
+        transition: 'top 220ms cubic-bezier(0.2, 0.9, 0.2, 1), left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), width 220ms cubic-bezier(0.2, 0.9, 0.2, 1), height 220ms cubic-bezier(0.2, 0.9, 0.2, 1)',
         background: isLight 
           ? 'linear-gradient(to bottom, #e0f2fe 0%, #f8fafc 100%)' 
           : 'transparent'
