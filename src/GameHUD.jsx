@@ -340,8 +340,8 @@ const GameHUD = ({
             <input
               ref={extInputRef}
               type="text"
-              name="country-answer"
-              id="q-field"
+              name="quiz-response"
+              id="quiz-response-field"
               inputMode="text"
               enterKeyHint="done"
               placeholder={isListening ? '...' : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))}
@@ -350,11 +350,14 @@ const GameHUD = ({
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               readOnly={isListening}
-              autoComplete="off"
+              autoComplete="new-password"
               autoCorrect="off"
               autoCapitalize="none"
               spellCheck="false"
               data-lpignore="true"
+              data-1p-ignore="true"
+              data-form-type="other"
+              aria-label={lang === 'fr' ? 'Réponse du quiz' : 'Quiz answer'}
             />
           </div>
 

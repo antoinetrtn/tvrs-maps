@@ -437,7 +437,7 @@ function App() {
     const isMobile = viewport.width < 768;
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = isMobile ? Math.min(devicePixelRatio, 1.5) : Math.min(devicePixelRatio, 1.75);
+    const pixelRatio = isMobile ? Math.min(devicePixelRatio, 2) : Math.min(devicePixelRatio, 1.75);
     return {
       isMobile,
       isTablet,
@@ -449,7 +449,7 @@ function App() {
       useImageTextures: false,
       // Smaller values create more cap subdivisions. This keeps large countries
       // curved above the globe instead of letting the sphere show through.
-      polygonCapCurvatureResolution: isMobile ? 2.5 : (isTablet ? 1.75 : 1.25)
+      polygonCapCurvatureResolution: isMobile ? 1.75 : (isTablet ? 1.5 : 1.25)
     };
   }, [viewport.width]);
 
