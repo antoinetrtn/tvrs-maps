@@ -334,8 +334,8 @@
 }
 
 .input-island:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 15px var(--accent-soft);
+  border-color: var(--accent-soft);
+  box-shadow: 0 0 20px var(--accent-soft);
 }
 
 .input-island.has-continent {
