@@ -102,12 +102,12 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
 };
 
 const GLOBE_LAYER_ALTITUDE = {
-  base: 0.01,
-  found: 0.05,
-  selected: 0.1,
-  label: 0.15
+  base: 0.001,
+  found: 0.006,
+  selected: 0.012,
+  label: 0.06
 };
-const SELECTION_TRANSITION_DURATION = 140;
+const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
   if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected;
@@ -393,13 +393,17 @@ const GlobeMap = ({
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
       const baseStroke = REGION_COLORS_LABELS[region] || UI_COLORS.accent;
-      // Selection stroke: pulses for visibility on the 3D block
+      // Selection stroke: pulses between continent label color and pure white/black
       return lerpColor(baseStroke, isLight ? '#000000' : '#ffffff', pulse * 0.5);
     }
     
-    // Normal countries have a very subtle border, the 3D 'side' will provide the depth
-    return 'rgba(0,0,0,0.15)';
-  }, [selectedCountry, UI_COLORS, REGION_COLORS_LABELS, isError, foundSet, isLight, pulse]);
+    // Normal borders: dark version of the base color to ensure visibility between countries
+    const baseColor = foundSet.has(admin) 
+      ? (REGION_COLORS[region] || UI_COLORS.success)
+      : UI_COLORS.mapBase;
+      
+    return lerpColor(baseColor, '#000000', 0.4); 
+  }, [selectedCountry, UI_COLORS, REGION_COLORS, REGION_COLORS_LABELS, isError, foundSet, isLight, pulse]);
 
   const getPolygonSideColor = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -410,13 +414,18 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return isLight ? '#dc7f7f' : '#991b1b';
-      // Pulsing sides for selection
-      return lerpColor(baseColor, isLight ? '#000000' : '#ffffff', pulse * 0.4);
+      
+      const capColor = foundSet.has(admin)
+        ? lerpColor(REGION_COLORS[region] || UI_COLORS.success, '#ffffff', pulse * 0.4)
+        : lerpColor(REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
+        
+      // Sides are only slightly darkened (20% blend) to keep the relief subtle
+      return lerpColor(capColor, '#000000', 0.2);
     }
     
-    // Regular sides: darkened version of the country color for a tinted black edge feel
-    return lerpColor(baseColor, '#000000', 0.65);
-  }, [foundSet, isError, isLight, selectedCountry, UI_COLORS, REGION_COLORS, pulse]);
+    // Regular sides: slightly darkened version of the country color (20% blend)
+    return lerpColor(baseColor, '#000000', 0.2);
+  }, [foundSet, REGION_COLORS, UI_COLORS, selectedCountry, isLight, pulse]);
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -425,7 +434,7 @@ const GlobeMap = ({
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
-    // Keep it crisp at 1px since webgl limits often prevent thicker lines
+    // Standard crisp widths
     return admin === selectedCountry ? 1.0 : 0.4;
   }, [selectedCountry]);
 
@@ -590,12 +599,6 @@ const GlobeMap = ({
       }));
   }, [countriesWithGeometry, tinyCountries]);
 
-  const getPolygonStrokeWidth = useCallback((d) => {
-    const admin = getFeatureAdmin(d);
-    // Slightly thicker general borders, and a bit more for selection
-    return admin === selectedCountry ? 1.5 : 0.6;
-  }, [selectedCountry]);
-
   const getPointColor = useCallback((d) => {
     const isFound = foundSet.has(d.admin);
     const isSelected = d.admin === selectedCountry;
@@ -700,7 +703,7 @@ const GlobeMap = ({
           polygonSideColor={getPolygonSideColor}
           polygonStrokeColor={getPolygonStroke}
           polygonStrokeWidth={getPolygonStrokeWidth}
-          polygonAltitudeUpdateMs={0}
+          polygonAltitudeUpdateMs={50}
           polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
           pointsData={markersData}
           pointLat="lat"
