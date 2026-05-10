@@ -4,7 +4,7 @@ import './GameHUD.css';
 
 // Check for Speech Recognition API support
 const SpeechRecognition = typeof window !== 'undefined'
-  ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+  ? (window.SpeechRecognition || window.webkitRecognition)
   : null;
 
 const GameHUD = ({
@@ -153,6 +153,12 @@ const GameHUD = ({
 
   const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
 
+  // Determine which continent to highlight
+  const activeContinent = useMemo(() => {
+    if (!selectedCountry || !countryDataMap) return null;
+    return countryDataMap[selectedCountry]?.region;
+  }, [selectedCountry, countryDataMap]);
+
   return (
     <>
       {!isKeyboardMode && (
@@ -175,41 +181,35 @@ const GameHUD = ({
                <div className="island-divider" />
                <div className="island-score">
                   <span className="score-current">{score}</span>
-                  const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
+                  <span className="score-total">/{totalPossible}</span>
+               </div>
+            </div>
+          </div>
 
-                  // Determine which continent to highlight
-                  const activeContinent = useMemo(() => {
-                    if (!selectedCountry || !countryDataMap) return null;
-                    return countryDataMap[selectedCountry]?.region;
-                  }, [selectedCountry, countryDataMap]);
-
-                  return (
-                    <>
-                      {!isKeyboardMode && (
-                  ...
-                          <div className="hud-bottom-right">
-                            <div className="island-sub-gauges animation-fade-in">
-                              {CONTINENT_ORDER.map(reg => {
-                                const isActive = activeContinent === reg;
-                                const isFaded = activeContinent && activeContinent !== reg;
-
-                                return (
-                                  <div 
-                                    key={reg} 
-                                    className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} 
-                                    title={reg}
-                                  >
-                                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
-                                      <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                            <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
-                              <Info size={18} />
-                            </button>
-                          </div>
+          <div className="hud-bottom-right">
+            <div className="island-sub-gauges animation-fade-in">
+              {CONTINENT_ORDER.map(reg => {
+                const isActive = activeContinent === reg;
+                const isFaded = activeContinent && activeContinent !== reg;
+                
+                return (
+                  <div 
+                    key={reg} 
+                    className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} 
+                    title={reg}
+                  >
+                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                      <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
+              <Info size={18} />
+            </button>
+          </div>
+        </>
       )}
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
