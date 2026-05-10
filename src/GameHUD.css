@@ -108,7 +108,7 @@
 /* New Top HUD Layout */
 .hud-top-left, .hud-top-right {
   position: fixed;
-  top: var(--spacing-lg);
+  top: 40px;
   pointer-events: none;
   z-index: 1000;
 }
@@ -118,7 +118,7 @@
 
 .hud-top-center {
   position: fixed;
-  top: var(--spacing-lg);
+  top: 40px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
