@@ -104,11 +104,22 @@ async function run() {
 
     if (match) {
         const capital = match.capital ? match.capital[0] : null;
+        
+        // Use capital-specific coordinates if available in match (restcountries)
+        // Note: capitalInfo.latlng is the standard field for capital coords in restcountries
         let lat = null, lng = null;
-        if (match.latlng) {
+        if (match.capitalInfo?.latlng) {
+            lat = match.capitalInfo.latlng[0];
+            lng = match.capitalInfo.latlng[1];
+        } else if (match.latlng) {
             lat = match.latlng[0];
             lng = match.latlng[1];
         }
+        
+        // Natural Earth Fallback for common mismatches or missing capital info
+        // (LABEL_X/LABEL_Y are often better for centroids, but here we want capitals)
+        // If the country has a known capital point in properties, we could use it, 
+        // but Natural Earth's main country file usually has LABEL_X/LABEL_Y.
         
         let capital_fr = capital;
         if (capital && capitalTranslations[capital]) {

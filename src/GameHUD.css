@@ -192,10 +192,18 @@
   outline: none; /* Remove blue focus ring */
 }
 
-.hud-btn-circular:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  transform: translateY(-2px);
+.hud-btn-circular.mic-btn.active {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  animation: mic-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes mic-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+  50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+  100% { transform: scale(1); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
 }
 
 .island-sub-gauges {

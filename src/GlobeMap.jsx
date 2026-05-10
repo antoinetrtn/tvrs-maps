@@ -102,10 +102,10 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
 };
 
 const GLOBE_LAYER_ALTITUDE = {
-  base: 0.0005,
-  found: 0.0012,
-  selected: 0.0025,
-  label: 0.005
+  base: 0.002,
+  found: 0.005,
+  selected: 0.01,
+  label: 0.02
 };
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 
@@ -599,7 +599,9 @@ const GlobeMap = ({
     return new THREE.MeshBasicMaterial({
       color: UI_COLORS.mapSea,
       depthTest: true,
-      depthWrite: true
+      depthWrite: true,
+      transparent: false,
+      opacity: 1
     });
   }, [UI_COLORS]);
 
