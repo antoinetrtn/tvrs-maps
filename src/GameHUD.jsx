@@ -161,96 +161,83 @@ const GameHUD = ({
 
   return (
     <>
-      <div className="top-hud-container" style={{ 
-        top: (viewport?.top || 0) + (window.innerWidth < 600 ? 8 : 24), 
-        left: viewport?.left || 0,
-        display: 'flex' // ALWAYS FLEX
-      }}>
-        <div className="top-hud-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
-          {/* Header Panel: Hidden in keyboard mode */}
-          {!isKeyboardMode ? (
-            <div className="glass-panel top-hud-panel">
-              <button 
-                className={`top-box ${statsOpen ? 'active' : ''}`} 
-                onClick={() => { setStatsOpen(!statsOpen); setMenuOpen(false); }} 
-                title={lang === 'fr' ? 'Voir les stats' : 'See stats'}
-              >
-                <span className="top-box-val">{score}</span>
-                <span className="top-box-total">/{totalPossible}</span>
-              </button>
-              
-              <div className="hud-divider" />
-              
-              <div className="hud-time">{formatTime(timeLeft)}</div>
+      {!isKeyboardMode && (
+        <>
+          <div className="hud-top-left">
+            <button className="hud-btn-circular glass-panel" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
+              <Home size={22} />
+            </button>
+          </div>
 
-              {isPlaying && !isGameOver && (
-                <button className="toggle-btn stop-top-btn" onClick={onStop} title={lang === 'fr' ? 'Arrêter la partie' : 'Stop game'}>
-                  <Square size={16} fill="currentColor" />
-                </button>
-              )}
-
-              <button 
-                className={`top-box ${menuOpen ? 'active' : ''}`} 
-                onClick={() => { setMenuOpen(!menuOpen); setStatsOpen(false); }} 
-                aria-label="Menu"
-              >
-                <span className="top-box-label">{lang === 'fr' ? 'Menu' : 'Menu'}</span>
-                {menuOpen ? <X size={16} /> : <Menu size={16} />}
-              </button>
-            </div>
-          ) : null}
-
-          {statsOpen && !isKeyboardMode && (
-            <div className="top-stats-dropdown glass-panel animation-fade-in">
-              <div className="stats-header" style={{ marginBottom: '12px' }}>
-                <span className="stats-text">{score}/{totalPossible} {lang === 'fr' ? 'trouvés' : 'found'}</span>
-                <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations de partie' : 'Game information'}>
-                  <Info size={18} />
-                </button>
-              </div>
-              <div className="progress-bar-container" style={{ marginBottom: '16px' }}>
-                <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
-              </div>
-
-              <div className="continent-gauges">
-                {CONTINENT_ORDER.map(reg => (
-                  <div key={reg} className="gauge-item" title={reg}>
-                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
-                      <span className="gauge-val">{regionStats[reg]?.found}</span>
-                    </div>
-                    <span className="gauge-label">{reg.substring(0, 3)}</span>
+          <div className="hud-top-center">
+            <div className="central-island-panel glass-panel" onClick={onInfo}>
+               <div className="island-timer">{formatTime(timeLeft)}</div>
+               <div className="island-divider" />
+               <div className="island-progress-wrap">
+                  <div className="progress-linear-container">
+                     <div className="progress-linear-fill" style={{ width: `${progressPercent}%` }} />
                   </div>
-                ))}
-              </div>
+               </div>
+               <div className="island-divider" />
+               <div className="island-score">
+                  <span className="score-current">{score}</span>
+                  <span className="score-total">/{totalPossible}</span>
+               </div>
             </div>
-          )}
+            
+            <div className="island-sub-gauges animation-fade-in">
+              {CONTINENT_ORDER.map(reg => (
+                <div key={reg} className="gauge-item" title={reg}>
+                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                    <span className="gauge-val">{regionStats[reg]?.found}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          {menuOpen && !isKeyboardMode && (
-            <div className="top-menu-dropdown glass-panel animation-fade-in">
-              <div className="settings-section">
-                <div className="util-btns">
-                  <button className="toggle-btn" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
-                    <Home size={18} />
-                  </button>
-                  <button className="toggle-btn lang-toggle" onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}>
-                    {lang.toUpperCase()}
-                  </button>
-                  <button className="toggle-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                  </button>
-                  <button className={`toggle-btn ${globeVisualTheme === 'satellite' ? 'active' : ''}`} onClick={() => setGlobeVisualTheme(globeVisualTheme === 'satellite' ? 'minimalist' : 'satellite')}>
-                    <Camera size={18} />
-                  </button>
-                  <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
-                    <Info size={18} />
-                  </button>
+          <div className="hud-top-right">
+            <button 
+              className={`hud-btn-circular glass-panel ${menuOpen ? 'active' : ''}`} 
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Menu"
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+
+            {menuOpen && (
+              <div className="top-menu-dropdown glass-panel animation-fade-in" style={{ position: 'absolute', top: '60px', right: '0' }}>
+                <div className="settings-section">
+                  <div className="util-btns">
+                    <button className="toggle-btn lang-toggle" onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}>
+                      {lang.toUpperCase()}
+                    </button>
+                    <button className="toggle-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                    <button className={`toggle-btn ${globeVisualTheme === 'satellite' ? 'active' : ''}`} onClick={() => setGlobeVisualTheme(globeVisualTheme === 'satellite' ? 'minimalist' : 'satellite')}>
+                      <Camera size={18} />
+                    </button>
+                    <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
+                      <Info size={18} />
+                    </button>
+                    {isPlaying && !isGameOver && (
+                      <button className="toggle-btn" style={{ color: 'var(--error)' }} onClick={onStop} title={lang === 'fr' ? 'Arrêter' : 'Stop'}>
+                        <Square size={18} fill="currentColor" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        </>
+      )}
 
-          {/* Focus Badge: Always visible if focused, even with keyboard */}
-          {isFocusedCountry && !menuOpen && (
+      {/* Focus Badge: Always visible if focused, even with keyboard */}
+      {isFocusedCountry && !menuOpen && (
+        <div className="top-hud-container" style={{ top: (viewport?.top || 0) + 24, left: viewport?.left || 0 }}>
+          <div className="top-hud-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
             <div className="focus-info-card animation-fade-in">
               {isKeyboardMode && (
                 <div className="focus-mini-pill">
@@ -270,9 +257,9 @@ const GameHUD = ({
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div 
         className={`bottom-hud-container hud-${hudSide} ${isFocusedCountry ? 'is-focused' : ''}`}
