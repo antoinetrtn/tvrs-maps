@@ -31,8 +31,8 @@ export const THEME = {
     success: '#10b981',
     error: '#ef4444',
     warning: '#f59e0b',
-    mapBase: '#1e293b',
-    mapSea: '#0f1c2e',
+    mapBase: '#2a3a4f',
+    mapSea: '#050a14',
     mapBorder: '#334155'
   }
 };
