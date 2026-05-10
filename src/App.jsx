@@ -465,9 +465,8 @@ function App() {
       maxLabels: isMobile ? 8 : (isTablet ? 15 : 30),
       showAtmosphere: false,
       useImageTextures: false,
-      // Smaller values create more cap subdivisions. This keeps large countries
-      // curved above the globe instead of letting the sphere show through.
-      polygonCapCurvatureResolution: isMobile ? 1.75 : (isTablet ? 1.5 : 1.25)
+      // Restore performant curvature resolution
+      polygonCapCurvatureResolution: isMobile ? 1.5 : (isTablet ? 1.25 : 1.1)
     };
   }, [viewport.width]);
 
