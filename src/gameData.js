@@ -73,7 +73,7 @@ export const countryDataMap = {
   "United Arab Emirates": {
     "iso2": "AE",
     "name_en": "United Arab Emirates",
-    "name_fr": "Émirats arabes unis",
+    "name_fr": "\u00c9mirats arabes unis",
     "capital": "Abu Dhabi",
     "capital_fr": "Abu Dhabi",
     "lat": 24.28,
@@ -462,12 +462,13 @@ export const countryDataMap = {
     "iso2": "CO",
     "name_en": "Colombia",
     "name_fr": "Colombie",
-    "capital": "Bogotá",
+    "capital": "Bogot\u00e1",
     "capital_fr": "Bogota",
-    "lat": 4.36,
+    "lat": 4.58,
     "lng": -74.05,
     "region": "Americas"
   },
+
   "Comoros": {
     "iso2": "KM",
     "name_en": "Comoros",
@@ -601,7 +602,7 @@ export const countryDataMap = {
   "Algeria": {
     "iso2": "DZ",
     "name_en": "Algeria",
-    "name_fr": "Algérie",
+    "name_fr": "Alg\u00e9rie",
     "capital": "Algiers",
     "capital_fr": "Alger",
     "lat": 36.45,
@@ -699,7 +700,7 @@ export const countryDataMap = {
     "region": "Americas"
   },
   "France": {
-    "iso2": "-99",
+    "iso2": "FR",
     "name_en": "France",
     "name_fr": "France",
     "capital": "Paris",
@@ -821,9 +822,9 @@ export const countryDataMap = {
   "Greece": {
     "iso2": "GR",
     "name_en": "Greece",
-    "name_fr": "Grèce",
+    "name_fr": "Gr\u00e8ce",
     "capital": "Athens",
-    "capital_fr": "Athènes",
+    "capital_fr": "Ath\u00e8nes",
     "lat": 37.59,
     "lng": 23.44,
     "region": "Europe"
@@ -991,7 +992,7 @@ export const countryDataMap = {
     "name_en": "Iran",
     "name_fr": "Iran",
     "capital": "Tehran",
-    "capital_fr": "Téhéran",
+    "capital_fr": "T\u00e9h\u00e9ran",
     "lat": 35.4,
     "lng": 51.25,
     "region": "Asia"
@@ -1019,13 +1020,14 @@ export const countryDataMap = {
   "Israel": {
     "iso2": "IL",
     "name_en": "Israel",
-    "name_fr": "Israël",
+    "name_fr": "Isra\u00ebl",
     "capital": "Jerusalem",
-    "capital_fr": "Jérusalem",
-    "lat": 31.46,
-    "lng": 35.14,
+    "capital_fr": "J\u00e9rusalem",
+    "lat": 31.76,
+    "lng": 35.21,
     "region": "Asia"
   },
+
   "Italy": {
     "iso2": "IT",
     "name_en": "Italy",
@@ -1139,13 +1141,14 @@ export const countryDataMap = {
   "South Korea": {
     "iso2": "KR",
     "name_en": "South Korea",
-    "name_fr": "Corée du Sud",
+    "name_fr": "Cor\u00e9e du Sud",
     "capital": "Seoul",
-    "capital_fr": "Séoul",
-    "lat": 37.33,
-    "lng": 126.59,
+    "capital_fr": "S\u00e9oul",
+    "lat": 37.51,
+    "lng": 126.98,
     "region": "Asia"
   },
+
   "Kosovo": {
     "iso2": "XK",
     "name_en": "Kosovo",

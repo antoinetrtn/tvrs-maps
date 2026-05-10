@@ -327,6 +327,24 @@
   box-shadow: 0 0 20px var(--continent-color);
 }
 
+.input-island.success {
+  border-color: var(--success);
+  box-shadow: 0 0 20px var(--success-soft);
+  background: var(--success-soft);
+}
+
+.input-island.error {
+  border-color: var(--error);
+  box-shadow: 0 0 20px var(--error-soft);
+  background: var(--error-soft);
+}
+
+.input-island.warning {
+  border-color: var(--warning);
+  box-shadow: 0 0 20px var(--warning-soft);
+  background: var(--warning-soft);
+}
+
 .suggestions-list {
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(20px);
