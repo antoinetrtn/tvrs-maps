@@ -385,7 +385,7 @@ function App() {
     }
   }, [lastInteractionType, selectedCountry]);
 
-  const shouldAutoRotate = !selectedCountry && !isGameOver;
+  const shouldAutoRotate = currentScreen === 'home';
 
   const handleCustomConfirm = (msg, action) => {
     setConfirmState({ message: msg, onConfirm: () => { action(); setConfirmState(null); } });
@@ -477,7 +477,7 @@ function App() {
         countriesData={countriesData} 
         foundList={foundList} 
         selectedCountry={selectedCountry}
-        shouldAutoRotate={(shouldAutoRotate || currentScreen === 'home') && perfProfile.enableAutoRotate}
+        shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
         onCountrySelect={handleCountrySelect}
         theme={theme}
         viewport={viewport}

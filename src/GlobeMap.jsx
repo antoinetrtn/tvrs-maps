@@ -199,7 +199,7 @@ const GlobeMap = ({
         const isMobile = viewport.width < 768;
         const currentPOV = globeEl.current.pointOfView();
         const hasPreviousSelection = !!previousSelectedCountryRef.current;
-        const fallbackAltitude = isMobile ? 1.8 : 0.8;
+        const fallbackAltitude = isMobile ? 1.8 : 0.68;
         const preservedAltitude = Number.isFinite(currentPOV?.altitude)
           ? currentPOV.altitude
           : fallbackAltitude;
@@ -219,9 +219,9 @@ const GlobeMap = ({
         lastTargetRef.current = target;
       }
     } else if (isHomeScreen && globeEl.current) {
-      globeEl.current.pointOfView({ altitude: 2.5 }, 1000);
+      globeEl.current.pointOfView({ altitude: viewport.width < 768 ? 2.5 : 1 }, 1000);
     } else if (wasHomeScreenRef.current && globeEl.current) {
-      globeEl.current.pointOfView({ lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.65 }, 700);
+      globeEl.current.pointOfView({ lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.35 }, 700);
     }
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;

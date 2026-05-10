@@ -94,6 +94,8 @@
 }
 
 .globe-map-shell canvas {
+  position: relative;
+  z-index: 1;
   transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
