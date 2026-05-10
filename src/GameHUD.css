@@ -206,14 +206,14 @@
 .score-current {
   font-weight: 600;
   font-size: 1.1rem;
-  color: var(--accent);
+  color: var(--text-main);
 }
 
 .score-total {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-muted);
-  opacity: 0.5;
+  color: var(--text-main);
+  opacity: 0.4;
 }
 
 .island-sub-gauges {
