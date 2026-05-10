@@ -373,6 +373,15 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
+    // No continent colors on home screen
+    if (isHomeScreen) {
+      if (admin === selectedCountry) {
+        if (isError) return UI_COLORS.error;
+        return lerpColor(UI_COLORS.mapBase, UI_COLORS.accent, pulse * 0.6);
+      }
+      return UI_COLORS.mapBase;
+    }
+
     if (foundSet.has(admin) || mode === 'learn') {
       const baseColor = REGION_COLORS[region] || UI_COLORS.success;
       if (admin === selectedCountry) {
@@ -390,8 +399,8 @@ const GlobeMap = ({
       return lerpColor(baseColor, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
     }
 
-    return mode === 'capitals' ? UI_COLORS.mapBase : UI_COLORS.mapBase;
-  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, pulse]);
+    return UI_COLORS.mapBase;
+  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, pulse, isHomeScreen]);
 
   const getPolygonStroke = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -400,29 +409,29 @@ const GlobeMap = ({
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
       // Vibrant continent color for selection edge, pulsing towards white/light
-      const baseStroke = REGION_COLORS[region] || UI_COLORS.accent;
+      const baseStroke = (isHomeScreen ? UI_COLORS.accent : (REGION_COLORS[region] || UI_COLORS.accent));
       return lerpColor(baseStroke, '#ffffff', pulse * 0.7);
     }
     
     // Normal borders: dark version of the base color
-    const baseColor = (foundSet.has(admin) || mode === 'learn')
+    const baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
       ? (REGION_COLORS[region] || UI_COLORS.success)
       : UI_COLORS.mapBase;
       
     return lerpColor(baseColor, '#000000', 0.4); 
-  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode]);
+  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen]);
 
   const getPolygonSideColor = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
-    const baseColor = (foundSet.has(admin) || mode === 'learn')
+    const baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
       ? (REGION_COLORS[region] || UI_COLORS.success)
       : UI_COLORS.mapBase;
 
     if (admin === selectedCountry) {
       if (isError) return isLight ? '#dc7f7f' : '#991b1b';
       
-      const capColor = (foundSet.has(admin) || mode === 'learn')
+      const capColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
         ? lerpColor(REGION_COLORS[region] || UI_COLORS.success, '#ffffff', pulse * 0.4)
         : lerpColor(REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
         
@@ -432,7 +441,7 @@ const GlobeMap = ({
     
     // Regular sides: slightly darkened version (30% blend for a soft relief)
     return lerpColor(baseColor, '#000000', 0.3);
-  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, pulse, mode]);
+  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, pulse, mode, isHomeScreen]);
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -458,7 +467,7 @@ const GlobeMap = ({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
     
-    const keysToShow = mode === 'learn' ? Object.keys(countryDataMap) : foundList;
+    const keysToShow = (mode === 'learn' || isHomeScreen) ? Object.keys(countryDataMap) : foundList;
     const pov = cameraPOV;
 
     const filtered = keysToShow
@@ -471,7 +480,8 @@ const GlobeMap = ({
         
         // Visibility based on zoom level
         // Selected country always bypasses the zoom threshold
-        const visibilityThreshold = isSelected ? 10 : Math.min(3.0, 0.8 + size * 2.0);
+        // On home screen, we use a slightly more restrictive threshold for performance
+        const visibilityThreshold = isSelected ? 10 : (isHomeScreen ? 1.8 : Math.min(3.0, 0.8 + size * 2.0));
         
         if (zoomLevel > visibilityThreshold) return null;
 
@@ -506,7 +516,7 @@ const GlobeMap = ({
       });
 
     return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
-  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry]);
+  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen]);
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
@@ -711,50 +721,52 @@ const GlobeMap = ({
              filter: 'blur(40px)'
            }} />
         </div>
-        <Globe
-          ref={globeEl}
-          width={globeWidth}
-          height={globeHeight}
-          globeImageUrl={null}
-          globeMaterial={globeMaterial}
-          backgroundImageUrl={null}
-          showAtmosphere={!!perfProfile?.showAtmosphere}
-          atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
-          atmosphereDayQuotient={isLight ? 0.2 : 0.1}
-          backgroundColor="rgba(0,0,0,0)"
-          lineHoverPrecision={0}
-          rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
-          animateIn={false}
-          enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
-          polygonsData={renderCountriesData}
-          polygonGeoJsonGeometry="renderGeometry"
-          polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
-          polygonAltitude={getPolygonAltitude}
-          polygonCapColor={getPolygonColor}
-          polygonSideColor={getPolygonSideColor}
-          polygonStrokeColor={getPolygonStroke}
-          polygonStrokeWidth={getPolygonStrokeWidth}
-          polygonAltitudeUpdateMs={50}
-          polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
-          pointsData={markersData}
-          pointLat="lat"
-          pointLng="lng"
-          pointColor={getPointColor}
-          pointRadius={getPointRadius}
-          pointAltitude={getPointAltitude}
-          pointsTransitionDuration={SELECTION_TRANSITION_DURATION}
-          htmlElementsData={labelsData}
-          htmlElement={createLabelElement}
-          htmlLat={d => d.lat}
-          htmlLng={d => d.lng}
-          htmlAltitude={GLOBE_LAYER_ALTITUDE.label}
-          ringsData={ringsData}
-          ringColor={getRingColor}
-          ringMaxRadius={perfProfile?.isMobile ? 1.0 : 1.4}
-          ringPropagationSpeed={perfProfile?.isMobile ? 0.35 : 0.5}
-          ringRepeatPeriod={perfProfile?.isMobile ? 2400 : 2000}
-          ringAltitude={GLOBE_LAYER_ALTITUDE.selected}
-        />
+        <div className="globe-content-wrapper">
+          <Globe
+            ref={globeEl}
+            width={globeWidth}
+            height={globeHeight}
+            globeImageUrl={null}
+            globeMaterial={globeMaterial}
+            backgroundImageUrl={null}
+            showAtmosphere={!!perfProfile?.showAtmosphere}
+            atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
+            atmosphereDayQuotient={isLight ? 0.2 : 0.1}
+            backgroundColor="rgba(0,0,0,0)"
+            lineHoverPrecision={0}
+            rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
+            animateIn={false}
+            enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
+            polygonsData={renderCountriesData}
+            polygonGeoJsonGeometry="renderGeometry"
+            polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
+            polygonAltitude={getPolygonAltitude}
+            polygonCapColor={getPolygonColor}
+            polygonSideColor={getPolygonSideColor}
+            polygonStrokeColor={getPolygonStroke}
+            polygonStrokeWidth={getPolygonStrokeWidth}
+            polygonAltitudeUpdateMs={50}
+            polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
+            pointsData={markersData}
+            pointLat="lat"
+            pointLng="lng"
+            pointColor={getPointColor}
+            pointRadius={getPointRadius}
+            pointAltitude={getPointAltitude}
+            pointsTransitionDuration={SELECTION_TRANSITION_DURATION}
+            htmlElementsData={labelsData}
+            htmlElement={createLabelElement}
+            htmlLat={d => d.lat}
+            htmlLng={d => d.lng}
+            htmlAltitude={GLOBE_LAYER_ALTITUDE.label}
+            ringsData={ringsData}
+            ringColor={getRingColor}
+            ringMaxRadius={perfProfile?.isMobile ? 1.0 : 1.4}
+            ringPropagationSpeed={perfProfile?.isMobile ? 0.35 : 0.5}
+            ringRepeatPeriod={perfProfile?.isMobile ? 2400 : 2000}
+            ringAltitude={GLOBE_LAYER_ALTITUDE.selected}
+          />
+        </div>
     </div>
   );
 };
