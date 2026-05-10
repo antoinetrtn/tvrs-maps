@@ -184,16 +184,6 @@ const GameHUD = ({
                   <span className="score-total">/{totalPossible}</span>
                </div>
             </div>
-            
-            <div className="island-sub-gauges animation-fade-in">
-              {CONTINENT_ORDER.map(reg => (
-                <div key={reg} className="gauge-item" title={reg}>
-                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
-                    <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="hud-top-right">
@@ -216,10 +206,7 @@ const GameHUD = ({
                       {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
                     <button className={`toggle-btn ${globeVisualTheme === 'satellite' ? 'active' : ''}`} onClick={() => setGlobeVisualTheme(globeVisualTheme === 'satellite' ? 'minimalist' : 'satellite')}>
-                      <Camera size={18} />
-                    </button>
-                    <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
-                      <Info size={18} />
+                      <Globe size={18} />
                     </button>
                     {isPlaying && !isGameOver && (
                       <button className="toggle-btn" style={{ color: 'var(--error)' }} onClick={onStop} title={lang === 'fr' ? 'Arrêter' : 'Stop'}>
@@ -233,6 +220,15 @@ const GameHUD = ({
           </div>
 
           <div className="hud-bottom-right">
+            <div className="island-sub-gauges animation-fade-in">
+              {CONTINENT_ORDER.map(reg => (
+                <div key={reg} className="gauge-item" title={reg}>
+                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                    <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
             <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
               <Info size={18} />
             </button>
