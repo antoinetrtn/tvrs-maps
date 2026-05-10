@@ -328,20 +328,20 @@
   .top-hud-bar {
     top: 16px;
     padding: 0 16px;
-    grid-template-columns: 1fr auto 1fr; /* Same as PC for perfect centering */
+    grid-template-columns: 44px 1fr 44px; /* Fixed sides to let center stretch on mobile */
     row-gap: 14px;
+    justify-items: center;
   }
 
-  .hud-btn-circular {
-    width: 44px;
-    height: 44px;
-  }
+  .hud-top-left { justify-self: start; }
+  .hud-top-right { justify-self: end; }
 
   .central-island-panel {
     min-width: 0;
     width: 100%;
+    max-width: 500px;
     padding: 0 8px;
-    height: 44px; /* PC Reference size */
+    height: 44px;
   }
 
   .island-timer, .island-score {
