@@ -165,7 +165,7 @@ const GlobeMap = ({
           ? currentPOV.altitude
           : fallbackAltitude;
         const isKeyboardOpen = isMobile && isKeyboardMode;
-        const latOffset = isKeyboardOpen ? -8 : (isMobile ? -10 : 0);
+        const latOffset = isKeyboardOpen ? 0 : (isMobile ? -10 : 0);
         const target = {
           lat: data.lat + latOffset,
           lng: data.lng,
