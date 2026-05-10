@@ -1,4 +1,4 @@
-/* Bottom HUD Positioning - ALWAYS CENTERED */
+/* Bottom HUD - Toolbar Style */
 .bottom-hud-container {
   position: fixed;
   bottom: var(--spacing-lg);
@@ -6,17 +6,75 @@
   transform: translateX(-50%);
   pointer-events: none;
   z-index: 1000;
-  width: 92%;
-  max-width: 400px;
+  width: auto;
 }
 
 .bottom-hud-panel {
   pointer-events: auto;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-md);
-  gap: var(--spacing-md);
-  overflow: hidden;
+  padding: 6px;
+  gap: 6px;
+  border-radius: var(--radius-xl);
+}
+
+.input-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.input-field {
+  width: 240px;
+  height: 40px;
+  background: var(--glass-border);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: 0 16px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 500;
+  outline: none;
+  transition: all var(--transition-normal);
+}
+
+.input-field:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.input-field.error { border-color: var(--error); color: var(--error); }
+.input-field.success { border-color: var(--success); color: var(--success); }
+.input-field.warning { border-color: var(--warning); color: var(--warning); }
+
+.nav-focus-btn, .mic-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-border);
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+}
+
+.mic-btn.active {
+  background: var(--error);
+  color: white;
+  border-color: var(--error);
+}
+
+.nav-focus-btn:hover, .mic-btn:hover:not(.active) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .input-field { width: 140px; }
 }
 
 .menu-content {
@@ -348,60 +406,6 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
-}
-
-/* Input Field */
-.input-wrap {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  position: relative;
-}
-
-.input-field {
-  width: 100%;
-  height: 48px;
-  background: var(--glass-border);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 0 40px 0 var(--spacing-md);
-  color: var(--text-main);
-  font-size: 1rem;
-  font-weight: 600;
-  outline: none;
-  transition: all var(--transition-fast);
-}
-
-.input-field:focus {
-  border-color: var(--accent);
-  background: var(--glass-bg);
-  box-shadow: 0 0 0 4px var(--accent-soft);
-}
-
-.input-field.error { border-color: var(--error); color: var(--error); }
-.input-field.success { border-color: var(--success); color: var(--success); }
-.input-field.warning { border-color: var(--warning); color: var(--warning); }
-
-.input-clear-btn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--glass-border);
-  border: none;
-  color: var(--text-muted);
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.input-clear-btn:hover {
-  background: var(--error-soft);
-  color: var(--error);
 }
 
 /* Gauges */
