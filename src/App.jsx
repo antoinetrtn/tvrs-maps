@@ -164,6 +164,7 @@ function App() {
     viewport.top > 20
   );
   const [isKeyboardMode, setIsKeyboardMode] = useState(false);
+  const effectiveKeyboardMode = keyboardModeCandidate || isKeyboardMode;
 
   useEffect(() => {
     if (window.innerWidth >= 1024) {
@@ -294,7 +295,7 @@ function App() {
           if (prev === matchFound) {
             const nextCountry = getClosestUnfound(matchFound, newFound);
             // Strong focus re-assertion ONLY if in keyboard mode
-            if (lastInteractionType === 'manual' && extInputRef.current && isKeyboardMode) {
+            if (lastInteractionType === 'manual' && extInputRef.current && effectiveKeyboardMode) {
               extInputRef.current.focus();
             }
             return nextCountry || null;
@@ -306,7 +307,7 @@ function App() {
       return "SUCCESS";
     }
     return "ERROR";
-  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, lastInteractionType, isKeyboardMode]);
+  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, lastInteractionType, effectiveKeyboardMode]);
 
   const specificCountryGuess = useCallback((inputVal) => {
     if (!selectedCountry) return false;
@@ -348,7 +349,7 @@ function App() {
           if (prev === guessedCountry) {
             const nextCountry = getClosestUnfound(guessedCountry, newFound);
             // Strong focus re-assertion ONLY if in keyboard mode
-            if (lastInteractionType === 'manual' && extInputRef.current && isKeyboardMode) {
+            if (lastInteractionType === 'manual' && extInputRef.current && effectiveKeyboardMode) {
               extInputRef.current.focus();
             }
             return nextCountry || null;
@@ -363,7 +364,7 @@ function App() {
       setTimeout(() => setPopupError(false), 500);
       return "ERROR";
     }
-  }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, lastInteractionType, isKeyboardMode]);
+  }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, lastInteractionType, effectiveKeyboardMode]);
 
   const handleCountrySelect = useCallback((c) => {
     if (c === selectedCountry) {
@@ -458,7 +459,7 @@ function App() {
           theme={theme}
           viewport={viewport}
           setLastInteractionType={setLastInteractionType}
-          isKeyboardMode={isKeyboardMode}
+          isKeyboardMode={effectiveKeyboardMode}
           selectedCountry={selectedCountry}
         />
       )}
@@ -477,7 +478,7 @@ function App() {
         hasActiveFeedback={popupError || popupSuccess}
         perfProfile={perfProfile}
         isHomeScreen={currentScreen === 'home'}
-        isKeyboardMode={isKeyboardMode}
+        isKeyboardMode={effectiveKeyboardMode}
       />
 
       {(isGameOver || showInfoModal) && (
