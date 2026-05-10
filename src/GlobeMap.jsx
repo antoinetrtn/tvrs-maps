@@ -102,10 +102,12 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
 };
 
 const GLOBE_LAYER_ALTITUDE = {
-  base: 0.001,
-  found: 0.003,
-  selected: 0.005,
-  label: 0.006
+  // Keep geometry far enough from the globe surface to avoid depth-buffer
+  // flickering when the globe is zoomed out, especially on mobile GPUs.
+  base: 0.01,
+  found: 0.014,
+  selected: 0.02,
+  label: 0.024
 };
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 
@@ -249,6 +251,9 @@ const GlobeMap = ({
         const camera = globeEl.current.camera();
         if (camera) {
           camera.clearViewOffset();
+          camera.near = 1;
+          camera.far = 1200;
+          camera.updateProjectionMatrix();
         }
       } catch (e) {}
     }
