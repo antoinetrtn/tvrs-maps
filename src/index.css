@@ -47,9 +47,9 @@
 }
 
 [data-theme="light"] {
-  --bg-color: #f8fafc;
+  --bg-color: #f1f5f9;
   --text-main: #0f172a;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(15, 23, 42, 0.08);
@@ -57,9 +57,9 @@
   --overlay-bg: rgba(241, 245, 249, 0.6);
   --modal-header-bg: rgba(255, 255, 255, 0.4);
   
-  --accent: #334155;
-  --accent-hover: #1e293b;
-  --accent-soft: rgba(51, 65, 85, 0.1);
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: rgba(37, 99, 235, 0.1);
   --accent-contrast: #ffffff;
 }
 

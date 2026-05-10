@@ -4,19 +4,19 @@
 
 export const THEME = {
   light: {
-    bg: '#f8fafc',
+    bg: '#f1f5f9',
     textMain: '#0f172a',
-    textMuted: '#64748b',
-    accent: '#334155',
-    accentHover: '#1e293b',
-    accentSoft: 'rgba(51, 65, 85, 0.1)',
+    textMuted: '#475569',
+    accent: '#2563eb',
+    accentHover: '#1d4ed8',
+    accentSoft: 'rgba(37, 99, 235, 0.1)',
     glassBg: 'rgba(255, 255, 255, 0.8)',
     glassBorder: 'rgba(15, 23, 42, 0.08)',
     success: '#10b981',
     error: '#ef4444',
     warning: '#f59e0b',
-    mapBase: '#f1f5f9',
-    mapSea: '#bdcedd',
+    mapBase: '#ffffff',
+    mapSea: '#e2e8f0',
     mapBorder: '#cbd5e1'
   },
   dark: {

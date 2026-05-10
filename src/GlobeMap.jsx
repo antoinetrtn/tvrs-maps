@@ -110,6 +110,8 @@ const GLOBE_LAYER_ALTITUDE = {
   label: 0.024
 };
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
+const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = -10;
+const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = -18;
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
   if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected;
@@ -271,7 +273,13 @@ const GlobeMap = ({
           ? currentPOV.altitude
           : fallbackAltitude;
         const isKeyboardOpen = isMobile && isKeyboardMode;
-        const latOffset = isKeyboardOpen ? 0 : (isMobile ? -10 : 0);
+        const keyboardOcclusion = Math.max(0, window.innerHeight - viewport.height - viewport.top);
+        const keyboardOffsetBoost = isKeyboardOpen
+          ? Math.min(8, Math.max(0, keyboardOcclusion - 180) / 30)
+          : 0;
+        const latOffset = isKeyboardOpen
+          ? MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET - keyboardOffsetBoost
+          : (isMobile ? MOBILE_SELECTED_COUNTRY_LAT_OFFSET : 0);
         const target = {
           lat: data.lat + latOffset,
           lng: data.lng,
@@ -280,6 +288,7 @@ const GlobeMap = ({
         const previousTarget = lastTargetRef.current;
         const onlyViewportNudge = previousTarget &&
           previousSelectedCountryRef.current === selectedCountry &&
+          Math.abs(previousTarget.lat - target.lat) < 0.001 &&
           Math.abs(previousTarget.lng - target.lng) < 0.001 &&
           Math.abs(previousTarget.altitude - target.altitude) < 0.001;
         globeEl.current.pointOfView(target, onlyViewportNudge ? 180 : (perfProfile?.isMobile ? 320 : 420));
@@ -292,7 +301,7 @@ const GlobeMap = ({
     }
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
-  }, [selectedCountry, viewport.height, isHomeScreen, perfProfile, isKeyboardMode]);
+  }, [selectedCountry, viewport.width, viewport.height, viewport.top, isHomeScreen, perfProfile, isKeyboardMode]);
 
   const isLight = theme === 'light';
 
