@@ -7,8 +7,8 @@ export const countryDataMap = {
     "name_fr": "Aruba",
     "capital": "Oranjestad",
     "capital_fr": "Oranjestad",
-    "lat": 12.5,
-    "lng": -69.96666666,
+    "lat": 12.52,
+    "lng": -70.03,
     "region": "Americas"
   },
   "Afghanistan": {
@@ -17,8 +17,8 @@ export const countryDataMap = {
     "name_fr": "Afghanistan",
     "capital": "Kabul",
     "capital_fr": "Kaboul",
-    "lat": 33,
-    "lng": 65,
+    "lat": 34.52,
+    "lng": 69.18,
     "region": "Asia"
   },
   "Angola": {
@@ -27,8 +27,8 @@ export const countryDataMap = {
     "name_fr": "Angola",
     "capital": "Luanda",
     "capital_fr": "Luanda",
-    "lat": -12.5,
-    "lng": 18.5,
+    "lat": -8.83,
+    "lng": 13.22,
     "region": "Africa"
   },
   "Anguilla": {
@@ -37,8 +37,8 @@ export const countryDataMap = {
     "name_fr": "Anguilla",
     "capital": "The Valley",
     "capital_fr": "The Valley",
-    "lat": 18.25,
-    "lng": -63.16666666,
+    "lat": 18.22,
+    "lng": -63.05,
     "region": "Americas"
   },
   "Albania": {
@@ -47,8 +47,8 @@ export const countryDataMap = {
     "name_fr": "Albanie",
     "capital": "Tirana",
     "capital_fr": "Tirana",
-    "lat": 41,
-    "lng": 20,
+    "lat": 41.32,
+    "lng": 19.82,
     "region": "Europe"
   },
   "Aland": {
@@ -57,7 +57,7 @@ export const countryDataMap = {
     "name_fr": "Ahvenanmaa",
     "capital": "Mariehamn",
     "capital_fr": "Mariehamn",
-    "lat": 60.116667,
+    "lat": 60.12,
     "lng": 19.9,
     "region": "Europe"
   },
@@ -68,7 +68,7 @@ export const countryDataMap = {
     "capital": "Andorra la Vella",
     "capital_fr": "Andorre-la-Vieille",
     "lat": 42.5,
-    "lng": 1.5,
+    "lng": 1.52,
     "region": "Europe"
   },
   "United Arab Emirates": {
@@ -77,8 +77,8 @@ export const countryDataMap = {
     "name_fr": "Émirats arabes unis",
     "capital": "Abu Dhabi",
     "capital_fr": "Abou Dabi",
-    "lat": 24,
-    "lng": 54,
+    "lat": 24.47,
+    "lng": 54.37,
     "region": "Asia"
   },
   "Argentina": {
@@ -87,8 +87,8 @@ export const countryDataMap = {
     "name_fr": "Argentine",
     "capital": "Buenos Aires",
     "capital_fr": "Buenos Aires",
-    "lat": -34,
-    "lng": -64,
+    "lat": -34.58,
+    "lng": -58.67,
     "region": "Americas"
   },
   "Armenia": {
@@ -97,8 +97,8 @@ export const countryDataMap = {
     "name_fr": "Arménie",
     "capital": "Yerevan",
     "capital_fr": "Erevan",
-    "lat": 40,
-    "lng": 45,
+    "lat": 40.17,
+    "lng": 44.5,
     "region": "Asia"
   },
   "American Samoa": {
@@ -107,16 +107,14 @@ export const countryDataMap = {
     "name_fr": "Samoa américaines",
     "capital": "Pago Pago",
     "capital_fr": "Pago Pago",
-    "lat": -14.33333333,
-    "lng": -170,
+    "lat": -14.27,
+    "lng": -170.7,
     "region": "Oceania"
   },
   "Antarctica": {
     "iso2": "AQ",
     "name_en": "Antarctica",
     "name_fr": "Antarctique",
-    "lat": -90,
-    "lng": 0,
     "region": "Antarctic"
   },
   "French Southern and Antarctic Lands": {
@@ -125,8 +123,8 @@ export const countryDataMap = {
     "name_fr": "Terres australes et antarctiques françaises",
     "capital": "Port-aux-Français",
     "capital_fr": "Port-aux-Français",
-    "lat": -49.25,
-    "lng": 69.167,
+    "lat": -49.35,
+    "lng": 70.21,
     "region": "Antarctic"
   },
   "Antigua and Barbuda": {
@@ -135,8 +133,8 @@ export const countryDataMap = {
     "name_fr": "Antigua-et-Barbuda",
     "capital": "Saint John's",
     "capital_fr": "Saint John's",
-    "lat": 17.05,
-    "lng": -61.8,
+    "lat": 17.12,
+    "lng": -61.85,
     "region": "Americas"
   },
   "Australia": {
@@ -145,8 +143,8 @@ export const countryDataMap = {
     "name_fr": "Australie",
     "capital": "Canberra",
     "capital_fr": "Canberra",
-    "lat": -27,
-    "lng": 133,
+    "lat": -35.27,
+    "lng": 149.13,
     "region": "Oceania"
   },
   "Austria": {
@@ -155,8 +153,8 @@ export const countryDataMap = {
     "name_fr": "Autriche",
     "capital": "Vienna",
     "capital_fr": "Vienne",
-    "lat": 47.33333333,
-    "lng": 13.33333333,
+    "lat": 48.2,
+    "lng": 16.37,
     "region": "Europe"
   },
   "Azerbaijan": {
@@ -165,8 +163,8 @@ export const countryDataMap = {
     "name_fr": "Azerbaïdjan",
     "capital": "Baku",
     "capital_fr": "Bakou",
-    "lat": 40.5,
-    "lng": 47.5,
+    "lat": 40.38,
+    "lng": 49.87,
     "region": "Asia"
   },
   "Burundi": {
@@ -175,8 +173,8 @@ export const countryDataMap = {
     "name_fr": "Burundi",
     "capital": "Gitega",
     "capital_fr": "Gitega",
-    "lat": -3.5,
-    "lng": 30,
+    "lat": -3.43,
+    "lng": 29.93,
     "region": "Africa"
   },
   "Belgium": {
@@ -185,8 +183,8 @@ export const countryDataMap = {
     "name_fr": "Belgique",
     "capital": "Brussels",
     "capital_fr": "Bruxelles",
-    "lat": 50.83333333,
-    "lng": 4,
+    "lat": 50.83,
+    "lng": 4.33,
     "region": "Europe"
   },
   "Benin": {
@@ -195,8 +193,8 @@ export const countryDataMap = {
     "name_fr": "Bénin",
     "capital": "Porto-Novo",
     "capital_fr": "Porto-Novo",
-    "lat": 9.5,
-    "lng": 2.25,
+    "lat": 6.48,
+    "lng": 2.62,
     "region": "Africa"
   },
   "Burkina Faso": {
@@ -205,8 +203,8 @@ export const countryDataMap = {
     "name_fr": "Burkina Faso",
     "capital": "Ouagadougou",
     "capital_fr": "Ouagadougou",
-    "lat": 13,
-    "lng": -2,
+    "lat": 12.37,
+    "lng": -1.52,
     "region": "Africa"
   },
   "Bangladesh": {
@@ -215,8 +213,8 @@ export const countryDataMap = {
     "name_fr": "Bangladesh",
     "capital": "Dhaka",
     "capital_fr": "Dacca",
-    "lat": 24,
-    "lng": 90,
+    "lat": 23.72,
+    "lng": 90.4,
     "region": "Asia"
   },
   "Bulgaria": {
@@ -225,8 +223,8 @@ export const countryDataMap = {
     "name_fr": "Bulgarie",
     "capital": "Sofia",
     "capital_fr": "Sofia",
-    "lat": 43,
-    "lng": 25,
+    "lat": 42.68,
+    "lng": 23.32,
     "region": "Europe"
   },
   "Bahrain": {
@@ -235,8 +233,8 @@ export const countryDataMap = {
     "name_fr": "Bahreïn",
     "capital": "Manama",
     "capital_fr": "Manama",
-    "lat": 26,
-    "lng": 50.55,
+    "lat": 26.23,
+    "lng": 50.57,
     "region": "Asia"
   },
   "The Bahamas": {
@@ -245,8 +243,8 @@ export const countryDataMap = {
     "name_fr": "Bahamas",
     "capital": "Nassau",
     "capital_fr": "Nassau",
-    "lat": 24.25,
-    "lng": -76,
+    "lat": 25.08,
+    "lng": -77.35,
     "region": "Americas"
   },
   "Bosnia and Herzegovina": {
@@ -255,8 +253,8 @@ export const countryDataMap = {
     "name_fr": "Bosnie-Herzégovine",
     "capital": "Sarajevo",
     "capital_fr": "Sarajevo",
-    "lat": 44,
-    "lng": 18,
+    "lat": 43.87,
+    "lng": 18.42,
     "region": "Europe"
   },
   "Saint Barthelemy": {
@@ -265,8 +263,8 @@ export const countryDataMap = {
     "name_fr": "Saint-Barthélemy",
     "capital": "Gustavia",
     "capital_fr": "Gustavia",
-    "lat": 18.5,
-    "lng": -63.41666666,
+    "lat": 17.88,
+    "lng": -62.85,
     "region": "Americas"
   },
   "Belarus": {
@@ -275,8 +273,8 @@ export const countryDataMap = {
     "name_fr": "Biélorussie",
     "capital": "Minsk",
     "capital_fr": "Minsk",
-    "lat": 53,
-    "lng": 28,
+    "lat": 53.9,
+    "lng": 27.57,
     "region": "Europe"
   },
   "Belize": {
@@ -286,7 +284,7 @@ export const countryDataMap = {
     "capital": "Belmopan",
     "capital_fr": "Belmopan",
     "lat": 17.25,
-    "lng": -88.75,
+    "lng": -88.77,
     "region": "Americas"
   },
   "Bermuda": {
@@ -295,8 +293,8 @@ export const countryDataMap = {
     "name_fr": "Bermudes",
     "capital": "Hamilton",
     "capital_fr": "Hamilton",
-    "lat": 32.33333333,
-    "lng": -64.75,
+    "lat": 32.28,
+    "lng": -64.78,
     "region": "Americas"
   },
   "Bolivia": {
@@ -305,8 +303,8 @@ export const countryDataMap = {
     "name_fr": "Bolivie",
     "capital": "Sucre",
     "capital_fr": "Sucre",
-    "lat": -17,
-    "lng": -65,
+    "lat": -19.02,
+    "lng": -65.26,
     "region": "Americas"
   },
   "Brazil": {
@@ -315,8 +313,8 @@ export const countryDataMap = {
     "name_fr": "Brésil",
     "capital": "Brasília",
     "capital_fr": "Brasília",
-    "lat": -10,
-    "lng": -55,
+    "lat": -15.79,
+    "lng": -47.88,
     "region": "Americas"
   },
   "Barbados": {
@@ -325,8 +323,8 @@ export const countryDataMap = {
     "name_fr": "Barbade",
     "capital": "Bridgetown",
     "capital_fr": "Bridgetown",
-    "lat": 13.16666666,
-    "lng": -59.53333333,
+    "lat": 13.1,
+    "lng": -59.62,
     "region": "Americas"
   },
   "Brunei": {
@@ -335,8 +333,8 @@ export const countryDataMap = {
     "name_fr": "Brunei",
     "capital": "Bandar Seri Begawan",
     "capital_fr": "Bandar Seri Begawan",
-    "lat": 4.5,
-    "lng": 114.66666666,
+    "lat": 4.88,
+    "lng": 114.93,
     "region": "Asia"
   },
   "Bhutan": {
@@ -345,8 +343,8 @@ export const countryDataMap = {
     "name_fr": "Bhoutan",
     "capital": "Thimphu",
     "capital_fr": "Thimphou",
-    "lat": 27.5,
-    "lng": 90.5,
+    "lat": 27.47,
+    "lng": 89.63,
     "region": "Asia"
   },
   "Botswana": {
@@ -355,8 +353,8 @@ export const countryDataMap = {
     "name_fr": "Botswana",
     "capital": "Gaborone",
     "capital_fr": "Gaborone",
-    "lat": -22,
-    "lng": 24,
+    "lat": -24.63,
+    "lng": 25.9,
     "region": "Africa"
   },
   "Central African Republic": {
@@ -365,8 +363,8 @@ export const countryDataMap = {
     "name_fr": "République centrafricaine",
     "capital": "Bangui",
     "capital_fr": "Bangui",
-    "lat": 7,
-    "lng": 21,
+    "lat": 4.37,
+    "lng": 18.58,
     "region": "Africa"
   },
   "Canada": {
@@ -375,8 +373,8 @@ export const countryDataMap = {
     "name_fr": "Canada",
     "capital": "Ottawa",
     "capital_fr": "Ottawa",
-    "lat": 60,
-    "lng": -95,
+    "lat": 45.42,
+    "lng": -75.7,
     "region": "Americas"
   },
   "Switzerland": {
@@ -385,8 +383,8 @@ export const countryDataMap = {
     "name_fr": "Suisse",
     "capital": "Bern",
     "capital_fr": "Berne",
-    "lat": 47,
-    "lng": 8,
+    "lat": 46.92,
+    "lng": 7.47,
     "region": "Europe"
   },
   "Chile": {
@@ -395,8 +393,8 @@ export const countryDataMap = {
     "name_fr": "Chili",
     "capital": "Santiago",
     "capital_fr": "Santiago",
-    "lat": -30,
-    "lng": -71,
+    "lat": -33.45,
+    "lng": -70.67,
     "region": "Americas"
   },
   "China": {
@@ -405,8 +403,8 @@ export const countryDataMap = {
     "name_fr": "Chine",
     "capital": "Beijing",
     "capital_fr": "Pékin",
-    "lat": 35,
-    "lng": 105,
+    "lat": 39.92,
+    "lng": 116.38,
     "region": "Asia"
   },
   "Ivory Coast": {
@@ -415,8 +413,8 @@ export const countryDataMap = {
     "name_fr": "Côte d'Ivoire",
     "capital": "Yamoussoukro",
     "capital_fr": "Yamoussoukro",
-    "lat": 8,
-    "lng": -5,
+    "lat": 6.82,
+    "lng": -5.27,
     "region": "Africa"
   },
   "Cameroon": {
@@ -425,8 +423,8 @@ export const countryDataMap = {
     "name_fr": "Cameroun",
     "capital": "Yaoundé",
     "capital_fr": "Yaoundé",
-    "lat": 6,
-    "lng": 12,
+    "lat": 3.85,
+    "lng": 11.5,
     "region": "Africa"
   },
   "Democratic Republic of the Congo": {
@@ -435,8 +433,8 @@ export const countryDataMap = {
     "name_fr": "République Démocratique du Congo",
     "capital": "Kinshasa",
     "capital_fr": "Kinshasa",
-    "lat": 0,
-    "lng": 25,
+    "lat": -4.32,
+    "lng": 15.3,
     "region": "Africa"
   },
   "Republic of the Congo": {
@@ -445,8 +443,8 @@ export const countryDataMap = {
     "name_fr": "République du Congo",
     "capital": "Brazzaville",
     "capital_fr": "Brazzaville",
-    "lat": -1,
-    "lng": 15,
+    "lat": -4.25,
+    "lng": 15.28,
     "region": "Africa"
   },
   "Cook Islands": {
@@ -455,8 +453,8 @@ export const countryDataMap = {
     "name_fr": "Îles Cook",
     "capital": "Avarua",
     "capital_fr": "Avarua",
-    "lat": -21.23333333,
-    "lng": -159.76666666,
+    "lat": -21.2,
+    "lng": -159.77,
     "region": "Oceania"
   },
   "Colombia": {
@@ -465,8 +463,8 @@ export const countryDataMap = {
     "name_fr": "Colombie",
     "capital": "Bogotá",
     "capital_fr": "Bogota",
-    "lat": 4,
-    "lng": -72,
+    "lat": 4.71,
+    "lng": -74.07,
     "region": "Americas"
   },
   "Comoros": {
@@ -475,8 +473,8 @@ export const countryDataMap = {
     "name_fr": "Comores",
     "capital": "Moroni",
     "capital_fr": "Moroni",
-    "lat": -12.16666666,
-    "lng": 44.25,
+    "lat": -11.7,
+    "lng": 43.23,
     "region": "Africa"
   },
   "Cabo Verde": {
@@ -485,8 +483,8 @@ export const countryDataMap = {
     "name_fr": "Cap-Vert",
     "capital": "Praia",
     "capital_fr": "Praia",
-    "lat": 16,
-    "lng": -24,
+    "lat": 14.92,
+    "lng": -23.52,
     "region": "Africa"
   },
   "Costa Rica": {
@@ -495,8 +493,8 @@ export const countryDataMap = {
     "name_fr": "Costa Rica",
     "capital": "San José",
     "capital_fr": "San José",
-    "lat": 10,
-    "lng": -84,
+    "lat": 9.93,
+    "lng": -84.09,
     "region": "Americas"
   },
   "Cuba": {
@@ -505,8 +503,8 @@ export const countryDataMap = {
     "name_fr": "Cuba",
     "capital": "Havana",
     "capital_fr": "La Havane",
-    "lat": 21.5,
-    "lng": -80,
+    "lat": 23.12,
+    "lng": -82.35,
     "region": "Americas"
   },
   "Curaçao": {
@@ -515,8 +513,8 @@ export const countryDataMap = {
     "name_fr": "Curaçao",
     "capital": "Willemstad",
     "capital_fr": "Willemstad",
-    "lat": 12.116667,
-    "lng": -68.933333,
+    "lat": 12.1,
+    "lng": -68.92,
     "region": "Americas"
   },
   "Cayman Islands": {
@@ -525,8 +523,8 @@ export const countryDataMap = {
     "name_fr": "Îles Caïmans",
     "capital": "George Town",
     "capital_fr": "George Town",
-    "lat": 19.5,
-    "lng": -80.5,
+    "lat": 19.3,
+    "lng": -81.38,
     "region": "Americas"
   },
   "Cyprus": {
@@ -535,8 +533,8 @@ export const countryDataMap = {
     "name_fr": "Chypre",
     "capital": "Nicosia",
     "capital_fr": "Nicosie",
-    "lat": 35,
-    "lng": 33,
+    "lat": 35.17,
+    "lng": 33.37,
     "region": "Europe"
   },
   "Czechia": {
@@ -545,8 +543,8 @@ export const countryDataMap = {
     "name_fr": "Tchéquie",
     "capital": "Prague",
     "capital_fr": "Prague",
-    "lat": 49.75,
-    "lng": 15.5,
+    "lat": 50.08,
+    "lng": 14.47,
     "region": "Europe"
   },
   "Germany": {
@@ -555,8 +553,8 @@ export const countryDataMap = {
     "name_fr": "Allemagne",
     "capital": "Berlin",
     "capital_fr": "Berlin",
-    "lat": 51,
-    "lng": 9,
+    "lat": 52.52,
+    "lng": 13.4,
     "region": "Europe"
   },
   "Djibouti": {
@@ -565,8 +563,8 @@ export const countryDataMap = {
     "name_fr": "Djibouti",
     "capital": "Djibouti",
     "capital_fr": "Djibouti",
-    "lat": 11.5,
-    "lng": 43,
+    "lat": 11.58,
+    "lng": 43.15,
     "region": "Africa"
   },
   "Dominica": {
@@ -575,8 +573,8 @@ export const countryDataMap = {
     "name_fr": "Dominique",
     "capital": "Roseau",
     "capital_fr": "Roseau",
-    "lat": 15.41666666,
-    "lng": -61.33333333,
+    "lat": 15.3,
+    "lng": -61.4,
     "region": "Americas"
   },
   "Denmark": {
@@ -585,8 +583,8 @@ export const countryDataMap = {
     "name_fr": "Danemark",
     "capital": "Copenhagen",
     "capital_fr": "Copenhague",
-    "lat": 56,
-    "lng": 10,
+    "lat": 55.67,
+    "lng": 12.58,
     "region": "Europe"
   },
   "Dominican Republic": {
@@ -595,8 +593,8 @@ export const countryDataMap = {
     "name_fr": "République dominicaine",
     "capital": "Santo Domingo",
     "capital_fr": "Saint-Domingue",
-    "lat": 19,
-    "lng": -70.66666666,
+    "lat": 18.47,
+    "lng": -69.9,
     "region": "Americas"
   },
   "Algeria": {
@@ -605,8 +603,8 @@ export const countryDataMap = {
     "name_fr": "Algérie",
     "capital": "Algiers",
     "capital_fr": "Alger",
-    "lat": 28,
-    "lng": 3,
+    "lat": 36.75,
+    "lng": 3.05,
     "region": "Africa"
   },
   "Ecuador": {
@@ -615,8 +613,8 @@ export const countryDataMap = {
     "name_fr": "Équateur",
     "capital": "Quito",
     "capital_fr": "Quito",
-    "lat": -2,
-    "lng": -77.5,
+    "lat": -0.22,
+    "lng": -78.5,
     "region": "Americas"
   },
   "Egypt": {
@@ -625,8 +623,8 @@ export const countryDataMap = {
     "name_fr": "Égypte",
     "capital": "Cairo",
     "capital_fr": "Le Caire",
-    "lat": 27,
-    "lng": 30,
+    "lat": 30.05,
+    "lng": 31.25,
     "region": "Africa"
   },
   "Eritrea": {
@@ -635,8 +633,8 @@ export const countryDataMap = {
     "name_fr": "Érythrée",
     "capital": "Asmara",
     "capital_fr": "Asmara",
-    "lat": 15,
-    "lng": 39,
+    "lat": 15.33,
+    "lng": 38.93,
     "region": "Africa"
   },
   "Spain": {
@@ -645,8 +643,8 @@ export const countryDataMap = {
     "name_fr": "Espagne",
     "capital": "Madrid",
     "capital_fr": "Madrid",
-    "lat": 40,
-    "lng": -4,
+    "lat": 40.4,
+    "lng": -3.68,
     "region": "Europe"
   },
   "Estonia": {
@@ -655,8 +653,8 @@ export const countryDataMap = {
     "name_fr": "Estonie",
     "capital": "Tallinn",
     "capital_fr": "Tallinn",
-    "lat": 59,
-    "lng": 26,
+    "lat": 59.43,
+    "lng": 24.72,
     "region": "Europe"
   },
   "Ethiopia": {
@@ -665,8 +663,8 @@ export const countryDataMap = {
     "name_fr": "Éthiopie",
     "capital": "Addis Ababa",
     "capital_fr": "Addis-Abeba",
-    "lat": 8,
-    "lng": 38,
+    "lat": 9.03,
+    "lng": 38.7,
     "region": "Africa"
   },
   "Finland": {
@@ -675,8 +673,8 @@ export const countryDataMap = {
     "name_fr": "Finlande",
     "capital": "Helsinki",
     "capital_fr": "Helsinki",
-    "lat": 64,
-    "lng": 26,
+    "lat": 60.17,
+    "lng": 24.93,
     "region": "Europe"
   },
   "Fiji": {
@@ -685,8 +683,8 @@ export const countryDataMap = {
     "name_fr": "Fidji",
     "capital": "Suva",
     "capital_fr": "Suva",
-    "lat": -18,
-    "lng": 175,
+    "lat": -18.13,
+    "lng": 178.42,
     "region": "Oceania"
   },
   "Falkland Islands": {
@@ -695,18 +693,18 @@ export const countryDataMap = {
     "name_fr": "Îles Malouines",
     "capital": "Stanley",
     "capital_fr": "Stanley",
-    "lat": -51.75,
-    "lng": -59,
+    "lat": -51.7,
+    "lng": -57.85,
     "region": "Americas"
   },
   "France": {
-    "iso2": "-99",
+    "iso2": "FR",
     "name_en": "France",
     "name_fr": "France",
     "capital": "Paris",
     "capital_fr": "Paris",
-    "lat": 46,
-    "lng": 2,
+    "lat": 48.8566,
+    "lng": 2.3522,
     "region": "Europe"
   },
   "Faroe Islands": {
@@ -715,8 +713,8 @@ export const countryDataMap = {
     "name_fr": "Îles Féroé",
     "capital": "Tórshavn",
     "capital_fr": "Tórshavn",
-    "lat": 62,
-    "lng": -7,
+    "lat": 62.01,
+    "lng": -6.77,
     "region": "Europe"
   },
   "Federated States of Micronesia": {
@@ -725,8 +723,8 @@ export const countryDataMap = {
     "name_fr": "Micronésie",
     "capital": "Palikir",
     "capital_fr": "Palikir",
-    "lat": 6.91666666,
-    "lng": 158.25,
+    "lat": 6.92,
+    "lng": 158.15,
     "region": "Oceania"
   },
   "Gabon": {
@@ -735,8 +733,8 @@ export const countryDataMap = {
     "name_fr": "Gabon",
     "capital": "Libreville",
     "capital_fr": "Libreville",
-    "lat": -1,
-    "lng": 11.75,
+    "lat": 0.38,
+    "lng": 9.45,
     "region": "Africa"
   },
   "United Kingdom": {
@@ -745,8 +743,8 @@ export const countryDataMap = {
     "name_fr": "Royaume-Uni",
     "capital": "London",
     "capital_fr": "Londres",
-    "lat": 54,
-    "lng": -2,
+    "lat": 51.5,
+    "lng": -0.08,
     "region": "Europe"
   },
   "Georgia": {
@@ -755,8 +753,8 @@ export const countryDataMap = {
     "name_fr": "Géorgie",
     "capital": "Tbilisi",
     "capital_fr": "Tbilissi",
-    "lat": 42,
-    "lng": 43.5,
+    "lat": 41.68,
+    "lng": 44.83,
     "region": "Asia"
   },
   "Guernsey": {
@@ -765,8 +763,8 @@ export const countryDataMap = {
     "name_fr": "Guernesey",
     "capital": "St. Peter Port",
     "capital_fr": "St. Peter Port",
-    "lat": 49.46666666,
-    "lng": -2.58333333,
+    "lat": 49.45,
+    "lng": -2.54,
     "region": "Europe"
   },
   "Ghana": {
@@ -775,8 +773,8 @@ export const countryDataMap = {
     "name_fr": "Ghana",
     "capital": "Accra",
     "capital_fr": "Accra",
-    "lat": 8,
-    "lng": -2,
+    "lat": 5.55,
+    "lng": -0.22,
     "region": "Africa"
   },
   "Guinea": {
@@ -785,8 +783,8 @@ export const countryDataMap = {
     "name_fr": "Guinée",
     "capital": "Conakry",
     "capital_fr": "Conakry",
-    "lat": 11,
-    "lng": -10,
+    "lat": 9.5,
+    "lng": -13.7,
     "region": "Africa"
   },
   "Gambia": {
@@ -795,8 +793,8 @@ export const countryDataMap = {
     "name_fr": "Gambie",
     "capital": "Banjul",
     "capital_fr": "Banjul",
-    "lat": 13.46666666,
-    "lng": -16.56666666,
+    "lat": 13.45,
+    "lng": -16.57,
     "region": "Africa"
   },
   "Guinea-Bissau": {
@@ -805,18 +803,18 @@ export const countryDataMap = {
     "name_fr": "Guinée-Bissau",
     "capital": "Bissau",
     "capital_fr": "Bissau",
-    "lat": 12,
-    "lng": -15,
+    "lat": 11.85,
+    "lng": -15.58,
     "region": "Africa"
   },
   "Equatorial Guinea": {
     "iso2": "GQ",
     "name_en": "Equatorial Guinea",
     "name_fr": "Guinée équatoriale",
-    "capital": "Malabo",
-    "capital_fr": "Malabo",
-    "lat": 2,
-    "lng": 10,
+    "capital": "Ciudad de la Paz",
+    "capital_fr": "Ciudad de la Paz",
+    "lat": 1.35,
+    "lng": 10.49,
     "region": "Africa"
   },
   "Greece": {
@@ -825,8 +823,8 @@ export const countryDataMap = {
     "name_fr": "Grèce",
     "capital": "Athens",
     "capital_fr": "Athènes",
-    "lat": 39,
-    "lng": 22,
+    "lat": 37.98,
+    "lng": 23.73,
     "region": "Europe"
   },
   "Grenada": {
@@ -835,8 +833,8 @@ export const countryDataMap = {
     "name_fr": "Grenade",
     "capital": "St. George's",
     "capital_fr": "Saint-Georges",
-    "lat": 12.11666666,
-    "lng": -61.66666666,
+    "lat": 32.38,
+    "lng": -64.68,
     "region": "Americas"
   },
   "Greenland": {
@@ -845,8 +843,8 @@ export const countryDataMap = {
     "name_fr": "Groenland",
     "capital": "Nuuk",
     "capital_fr": "Nuuk",
-    "lat": 72,
-    "lng": -40,
+    "lat": 64.18,
+    "lng": -51.75,
     "region": "Americas"
   },
   "Guatemala": {
@@ -855,8 +853,8 @@ export const countryDataMap = {
     "name_fr": "Guatemala",
     "capital": "Guatemala City",
     "capital_fr": "Guatemala",
-    "lat": 15.5,
-    "lng": -90.25,
+    "lat": 14.62,
+    "lng": -90.52,
     "region": "Americas"
   },
   "Guam": {
@@ -865,8 +863,8 @@ export const countryDataMap = {
     "name_fr": "Guam",
     "capital": "Hagåtña",
     "capital_fr": "Hagåtña",
-    "lat": 13.46666666,
-    "lng": 144.78333333,
+    "lat": 13.48,
+    "lng": 144.75,
     "region": "Oceania"
   },
   "Guyana": {
@@ -875,8 +873,8 @@ export const countryDataMap = {
     "name_fr": "Guyana",
     "capital": "Georgetown",
     "capital_fr": "Georgetown",
-    "lat": 5,
-    "lng": -59,
+    "lat": 6.8,
+    "lng": -58.15,
     "region": "Americas"
   },
   "Hong Kong S.A.R.": {
@@ -893,8 +891,6 @@ export const countryDataMap = {
     "iso2": "HM",
     "name_en": "Heard Island and McDonald Islands",
     "name_fr": "Îles Heard-et-MacDonald",
-    "lat": -53.1,
-    "lng": 72.51666666,
     "region": "Antarctic"
   },
   "Honduras": {
@@ -903,8 +899,8 @@ export const countryDataMap = {
     "name_fr": "Honduras",
     "capital": "Tegucigalpa",
     "capital_fr": "Tegucigalpa",
-    "lat": 15,
-    "lng": -86.5,
+    "lat": 14.1,
+    "lng": -87.22,
     "region": "Americas"
   },
   "Croatia": {
@@ -913,8 +909,8 @@ export const countryDataMap = {
     "name_fr": "Croatie",
     "capital": "Zagreb",
     "capital_fr": "Zagreb",
-    "lat": 45.16666666,
-    "lng": 15.5,
+    "lat": 45.8,
+    "lng": 16,
     "region": "Europe"
   },
   "Haiti": {
@@ -923,8 +919,8 @@ export const countryDataMap = {
     "name_fr": "Haïti",
     "capital": "Port-au-Prince",
     "capital_fr": "Port-au-Prince",
-    "lat": 19,
-    "lng": -72.41666666,
+    "lat": 18.53,
+    "lng": -72.33,
     "region": "Americas"
   },
   "Hungary": {
@@ -933,8 +929,8 @@ export const countryDataMap = {
     "name_fr": "Hongrie",
     "capital": "Budapest",
     "capital_fr": "Budapest",
-    "lat": 47,
-    "lng": 20,
+    "lat": 47.5,
+    "lng": 19.08,
     "region": "Europe"
   },
   "Indonesia": {
@@ -943,8 +939,8 @@ export const countryDataMap = {
     "name_fr": "Indonésie",
     "capital": "Jakarta",
     "capital_fr": "Jakarta",
-    "lat": -5,
-    "lng": 120,
+    "lat": -6.17,
+    "lng": 106.82,
     "region": "Asia"
   },
   "Isle of Man": {
@@ -953,8 +949,8 @@ export const countryDataMap = {
     "name_fr": "Île de Man",
     "capital": "Douglas",
     "capital_fr": "Douglas",
-    "lat": 54.25,
-    "lng": -4.5,
+    "lat": 54.15,
+    "lng": -4.48,
     "region": "Europe"
   },
   "India": {
@@ -963,8 +959,8 @@ export const countryDataMap = {
     "name_fr": "Inde",
     "capital": "New Delhi",
     "capital_fr": "New Delhi",
-    "lat": 20,
-    "lng": 77,
+    "lat": 28.6,
+    "lng": 77.2,
     "region": "Asia"
   },
   "British Indian Ocean Territory": {
@@ -973,8 +969,8 @@ export const countryDataMap = {
     "name_fr": "Territoire britannique de l'océan Indien",
     "capital": "Diego Garcia",
     "capital_fr": "Diego Garcia",
-    "lat": -6,
-    "lng": 71.5,
+    "lat": -7.3,
+    "lng": 72.4,
     "region": "Africa"
   },
   "Ireland": {
@@ -983,8 +979,8 @@ export const countryDataMap = {
     "name_fr": "Irlande",
     "capital": "Dublin",
     "capital_fr": "Dublin",
-    "lat": 53,
-    "lng": -8,
+    "lat": 53.32,
+    "lng": -6.23,
     "region": "Europe"
   },
   "Iran": {
@@ -993,8 +989,8 @@ export const countryDataMap = {
     "name_fr": "Iran",
     "capital": "Tehran",
     "capital_fr": "Téhéran",
-    "lat": 32,
-    "lng": 53,
+    "lat": 35.7,
+    "lng": 51.42,
     "region": "Asia"
   },
   "Iraq": {
@@ -1003,8 +999,8 @@ export const countryDataMap = {
     "name_fr": "Irak",
     "capital": "Baghdad",
     "capital_fr": "Bagdad",
-    "lat": 33,
-    "lng": 44,
+    "lat": 33.33,
+    "lng": 44.4,
     "region": "Asia"
   },
   "Iceland": {
@@ -1013,8 +1009,8 @@ export const countryDataMap = {
     "name_fr": "Islande",
     "capital": "Reykjavik",
     "capital_fr": "Reykjavik",
-    "lat": 65,
-    "lng": -18,
+    "lat": 64.15,
+    "lng": -21.95,
     "region": "Europe"
   },
   "Israel": {
@@ -1023,8 +1019,8 @@ export const countryDataMap = {
     "name_fr": "Israël",
     "capital": "Jerusalem",
     "capital_fr": "Jérusalem",
-    "lat": 31.47,
-    "lng": 35.13,
+    "lat": 31.77,
+    "lng": 35.23,
     "region": "Asia"
   },
   "Italy": {
@@ -1033,8 +1029,8 @@ export const countryDataMap = {
     "name_fr": "Italie",
     "capital": "Rome",
     "capital_fr": "Rome",
-    "lat": 42.83333333,
-    "lng": 12.83333333,
+    "lat": 41.9,
+    "lng": 12.48,
     "region": "Europe"
   },
   "Jamaica": {
@@ -1043,8 +1039,8 @@ export const countryDataMap = {
     "name_fr": "Jamaïque",
     "capital": "Kingston",
     "capital_fr": "Kingston",
-    "lat": 18.25,
-    "lng": -77.5,
+    "lat": 17.99702,
+    "lng": -76.79358,
     "region": "Americas"
   },
   "Jersey": {
@@ -1053,8 +1049,8 @@ export const countryDataMap = {
     "name_fr": "Jersey",
     "capital": "Saint Helier",
     "capital_fr": "Saint Helier",
-    "lat": 49.25,
-    "lng": -2.16666666,
+    "lat": 49.18,
+    "lng": -2.1,
     "region": "Europe"
   },
   "Jordan": {
@@ -1063,8 +1059,8 @@ export const countryDataMap = {
     "name_fr": "Jordanie",
     "capital": "Amman",
     "capital_fr": "Amman",
-    "lat": 31,
-    "lng": 36,
+    "lat": 31.95,
+    "lng": 35.93,
     "region": "Asia"
   },
   "Japan": {
@@ -1073,8 +1069,8 @@ export const countryDataMap = {
     "name_fr": "Japon",
     "capital": "Tokyo",
     "capital_fr": "Tokyo",
-    "lat": 36,
-    "lng": 138,
+    "lat": 35.68,
+    "lng": 139.75,
     "region": "Asia"
   },
   "Kazakhstan": {
@@ -1083,8 +1079,8 @@ export const countryDataMap = {
     "name_fr": "Kazakhstan",
     "capital": "Astana",
     "capital_fr": "Astana",
-    "lat": 48,
-    "lng": 68,
+    "lat": 51.16,
+    "lng": 71.45,
     "region": "Asia"
   },
   "Kenya": {
@@ -1093,8 +1089,8 @@ export const countryDataMap = {
     "name_fr": "Kenya",
     "capital": "Nairobi",
     "capital_fr": "Nairobi",
-    "lat": 1,
-    "lng": 38,
+    "lat": -1.28,
+    "lng": 36.82,
     "region": "Africa"
   },
   "Kyrgyzstan": {
@@ -1103,8 +1099,8 @@ export const countryDataMap = {
     "name_fr": "Kirghizistan",
     "capital": "Bishkek",
     "capital_fr": "Bichkek",
-    "lat": 41,
-    "lng": 75,
+    "lat": 42.87,
+    "lng": 74.6,
     "region": "Asia"
   },
   "Cambodia": {
@@ -1113,8 +1109,8 @@ export const countryDataMap = {
     "name_fr": "Cambodge",
     "capital": "Phnom Penh",
     "capital_fr": "Phnom Penh",
-    "lat": 13,
-    "lng": 105,
+    "lat": 11.55,
+    "lng": 104.92,
     "region": "Asia"
   },
   "Kiribati": {
@@ -1123,8 +1119,8 @@ export const countryDataMap = {
     "name_fr": "Kiribati",
     "capital": "South Tarawa",
     "capital_fr": "South Tarawa",
-    "lat": 1.41666666,
-    "lng": 173,
+    "lat": 1.33,
+    "lng": 172.98,
     "region": "Oceania"
   },
   "Saint Kitts and Nevis": {
@@ -1133,8 +1129,8 @@ export const countryDataMap = {
     "name_fr": "Saint-Christophe-et-Niévès",
     "capital": "Basseterre",
     "capital_fr": "Basseterre",
-    "lat": 17.33333333,
-    "lng": -62.75,
+    "lat": 17.3,
+    "lng": -62.72,
     "region": "Americas"
   },
   "South Korea": {
@@ -1143,8 +1139,8 @@ export const countryDataMap = {
     "name_fr": "Corée du Sud",
     "capital": "Seoul",
     "capital_fr": "Séoul",
-    "lat": 37,
-    "lng": 127.5,
+    "lat": 37.55,
+    "lng": 126.98,
     "region": "Asia"
   },
   "Kosovo": {
@@ -1153,8 +1149,8 @@ export const countryDataMap = {
     "name_fr": "Kosovo",
     "capital": "Pristina",
     "capital_fr": "Pristina",
-    "lat": 42.666667,
-    "lng": 21.166667,
+    "lat": 42.67,
+    "lng": 21.17,
     "region": "Europe"
   },
   "Kuwait": {
@@ -1163,8 +1159,8 @@ export const countryDataMap = {
     "name_fr": "Koweït",
     "capital": "Kuwait City",
     "capital_fr": "Koweït",
-    "lat": 29.5,
-    "lng": 45.75,
+    "lat": 29.37,
+    "lng": 47.97,
     "region": "Asia"
   },
   "Laos": {
@@ -1173,8 +1169,8 @@ export const countryDataMap = {
     "name_fr": "Laos",
     "capital": "Vientiane",
     "capital_fr": "Vientiane",
-    "lat": 18,
-    "lng": 105,
+    "lat": 17.97,
+    "lng": 102.6,
     "region": "Asia"
   },
   "Lebanon": {
@@ -1183,8 +1179,8 @@ export const countryDataMap = {
     "name_fr": "Liban",
     "capital": "Beirut",
     "capital_fr": "Beyrouth",
-    "lat": 33.83333333,
-    "lng": 35.83333333,
+    "lat": 33.87,
+    "lng": 35.5,
     "region": "Asia"
   },
   "Liberia": {
@@ -1193,8 +1189,8 @@ export const countryDataMap = {
     "name_fr": "Liberia",
     "capital": "Monrovia",
     "capital_fr": "Monrovia",
-    "lat": 6.5,
-    "lng": -9.5,
+    "lat": 6.3,
+    "lng": -10.8,
     "region": "Africa"
   },
   "Libya": {
@@ -1203,8 +1199,8 @@ export const countryDataMap = {
     "name_fr": "Libye",
     "capital": "Tripoli",
     "capital_fr": "Tripoli",
-    "lat": 25,
-    "lng": 17,
+    "lat": 32.88,
+    "lng": 13.17,
     "region": "Africa"
   },
   "Saint Lucia": {
@@ -1213,8 +1209,8 @@ export const countryDataMap = {
     "name_fr": "Sainte-Lucie",
     "capital": "Castries",
     "capital_fr": "Castries",
-    "lat": 13.88333333,
-    "lng": -60.96666666,
+    "lat": 14,
+    "lng": -61,
     "region": "Americas"
   },
   "Liechtenstein": {
@@ -1223,18 +1219,18 @@ export const countryDataMap = {
     "name_fr": "Liechtenstein",
     "capital": "Vaduz",
     "capital_fr": "Vaduz",
-    "lat": 47.26666666,
-    "lng": 9.53333333,
+    "lat": 47.13,
+    "lng": 9.52,
     "region": "Europe"
   },
   "Sri Lanka": {
     "iso2": "LK",
     "name_en": "Sri Lanka",
     "name_fr": "Sri Lanka",
-    "capital": "Colombo",
-    "capital_fr": "Colombo",
-    "lat": 7,
-    "lng": 81,
+    "capital": "Sri Jayawardenepura Kotte",
+    "capital_fr": "Sri Jayawardenepura Kotte",
+    "lat": 6.89,
+    "lng": 79.9,
     "region": "Asia"
   },
   "Lesotho": {
@@ -1243,8 +1239,8 @@ export const countryDataMap = {
     "name_fr": "Lesotho",
     "capital": "Maseru",
     "capital_fr": "Maseru",
-    "lat": -29.5,
-    "lng": 28.5,
+    "lat": -29.32,
+    "lng": 27.48,
     "region": "Africa"
   },
   "Lithuania": {
@@ -1253,8 +1249,8 @@ export const countryDataMap = {
     "name_fr": "Lituanie",
     "capital": "Vilnius",
     "capital_fr": "Vilnius",
-    "lat": 56,
-    "lng": 24,
+    "lat": 54.68,
+    "lng": 25.32,
     "region": "Europe"
   },
   "Luxembourg": {
@@ -1263,8 +1259,8 @@ export const countryDataMap = {
     "name_fr": "Luxembourg",
     "capital": "Luxembourg",
     "capital_fr": "Luxembourg",
-    "lat": 49.75,
-    "lng": 6.16666666,
+    "lat": 49.6,
+    "lng": 6.12,
     "region": "Europe"
   },
   "Latvia": {
@@ -1273,16 +1269,14 @@ export const countryDataMap = {
     "name_fr": "Lettonie",
     "capital": "Riga",
     "capital_fr": "Riga",
-    "lat": 57,
-    "lng": 25,
+    "lat": 56.95,
+    "lng": 24.1,
     "region": "Europe"
   },
   "Macao S.A.R": {
     "iso2": "MO",
     "name_en": "Macau",
     "name_fr": "Macao",
-    "lat": 22.16666666,
-    "lng": 113.55,
     "region": "Asia"
   },
   "Saint Martin": {
@@ -1291,8 +1285,8 @@ export const countryDataMap = {
     "name_fr": "Saint-Martin",
     "capital": "Marigot",
     "capital_fr": "Marigot",
-    "lat": 18.08333333,
-    "lng": -63.95,
+    "lat": 18.07,
+    "lng": -63.08,
     "region": "Americas"
   },
   "Morocco": {
@@ -1301,8 +1295,8 @@ export const countryDataMap = {
     "name_fr": "Maroc",
     "capital": "Rabat",
     "capital_fr": "Rabat",
-    "lat": 32,
-    "lng": -5,
+    "lat": 34.02,
+    "lng": -6.82,
     "region": "Africa"
   },
   "Monaco": {
@@ -1311,8 +1305,8 @@ export const countryDataMap = {
     "name_fr": "Monaco",
     "capital": "Monaco",
     "capital_fr": "Monaco",
-    "lat": 43.73333333,
-    "lng": 7.4,
+    "lat": 43.73,
+    "lng": 7.42,
     "region": "Europe"
   },
   "Moldova": {
@@ -1321,8 +1315,8 @@ export const countryDataMap = {
     "name_fr": "Moldavie",
     "capital": "Chișinău",
     "capital_fr": "Chișinău",
-    "lat": 47,
-    "lng": 29,
+    "lat": 47.01,
+    "lng": 28.9,
     "region": "Europe"
   },
   "Madagascar": {
@@ -1331,8 +1325,8 @@ export const countryDataMap = {
     "name_fr": "Madagascar",
     "capital": "Antananarivo",
     "capital_fr": "Antananarivo",
-    "lat": -20,
-    "lng": 47,
+    "lat": -18.92,
+    "lng": 47.52,
     "region": "Africa"
   },
   "Maldives": {
@@ -1341,8 +1335,8 @@ export const countryDataMap = {
     "name_fr": "Maldives",
     "capital": "Malé",
     "capital_fr": "Malé",
-    "lat": 3.25,
-    "lng": 73,
+    "lat": 4.17,
+    "lng": 73.51,
     "region": "Asia"
   },
   "Mexico": {
@@ -1351,8 +1345,8 @@ export const countryDataMap = {
     "name_fr": "Mexique",
     "capital": "Mexico City",
     "capital_fr": "Mexico",
-    "lat": 23,
-    "lng": -102,
+    "lat": 19.43,
+    "lng": -99.13,
     "region": "Americas"
   },
   "Marshall Islands": {
@@ -1361,8 +1355,8 @@ export const countryDataMap = {
     "name_fr": "Îles Marshall",
     "capital": "Majuro",
     "capital_fr": "Majuro",
-    "lat": 9,
-    "lng": 168,
+    "lat": 7.1,
+    "lng": 171.38,
     "region": "Oceania"
   },
   "Macedonia": {
@@ -1371,8 +1365,8 @@ export const countryDataMap = {
     "name_fr": "Macédoine du Nord",
     "capital": "Skopje",
     "capital_fr": "Skopje",
-    "lat": 41.83333333,
-    "lng": 22,
+    "lat": 42,
+    "lng": 21.43,
     "region": "Europe"
   },
   "Mali": {
@@ -1381,8 +1375,8 @@ export const countryDataMap = {
     "name_fr": "Mali",
     "capital": "Bamako",
     "capital_fr": "Bamako",
-    "lat": 17,
-    "lng": -4,
+    "lat": 12.65,
+    "lng": -8,
     "region": "Africa"
   },
   "Malta": {
@@ -1391,8 +1385,8 @@ export const countryDataMap = {
     "name_fr": "Malte",
     "capital": "Valletta",
     "capital_fr": "La Valette",
-    "lat": 35.83333333,
-    "lng": 14.58333333,
+    "lat": 35.88,
+    "lng": 14.5,
     "region": "Europe"
   },
   "Myanmar": {
@@ -1401,8 +1395,8 @@ export const countryDataMap = {
     "name_fr": "Birmanie",
     "capital": "Naypyidaw",
     "capital_fr": "Naypyidaw",
-    "lat": 22,
-    "lng": 98,
+    "lat": 19.76,
+    "lng": 96.07,
     "region": "Asia"
   },
   "Montenegro": {
@@ -1411,8 +1405,8 @@ export const countryDataMap = {
     "name_fr": "Monténégro",
     "capital": "Podgorica",
     "capital_fr": "Podgorica",
-    "lat": 42.5,
-    "lng": 19.3,
+    "lat": 42.43,
+    "lng": 19.27,
     "region": "Europe"
   },
   "Mongolia": {
@@ -1421,8 +1415,8 @@ export const countryDataMap = {
     "name_fr": "Mongolie",
     "capital": "Ulan Bator",
     "capital_fr": "Oulan-Bator",
-    "lat": 46,
-    "lng": 105,
+    "lat": 47.92,
+    "lng": 106.91,
     "region": "Asia"
   },
   "Northern Mariana Islands": {
@@ -1441,8 +1435,8 @@ export const countryDataMap = {
     "name_fr": "Mozambique",
     "capital": "Maputo",
     "capital_fr": "Maputo",
-    "lat": -18.25,
-    "lng": 35,
+    "lat": -25.95,
+    "lng": 32.58,
     "region": "Africa"
   },
   "Mauritania": {
@@ -1451,8 +1445,8 @@ export const countryDataMap = {
     "name_fr": "Mauritanie",
     "capital": "Nouakchott",
     "capital_fr": "Nouakchott",
-    "lat": 20,
-    "lng": -12,
+    "lat": 18.07,
+    "lng": -15.97,
     "region": "Africa"
   },
   "Montserrat": {
@@ -1461,8 +1455,8 @@ export const countryDataMap = {
     "name_fr": "Montserrat",
     "capital": "Plymouth",
     "capital_fr": "Plymouth",
-    "lat": 16.75,
-    "lng": -62.2,
+    "lat": 16.7,
+    "lng": -62.22,
     "region": "Americas"
   },
   "Mauritius": {
@@ -1471,8 +1465,8 @@ export const countryDataMap = {
     "name_fr": "Île Maurice",
     "capital": "Port Louis",
     "capital_fr": "Port-Louis",
-    "lat": -20.28333333,
-    "lng": 57.55,
+    "lat": -20.15,
+    "lng": 57.48,
     "region": "Africa"
   },
   "Malawi": {
@@ -1481,8 +1475,8 @@ export const countryDataMap = {
     "name_fr": "Malawi",
     "capital": "Lilongwe",
     "capital_fr": "Lilongwe",
-    "lat": -13.5,
-    "lng": 34,
+    "lat": -13.97,
+    "lng": 33.78,
     "region": "Africa"
   },
   "Malaysia": {
@@ -1491,8 +1485,8 @@ export const countryDataMap = {
     "name_fr": "Malaisie",
     "capital": "Kuala Lumpur",
     "capital_fr": "Kuala Lumpur",
-    "lat": 2.5,
-    "lng": 112.5,
+    "lat": 3.17,
+    "lng": 101.7,
     "region": "Asia"
   },
   "Namibia": {
@@ -1501,8 +1495,8 @@ export const countryDataMap = {
     "name_fr": "Namibie",
     "capital": "Windhoek",
     "capital_fr": "Windhoek",
-    "lat": -22,
-    "lng": 17,
+    "lat": -22.57,
+    "lng": 17.08,
     "region": "Africa"
   },
   "New Caledonia": {
@@ -1511,8 +1505,8 @@ export const countryDataMap = {
     "name_fr": "Nouvelle-Calédonie",
     "capital": "Nouméa",
     "capital_fr": "Nouméa",
-    "lat": -21.5,
-    "lng": 165.5,
+    "lat": -22.27,
+    "lng": 166.45,
     "region": "Oceania"
   },
   "Niger": {
@@ -1521,8 +1515,8 @@ export const countryDataMap = {
     "name_fr": "Niger",
     "capital": "Niamey",
     "capital_fr": "Niamey",
-    "lat": 16,
-    "lng": 8,
+    "lat": 13.52,
+    "lng": 2.12,
     "region": "Africa"
   },
   "Norfolk Island": {
@@ -1531,8 +1525,8 @@ export const countryDataMap = {
     "name_fr": "Île Norfolk",
     "capital": "Kingston",
     "capital_fr": "Kingston",
-    "lat": -29.03333333,
-    "lng": 167.95,
+    "lat": -29.05,
+    "lng": 167.97,
     "region": "Oceania"
   },
   "Nigeria": {
@@ -1541,8 +1535,8 @@ export const countryDataMap = {
     "name_fr": "Nigéria",
     "capital": "Abuja",
     "capital_fr": "Abuja",
-    "lat": 10,
-    "lng": 8,
+    "lat": 9.08,
+    "lng": 7.53,
     "region": "Africa"
   },
   "Nicaragua": {
@@ -1551,8 +1545,8 @@ export const countryDataMap = {
     "name_fr": "Nicaragua",
     "capital": "Managua",
     "capital_fr": "Managua",
-    "lat": 13,
-    "lng": -85,
+    "lat": 12.13,
+    "lng": -86.25,
     "region": "Americas"
   },
   "Niue": {
@@ -1561,8 +1555,8 @@ export const countryDataMap = {
     "name_fr": "Niue",
     "capital": "Alofi",
     "capital_fr": "Alofi",
-    "lat": -19.03333333,
-    "lng": -169.86666666,
+    "lat": -19.02,
+    "lng": -169.92,
     "region": "Oceania"
   },
   "Netherlands": {
@@ -1571,18 +1565,18 @@ export const countryDataMap = {
     "name_fr": "Pays-Bas",
     "capital": "Amsterdam",
     "capital_fr": "Amsterdam",
-    "lat": 52.5,
-    "lng": 5.75,
+    "lat": 52.35,
+    "lng": 4.92,
     "region": "Europe"
   },
   "Norway": {
-    "iso2": "-99",
+    "iso2": "NO",
     "name_en": "Norway",
     "name_fr": "Norvège",
     "capital": "Oslo",
     "capital_fr": "Oslo",
-    "lat": 62,
-    "lng": 10,
+    "lat": 59.92,
+    "lng": 10.75,
     "region": "Europe"
   },
   "Nepal": {
@@ -1591,8 +1585,8 @@ export const countryDataMap = {
     "name_fr": "Népal",
     "capital": "Kathmandu",
     "capital_fr": "Katmandou",
-    "lat": 28,
-    "lng": 84,
+    "lat": 27.72,
+    "lng": 85.32,
     "region": "Asia"
   },
   "Nauru": {
@@ -1601,8 +1595,8 @@ export const countryDataMap = {
     "name_fr": "Nauru",
     "capital": "Yaren",
     "capital_fr": "Yaren",
-    "lat": -0.53333333,
-    "lng": 166.91666666,
+    "lat": -0.55,
+    "lng": 166.92,
     "region": "Oceania"
   },
   "New Zealand": {
@@ -1611,8 +1605,8 @@ export const countryDataMap = {
     "name_fr": "Nouvelle-Zélande",
     "capital": "Wellington",
     "capital_fr": "Wellington",
-    "lat": -41,
-    "lng": 174,
+    "lat": -41.3,
+    "lng": 174.78,
     "region": "Oceania"
   },
   "Oman": {
@@ -1621,8 +1615,8 @@ export const countryDataMap = {
     "name_fr": "Oman",
     "capital": "Muscat",
     "capital_fr": "Mascate",
-    "lat": 21,
-    "lng": 57,
+    "lat": 23.62,
+    "lng": 58.58,
     "region": "Asia"
   },
   "Pakistan": {
@@ -1631,8 +1625,8 @@ export const countryDataMap = {
     "name_fr": "Pakistan",
     "capital": "Islamabad",
     "capital_fr": "Islamabad",
-    "lat": 30,
-    "lng": 70,
+    "lat": 33.68,
+    "lng": 73.05,
     "region": "Asia"
   },
   "Panama": {
@@ -1641,8 +1635,8 @@ export const countryDataMap = {
     "name_fr": "Panama",
     "capital": "Panama City",
     "capital_fr": "Panama",
-    "lat": 9,
-    "lng": -80,
+    "lat": 8.97,
+    "lng": -79.53,
     "region": "Americas"
   },
   "Pitcairn Islands": {
@@ -1651,8 +1645,8 @@ export const countryDataMap = {
     "name_fr": "Îles Pitcairn",
     "capital": "Adamstown",
     "capital_fr": "Adamstown",
-    "lat": -25.06666666,
-    "lng": -130.1,
+    "lat": -25.07,
+    "lng": -130.08,
     "region": "Oceania"
   },
   "Peru": {
@@ -1661,8 +1655,8 @@ export const countryDataMap = {
     "name_fr": "Pérou",
     "capital": "Lima",
     "capital_fr": "Lima",
-    "lat": -10,
-    "lng": -76,
+    "lat": -12.05,
+    "lng": -77.05,
     "region": "Americas"
   },
   "Philippines": {
@@ -1671,8 +1665,8 @@ export const countryDataMap = {
     "name_fr": "Philippines",
     "capital": "Manila",
     "capital_fr": "Manille",
-    "lat": 13,
-    "lng": 122,
+    "lat": 14.6,
+    "lng": 120.97,
     "region": "Asia"
   },
   "Palau": {
@@ -1682,7 +1676,7 @@ export const countryDataMap = {
     "capital": "Ngerulmud",
     "capital_fr": "Ngerulmud",
     "lat": 7.5,
-    "lng": 134.5,
+    "lng": 134.62,
     "region": "Oceania"
   },
   "Papua New Guinea": {
@@ -1691,8 +1685,8 @@ export const countryDataMap = {
     "name_fr": "Papouasie-Nouvelle-Guinée",
     "capital": "Port Moresby",
     "capital_fr": "Port Moresby",
-    "lat": -6,
-    "lng": 147,
+    "lat": -9.45,
+    "lng": 147.18,
     "region": "Oceania"
   },
   "Poland": {
@@ -1701,8 +1695,8 @@ export const countryDataMap = {
     "name_fr": "Pologne",
     "capital": "Warsaw",
     "capital_fr": "Varsovie",
-    "lat": 52,
-    "lng": 20,
+    "lat": 52.25,
+    "lng": 21,
     "region": "Europe"
   },
   "Puerto Rico": {
@@ -1711,8 +1705,8 @@ export const countryDataMap = {
     "name_fr": "Porto Rico",
     "capital": "San Juan",
     "capital_fr": "San Juan",
-    "lat": 18.25,
-    "lng": -66.5,
+    "lat": 18.47,
+    "lng": -66.12,
     "region": "Americas"
   },
   "North Korea": {
@@ -1721,8 +1715,8 @@ export const countryDataMap = {
     "name_fr": "Corée du Nord",
     "capital": "Pyongyang",
     "capital_fr": "Pyongyang",
-    "lat": 40,
-    "lng": 127,
+    "lat": 39.02,
+    "lng": 125.75,
     "region": "Asia"
   },
   "Portugal": {
@@ -1731,8 +1725,8 @@ export const countryDataMap = {
     "name_fr": "Portugal",
     "capital": "Lisbon",
     "capital_fr": "Lisbonne",
-    "lat": 39.5,
-    "lng": -8,
+    "lat": 38.72,
+    "lng": -9.13,
     "region": "Europe"
   },
   "Paraguay": {
@@ -1741,8 +1735,8 @@ export const countryDataMap = {
     "name_fr": "Paraguay",
     "capital": "Asunción",
     "capital_fr": "Asunción",
-    "lat": -23,
-    "lng": -58,
+    "lat": -25.28,
+    "lng": -57.57,
     "region": "Americas"
   },
   "Palestine": {
@@ -1761,8 +1755,8 @@ export const countryDataMap = {
     "name_fr": "Polynésie française",
     "capital": "Papeetē",
     "capital_fr": "Papeetē",
-    "lat": -15,
-    "lng": -140,
+    "lat": -17.53,
+    "lng": -149.56,
     "region": "Oceania"
   },
   "Qatar": {
@@ -1771,8 +1765,8 @@ export const countryDataMap = {
     "name_fr": "Qatar",
     "capital": "Doha",
     "capital_fr": "Doha",
-    "lat": 25.5,
-    "lng": 51.25,
+    "lat": 25.28,
+    "lng": 51.53,
     "region": "Asia"
   },
   "Romania": {
@@ -1781,8 +1775,8 @@ export const countryDataMap = {
     "name_fr": "Roumanie",
     "capital": "Bucharest",
     "capital_fr": "Bucarest",
-    "lat": 46,
-    "lng": 25,
+    "lat": 44.43,
+    "lng": 26.1,
     "region": "Europe"
   },
   "Russia": {
@@ -1791,8 +1785,8 @@ export const countryDataMap = {
     "name_fr": "Russie",
     "capital": "Moscow",
     "capital_fr": "Moscou",
-    "lat": 60,
-    "lng": 100,
+    "lat": 55.75,
+    "lng": 37.6,
     "region": "Europe"
   },
   "Rwanda": {
@@ -1801,8 +1795,8 @@ export const countryDataMap = {
     "name_fr": "Rwanda",
     "capital": "Kigali",
     "capital_fr": "Kigali",
-    "lat": -2,
-    "lng": 30,
+    "lat": -1.95,
+    "lng": 30.05,
     "region": "Africa"
   },
   "Western Sahara": {
@@ -1811,8 +1805,8 @@ export const countryDataMap = {
     "name_fr": "Sahara Occidental",
     "capital": "El Aaiún",
     "capital_fr": "El Aaiún",
-    "lat": 24.5,
-    "lng": -13,
+    "lat": -13.28,
+    "lng": 27.14,
     "region": "Africa"
   },
   "Saudi Arabia": {
@@ -1821,8 +1815,8 @@ export const countryDataMap = {
     "name_fr": "Arabie Saoudite",
     "capital": "Riyadh",
     "capital_fr": "Riyad",
-    "lat": 25,
-    "lng": 45,
+    "lat": 24.65,
+    "lng": 46.7,
     "region": "Asia"
   },
   "Sudan": {
@@ -1831,8 +1825,8 @@ export const countryDataMap = {
     "name_fr": "Soudan",
     "capital": "Khartoum",
     "capital_fr": "Khartoum",
-    "lat": 15,
-    "lng": 30,
+    "lat": 15.6,
+    "lng": 32.53,
     "region": "Africa"
   },
   "South Sudan": {
@@ -1841,8 +1835,8 @@ export const countryDataMap = {
     "name_fr": "Soudan du Sud",
     "capital": "Juba",
     "capital_fr": "Juba",
-    "lat": 7,
-    "lng": 30,
+    "lat": 4.85,
+    "lng": 31.62,
     "region": "Africa"
   },
   "Senegal": {
@@ -1851,8 +1845,8 @@ export const countryDataMap = {
     "name_fr": "Sénégal",
     "capital": "Dakar",
     "capital_fr": "Dakar",
-    "lat": 14,
-    "lng": -14,
+    "lat": 14.73,
+    "lng": -17.63,
     "region": "Africa"
   },
   "Singapore": {
@@ -1861,8 +1855,8 @@ export const countryDataMap = {
     "name_fr": "Singapour",
     "capital": "Singapore",
     "capital_fr": "Singapour",
-    "lat": 1.36666666,
-    "lng": 103.8,
+    "lat": 1.28,
+    "lng": 103.85,
     "region": "Asia"
   },
   "South Georgia and the Islands": {
@@ -1871,8 +1865,8 @@ export const countryDataMap = {
     "name_fr": "Géorgie du Sud-et-les Îles Sandwich du Sud",
     "capital": "King Edward Point",
     "capital_fr": "King Edward Point",
-    "lat": -54.5,
-    "lng": -37,
+    "lat": -54.28,
+    "lng": -36.5,
     "region": "Antarctic"
   },
   "Saint Helena": {
@@ -1881,7 +1875,7 @@ export const countryDataMap = {
     "name_fr": "Sainte-Hélène, Ascension et Tristan da Cunha",
     "capital": "Jamestown",
     "capital_fr": "Jamestown",
-    "lat": -15.95,
+    "lat": -15.93,
     "lng": -5.72,
     "region": "Africa"
   },
@@ -1891,8 +1885,8 @@ export const countryDataMap = {
     "name_fr": "Îles Salomon",
     "capital": "Honiara",
     "capital_fr": "Honiara",
-    "lat": -8,
-    "lng": 159,
+    "lat": -9.43,
+    "lng": 159.95,
     "region": "Oceania"
   },
   "Sierra Leone": {
@@ -1901,8 +1895,8 @@ export const countryDataMap = {
     "name_fr": "Sierra Leone",
     "capital": "Freetown",
     "capital_fr": "Freetown",
-    "lat": 8.5,
-    "lng": -11.5,
+    "lat": 8.48,
+    "lng": -13.23,
     "region": "Africa"
   },
   "El Salvador": {
@@ -1911,8 +1905,8 @@ export const countryDataMap = {
     "name_fr": "Salvador",
     "capital": "San Salvador",
     "capital_fr": "San Salvador",
-    "lat": 13.83333333,
-    "lng": -88.91666666,
+    "lat": 13.7,
+    "lng": -89.2,
     "region": "Americas"
   },
   "San Marino": {
@@ -1921,8 +1915,8 @@ export const countryDataMap = {
     "name_fr": "Saint-Marin",
     "capital": "City of San Marino",
     "capital_fr": "City of San Marino",
-    "lat": 43.76666666,
-    "lng": 12.41666666,
+    "lat": 43.94,
+    "lng": 12.45,
     "region": "Europe"
   },
   "Somalia": {
@@ -1931,8 +1925,8 @@ export const countryDataMap = {
     "name_fr": "Somalie",
     "capital": "Mogadishu",
     "capital_fr": "Mogadiscio",
-    "lat": 10,
-    "lng": 49,
+    "lat": 2.07,
+    "lng": 45.33,
     "region": "Africa"
   },
   "Saint Pierre and Miquelon": {
@@ -1941,8 +1935,8 @@ export const countryDataMap = {
     "name_fr": "Saint-Pierre-et-Miquelon",
     "capital": "Saint-Pierre",
     "capital_fr": "Saint-Pierre",
-    "lat": 46.83333333,
-    "lng": -56.33333333,
+    "lat": 46.77,
+    "lng": -56.18,
     "region": "Americas"
   },
   "Republic of Serbia": {
@@ -1951,8 +1945,8 @@ export const countryDataMap = {
     "name_fr": "Serbie",
     "capital": "Belgrade",
     "capital_fr": "Belgrade",
-    "lat": 44,
-    "lng": 21,
+    "lat": 44.83,
+    "lng": 20.5,
     "region": "Europe"
   },
   "Sao Tome and Principe": {
@@ -1961,8 +1955,8 @@ export const countryDataMap = {
     "name_fr": "São Tomé et Príncipe",
     "capital": "São Tomé",
     "capital_fr": "São Tomé",
-    "lat": 1,
-    "lng": 7,
+    "lat": 0.34,
+    "lng": 6.73,
     "region": "Africa"
   },
   "Suriname": {
@@ -1971,8 +1965,8 @@ export const countryDataMap = {
     "name_fr": "Surinam",
     "capital": "Paramaribo",
     "capital_fr": "Paramaribo",
-    "lat": 4,
-    "lng": -56,
+    "lat": 5.83,
+    "lng": -55.17,
     "region": "Americas"
   },
   "Slovakia": {
@@ -1981,8 +1975,8 @@ export const countryDataMap = {
     "name_fr": "Slovaquie",
     "capital": "Bratislava",
     "capital_fr": "Bratislava",
-    "lat": 48.66666666,
-    "lng": 19.5,
+    "lat": 48.15,
+    "lng": 17.12,
     "region": "Europe"
   },
   "Slovenia": {
@@ -1991,8 +1985,8 @@ export const countryDataMap = {
     "name_fr": "Slovénie",
     "capital": "Ljubljana",
     "capital_fr": "Ljubljana",
-    "lat": 46.11666666,
-    "lng": 14.81666666,
+    "lat": 46.05,
+    "lng": 14.52,
     "region": "Europe"
   },
   "Sweden": {
@@ -2001,18 +1995,18 @@ export const countryDataMap = {
     "name_fr": "Suède",
     "capital": "Stockholm",
     "capital_fr": "Stockholm",
-    "lat": 62,
-    "lng": 15,
+    "lat": 59.33,
+    "lng": 18.05,
     "region": "Europe"
   },
   "Swaziland": {
     "iso2": "SZ",
     "name_en": "Eswatini",
-    "name_fr": "Eswatini",
-    "capital": "Lobamba",
-    "capital_fr": "Lobamba",
-    "lat": -26.5,
-    "lng": 31.5,
+    "name_fr": "Swaziland",
+    "capital": "Mbabane",
+    "capital_fr": "Mbabane",
+    "lat": -26.32,
+    "lng": 31.13,
     "region": "Africa"
   },
   "Sint Maarten": {
@@ -2021,8 +2015,8 @@ export const countryDataMap = {
     "name_fr": "Saint-Martin",
     "capital": "Philipsburg",
     "capital_fr": "Philipsburg",
-    "lat": 18.033333,
-    "lng": -63.05,
+    "lat": 18.02,
+    "lng": -63.03,
     "region": "Americas"
   },
   "Seychelles": {
@@ -2031,8 +2025,8 @@ export const countryDataMap = {
     "name_fr": "Seychelles",
     "capital": "Victoria",
     "capital_fr": "Victoria",
-    "lat": -4.58333333,
-    "lng": 55.66666666,
+    "lat": -4.62,
+    "lng": 55.45,
     "region": "Africa"
   },
   "Syria": {
@@ -2041,8 +2035,8 @@ export const countryDataMap = {
     "name_fr": "Syrie",
     "capital": "Damascus",
     "capital_fr": "Damas",
-    "lat": 35,
-    "lng": 38,
+    "lat": 33.5,
+    "lng": 36.3,
     "region": "Asia"
   },
   "Turks and Caicos Islands": {
@@ -2051,8 +2045,8 @@ export const countryDataMap = {
     "name_fr": "Îles Turques-et-Caïques",
     "capital": "Cockburn Town",
     "capital_fr": "Cockburn Town",
-    "lat": 21.75,
-    "lng": -71.58333333,
+    "lat": 21.46,
+    "lng": -71.14,
     "region": "Americas"
   },
   "Chad": {
@@ -2061,8 +2055,8 @@ export const countryDataMap = {
     "name_fr": "Tchad",
     "capital": "N'Djamena",
     "capital_fr": "N'Djaména",
-    "lat": 15,
-    "lng": 19,
+    "lat": 12.1,
+    "lng": 15.03,
     "region": "Africa"
   },
   "Togo": {
@@ -2071,8 +2065,8 @@ export const countryDataMap = {
     "name_fr": "Togo",
     "capital": "Lomé",
     "capital_fr": "Lomé",
-    "lat": 8,
-    "lng": 1.16666666,
+    "lat": 6.14,
+    "lng": 1.21,
     "region": "Africa"
   },
   "Thailand": {
@@ -2081,8 +2075,8 @@ export const countryDataMap = {
     "name_fr": "Thaïlande",
     "capital": "Bangkok",
     "capital_fr": "Bangkok",
-    "lat": 15,
-    "lng": 100,
+    "lat": 13.75,
+    "lng": 100.52,
     "region": "Asia"
   },
   "Tajikistan": {
@@ -2091,8 +2085,8 @@ export const countryDataMap = {
     "name_fr": "Tadjikistan",
     "capital": "Dushanbe",
     "capital_fr": "Douchanbé",
-    "lat": 39,
-    "lng": 71,
+    "lat": 38.55,
+    "lng": 68.77,
     "region": "Asia"
   },
   "Turkmenistan": {
@@ -2101,8 +2095,8 @@ export const countryDataMap = {
     "name_fr": "Turkménistan",
     "capital": "Ashgabat",
     "capital_fr": "Achgabat",
-    "lat": 40,
-    "lng": 60,
+    "lat": 37.95,
+    "lng": 58.38,
     "region": "Asia"
   },
   "East Timor": {
@@ -2111,8 +2105,8 @@ export const countryDataMap = {
     "name_fr": "Timor oriental",
     "capital": "Dili",
     "capital_fr": "Dili",
-    "lat": -8.83333333,
-    "lng": 125.91666666,
+    "lat": -8.58,
+    "lng": 125.6,
     "region": "Asia"
   },
   "Tonga": {
@@ -2121,8 +2115,8 @@ export const countryDataMap = {
     "name_fr": "Tonga",
     "capital": "Nuku'alofa",
     "capital_fr": "Nuku'alofa",
-    "lat": -20,
-    "lng": -175,
+    "lat": -21.13,
+    "lng": -175.2,
     "region": "Oceania"
   },
   "Trinidad and Tobago": {
@@ -2131,8 +2125,8 @@ export const countryDataMap = {
     "name_fr": "Trinité-et-Tobago",
     "capital": "Port of Spain",
     "capital_fr": "Port-d'Espagne",
-    "lat": 11,
-    "lng": -61,
+    "lat": 10.65,
+    "lng": -61.52,
     "region": "Americas"
   },
   "Tunisia": {
@@ -2141,18 +2135,18 @@ export const countryDataMap = {
     "name_fr": "Tunisie",
     "capital": "Tunis",
     "capital_fr": "Tunis",
-    "lat": 34,
-    "lng": 9,
+    "lat": 36.8,
+    "lng": 10.18,
     "region": "Africa"
   },
   "Turkey": {
     "iso2": "TR",
-    "name_en": "Türkiye",
+    "name_en": "Turkey",
     "name_fr": "Turquie",
     "capital": "Ankara",
     "capital_fr": "Ankara",
-    "lat": 39,
-    "lng": 35,
+    "lat": 39.93,
+    "lng": 32.87,
     "region": "Asia"
   },
   "Taiwan": {
@@ -2161,8 +2155,8 @@ export const countryDataMap = {
     "name_fr": "Taïwan",
     "capital": "Taipei",
     "capital_fr": "Taipei",
-    "lat": 23.5,
-    "lng": 121,
+    "lat": 25.03,
+    "lng": 121.52,
     "region": "Asia"
   },
   "United Republic of Tanzania": {
@@ -2171,8 +2165,8 @@ export const countryDataMap = {
     "name_fr": "Tanzanie",
     "capital": "Dodoma",
     "capital_fr": "Dodoma",
-    "lat": -6,
-    "lng": 35,
+    "lat": -6.16,
+    "lng": 35.75,
     "region": "Africa"
   },
   "Uganda": {
@@ -2181,8 +2175,8 @@ export const countryDataMap = {
     "name_fr": "Ouganda",
     "capital": "Kampala",
     "capital_fr": "Kampala",
-    "lat": 1,
-    "lng": 32,
+    "lat": 0.32,
+    "lng": 32.55,
     "region": "Africa"
   },
   "Ukraine": {
@@ -2191,8 +2185,8 @@ export const countryDataMap = {
     "name_fr": "Ukraine",
     "capital": "Kyiv",
     "capital_fr": "Kyiv",
-    "lat": 49,
-    "lng": 32,
+    "lat": 50.43,
+    "lng": 30.52,
     "region": "Europe"
   },
   "Uruguay": {
@@ -2201,18 +2195,18 @@ export const countryDataMap = {
     "name_fr": "Uruguay",
     "capital": "Montevideo",
     "capital_fr": "Montevideo",
-    "lat": -33,
-    "lng": -56,
+    "lat": -34.85,
+    "lng": -56.17,
     "region": "Americas"
   },
   "United States of America": {
     "iso2": "US",
     "name_en": "United States",
     "name_fr": "États-Unis",
-    "capital": "Washington D.C.",
+    "capital": "Washington, D.C.",
     "capital_fr": "Washington",
-    "lat": 38,
-    "lng": -97,
+    "lat": 38.89,
+    "lng": -77.05,
     "region": "Americas"
   },
   "Uzbekistan": {
@@ -2221,8 +2215,8 @@ export const countryDataMap = {
     "name_fr": "Ouzbékistan",
     "capital": "Tashkent",
     "capital_fr": "Tachkent",
-    "lat": 41,
-    "lng": 64,
+    "lat": 41.32,
+    "lng": 69.25,
     "region": "Asia"
   },
   "Vatican": {
@@ -2241,8 +2235,8 @@ export const countryDataMap = {
     "name_fr": "Saint-Vincent-et-les-Grenadines",
     "capital": "Kingstown",
     "capital_fr": "Kingstown",
-    "lat": 13.25,
-    "lng": -61.2,
+    "lat": 13.13,
+    "lng": -61.22,
     "region": "Americas"
   },
   "Venezuela": {
@@ -2251,8 +2245,8 @@ export const countryDataMap = {
     "name_fr": "Venezuela",
     "capital": "Caracas",
     "capital_fr": "Caracas",
-    "lat": 8,
-    "lng": -66,
+    "lat": 10.48,
+    "lng": -66.87,
     "region": "Americas"
   },
   "British Virgin Islands": {
@@ -2261,8 +2255,8 @@ export const countryDataMap = {
     "name_fr": "Îles Vierges britanniques",
     "capital": "Road Town",
     "capital_fr": "Road Town",
-    "lat": 18.431383,
-    "lng": -64.62305,
+    "lat": 18.42,
+    "lng": -64.62,
     "region": "Americas"
   },
   "United States Virgin Islands": {
@@ -2272,7 +2266,7 @@ export const countryDataMap = {
     "capital": "Charlotte Amalie",
     "capital_fr": "Charlotte Amalie",
     "lat": 18.35,
-    "lng": -64.933333,
+    "lng": -64.93,
     "region": "Americas"
   },
   "Vietnam": {
@@ -2281,8 +2275,8 @@ export const countryDataMap = {
     "name_fr": "Vietnam",
     "capital": "Hanoi",
     "capital_fr": "Hanoï",
-    "lat": 16.16666666,
-    "lng": 107.83333333,
+    "lat": 21.03,
+    "lng": 105.85,
     "region": "Asia"
   },
   "Vanuatu": {
@@ -2291,8 +2285,8 @@ export const countryDataMap = {
     "name_fr": "Vanuatu",
     "capital": "Port Vila",
     "capital_fr": "Port-Vila",
-    "lat": -16,
-    "lng": 167,
+    "lat": -17.73,
+    "lng": 168.32,
     "region": "Oceania"
   },
   "Wallis and Futuna": {
@@ -2301,8 +2295,8 @@ export const countryDataMap = {
     "name_fr": "Wallis-et-Futuna",
     "capital": "Mata-Utu",
     "capital_fr": "Mata-Utu",
-    "lat": -13.3,
-    "lng": -176.2,
+    "lat": -13.95,
+    "lng": -171.93,
     "region": "Oceania"
   },
   "Samoa": {
@@ -2311,8 +2305,8 @@ export const countryDataMap = {
     "name_fr": "Samoa",
     "capital": "Apia",
     "capital_fr": "Apia",
-    "lat": -13.58333333,
-    "lng": -172.33333333,
+    "lat": -13.82,
+    "lng": -171.77,
     "region": "Oceania"
   },
   "Yemen": {
@@ -2321,8 +2315,8 @@ export const countryDataMap = {
     "name_fr": "Yémen",
     "capital": "Sana'a",
     "capital_fr": "Sana'a",
-    "lat": 15,
-    "lng": 48,
+    "lat": 15.37,
+    "lng": 44.19,
     "region": "Asia"
   },
   "South Africa": {
@@ -2331,8 +2325,8 @@ export const countryDataMap = {
     "name_fr": "Afrique du Sud",
     "capital": "Pretoria",
     "capital_fr": "Pretoria",
-    "lat": -29,
-    "lng": 24,
+    "lat": -25.7,
+    "lng": 28.22,
     "region": "Africa"
   },
   "Zambia": {
@@ -2341,8 +2335,8 @@ export const countryDataMap = {
     "name_fr": "Zambie",
     "capital": "Lusaka",
     "capital_fr": "Lusaka",
-    "lat": -15,
-    "lng": 30,
+    "lat": -15.42,
+    "lng": 28.28,
     "region": "Africa"
   },
   "Zimbabwe": {
@@ -2351,8 +2345,8 @@ export const countryDataMap = {
     "name_fr": "Zimbabwe",
     "capital": "Harare",
     "capital_fr": "Harare",
-    "lat": -20,
-    "lng": 30,
+    "lat": -17.82,
+    "lng": 31.03,
     "region": "Africa"
   }
 };

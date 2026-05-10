@@ -4,11 +4,12 @@ import fs from 'fs';
 async function run() {
   const geo = await fetch('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/50m/cultural/ne_50m_admin_0_countries.json').then(r => r.json());
   
-  const rest = await fetch('https://raw.githubusercontent.com/mledoze/countries/master/countries.json').then(r => r.json());
+  // Use official restcountries.com API for the most accurate and up-to-date data (especially capital coordinates)
+  const rest = await fetch('https://restcountries.com/v3.1/all?fields=name,capital,latlng,capitalInfo,cca2,cca3,translations,region').then(r => r.json());
   
   const restMap = {};
   rest.forEach(c => {
-    restMap[c.cca2] = c;
+    if (c.cca2) restMap[c.cca2] = c;
     if (c.cca3) restMap[c.cca3] = c;
   });
 
@@ -142,8 +143,25 @@ async function run() {
         if (name_fr === "République démocratique du Congo") name_fr = "République Démocratique du Congo";
         if (name_fr === "République du Congo") name_fr = "République du Congo";
 
+        // Use restcountries ISO code primarily to fix flags (e.g. France -99 -> FR)
+        let finalIso2 = match.cca2 || iso2;
+        if (admin === "France") finalIso2 = "FR";
+
+        // Hard fix for French Southern and Antarctic Lands (restcountries has wrong capital latlng)
+        if (admin === "French Southern and Antarctic Lands" || finalIso2 === "TF") {
+           lat = -49.35;
+           lng = 70.21;
+           name_fr = "Terres australes et antarctiques françaises";
+        }
+        
+        // Ensure Paris is perfectly placed
+        if (finalIso2 === "FR") {
+           lat = 48.8566;
+           lng = 2.3522;
+        }
+
         finalMap[admin] = {
-            iso2: iso2,
+            iso2: finalIso2,
             name_en: name_en,
             name_fr: name_fr,
             capital: capital,

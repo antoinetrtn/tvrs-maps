@@ -733,7 +733,7 @@ const GlobeMap = ({
              filter: 'blur(40px)'
            }} />
         </div>
-        <div className="globe-content-wrapper">
+        <div className="globe-content-wrapper" style={{ background: isLight ? '#f1f5f9' : '#020617' }}>
           <Globe
             ref={globeEl}
             width={globeWidth}
@@ -744,7 +744,7 @@ const GlobeMap = ({
             showAtmosphere={!!perfProfile?.showAtmosphere}
             atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
-            backgroundColor="rgba(0,0,0,0)"
+            backgroundColor={isLight ? '#f1f5f9' : '#020617'}
             lineHoverPrecision={0}
             rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
             animateIn={false}
