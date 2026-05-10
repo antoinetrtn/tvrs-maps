@@ -334,7 +334,12 @@ const GlobeMap = ({
       const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
       if (!best || dist < best.dist) best = { admin, dist };
     });
-    if (best && best.dist < 6) selectCountry(best.admin);
+    if (best && best.dist < 6) {
+      selectCountry(best.admin);
+    } else {
+      // Clicked on ocean / far from any country: deselect
+      selectCountry(null);
+    }
   }, [selectableFeatureIndex, selectCountry]);
 
   const handlePointerDown = useCallback((event) => {
