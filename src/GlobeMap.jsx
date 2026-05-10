@@ -757,11 +757,10 @@ const GlobeMap = ({
              position: 'absolute',
              width: '100%',
              height: '100%',
-             backgroundImage: `radial-gradient(${isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'} 1.2px, transparent 0)`,
+             backgroundImage: `radial-gradient(${isLight ? 'rgba(15, 23, 42, 0.25)' : 'rgba(248, 250, 252, 0.18)'} 1.5px, transparent 0)`,
              backgroundSize: '40px 40px',
-             opacity: 0.8
-           }} />
-           {/* Subtle corner glow */}
+             opacity: 1
+           }} />           {/* Subtle corner glow */}
            <div style={{ 
              position: 'absolute', 
              top: '-10%', 
