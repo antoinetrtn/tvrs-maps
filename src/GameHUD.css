@@ -239,7 +239,7 @@
   align-items: center;
   gap: 12px;
   width: 92%;
-  max-width: 600px;
+  max-width: 500px; /* Aligned with central-island-panel */
 }
 
 .bottom-hud-islands {
