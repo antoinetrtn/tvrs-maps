@@ -659,27 +659,27 @@ const GlobeMap = ({
           : 'transparent'
       }}
     >
-        {isLight && (
-          <div className="day-decorations" style={{ position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
-             <div style={{
-               position: 'absolute',
-               width: '100%',
-               height: '100%',
-               backgroundImage: 'radial-gradient(rgba(0,0,0,0.12) 1.2px, transparent 0)',
-               backgroundSize: '40px 40px',
-               opacity: 0.8
-             }} />
-             <div style={{ 
-               position: 'absolute', 
-               top: '-10%', 
-               left: '-10%', 
-               width: '60%', 
-               height: '60%', 
-               background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%)',
-               filter: 'blur(40px)'
-             }} />
-          </div>
-        )}
+        <div className="background-decorations" style={{ position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}>
+           {/* Dotted Grid */}
+           <div style={{
+             position: 'absolute',
+             width: '100%',
+             height: '100%',
+             backgroundImage: `radial-gradient(${isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)'} 1.2px, transparent 0)`,
+             backgroundSize: '40px 40px',
+             opacity: 0.8
+           }} />
+           {/* Subtle corner glow */}
+           <div style={{ 
+             position: 'absolute', 
+             top: '-10%', 
+             left: '-10%', 
+             width: '60%', 
+             height: '60%', 
+             background: `radial-gradient(circle, ${isLight ? 'rgba(255,255,255,0.8)' : 'rgba(58, 118, 240, 0.15)'} 0%, rgba(255,255,255,0) 70%)`,
+             filter: 'blur(40px)'
+           }} />
+        </div>
         <Globe
           ref={globeEl}
           width={globeWidth}
