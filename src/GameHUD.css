@@ -200,19 +200,20 @@
 .island-score {
   display: flex;
   align-items: baseline;
-  gap: 2px;
+  gap: 4px;
 }
 
 .score-current {
   font-weight: 800;
   font-size: 1.1rem;
-  color: var(--text-main);
+  color: var(--accent);
 }
 
 .score-total {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 800;
   color: var(--text-muted);
+  opacity: 0.5;
 }
 
 .island-sub-gauges {
