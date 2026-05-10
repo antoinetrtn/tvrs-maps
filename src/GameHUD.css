@@ -155,6 +155,7 @@
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   transition: all var(--transition-normal);
+  outline: none; /* Remove blue focus ring */
 }
 
 .hud-btn-circular:hover {
