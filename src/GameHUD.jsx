@@ -4,7 +4,7 @@ import './GameHUD.css';
 
 // Check for Speech Recognition API support
 const SpeechRecognition = typeof window !== 'undefined'
-  ? (window.SpeechRecognition || window.webkitRecognition)
+  ? (window.SpeechRecognition || window.webkitSpeechRecognition)
   : null;
 
 const GameHUD = ({
@@ -80,7 +80,10 @@ const GameHUD = ({
 
   const toggleMic = () => {
     if (isListening) {
-      recognitionRef.current = null;
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
       setIsListening(false);
     } else {
       startListening();
@@ -162,7 +165,7 @@ const GameHUD = ({
   return (
     <>
       {!isKeyboardMode && (
-        <>
+        <div className="top-hud-bar">
           <div className="hud-top-left">
             <button className="hud-btn-circular glass-panel" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
               <Home size={18} />
@@ -213,31 +216,34 @@ const GameHUD = ({
               </button>
             )}
           </div>
+        </div>
+      )}
 
-          <div className="hud-bottom-right desktop-only">
-            <div className="island-sub-gauges desktop-only animation-fade-in">
-              {CONTINENT_ORDER.map(reg => {
-                const isActive = activeContinent === reg;
-                const isFaded = activeContinent && activeContinent !== reg;
-                
-                return (
-                  <div 
-                    key={reg} 
-                    className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} 
-                    title={reg}
-                  >
-                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
-                      <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
-                    </div>
+      {/* Desktop Only Gauges in Bottom Right */}
+      {!isKeyboardMode && (
+        <div className="hud-bottom-right desktop-only">
+          <div className="island-sub-gauges animation-fade-in">
+            {CONTINENT_ORDER.map(reg => {
+              const isActive = activeContinent === reg;
+              const isFaded = activeContinent && activeContinent !== reg;
+              
+              return (
+                <div 
+                  key={reg} 
+                  className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} 
+                  title={reg}
+                >
+                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                    <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
                   </div>
-                );
-              })}
-            </div>
-            <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
-              <Info size={18} />
-            </button>
+                </div>
+              );
+            })}
           </div>
-        </>
+          <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
+            <Info size={18} />
+          </button>
+        </div>
       )}
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
