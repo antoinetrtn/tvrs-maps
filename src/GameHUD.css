@@ -116,6 +116,14 @@
 .hud-top-left { left: var(--spacing-lg); }
 .hud-top-right { right: var(--spacing-lg); }
 
+.hud-bottom-right {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  pointer-events: none;
+  z-index: 1000;
+}
+
 .hud-top-center {
   position: fixed;
   top: var(--spacing-lg);

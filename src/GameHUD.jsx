@@ -231,6 +231,12 @@ const GameHUD = ({
               </div>
             )}
           </div>
+
+          <div className="hud-bottom-right">
+            <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
+              <Info size={18} />
+            </button>
+          </div>
         </>
       )}
 
