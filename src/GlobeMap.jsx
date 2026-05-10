@@ -369,8 +369,13 @@ const GlobeMap = ({
     if (moved > 10 || elapsed > 600 || !globeEl.current?.toGlobeCoords) return;
 
     const coords = globeEl.current.toGlobeCoords(event.clientX, event.clientY);
-    if (coords) selectCountryAtLngLat(coords.lng, coords.lat);
-  }, [selectCountryAtLngLat]);
+    if (coords) {
+      selectCountryAtLngLat(coords.lng, coords.lat);
+    } else {
+      // Clicked in space (not on the globe sphere)
+      selectCountry(null);
+    }
+  }, [selectCountryAtLngLat, selectCountry]);
 
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
   const REGION_COLORS_ATTENUATED = useMemo(() => CONTINENT_COLORS_ATTENUATED[theme] || CONTINENT_COLORS_ATTENUATED.dark, [theme]);
