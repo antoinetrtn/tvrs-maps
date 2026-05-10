@@ -98,6 +98,7 @@ const GLOBE_LAYER_ALTITUDE = {
   found: 0.012,
   selected: 0.02
 };
+const SELECTION_TRANSITION_DURATION = 140;
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
   if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected;
@@ -553,13 +554,14 @@ const GlobeMap = ({
           polygonStrokeColor={getPolygonStroke}
           polygonStrokeWidth={getPolygonStrokeWidth}
           polygonAltitudeUpdateMs={0}
-          polygonsTransitionDuration={0}
+          polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
           pointsData={markersData}
           pointLat="lat"
           pointLng="lng"
           pointColor={getPointColor}
           pointRadius={getPointRadius}
           pointAltitude={getPointAltitude}
+          pointsTransitionDuration={SELECTION_TRANSITION_DURATION}
           labelsData={labelsData}
           labelLat={d => d.lat}
           labelLng={d => d.lng}
