@@ -110,8 +110,8 @@ const GLOBE_LAYER_ALTITUDE = {
   label: 0.024
 };
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
-const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = -10;
-const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = -18;
+const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = 0;
+const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
@@ -281,9 +281,19 @@ const GlobeMap = ({
         const keyboardOffsetBoost = isKeyboardOpen
           ? Math.min(8, Math.max(0, keyboardOcclusion - 180) / 30)
           : 0;
-        const latOffset = isKeyboardOpen
+        const baseLatOffset = isKeyboardOpen
           ? MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET - keyboardOffsetBoost
           : (isMobile ? MOBILE_SELECTED_COUNTRY_LAT_OFFSET : 0);
+
+        // Dynamic latOffset based on altitude and aspect ratio to prevent over-shifting on short screens or high zoom.
+        // As altitude decreases (zoom in), the same angular offset results in larger pixel displacement.
+        const altitudeFactor = Math.max(0.2, Math.min(1, preservedAltitude / 1.2));
+        // On "short" screens (aspect > 0.7), vertical space is limited; reduce offset to keep country visible.
+        const aspect = viewport.width / viewport.height;
+        const aspectFactor = aspect > 0.7 ? Math.max(0.1, 1 - (aspect - 0.7) * 2.5) : 1;
+
+        const latOffset = baseLatOffset * altitudeFactor * aspectFactor;
+
         const target = {
           lat: data.lat + latOffset,
           lng: data.lng,
