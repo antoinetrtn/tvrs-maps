@@ -702,6 +702,13 @@ const GlobeMap = ({
     return REGION_COLORS_LABELS[region] || (isLight ? 'rgba(37, 99, 235, 0.6)' : 'rgba(255, 255, 255, 0.5)');
   }, [isError, isLight, UI_COLORS, selectedCountry, REGION_COLORS_LABELS]);
 
+  const handleGlobeClick = useCallback((coords) => {
+    // This event fires whenever the globe is clicked (anywhere on the surface)
+    // We can use it as a robust fallback for deselection if the pointer-up logic didn't hit a country.
+    // However, for space/background clicks, the canvas itself needs to catch the click.
+    selectCountryAtLngLat(coords.lng, coords.lat);
+  }, [selectCountryAtLngLat]);
+
   return (
     <div 
       className={`globe-map-shell ${isHomeScreen ? 'home-layout' : 'game-layout'}`}
@@ -711,6 +718,12 @@ const GlobeMap = ({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => { tapRef.current = null; }}
+      onClick={(e) => {
+        // Fallback for clicks completely outside the globe (in the empty space/background)
+        if (e.target.tagName === 'DIV' && e.target.classList.contains('globe-map-shell')) {
+           selectCountry(null);
+        }
+      }}
       style={{ 
         position: 'fixed', 
         top: isMobileKeyboardOpen ? viewport.top : 0, 
