@@ -120,6 +120,8 @@ function App() {
     const unfoundKeys = allCountryKeys.filter(k => !foundList.includes(k) && countryDataMap[k]?.lat !== undefined);
     if (unfoundKeys.length === 0) return;
 
+    if (!isPlaying) setIsPlaying(true);
+
     let nextIdx;
     if (!selectedCountry) {
       nextIdx = 0;
