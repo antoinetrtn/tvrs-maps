@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home } from 'lucide-react';
+import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home, Play } from 'lucide-react';
 import './GameHUD.css';
 
 // Check for Speech Recognition API support
@@ -190,7 +190,7 @@ const GameHUD = ({
           </div>
 
           <div className="hud-top-right">
-            {isPlaying && !isGameOver && (
+            {isPlaying && !isGameOver ? (
               <button 
                 className="hud-btn-circular glass-panel" 
                 style={{ color: 'var(--error)' }} 
@@ -198,6 +198,15 @@ const GameHUD = ({
                 title={lang === 'fr' ? 'Arrêter' : 'Stop'}
               >
                 <Square size={18} fill="currentColor" />
+              </button>
+            ) : (
+              <button 
+                className="hud-btn-circular glass-panel" 
+                style={{ color: 'var(--success)' }} 
+                onClick={() => onNavigateFocus('next')} 
+                title={lang === 'fr' ? 'Jouer' : 'Play'}
+              >
+                <Play size={18} fill="currentColor" />
               </button>
             )}
           </div>
