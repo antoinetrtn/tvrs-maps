@@ -366,7 +366,7 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
-    if (foundSet.has(admin)) {
+    if (foundSet.has(admin) || mode === 'learn') {
       const baseColor = REGION_COLORS[region] || UI_COLORS.success;
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
@@ -398,24 +398,24 @@ const GlobeMap = ({
     }
     
     // Normal borders: dark version of the base color
-    const baseColor = foundSet.has(admin) 
+    const baseColor = (foundSet.has(admin) || mode === 'learn')
       ? (REGION_COLORS[region] || UI_COLORS.success)
       : UI_COLORS.mapBase;
       
     return lerpColor(baseColor, '#000000', 0.4); 
-  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse]);
+  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode]);
 
   const getPolygonSideColor = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
-    const baseColor = foundSet.has(admin) 
+    const baseColor = (foundSet.has(admin) || mode === 'learn')
       ? (REGION_COLORS[region] || UI_COLORS.success)
       : UI_COLORS.mapBase;
 
     if (admin === selectedCountry) {
       if (isError) return isLight ? '#dc7f7f' : '#991b1b';
       
-      const capColor = foundSet.has(admin)
+      const capColor = (foundSet.has(admin) || mode === 'learn')
         ? lerpColor(REGION_COLORS[region] || UI_COLORS.success, '#ffffff', pulse * 0.4)
         : lerpColor(REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
         
@@ -425,7 +425,7 @@ const GlobeMap = ({
     
     // Regular sides: slightly darkened version (30% blend for a soft relief)
     return lerpColor(baseColor, '#000000', 0.3);
-  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, pulse]);
+  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, pulse, mode]);
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -451,9 +451,10 @@ const GlobeMap = ({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0) return [];
     
-    // We filter based on zoom level and country size
-    // Larger countries stay visible longer (higher zoomLevel/altitude)
-    return foundList
+    // In learn mode, show all countries. In game mode, only found countries.
+    const keysToShow = mode === 'learn' ? Object.keys(countryDataMap) : foundList;
+
+    return keysToShow
       .map(adminKey => {
         const data = countryDataMap[adminKey];
         if (!data) return null;
@@ -600,7 +601,7 @@ const GlobeMap = ({
   }, [countriesWithGeometry, tinyCountries]);
 
   const getPointColor = useCallback((d) => {
-    const isFound = foundSet.has(d.admin);
+    const isFound = foundSet.has(d.admin) || mode === 'learn';
     const isSelected = d.admin === selectedCountry;
     const region = d.region || 'Unknown';
 

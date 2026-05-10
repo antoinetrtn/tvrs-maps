@@ -168,7 +168,7 @@ const GameHUD = ({
   return (
     <>
       <div
-        className={`top-hud-bar ${isKeyboardMode ? 'keyboard-mode' : ''}`}
+        className={`top-hud-bar ${isKeyboardMode ? 'keyboard-mode' : ''} ${mode === 'learn' ? 'learn-mode' : ''}`}
         style={window.innerWidth < 1024 ? {
           top: (viewport?.top || 0) + (isKeyboardMode ? 10 : 24)
         } : {}}
@@ -187,7 +187,9 @@ const GameHUD = ({
             </div>
           </div>
 
-          <div className="hud-top-center">
+          {mode !== 'learn' && (
+            <>
+              <div className="hud-top-center">
             <div className="central-island-panel glass-panel" onClick={onInfo}>
                <div className="island-timer">{formatTime(timeLeft)}</div>
                <div className="island-divider" />
@@ -238,12 +240,14 @@ const GameHUD = ({
                   </div>
                 </div>
               );
-            })}
-          </div>
-      </div>
-
+              })}
+              </div>
+              </>
+              )}
+              </div>
       {/* Desktop Only Gauges in Bottom Right */}
-      <div className={`hud-bottom-right desktop-only ${isKeyboardMode ? 'keyboard-mode' : ''}`}>
+      {mode !== 'learn' && (
+        <div className={`hud-bottom-right desktop-only ${isKeyboardMode ? 'keyboard-mode' : ''}`}>
           <div className="island-sub-gauges animation-fade-in">
             {CONTINENT_ORDER.map(reg => {
               const isActive = activeContinent === reg;
@@ -265,10 +269,11 @@ const GameHUD = ({
           <button className="hud-btn-circular glass-panel" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
             <Info size={18} />
           </button>
-      </div>
+        </div>
+      )}
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
-      {isFocusedCountry && (
+      {isFocusedCountry && mode !== 'learn' && (
         <div className="top-hud-container" style={{ top: (viewport?.top || 0) + 24, left: viewport?.left || 0 }}>
           <div className="top-hud-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
             <div className="focus-info-card animation-fade-in">
@@ -294,82 +299,84 @@ const GameHUD = ({
         </div>
       )}
 
-      <div 
-        className="bottom-hud-container"
-        style={window.innerWidth < 1024 ? {
-          position: 'absolute',
-          bottom: 'auto',
-          top: (viewport.top + viewport.height) - 24,
-          transform: `translate(-50%, -100%)`,
-          left: viewport.left + (viewport.width / 2)
-        } : {}}
-      >
-        {suggestions.length > 0 && (
-          <div className="suggestions-list animation-fade-in">
-            {suggestions.map((s, idx) => (
-              <button 
-                key={idx} 
-                className="suggestion-item" 
-                onPointerDown={(e) => {
-                  e.preventDefault(); // STOPS BLUR
-                  submitSuggestion(s.display);
-                }}
-                type="button"
-              >
-                <span className="sug-text">{s.display}</span>
-                {s.subtext && <small className="sug-sub">({s.subtext})</small>}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="bottom-hud-islands">
-          {isFocusedCountry && (
-            <>
-              <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('prev')}>
-                <ChevronLeft size={18} />
-              </button>
-              <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('next')}>
-                <ChevronRight size={18} />
-              </button>
-            </>
+      {mode !== 'learn' && (
+        <div 
+          className="bottom-hud-container"
+          style={window.innerWidth < 1024 ? {
+            position: 'absolute',
+            bottom: 'auto',
+            top: (viewport.top + viewport.height) - 24,
+            transform: `translate(-50%, -100%)`,
+            left: viewport.left + (viewport.width / 2)
+          } : {}}
+        >
+          {suggestions.length > 0 && (
+            <div className="suggestions-list animation-fade-in">
+              {suggestions.map((s, idx) => (
+                <button 
+                  key={idx} 
+                  className="suggestion-item" 
+                  onPointerDown={(e) => {
+                    e.preventDefault(); // STOPS BLUR
+                    submitSuggestion(s.display);
+                  }}
+                  type="button"
+                >
+                  <span className="sug-text">{s.display}</span>
+                  {s.subtext && <small className="sug-sub">({s.subtext})</small>}
+                </button>
+              ))}
+            </div>
           )}
 
-          <div 
-            className={`input-island glass-panel ${inputError ? 'error' : ''} ${inputWarning ? 'warning' : ''} ${inputSuccess ? 'success' : ''} ${activeContinent ? 'has-continent' : ''}`}
-            style={{ "--continent-color": activeContinent ? REGION_COLORS[activeContinent] : 'transparent' }}
-          >
-            <input
-              ref={extInputRef}
-              type="text"
-              name="quiz-response"
-              id="quiz-response-field"
-              inputMode="text"
-              enterKeyHint="done"
-              placeholder={isListening ? '...' : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))}
-              className="input-field"
-              value={inputValue}
-              onChange={handleTextChange}
-              onKeyDown={handleKeyDown}
-              readOnly={isListening}
-              autoComplete="new-password"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck="false"
-              data-lpignore="true"
-              data-1p-ignore="true"
-              data-form-type="other"
-              aria-label={lang === 'fr' ? 'Réponse du quiz' : 'Quiz answer'}
-            />
-          </div>
+          <div className="bottom-hud-islands">
+            {isFocusedCountry && (
+              <>
+                <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('prev')}>
+                  <ChevronLeft size={18} />
+                </button>
+                <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('next')}>
+                  <ChevronRight size={18} />
+                </button>
+              </>
+            )}
 
-          {SpeechRecognition && (
-            <button className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-            </button>
-          )}
+            <div 
+              className={`input-island glass-panel ${inputError ? 'error' : ''} ${inputWarning ? 'warning' : ''} ${inputSuccess ? 'success' : ''} ${activeContinent ? 'has-continent' : ''}`}
+              style={{ "--continent-color": activeContinent ? REGION_COLORS[activeContinent] : 'transparent' }}
+            >
+              <input
+                ref={extInputRef}
+                type="text"
+                name="quiz-response"
+                id="quiz-response-field"
+                inputMode="text"
+                enterKeyHint="done"
+                placeholder={isListening ? '...' : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))}
+                className="input-field"
+                value={inputValue}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                readOnly={isListening}
+                autoComplete="new-password"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-form-type="other"
+                aria-label={lang === 'fr' ? 'Réponse du quiz' : 'Quiz answer'}
+              />
+            </div>
+
+            {SpeechRecognition && (
+              <button className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

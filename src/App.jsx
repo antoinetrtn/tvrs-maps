@@ -132,7 +132,7 @@ function App() {
     const unfoundKeys = allCountryKeys.filter(k => !foundList.includes(k) && countryDataMap[k]?.lat !== undefined);
     if (unfoundKeys.length === 0) return;
 
-    if (!isPlaying) setIsPlaying(true);
+    if (!isPlaying && mode !== 'learn') setIsPlaying(true);
 
     let nextCountry;
     if (!selectedCountry) {
@@ -289,7 +289,7 @@ function App() {
       return true;
     }
 
-    if (!isPlaying) setIsPlaying(true);
+    if (!isPlaying && mode !== 'learn') setIsPlaying(true);
     if (selectedCountry) return false;
 
     const normalizedInput = normalizeString(inputVal);
@@ -358,7 +358,7 @@ function App() {
     const mapped = countryDataMap[selectedCountry];
     if (!mapped) return false;
 
-    if (!isPlaying) setIsPlaying(true);
+    if (!isPlaying && mode !== 'learn') setIsPlaying(true);
 
     const normalizedInput = normalizeString(inputVal);
     let matchName = lang === 'fr' ? normalizeString(mapped.name_fr) : normalizeString(mapped.name_en);

@@ -20,9 +20,9 @@ const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang }) => {
             <span className="btn-title">{lang === 'fr' ? 'Capitales' : 'Capitals'}</span>
           </button>
 
-          <button className="home-btn mode-learn disabled" disabled title={lang === 'fr' ? 'Bientôt disponible' : 'Coming soon'}>
+          <button className="home-btn mode-learn" onClick={() => onStartGame('learn')}>
             <GraduationCap size={20} />
-            <span className="btn-title">Learn <span className="soon-label">(Soon)</span></span>
+            <span className="btn-title">{lang === 'fr' ? 'Apprendre' : 'Learn'}</span>
           </button>
         </div>
       </div>

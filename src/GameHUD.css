@@ -22,6 +22,10 @@
   will-change: top, transform, opacity;
 }
 
+.top-hud-bar.learn-mode {
+  grid-template-columns: 44px 1fr 44px;
+}
+
 .hud-top-left, .hud-top-right {
   display: flex;
   align-items: center;
