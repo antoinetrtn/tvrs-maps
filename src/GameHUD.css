@@ -239,7 +239,7 @@
   align-items: center;
   gap: 12px;
   width: 92%;
-  max-width: 480px;
+  max-width: 600px;
 }
 
 .bottom-hud-islands {
@@ -321,7 +321,7 @@
 .desktop-only { display: flex !important; }
 .mobile-only { display: none !important; }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .desktop-only { display: none !important; }
   .mobile-only { display: flex !important; }
 
