@@ -327,9 +327,12 @@
   .mobile-only { display: flex !important; }
 
   .top-hud-bar {
-    top: 16px;
-    padding: 0 16px;
-    grid-template-columns: 44px 1fr 44px; /* Fix columns to let center expand */
+    top: var(--spacing-lg); /* Match bottom spacing (24px) */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%; /* Match bottom search bar width */
+    padding: 0;
+    grid-template-columns: 44px 1fr 44px;
     row-gap: 14px;
     column-gap: 8px;
     align-items: center;
