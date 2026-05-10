@@ -314,8 +314,10 @@ const GlobeMap = ({
   }, [selectableCountriesData]);
 
   const selectCountry = useCallback((admin) => {
-    if (admin && countryDataMap[admin] && onCountrySelect) {
-      onCountrySelect(admin);
+    if (onCountrySelect) {
+      if (!admin || countryDataMap[admin]) {
+        onCountrySelect(admin);
+      }
     }
   }, [onCountrySelect]);
 
