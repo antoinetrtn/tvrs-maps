@@ -573,6 +573,7 @@ function App() {
           isPlaying={isPlaying}
           mode={mode}
           theme={theme}
+          lang={lang}
         />
       )}
 
