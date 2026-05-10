@@ -1,0 +1,356 @@
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Globe, MapPin, Info, Play, Square, X, ChevronLeft, ChevronRight, Sun, Moon, Mic, MicOff, Camera, Menu, Layout } from 'lucide-react';
+import './GameHUD.css';
+
+// Check for Speech Recognition API support
+const SpeechRecognition = typeof window !== 'undefined'
+  ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+  : null;
+
+const GameHUD = ({
+  mode, onModeSwitch, lang, setLang, score, totalPossible, timeLeft,
+  onInput, onEnter, isPlaying, isGameOver, onStop, onInfo,
+  isFocusedCountry, onClearFocus, onNavigateFocus, inputError, inputSuccess, inputWarning, extInputRef,
+  foundList, countryDataMap, theme, setTheme, viewport, setLastInteractionType,
+  globeVisualTheme, setGlobeVisualTheme,
+  menuOpen, setMenuOpen, hudSide, setHudSide, isKeyboardMode
+}) => {
+  const [inputValue, setInputValue] = useState('');
+  const [statsOpen, setStatsOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+  
+  // Use a ref to store the latest onEnter callback so the Speech API never uses a stale closure
+  const onEnterRef = useRef(onEnter);
+  useEffect(() => {
+    onEnterRef.current = onEnter;
+  }, [onEnter]);
+
+  const normalizeString = (str) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[-'']/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  };
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const startListening = useCallback(() => {
+    if (!SpeechRecognition) return;
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === 'fr' ? 'fr-FR' : 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    
+    recognition.onstart = () => {
+      setIsListening(true);
+      setLastInteractionType('voice');
+    };
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      let isFinal = false;
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+        if (event.results[i].isFinal) isFinal = true;
+      }
+      
+      const text = transcript.trim();
+      if (text) {
+        // Display the preview instantly in the input field
+        setInputValue(text);
+        if (isFinal) {
+          // Use the REF to ensure we are validating against the currently selected country
+          if (onEnterRef.current && onEnterRef.current(text)) {
+            setInputValue('');
+          }
+        }
+      }
+    };
+
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => {
+      if (recognitionRef.current === recognition && !isGameOver) {
+        try { recognition.start(); } catch(e) {}
+      }
+    };
+    
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, [lang, isGameOver, setLastInteractionType]);
+
+  const toggleMic = () => {
+    if (isListening) {
+      recognitionRef.current = null;
+      setIsListening(false);
+    } else {
+      startListening();
+    }
+  };
+
+  const handleTextChange = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+    setLastInteractionType('manual');
+    if (val.length >= 3) {
+      const normalizedInput = normalizeString(val);
+      const newSuggestions = [];
+      const keysToCheck = Object.keys(countryDataMap || {}).filter(k => !foundList.includes(k));
+      for (const adminKey of keysToCheck) {
+        const mapped = countryDataMap[adminKey];
+        if (!mapped) continue;
+        let nameToMatch = lang === 'fr' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped.name_en || adminKey);
+        let capitalToMatch = lang === 'fr' && mapped.capital_fr ? mapped.capital_fr : (mapped.capital || null);
+        let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
+        if (targetMatch && normalizeString(targetMatch).includes(normalizedInput)) {
+          if (val.length / targetMatch.length >= 0.6) {
+            newSuggestions.push({ key: adminKey, display: targetMatch, subtext: mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital) });
+          }
+        }
+      }
+      setSuggestions(newSuggestions.slice(0, 3));
+    } else setSuggestions([]);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Tab' && suggestions.length > 0) { 
+      e.preventDefault(); 
+      submitSuggestion(suggestions[0].display); 
+    }
+    else if (e.key === 'Enter' && onEnter) {
+      e.preventDefault();
+      if (onEnter(inputValue)) { 
+        setInputValue(''); 
+        setSuggestions([]); 
+      }
+    }
+  };
+
+  const submitSuggestion = (match) => {
+    if (onEnter && onEnter(match)) { 
+      setInputValue(''); 
+      setSuggestions([]);
+      if (extInputRef.current) extInputRef.current.focus();
+    }
+  };
+
+  const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic"];
+  const REGION_COLORS = { "Europe": "#3b82f6", "Americas": "#22c55e", "Asia": "#ef4444", "Africa": "#eab308", "Oceania": "#a855f7", "Antarctic": "#94a3b8" };
+
+  const regionStats = useMemo(() => {
+    if (!countryDataMap) return {};
+    const stats = {};
+    CONTINENT_ORDER.forEach(r => stats[r] = { total: 0, found: 0 });
+    Object.keys(countryDataMap).forEach(k => {
+      const reg = countryDataMap[k]?.region;
+      if (reg && stats[reg]) stats[reg].total++;
+    });
+    if (foundList) foundList.forEach(k => {
+      const reg = countryDataMap[k]?.region;
+      if (reg && stats[reg]) stats[reg].found++;
+    });
+    return stats;
+  }, [foundList, countryDataMap]);
+
+  const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
+
+  return (
+    <>
+      <div className="top-hud-container" style={{ 
+        top: (viewport?.top || 0) + (window.innerWidth < 600 ? 8 : 24), 
+        left: viewport?.left || 0,
+        display: 'flex' // ALWAYS FLEX
+      }}>
+        <div className="top-hud-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
+          {/* Header Panel: Hidden in keyboard mode */}
+          {!isKeyboardMode ? (
+            <div className="glass-panel top-hud-panel">
+              <button 
+                className={`top-box ${statsOpen ? 'active' : ''}`} 
+                onClick={() => { setStatsOpen(!statsOpen); setMenuOpen(false); }} 
+                title={lang === 'fr' ? 'Voir les stats' : 'See stats'}
+              >
+                <span className="top-box-val">{score}</span>
+                <span className="top-box-total">/{totalPossible}</span>
+              </button>
+              
+              <div className="hud-divider" />
+              
+              <div className="hud-time">{formatTime(timeLeft)}</div>
+
+              {isPlaying && !isGameOver && (
+                <button className="toggle-btn stop-top-btn" onClick={onStop} title={lang === 'fr' ? 'Arrêter la partie' : 'Stop game'}>
+                  <Square size={16} fill="currentColor" />
+                </button>
+              )}
+
+              <button 
+                className={`top-box ${menuOpen ? 'active' : ''}`} 
+                onClick={() => { setMenuOpen(!menuOpen); setStatsOpen(false); }} 
+                aria-label="Menu"
+              >
+                <span className="top-box-label">{lang === 'fr' ? 'Menu' : 'Menu'}</span>
+                {menuOpen ? <X size={16} /> : <Menu size={16} />}
+              </button>
+            </div>
+          ) : null}
+
+          {statsOpen && !isKeyboardMode && (
+            <div className="top-stats-dropdown glass-panel animation-fade-in">
+              <div className="stats-header" style={{ marginBottom: '12px' }}>
+                <span className="stats-text">{score}/{totalPossible} {lang === 'fr' ? 'trouvés' : 'found'}</span>
+                <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations de partie' : 'Game information'}>
+                  <Info size={18} />
+                </button>
+              </div>
+              <div className="progress-bar-container" style={{ marginBottom: '16px' }}>
+                <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
+              </div>
+
+              <div className="continent-gauges">
+                {CONTINENT_ORDER.map(reg => (
+                  <div key={reg} className="gauge-item" title={reg}>
+                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                      <span className="gauge-val">{regionStats[reg]?.found}</span>
+                    </div>
+                    <span className="gauge-label">{reg.substring(0, 3)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {menuOpen && !isKeyboardMode && (
+            <div className="top-menu-dropdown glass-panel animation-fade-in">
+              <div className="settings-section">
+                <div className="mode-toggle wide">
+                  <button className={`toggle-btn ${mode === 'countries' ? 'active' : ''}`} onClick={() => onModeSwitch('countries')}>
+                    <Globe size={16} /> {lang === 'fr' ? 'Pays' : 'Countries'}
+                  </button>
+                  <button className={`toggle-btn ${mode === 'capitals' ? 'active' : ''}`} onClick={() => onModeSwitch('capitals')}>
+                    <MapPin size={16} /> {lang === 'fr' ? 'Capitales' : 'Capitals'}
+                  </button>
+                </div>
+
+                <div className="util-btns">
+                  <button className="toggle-btn lang-toggle" onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}>
+                    {lang.toUpperCase()}
+                  </button>
+                  <button className="toggle-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                  </button>
+                  <button className={`toggle-btn ${globeVisualTheme === 'satellite' ? 'active' : ''}`} onClick={() => setGlobeVisualTheme(globeVisualTheme === 'satellite' ? 'minimalist' : 'satellite')}>
+                    <Camera size={18} />
+                  </button>
+                  <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
+                    <Info size={18} />
+                  </button>
+                  {window.innerWidth >= 1024 && (
+                    <button className="toggle-btn" onClick={() => setHudSide(hudSide === 'left' ? 'right' : 'left')} title="Inverser la position">
+                      <Layout size={18} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Focus Badge: Always visible if focused, even with keyboard */}
+          {isFocusedCountry && !menuOpen && (
+            <div className="focus-info-card animation-fade-in">
+              {isKeyboardMode && (
+                <div className="focus-mini-pill">
+                  <span className="focus-mini-val">{score}</span><span className="focus-mini-sub">/{totalPossible}</span>
+                </div>
+              )}
+              <div className="focus-label">
+                <MapPin size={14} className="focus-icon" />
+                <span className="focus-label-text">{mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')}</span>
+                <button className="focus-close-btn" onClick={onClearFocus}>
+                  <X size={14} />
+                </button>
+              </div>
+              {isKeyboardMode && (
+                <div className="focus-mini-pill">
+                  <span className="focus-mini-val">{formatTime(timeLeft)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div 
+        className={`bottom-hud-container hud-${hudSide} ${isFocusedCountry ? 'is-focused' : ''}`}
+        style={window.innerWidth < 1024 ? {
+          position: 'absolute',
+          bottom: 'auto',
+          top: (viewport.top + viewport.height) - (window.innerWidth < 600 ? 12 : 24),
+          transform: `translate(-50%, -100%)`,
+          left: viewport.left + (viewport.width / 2)
+        } : {}}
+      >
+        <div className="glass-panel bottom-hud-panel">
+          {suggestions.length > 0 && (
+            <div className="suggestions-list animation-fade-in">
+              {suggestions.map((s, idx) => (
+                <button 
+                  key={idx} 
+                  className="suggestion-item" 
+                  onPointerDown={(e) => {
+                    e.preventDefault(); // STOPS BLUR
+                    submitSuggestion(s.display);
+                  }}
+                  type="button"
+                >
+                  <span className="sug-text">{s.display}</span>
+                  {s.subtext && <small className="sug-sub">({s.subtext})</small>}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="input-wrap">
+            {isFocusedCountry && (
+              <button className="toggle-btn nav-focus-btn" onClick={() => onNavigateFocus('prev')}><ChevronLeft size={20} /></button>
+            )}
+
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input
+                ref={extInputRef}
+                type="text"
+                name={`q-${Math.floor(Math.random() * 10000)}`}
+                id="q-field"
+                placeholder={isListening ? '🎤...' : (isFocusedCountry ? '?' : '🌍...')}
+                className={`input-field ${inputError ? 'error' : ''} ${inputWarning ? 'warning' : ''} ${inputSuccess ? 'success' : ''}`}
+                value={inputValue}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                readOnly={isListening}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
+                data-lpignore="true"
+              />
+            </div>
+
+            {isFocusedCountry && (
+              <button className="toggle-btn nav-focus-btn" onClick={() => onNavigateFocus('next')}><ChevronRight size={20} /></button>
+            )}
+
+            {SpeechRecognition && (
+              <button className={`mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
+                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default React.memo(GameHUD);
