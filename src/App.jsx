@@ -117,19 +117,23 @@ function App() {
 
   // Navigate to next/previous unfound country in focus mode
   const navigateFocus = useCallback((direction) => {
-    if (!selectedCountry) return;
     const unfoundKeys = allCountryKeys.filter(k => !foundList.includes(k) && countryDataMap[k]?.lat !== undefined);
     if (unfoundKeys.length === 0) return;
 
-    const currentIdx = unfoundKeys.indexOf(selectedCountry);
     let nextIdx;
-    if (currentIdx === -1) {
+    if (!selectedCountry) {
       nextIdx = 0;
-    } else if (direction === 'next') {
-      nextIdx = (currentIdx + 1) % unfoundKeys.length;
     } else {
-      nextIdx = (currentIdx - 1 + unfoundKeys.length) % unfoundKeys.length;
+      const currentIdx = unfoundKeys.indexOf(selectedCountry);
+      if (currentIdx === -1) {
+        nextIdx = 0;
+      } else if (direction === 'next') {
+        nextIdx = (currentIdx + 1) % unfoundKeys.length;
+      } else {
+        nextIdx = (currentIdx - 1 + unfoundKeys.length) % unfoundKeys.length;
+      }
     }
+    
     setSelectedCountry(unfoundKeys[nextIdx]);
     setPopupError(false);
     setPopupWarning(false);
