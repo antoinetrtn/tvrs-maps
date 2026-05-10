@@ -94,9 +94,9 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
 };
 
 const GLOBE_LAYER_ALTITUDE = {
-  base: 0.014,
-  found: 0.014,
-  selected: 0.017
+  base: 0.012,
+  found: 0.012,
+  selected: 0.02
 };
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
@@ -335,6 +335,23 @@ const GlobeMap = ({
     return isLight ? '#86aede' : '#31598d';
   }, [selectedCountry, foundSet, isLight, isError]);
 
+  const getPolygonSideColor = useCallback((d) => {
+    const admin = d.properties.ADMIN;
+    if (admin === selectedCountry) {
+      if (isError) return isLight ? '#dc7f7f' : '#991b1b';
+      return isLight ? '#5b9ce8' : '#2563eb';
+    }
+    if (foundSet.has(admin)) {
+      const region = countryDataMap[admin]?.region;
+      if (region === 'Europe') return isLight ? '#5f93d4' : '#1d4ed8';
+      if (region === 'Americas') return isLight ? '#559c70' : '#15803d';
+      if (region === 'Asia') return isLight ? '#c86d6d' : '#b91c1c';
+      if (region === 'Africa') return isLight ? '#b9993e' : '#a16207';
+      if (region === 'Oceania') return isLight ? '#9973cc' : '#7e22ce';
+    }
+    return isLight ? '#9fc4e8' : '#0f2748';
+  }, [foundSet, isError, isLight, selectedCountry]);
+
   const getPolygonAltitude = useCallback((d) => {
     const admin = d.properties.ADMIN;
     return getCountryLayerAltitude(admin, foundSet, selectedCountry);
@@ -392,8 +409,6 @@ const GlobeMap = ({
   }
   const globeWidth = isMobileKeyboardOpen ? viewport.width : layoutViewportRef.current.width;
   const globeHeight = isMobileKeyboardOpen ? viewport.height : layoutViewportRef.current.height;
-
-  const polygonSideColor = useCallback(() => null, []);
 
   const countriesWithGeometry = useMemo(() => {
     return new Set(renderCountriesData.map(getFeatureAdmin));
@@ -529,7 +544,7 @@ const GlobeMap = ({
           polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
           polygonAltitude={getPolygonAltitude}
           polygonCapColor={getPolygonColor}
-          polygonSideColor={polygonSideColor}
+          polygonSideColor={getPolygonSideColor}
           polygonStrokeColor={getPolygonStroke}
           polygonStrokeWidth={getPolygonStrokeWidth}
           polygonAltitudeUpdateMs={0}
