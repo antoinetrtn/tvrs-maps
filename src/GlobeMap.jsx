@@ -392,18 +392,18 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
-      const baseStroke = REGION_COLORS_LABELS[region] || UI_COLORS.accent;
-      // Selection stroke: pulses between continent label color and pure white/black
-      return lerpColor(baseStroke, isLight ? '#000000' : '#ffffff', pulse * 0.5);
+      // Vibrant continent color for selection edge, pulsing towards white/light
+      const baseStroke = REGION_COLORS[region] || UI_COLORS.accent;
+      return lerpColor(baseStroke, '#ffffff', pulse * 0.7);
     }
     
-    // Normal borders: dark version of the base color to ensure visibility between countries
+    // Normal borders: dark version of the base color
     const baseColor = foundSet.has(admin) 
       ? (REGION_COLORS[region] || UI_COLORS.success)
       : UI_COLORS.mapBase;
       
     return lerpColor(baseColor, '#000000', 0.4); 
-  }, [selectedCountry, UI_COLORS, REGION_COLORS, REGION_COLORS_LABELS, isError, foundSet, isLight, pulse]);
+  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse]);
 
   const getPolygonSideColor = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -419,13 +419,13 @@ const GlobeMap = ({
         ? lerpColor(REGION_COLORS[region] || UI_COLORS.success, '#ffffff', pulse * 0.4)
         : lerpColor(REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
         
-      // Sides are only slightly darkened (20% blend) to keep the relief subtle
-      return lerpColor(capColor, '#000000', 0.2);
+      // Sides are very bright and tinted (only 10% black blend) to make the block 'glow'
+      return lerpColor(capColor, '#000000', 0.1);
     }
     
-    // Regular sides: slightly darkened version of the country color (20% blend)
-    return lerpColor(baseColor, '#000000', 0.2);
-  }, [foundSet, REGION_COLORS, UI_COLORS, selectedCountry, isLight, pulse]);
+    // Regular sides: slightly darkened version (30% blend for a soft relief)
+    return lerpColor(baseColor, '#000000', 0.3);
+  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, pulse]);
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -434,8 +434,8 @@ const GlobeMap = ({
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
-    // Standard crisp widths
-    return admin === selectedCountry ? 1.0 : 0.4;
+    // Increased thickness for selection
+    return admin === selectedCountry ? 2.5 : 0.4;
   }, [selectedCountry]);
 
   const countrySizes = useMemo(() => {
