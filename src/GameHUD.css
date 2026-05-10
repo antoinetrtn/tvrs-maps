@@ -479,45 +479,36 @@
 }
 
 .mic-btn, .nav-focus-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
   background: var(--glass-border);
-  color: var(--text-muted);
+  color: var(--text-main);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
 }
 
-.mic-btn:hover {
-  background: var(--glass-bg);
-  color: var(--text-main);
+.mic-btn:hover, .nav-focus-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .mic-btn.active {
   background: var(--error);
   color: white;
+  border-color: var(--error);
   animation: pulse 1.5s infinite;
-  box-shadow: 0 0 0 4px var(--error-soft);
 }
 
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+/* Hide old top HUD elements as instructions are now in the placeholder */
+.top-hud-container, .focus-info-card {
+  display: none !important;
 }
-
-/* Focus Info Card */
-.focus-info-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-  animation: animation-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto; /* ENABLE CLICKS */
   width: 100%;
 }

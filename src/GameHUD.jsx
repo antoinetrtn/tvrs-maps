@@ -284,7 +284,7 @@ const GameHUD = ({
               type="text"
               name={`q-${Math.floor(Math.random() * 10000)}`}
               id="q-field"
-              placeholder={isListening ? '...' : (isFocusedCountry ? '' : '')}
+              placeholder={isListening ? '...' : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))}
               className="input-field"
               value={inputValue}
               onChange={handleTextChange}
