@@ -396,7 +396,10 @@ function App() {
           }}
           isPlaying={isPlaying}
           isGameOver={isGameOver}
-          onStop={stopGame}
+          onStop={() => handleCustomConfirm(
+            lang === 'fr' ? "Arrêter la partie en cours ?" : "Stop the current game?",
+            stopGame
+          )}
           onInfo={() => setShowInfoModal(true)}
           isFocusedCountry={!!selectedCountry}
           onClearFocus={() => setSelectedCountry(null)}
