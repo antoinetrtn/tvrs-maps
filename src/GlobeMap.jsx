@@ -13,6 +13,31 @@ const getFeaturePolygons = (feature) => {
   return [];
 };
 
+const getExteriorPolygonForRendering = (polygon) => (
+  polygon?.[0] ? [polygon[0]] : polygon
+);
+
+const getRenderGeometry = (feature) => {
+  const geometry = feature?.geometry;
+  if (!geometry) return null;
+
+  if (geometry.type === 'Polygon') {
+    return {
+      ...geometry,
+      coordinates: getExteriorPolygonForRendering(geometry.coordinates)
+    };
+  }
+
+  if (geometry.type === 'MultiPolygon') {
+    return {
+      ...geometry,
+      coordinates: geometry.coordinates.map(getExteriorPolygonForRendering)
+    };
+  }
+
+  return geometry;
+};
+
 const getLngLatBounds = (polygons) => {
   let minLng = Infinity;
   let maxLng = -Infinity;
@@ -66,6 +91,18 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
   let dLng = Math.abs(lngA - lngB);
   if (dLng > 180) dLng = 360 - dLng;
   return Math.hypot(dLng, latA - latB);
+};
+
+const GLOBE_LAYER_ALTITUDE = {
+  base: 0.014,
+  found: 0.014,
+  selected: 0.017
+};
+
+const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
+  if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected;
+  if (foundSet.has(admin)) return GLOBE_LAYER_ALTITUDE.found;
+  return GLOBE_LAYER_ALTITUDE.base;
 };
 
 const GlobeMap = ({
@@ -132,6 +169,7 @@ const GlobeMap = ({
         const renderer = globeEl.current.renderer();
         if (renderer) {
           renderer.setPixelRatio(perfProfile?.pixelRatio || 1);
+          renderer.sortObjects = true;
         }
 
         const controls = globeEl.current.controls();
@@ -190,6 +228,13 @@ const GlobeMap = ({
   const selectableCountriesData = useMemo(() => {
     return countriesData.filter(feature => countryDataMap[getFeatureAdmin(feature)]);
   }, [countriesData]);
+
+  const renderCountriesData = useMemo(() => {
+    return selectableCountriesData.map(feature => ({
+      ...feature,
+      renderGeometry: getRenderGeometry(feature)
+    }));
+  }, [selectableCountriesData]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData.map(feature => {
@@ -255,13 +300,13 @@ const GlobeMap = ({
   }, [selectCountryAtLngLat]);
 
   const REGION_COLORS = useMemo(() => ({
-    "Europe": isLight ? "rgba(37, 99, 235, 0.55)" : "rgba(59, 130, 246, 0.7)",
-    "Americas": isLight ? "rgba(22, 163, 74, 0.55)" : "rgba(34, 197, 94, 0.7)",
-    "Asia": isLight ? "rgba(220, 38, 38, 0.55)" : "rgba(239, 68, 68, 0.7)",
-    "Africa": isLight ? "rgba(202, 138, 4, 0.55)" : "rgba(234, 179, 8, 0.7)",
-    "Oceania": isLight ? "rgba(147, 51, 234, 0.55)" : "rgba(168, 85, 247, 0.7)",
-    "Antarctic": isLight ? "rgba(160, 160, 160, 0.55)" : "rgba(200, 200, 200, 0.7)",
-    "Unknown": isLight ? "rgba(80, 80, 80, 0.55)" : "rgba(100, 100, 100, 0.7)"
+    "Europe": isLight ? "#86b7f5" : "#3b82f6",
+    "Americas": isLight ? "#7fcc9a" : "#22c55e",
+    "Asia": isLight ? "#ef9a9a" : "#ef4444",
+    "Africa": isLight ? "#e8c76c" : "#eab308",
+    "Oceania": isLight ? "#c5a0f2" : "#a855f7",
+    "Antarctic": isLight ? "#d4dde8" : "#94a3b8",
+    "Unknown": isLight ? "#cbd5e1" : "#64748b"
   }), [isLight]);
 
   const foundSet = useMemo(() => new Set(foundList), [foundList]);
@@ -269,31 +314,30 @@ const GlobeMap = ({
   const getPolygonColor = useCallback((d) => {
     const admin = d.properties.ADMIN;
     if (foundSet.has(admin)) {
-      if (admin === selectedCountry) return 'rgba(34, 197, 94, 0.85)';
+      if (admin === selectedCountry) return isError ? "#fca5a5" : "#72d38f";
       const region = countryDataMap[admin]?.region;
-      return REGION_COLORS[region] || 'rgba(34, 197, 94, 0.7)';
+      return REGION_COLORS[region] || (isLight ? "#8edaa5" : "#22c55e");
     }
     if (admin === selectedCountry) {
-      if (isError) return 'rgba(239, 68, 68, 0.8)';
-      return isLight ? 'rgba(37, 99, 235, 0.25)' : 'rgba(59, 130, 246, 0.25)'; 
+      if (isError) return isLight ? "#fca5a5" : "#ef4444";
+      return isLight ? "#93c5fd" : "#60a5fa"; 
     }
-    if (mode === 'capitals') return isLight ? 'rgba(255, 255, 255, 0.15)' : 'rgba(20, 30, 45, 0.2)';
-    return isLight ? 'rgba(255, 255, 255, 0.4)' : 'rgba(25, 40, 65, 0.5)';
+    if (mode === 'capitals') return isLight ? "#d7e9fc" : "#12264c";
+    return isLight ? "#d9ecff" : "#193456";
   }, [selectedCountry, mode, foundSet, REGION_COLORS, isLight, isError]);
 
   const getPolygonStroke = useCallback((d) => {
     const admin = d.properties.ADMIN;
     if (admin === selectedCountry) {
       if (isError) return '#ef4444';
-      return isLight ? '#1e40af' : '#ffffff';
+      return isLight ? '#1e3a8a' : '#ffffff';
     }
-    if (foundSet.has(admin)) return 'rgba(0,0,0,0)';
-    return isLight ? 'rgba(30, 58, 138, 0.2)' : 'rgba(40, 70, 120, 0.4)';
+    return isLight ? '#86aede' : '#31598d';
   }, [selectedCountry, foundSet, isLight, isError]);
 
   const getPolygonAltitude = useCallback((d) => {
-    if (d.properties.ADMIN === selectedCountry) return 0.028;
-    return foundSet.has(d.properties.ADMIN) ? 0.016 : 0.012;
+    const admin = d.properties.ADMIN;
+    return getCountryLayerAltitude(admin, foundSet, selectedCountry);
   }, [selectedCountry, foundSet]);
 
   const labelsData = useMemo(() => {
@@ -326,8 +370,18 @@ const GlobeMap = ({
   }, [selectedCountry, perfProfile?.isMobile, hasActiveFeedback]);
 
   const globeMaterial = useMemo(() => {
-    return new THREE.MeshBasicMaterial({ color: isLight ? '#a5c9f5' : '#0a1a3a' });
+    return new THREE.MeshBasicMaterial({
+      color: isLight ? '#a5c9f5' : '#0a1a3a',
+      depthTest: true,
+      depthWrite: true
+    });
   }, [isLight]);
+
+  useEffect(() => {
+    return () => {
+      globeMaterial.dispose();
+    };
+  }, [globeMaterial]);
 
   const isMobileKeyboardOpen = viewport.width < 1024 && isKeyboardMode;
   if (!isMobileKeyboardOpen) {
@@ -339,13 +393,11 @@ const GlobeMap = ({
   const globeWidth = isMobileKeyboardOpen ? viewport.width : layoutViewportRef.current.width;
   const globeHeight = isMobileKeyboardOpen ? viewport.height : layoutViewportRef.current.height;
 
-  const polygonSideColor = useCallback((d) => {
-    return 'rgba(0, 0, 0, 0)';
-  }, []);
+  const polygonSideColor = useCallback(() => null, []);
 
   const countriesWithGeometry = useMemo(() => {
-    return new Set(selectableCountriesData.map(getFeatureAdmin));
-  }, [selectableCountriesData]);
+    return new Set(renderCountriesData.map(getFeatureAdmin));
+  }, [renderCountriesData]);
 
   const tinyCountries = useMemo(() => {
     // Countries that HAVE geometry but it's too small to see/tap easily (< 0.5 deg)
@@ -376,30 +428,39 @@ const GlobeMap = ({
 
   const getPolygonStrokeWidth = useCallback((d) => (
     d.properties.ADMIN === selectedCountry
-      ? 1.15
-      : 0.4
+      ? 0.8
+      : 0.35
   ), [selectedCountry]);
 
   const getPointColor = useCallback((d) => {
     const isFound = foundSet.has(d.admin);
     const isSelected = d.admin === selectedCountry;
-    if (isFound) return REGION_COLORS[d.region] || '#22c55e';
-    if (isSelected) return isError ? '#ef4444' : (isLight ? '#3b82f6' : '#60a5fa');
-    return isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
-  }, [REGION_COLORS, foundSet, isError, isLight, selectedCountry]);
+    if (isFound) {
+      if (isSelected) return isError ? "#fca5a5" : "#72d38f";
+      return REGION_COLORS[d.region] || (isLight ? "#8edaa5" : "#22c55e");
+    }
+    if (isSelected) {
+      if (isError) return isLight ? "#fca5a5" : "#ef4444";
+      return isLight ? "#93c5fd" : "#60a5fa";
+    }
+    
+    // Match unselected country styling
+    if (mode === 'capitals') return isLight ? "#d7e9fc" : "#12264c";
+    return isLight ? "#d9ecff" : "#193456";
+  }, [REGION_COLORS, foundSet, isError, isLight, selectedCountry, mode]);
 
   const getPointRadius = useCallback((d) => (
-    d.admin === selectedCountry ? 0.4 : 0.2
+    d.admin === selectedCountry ? 0.32 : 0.18
   ), [selectedCountry]);
 
   const getPointAltitude = useCallback((d) => {
-    if (d.admin === selectedCountry) return 0.03;
-    return foundSet.has(d.admin) ? 0.015 : 0.005;
+    return getCountryLayerAltitude(d.admin, foundSet, selectedCountry);
   }, [foundSet, selectedCountry]);
 
+
   const getLabelColor = useCallback((d) => (
-    REGION_COLORS[d.region] || 'rgba(234, 179, 8, 0.7)'
-  ).replace('0.7', '1').replace('0.55', '1'), [REGION_COLORS]);
+    REGION_COLORS[d.region] || (isLight ? "#d6a821" : "#eab308")
+  ), [REGION_COLORS, isLight]);
 
   const getRingColor = useCallback(() => (
     isError ? '#ef4444' : (isLight ? 'rgba(37, 99, 235, 0.6)' : 'rgba(255, 255, 255, 0.5)')
@@ -460,11 +521,12 @@ const GlobeMap = ({
           atmosphereDayQuotient={isLight ? 0.2 : 0.1}
           backgroundColor="rgba(0,0,0,0)"
           lineHoverPrecision={0}
-          rendererConfig={{ antialias: false, powerPreference: 'high-performance' }}
+          rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
           animateIn={false}
           enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
-          polygonsData={selectableCountriesData}
-          polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution || 12}
+          polygonsData={renderCountriesData}
+          polygonGeoJsonGeometry="renderGeometry"
+          polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
           polygonAltitude={getPolygonAltitude}
           polygonCapColor={getPolygonColor}
           polygonSideColor={polygonSideColor}
@@ -486,13 +548,13 @@ const GlobeMap = ({
           labelDotRadius={0.35}
           labelColor={getLabelColor}
           labelResolution={viewport.width < 768 ? 1 : 2}
-          labelAltitude={0.02}
+          labelAltitude={GLOBE_LAYER_ALTITUDE.selected}
           ringsData={ringsData}
           ringColor={getRingColor}
           ringMaxRadius={perfProfile?.isMobile ? 1.5 : 2.2}
           ringPropagationSpeed={perfProfile?.isMobile ? 0.75 : 1.2}
           ringRepeatPeriod={perfProfile?.isMobile ? 1300 : 1000}
-          ringAltitude={0.032}
+          ringAltitude={GLOBE_LAYER_ALTITUDE.selected}
         />
     </div>
   );

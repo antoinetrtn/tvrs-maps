@@ -1,0 +1,83 @@
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.logo-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.main-logo-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  color: var(--text-main);
+}
+
+/* Sizes */
+.logo-container.small { width: 64px; height: 48px; }
+.logo-container.medium { width: 140px; height: 105px; }
+.logo-container.large { width: 300px; height: 225px; }
+.logo-container.huge { width: 440px; height: 330px; }
+
+/* Effects */
+.logo-container:hover .main-logo-svg {
+  filter: brightness(1.1);
+}
+
+/* Bouncy effect for Desktop HUD Logo */
+.hud-logo-clickable {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-logo-clickable:hover {
+  transform: scale(1.15);
+}
+
+.hud-logo-clickable:active {
+  transform: scale(0.95);
+}
+
+/* Star Twinkle Animations - ALWAYS BLINKING */
+.logo-stars .star {
+  opacity: 0.2;
+  fill: currentColor;
+  animation: twinkle-goat 3s infinite ease-in-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.star-2 { animation-delay: 0.2s; }
+.star-3 { animation-delay: 1.2s; }
+.star-4 { animation-delay: 0.8s; }
+.star-5 { animation-delay: 2.1s; }
+.star-6 { animation-delay: 0.5s; }
+.star-7 { animation-delay: 1.5s; }
+.star-8 { animation-delay: 0.9s; }
+.star-9 { animation-delay: 1.8s; }
+.star-10 { animation-delay: 2.4s; }
+.star-11 { animation-delay: 0.3s; }
+.star-12 { animation-delay: 1.4s; }
+
+@keyframes twinkle-goat {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}

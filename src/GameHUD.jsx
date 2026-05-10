@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home, Play } from 'lucide-react';
+import Logo from './Logo';
 import './GameHUD.css';
 
 // Check for Speech Recognition API support
@@ -171,9 +172,17 @@ const GameHUD = ({
         } : {}}
       >
           <div className="hud-top-left">
-            <button className="hud-btn-circular glass-panel" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
+            <button className="hud-btn-circular glass-panel mobile-only" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
               <Home size={18} />
             </button>
+            <div 
+              className="desktop-only hud-logo-clickable" 
+              onClick={onGoHome}
+              title={lang === 'fr' ? 'Retour à l\'accueil' : 'Return home'}
+              style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+            >
+              <Logo size="small" variant="hud" />
+            </div>
           </div>
 
           <div className="hud-top-center">

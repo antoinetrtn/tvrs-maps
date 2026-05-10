@@ -38,7 +38,12 @@ function App() {
   const [popupWarning, setPopupWarning] = useState(false);
   const [popupSuccess, setPopupSuccess] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [theme, setTheme] = useState('dark'); // 'dark' or 'light'
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'dark';
+  }); // System default theme
   const [lastInteractionType, setLastInteractionType] = useState('manual'); // 'manual' or 'voice'
   
   // New States for Advanced UX
@@ -400,7 +405,9 @@ function App() {
       maxLabels: isMobile ? 0 : (isTablet ? 12 : 20),
       showAtmosphere: false,
       useImageTextures: false,
-      polygonCapCurvatureResolution: isMobile ? 6 : (isTablet ? 8 : 12)
+      // Smaller values create more cap subdivisions. This keeps large countries
+      // curved above the globe instead of letting the sphere show through.
+      polygonCapCurvatureResolution: isMobile ? 2.5 : (isTablet ? 1.75 : 1.25)
     };
   }, [viewport.width]);
 
