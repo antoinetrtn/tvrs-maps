@@ -16,7 +16,7 @@ export const THEME = {
     error: '#ef4444',
     warning: '#f59e0b',
     mapBase: '#e2e8f0',
-    mapSea: '#cbd5e1',
+    mapSea: '#cedbe9',
     mapBorder: '#94a3b8'
   },
   dark: {
@@ -32,7 +32,7 @@ export const THEME = {
     error: '#ef4444',
     warning: '#f59e0b',
     mapBase: '#1e293b',
-    mapSea: '#0f172a',
+    mapSea: '#0f1c2e',
     mapBorder: '#334155'
   }
 };
