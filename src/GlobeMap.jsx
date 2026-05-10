@@ -718,12 +718,6 @@ const GlobeMap = ({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => { tapRef.current = null; }}
-      onClick={(e) => {
-        // Fallback for clicks completely outside the globe (in the empty space/background)
-        if (e.target.tagName === 'DIV' && e.target.classList.contains('globe-map-shell')) {
-           selectCountry(null);
-        }
-      }}
       style={{ 
         position: 'fixed', 
         top: isMobileKeyboardOpen ? viewport.top : 0, 
@@ -803,6 +797,7 @@ const GlobeMap = ({
             ringPropagationSpeed={perfProfile?.isMobile ? 0.35 : 0.5}
             ringRepeatPeriod={perfProfile?.isMobile ? 2400 : 2000}
             ringAltitude={GLOBE_LAYER_ALTITUDE.selected}
+            onBackgroundClick={() => selectCountry(null)}
           />
         </div>
     </div>
