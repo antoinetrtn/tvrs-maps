@@ -374,16 +374,19 @@ const GlobeMap = ({
 
   const handlePointerDown = useCallback((event) => {
     if (event.target?.tagName !== 'CANVAS') return;
-    if (event.pointerType === 'touch' && selectedCountry && viewport.width < 1024) {
+    
+    // Prevent focus shift (keyboard flicker) on mobile when interacting with the globe
+    if (event.pointerType === 'touch' && isKeyboardMode && viewport.width < 1024) {
       event.preventDefault();
     }
+
     tapRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
       t: performance.now()
     };
-  }, [selectedCountry, viewport.width]);
+  }, [isKeyboardMode, viewport.width]);
 
   const handlePointerUp = useCallback((event) => {
     const tap = tapRef.current;

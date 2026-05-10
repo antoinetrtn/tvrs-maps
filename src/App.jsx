@@ -183,8 +183,12 @@ function App() {
     setSelectedCountry(nextCountry);
     setPopupError(false);
     setPopupWarning(false);
-    if (extInputRef.current) {
-       setTimeout(() => extInputRef.current.focus(), 50);
+    
+    // Maintain focus for a seamless experience. If already focused, don't re-assert.
+    if (extInputRef.current && document.activeElement !== extInputRef.current) {
+       setTimeout(() => {
+         if (extInputRef.current) extInputRef.current.focus();
+       }, 50);
     }
   }, [selectedCountry, foundList, allCountryKeys, isPlaying, getClosestUnfound, resetNavigationTrail]);
 
@@ -341,8 +345,8 @@ function App() {
             const nextCountry = getClosestUnfound(matchFound, newFound);
             navigationTrailRef.current = nextCountry ? [matchFound, nextCountry] : [matchFound];
             navigationTrailIndexRef.current = nextCountry ? 1 : 0;
-            // Strong focus re-assertion ONLY if in keyboard mode
-            if (extInputRef.current && effectiveKeyboardMode) {
+            // Strong focus re-assertion ONLY if in keyboard mode and focus was actually lost
+            if (extInputRef.current && effectiveKeyboardMode && document.activeElement !== extInputRef.current) {
               extInputRef.current.focus();
             }
             return nextCountry || null;
@@ -397,8 +401,8 @@ function App() {
             const nextCountry = getClosestUnfound(guessedCountry, newFound);
             navigationTrailRef.current = nextCountry ? [guessedCountry, nextCountry] : [guessedCountry];
             navigationTrailIndexRef.current = nextCountry ? 1 : 0;
-            // Strong focus re-assertion ONLY if in keyboard mode
-            if (extInputRef.current && effectiveKeyboardMode) {
+            // Strong focus re-assertion ONLY if in keyboard mode and focus was actually lost
+            if (extInputRef.current && effectiveKeyboardMode && document.activeElement !== extInputRef.current) {
               extInputRef.current.focus();
             }
             return nextCountry || null;
@@ -424,9 +428,12 @@ function App() {
     setSelectedCountry(c);
     resetNavigationTrail(c);
     setPopupError(false);
-    // Assert focus when clicking a country on the globe
-    if (c && extInputRef.current) {
-      setTimeout(() => extInputRef.current.focus(), 50);
+    // Assert focus when clicking a country on the globe.
+    // If we're already focused (e.g. via preventDefault on pointerdown), skip the redundant call.
+    if (c && extInputRef.current && document.activeElement !== extInputRef.current) {
+      setTimeout(() => {
+        if (extInputRef.current) extInputRef.current.focus();
+      }, 80); // Slightly longer delay for stability on globe clicks
     }
   }, [selectedCountry, resetNavigationTrail]);
 

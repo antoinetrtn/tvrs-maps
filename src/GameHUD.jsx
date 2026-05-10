@@ -212,12 +212,18 @@ const GameHUD = ({
         } : {}}
       >
           <div className="hud-top-left">
-            <button className="hud-btn-circular glass-panel mobile-only" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
+            <button 
+              className="hud-btn-circular glass-panel mobile-only" 
+              onClick={onGoHome} 
+              onPointerDown={(e) => e.preventDefault()}
+              title={lang === 'fr' ? 'Accueil' : 'Home'}
+            >
               <Home size={18} />
             </button>
             <div 
               className="desktop-only hud-logo-clickable" 
               onClick={onGoHome}
+              onPointerDown={(e) => e.preventDefault()}
               title={lang === 'fr' ? 'Retour à l\'accueil' : 'Return home'}
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
             >
@@ -228,7 +234,7 @@ const GameHUD = ({
           {mode !== 'learn' && (
             <>
               <div className="hud-top-center">
-            <div className="central-island-panel glass-panel" onClick={onInfo}>
+            <div className="central-island-panel glass-panel" onClick={onInfo} onPointerDown={(e) => e.preventDefault()}>
                <div className="island-timer">{formatTime(timeLeft)}</div>
                <div className="island-divider" />
                <div className="island-progress-wrap">
@@ -250,6 +256,7 @@ const GameHUD = ({
                 className="hud-btn-circular glass-panel" 
                 style={{ color: 'var(--error)' }} 
                 onClick={onStop} 
+                onPointerDown={(e) => e.preventDefault()}
                 title={lang === 'fr' ? 'Arrêter' : 'Stop'}
               >
                 <Square size={18} fill="currentColor" />
@@ -259,6 +266,7 @@ const GameHUD = ({
                 className="hud-btn-circular glass-panel" 
                 style={{ color: 'var(--success)' }} 
                 onClick={() => onNavigateFocus('next')} 
+                onPointerDown={(e) => e.preventDefault()}
                 title={lang === 'fr' ? 'Jouer' : 'Play'}
               >
                 <Play size={18} fill="currentColor" />
@@ -332,7 +340,7 @@ const GameHUD = ({
                         : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital'))
                   }
                 </span>
-                <button className="focus-close-btn" onClick={onClearFocus}>
+                <button className="focus-close-btn" onClick={onClearFocus} onPointerDown={(e) => e.preventDefault()}>
                   <X size={14} />
                 </button>
               </div>
@@ -378,10 +386,18 @@ const GameHUD = ({
           <div className="bottom-hud-islands">
             {isFocusedCountry && mode !== 'learn' && (
               <>
-                <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('prev')}>
+                <button 
+                  className="hud-btn-circular glass-panel" 
+                  onClick={() => onNavigateFocus('prev')}
+                  onPointerDown={(e) => e.preventDefault()}
+                >
                   <ChevronLeft size={18} />
                 </button>
-                <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('next')}>
+                <button 
+                  className="hud-btn-circular glass-panel" 
+                  onClick={() => onNavigateFocus('next')}
+                  onPointerDown={(e) => e.preventDefault()}
+                >
                   <ChevronRight size={18} />
                 </button>
               </>
@@ -416,7 +432,11 @@ const GameHUD = ({
             </div>
 
             {SpeechRecognition && mode !== 'learn' && (
-              <button className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
+              <button 
+                className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} 
+                onClick={toggleMic}
+                onPointerDown={(e) => e.preventDefault()}
+              >
                 {isListening ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
             )}
