@@ -10,10 +10,12 @@
   align-items: flex-start;
   pointer-events: none;
   z-index: 1001;
+  gap: 12px;
 }
 
 .hud-top-left, .hud-top-right {
   pointer-events: none;
+  flex-shrink: 0;
 }
 
 .hud-top-center {
@@ -23,6 +25,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   pointer-events: none;
+  min-width: 0;
 }
 
 .hud-bottom-right {
@@ -44,7 +47,16 @@
   .desktop-only { display: none !important; }
   .mobile-only { display: flex !important; }
   
-  .top-hud-bar { padding: 0 var(--spacing-sm); }
+  .top-hud-bar { padding: 0 var(--spacing-sm); gap: 8px; }
+
+  .central-island-panel {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .island-progress-wrap {
+    max-width: none;
+  }
 
   .island-sub-gauges.mobile-only {
     flex-direction: row;
@@ -92,7 +104,9 @@
   padding: 8px 16px;
   border-radius: var(--radius-full);
   cursor: pointer;
-  max-width: 100%;
+  width: 100%;
+  max-width: 600px;
+  justify-content: center;
 }
 
 .central-island-panel:hover {
@@ -116,7 +130,7 @@
 .island-progress-wrap {
   flex: 1;
   max-width: 300px;
-  min-width: 80px;
+  min-width: 40px;
 }
 
 .progress-linear-container {
@@ -290,42 +304,8 @@
   margin-bottom: 8px;
 }
 
-.suggestion-item {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: 10px 16px;
-  color: var(--text-main);
-  font-size: 0.9rem;
-  font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  text-align: left;
-}
-
-.suggestion-item:hover {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
-}
-
-.sug-text {
-  flex: 1;
-}
-
-.sug-sub {
-  font-size: 0.75rem;
-  opacity: 0.6;
-  font-weight: 500;
-}
-
 @media (max-width: 600px) {
   .input-island { width: auto; flex: 1; }
-  .island-progress-wrap { display: none; }
-  .island-divider { display: none; }
 }
 
 .mic-btn.active {
