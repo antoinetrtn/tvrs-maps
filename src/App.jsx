@@ -12,13 +12,17 @@ const normalizeString = (str) => {
 import ResultsModal from './ResultsModal.jsx';
 
 // Custom Confirmation Modal Component
-const ConfirmationModal = ({ message, onConfirm, onCancel, theme }) => (
+const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => (
   <div className="custom-modal-overlay">
     <div className={`custom-modal-content glass-panel ${theme}`}>
       <p>{message}</p>
       <div className="modal-actions">
-        <button className="modal-btn cancel" onClick={onCancel}>Annuler</button>
-        <button className="modal-btn confirm" onClick={onConfirm}>Confirmer</button>
+        <button className="modal-btn cancel" onClick={onCancel}>
+          {lang === 'fr' ? "Annuler" : "Cancel"}
+        </button>
+        <button className="modal-btn confirm" onClick={onConfirm}>
+          {lang === 'fr' ? "Confirmer" : "Confirm"}
+        </button>
       </div>
     </div>
   </div>
@@ -578,14 +582,14 @@ function App() {
       )}
 
       {confirmState && (
-        <ConfirmationModal 
+        <ConfirmationModal
           message={confirmState.message}
           onConfirm={confirmState.onConfirm}
           onCancel={() => setConfirmState(null)}
           theme={theme}
+          lang={lang}
         />
-      )}
-    </div>
+      )}    </div>
   );
 }
 
