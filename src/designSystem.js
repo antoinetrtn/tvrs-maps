@@ -15,9 +15,9 @@ export const THEME = {
     success: '#10b981',
     error: '#ef4444',
     warning: '#f59e0b',
-    mapBase: '#e2e8f0',
-    mapSea: '#cedbe9',
-    mapBorder: '#94a3b8'
+    mapBase: '#f1f5f9',
+    mapSea: '#bdcedd',
+    mapBorder: '#cbd5e1'
   },
   dark: {
     bg: '#020617',
