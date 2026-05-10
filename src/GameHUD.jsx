@@ -1,30 +1,17 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home, Play } from 'lucide-react';
+import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Home, Play } from 'lucide-react';
 import Logo from './Logo';
 import './GameHUD.css';
 import { THEME, CONTINENT_COLORS } from './designSystem';
-
-// Check for Speech Recognition API support
-const SpeechRecognition = typeof window !== 'undefined'
-  ? (window.SpeechRecognition || window.webkitSpeechRecognition)
-  : null;
 
 const GameHUD = ({
   mode, onGoHome, lang, score, totalPossible, timeLeft,
   onInput, onEnter, isPlaying, isGameOver, onStop, onInfo,
   isFocusedCountry, onClearFocus, onNavigateFocus, inputError, inputSuccess, inputWarning, extInputRef,
-  foundList, countryDataMap, theme, viewport, setLastInteractionType, isKeyboardMode, selectedCountry
+  foundList, countryDataMap, theme, viewport, isKeyboardMode, selectedCountry
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState([]);
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef(null);
-  
-  // Use a ref to store the latest onEnter callback so the Speech API never uses a stale closure
-  const onEnterRef = useRef(onEnter);
-  useEffect(() => {
-    onEnterRef.current = onEnter;
-  }, [onEnter]);
 
   const normalizeString = (str) => {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[-'']/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -36,83 +23,47 @@ const GameHUD = ({
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const startListening = useCallback(() => {
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.lang = lang === 'fr' ? 'fr-FR' : 'en-US';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    
-    recognition.onstart = () => {
-      setIsListening(true);
-      setLastInteractionType('voice');
-    };
-
-    recognition.onresult = (event) => {
-      let transcript = '';
-      let isFinal = false;
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-        if (event.results[i].isFinal) isFinal = true;
-      }
-      
-      const text = transcript.trim();
-      if (text) {
-        // Display the preview instantly in the input field
-        setInputValue(text);
-        if (isFinal) {
-          // Use the REF to ensure we are validating against the currently selected country
-          if (onEnterRef.current && onEnterRef.current(text)) {
-            setInputValue('');
-          }
-        }
-      }
-    };
-
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => {
-      if (recognitionRef.current === recognition && !isGameOver) {
-        try { recognition.start(); } catch(e) {}
-      }
-    };
-    
-    recognitionRef.current = recognition;
-    recognition.start();
-  }, [lang, isGameOver, setLastInteractionType]);
-
-  const toggleMic = () => {
-    if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-      setIsListening(false);
-    } else {
-      startListening();
-    }
-  };
-
   const handleTextChange = (e) => {
     const val = e.target.value;
     setInputValue(val);
-    setLastInteractionType('manual');
-    if (val.length >= 3) {
+    if (val.length >= 2) {
       const normalizedInput = normalizeString(val);
       const newSuggestions = [];
-      const keysToCheck = Object.keys(countryDataMap || {}).filter(k => !foundList.includes(k));
+      const keysToCheck = mode === 'learn' 
+        ? Object.keys(countryDataMap || {}) 
+        : Object.keys(countryDataMap || {}).filter(k => !foundList.includes(k));
+      
       for (const adminKey of keysToCheck) {
         const mapped = countryDataMap[adminKey];
         if (!mapped) continue;
         let nameToMatch = lang === 'fr' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped.name_en || adminKey);
         let capitalToMatch = lang === 'fr' && mapped.capital_fr ? mapped.capital_fr : (mapped.capital || null);
-        let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
-        if (targetMatch && normalizeString(targetMatch).includes(normalizedInput)) {
-          if (val.length / targetMatch.length >= 0.6) {
-            newSuggestions.push({ key: adminKey, display: targetMatch, subtext: mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital) });
+        
+        // In learn mode, match both name and capital
+        if (mode === 'learn') {
+          const matchName = normalizeString(nameToMatch).includes(normalizedInput);
+          const matchCap = capitalToMatch && normalizeString(capitalToMatch).includes(normalizedInput);
+          if (matchName || matchCap) {
+            newSuggestions.push({ 
+              key: adminKey, 
+              display: matchName ? nameToMatch : capitalToMatch, 
+              subtext: matchName ? (mapped.capital_fr || mapped.capital) : (mapped.name_fr || mapped.name_en || adminKey) 
+            });
+          }
+        } else {
+          let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
+          if (targetMatch && normalizeString(targetMatch).includes(normalizedInput)) {
+            if (val.length / targetMatch.length >= 0.6 || val.length >= 3) {
+              newSuggestions.push({ 
+                key: adminKey, 
+                display: targetMatch, 
+                subtext: mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital) 
+              });
+            }
           }
         }
       }
-      setSuggestions(newSuggestions.slice(0, 3));
+      setSuggestions(newSuggestions.slice(0, 5));
     } else setSuggestions([]);
   };
 
@@ -273,23 +224,32 @@ const GameHUD = ({
       )}
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
-      {isFocusedCountry && mode !== 'learn' && (
+      {isFocusedCountry && (
         <div className="top-hud-container" style={{ top: (viewport?.top || 0) + 24, left: viewport?.left || 0 }}>
           <div className="top-hud-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
             <div className="focus-info-card animation-fade-in">
-              {isKeyboardMode && (
+              {isKeyboardMode && mode !== 'learn' && (
                 <div className="focus-mini-pill">
                   <span className="focus-mini-val">{score}</span><span className="focus-mini-sub">/{totalPossible}</span>
                 </div>
               )}
               <div className="focus-label">
                 <MapPin size={14} className="focus-icon" />
-                <span className="focus-label-text">{mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')}</span>
+                <span className="focus-label-text">
+                  {mode === 'learn' 
+                    ? (lang === 'fr' 
+                        ? (countryDataMap[selectedCountry]?.name_fr || selectedCountry) 
+                        : (countryDataMap[selectedCountry]?.name_en || selectedCountry))
+                    : (mode === 'countries' 
+                        ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') 
+                        : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital'))
+                  }
+                </span>
                 <button className="focus-close-btn" onClick={onClearFocus}>
                   <X size={14} />
                 </button>
               </div>
-              {isKeyboardMode && (
+              {isKeyboardMode && mode !== 'learn' && (
                 <div className="focus-mini-pill">
                   <span className="focus-mini-val">{formatTime(timeLeft)}</span>
                 </div>
@@ -299,7 +259,6 @@ const GameHUD = ({
         </div>
       )}
 
-      {mode !== 'learn' && (
         <div 
           className="bottom-hud-container"
           style={window.innerWidth < 1024 ? {
@@ -330,7 +289,7 @@ const GameHUD = ({
           )}
 
           <div className="bottom-hud-islands">
-            {isFocusedCountry && (
+            {isFocusedCountry && mode !== 'learn' && (
               <>
                 <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('prev')}>
                   <ChevronLeft size={18} />
@@ -352,12 +311,11 @@ const GameHUD = ({
                 id="quiz-response-field"
                 inputMode="text"
                 enterKeyHint="done"
-                placeholder={isListening ? '...' : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))}
+                placeholder={mode === 'learn' ? (lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...') : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))}
                 className="input-field"
                 value={inputValue}
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
-                readOnly={isListening}
                 autoComplete="new-password"
                 autoCorrect="off"
                 autoCapitalize="none"
@@ -368,15 +326,8 @@ const GameHUD = ({
                 aria-label={lang === 'fr' ? 'Réponse du quiz' : 'Quiz answer'}
               />
             </div>
-
-            {SpeechRecognition && (
-              <button className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
-                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-              </button>
-            )}
           </div>
         </div>
-      )}
     </>
   );
 };

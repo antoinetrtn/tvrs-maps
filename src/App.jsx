@@ -44,7 +44,6 @@ function App() {
     }
     return 'dark';
   }); // System default theme
-  const [lastInteractionType, setLastInteractionType] = useState('manual'); // 'manual' or 'voice'
   
   // New States for Advanced UX
   const [menuOpen, setMenuOpen] = useState(false);
@@ -180,10 +179,10 @@ function App() {
     setSelectedCountry(nextCountry);
     setPopupError(false);
     setPopupWarning(false);
-    if (lastInteractionType === 'manual' && extInputRef.current) {
+    if (extInputRef.current) {
        setTimeout(() => extInputRef.current.focus(), 50);
     }
-  }, [selectedCountry, foundList, allCountryKeys, isPlaying, lastInteractionType, getClosestUnfound, resetNavigationTrail]);
+  }, [selectedCountry, foundList, allCountryKeys, isPlaying, getClosestUnfound, resetNavigationTrail]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -339,7 +338,7 @@ function App() {
             navigationTrailRef.current = nextCountry ? [matchFound, nextCountry] : [matchFound];
             navigationTrailIndexRef.current = nextCountry ? 1 : 0;
             // Strong focus re-assertion ONLY if in keyboard mode
-            if (lastInteractionType === 'manual' && extInputRef.current && effectiveKeyboardMode) {
+            if (extInputRef.current && effectiveKeyboardMode) {
               extInputRef.current.focus();
             }
             return nextCountry || null;
@@ -351,7 +350,7 @@ function App() {
       return "SUCCESS";
     }
     return "ERROR";
-  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, lastInteractionType, effectiveKeyboardMode]);
+  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, effectiveKeyboardMode]);
 
   const specificCountryGuess = useCallback((inputVal) => {
     if (!selectedCountry) return false;
@@ -395,7 +394,7 @@ function App() {
             navigationTrailRef.current = nextCountry ? [guessedCountry, nextCountry] : [guessedCountry];
             navigationTrailIndexRef.current = nextCountry ? 1 : 0;
             // Strong focus re-assertion ONLY if in keyboard mode
-            if (lastInteractionType === 'manual' && extInputRef.current && effectiveKeyboardMode) {
+            if (extInputRef.current && effectiveKeyboardMode) {
               extInputRef.current.focus();
             }
             return nextCountry || null;
@@ -410,7 +409,7 @@ function App() {
       setTimeout(() => setPopupError(false), 500);
       return "ERROR";
     }
-  }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, lastInteractionType, effectiveKeyboardMode]);
+  }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, effectiveKeyboardMode]);
 
   const handleCountrySelect = useCallback((c) => {
     if (c === selectedCountry) {
@@ -422,10 +421,29 @@ function App() {
     resetNavigationTrail(c);
     setPopupError(false);
     // Assert focus when clicking a country on the globe
-    if (lastInteractionType === 'manual' && extInputRef.current) {
+    if (extInputRef.current) {
       setTimeout(() => extInputRef.current.focus(), 50);
     }
-  }, [lastInteractionType, selectedCountry, resetNavigationTrail]);
+  }, [selectedCountry, resetNavigationTrail]);
+
+  const handleSearch = useCallback((inputVal) => {
+    const normalizedInput = normalizeString(inputVal);
+    if (!normalizedInput) return false;
+
+    for (let adminKey of Object.keys(countryDataMap)) {
+      const mapped = countryDataMap[adminKey];
+      if (!mapped) continue;
+      
+      const matchName = lang === 'fr' ? normalizeString(mapped.name_fr || mapped.name_en || adminKey) : normalizeString(mapped.name_en || adminKey);
+      const matchCapital = lang === 'fr' && mapped.capital_fr ? normalizeString(mapped.capital_fr) : (mapped.capital ? normalizeString(mapped.capital) : null);
+
+      if (matchName === normalizedInput || matchCapital === normalizedInput) {
+        handleCountrySelect(adminKey);
+        return true;
+      }
+    }
+    return false;
+  }, [lang, handleCountrySelect]);
 
   const shouldAutoRotate = currentScreen === 'home';
 
@@ -444,7 +462,7 @@ function App() {
       pixelRatio,
       enableAutoRotate: true,
       enablePointerInteraction: false,
-      maxLabels: isMobile ? 0 : (isTablet ? 12 : 20),
+      maxLabels: isMobile ? 8 : (isTablet ? 15 : 30),
       showAtmosphere: false,
       useImageTextures: false,
       // Smaller values create more cap subdivisions. This keeps large countries
@@ -473,6 +491,15 @@ function App() {
           timeLeft={timeLeft}
           onInput={() => {}} 
           onEnter={(val) => {
+            if (mode === 'learn') {
+               const res = handleSearch(val);
+               if (!res) {
+                  setPopupError(true);
+                  setTimeout(() => setPopupError(false), 500);
+               }
+               return res;
+            }
+
             let res;
             if (selectedCountry) {
                res = specificCountryGuess(val);
@@ -510,7 +537,6 @@ function App() {
           countryDataMap={countryDataMap}
           theme={theme}
           viewport={viewport}
-          setLastInteractionType={setLastInteractionType}
           isKeyboardMode={effectiveKeyboardMode}
           selectedCountry={selectedCountry}
         />

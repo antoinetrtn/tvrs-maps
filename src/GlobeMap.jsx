@@ -102,10 +102,10 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
 };
 
 const GLOBE_LAYER_ALTITUDE = {
-  base: 0.001,
-  found: 0.006,
-  selected: 0.012,
-  label: 0.06
+  base: 0.0001,
+  found: 0.0004,
+  selected: 0.0008,
+  label: 0.001
 };
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 
@@ -141,6 +141,7 @@ const GlobeMap = ({
   });
   const wasHomeScreenRef = useRef(isHomeScreen);
   const [zoomLevel, setZoomLevel] = useState(2.5);
+  const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
   const [pulse, setPulse] = useState(0);
 
   // Pulse animation loop for selection
@@ -229,7 +230,13 @@ const GlobeMap = ({
              if (globeEl.current) {
                 const pov = globeEl.current.pointOfView();
                 setZoomLevel(prev => {
-                   if (Math.abs(prev - pov.altitude) > 0.1) return pov.altitude;
+                   if (Math.abs(prev - pov.altitude) > 0.01) return pov.altitude;
+                   return prev;
+                });
+                setCameraPOV(prev => {
+                   if (Math.abs(prev.lat - pov.lat) > 0.5 || Math.abs(prev.lng - pov.lng) > 0.5) {
+                      return { lat: pov.lat, lng: pov.lng };
+                   }
                    return prev;
                 });
              }
@@ -449,21 +456,33 @@ const GlobeMap = ({
   }, [selectableFeatureIndex]);
 
   const labelsData = useMemo(() => {
-    if (perfProfile?.maxLabels === 0) return [];
+    if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
     
-    // In learn mode, show all countries. In game mode, only found countries.
     const keysToShow = mode === 'learn' ? Object.keys(countryDataMap) : foundList;
+    const pov = cameraPOV;
 
-    return keysToShow
+    const filtered = keysToShow
       .map(adminKey => {
         const data = countryDataMap[adminKey];
         if (!data) return null;
         
+        const isSelected = adminKey === selectedCountry;
         const size = countrySizes[adminKey] || 0.5;
-        // Occlusion threshold: small countries disappear earlier (lower zoomLevel/altitude)
-        const visibilityThreshold = Math.min(2.8, 0.4 + size * 1.2);
+        
+        // Visibility based on zoom level
+        // Selected country always bypasses the zoom threshold
+        const visibilityThreshold = isSelected ? 10 : Math.min(3.0, 0.8 + size * 2.0);
         
         if (zoomLevel > visibilityThreshold) return null;
+
+        // Calculate angular distance to current POV to prioritize labels in view
+        let dLng = Math.abs(data.lng - pov.lng);
+        if (dLng > 180) dLng = 360 - dLng;
+        const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
+        
+        // Hide labels on the far side of the globe (approx > 90 deg)
+        // Selected country also bypasses the far-side check for better UX
+        if (!isSelected && distToCenter > 85) return null;
 
         return {
           admin: adminKey,
@@ -472,11 +491,22 @@ const GlobeMap = ({
           country: lang === 'fr' ? (data.name_fr || adminKey) : (data.name_en || adminKey),
           capital: lang === 'fr' ? (data.capital_fr || data.capital) : data.capital,
           region: data.region,
-          flag: getFlagEmoji(data.iso2)
+          flag: getFlagEmoji(data.iso2),
+          size,
+          distToCenter,
+          isSelected
         };
       })
-      .filter(d => d !== null);
-  }, [foundList, countrySizes, zoomLevel, lang, perfProfile?.maxLabels]);
+      .filter(d => d !== null)
+      // Sort: Selected first, then by distance to center
+      .sort((a, b) => {
+        if (a.isSelected) return -1;
+        if (b.isSelected) return 1;
+        return a.distToCenter - b.distToCenter;
+      });
+
+    return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
+  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry]);
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
@@ -618,7 +648,7 @@ const GlobeMap = ({
   }, [REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, foundSet, isError, selectedCountry]);
 
   const getPointRadius = useCallback((d) => (
-    d.admin === selectedCountry ? 0.32 : 0.18
+    d.admin === selectedCountry ? 0.22 : 0.12
   ), [selectedCountry]);
 
   const getPointAltitude = useCallback((d) => {
