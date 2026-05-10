@@ -34,6 +34,7 @@ function App() {
   const [mode, setMode] = useState('countries'); // 'countries' or 'capitals'
   const [foundList, setFoundList] = useState([]);
   const [score, setScore] = useState(0);
+  const [gameDuration, setGameDuration] = useState(15 * 60);
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [lang, setLang] = useState('fr'); // 'fr' or 'en'
   const [isPlaying, setIsPlaying] = useState(false);
@@ -236,7 +237,7 @@ function App() {
     setMode(newMode);
     setFoundList([]);
     setScore(0);
-    setTimeLeft(15 * 60);
+    setTimeLeft(gameDuration);
     setIsPlaying(false);
     setIsGameOver(false);
     setShowEndScreen(false);
@@ -244,7 +245,7 @@ function App() {
     setSelectedCountry(null);
     resetNavigationTrail(null);
     setMenuOpen(false);
-  }, [resetNavigationTrail]);
+  }, [resetNavigationTrail, gameDuration]);
 
   const startGame = useCallback((selectedMode) => {
     resetGame(selectedMode);
@@ -255,6 +256,12 @@ function App() {
     resetGame(mode);
     setCurrentScreen('home');
   }, [resetGame, mode]);
+
+  useEffect(() => {
+    if (currentScreen === 'home') {
+      setTimeLeft(gameDuration);
+    }
+  }, [gameDuration, currentScreen]);
 
   useEffect(() => {
     if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= Object.keys(countryDataMap).length) {
@@ -497,7 +504,9 @@ function App() {
           theme={theme} 
           setTheme={setTheme} 
           lang={lang} 
-          setLang={setLang} 
+          setLang={setLang}
+          gameDuration={gameDuration}
+          setGameDuration={setGameDuration}
         />
       ) : (
         !showEndScreen && (

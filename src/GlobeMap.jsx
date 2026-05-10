@@ -427,7 +427,7 @@ const GlobeMap = ({
     // End screen: Green (or Gold if perfect) for found, Red for missed
     if (isEndScreen) {
       if (foundSet.has(admin)) {
-        return isPerfectScore ? '#fbbf24' : UI_COLORS.success;
+        return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
       }
       return UI_COLORS.error;
     }
@@ -487,7 +487,7 @@ const GlobeMap = ({
     let baseColor;
     if (isEndScreen) {
       if (foundSet.has(admin)) {
-        baseColor = isPerfectScore ? '#fbbf24' : UI_COLORS.success;
+        baseColor = isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
       } else {
         baseColor = UI_COLORS.error;
       }
@@ -725,7 +725,7 @@ const GlobeMap = ({
 
     if (isEndScreen) {
       if (foundSet.has(d.admin)) {
-        return isPerfectScore ? '#fbbf24' : UI_COLORS.success;
+        return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
       }
       return UI_COLORS.error;
     }

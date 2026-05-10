@@ -46,17 +46,54 @@
   z-index: 1000;
 }
 
-.home-bottom-right .lang-toggle-wrap.glass-panel {
+.home-bottom-right .lang-toggle-wrap.glass-panel,
+.home-bottom-right .timer-toggle-wrap.glass-panel {
   display: flex;
   align-items: center;
-  height: 42px;
+  height: 44px;
   padding: 4px;
   gap: 4px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   backdrop-filter: var(--glass-blur);
+}
+
+.timer-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+}
+
+.timer-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  min-width: 70px;
+  justify-content: center;
+  color: var(--text-main);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.timer-icon {
+  color: var(--accent);
+  opacity: 0.8;
 }
 
 .lang-btn {
@@ -206,13 +243,26 @@
     justify-content: center;
   }
 
-  .lang-toggle-wrap, .theme-toggle-btn {
+  .lang-toggle-wrap, .timer-toggle-wrap, .theme-toggle-btn {
     height: 40px;
   }
 
-  .home-bottom-right .lang-toggle-wrap.glass-panel {
+  .home-bottom-right .lang-toggle-wrap.glass-panel,
+  .home-bottom-right .timer-toggle-wrap.glass-panel {
     height: 40px;
     border-radius: 10px;
+  }
+
+  .timer-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .timer-display {
+    min-width: 60px;
+    font-size: 0.8rem;
+    padding: 0 4px;
+    gap: 4px;
   }
 
   .theme-toggle-btn {

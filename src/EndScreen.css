@@ -52,15 +52,15 @@
 }
 
 .perfect-game .final-score {
-  color: #fbbf24; /* Gold */
-  text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+  color: var(--gold, #fbbf24);
+  text-shadow: 0 0 20px var(--gold-soft, rgba(251, 191, 36, 0.4));
 }
 
 .perfect-game .end-screen-header h1 {
-  background: linear-gradient(to bottom, #fde68a, #fbbf24);
+  background: linear-gradient(to bottom, var(--gold-light, #fde68a), var(--gold, #fbbf24));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.3));
+  filter: drop-shadow(0 0 15px var(--gold-soft, rgba(251, 191, 36, 0.3)));
 }
 
 .end-screen-spacer {

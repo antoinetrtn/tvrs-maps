@@ -1,9 +1,15 @@
 import React from 'react';
-import { Globe2, MapPin, GraduationCap, Sun, Moon } from 'lucide-react';
+import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus } from 'lucide-react';
 import Logo from './Logo';
 import './HomeScreen.css';
 
-const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang }) => {
+const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang, gameDuration, setGameDuration }) => {
+  const adjustDuration = (amount) => {
+    // Increment/decrement by 60 seconds (1 minute)
+    // Min 1 minute, Max 60 minutes
+    setGameDuration(prev => Math.max(60, Math.min(3600, prev + amount)));
+  };
+
   return (
     <div className={`home-screen-overlay ${theme}`}>
       <div className="home-content animation-fade-in">
@@ -28,6 +34,19 @@ const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang }) => {
       </div>
 
       <div className="home-bottom-right">
+        <div className="timer-toggle-wrap glass-panel">
+          <button className="timer-btn" onClick={() => adjustDuration(-60)} title={lang === 'fr' ? '-1 minute' : '-1 minute'}>
+            <Minus size={16} />
+          </button>
+          <div className="timer-display">
+            <Timer size={16} className="timer-icon" />
+            <span>{Math.floor(gameDuration / 60)}'</span>
+          </div>
+          <button className="timer-btn" onClick={() => adjustDuration(60)} title={lang === 'fr' ? '+1 minute' : '+1 minute'}>
+            <Plus size={16} />
+          </button>
+        </div>
+
         <div className="lang-toggle-wrap glass-panel">
           <button 
             className={`lang-btn ${lang === 'fr' ? 'active' : ''}`} 
