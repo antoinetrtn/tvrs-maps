@@ -201,6 +201,19 @@ const GameHUD = ({
             </div>
           </div>
 
+          <div className="hud-top-right">
+            {isPlaying && !isGameOver && (
+              <button 
+                className="hud-btn-circular glass-panel" 
+                style={{ color: 'var(--error)' }} 
+                onClick={onStop} 
+                title={lang === 'fr' ? 'Arrêter' : 'Stop'}
+              >
+                <Square size={18} fill="currentColor" />
+              </button>
+            )}
+          </div>
+
           <div className="hud-bottom-right desktop-only">
             <div className="island-sub-gauges desktop-only animation-fade-in">
               {CONTINENT_ORDER.map(reg => {
@@ -318,17 +331,6 @@ const GameHUD = ({
           {SpeechRecognition && (
             <button className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
               {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-            </button>
-          )}
-
-          {isPlaying && !isGameOver && (
-            <button 
-              className="hud-btn-circular glass-panel" 
-              style={{ color: 'var(--error)' }} 
-              onClick={onStop} 
-              title={lang === 'fr' ? 'Arrêter' : 'Stop'}
-            >
-              <Square size={18} fill="currentColor" />
             </button>
           )}
         </div>
