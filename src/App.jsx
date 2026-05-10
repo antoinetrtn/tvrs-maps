@@ -54,6 +54,8 @@ function App() {
   const extInputRef = useRef(null);
   const initialHeight = useRef(window.innerHeight);
   const viewportFrameRef = useRef(null);
+  const navigationTrailRef = useRef([]);
+  const navigationTrailIndexRef = useRef(-1);
 
   // --- MOBILE KEYBOARD / VIEWPORT LOGIC ---
   const getViewport = useCallback(() => {
@@ -120,6 +122,11 @@ function App() {
      return minList.length > 0 ? minList[0].key : null;
   }, []);
 
+  const resetNavigationTrail = useCallback((country) => {
+    navigationTrailRef.current = country ? [country] : [];
+    navigationTrailIndexRef.current = country ? 0 : -1;
+  }, []);
+
   // Navigate to next/previous unfound country in focus mode
   const navigateFocus = useCallback((direction) => {
     const unfoundKeys = allCountryKeys.filter(k => !foundList.includes(k) && countryDataMap[k]?.lat !== undefined);
@@ -127,27 +134,56 @@ function App() {
 
     if (!isPlaying) setIsPlaying(true);
 
-    let nextIdx;
+    let nextCountry;
     if (!selectedCountry) {
-      nextIdx = 0;
+      nextCountry = direction === 'prev' ? unfoundKeys[unfoundKeys.length - 1] : unfoundKeys[0];
+      resetNavigationTrail(nextCountry);
     } else {
-      const currentIdx = unfoundKeys.indexOf(selectedCountry);
-      if (currentIdx === -1) {
-        nextIdx = 0;
-      } else if (direction === 'next') {
-        nextIdx = (currentIdx + 1) % unfoundKeys.length;
+      let trail = navigationTrailRef.current;
+      let trailIndex = navigationTrailIndexRef.current;
+
+      if (trail[trailIndex] !== selectedCountry) {
+        trail = [selectedCountry];
+        trailIndex = 0;
+        navigationTrailRef.current = trail;
+        navigationTrailIndexRef.current = trailIndex;
+      }
+
+      if (direction === 'prev' && trailIndex > 0) {
+        nextCountry = trail[trailIndex - 1];
+        navigationTrailIndexRef.current = trailIndex - 1;
+      } else if (direction === 'next' && trailIndex < trail.length - 1) {
+        nextCountry = trail[trailIndex + 1];
+        navigationTrailIndexRef.current = trailIndex + 1;
       } else {
-        nextIdx = (currentIdx - 1 + unfoundKeys.length) % unfoundKeys.length;
+        const excludedForNavigation = Array.from(new Set([
+          ...foundList,
+          ...trail,
+          selectedCountry
+        ]));
+        nextCountry = getClosestUnfound(selectedCountry, excludedForNavigation);
+
+        if (nextCountry) {
+          if (direction === 'prev') {
+            navigationTrailRef.current = [nextCountry, ...trail];
+            navigationTrailIndexRef.current = 0;
+          } else {
+            navigationTrailRef.current = [...trail.slice(0, trailIndex + 1), nextCountry];
+            navigationTrailIndexRef.current = trailIndex + 1;
+          }
+        }
       }
     }
+
+    if (!nextCountry) return;
     
-    setSelectedCountry(unfoundKeys[nextIdx]);
+    setSelectedCountry(nextCountry);
     setPopupError(false);
     setPopupWarning(false);
     if (lastInteractionType === 'manual' && extInputRef.current) {
        setTimeout(() => extInputRef.current.focus(), 50);
     }
-  }, [selectedCountry, foundList, allCountryKeys, lastInteractionType]);
+  }, [selectedCountry, foundList, allCountryKeys, isPlaying, lastInteractionType, getClosestUnfound, resetNavigationTrail]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -194,8 +230,9 @@ function App() {
     setIsPlaying(false);
     setIsGameOver(false);
     setSelectedCountry(null);
+    resetNavigationTrail(null);
     setMenuOpen(false);
-  }, []);
+  }, [resetNavigationTrail]);
 
   const startGame = useCallback((selectedMode) => {
     resetGame(selectedMode);
@@ -299,6 +336,8 @@ function App() {
         setSelectedCountry(prev => {
           if (prev === matchFound) {
             const nextCountry = getClosestUnfound(matchFound, newFound);
+            navigationTrailRef.current = nextCountry ? [matchFound, nextCountry] : [matchFound];
+            navigationTrailIndexRef.current = nextCountry ? 1 : 0;
             // Strong focus re-assertion ONLY if in keyboard mode
             if (lastInteractionType === 'manual' && extInputRef.current && effectiveKeyboardMode) {
               extInputRef.current.focus();
@@ -353,6 +392,8 @@ function App() {
         setSelectedCountry(prev => {
           if (prev === guessedCountry) {
             const nextCountry = getClosestUnfound(guessedCountry, newFound);
+            navigationTrailRef.current = nextCountry ? [guessedCountry, nextCountry] : [guessedCountry];
+            navigationTrailIndexRef.current = nextCountry ? 1 : 0;
             // Strong focus re-assertion ONLY if in keyboard mode
             if (lastInteractionType === 'manual' && extInputRef.current && effectiveKeyboardMode) {
               extInputRef.current.focus();
@@ -378,12 +419,13 @@ function App() {
     }
 
     setSelectedCountry(c);
+    resetNavigationTrail(c);
     setPopupError(false);
     // Assert focus when clicking a country on the globe
     if (lastInteractionType === 'manual' && extInputRef.current) {
       setTimeout(() => extInputRef.current.focus(), 50);
     }
-  }, [lastInteractionType, selectedCountry]);
+  }, [lastInteractionType, selectedCountry, resetNavigationTrail]);
 
   const shouldAutoRotate = currentScreen === 'home';
 
@@ -455,7 +497,10 @@ function App() {
           )}
           onInfo={() => setShowInfoModal(true)}
           isFocusedCountry={!!selectedCountry}
-          onClearFocus={() => setSelectedCountry(null)}
+          onClearFocus={() => {
+            setSelectedCountry(null);
+            resetNavigationTrail(null);
+          }}
           onNavigateFocus={navigateFocus}
           inputError={popupError}
           inputWarning={popupWarning}
