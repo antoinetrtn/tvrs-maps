@@ -154,7 +154,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  padding: 8px 20px;
+  padding: 8px 16px;
   border-radius: var(--radius-full);
   cursor: pointer;
 }
@@ -166,7 +166,7 @@
 
 .island-timer {
   font-variant-numeric: tabular-nums;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.1rem;
   color: var(--accent);
 }
@@ -204,14 +204,14 @@
 }
 
 .score-current {
-  font-weight: 800;
+  font-weight: 600;
   font-size: 1.1rem;
   color: var(--accent);
 }
 
 .score-total {
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-muted);
   opacity: 0.5;
 }
