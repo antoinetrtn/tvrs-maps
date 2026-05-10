@@ -78,7 +78,7 @@
 
 .lang-btn.active {
   background: var(--accent);
-  color: white;
+  color: var(--accent-contrast);
   box-shadow: 0 4px 12px var(--accent-soft);
 }
 
