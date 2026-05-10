@@ -465,8 +465,8 @@ function App() {
       maxLabels: isMobile ? 8 : (isTablet ? 15 : 30),
       showAtmosphere: false,
       useImageTextures: false,
-      // Restore performant curvature resolution
-      polygonCapCurvatureResolution: isMobile ? 1.5 : (isTablet ? 1.25 : 1.1)
+      // High-quality but performant resolution to avoid clipping
+      polygonCapCurvatureResolution: isMobile ? 0.9 : (isTablet ? 0.75 : 0.6)
     };
   }, [viewport.width]);
 
