@@ -129,6 +129,7 @@ const GlobeMap = ({
     width: window.innerWidth,
     height: window.innerHeight
   });
+  const wasHomeScreenRef = useRef(isHomeScreen);
   
   // Custom Zoom Logic (Google Maps style: double tap + drag)
   const lastTapRef = useRef(0);
@@ -219,7 +220,10 @@ const GlobeMap = ({
       }
     } else if (isHomeScreen && globeEl.current) {
       globeEl.current.pointOfView({ altitude: 2.5 }, 1000);
+    } else if (wasHomeScreenRef.current && globeEl.current) {
+      globeEl.current.pointOfView({ lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.65 }, 700);
     }
+    wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
   }, [selectedCountry, viewport.height, isHomeScreen, perfProfile, isKeyboardMode]);
 
@@ -483,6 +487,7 @@ const GlobeMap = ({
 
   return (
     <div 
+      className={`globe-map-shell ${isHomeScreen ? 'home-layout' : 'game-layout'}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

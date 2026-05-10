@@ -11,27 +11,18 @@ const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang }) => {
         
         <div className="home-buttons">
           <button className="home-btn mode-countries" onClick={() => onStartGame('countries')}>
-            <Globe2 size={24} />
-            <div className="btn-text">
-              <span className="btn-title">{lang === 'fr' ? 'Pays' : 'Countries'}</span>
-              <span className="btn-desc">{lang === 'fr' ? 'Devinez tous les pays du monde' : 'Guess all countries in the world'}</span>
-            </div>
+            <Globe2 size={20} />
+            <span className="btn-title">{lang === 'fr' ? 'Pays' : 'Countries'}</span>
           </button>
 
           <button className="home-btn mode-capitals" onClick={() => onStartGame('capitals')}>
-            <MapPin size={24} />
-            <div className="btn-text">
-              <span className="btn-title">{lang === 'fr' ? 'Capitales' : 'Capitals'}</span>
-              <span className="btn-desc">{lang === 'fr' ? 'Trouvez la capitale de chaque pays' : 'Find the capital of every country'}</span>
-            </div>
+            <MapPin size={20} />
+            <span className="btn-title">{lang === 'fr' ? 'Capitales' : 'Capitals'}</span>
           </button>
 
           <button className="home-btn mode-learn disabled" disabled title={lang === 'fr' ? 'Bientôt disponible' : 'Coming soon'}>
-            <GraduationCap size={24} />
-            <div className="btn-text">
-              <span className="btn-title">Learn</span>
-              <span className="btn-desc">{lang === 'fr' ? 'Mode apprentissage (À venir)' : 'Learning mode (Coming soon)'}</span>
-            </div>
+            <GraduationCap size={20} />
+            <span className="btn-title">Learn <span className="soon-label">(Soon)</span></span>
           </button>
         </div>
       </div>
