@@ -1,33 +1,134 @@
-/* New Top HUD Layout with Flex Bar */
+/* ==========================================================================
+   HUD TOP BAR - Global Grid Layout
+   ========================================================================== */
 .top-hud-bar {
   position: fixed;
-  top: var(--spacing-lg);
+  top: 16px;
   left: 0;
   width: 100%;
-  padding: 0 var(--spacing-lg);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center; /* PERFECT VERTICAL CENTERING OF SIDE BUTTONS AND ISLAND */
+  row-gap: 12px;
+  column-gap: 8px;
   pointer-events: none;
   z-index: 1001;
-  gap: 12px;
 }
 
 .hud-top-left, .hud-top-right {
+  display: flex;
   pointer-events: none;
-  flex-shrink: 0;
+}
+
+.hud-top-right {
+  justify-content: flex-end;
 }
 
 .hud-top-center {
-  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
   pointer-events: none;
   min-width: 0;
 }
 
+/* New row for gauges that spans the whole width */
+.hud-top-gauges {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   CENTRAL ISLAND PANEL (The Pill)
+   ========================================================================== */
+.central-island-panel {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 44px;
+  border-radius: 22px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  width: 100%;
+  max-width: 500px;
+  min-width: 300px;
+}
+
+/* Fixed, identical widths for timer and score to keep the center... central */
+.island-timer, .island-score {
+  width: 70px; 
+  display: flex;
+  align-items: center;
+  justify-content: center; /* PERFECT HORIZONTAL CENTERING WITHIN SLOT */
+  flex-shrink: 0;
+}
+
+.island-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.island-score {
+  font-weight: 700;
+  font-size: 1.1rem;
+  gap: 4px;
+}
+
+.score-current {
+  color: var(--text-main);
+}
+
+.score-total {
+  opacity: 0.4;
+}
+
+.island-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--glass-border);
+  flex-shrink: 0;
+  margin: 0 12px;
+  opacity: 0.6;
+}
+
+/* The progress bar now takes all remaining space */
+.island-progress-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 40px;
+}
+
+.progress-linear-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-linear-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #60a5fa);
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 10px var(--accent-soft);
+}
+
+/* ==========================================================================
+   GAUGES & BUTTONS
+   ========================================================================== */
 .hud-bottom-right {
   position: fixed;
   bottom: var(--spacing-lg);
@@ -40,53 +141,26 @@
   z-index: 1000;
 }
 
-.desktop-only { display: flex !important; }
-.mobile-only { display: none !important; }
+.hud-btn-circular {
+  width: 44px; 
+  height: 44px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  color: var(--text-main);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  transition: all var(--transition-normal);
+}
 
-@media (max-width: 768px) {
-  .desktop-only { display: none !important; }
-  .mobile-only { display: flex !important; }
-  
-  .top-hud-bar { 
-    top: var(--spacing-sm);
-    padding: 0 var(--spacing-sm); 
-    gap: 8px; 
-  }
-
-  .central-island-panel {
-    padding: 6px 10px;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-    justify-content: center;
-    max-width: none;
-  }
-
-  .island-timer, .island-score {
-    min-width: 45px;
-    font-size: 1rem;
-  }
-
-  .island-progress-wrap {
-    max-width: none;
-    margin: 0 2px;
-  }
-
-  .island-sub-gauges.mobile-only {
-    flex-direction: row;
-    gap: 8px;
-    margin-top: 6px;
-    justify-content: center;
-  }
-
-  .hud-bottom-right {
-    display: none !important;
-  }
-  
-  .bottom-hud-container {
-    bottom: var(--spacing-sm);
-    width: 96% !important;
-  }
+.hud-btn-circular:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  transform: translateY(-2px);
 }
 
 .island-sub-gauges {
@@ -94,132 +168,6 @@
   flex-direction: column;
   gap: 8px;
   pointer-events: auto;
-}
-
-.hud-btn-circular {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  cursor: pointer;
-  color: var(--text-main);
-  transition: all var(--transition-normal);
-}
-
-.hud-btn-circular:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  transform: scale(1.05);
-}
-
-.central-island-panel {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  width: 100%;
-  max-width: 450px;
-  justify-content: center;
-  min-width: 0;
-}
-
-.central-island-panel:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.island-timer, .island-score {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: center;
-  min-width: 60px;
-}
-
-.island-timer {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: var(--accent);
-}
-
-.island-divider {
-  width: 1px;
-  height: 20px;
-  background: var(--glass-border);
-}
-
-.island-progress-wrap {
-  flex: 1;
-  max-width: 220px;
-  min-width: 20px;
-}
-
-.progress-linear-container {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-linear-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), #60a5fa);
-  border-radius: var(--radius-full);
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 0 12px var(--accent-soft);
-}
-
-.island-score {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.score-current {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: var(--text-main);
-}
-
-.score-total {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-main);
-  opacity: 0.4;
-}
-
-.gauge-val { 
-  font-size: 0.65rem; 
-  font-weight: 800;
-  z-index: 1;
-  color: var(--text-main);
-  letter-spacing: -0.01em;
-}
-
-/* Header UI - Old styles cleanup if needed */
-.top-hud-container {
-  display: none; /* We hide the old container */
-}
-
-.progress-bar-container {
-  width: 100%;
-  height: 8px;
-  background: var(--glass-border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.4s ease;
 }
 
 .circular-gauge {
@@ -240,6 +188,14 @@
   height: 24px;
   background: var(--glass-bg);
   border-radius: var(--radius-full);
+}
+
+.gauge-val { 
+  font-size: 0.65rem; 
+  font-weight: 800;
+  z-index: 1;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
 }
 
 .gauge-item {
@@ -268,7 +224,9 @@
   100% { box-shadow: 0 0 10px var(--color); }
 }
 
-/* Bottom HUD - Separate Islands Style */
+/* ==========================================================================
+   BOTTOM HUD & INPUT
+   ========================================================================== */
 .bottom-hud-container {
   position: fixed;
   bottom: var(--spacing-lg);
@@ -293,19 +251,17 @@
 }
 
 .input-island {
-  height: 40px;
+  height: 44px;
   display: flex;
   align-items: center;
   padding: 0 16px;
   flex: 1;
+  border-radius: 22px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   transition: all var(--transition-normal);
   min-width: 0;
-  border: 1px solid var(--glass-border);
-}
-
-.input-island.has-continent {
-  border-color: var(--continent-color);
-  box-shadow: 0 0 12px var(--continent-color);
 }
 
 .input-field {
@@ -313,7 +269,7 @@
   background: transparent;
   border: none;
   color: var(--text-main);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 500;
   outline: none;
   padding: 0;
@@ -321,16 +277,11 @@
 
 .input-island:focus-within {
   border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-soft);
 }
 
-.input-island.has-continent:focus-within {
-  border-color: var(--continent-color);
-  box-shadow: 0 0 20px var(--continent-color);
-}
-
-/* Corrected Suggestions Theme */
 .suggestions-list {
-  background: rgba(15, 23, 42, 0.95); /* Forced deep dark blue */
+  background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
@@ -349,7 +300,7 @@
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   padding: 10px 16px;
-  color: #f8fafc; /* Forced light text */
+  color: #f8fafc;
   font-size: 0.9rem;
   font-weight: 500;
   display: flex;
@@ -357,43 +308,72 @@
   align-items: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: left;
 }
 
 .suggestion-item:hover {
   background: var(--accent);
   color: white;
-  transform: translateY(-1px);
 }
 
-.sug-text {
-  font-weight: 600;
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+.desktop-only { display: flex !important; }
+.mobile-only { display: none !important; }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
+
+  .top-hud-bar {
+    top: 8px;
+    padding: 0 8px;
+    grid-template-columns: 38px 1fr 38px; /* Match mobile button size */
+    row-gap: 14px;
+  }
+
+  .hud-btn-circular {
+    width: 38px;
+    height: 38px;
+  }
+
+  .central-island-panel {
+    min-width: 0;
+    width: 100%;
+    padding: 0 8px;
+    height: 38px; /* Standardized height for all mobile HUD elements */
+  }
+
+  .island-timer, .island-score {
+    font-size: 0.95rem;
+    width: 55px; /* Symmetrical slots on mobile */
+  }
+
+  .island-divider {
+    margin: 0 6px;
+    height: 12px;
+  }
+
+  .island-progress-wrap {
+    flex: 1;
+    min-width: 30px;
+  }
+
+  .hud-top-gauges {
+    gap: 8px;
+  }
+
+  .hud-bottom-right {
+    display: none !important;
+  }
+
+  .bottom-hud-container {
+    bottom: 8px;
+    width: 96%;
+  }
 }
 
-.sug-sub {
-  font-size: 0.75rem;
-  color: #94a3b8; /* Muted subtext */
-  margin-left: 12px;
-}
-
-@media (max-width: 600px) {
-  .input-island { width: auto; flex: 1; }
-}
-
-.mic-btn.active {
-  background: var(--success) !important;
-  color: white !important;
-  border-color: var(--success) !important;
-  animation: pulse-success 1.5s infinite;
-}
-
-@keyframes pulse-success {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-}
-
-/* Cleanup: remove blue popup as it's now in the placeholder */
+/* Cleanup */
 .top-hud-container, .top-hud-stack, .focus-info-card {
   display: none !important;
 }

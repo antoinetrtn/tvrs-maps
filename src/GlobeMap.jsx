@@ -84,6 +84,10 @@ const GlobeMap = ({
 }) => {
   const globeEl = useRef();
   const tapRef = useRef(null);
+  const layoutViewportRef = useRef({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
   
   // Custom Zoom Logic (Google Maps style: double tap + drag)
   const lastTapRef = useRef(0);
@@ -202,13 +206,16 @@ const GlobeMap = ({
 
   const handlePointerDown = useCallback((event) => {
     if (event.target?.tagName !== 'CANVAS') return;
+    if (event.pointerType === 'touch' && selectedCountry && viewport.width < 1024) {
+      event.preventDefault();
+    }
     tapRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
       t: performance.now()
     };
-  }, []);
+  }, [selectedCountry, viewport.width]);
 
   const handlePointerUp = useCallback((event) => {
     const tap = tapRef.current;
@@ -298,6 +305,16 @@ const GlobeMap = ({
     return new THREE.MeshBasicMaterial({ color: isLight ? '#a5c9f5' : '#0a1a3a' });
   }, [isLight]);
 
+  const isMobileKeyboardOpen = viewport.width < 1024 && viewport.height < layoutViewportRef.current.height * 0.85;
+  if (!isMobileKeyboardOpen) {
+    layoutViewportRef.current = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+  }
+  const globeWidth = layoutViewportRef.current.width;
+  const globeHeight = layoutViewportRef.current.height;
+
   const polygonSideColor = useCallback((d) => {
     const admin = d.properties.ADMIN;
     if (admin === selectedCountry) {
@@ -319,8 +336,8 @@ const GlobeMap = ({
         position: 'fixed', 
         top: 0, 
         left: 0, 
-        width: '100vw', 
-        height: '100vh', 
+        width: globeWidth,
+        height: globeHeight,
         zIndex: 0, 
         overflow: 'hidden',
         background: isLight 
@@ -351,8 +368,8 @@ const GlobeMap = ({
         )}
         <Globe
           ref={globeEl}
-          width={window.innerWidth}
-          height={window.innerHeight}
+          width={globeWidth}
+          height={globeHeight}
           globeImageUrl={null}
           globeMaterial={globeMaterial}
           backgroundImageUrl={null}

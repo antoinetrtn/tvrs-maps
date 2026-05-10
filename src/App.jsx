@@ -47,6 +47,8 @@ function App() {
   const [confirmState, setConfirmState] = useState(null); // { message, onConfirm }
 
   const extInputRef = useRef(null);
+  const initialHeight = useRef(window.innerHeight);
+  const viewportFrameRef = useRef(null);
 
   // --- MOBILE KEYBOARD / VIEWPORT LOGIC ---
   const getViewport = useCallback(() => {
@@ -63,9 +65,18 @@ function App() {
 
   useEffect(() => {
     const handleResize = () => {
-      setViewport(getViewport());
-      // Force scroll to top to counteract native keyboard push
-      window.scrollTo(0, 0);
+      if (viewportFrameRef.current) cancelAnimationFrame(viewportFrameRef.current);
+      viewportFrameRef.current = requestAnimationFrame(() => {
+        const nextViewport = getViewport();
+        setViewport(prev => {
+          const changed =
+            Math.abs(prev.width - nextViewport.width) > 1 ||
+            Math.abs(prev.height - nextViewport.height) > 1 ||
+            Math.abs(prev.top - nextViewport.top) > 1 ||
+            Math.abs(prev.left - nextViewport.left) > 1;
+          return changed ? nextViewport : prev;
+        });
+      });
     };
     window.addEventListener('resize', handleResize);
     if (window.visualViewport) {
@@ -73,6 +84,7 @@ function App() {
       window.visualViewport.addEventListener('scroll', handleResize);
     }
     return () => {
+      if (viewportFrameRef.current) cancelAnimationFrame(viewportFrameRef.current);
       window.removeEventListener('resize', handleResize);
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
@@ -140,10 +152,27 @@ function App() {
   
   // Game countries loaded from GeoJSON
   const [countriesData, setCountriesData] = useState([]);
-  const initialHeight = useRef(window.innerHeight);
 
-  // Improved Keyboard detection
-  const isKeyboardMode = window.innerWidth < 1024 && (viewport.height < initialHeight.current * 0.85 || viewport.top > 20);
+  const keyboardModeCandidate = window.innerWidth < 1024 && (
+    viewport.height < initialHeight.current * 0.85 ||
+    viewport.top > 20
+  );
+  const [isKeyboardMode, setIsKeyboardMode] = useState(false);
+
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setIsKeyboardMode(false);
+      return undefined;
+    }
+
+    if (keyboardModeCandidate) {
+      setIsKeyboardMode(true);
+      return undefined;
+    }
+
+    const closeTimer = setTimeout(() => setIsKeyboardMode(false), 180);
+    return () => clearTimeout(closeTimer);
+  }, [keyboardModeCandidate]);
 
   const resetGame = useCallback((newMode) => {
     setMode(newMode);
@@ -331,13 +360,18 @@ function App() {
   }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, lastInteractionType, isKeyboardMode]);
 
   const handleCountrySelect = useCallback((c) => {
-    setSelectedCountry(c); 
+    if (c === selectedCountry) {
+      setPopupError(false);
+      return;
+    }
+
+    setSelectedCountry(c);
     setPopupError(false);
     // Assert focus when clicking a country on the globe
     if (lastInteractionType === 'manual' && extInputRef.current) {
       setTimeout(() => extInputRef.current.focus(), 50);
     }
-  }, [lastInteractionType]);
+  }, [lastInteractionType, selectedCountry]);
 
   const shouldAutoRotate = !selectedCountry && !isGameOver;
 

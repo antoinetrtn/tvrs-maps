@@ -187,21 +187,6 @@ const GameHUD = ({
                   <span className="score-total">/{totalPossible}</span>
                </div>
             </div>
-
-            {/* Mobile Only Gauges (under the island) */}
-            <div className="island-sub-gauges mobile-only animation-fade-in">
-              {CONTINENT_ORDER.map(reg => {
-                const isActive = activeContinent === reg;
-                const isFaded = activeContinent && activeContinent !== reg;
-                return (
-                  <div key={reg} className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} title={reg}>
-                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
-                      <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           <div className="hud-top-right">
@@ -215,6 +200,21 @@ const GameHUD = ({
                 <Square size={18} fill="currentColor" />
               </button>
             )}
+          </div>
+
+          {/* Mobile Only Gauges (Now separate row in grid) */}
+          <div className="hud-top-gauges mobile-only animation-fade-in">
+            {CONTINENT_ORDER.map(reg => {
+              const isActive = activeContinent === reg;
+              const isFaded = activeContinent && activeContinent !== reg;
+              return (
+                <div key={reg} className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} title={reg}>
+                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                    <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -321,8 +321,10 @@ const GameHUD = ({
             <input
               ref={extInputRef}
               type="text"
-              name={`q-${Math.floor(Math.random() * 10000)}`}
+              name="country-answer"
               id="q-field"
+              inputMode="text"
+              enterKeyHint="done"
               placeholder={isListening ? '...' : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))}
               className="input-field"
               value={inputValue}
