@@ -328,13 +328,15 @@
   .top-hud-bar {
     top: 16px;
     padding: 0 16px;
-    grid-template-columns: 44px 1fr 44px; /* Fixed sides to let center stretch on mobile */
+    grid-template-columns: 44px 1fr 44px; /* Fix columns to let center expand */
     row-gap: 14px;
-    justify-items: center;
+    column-gap: 8px;
+    align-items: center;
   }
 
-  .hud-top-left { justify-self: start; }
-  .hud-top-right { justify-self: end; }
+  .hud-top-center {
+    width: 100%;
+  }
 
   .central-island-panel {
     min-width: 0;
@@ -342,6 +344,7 @@
     max-width: 500px;
     padding: 0 8px;
     height: 44px;
+    justify-content: space-between; /* Ensure elements inside stretch */
   }
 
   .island-timer, .island-score {
