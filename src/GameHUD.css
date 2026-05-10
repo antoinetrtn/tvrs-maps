@@ -1,4 +1,4 @@
-/* Bottom HUD Positioning */
+/* Bottom HUD Positioning - ALWAYS CENTERED */
 .bottom-hud-container {
   position: fixed;
   bottom: var(--spacing-lg);
@@ -8,11 +8,6 @@
   z-index: 1000;
   width: 92%;
   max-width: 400px;
-}
-
-@media (min-width: 1024px) {
-  .bottom-hud-container.hud-right { left: auto; right: var(--spacing-lg); transform: none; }
-  .bottom-hud-container.hud-left { left: var(--spacing-lg); right: auto; transform: none; }
 }
 
 .bottom-hud-panel {

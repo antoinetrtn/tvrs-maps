@@ -247,11 +247,6 @@ const GameHUD = ({
                   <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
                     <Info size={18} />
                   </button>
-                  {window.innerWidth >= 1024 && (
-                    <button className="toggle-btn" onClick={() => setHudSide(hudSide === 'left' ? 'right' : 'left')} title="Inverser la position">
-                      <Layout size={18} />
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
