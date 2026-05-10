@@ -662,12 +662,11 @@ const GlobeMap = ({
   }, [selectedCountry, perfProfile?.isMobile, hasActiveFeedback]);
 
   const globeMaterial = useMemo(() => {
-    return new THREE.MeshBasicMaterial({
+    return new THREE.MeshPhongMaterial({
       color: UI_COLORS.mapSea,
-      depthTest: true,
-      depthWrite: true,
       transparent: false,
-      opacity: 1
+      opacity: 1,
+      shininess: 0.7
     });
   }, [UI_COLORS]);
 
@@ -808,15 +807,41 @@ const GlobeMap = ({
              backgroundSize: '20px 20px',
              opacity: 1
            }} />
-           {/* Subtle corner glow */}
+
+           {/* Mist / Fog (Attenuates the grid like on Home Screen) */}
+           <div style={{
+             position: 'absolute',
+             width: '100%',
+             height: '100%',
+             background: `radial-gradient(circle at center, transparent 0%, var(--bg-color) 100%)`,
+             opacity: 0.6
+           }} />
+           
+           {/* Glow Effects (Blue/Purple accents) */}
            <div style={{ 
              position: 'absolute', 
-             top: '-10%', 
-             left: '-10%', 
-             width: '60%', 
-             height: '60%', 
-             background: `radial-gradient(circle, ${isLight ? 'rgba(255,255,255,0.8)' : 'rgba(58, 118, 240, 0.15)'} 0%, rgba(255,255,255,0) 70%)`,
-             filter: 'blur(40px)'
+             top: '-20%', 
+             left: '-20%', 
+             width: '140%', 
+             height: '140%', 
+             background: isLight 
+                ? `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7) 0%, rgba(241, 245, 249, 0) 60%)`
+                : `radial-gradient(circle at 30% 30%, rgba(58, 118, 240, 0.1) 0%, rgba(2, 6, 23, 0) 70%)`,
+             filter: 'blur(80px)',
+             opacity: 0.7
+           }} />
+
+           <div style={{ 
+             position: 'absolute', 
+             bottom: '-20%', 
+             right: '-20%', 
+             width: '100%', 
+             height: '100%', 
+             background: isLight 
+                ? `radial-gradient(circle at 70% 70%, rgba(255,255,255,0.5) 0%, rgba(241, 245, 249, 0) 50%)`
+                : `radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.06) 0%, rgba(2, 6, 23, 0) 60%)`,
+             filter: 'blur(100px)',
+             opacity: 0.5
            }} />
         </div>
         <div className="globe-content-wrapper" style={{ background: 'transparent' }}>
@@ -832,6 +857,7 @@ const GlobeMap = ({
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             backgroundColor="rgba(0,0,0,0)"
             lineHoverPrecision={0}
+            showGraticules={true}
             rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
