@@ -281,6 +281,16 @@
   box-shadow: 0 0 15px var(--accent-soft);
 }
 
+.input-island.has-continent {
+  border-color: var(--continent-color);
+  box-shadow: 0 0 12px var(--continent-color);
+}
+
+.input-island.has-continent:focus-within {
+  border-color: var(--continent-color);
+  box-shadow: 0 0 20px var(--continent-color);
+}
+
 .suggestions-list {
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(20px);
