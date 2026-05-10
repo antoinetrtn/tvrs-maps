@@ -333,7 +333,11 @@ function App() {
   const handleCountrySelect = useCallback((c) => {
     setSelectedCountry(c); 
     setPopupError(false);
-  }, []);
+    // Assert focus when clicking a country on the globe
+    if (lastInteractionType === 'manual' && extInputRef.current) {
+      setTimeout(() => extInputRef.current.focus(), 50);
+    }
+  }, [lastInteractionType]);
 
   const shouldAutoRotate = !selectedCountry && !isGameOver;
 
@@ -437,7 +441,7 @@ function App() {
           foundList={foundList}
           totalCountries={totalPossible}
           countryDataMap={countryDataMap}
-          onRestart={() => handleCustomConfirm(
+          onRestart={isGameOver ? goHome : () => handleCustomConfirm(
             lang === 'fr' ? "Recommencer une partie ?" : "Restart game?",
             () => { resetGame(mode); setShowInfoModal(false); }
           )}

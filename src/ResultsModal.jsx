@@ -69,7 +69,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, on
              </button>
            )}
            <button className="restart-btn" onClick={onRestart}>
-             {isGameOver ? "Rejouer" : "Relancer la partie"}
+             {isGameOver ? (mode === 'capitals' ? "Accueil" : "Accueil") : "Relancer la partie"}
            </button>
         </div>
       </div>
