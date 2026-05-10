@@ -37,7 +37,6 @@ function App() {
   const [popupSuccess, setPopupSuccess] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [theme, setTheme] = useState('dark'); // 'dark' or 'light'
-  const [globeVisualTheme, setGlobeVisualTheme] = useState('minimalist'); // 'minimalist' or 'satellite'
   const [lastInteractionType, setLastInteractionType] = useState('manual'); // 'manual' or 'voice'
   
   // New States for Advanced UX
@@ -139,6 +138,10 @@ function App() {
   
   // Game countries loaded from GeoJSON
   const [countriesData, setCountriesData] = useState([]);
+  const initialHeight = useRef(window.innerHeight);
+
+  // Improved Keyboard detection
+  const isKeyboardMode = window.innerWidth < 1024 && (viewport.height < initialHeight.current * 0.85 || viewport.top > 20);
 
   const resetGame = useCallback((newMode) => {
     setMode(newMode);
@@ -256,7 +259,7 @@ function App() {
       return "SUCCESS";
     }
     return "ERROR";
-  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, lastInteractionType]);
+  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, lastInteractionType, isKeyboardMode]);
 
   const specificCountryGuess = useCallback((inputVal) => {
     if (!selectedCountry) return false;
@@ -285,7 +288,7 @@ function App() {
 
       const newFound = [...foundList, selectedCountry];
       setFoundList(newFound);
-      setScore(score + 1);
+      setScore(prev => prev + 1);
       setPopupError(false);
       setPopupWarning(false);
       setPopupSuccess(true);
@@ -313,7 +316,7 @@ function App() {
       setTimeout(() => setPopupError(false), 500);
       return "ERROR";
     }
-  }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, lastInteractionType]);
+  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, lastInteractionType, isKeyboardMode]);
 
   const handleCountrySelect = useCallback((c) => {
     setSelectedCountry(c); 
@@ -326,10 +329,24 @@ function App() {
     setConfirmState({ message: msg, onConfirm: () => { action(); setConfirmState(null); } });
   };
 
-  const initialHeight = useRef(window.innerHeight);
+  const perfProfile = useMemo(() => {
+    const isMobile = viewport.width < 768;
+    const isTablet = viewport.width >= 768 && viewport.width < 1024;
+    const pixelRatio = isMobile ? 0.75 : 1;
 
-  // Improved Keyboard detection
-  const isKeyboardMode = window.innerWidth < 1024 && (viewport.height < initialHeight.current * 0.85 || viewport.top > 20);
+    return {
+      mode: 'efficient',
+      isMobile,
+      isTablet,
+      pixelRatio,
+      enableAutoRotate: false,
+      enablePointerInteraction: true,
+      maxLabels: isMobile ? 0 : (isTablet ? 12 : 20),
+      showAtmosphere: false,
+      useImageTextures: false,
+      polygonCapCurvatureResolution: isMobile ? 8 : 6
+    };
+  }, [viewport.width]);
 
   return (
     <div className={`app-container ${theme}`} data-theme={theme}>
@@ -379,8 +396,6 @@ function App() {
         setTheme={setTheme}
         viewport={viewport}
         setLastInteractionType={setLastInteractionType}
-        globeVisualTheme={globeVisualTheme}
-        setGlobeVisualTheme={setGlobeVisualTheme}
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
         hudSide={hudSide}
@@ -392,14 +407,13 @@ function App() {
         countriesData={countriesData} 
         foundList={foundList} 
         selectedCountry={selectedCountry}
-        shouldAutoRotate={shouldAutoRotate}
-        isPaused={!shouldAutoRotate}
+        shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
         onCountrySelect={handleCountrySelect}
         theme={theme}
         viewport={viewport}
-        globeVisualTheme={globeVisualTheme}
-        hudSide={hudSide}
         isError={popupError}
+        hasActiveFeedback={popupError || popupSuccess}
+        perfProfile={perfProfile}
       />
 
       {(isGameOver || showInfoModal) && (

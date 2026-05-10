@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Globe, MapPin, Info, Play, Square, X, ChevronLeft, ChevronRight, Sun, Moon, Mic, MicOff, Camera, Menu, Layout } from 'lucide-react';
+import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Sun, Moon, Mic, MicOff, Menu, Layout } from 'lucide-react';
 import './GameHUD.css';
 
 // Check for Speech Recognition API support
@@ -12,7 +12,6 @@ const GameHUD = ({
   onInput, onEnter, isPlaying, isGameOver, onStop, onInfo,
   isFocusedCountry, onClearFocus, onNavigateFocus, inputError, inputSuccess, inputWarning, extInputRef,
   foundList, countryDataMap, theme, setTheme, viewport, setLastInteractionType,
-  globeVisualTheme, setGlobeVisualTheme,
   menuOpen, setMenuOpen, hudSide, setHudSide, isKeyboardMode
 }) => {
   const [inputValue, setInputValue] = useState('');
@@ -83,6 +82,9 @@ const GameHUD = ({
 
   const toggleMic = () => {
     if (isListening) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch(e) {}
+      }
       recognitionRef.current = null;
       setIsListening(false);
     } else {
@@ -240,9 +242,6 @@ const GameHUD = ({
                   </button>
                   <button className="toggle-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                     {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                  </button>
-                  <button className={`toggle-btn ${globeVisualTheme === 'satellite' ? 'active' : ''}`} onClick={() => setGlobeVisualTheme(globeVisualTheme === 'satellite' ? 'minimalist' : 'satellite')}>
-                    <Camera size={18} />
                   </button>
                   <button className="toggle-btn" onClick={onInfo} title={lang === 'fr' ? 'Informations' : 'Information'}>
                     <Info size={18} />

@@ -1,10 +1,88 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
 
-const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, shouldAutoRotate, selectedCountry, theme, viewport, globeVisualTheme, hudSide, isError }) => {
+const getFeatureAdmin = (feature) => feature?.properties?.ADMIN;
+
+const getFeaturePolygons = (feature) => {
+  const geometry = feature?.geometry;
+  if (!geometry) return [];
+  if (geometry.type === 'Polygon') return [geometry.coordinates];
+  if (geometry.type === 'MultiPolygon') return geometry.coordinates;
+  return [];
+};
+
+const getLngLatBounds = (polygons) => {
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+
+  polygons.forEach(polygon => {
+    polygon.forEach(ring => {
+      ring.forEach(([lng, lat]) => {
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
+      });
+    });
+  });
+
+  return { minLng, maxLng, minLat, maxLat };
+};
+
+const pointInBounds = (lng, lat, bounds) => {
+  return lng >= bounds.minLng && lng <= bounds.maxLng && lat >= bounds.minLat && lat <= bounds.maxLat;
+};
+
+const pointInRing = (lng, lat, ring) => {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [lngI, latI] = ring[i];
+    const [lngJ, latJ] = ring[j];
+    const intersects = ((latI > lat) !== (latJ > lat)) &&
+      (lng < ((lngJ - lngI) * (lat - latI)) / (latJ - latI || Number.EPSILON) + lngI);
+    if (intersects) inside = !inside;
+  }
+  return inside;
+};
+
+const pointInPolygon = (lng, lat, polygon) => {
+  if (!polygon?.length || !pointInRing(lng, lat, polygon[0])) return false;
+  for (let i = 1; i < polygon.length; i++) {
+    if (pointInRing(lng, lat, polygon[i])) return false;
+  }
+  return true;
+};
+
+const featureContainsLngLat = (featureIndexEntry, lng, lat) => {
+  if (!pointInBounds(lng, lat, featureIndexEntry.bounds)) return false;
+  return featureIndexEntry.polygons.some(polygon => pointInPolygon(lng, lat, polygon));
+};
+
+const getLngLatDistance = (lngA, latA, lngB, latB) => {
+  let dLng = Math.abs(lngA - lngB);
+  if (dLng > 180) dLng = 360 - dLng;
+  return Math.hypot(dLng, latA - latB);
+};
+
+const GlobeMap = ({
+  mode,
+  countriesData,
+  foundList,
+  onCountrySelect,
+  shouldAutoRotate,
+  selectedCountry,
+  theme,
+  viewport,
+  isError,
+  hasActiveFeedback,
+  perfProfile
+}) => {
   const globeEl = useRef();
+  const tapRef = useRef(null);
   
   // Custom Zoom Logic (Google Maps style: double tap + drag)
   const lastTapRef = useRef(0);
@@ -42,32 +120,26 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
   useEffect(() => {
     if (globeEl.current) {
       try {
+        const renderer = globeEl.current.renderer();
+        if (renderer) {
+          renderer.setPixelRatio(perfProfile?.pixelRatio || 1);
+        }
+
         const controls = globeEl.current.controls();
         if (controls) {
           controls.autoRotate = shouldAutoRotate;
           controls.autoRotateSpeed = 0.3;
           controls.enableZoom = true;
+          controls.enableDamping = !perfProfile?.isMobile;
         }
 
         const camera = globeEl.current.camera();
         if (camera) {
-          const fullW = window.innerWidth;
-          const fullH = window.innerHeight;
-
-          if (fullW >= 1024) {
-            // DESKTOP: Use offset to accommodate side HUD
-            const horizontalOffset = hudSide === 'right' ? 160 : -160;
-            camera.setViewOffset(fullW, fullH, horizontalOffset, 0, fullW, fullH);
-          } else {
-            // MOBILE: Clear offset, do NOT shift the camera.
-            // This prevents the globe from resizing/glitching when the keyboard opens.
-            // We handle centering by rotating the globe itself via latOffset.
-            camera.clearViewOffset();
-          }
+          camera.clearViewOffset();
         }
       } catch (e) {}
     }
-  }, [shouldAutoRotate, hudSide, theme, globeVisualTheme]);
+  }, [shouldAutoRotate, theme, perfProfile?.pixelRatio, perfProfile?.isMobile]);
 
   useEffect(() => {
     if (selectedCountry && globeEl.current) {
@@ -79,13 +151,76 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
         // we must point the camera slightly SOUTH of the country (negative offset).
         const isKeyboardOpen = isMobile && viewport.height < window.innerHeight * 0.85;
         const latOffset = isKeyboardOpen ? -25 : (isMobile ? -10 : 0);
-        globeEl.current.pointOfView({ lat: data.lat + latOffset, lng: data.lng, altitude: zoomAlt }, 400);
+        globeEl.current.pointOfView({ lat: data.lat + latOffset, lng: data.lng, altitude: zoomAlt }, perfProfile?.isMobile ? 250 : 400);
       }
     }
-  }, [selectedCountry, viewport.height]);
+  }, [selectedCountry, viewport.height, perfProfile?.isMobile]);
 
   const isLight = theme === 'light';
-  const isSatellite = globeVisualTheme === 'satellite';
+
+  const selectableCountriesData = useMemo(() => {
+    return countriesData.filter(feature => countryDataMap[getFeatureAdmin(feature)]);
+  }, [countriesData]);
+
+  const selectableFeatureIndex = useMemo(() => {
+    return selectableCountriesData.map(feature => {
+      const polygons = getFeaturePolygons(feature);
+      return {
+        admin: getFeatureAdmin(feature),
+        bounds: getLngLatBounds(polygons),
+        polygons
+      };
+    }).filter(entry => entry.admin && entry.polygons.length);
+  }, [selectableCountriesData]);
+
+  const selectCountry = useCallback((admin) => {
+    if (admin && countryDataMap[admin] && onCountrySelect) {
+      onCountrySelect(admin);
+    }
+  }, [onCountrySelect]);
+
+  const selectCountryAtLngLat = useCallback((lng, lat) => {
+    const match = selectableFeatureIndex.find(entry => featureContainsLngLat(entry, lng, lat));
+    if (match) {
+      selectCountry(match.admin);
+      return;
+    }
+
+    // GeoJSON at 110m is very simplified; a tap near a coast/border can land just
+    // outside the polygon. Fall back to the closest capital/country point nearby.
+    let best = null;
+    Object.entries(countryDataMap).forEach(([admin, data]) => {
+      if (data.lat === undefined || data.lng === undefined) return;
+      const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
+      if (!best || dist < best.dist) best = { admin, dist };
+    });
+    if (best && best.dist < 6) selectCountry(best.admin);
+  }, [selectableFeatureIndex, selectCountry]);
+
+  const handlePointerDown = useCallback((event) => {
+    if (event.target?.tagName !== 'CANVAS') return;
+    tapRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      t: performance.now()
+    };
+  }, []);
+
+  const handlePointerUp = useCallback((event) => {
+    const tap = tapRef.current;
+    tapRef.current = null;
+    if (!tap || tap.pointerId !== event.pointerId) return;
+
+    const dx = event.clientX - tap.x;
+    const dy = event.clientY - tap.y;
+    const moved = Math.hypot(dx, dy);
+    const elapsed = performance.now() - tap.t;
+    if (moved > 10 || elapsed > 600 || !globeEl.current?.toGlobeCoords) return;
+
+    const coords = globeEl.current.toGlobeCoords(event.clientX, event.clientY);
+    if (coords) selectCountryAtLngLat(coords.lng, coords.lat);
+  }, [selectCountryAtLngLat]);
 
   const REGION_COLORS = useMemo(() => ({
     "Europe": isLight ? "rgba(37, 99, 235, 0.55)" : "rgba(59, 130, 246, 0.7)",
@@ -108,10 +243,9 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
       if (isError) return 'rgba(239, 68, 68, 0.8)';
       return isLight ? 'rgba(37, 99, 235, 0.25)' : 'rgba(59, 130, 246, 0.25)'; 
     }
-    if (isSatellite) return 'rgba(0,0,0,0)';
     if (mode === 'capitals') return isLight ? 'rgba(255, 255, 255, 0.15)' : 'rgba(20, 30, 45, 0.2)';
     return isLight ? 'rgba(255, 255, 255, 0.4)' : 'rgba(25, 40, 65, 0.5)';
-  }, [selectedCountry, mode, foundList, REGION_COLORS, isLight, isSatellite, isError]);
+  }, [selectedCountry, mode, foundList, REGION_COLORS, isLight, isError]);
 
   const getPolygonStroke = useCallback((d) => {
     const admin = d.properties.ADMIN;
@@ -120,9 +254,8 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
       if (isError) return '#ef4444';
       return isLight ? '#1e40af' : '#ffffff';
     }
-    if (isSatellite) return isLight ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.3)';
     return isLight ? 'rgba(30, 58, 138, 0.2)' : 'rgba(40, 70, 120, 0.4)';
-  }, [selectedCountry, foundList, isLight, isSatellite, isError]);
+  }, [selectedCountry, foundList, isLight, isError]);
 
   const getPolygonAltitude = useCallback((d) => {
     if (d.properties.ADMIN === selectedCountry) return 0.03; 
@@ -130,7 +263,12 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
   }, [selectedCountry, foundList]);
 
   const labelsData = useMemo(() => {
-    return foundList
+    if (perfProfile?.maxLabels === 0) return [];
+    const labelKeys = Number.isFinite(perfProfile?.maxLabels)
+      ? foundList.slice(-perfProfile.maxLabels)
+      : foundList;
+
+    return labelKeys
       .map(adminKey => countryDataMap[adminKey])
       .filter(data => data && data.lat !== undefined)
       .map(data => ({
@@ -140,17 +278,18 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
         text: data.capital_fr || data.capital,
         region: data.region
       }));
-  }, [foundList]);
+  }, [foundList, perfProfile?.maxLabels]);
 
   const ringsData = useMemo(() => {
-    if (selectedCountry) {
+    const shouldShowRing = selectedCountry && (!perfProfile?.isMobile || hasActiveFeedback);
+    if (shouldShowRing) {
        const mapped = countryDataMap[selectedCountry];
        if (mapped && mapped.lat !== undefined) {
           return [{ lat: mapped.lat, lng: mapped.lng }];
        }
     }
     return [];
-  }, [selectedCountry]);
+  }, [selectedCountry, perfProfile?.isMobile, hasActiveFeedback]);
 
   const globeMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({ color: isLight ? '#a5c9f5' : '#0a1a3a' });
@@ -170,12 +309,9 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onPointerDown={(e) => {
-        // If clicking the canvas (globe), prevent default to keep the keyboard open
-        if (e.target.tagName === 'CANVAS') {
-          e.preventDefault();
-        }
-      }}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => { tapRef.current = null; }}
       style={{ 
         position: 'fixed', 
         top: 0, 
@@ -214,17 +350,19 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
           ref={globeEl}
           width={window.innerWidth}
           height={window.innerHeight}
-          globeImageUrl={isSatellite ? "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg" : null}
-          globeMaterial={isSatellite ? null : globeMaterial}
-          backgroundImageUrl={!isLight ? "//unpkg.com/three-globe/example/img/night-sky.png" : null}
-          showAtmosphere={(isSatellite || isLight) && window.innerWidth >= 768} // Disable heavy atmosphere shader on mobile to fix heating
+          globeImageUrl={null}
+          globeMaterial={globeMaterial}
+          backgroundImageUrl={null}
+          showAtmosphere={!!perfProfile?.showAtmosphere}
           atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
           atmosphereDayQuotient={isLight ? 0.2 : 0.1}
           backgroundColor="rgba(0,0,0,0)"
           lineHoverPrecision={0}
           rendererConfig={{ antialias: false, powerPreference: 'high-performance' }}
-          polygonsData={countriesData}
-          polygonResolution={1}
+          animateIn={false}
+          enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
+          polygonsData={selectableCountriesData}
+          polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution || 12}
           polygonAltitude={getPolygonAltitude}
           polygonCapColor={getPolygonColor}
           polygonSideColor={polygonSideColor}
@@ -247,10 +385,8 @@ const GlobeMap = ({ mode, countriesData, foundList, onCountrySelect, isPaused, s
           ringPropagationSpeed={1.2}
           ringRepeatPeriod={1000}
           ringAltitude={0.032}
-          onPolygonClick={d => {
-            const admin = d.properties.ADMIN;
-            if (onCountrySelect) onCountrySelect(admin);
-          }}
+          onPolygonClick={d => selectCountry(getFeatureAdmin(d))}
+          onGlobeClick={({ lat, lng }) => selectCountryAtLngLat(lng, lat)}
         />
     </div>
   );
