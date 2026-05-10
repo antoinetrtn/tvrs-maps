@@ -295,6 +295,12 @@
   flex: 1;
   transition: all var(--transition-normal);
   min-width: 0;
+  border: 1px solid var(--glass-border);
+}
+
+.input-island.has-continent {
+  border-color: var(--continent-color);
+  box-shadow: 0 0 12px var(--continent-color);
 }
 
 .input-field {
@@ -310,6 +316,11 @@
 
 .input-island:focus-within {
   border-color: var(--accent);
+}
+
+.input-island.has-continent:focus-within {
+  border-color: var(--continent-color);
+  box-shadow: 0 0 20px var(--continent-color);
 }
 
 .suggestions-list {
