@@ -86,6 +86,8 @@ const GlobeMap = ({
 }) => {
   const globeEl = useRef();
   const tapRef = useRef(null);
+  const previousSelectedCountryRef = useRef(null);
+  const lastTargetRef = useRef(null);
   const layoutViewportRef = useRef({
     width: window.innerWidth,
     height: window.innerHeight
@@ -137,7 +139,10 @@ const GlobeMap = ({
           controls.autoRotate = shouldAutoRotate;
           controls.autoRotateSpeed = 0.3;
           controls.enableZoom = true;
-          controls.enableDamping = !perfProfile?.isMobile;
+          controls.enableDamping = true;
+          controls.dampingFactor = perfProfile?.isMobile ? 0.08 : 0.05;
+          controls.rotateSpeed = perfProfile?.isMobile ? 0.75 : 0.9;
+          controls.zoomSpeed = perfProfile?.isMobile ? 0.75 : 1;
         }
 
         const camera = globeEl.current.camera();
@@ -153,17 +158,32 @@ const GlobeMap = ({
       const data = countryDataMap[selectedCountry];
       if (data && data.lat !== undefined) {
         const isMobile = viewport.width < 768;
-        const zoomAlt = isMobile ? 1.8 : 0.8;
-        // To push the country UP on the screen (above the keyboard), 
-        // we must point the camera slightly SOUTH of the country (negative offset).
+        const currentPOV = globeEl.current.pointOfView();
+        const hasPreviousSelection = !!previousSelectedCountryRef.current;
+        const fallbackAltitude = isMobile ? 1.8 : 0.8;
+        const preservedAltitude = Number.isFinite(currentPOV?.altitude)
+          ? currentPOV.altitude
+          : fallbackAltitude;
         const isKeyboardOpen = isMobile && isKeyboardMode;
         const latOffset = isKeyboardOpen ? -8 : (isMobile ? -10 : 0);
-        globeEl.current.pointOfView({ lat: data.lat + latOffset, lng: data.lng, altitude: zoomAlt }, perfProfile?.isMobile ? 250 : 400);
+        const target = {
+          lat: data.lat + latOffset,
+          lng: data.lng,
+          altitude: hasPreviousSelection ? preservedAltitude : Math.min(preservedAltitude, fallbackAltitude)
+        };
+        const previousTarget = lastTargetRef.current;
+        const onlyViewportNudge = previousTarget &&
+          previousSelectedCountryRef.current === selectedCountry &&
+          Math.abs(previousTarget.lng - target.lng) < 0.001 &&
+          Math.abs(previousTarget.altitude - target.altitude) < 0.001;
+        globeEl.current.pointOfView(target, onlyViewportNudge ? 180 : (perfProfile?.isMobile ? 320 : 420));
+        lastTargetRef.current = target;
       }
     } else if (isHomeScreen && globeEl.current) {
       globeEl.current.pointOfView({ altitude: 2.5 }, 1000);
     }
-  }, [selectedCountry, viewport.height, isHomeScreen, perfProfile]);
+    previousSelectedCountryRef.current = selectedCountry;
+  }, [selectedCountry, viewport.height, isHomeScreen, perfProfile, isKeyboardMode]);
 
   const isLight = theme === 'light';
 
@@ -244,9 +264,11 @@ const GlobeMap = ({
     "Unknown": isLight ? "rgba(80, 80, 80, 0.55)" : "rgba(100, 100, 100, 0.7)"
   }), [isLight]);
 
+  const foundSet = useMemo(() => new Set(foundList), [foundList]);
+
   const getPolygonColor = useCallback((d) => {
     const admin = d.properties.ADMIN;
-    if (foundList.includes(admin)) {
+    if (foundSet.has(admin)) {
       if (admin === selectedCountry) return 'rgba(34, 197, 94, 0.85)';
       const region = countryDataMap[admin]?.region;
       return REGION_COLORS[region] || 'rgba(34, 197, 94, 0.7)';
@@ -257,22 +279,22 @@ const GlobeMap = ({
     }
     if (mode === 'capitals') return isLight ? 'rgba(255, 255, 255, 0.15)' : 'rgba(20, 30, 45, 0.2)';
     return isLight ? 'rgba(255, 255, 255, 0.4)' : 'rgba(25, 40, 65, 0.5)';
-  }, [selectedCountry, mode, foundList, REGION_COLORS, isLight, isError]);
+  }, [selectedCountry, mode, foundSet, REGION_COLORS, isLight, isError]);
 
   const getPolygonStroke = useCallback((d) => {
     const admin = d.properties.ADMIN;
-    if (foundList.includes(admin)) return 'rgba(0,0,0,0)';
+    if (foundSet.has(admin)) return 'rgba(0,0,0,0)';
     if (admin === selectedCountry) {
       if (isError) return '#ef4444';
       return isLight ? '#1e40af' : '#ffffff';
     }
     return isLight ? 'rgba(30, 58, 138, 0.2)' : 'rgba(40, 70, 120, 0.4)';
-  }, [selectedCountry, foundList, isLight, isError]);
+  }, [selectedCountry, foundSet, isLight, isError]);
 
   const getPolygonAltitude = useCallback((d) => {
     if (d.properties.ADMIN === selectedCountry) return 0.03; 
-    return foundList.includes(d.properties.ADMIN) ? 0.015 : 0.008;
-  }, [selectedCountry, foundList]);
+    return foundSet.has(d.properties.ADMIN) ? 0.015 : 0.008;
+  }, [selectedCountry, foundSet]);
 
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0) return [];
@@ -357,6 +379,35 @@ const GlobeMap = ({
       }));
   }, [countriesWithGeometry, tinyCountries]);
 
+  const getPolygonStrokeWidth = useCallback((d) => (
+    d.properties.ADMIN === selectedCountry ? 1.5 : 0.5
+  ), [selectedCountry]);
+
+  const getPointColor = useCallback((d) => {
+    const isFound = foundSet.has(d.admin);
+    const isSelected = d.admin === selectedCountry;
+    if (isFound) return REGION_COLORS[d.region] || '#22c55e';
+    if (isSelected) return isError ? '#ef4444' : (isLight ? '#3b82f6' : '#60a5fa');
+    return isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
+  }, [REGION_COLORS, foundSet, isError, isLight, selectedCountry]);
+
+  const getPointRadius = useCallback((d) => (
+    d.admin === selectedCountry ? 0.4 : 0.2
+  ), [selectedCountry]);
+
+  const getPointAltitude = useCallback((d) => {
+    if (d.admin === selectedCountry) return 0.03;
+    return foundSet.has(d.admin) ? 0.015 : 0.005;
+  }, [foundSet, selectedCountry]);
+
+  const getLabelColor = useCallback((d) => (
+    REGION_COLORS[d.region] || 'rgba(234, 179, 8, 0.7)'
+  ).replace('0.7', '1').replace('0.55', '1'), [REGION_COLORS]);
+
+  const getRingColor = useCallback(() => (
+    isError ? '#ef4444' : (isLight ? 'rgba(37, 99, 235, 0.6)' : 'rgba(255, 255, 255, 0.5)')
+  ), [isError, isLight]);
+
   return (
     <div 
       onTouchStart={handleTouchStart}
@@ -421,24 +472,15 @@ const GlobeMap = ({
           polygonCapColor={getPolygonColor}
           polygonSideColor={polygonSideColor}
           polygonStrokeColor={getPolygonStroke}
-          polygonStrokeWidth={d => d.properties.ADMIN === selectedCountry ? 1.5 : 0.5}
+          polygonStrokeWidth={getPolygonStrokeWidth}
           polygonAltitudeUpdateMs={0}
           polygonsTransitionDuration={0}
           pointsData={markersData}
           pointLat="lat"
           pointLng="lng"
-          pointColor={d => {
-            const isFound = foundList.includes(d.admin);
-            const isSelected = d.admin === selectedCountry;
-            if (isFound) return REGION_COLORS[d.region] || '#22c55e';
-            if (isSelected) return isError ? '#ef4444' : (isLight ? '#3b82f6' : '#60a5fa');
-            return isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
-          }}
-          pointRadius={d => d.admin === selectedCountry ? 0.4 : 0.2}
-          pointAltitude={d => {
-            if (d.admin === selectedCountry) return 0.03;
-            return foundList.includes(d.admin) ? 0.015 : 0.005;
-          }}
+          pointColor={getPointColor}
+          pointRadius={getPointRadius}
+          pointAltitude={getPointAltitude}
           onPointClick={d => selectCountry(d.admin)}
           labelsData={labelsData}
           labelLat={d => d.lat}
@@ -446,11 +488,11 @@ const GlobeMap = ({
           labelText={d => d.text}
           labelSize={0.6}
           labelDotRadius={0.35}
-          labelColor={d => (REGION_COLORS[d.region] || 'rgba(234, 179, 8, 0.7)').replace('0.7', '1').replace('0.55', '1')}
+          labelColor={getLabelColor}
           labelResolution={viewport.width < 768 ? 1 : 2}
           labelAltitude={0.02}
           ringsData={ringsData}
-          ringColor={() => isError ? '#ef4444' : (isLight ? 'rgba(37, 99, 235, 0.6)' : 'rgba(255, 255, 255, 0.5)')}
+          ringColor={getRingColor}
           ringMaxRadius={2.2}
           ringPropagationSpeed={1.2}
           ringRepeatPeriod={1000}
