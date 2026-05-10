@@ -165,7 +165,7 @@ const GameHUD = ({
         <>
           <div className="hud-top-left">
             <button className="hud-btn-circular glass-panel" onClick={onGoHome} title={lang === 'fr' ? 'Accueil' : 'Home'}>
-              <Home size={22} />
+              <Home size={18} />
             </button>
           </div>
 
@@ -202,7 +202,7 @@ const GameHUD = ({
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Menu"
             >
-              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
 
             {menuOpen && (
