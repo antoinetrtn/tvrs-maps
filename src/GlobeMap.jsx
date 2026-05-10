@@ -70,6 +70,7 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
 
 const GlobeMap = ({
   mode,
+  lang,
   countriesData,
   foundList,
   onCountrySelect,
@@ -324,6 +325,37 @@ const GlobeMap = ({
     return isLight ? 'rgba(0, 0, 0, 0.02)' : 'rgba(0, 0, 0, 0.05)';
   }, [isLight, selectedCountry, isError]);
 
+  const countriesWithGeometry = useMemo(() => {
+    return new Set(selectableCountriesData.map(getFeatureAdmin));
+  }, [selectableCountriesData]);
+
+  const tinyCountries = useMemo(() => {
+    // Countries that HAVE geometry but it's too small to see/tap easily (< 0.5 deg)
+    return new Set(
+      selectableFeatureIndex
+        .filter(entry => {
+          const b = entry.bounds;
+          return (b.maxLng - b.minLng < 0.5) && (b.maxLat - b.minLat < 0.5);
+        })
+        .map(entry => entry.admin)
+    );
+  }, [selectableFeatureIndex]);
+
+  const markersData = useMemo(() => {
+    return Object.entries(countryDataMap)
+      .filter(([admin, data]) => {
+        if (data.lat === undefined || data.lng === undefined) return false;
+        // Marker if: No geometry OR Tiny geometry
+        return !countriesWithGeometry.has(admin) || tinyCountries.has(admin);
+      })
+      .map(([admin, data]) => ({
+        admin,
+        lat: data.lat,
+        lng: data.lng,
+        region: data.region
+      }));
+  }, [countriesWithGeometry, tinyCountries]);
+
   return (
     <div 
       onTouchStart={handleTouchStart}
@@ -390,6 +422,22 @@ const GlobeMap = ({
           polygonStrokeWidth={d => d.properties.ADMIN === selectedCountry ? 1.5 : 0.5}
           polygonAltitudeUpdateMs={0}
           polygonsTransitionDuration={0}
+          pointsData={markersData}
+          pointLat="lat"
+          pointLng="lng"
+          pointColor={d => {
+            const isFound = foundList.includes(d.admin);
+            const isSelected = d.admin === selectedCountry;
+            if (isFound) return REGION_COLORS[d.region] || '#22c55e';
+            if (isSelected) return isError ? '#ef4444' : (isLight ? '#3b82f6' : '#60a5fa');
+            return isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
+          }}
+          pointRadius={d => d.admin === selectedCountry ? 0.4 : 0.2}
+          pointAltitude={d => {
+            if (d.admin === selectedCountry) return 0.03;
+            return foundList.includes(d.admin) ? 0.015 : 0.005;
+          }}
+          onPointClick={d => selectCountry(d.admin)}
           labelsData={labelsData}
           labelLat={d => d.lat}
           labelLng={d => d.lng}

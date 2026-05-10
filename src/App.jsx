@@ -464,6 +464,7 @@ function App() {
       
       <GlobeMap  
         mode={mode} 
+        lang={lang}
         countriesData={countriesData} 
         foundList={foundList} 
         selectedCountry={selectedCountry}
