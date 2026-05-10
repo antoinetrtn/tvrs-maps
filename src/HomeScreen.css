@@ -79,7 +79,7 @@
 .lang-btn.active {
   background: var(--accent);
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 4px 12px var(--accent-soft);
 }
 
 .lang-btn:hover:not(.active) {

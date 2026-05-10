@@ -7,35 +7,36 @@ export const THEME = {
     bg: '#f8fafc',
     textMain: '#0f172a',
     textMuted: '#64748b',
-    accent: '#2563eb',
-    accentHover: '#1d4ed8',
-    accentSoft: 'rgba(37, 99, 235, 0.1)',
-    glassBg: 'rgba(255, 255, 255, 0.85)',
-    glassBorder: 'rgba(15, 23, 42, 0.1)',
-    success: '#22c55e',
+    accent: '#334155',
+    accentHover: '#1e293b',
+    accentSoft: 'rgba(51, 65, 85, 0.1)',
+    glassBg: 'rgba(255, 255, 255, 0.8)',
+    glassBorder: 'rgba(15, 23, 42, 0.08)',
+    success: '#10b981',
     error: '#ef4444',
-    warning: '#eab308',
-    mapBase: '#d9ecff',
-    mapSea: '#a5c9f5',
-    mapBorder: '#c2d9ff'
+    warning: '#f59e0b',
+    mapBase: '#e2e8f0',
+    mapSea: '#cbd5e1',
+    mapBorder: '#94a3b8'
   },
   dark: {
-    bg: '#020205',
-    textMain: '#ffffff',
+    bg: '#020617',
+    textMain: '#f8fafc',
     textMuted: '#94a3b8',
-    accent: '#3b82f6',
-    accentHover: '#2563eb',
-    accentSoft: 'rgba(59, 130, 246, 0.15)',
-    glassBg: 'rgba(15, 23, 42, 0.75)',
-    glassBorder: 'rgba(255, 255, 255, 0.12)',
-    success: '#22c55e',
+    accent: '#f8fafc',
+    accentHover: '#ffffff',
+    accentSoft: 'rgba(248, 250, 252, 0.1)',
+    glassBg: 'rgba(15, 23, 42, 0.7)',
+    glassBorder: 'rgba(255, 255, 255, 0.1)',
+    success: '#10b981',
     error: '#ef4444',
-    warning: '#eab308',
-    mapBase: '#193456',
-    mapSea: '#0a1a3a',
-    mapBorder: '#2a4a75'
+    warning: '#f59e0b',
+    mapBase: '#1e293b',
+    mapSea: '#0f172a',
+    mapBorder: '#334155'
   }
 };
+
 
 export const CONTINENT_COLORS = {
   light: {

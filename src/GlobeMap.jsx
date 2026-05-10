@@ -655,7 +655,7 @@ const GlobeMap = ({
         overflow: 'hidden',
         transition: 'top 220ms cubic-bezier(0.2, 0.9, 0.2, 1), left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), width 220ms cubic-bezier(0.2, 0.9, 0.2, 1), height 220ms cubic-bezier(0.2, 0.9, 0.2, 1)',
         background: isLight 
-          ? 'linear-gradient(to bottom, #e0f2fe 0%, #f8fafc 100%)' 
+          ? 'linear-gradient(to bottom, #f1f5f9 0%, #f8fafc 100%)' 
           : 'transparent'
       }}
     >
