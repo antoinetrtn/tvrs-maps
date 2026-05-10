@@ -10,7 +10,7 @@
   align-items: flex-start;
   pointer-events: none;
   z-index: 1001;
-  gap: 12px;
+  gap: 8px;
 }
 
 .hud-top-left, .hud-top-right {
@@ -47,13 +47,15 @@
   .desktop-only { display: none !important; }
   .mobile-only { display: flex !important; }
   
-  .top-hud-bar { padding: 0 var(--spacing-sm); gap: 8px; }
+  .top-hud-bar { 
+    top: var(--spacing-sm);
+    padding: 0 var(--spacing-sm); 
+    gap: 4px; 
+  }
 
   .central-island-panel {
-    padding: 6px 12px;
+    padding: 6px 10px;
     gap: 8px;
-    width: 100%;
-    min-width: 0;
   }
 
   .island-progress-wrap {
@@ -62,13 +64,18 @@
 
   .island-sub-gauges.mobile-only {
     flex-direction: row;
-    gap: 12px;
-    margin-top: 8px;
+    gap: 8px;
+    margin-top: 6px;
     justify-content: center;
   }
 
   .hud-bottom-right {
     display: none !important;
+  }
+  
+  .bottom-hud-container {
+    bottom: var(--spacing-sm);
+    width: 96% !important;
   }
 }
 
@@ -106,9 +113,8 @@
   padding: 8px 16px;
   border-radius: var(--radius-full);
   cursor: pointer;
-  width: auto;
-  min-width: 280px;
-  max-width: 450px;
+  width: 100%; /* Adapts to container */
+  max-width: 450px; /* Keep it tight on PC */
   justify-content: center;
 }
 
@@ -133,7 +139,7 @@
 .island-progress-wrap {
   flex: 1;
   max-width: 220px;
-  min-width: 60px;
+  min-width: 20px;
 }
 
 .progress-linear-container {
@@ -256,8 +262,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  width: auto;
-  min-width: 320px;
+  width: 92%;
   max-width: 480px;
 }
 
@@ -275,8 +280,8 @@
   align-items: center;
   padding: 0 16px;
   flex: 1;
-  min-width: 180px;
   transition: all var(--transition-normal);
+  min-width: 0;
 }
 
 .input-field {
