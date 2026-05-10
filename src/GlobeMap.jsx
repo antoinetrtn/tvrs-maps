@@ -757,10 +757,11 @@ const GlobeMap = ({
              position: 'absolute',
              width: '100%',
              height: '100%',
-             backgroundImage: `radial-gradient(${isLight ? 'rgba(15, 23, 42, 0.25)' : 'rgba(248, 250, 252, 0.18)'} 1.5px, transparent 0)`,
-             backgroundSize: '40px 40px',
+             backgroundImage: `radial-gradient(${isLight ? 'rgba(15, 23, 42, 0.2)' : 'rgba(255, 255, 255, 0.15)'} 1.1px, transparent 0)`,
+             backgroundSize: '20px 20px',
              opacity: 1
-           }} />           {/* Subtle corner glow */}
+           }} />
+           {/* Subtle corner glow */}
            <div style={{ 
              position: 'absolute', 
              top: '-10%', 
@@ -771,7 +772,7 @@ const GlobeMap = ({
              filter: 'blur(40px)'
            }} />
         </div>
-        <div className="globe-content-wrapper" style={{ background: isLight ? '#f1f5f9' : '#020617' }}>
+        <div className="globe-content-wrapper" style={{ background: 'transparent' }}>
           <Globe
             ref={globeEl}
             width={globeWidth}
@@ -782,7 +783,7 @@ const GlobeMap = ({
             showAtmosphere={!!perfProfile?.showAtmosphere}
             atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
-            backgroundColor={isLight ? '#f1f5f9' : '#020617'}
+            backgroundColor="rgba(0,0,0,0)"
             lineHoverPrecision={0}
             rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
             animateIn={false}
