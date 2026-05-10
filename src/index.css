@@ -37,7 +37,7 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
 
-  --font-main: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-main: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
