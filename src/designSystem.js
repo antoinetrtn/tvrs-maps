@@ -39,63 +39,63 @@ export const THEME = {
 
 export const CONTINENT_COLORS = {
   light: {
-    "Europe": "#86b7f5",
-    "Americas": "#7fcc9a",
-    "Asia": "#ef9a9a",
-    "Africa": "#e8c76c",
-    "Oceania": "#c5a0f2",
-    "Antarctic": "#d4dde8",
+    "Europe": "#7AABF0",
+    "Americas": "#F5A8A8",
+    "Asia": "#FAE8A0",
+    "Africa": "#A8EBC0",
+    "Oceania": "#E0B8F5",
+    "Antarctic": "#DDE4F0",
     "Unknown": "#cbd5e1"
   },
   dark: {
-    "Europe": "#3b82f6",
-    "Americas": "#22c55e",
-    "Asia": "#ef4444",
-    "Africa": "#eab308",
-    "Oceania": "#a855f7",
-    "Antarctic": "#94a3b8",
+    "Europe": "#3A6AAC",
+    "Americas": "#AC3A3A",
+    "Asia": "#9C8020",
+    "Africa": "#2A8A50",
+    "Oceania": "#6E3A9C",
+    "Antarctic": "#2A3A5A",
     "Unknown": "#64748b"
   }
 };
 
 export const CONTINENT_COLORS_LABELS = {
   light: {
-    "Europe": "#1e40af",
-    "Americas": "#166534",
-    "Asia": "#991b1b",
-    "Africa": "#854d0e",
-    "Oceania": "#6b21a8",
-    "Antarctic": "#334155",
+    "Europe": "#1A3D7A",
+    "Americas": "#8C2020",
+    "Asia": "#7A6000",
+    "Africa": "#1A5C35",
+    "Oceania": "#5A1A8C",
+    "Antarctic": "#3A4A6A",
     "Unknown": "#1e293b"
   },
   dark: {
-    "Europe": "#93c5fd",
-    "Americas": "#86efac",
-    "Asia": "#fca5a5",
-    "Africa": "#fde047",
-    "Oceania": "#d8b4fe",
-    "Antarctic": "#cbd5e1",
+    "Europe": "#A8C8F5",
+    "Americas": "#F5A8A8",
+    "Asia": "#FAE8A0",
+    "Africa": "#A8EBC0",
+    "Oceania": "#E0B8F5",
+    "Antarctic": "#DDE4F0",
     "Unknown": "#94a3b8"
   }
 };
 
 export const CONTINENT_COLORS_ATTENUATED = {
   light: {
-    "Europe": "#b8d4f9",
-    "Americas": "#b2e0c2",
-    "Asia": "#f5c7c7",
-    "Africa": "#f1e1b2",
-    "Oceania": "#e2d1f9",
-    "Antarctic": "#e8eef4",
+    "Europe": "#B3CDFF",
+    "Americas": "#FFD1D1",
+    "Asia": "#FFF4D1",
+    "Africa": "#D1F5DD",
+    "Oceania": "#F0D1FF",
+    "Antarctic": "#F0F4FF",
     "Unknown": "#e2e8f0"
   },
   dark: {
-    "Europe": "#254b8a",
-    "Americas": "#1b5e35",
-    "Asia": "#7a2d2d",
-    "Africa": "#7a6321",
-    "Oceania": "#5c3b8a",
-    "Antarctic": "#4a545e",
+    "Europe": "#1A2D4A",
+    "Americas": "#4A1A1A",
+    "Asia": "#4A3D0A",
+    "Africa": "#123D26",
+    "Oceania": "#2D1A4A",
+    "Antarctic": "#121A2D",
     "Unknown": "#334155"
   }
 };
