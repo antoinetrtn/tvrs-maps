@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Sun, Moon, Mic, MicOff, Camera, Menu, Home } from 'lucide-react';
+import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home } from 'lucide-react';
 import './GameHUD.css';
 
 // Check for Speech Recognition API support
@@ -8,16 +8,12 @@ const SpeechRecognition = typeof window !== 'undefined'
   : null;
 
 const GameHUD = ({
-  mode, onModeSwitch, onGoHome, lang, setLang, score, totalPossible, timeLeft,
+  mode, onGoHome, lang, score, totalPossible, timeLeft,
   onInput, onEnter, isPlaying, isGameOver, onStop, onInfo,
   isFocusedCountry, onClearFocus, onNavigateFocus, inputError, inputSuccess, inputWarning, extInputRef,
-  foundList, countryDataMap, theme, setTheme, viewport, setLastInteractionType,
-  globeVisualTheme, setGlobeVisualTheme,
-  menuOpen, setMenuOpen, hudSide, setHudSide, isKeyboardMode
+  foundList, countryDataMap, theme, viewport, setLastInteractionType, isKeyboardMode
 }) => {
   const [inputValue, setInputValue] = useState('');
-  const [statsOpen, setStatsOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   
@@ -83,9 +79,6 @@ const GameHUD = ({
 
   const toggleMic = () => {
     if (isListening) {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch(e) {}
-      }
       recognitionRef.current = null;
       setIsListening(false);
     } else {
@@ -97,45 +90,14 @@ const GameHUD = ({
     const val = e.target.value;
     setInputValue(val);
     setLastInteractionType('manual');
-    if (val.length >= 3) {
-      const normalizedInput = normalizeString(val);
-      const newSuggestions = [];
-      const keysToCheck = Object.keys(countryDataMap || {}).filter(k => !foundList.includes(k));
-      for (const adminKey of keysToCheck) {
-        const mapped = countryDataMap[adminKey];
-        if (!mapped) continue;
-        let nameToMatch = lang === 'fr' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped.name_en || adminKey);
-        let capitalToMatch = lang === 'fr' && mapped.capital_fr ? mapped.capital_fr : (mapped.capital || null);
-        let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
-        if (targetMatch && normalizeString(targetMatch).includes(normalizedInput)) {
-          if (val.length / targetMatch.length >= 0.6) {
-            newSuggestions.push({ key: adminKey, display: targetMatch, subtext: mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital) });
-          }
-        }
-      }
-      setSuggestions(newSuggestions.slice(0, 3));
-    } else setSuggestions([]);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Tab' && suggestions.length > 0) { 
-      e.preventDefault(); 
-      submitSuggestion(suggestions[0].display); 
-    }
-    else if (e.key === 'Enter' && onEnter) {
+    if (e.key === 'Enter' && onEnter) {
       e.preventDefault();
       if (onEnter(inputValue)) { 
         setInputValue(''); 
-        setSuggestions([]); 
       }
-    }
-  };
-
-  const submitSuggestion = (match) => {
-    if (onEnter && onEnter(match)) { 
-      setInputValue(''); 
-      setSuggestions([]);
-      if (extInputRef.current) extInputRef.current.focus();
     }
   };
 
@@ -187,35 +149,15 @@ const GameHUD = ({
           </div>
 
           <div className="hud-top-right">
-            <button 
-              className={`hud-btn-circular glass-panel ${menuOpen ? 'active' : ''}`} 
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label="Menu"
-            >
-              {menuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
-
-            {menuOpen && (
-              <div className="top-menu-dropdown glass-panel animation-fade-in" style={{ position: 'absolute', top: '60px', right: '0' }}>
-                <div className="settings-section">
-                  <div className="util-btns">
-                    <button className="toggle-btn lang-toggle" onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}>
-                      {lang.toUpperCase()}
-                    </button>
-                    <button className="toggle-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                    </button>
-                    <button className={`toggle-btn ${globeVisualTheme === 'satellite' ? 'active' : ''}`} onClick={() => setGlobeVisualTheme(globeVisualTheme === 'satellite' ? 'minimalist' : 'satellite')}>
-                      <Globe size={18} />
-                    </button>
-                    {isPlaying && !isGameOver && (
-                      <button className="toggle-btn" style={{ color: 'var(--error)' }} onClick={onStop} title={lang === 'fr' ? 'Arrêter' : 'Stop'}>
-                        <Square size={18} fill="currentColor" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+            {isPlaying && !isGameOver && (
+              <button 
+                className="hud-btn-circular glass-panel" 
+                style={{ color: 'var(--error)' }} 
+                onClick={onStop} 
+                title={lang === 'fr' ? 'Arrêter' : 'Stop'}
+              >
+                <Square size={18} fill="currentColor" />
+              </button>
             )}
           </div>
 
@@ -237,7 +179,7 @@ const GameHUD = ({
       )}
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
-      {isFocusedCountry && !menuOpen && (
+      {isFocusedCountry && (
         <div className="top-hud-container" style={{ top: (viewport?.top || 0) + 24, left: viewport?.left || 0 }}>
           <div className="top-hud-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
             <div className="focus-info-card animation-fade-in">
@@ -264,7 +206,7 @@ const GameHUD = ({
       )}
 
       <div 
-        className={`bottom-hud-container hud-${hudSide} ${isFocusedCountry ? 'is-focused' : ''}`}
+        className="bottom-hud-container"
         style={window.innerWidth < 1024 ? {
           position: 'absolute',
           bottom: 'auto',
@@ -274,25 +216,6 @@ const GameHUD = ({
         } : {}}
       >
         <div className="glass-panel bottom-hud-panel">
-          {suggestions.length > 0 && (
-            <div className="suggestions-list animation-fade-in">
-              {suggestions.map((s, idx) => (
-                <button 
-                  key={idx} 
-                  className="suggestion-item" 
-                  onPointerDown={(e) => {
-                    e.preventDefault(); // STOPS BLUR
-                    submitSuggestion(s.display);
-                  }}
-                  type="button"
-                >
-                  <span className="sug-text">{s.display}</span>
-                  {s.subtext && <small className="sug-sub">({s.subtext})</small>}
-                </button>
-              ))}
-            </div>
-          )}
-
           <div className="input-wrap">
             {isFocusedCountry && (
               <button className="toggle-btn nav-focus-btn" onClick={() => onNavigateFocus('prev')}><ChevronLeft size={20} /></button>

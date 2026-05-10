@@ -1,36 +1,58 @@
 import React from 'react';
-import { Globe2, MapPin, GraduationCap } from 'lucide-react';
+import { Globe2, MapPin, GraduationCap, Sun, Moon } from 'lucide-react';
 import './HomeScreen.css';
 
-const HomeScreen = ({ onStartGame, theme }) => {
+const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang }) => {
   return (
     <div className={`home-screen-overlay ${theme}`}>
       <div className="home-content animation-fade-in">
+        <div className="lang-toggle-wrap">
+          <button 
+            className={`lang-btn ${lang === 'fr' ? 'active' : ''}`} 
+            onClick={() => setLang('fr')}
+          >
+            FR
+          </button>
+          <div className="lang-divider" />
+          <button 
+            className={`lang-btn ${lang === 'en' ? 'active' : ''}`} 
+            onClick={() => setLang('en')}
+          >
+            EN
+          </button>
+        </div>
+
         <div className="home-buttons">
           <button className="home-btn mode-countries" onClick={() => onStartGame('countries')}>
             <Globe2 size={24} />
             <div className="btn-text">
-              <span className="btn-title">Pays</span>
-              <span className="btn-desc">Devinez tous les pays du monde</span>
+              <span className="btn-title">{lang === 'fr' ? 'Pays' : 'Countries'}</span>
+              <span className="btn-desc">{lang === 'fr' ? 'Devinez tous les pays du monde' : 'Guess all countries in the world'}</span>
             </div>
           </button>
 
           <button className="home-btn mode-capitals" onClick={() => onStartGame('capitals')}>
             <MapPin size={24} />
             <div className="btn-text">
-              <span className="btn-title">Capitales</span>
-              <span className="btn-desc">Trouvez la capitale de chaque pays</span>
+              <span className="btn-title">{lang === 'fr' ? 'Capitales' : 'Capitals'}</span>
+              <span className="btn-desc">{lang === 'fr' ? 'Trouvez la capitale de chaque pays' : 'Find the capital of every country'}</span>
             </div>
           </button>
 
-          <button className="home-btn mode-learn disabled" disabled title="Bientôt disponible">
+          <button className="home-btn mode-learn disabled" disabled title={lang === 'fr' ? 'Bientôt disponible' : 'Coming soon'}>
             <GraduationCap size={24} />
             <div className="btn-text">
               <span className="btn-title">Learn</span>
-              <span className="btn-desc">Mode apprentissage (À venir)</span>
+              <span className="btn-desc">{lang === 'fr' ? 'Mode apprentissage (À venir)' : 'Learning mode (Coming soon)'}</span>
             </div>
           </button>
         </div>
+      </div>
+
+      <div className="home-bottom-right">
+        <button className="theme-toggle-btn glass-panel" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
       </div>
     </div>
   );

@@ -1,29 +1,3 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import GlobeMap from './GlobeMap.jsx';
-import GameHUD from './GameHUD.jsx';
-import HomeScreen from './HomeScreen.jsx';
-import './App.css';
-import { normalizeString as rawNormalize, countryDataMap } from './gameData';
-
-// Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
-const normalizeString = (str) => {
-  return rawNormalize(str).replace(/[-'']/g, ' ').replace(/\s+/g, ' ').trim();
-};
-import ResultsModal from './ResultsModal.jsx';
-
-// Custom Confirmation Modal Component
-const ConfirmationModal = ({ message, onConfirm, onCancel, theme }) => (
-  <div className="custom-modal-overlay">
-    <div className={`custom-modal-content glass-panel ${theme}`}>
-      <p>{message}</p>
-      <div className="modal-actions">
-        <button className="modal-btn cancel" onClick={onCancel}>Annuler</button>
-        <button className="modal-btn confirm" onClick={onConfirm}>Confirmer</button>
-      </div>
-    </div>
-  </div>
-);
-
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home'); // 'home' or 'game'
   const [mode, setMode] = useState('countries'); // 'countries' or 'capitals'
@@ -300,7 +274,7 @@ function App() {
 
       const newFound = [...foundList, selectedCountry];
       setFoundList(newFound);
-      setScore(prev => prev + 1);
+      setScore(score + 1);
       setPopupError(false);
       setPopupWarning(false);
       setPopupSuccess(true);
@@ -328,7 +302,7 @@ function App() {
       setTimeout(() => setPopupError(false), 500);
       return "ERROR";
     }
-  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, lastInteractionType, isKeyboardMode]);
+  }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, lastInteractionType, isKeyboardMode]);
 
   const handleCountrySelect = useCallback((c) => {
     setSelectedCountry(c); 
@@ -344,36 +318,35 @@ function App() {
   const perfProfile = useMemo(() => {
     const isMobile = viewport.width < 768;
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
-    const pixelRatio = isMobile ? 0.75 : 1;
-
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     return {
-      mode: 'efficient',
       isMobile,
       isTablet,
       pixelRatio,
-      enableAutoRotate: false,
+      enableAutoRotate: true,
       enablePointerInteraction: true,
       maxLabels: isMobile ? 0 : (isTablet ? 12 : 20),
       showAtmosphere: false,
       useImageTextures: false,
-      polygonCapCurvatureResolution: isMobile ? 8 : 6
+      polygonCapCurvatureResolution: isMobile ? 8 : 12
     };
   }, [viewport.width]);
 
   return (
     <div className={`app-container ${theme}`} data-theme={theme}>
       {currentScreen === 'home' ? (
-        <HomeScreen onStartGame={startGame} theme={theme} />
+        <HomeScreen 
+          onStartGame={startGame} 
+          theme={theme} 
+          setTheme={setTheme} 
+          lang={lang} 
+          setLang={setLang} 
+        />
       ) : (
         <GameHUD 
           mode={mode} 
-          onModeSwitch={(newMode) => handleCustomConfirm(
-            lang === 'fr' ? "Changer de mode réinitialise la partie. Continuer ?" : "Changing modes resets the game. Continue?",
-            () => resetGame(newMode)
-          )}
           onGoHome={goHome}
           lang={lang}
-          setLang={setLang}
           score={score} 
           totalPossible={totalPossible}
           timeLeft={timeLeft}
@@ -409,13 +382,8 @@ function App() {
           foundList={foundList}
           countryDataMap={countryDataMap}
           theme={theme}
-          setTheme={setTheme}
           viewport={viewport}
           setLastInteractionType={setLastInteractionType}
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-          hudSide={hudSide}
-          setHudSide={setHudSide}
           isKeyboardMode={isKeyboardMode}
         />
       )}
