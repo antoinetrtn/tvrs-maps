@@ -665,16 +665,22 @@ const GlobeMap = ({
     const region = d.region || 'Unknown';
 
     if (isFound) {
-      if (isSelected) return isError ? UI_COLORS.error : UI_COLORS.success;
-      return REGION_COLORS[region] || UI_COLORS.success;
+      const baseColor = REGION_COLORS[region] || UI_COLORS.success;
+      if (isSelected) {
+        if (isError) return UI_COLORS.error;
+        return lerpColor(baseColor, '#ffffff', pulse * 0.4);
+      }
+      return baseColor;
     }
+    
     if (isSelected) {
       if (isError) return UI_COLORS.error;
-      return REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
+      const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
+      return lerpColor(baseColor, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
     }
     
     return UI_COLORS.mapBase;
-  }, [REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, foundSet, isError, selectedCountry]);
+  }, [REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, foundSet, isError, selectedCountry, mode, pulse]);
 
   const getPointRadius = useCallback((d) => (
     d.admin === selectedCountry ? 0.22 : 0.12
