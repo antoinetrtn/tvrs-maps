@@ -102,10 +102,10 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
 };
 
 const GLOBE_LAYER_ALTITUDE = {
-  base: 0.002,
-  found: 0.005,
-  selected: 0.01,
-  label: 0.02
+  base: 0.001,
+  found: 0.003,
+  selected: 0.005,
+  label: 0.006
 };
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 
