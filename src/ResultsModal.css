@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(2, 6, 23, 0.85);
+  background: var(--overlay-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 10000;
@@ -21,12 +21,11 @@
   border-radius: var(--radius-xl);
   position: relative;
   overflow: hidden;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--bg-color);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   animation: modalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 10001;
 }
 
 .close-popup {
@@ -107,15 +106,27 @@
 .continents-grid {
   flex: 1;
   overflow-y: auto;
-  padding: 0 var(--spacing-md) var(--spacing-md) 0;
+  overflow-x: hidden;
+  padding: 0 var(--spacing-md) var(--spacing-xl) 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+  /* Scroll fade effect at the bottom */
+  mask-image: linear-gradient(to bottom, 
+    black 0%, 
+    black calc(100% - 40px), 
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom, 
+    black 0%, 
+    black calc(100% - 40px), 
+    transparent 100%
+  );
 }
 
 /* Custom Scrollbar */
 .continents-grid::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 .continents-grid::-webkit-scrollbar-track {
   background: transparent;
@@ -129,32 +140,33 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  position: relative;
 }
 
 .continent-header {
   position: sticky;
-  top: -1px;
-  z-index: 10;
-  background: var(--glass-bg); /* Same as modal-content for seamless integration */
-  margin: 0 -32px;
-  padding: 16px 32px;
-  border-bottom: 1px solid var(--glass-border);
+  top: 0;
+  z-index: 20;
+  background: var(--bg-color);
+  margin: 0 calc(var(--spacing-xl) * -1);
+  padding: var(--spacing-md) var(--spacing-xl);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .continent-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--bg-color);
 }
 
 .continent-info h3 {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+  text-transform: none; /* Switch from uppercase to normal casing */
+  letter-spacing: -0.02em;
   color: var(--continent-color);
   margin: 0;
   display: flex;
@@ -163,12 +175,7 @@
 }
 
 .continent-info h3::after {
-  content: '';
-  height: 1px;
-  flex: 1;
-  min-width: 30px;
-  background: var(--continent-color);
-  opacity: 0.2;
+  display: none;
 }
 
 .continent-count {
@@ -184,13 +191,7 @@
 }
 
 .continent-progress-bar {
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--glass-border);
-  overflow: hidden;
+  display: none; /* Remove the progress bar line under the header */
 }
 
 .progress-fill {
@@ -199,10 +200,22 @@
   background-color: var(--continent-color);
 }
 
+/* Countries grid within section gets the top fade */
 .countries-pill-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  /* Top fade effect under sticky header */
+  mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    black 20px, 
+    black 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    black 20px, 
+    black 100%
+  );
 }
 
 .country-pill {
@@ -224,14 +237,15 @@
 .country-pill.missed {
   background: var(--glass-border);
   color: var(--text-muted);
-  opacity: 0.6;
-  filter: blur(4px);
+  opacity: 0.5;
+  filter: blur(5px); /* Strong blur to hide the name but keep the shape */
   user-select: none;
+  cursor: default;
 }
 
 .country-pill.missed:hover {
-  filter: blur(2px);
-  opacity: 0.8;
+  filter: blur(5px); /* Stay blurred on hover */
+  opacity: 0.5;
 }
 
 .modal-footer {
@@ -249,7 +263,7 @@
 .restart-btn {
   padding: 14px 28px;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-contrast);
   border: none;
   border-radius: var(--radius-lg);
   font-weight: 700;
@@ -260,7 +274,7 @@
 
 .restart-btn:hover {
   transform: translateY(-2px);
-  filter: brightness(1.1);
+  background: var(--accent-hover);
 }
 
 .stop-btn {
@@ -276,8 +290,7 @@
 }
 
 .stop-btn:hover {
-  background: var(--error);
-  color: #fff;
+  background: var(--error-soft);
   transform: translateY(-2px);
 }
 
@@ -300,11 +313,11 @@
   .continent-header {
     margin: 0 -24px;
     padding: 12px 24px;
-    background: var(--glass-bg);
+    background: var(--bg-color);
+    border-bottom: none;
   }
 
   .modal-actions {
-...
     flex-direction: column;
   }
   

@@ -42,7 +42,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, on
 
   return (
     <div className="modal-overlay">
-      <div className="glass-panel modal-content">
+      <div className="modal-content">
         {onClose && <button className="close-popup" onClick={onClose}>✕</button>}
         
         <header className="modal-header">
@@ -89,11 +89,12 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, on
                 <div className="countries-pill-grid">
                   {data.countries.map(c => {
                     const label = mode === 'capitals' ? c.capital : c.name;
+                    const isRevealed = c.found || isGameOver;
                     return (
                       <div 
                         key={c.key} 
                         className={`country-pill ${c.found ? 'found' : 'missed'}`}
-                        title={c.found ? label : (isGameOver ? label : '???')}
+                        title={isRevealed ? label : '???'}
                       >
                         {label}
                       </div>
