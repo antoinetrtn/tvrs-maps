@@ -32,7 +32,7 @@ export const THEME = {
     error: '#ef4444',
     warning: '#f59e0b',
     mapBase: '#2a3a4f',
-    mapSea: '#050a14',
+    mapSea: '#0a1425',
     mapBorder: '#334155'
   }
 };
