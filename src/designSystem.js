@@ -17,7 +17,7 @@ export const THEME = {
     warning: '#eab308',
     mapBase: '#d9ecff',
     mapSea: '#a5c9f5',
-    mapBorder: '#86aede'
+    mapBorder: '#c2d9ff'
   },
   dark: {
     bg: '#020205',
@@ -33,7 +33,7 @@ export const THEME = {
     warning: '#eab308',
     mapBase: '#193456',
     mapSea: '#0a1a3a',
-    mapBorder: '#31598d'
+    mapBorder: '#2a4a75'
   }
 };
 
