@@ -191,6 +191,7 @@ const GameHUD = ({
                   <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
                     <span className="gauge-val">{regionStats[reg]?.found}</span>
                   </div>
+                  <span className="gauge-label">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
                 </div>
               ))}
             </div>

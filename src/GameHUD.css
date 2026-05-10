@@ -217,8 +217,17 @@
 
 .island-sub-gauges {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   pointer-events: auto;
+  margin-top: 4px;
+}
+
+.gauge-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  opacity: 0.8;
+  margin-top: 2px;
+  color: var(--text-main);
 }
 
 /* Header UI - Old styles cleanup if needed */
