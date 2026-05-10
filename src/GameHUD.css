@@ -320,8 +320,10 @@
   color: var(--text-main);
   font-size: 1rem;
   font-weight: 500;
-  outline: none;
+  outline: none !important;
+  box-shadow: none !important;
   padding: 0;
+  -webkit-appearance: none;
 }
 
 .input-island:focus-within {
