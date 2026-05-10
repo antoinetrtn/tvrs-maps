@@ -143,6 +143,7 @@ const GlobeMap = ({
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
   const [pulse, setPulse] = useState(0);
+  const labelsCacheRef = useRef({});
 
   // Pulse animation loop for selection
   useEffect(() => {
@@ -230,11 +231,13 @@ const GlobeMap = ({
              if (globeEl.current) {
                 const pov = globeEl.current.pointOfView();
                 setZoomLevel(prev => {
-                   if (Math.abs(prev - pov.altitude) > 0.01) return pov.altitude;
+                   if (Math.abs(prev - pov.altitude) > 0.05) return pov.altitude;
                    return prev;
                 });
                 setCameraPOV(prev => {
-                   if (Math.abs(prev.lat - pov.lat) > 0.5 || Math.abs(prev.lng - pov.lng) > 0.5) {
+                   // Larger threshold for home screen to keep background stable
+                   const threshold = isHomeScreen ? 15 : 4;
+                   if (Math.abs(prev.lat - pov.lat) > threshold || Math.abs(prev.lng - pov.lng) > threshold) {
                       return { lat: pov.lat, lng: pov.lng };
                    }
                    return prev;
@@ -479,22 +482,24 @@ const GlobeMap = ({
         const size = countrySizes[adminKey] || 0.5;
         
         // Visibility based on zoom level
-        // Selected country always bypasses the zoom threshold
-        // On home screen, we use a slightly more restrictive threshold for performance
         const visibilityThreshold = isSelected ? 10 : (isHomeScreen ? 1.8 : Math.min(3.0, 0.8 + size * 2.0));
         
         if (zoomLevel > visibilityThreshold) return null;
 
-        // Calculate angular distance to current POV to prioritize labels in view
         let dLng = Math.abs(data.lng - pov.lng);
         if (dLng > 180) dLng = 360 - dLng;
         const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
         
-        // Hide labels on the far side of the globe (approx > 90 deg)
-        // Selected country also bypasses the far-side check for better UX
-        if (!isSelected && distToCenter > 85) return null;
+        if (!isSelected && distToCenter > 95) return null;
 
-        return {
+        // Use cached object if available to maintain reference stability
+        const cached = labelsCacheRef.current[adminKey];
+        if (cached && cached.isSelected === isSelected && cached.lang === lang) {
+           cached.distToCenter = distToCenter; // Update distance for sorting without changing reference
+           return cached;
+        }
+
+        const newLabel = {
           admin: adminKey,
           lat: data.lat,
           lng: data.lng,
@@ -504,11 +509,13 @@ const GlobeMap = ({
           flag: getFlagEmoji(data.iso2),
           size,
           distToCenter,
-          isSelected
+          isSelected,
+          lang // Store lang to invalidate cache if it changes
         };
+        labelsCacheRef.current[adminKey] = newLabel;
+        return newLabel;
       })
       .filter(d => d !== null)
-      // Sort: Selected first, then by distance to center
       .sort((a, b) => {
         if (a.isSelected) return -1;
         if (b.isSelected) return 1;
@@ -520,7 +527,7 @@ const GlobeMap = ({
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
-    const color = REGION_COLORS_LABELS[d.region] || UI_COLORS.warning;
+    const color = isHomeScreen ? UI_COLORS.textMuted : (REGION_COLORS_LABELS[d.region] || UI_COLORS.warning);
     
     // Set root to 0 size so its center is the exact lat/lng
     el.style.width = '0';
@@ -530,49 +537,52 @@ const GlobeMap = ({
     el.style.userSelect = 'none';
 
     el.innerHTML = `
-      <div style="
-        position: absolute;
-        width: 6px;
-        height: 6px;
-        background: ${color};
-        border-radius: 50%;
-        left: -3px;
-        top: -3px;
-      "></div>
-      <div style="
-        position: absolute;
-        left: 8px;
-        top: 0;
-        transform: translateY(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        font-family: var(--font-main);
-        white-space: nowrap;
-      ">
+      <div class="globe-label-element" style="position: relative; width: 0; height: 0;">
         <div style="
-          color: ${color};
-          font-weight: 600;
-          font-size: 13px;
-          line-height: 1.2;
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          background: ${color};
+          border-radius: 50%;
+          left: -3px;
+          top: -3px;
+          opacity: ${isHomeScreen ? 0.5 : 1};
+        "></div>
+        <div style="
+          position: absolute;
+          left: 8px;
+          top: 0;
+          transform: translateY(-50%);
           display: flex;
-          align-items: center;
-          gap: 4px;
+          flex-direction: column;
+          align-items: flex-start;
+          font-family: var(--font-main);
+          white-space: nowrap;
         ">
-          <span>${d.flag}</span>
-          <span>${d.country}</span>
+          <div style="
+            color: ${color};
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          ">
+            <span>${d.flag}</span>
+            <span>${d.country}</span>
+          </div>
+          <div style="
+            color: ${color};
+            font-weight: 400;
+            font-size: 11px;
+            line-height: 1.2;
+            opacity: 0.7;
+          ">(${d.capital})</div>
         </div>
-        <div style="
-          color: ${color};
-          font-weight: 400;
-          font-size: 11px;
-          line-height: 1.2;
-          opacity: 0.9;
-        ">(${d.capital})</div>
       </div>
     `;
     return el;
-  }, [REGION_COLORS_LABELS, UI_COLORS]);
+  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen]);
 
   const ringsData = useMemo(() => {
     const shouldShowRing = selectedCountry;
