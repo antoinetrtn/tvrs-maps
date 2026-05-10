@@ -183,6 +183,35 @@
   z-index: 1000;
 }
 
+.desktop-only { display: flex; }
+.mobile-only { display: none; }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
+  
+  .hud-top-center {
+    width: 96vw;
+    max-width: none;
+  }
+  
+  .central-island-panel {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .island-sub-gauges.mobile-only {
+    flex-direction: row;
+    gap: 12px;
+    margin-top: 8px;
+    justify-content: center;
+  }
+
+  .hud-bottom-right {
+    display: none !important;
+  }
+}
+
 .island-sub-gauges {
   display: flex;
   flex-direction: column;

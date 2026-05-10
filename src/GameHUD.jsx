@@ -184,10 +184,25 @@ const GameHUD = ({
                   <span className="score-total">/{totalPossible}</span>
                </div>
             </div>
+
+            {/* Mobile Only Gauges (under the island) */}
+            <div className="island-sub-gauges mobile-only animation-fade-in">
+              {CONTINENT_ORDER.map(reg => {
+                const isActive = activeContinent === reg;
+                const isFaded = activeContinent && activeContinent !== reg;
+                return (
+                  <div key={reg} className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} title={reg}>
+                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                      <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="hud-bottom-right">
-            <div className="island-sub-gauges animation-fade-in">
+          <div className="hud-bottom-right desktop-only">
+            <div className="island-sub-gauges desktop-only animation-fade-in">
               {CONTINENT_ORDER.map(reg => {
                 const isActive = activeContinent === reg;
                 const isFaded = activeContinent && activeContinent !== reg;
