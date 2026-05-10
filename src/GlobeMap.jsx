@@ -134,7 +134,9 @@ const GlobeMap = ({
   hasActiveFeedback,
   perfProfile,
   isHomeScreen,
-  isKeyboardMode
+  isKeyboardMode,
+  isEndScreen,
+  isPerfectScore
 }) => {
   const globeEl = useRef();
   const tapRef = useRef(null);
@@ -266,7 +268,10 @@ const GlobeMap = ({
   }, [shouldAutoRotate, theme, perfProfile?.pixelRatio, perfProfile?.isMobile]);
 
   useEffect(() => {
-    if (selectedCountry && globeEl.current) {
+    if (isEndScreen && globeEl.current) {
+      // Center and zoom out for the end screen
+      globeEl.current.pointOfView({ lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 }, 1200);
+    } else if (selectedCountry && globeEl.current) {
       const data = countryDataMap[selectedCountry];
       if (data && data.lat !== undefined) {
         const isMobile = viewport.width < 768;
@@ -315,7 +320,7 @@ const GlobeMap = ({
     }
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
-  }, [selectedCountry, viewport.width, viewport.height, viewport.top, isHomeScreen, perfProfile, isKeyboardMode]);
+  }, [selectedCountry, viewport.width, viewport.height, viewport.top, isHomeScreen, perfProfile, isKeyboardMode, isEndScreen]);
 
   const isLight = theme === 'light';
 
@@ -419,6 +424,14 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
+    // End screen: Green (or Gold if perfect) for found, Red for missed
+    if (isEndScreen) {
+      if (foundSet.has(admin)) {
+        return isPerfectScore ? '#fbbf24' : UI_COLORS.success;
+      }
+      return UI_COLORS.error;
+    }
+
     // No continent colors on home screen
     if (isHomeScreen) {
       if (admin === selectedCountry) {
@@ -470,9 +483,19 @@ const GlobeMap = ({
   const getPolygonSideColor = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
-    const baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
-      ? (REGION_COLORS[region] || UI_COLORS.success)
-      : UI_COLORS.mapBase;
+    
+    let baseColor;
+    if (isEndScreen) {
+      if (foundSet.has(admin)) {
+        baseColor = isPerfectScore ? '#fbbf24' : UI_COLORS.success;
+      } else {
+        baseColor = UI_COLORS.error;
+      }
+    } else {
+      baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
+        ? (REGION_COLORS[region] || UI_COLORS.success)
+        : UI_COLORS.mapBase;
+    }
 
     if (admin === selectedCountry) {
       if (isError) return isLight ? '#dc7f7f' : '#991b1b';
@@ -513,7 +536,7 @@ const GlobeMap = ({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
     
-    const keysToShow = (mode === 'learn' || isHomeScreen) ? Object.keys(countryDataMap) : foundList;
+    const keysToShow = (mode === 'learn' || isHomeScreen || isEndScreen) ? Object.keys(countryDataMap) : foundList;
     const pov = cameraPOV;
 
     const filtered = keysToShow
@@ -699,6 +722,13 @@ const GlobeMap = ({
     const isFound = foundSet.has(d.admin) || mode === 'learn';
     const isSelected = d.admin === selectedCountry;
     const region = d.region || 'Unknown';
+
+    if (isEndScreen) {
+      if (foundSet.has(d.admin)) {
+        return isPerfectScore ? '#fbbf24' : UI_COLORS.success;
+      }
+      return UI_COLORS.error;
+    }
 
     if (isFound) {
       const baseColor = REGION_COLORS[region] || UI_COLORS.success;

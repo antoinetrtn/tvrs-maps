@@ -10,6 +10,7 @@ const normalizeString = (str) => {
   return rawNormalize(str).replace(/[-'']/g, ' ').replace(/\s+/g, ' ').trim();
 };
 import ResultsModal from './ResultsModal.jsx';
+import EndScreen from './EndScreen.jsx';
 
 // Custom Confirmation Modal Component
 const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => (
@@ -37,6 +38,8 @@ function App() {
   const [lang, setLang] = useState('fr'); // 'fr' or 'en'
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [showEndScreen, setShowEndScreen] = useState(false);
+  const [showResultsTable, setShowResultsTable] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [popupError, setPopupError] = useState(false);
   const [popupWarning, setPopupWarning] = useState(false);
@@ -236,6 +239,8 @@ function App() {
     setTimeLeft(15 * 60);
     setIsPlaying(false);
     setIsGameOver(false);
+    setShowEndScreen(false);
+    setShowResultsTable(false);
     setSelectedCountry(null);
     resetNavigationTrail(null);
     setMenuOpen(false);
@@ -255,6 +260,7 @@ function App() {
     if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= Object.keys(countryDataMap).length) {
       setIsGameOver(true);
       setIsPlaying(false);
+      setShowEndScreen(true);
     }
   }, [foundList.length, isPlaying, isGameOver]);
 
@@ -275,6 +281,7 @@ function App() {
     } else if (timeLeft <= 0 && isPlaying && !isGameOver) {
       setIsGameOver(true);
       setIsPlaying(false);
+      setShowEndScreen(true);
       clearInterval(timer);
     }
     return () => clearInterval(timer);
@@ -283,6 +290,7 @@ function App() {
   const stopGame = useCallback(() => {
     setIsGameOver(true);
     setIsPlaying(false);
+    setShowEndScreen(true);
   }, []);
 
   const handleInput = useCallback((inputVal) => {
@@ -472,7 +480,7 @@ function App() {
       isTablet,
       pixelRatio,
       enableAutoRotate: true,
-      enablePointerInteraction: false,
+      enablePointerInteraction: true,
       maxLabels: isMobile ? 8 : (isTablet ? 15 : 30),
       showAtmosphere: false,
       useImageTextures: false,
@@ -492,64 +500,66 @@ function App() {
           setLang={setLang} 
         />
       ) : (
-        <GameHUD 
-          mode={mode} 
-          onGoHome={goHome}
-          lang={lang}
-          score={score} 
-          totalPossible={totalPossible}
-          timeLeft={timeLeft}
-          onInput={() => {}} 
-          onEnter={(val) => {
-            if (mode === 'learn') {
-               const res = handleSearch(val);
-               if (!res) {
-                  setPopupError(true);
-                  setTimeout(() => setPopupError(false), 500);
-               }
-               return res;
-            }
+        !showEndScreen && (
+          <GameHUD 
+            mode={mode} 
+            onGoHome={goHome}
+            lang={lang}
+            score={score} 
+            totalPossible={totalPossible}
+            timeLeft={timeLeft}
+            onInput={() => {}} 
+            onEnter={(val) => {
+              if (mode === 'learn') {
+                 const res = handleSearch(val);
+                 if (!res) {
+                    setPopupError(true);
+                    setTimeout(() => setPopupError(false), 500);
+                 }
+                 return res;
+              }
 
-            let res;
-            if (selectedCountry) {
-               res = specificCountryGuess(val);
-            } else {
-               res = handleInput(val);
-               if (res === "ALREADY_FOUND") {
-                  setPopupWarning(true);
-                  setTimeout(() => setPopupWarning(false), 500);
-               } else if (res === "ERROR") {
-                  setPopupError(true);
-                  setTimeout(() => setPopupError(false), 500);
-               }
-            }
-            // Return true to clear the input field in GameHUD for any terminal result
-            return res === "SUCCESS" || res === true || res === "ERROR" || res === "ALREADY_FOUND";
-          }}
-          isPlaying={isPlaying}
-          isGameOver={isGameOver}
-          onStop={() => handleCustomConfirm(
-            lang === 'fr' ? "Arrêter la partie en cours ?" : "Stop the current game?",
-            stopGame
-          )}
-          onInfo={() => setShowInfoModal(true)}
-          isFocusedCountry={!!selectedCountry}
-          onClearFocus={() => {
-            setSelectedCountry(null);
-            resetNavigationTrail(null);
-          }}
-          onNavigateFocus={navigateFocus}
-          inputError={popupError}
-          inputWarning={popupWarning}
-          inputSuccess={popupSuccess}
-          extInputRef={extInputRef}
-          foundList={foundList}
-          countryDataMap={countryDataMap}
-          theme={theme}
-          viewport={viewport}
-          isKeyboardMode={effectiveKeyboardMode}
-          selectedCountry={selectedCountry}
-        />
+              let res;
+              if (selectedCountry) {
+                 res = specificCountryGuess(val);
+              } else {
+                 res = handleInput(val);
+                 if (res === "ALREADY_FOUND") {
+                    setPopupWarning(true);
+                    setTimeout(() => setPopupWarning(false), 500);
+                 } else if (res === "ERROR") {
+                    setPopupError(true);
+                    setTimeout(() => setPopupError(false), 500);
+                 }
+              }
+              // Return true to clear the input field in GameHUD for any terminal result
+              return res === "SUCCESS" || res === true || res === "ERROR" || res === "ALREADY_FOUND";
+            }}
+            isPlaying={isPlaying}
+            isGameOver={isGameOver}
+            onStop={() => handleCustomConfirm(
+              lang === 'fr' ? "Arrêter la partie en cours ?" : "Stop the current game?",
+              stopGame
+            )}
+            onInfo={() => setShowInfoModal(true)}
+            isFocusedCountry={!!selectedCountry}
+            onClearFocus={() => {
+              setSelectedCountry(null);
+              resetNavigationTrail(null);
+            }}
+            onNavigateFocus={navigateFocus}
+            inputError={popupError}
+            inputWarning={popupWarning}
+            inputSuccess={popupSuccess}
+            extInputRef={extInputRef}
+            foundList={foundList}
+            countryDataMap={countryDataMap}
+            theme={theme}
+            viewport={viewport}
+            isKeyboardMode={effectiveKeyboardMode}
+            selectedCountry={selectedCountry}
+          />
+        )
       )}
       
       <GlobeMap  
@@ -567,9 +577,26 @@ function App() {
         perfProfile={perfProfile}
         isHomeScreen={currentScreen === 'home'}
         isKeyboardMode={effectiveKeyboardMode}
+        isEndScreen={showEndScreen}
+        isPerfectScore={foundList.length === totalPossible}
       />
 
-      {(isGameOver || showInfoModal) && (
+      {showEndScreen && (
+        <EndScreen 
+          foundList={foundList}
+          totalCountries={totalPossible}
+          countryDataMap={countryDataMap}
+          onRestart={goHome}
+          onViewTable={() => {
+            setShowEndScreen(false);
+            setShowResultsTable(true);
+          }}
+          theme={theme}
+          lang={lang}
+        />
+      )}
+
+      {(showResultsTable || showInfoModal) && (
         <ResultsModal 
           foundList={foundList}
           totalCountries={totalPossible}
@@ -578,7 +605,11 @@ function App() {
             lang === 'fr' ? "Recommencer une partie ?" : "Restart game?",
             () => { resetGame(mode); setShowInfoModal(false); }
           )}
-          onClose={!isGameOver ? () => setShowInfoModal(false) : null}
+          onClose={() => {
+            setShowResultsTable(false);
+            setShowInfoModal(false);
+            if (isGameOver) setShowEndScreen(true);
+          }}
           isGameOver={isGameOver}
           onStop={stopGame}
           isPlaying={isPlaying}

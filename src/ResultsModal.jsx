@@ -1,40 +1,13 @@
 import React, { useMemo } from 'react';
 import './ResultsModal.css';
+import { getGameStats } from './utils';
 import { CONTINENT_COLORS, CONTINENT_COLORS_LABELS, CONTINENT_COLORS_ATTENUATED, THEME } from './designSystem';
 
 const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr' }) => {
-  const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "Unknown"];
-
-  const stats = useMemo(() => {
-    const s = {};
-    CONTINENT_ORDER.forEach(reg => s[reg] = { total: 0, found: 0, countries: [] });
-    
-    Object.keys(countryDataMap).forEach(k => {
-      const country = countryDataMap[k];
-      let reg = country?.region;
-      if (!reg || !s[reg]) reg = 'Unknown';
-      
-      s[reg].total++;
-      const isFound = foundList.includes(k);
-      if (isFound) s[reg].found++;
-      s[reg].countries.push({
-        key: k,
-        found: isFound,
-        name: lang === 'fr' ? (country.name_fr || k) : (country.name_en || k),
-        capital: lang === 'fr' ? (country.capital_fr || country.capital) : country.capital
-      });
-    });
-
-    // Sort countries in each region: found first, then alphabetical
-    CONTINENT_ORDER.forEach(reg => {
-      s[reg].countries.sort((a, b) => {
-        if (a.found !== b.found) return a.found ? -1 : 1;
-        return a.name.localeCompare(b.name);
-      });
-    });
-
-    return s;
-  }, [foundList, countryDataMap, lang]);
+  const { stats, CONTINENT_ORDER } = useMemo(() => 
+    getGameStats(foundList, countryDataMap, lang), 
+    [foundList, countryDataMap, lang]
+  );
 
   const colors = CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark;
   const labelColors = CONTINENT_COLORS_LABELS[theme] || CONTINENT_COLORS_LABELS.dark;
