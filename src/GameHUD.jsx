@@ -247,60 +247,62 @@ const GameHUD = ({
           left: viewport.left + (viewport.width / 2)
         } : {}}
       >
-        <div className="glass-panel bottom-hud-panel">
-          {suggestions.length > 0 && (
-            <div className="suggestions-list animation-fade-in">
-              {suggestions.map((s, idx) => (
-                <button 
-                  key={idx} 
-                  className="suggestion-item" 
-                  onPointerDown={(e) => {
-                    e.preventDefault(); // STOPS BLUR
-                    submitSuggestion(s.display);
-                  }}
-                  type="button"
-                >
-                  <span className="sug-text">{s.display}</span>
-                  {s.subtext && <small className="sug-sub">({s.subtext})</small>}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="input-wrap">
-            {isFocusedCountry && (
-              <button className="toggle-btn nav-focus-btn" onClick={() => onNavigateFocus('prev')}><ChevronLeft size={20} /></button>
-            )}
-
-            <div style={{ flex: 1, position: 'relative' }}>
-              <input
-                ref={extInputRef}
-                type="text"
-                name={`q-${Math.floor(Math.random() * 10000)}`}
-                id="q-field"
-                placeholder={isListening ? '🎤...' : (isFocusedCountry ? '?' : '🌍...')}
-                className={`input-field ${inputError ? 'error' : ''} ${inputWarning ? 'warning' : ''} ${inputSuccess ? 'success' : ''}`}
-                value={inputValue}
-                onChange={handleTextChange}
-                onKeyDown={handleKeyDown}
-                readOnly={isListening}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck="false"
-                data-lpignore="true"
-              />
-            </div>
-
-            {isFocusedCountry && (
-              <button className="toggle-btn nav-focus-btn" onClick={() => onNavigateFocus('next')}><ChevronRight size={20} /></button>
-            )}
-
-            {SpeechRecognition && (
-              <button className={`mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
-                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+        {suggestions.length > 0 && (
+          <div className="suggestions-list animation-fade-in">
+            {suggestions.map((s, idx) => (
+              <button 
+                key={idx} 
+                className="suggestion-item" 
+                onPointerDown={(e) => {
+                  e.preventDefault(); // STOPS BLUR
+                  submitSuggestion(s.display);
+                }}
+                type="button"
+              >
+                <span className="sug-text">{s.display}</span>
+                {s.subtext && <small className="sug-sub">({s.subtext})</small>}
               </button>
-            )}
+            ))}
           </div>
+        )}
+
+        <div className="bottom-hud-islands">
+          {isFocusedCountry && (
+            <>
+              <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('prev')}>
+                <ChevronLeft size={18} />
+              </button>
+              <button className="hud-btn-circular glass-panel" onClick={() => onNavigateFocus('next')}>
+                <ChevronRight size={18} />
+              </button>
+            </>
+          )}
+
+          <div className={`input-island glass-panel ${inputError ? 'error' : ''} ${inputWarning ? 'warning' : ''} ${inputSuccess ? 'success' : ''}`}>
+            <input
+              ref={extInputRef}
+              type="text"
+              name={`q-${Math.floor(Math.random() * 10000)}`}
+              id="q-field"
+              placeholder={isListening ? '...' : (isFocusedCountry ? '' : '')}
+              className="input-field"
+              value={inputValue}
+              onChange={handleTextChange}
+              onKeyDown={handleKeyDown}
+              readOnly={isListening}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck="false"
+              data-lpignore="true"
+            />
+          </div>
+
+          {SpeechRecognition && (
+            <button className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} onClick={toggleMic}>
+              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+            </button>
+          )}
         </div>
       </div>
     </>

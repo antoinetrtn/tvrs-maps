@@ -1,4 +1,4 @@
-/* Bottom HUD - Toolbar Style */
+/* Bottom HUD - Separate Islands Style */
 .bottom-hud-container {
   position: fixed;
   bottom: var(--spacing-lg);
@@ -6,75 +6,61 @@
   transform: translateX(-50%);
   pointer-events: none;
   z-index: 1000;
-  width: auto;
-}
-
-.bottom-hud-panel {
-  pointer-events: auto;
   display: flex;
   flex-direction: column;
-  padding: 6px;
-  gap: 6px;
-  border-radius: var(--radius-xl);
+  align-items: center;
+  gap: 12px;
 }
 
-.input-wrap {
+.bottom-hud-islands {
+  pointer-events: auto;
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 8px;
+}
+
+.input-island {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  width: 240px;
+  transition: all var(--transition-normal);
 }
 
 .input-field {
-  width: 240px;
-  height: 40px;
-  background: var(--glass-border);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  padding: 0 16px;
+  width: 100%;
+  background: transparent;
+  border: none;
   color: var(--text-main);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 500;
   outline: none;
-  transition: all var(--transition-normal);
+  padding: 0;
 }
 
-.input-field:focus {
+.input-island:focus-within {
   border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.05);
+  width: 280px;
 }
 
-.input-field.error { border-color: var(--error); color: var(--error); }
-.input-field.success { border-color: var(--success); color: var(--success); }
-.input-field.warning { border-color: var(--warning); color: var(--warning); }
-
-.nav-focus-btn, .mic-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
+.suggestions-list {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  background: var(--glass-border);
-  color: var(--text-main);
-  cursor: pointer;
+  border-radius: var(--radius-lg);
+  padding: 6px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-normal);
-}
-
-.mic-btn.active {
-  background: var(--error);
-  color: white;
-  border-color: var(--error);
-}
-
-.nav-focus-btn:hover, .mic-btn:hover:not(.active) {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
+  flex-direction: column;
+  gap: 4px;
+  min-width: 240px;
+  pointer-events: auto;
+  box-shadow: var(--glass-shadow);
 }
 
 @media (max-width: 600px) {
-  .input-field { width: 140px; }
+  .input-island { width: 140px; }
+  .input-island:focus-within { width: 160px; }
 }
 
 .menu-content {
