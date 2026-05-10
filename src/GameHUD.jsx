@@ -12,6 +12,7 @@ const GameHUD = ({
   onInput, onEnter, isPlaying, isGameOver, onStop, onInfo,
   isFocusedCountry, onClearFocus, onNavigateFocus, inputError, inputSuccess, inputWarning, extInputRef,
   foundList, countryDataMap, theme, setTheme, viewport, setLastInteractionType,
+  globeVisualTheme, setGlobeVisualTheme,
   menuOpen, setMenuOpen, hudSide, setHudSide, isKeyboardMode
 }) => {
   const [inputValue, setInputValue] = useState('');
