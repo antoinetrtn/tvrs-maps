@@ -15,12 +15,82 @@ async function run() {
   const finalMap = {};
 
   const capitalTranslations = {
+    // Europe
     "Brussels": "Bruxelles", "Vienna": "Vienne", "Copenhagen": "Copenhague", "Warsaw": "Varsovie",
-    "Lisbon": "Lisbonne", "London": "Londres", "Athens": "Athènes", "Moscow": "Moscou", "Beijing": "Pékin",
-    "Havana": "La Havane", "Damascus": "Damas", "Jerusalem": "Jérusalem", "Beirut": "Beyrouth",
-    "Seoul": "Séoul", "Riyadh": "Riyad", "Tehran": "Téhéran", "Algiers": "Alger", "Cairo": "Le Caire",
-    "Kabul": "Kaboul", "Baghdad": "Bagdad", "Cape Town": "Le Cap", "Bogotá": "Bogota", "Bucharest": "Bucarest",
-    "Reykjavik": "Reykjavik", "Damascus": "Damas", "Kiev": "Kiev", "Tashkent": "Tachkent", "Asuncion": "Asuncion"
+    "Lisbon": "Lisbonne", "London": "Londres", "Athens": "Athènes", "Moscow": "Moscou",
+    "Bucharest": "Bucarest", "Reykjavik": "Reykjavik", "Kiev": "Kiev", "Bern": "Berne",
+    "Nicosia": "Nicosie", "Valletta": "La Valette", "Andorra la Vella": "Andorre-la-Vieille",
+    "Luxembourg": "Luxembourg", "Monaco": "Monaco", "San Marino": "Saint-Marin", "Vatican City": "Vatican",
+    
+    // Asia
+    "Beijing": "Pékin", "Seoul": "Séoul", "Tokyo": "Tokyo", "Riyadh": "Riyad", "Tehran": "Téhéran",
+    "Kabul": "Kaboul", "Baghdad": "Bagdad", "Damascus": "Damas", "Beirut": "Beyrouth",
+    "Jerusalem": "Jérusalem", "Amman": "Amman", "Kuwait City": "Koweït", "Muscat": "Mascate",
+    "Abu Dhabi": "Abou Dabi", "Doha": "Doha", "Manama": "Manama", "Baku": "Bakou",
+    "Yerevan": "Erevan", "Tbilisi": "Tbilissi", "Astana": "Astana", "Tashkent": "Tachkent",
+    "Ashgabat": "Achgabat", "Dushanbe": "Douchanbé", "Bishkek": "Bichkek", "Kathmandu": "Katmandou",
+    "Dhaka": "Dacca", "Colombo": "Colombo", "Thimphu": "Thimphou", "Naypyidaw": "Naypyidaw",
+    "Bangkok": "Bangkok", "Vientiane": "Vientiane", "Phnom Penh": "Phnom Penh", "Hanoi": "Hanoï",
+    "Kuala Lumpur": "Kuala Lumpur", "Singapore": "Singapour", "Jakarta": "Jakarta", "Manila": "Manille",
+    "Ulan Bator": "Oulan-Bator", "Dili": "Dili", "Male": "Malé",
+    
+    // Americas
+    "Havana": "La Havane", "Bogotá": "Bogota", "Asuncion": "Asuncion", "Mexico City": "Mexico",
+    "Washington, D.C.": "Washington", "Washington D.C.": "Washington", "Ottawa": "Ottawa",
+    "San José": "San José", "Panama City": "Panama", "Guatemala City": "Guatemala",
+    "Port-au-Prince": "Port-au-Prince", "Santo Domingo": "Saint-Domingue", "Kingston": "Kingston",
+    "Port of Spain": "Port-d'Espagne", "Georgetown": "Georgetown", "Paramaribo": "Paramaribo",
+    "Cayenne": "Cayenne", "Saint George's": "Saint-Georges", "St. George's": "Saint-Georges",
+    
+    // Africa
+    "Algiers": "Alger", "Cairo": "Le Caire", "Tunis": "Tunis", "Rabat": "Rabat", "Tripoli": "Tripoli",
+    "Addis Ababa": "Addis-Abeba", "Nairobi": "Nairobi", "Mogadishu": "Mogadiscio", "Khartoum": "Khartoum",
+    "Antananarivo": "Antananarivo", "Port Louis": "Port-Louis", "Cape Town": "Le Cap", "Pretoria": "Pretoria",
+    "Johannesburg": "Johannesburg", "Dakar": "Dakar", "Abidjan": "Abidjan", "Yamoussoukro": "Yamoussoukro",
+    "Accra": "Accra", "Lagos": "Lagos", "Abuja": "Abuja", "Kinshasa": "Kinshasa", "Brazzaville": "Brazzaville",
+    "Luanda": "Luanda", "Libreville": "Libreville", "Yaoundé": "Yaoundé", "Bangui": "Bangui",
+    "N'Djamena": "N'Djaména", "Niamey": "Niamey", "Bamako": "Bamako", "Ouagadougou": "Ouagadougou",
+    "Nouakchott": "Nouakchott", "Conakry": "Conakry", "Freetown": "Freetown", "Monrovia": "Monrovia",
+    "Lomé": "Lomé", "Porto-Novo": "Porto-Novo", "Banjul": "Banjul", "Bissau": "Bissau", "Malabo": "Malabo",
+    
+    // Oceania
+    "Canberra": "Canberra", "Wellington": "Wellington", "Port Vila": "Port-Vila", "Suva": "Suva",
+    "Apia": "Apia", "Nuku'alofa": "Nuku'alofa", "Honiara": "Honiara"
+  };
+
+  const countryNameOverrides = {
+    "Democratic Republic of the Congo": {
+      name_en: "DR Congo",
+      name_fr: "République Démocratique du Congo"
+    },
+    "Republic of the Congo": {
+      name_en: "Congo",
+      name_fr: "République du Congo"
+    },
+    "Vietnam": {
+      name_en: "Vietnam",
+      name_fr: "Vietnam"
+    },
+    "Cote d'Ivoire": {
+      name_en: "Ivory Coast",
+      name_fr: "Côte d'Ivoire"
+    },
+    "Curaçao": {
+       name_en: "Curaçao",
+       name_fr: "Curaçao"
+    },
+    "Palestine": {
+       name_en: "Palestine",
+       name_fr: "Palestine"
+    },
+    "Cape Verde": {
+       name_en: "Cape Verde",
+       name_fr: "Cap-Vert"
+    },
+    "Palau": {
+       name_en: "Palau",
+       name_fr: "Palaos"
+    }
   };
   
   geo.features.forEach(f => {
@@ -45,10 +115,26 @@ async function run() {
            capital_fr = capitalTranslations[capital];
         }
 
+        let name_en = match.translations?.eng?.common || match.name.common;
+        let name_fr = match.translations?.fra?.common || admin;
+
+        if (countryNameOverrides[admin]) {
+           if (countryNameOverrides[admin].name_en) name_en = countryNameOverrides[admin].name_en;
+           if (countryNameOverrides[admin].name_fr) name_fr = countryNameOverrides[admin].name_fr;
+        } else if (countryNameOverrides[name_en]) {
+           if (countryNameOverrides[name_en].name_en) name_en = countryNameOverrides[name_en].name_en;
+           if (countryNameOverrides[name_en].name_fr) name_fr = countryNameOverrides[name_en].name_fr;
+        }
+
+        // Fix specific known issues from restcountries/NaturalEarth
+        if (name_fr === "Viêt Nam") name_fr = "Vietnam";
+        if (name_fr === "République démocratique du Congo") name_fr = "République Démocratique du Congo";
+        if (name_fr === "République du Congo") name_fr = "République du Congo";
+
         finalMap[admin] = {
             iso2: iso2,
-            name_en: match.translations?.eng?.common || match.name.common,
-            name_fr: match.translations?.fra?.common || admin,
+            name_en: name_en,
+            name_fr: name_fr,
             capital: capital,
             capital_fr: capital_fr,
             lat: lat,
