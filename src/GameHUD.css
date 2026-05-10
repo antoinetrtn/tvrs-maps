@@ -406,6 +406,25 @@
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-xs);
+  transition: all var(--transition-normal);
+}
+
+.gauge-item.faded {
+  opacity: 0.1;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+.gauge-item.highlight .circular-gauge {
+  box-shadow: 0 0 20px var(--color);
+  animation: aura-pulse 1.5s infinite ease-in-out;
+  transform: scale(1.15);
+}
+
+@keyframes aura-pulse {
+  0% { box-shadow: 0 0 10px var(--color); }
+  50% { box-shadow: 0 0 25px var(--color); }
+  100% { box-shadow: 0 0 10px var(--color); }
 }
 
 .circular-gauge {

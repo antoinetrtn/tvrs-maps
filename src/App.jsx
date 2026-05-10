@@ -418,6 +418,7 @@ function App() {
           viewport={viewport}
           setLastInteractionType={setLastInteractionType}
           isKeyboardMode={isKeyboardMode}
+          selectedCountry={selectedCountry}
         />
       )}
       
