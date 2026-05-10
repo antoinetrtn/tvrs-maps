@@ -43,15 +43,16 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, on
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        {onClose && <button className="close-popup" onClick={onClose}>✕</button>}
-        
         <header className="modal-header">
-          <h2>{isGameOver ? (lang === 'fr' ? "Partie Terminée" : "Game Over") : (lang === 'fr' ? "Progression" : "Progress")}</h2>
-          <div className="overall-score">
-            <span className="score-number">{foundList.length}</span>
-            <span className="score-sep">/</span>
-            <span className="score-total">{totalCountries}</span>
+          <div className="header-left">
+            <h2>{isGameOver ? (lang === 'fr' ? "Partie Terminée" : "Game Over") : (lang === 'fr' ? "Progression" : "Progress")}</h2>
+            <div className="overall-score">
+              <span className="score-number">{foundList.length}</span>
+              <span className="score-sep">/</span>
+              <span className="score-total">{totalCountries}</span>
+            </div>
           </div>
+          {onClose && <button className="close-popup" onClick={onClose}>✕</button>}
         </header>
 
         <div className="continents-grid">
@@ -75,14 +76,11 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, on
             }[region] || region : region;
 
             return (
-              <div key={region} className="continent-section" style={{ '--continent-color': color, '--continent-bg': bgColor, '--continent-label': labelColor }}>
-                <div className="continent-header">
+              <div key={region} className="continent-tile" style={{ '--continent-color': color, '--continent-bg': bgColor, '--continent-label': labelColor }}>
+                <div className="tile-header">
                   <div className="continent-info">
                     <h3>{regionLabel}</h3>
                     <span className="continent-count">{data.found} / {data.total}</span>
-                  </div>
-                  <div className="continent-progress-bar">
-                    <div className="progress-fill" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
                 
