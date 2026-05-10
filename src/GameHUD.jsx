@@ -14,6 +14,7 @@ const GameHUD = ({
   foundList, countryDataMap, theme, viewport, setLastInteractionType, isKeyboardMode
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   
@@ -90,14 +91,45 @@ const GameHUD = ({
     const val = e.target.value;
     setInputValue(val);
     setLastInteractionType('manual');
+    if (val.length >= 3) {
+      const normalizedInput = normalizeString(val);
+      const newSuggestions = [];
+      const keysToCheck = Object.keys(countryDataMap || {}).filter(k => !foundList.includes(k));
+      for (const adminKey of keysToCheck) {
+        const mapped = countryDataMap[adminKey];
+        if (!mapped) continue;
+        let nameToMatch = lang === 'fr' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped.name_en || adminKey);
+        let capitalToMatch = lang === 'fr' && mapped.capital_fr ? mapped.capital_fr : (mapped.capital || null);
+        let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
+        if (targetMatch && normalizeString(targetMatch).includes(normalizedInput)) {
+          if (val.length / targetMatch.length >= 0.6) {
+            newSuggestions.push({ key: adminKey, display: targetMatch, subtext: mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital) });
+          }
+        }
+      }
+      setSuggestions(newSuggestions.slice(0, 3));
+    } else setSuggestions([]);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && onEnter) {
+    if (e.key === 'Tab' && suggestions.length > 0) { 
+      e.preventDefault(); 
+      submitSuggestion(suggestions[0].display); 
+    }
+    else if (e.key === 'Enter' && onEnter) {
       e.preventDefault();
       if (onEnter(inputValue)) { 
         setInputValue(''); 
+        setSuggestions([]);
       }
+    }
+  };
+
+  const submitSuggestion = (match) => {
+    if (onEnter && onEnter(match)) { 
+      setInputValue(''); 
+      setSuggestions([]);
+      if (extInputRef.current) extInputRef.current.focus();
     }
   };
 
@@ -216,6 +248,24 @@ const GameHUD = ({
         } : {}}
       >
         <div className="glass-panel bottom-hud-panel">
+          {suggestions.length > 0 && (
+            <div className="suggestions-list animation-fade-in">
+              {suggestions.map((s, idx) => (
+                <button 
+                  key={idx} 
+                  className="suggestion-item" 
+                  onPointerDown={(e) => {
+                    e.preventDefault(); // STOPS BLUR
+                    submitSuggestion(s.display);
+                  }}
+                  type="button"
+                >
+                  <span className="sug-text">{s.display}</span>
+                  {s.subtext && <small className="sug-sub">({s.subtext})</small>}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="input-wrap">
             {isFocusedCountry && (
               <button className="toggle-btn nav-focus-btn" onClick={() => onNavigateFocus('prev')}><ChevronLeft size={20} /></button>

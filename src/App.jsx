@@ -1,3 +1,29 @@
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import GlobeMap from './GlobeMap.jsx';
+import GameHUD from './GameHUD.jsx';
+import HomeScreen from './HomeScreen.jsx';
+import './App.css';
+import { normalizeString as rawNormalize, countryDataMap } from './gameData';
+
+// Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
+const normalizeString = (str) => {
+  return rawNormalize(str).replace(/[-'']/g, ' ').replace(/\s+/g, ' ').trim();
+};
+import ResultsModal from './ResultsModal.jsx';
+
+// Custom Confirmation Modal Component
+const ConfirmationModal = ({ message, onConfirm, onCancel, theme }) => (
+  <div className="custom-modal-overlay">
+    <div className={`custom-modal-content glass-panel ${theme}`}>
+      <p>{message}</p>
+      <div className="modal-actions">
+        <button className="modal-btn cancel" onClick={onCancel}>Annuler</button>
+        <button className="modal-btn confirm" onClick={onConfirm}>Confirmer</button>
+      </div>
+    </div>
+  </div>
+);
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home'); // 'home' or 'game'
   const [mode, setMode] = useState('countries'); // 'countries' or 'capitals'
