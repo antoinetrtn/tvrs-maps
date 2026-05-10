@@ -94,7 +94,9 @@ const GameHUD = ({
   const handleTextChange = (e) => {
     const val = e.target.value;
     setInputValue(val);
-    if (val.length >= 2) {
+    
+    // Stricter trigger: at least 4 chars and must represent a significant part of the word
+    if (val.length >= 4) {
       const normalizedInput = normalizeString(val);
       const newSuggestions = [];
       const keysToCheck = mode === 'learn' 
@@ -111,17 +113,27 @@ const GameHUD = ({
         if (mode === 'learn') {
           const matchName = normalizeString(nameToMatch).includes(normalizedInput);
           const matchCap = capitalToMatch && normalizeString(capitalToMatch).includes(normalizedInput);
+          
+          // Suggestions should help with long/complex names
           if (matchName || matchCap) {
-            newSuggestions.push({ 
-              key: adminKey, 
-              display: matchName ? nameToMatch : capitalToMatch, 
-              subtext: matchName ? (mapped.capital_fr || mapped.capital) : (mapped.name_fr || mapped.name_en || adminKey) 
-            });
+            const target = matchName ? nameToMatch : capitalToMatch;
+            // Only suggest if input is long enough or target is complex (has spaces/hyphens)
+            if (val.length >= 5 || target.includes(' ') || target.includes('-')) {
+              newSuggestions.push({ 
+                key: adminKey, 
+                display: target, 
+                subtext: matchName ? (mapped.capital_fr || mapped.capital) : (mapped.name_fr || mapped.name_en || adminKey) 
+              });
+            }
           }
         } else {
           let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
           if (targetMatch && normalizeString(targetMatch).includes(normalizedInput)) {
-            if (val.length / targetMatch.length >= 0.6 || val.length >= 3) {
+            // Very strict in game mode: only suggest if we have a lot of letters or it's a compound name
+            const isCompound = targetMatch.includes(' ') || targetMatch.includes('-');
+            const isSignificantMatch = val.length / targetMatch.length >= 0.7;
+
+            if (isSignificantMatch || (isCompound && val.length >= 5)) {
               newSuggestions.push({ 
                 key: adminKey, 
                 display: targetMatch, 
