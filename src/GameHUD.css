@@ -419,6 +419,19 @@
     gap: 8px;
   }
 
+  .gauge-item.highlight .circular-gauge {
+    animation: none;
+    box-shadow: 0 0 10px var(--color);
+  }
+
+  .central-island-panel,
+  .hud-btn-circular,
+  .input-island,
+  .suggestions-list {
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+
   .hud-bottom-right {
     display: none !important;
   }

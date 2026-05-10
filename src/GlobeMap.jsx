@@ -283,17 +283,17 @@ const GlobeMap = ({
 
   const getPolygonStroke = useCallback((d) => {
     const admin = d.properties.ADMIN;
-    if (foundSet.has(admin)) return 'rgba(0,0,0,0)';
     if (admin === selectedCountry) {
       if (isError) return '#ef4444';
       return isLight ? '#1e40af' : '#ffffff';
     }
+    if (foundSet.has(admin)) return 'rgba(0,0,0,0)';
     return isLight ? 'rgba(30, 58, 138, 0.2)' : 'rgba(40, 70, 120, 0.4)';
   }, [selectedCountry, foundSet, isLight, isError]);
 
   const getPolygonAltitude = useCallback((d) => {
-    if (d.properties.ADMIN === selectedCountry) return 0.03; 
-    return foundSet.has(d.properties.ADMIN) ? 0.015 : 0.008;
+    if (d.properties.ADMIN === selectedCountry) return 0.028;
+    return foundSet.has(d.properties.ADMIN) ? 0.016 : 0.012;
   }, [selectedCountry, foundSet]);
 
   const labelsData = useMemo(() => {
@@ -315,7 +315,7 @@ const GlobeMap = ({
   }, [foundList, perfProfile?.maxLabels]);
 
   const ringsData = useMemo(() => {
-    const shouldShowRing = selectedCountry && (!perfProfile?.isMobile || hasActiveFeedback);
+    const shouldShowRing = selectedCountry;
     if (shouldShowRing) {
        const mapped = countryDataMap[selectedCountry];
        if (mapped && mapped.lat !== undefined) {
@@ -340,13 +340,8 @@ const GlobeMap = ({
   const globeHeight = isMobileKeyboardOpen ? viewport.height : layoutViewportRef.current.height;
 
   const polygonSideColor = useCallback((d) => {
-    const admin = d.properties.ADMIN;
-    if (admin === selectedCountry) {
-      if (isError) return 'rgba(239, 68, 68, 0.5)';
-      return isLight ? 'rgba(37, 99, 235, 0.3)' : 'rgba(59, 130, 246, 0.3)'; 
-    }
-    return isLight ? 'rgba(0, 0, 0, 0.02)' : 'rgba(0, 0, 0, 0.05)';
-  }, [isLight, selectedCountry, isError]);
+    return 'rgba(0, 0, 0, 0)';
+  }, []);
 
   const countriesWithGeometry = useMemo(() => {
     return new Set(selectableCountriesData.map(getFeatureAdmin));
@@ -380,7 +375,9 @@ const GlobeMap = ({
   }, [countriesWithGeometry, tinyCountries]);
 
   const getPolygonStrokeWidth = useCallback((d) => (
-    d.properties.ADMIN === selectedCountry ? 1.5 : 0.5
+    d.properties.ADMIN === selectedCountry
+      ? 1.15
+      : 0.4
   ), [selectedCountry]);
 
   const getPointColor = useCallback((d) => {
@@ -481,7 +478,6 @@ const GlobeMap = ({
           pointColor={getPointColor}
           pointRadius={getPointRadius}
           pointAltitude={getPointAltitude}
-          onPointClick={d => selectCountry(d.admin)}
           labelsData={labelsData}
           labelLat={d => d.lat}
           labelLng={d => d.lng}
@@ -493,12 +489,10 @@ const GlobeMap = ({
           labelAltitude={0.02}
           ringsData={ringsData}
           ringColor={getRingColor}
-          ringMaxRadius={2.2}
-          ringPropagationSpeed={1.2}
-          ringRepeatPeriod={1000}
+          ringMaxRadius={perfProfile?.isMobile ? 1.5 : 2.2}
+          ringPropagationSpeed={perfProfile?.isMobile ? 0.75 : 1.2}
+          ringRepeatPeriod={perfProfile?.isMobile ? 1300 : 1000}
           ringAltitude={0.032}
-          onPolygonClick={d => selectCountry(getFeatureAdmin(d))}
-          onGlobeClick={({ lat, lng }) => selectCountryAtLngLat(lng, lat)}
         />
     </div>
   );

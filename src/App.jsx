@@ -389,17 +389,17 @@ function App() {
     const isMobile = viewport.width < 768;
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = isMobile ? Math.min(devicePixelRatio, 1.35) : Math.min(devicePixelRatio, 1.75);
+    const pixelRatio = isMobile ? Math.min(devicePixelRatio, 1.5) : Math.min(devicePixelRatio, 1.75);
     return {
       isMobile,
       isTablet,
       pixelRatio,
       enableAutoRotate: true,
-      enablePointerInteraction: true,
+      enablePointerInteraction: false,
       maxLabels: isMobile ? 0 : (isTablet ? 12 : 20),
       showAtmosphere: false,
       useImageTextures: false,
-      polygonCapCurvatureResolution: isMobile ? 5 : (isTablet ? 8 : 12)
+      polygonCapCurvatureResolution: isMobile ? 6 : (isTablet ? 8 : 12)
     };
   }, [viewport.width]);
 
