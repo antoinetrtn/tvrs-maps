@@ -115,8 +115,8 @@
 
 .island-progress-wrap {
   flex: 1;
-  max-width: 140px;
-  min-width: 40px;
+  max-width: 300px;
+  min-width: 80px;
 }
 
 .progress-linear-container {
@@ -280,13 +280,46 @@
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  padding: 6px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 240px;
+  width: 100%;
   pointer-events: auto;
   box-shadow: var(--glass-shadow);
+  margin-bottom: 8px;
+}
+
+.suggestion-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.suggestion-item:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.sug-text {
+  flex: 1;
+}
+
+.sug-sub {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-weight: 500;
 }
 
 @media (max-width: 600px) {
