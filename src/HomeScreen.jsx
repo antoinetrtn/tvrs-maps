@@ -6,12 +6,6 @@ const HomeScreen = ({ onStartGame, theme }) => {
   return (
     <div className={`home-screen-overlay ${theme}`}>
       <div className="home-content animation-fade-in">
-        <h1 className="home-title">
-          <span className="title-tvrs">TVRS</span>
-          <span className="title-maps">Maps</span>
-        </h1>
-        <p className="home-subtitle">L'expérience géographique interactive</p>
-
         <div className="home-buttons">
           <button className="home-btn mode-countries" onClick={() => onStartGame('countries')}>
             <Globe2 size={24} />
