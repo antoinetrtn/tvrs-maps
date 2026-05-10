@@ -112,6 +112,7 @@ const GLOBE_LAYER_ALTITUDE = {
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = -10;
 const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = -18;
+const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
   if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected;
@@ -229,6 +230,9 @@ const GlobeMap = ({
           controls.dampingFactor = perfProfile?.isMobile ? 0.08 : 0.05;
           controls.rotateSpeed = perfProfile?.isMobile ? 0.75 : 0.9;
           controls.zoomSpeed = perfProfile?.isMobile ? 0.75 : 1;
+          controls.zoomToCursor = false;
+          controls.minPolarAngle = ORBIT_POLE_GUARD_ANGLE;
+          controls.maxPolarAngle = Math.PI - ORBIT_POLE_GUARD_ANGLE;
 
           // Track POV changes with a threshold to avoid jittery re-renders
           controls.addEventListener('change', () => {
