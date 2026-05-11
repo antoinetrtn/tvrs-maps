@@ -300,11 +300,13 @@
 
   .home-bottom-right {
     position: fixed;
-    left: 50%;
+    left: calc(var(--spacing-sm) + env(safe-area-inset-left));
     right: auto;
     bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom));
-    transform: translateX(-50%);
+    width: calc(100vw - (var(--spacing-sm) * 2) - env(safe-area-inset-left) - env(safe-area-inset-right));
+    transform: none;
     gap: var(--spacing-sm);
+    flex-wrap: wrap;
     justify-content: center;
   }
 
