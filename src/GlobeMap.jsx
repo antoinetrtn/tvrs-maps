@@ -101,6 +101,13 @@ const getLngLatDistance = (lngA, latA, lngB, latB) => {
   return Math.hypot(dLng, latA - latB);
 };
 
+const getMobileRenderRadius = (zoomLevel) => {
+  if (zoomLevel >= 1.6) return 118;
+  if (zoomLevel >= 1.05) return 96;
+  if (zoomLevel >= 0.7) return 78;
+  return 64;
+};
+
 const GLOBE_LAYER_ALTITUDE = {
   // Keep geometry far enough from the globe surface to avoid depth-buffer
   // flickering when the globe is zoomed out, especially on mobile GPUs.
@@ -396,6 +403,7 @@ const GlobeMap = ({
   const handlePointerUp = useCallback((event) => {
     const tap = tapRef.current;
     tapRef.current = null;
+    if (isHomeScreen) return;
     if (!tap || tap.pointerId !== event.pointerId) return;
 
     const dx = event.clientX - tap.x;
@@ -416,7 +424,7 @@ const GlobeMap = ({
       // Clicked in space (not on the globe sphere)
       selectCountry(null);
     }
-  }, [isKeyboardMode, onPreserveInputFocus, selectCountryAtLngLat, selectCountry, viewport.width]);
+  }, [isHomeScreen, isKeyboardMode, onPreserveInputFocus, selectCountryAtLngLat, selectCountry, viewport.width]);
 
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
   const REGION_COLORS_ATTENUATED = useMemo(() => CONTINENT_COLORS_ATTENUATED[theme] || CONTINENT_COLORS_ATTENUATED.dark, [theme]);
@@ -525,8 +533,9 @@ const GlobeMap = ({
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     // Increased thickness for selection
-    return admin === selectedCountry ? 2.5 : 0.4;
-  }, [selectedCountry]);
+    if (admin === selectedCountry) return perfProfile?.isMobile ? 1.7 : 2.5;
+    return perfProfile?.isMobile ? 0.25 : 0.4;
+  }, [perfProfile?.isMobile, selectedCountry]);
 
   const countrySizes = useMemo(() => {
     const sizes = {};
@@ -537,6 +546,39 @@ const GlobeMap = ({
     });
     return sizes;
   }, [selectableFeatureIndex]);
+
+  const visibleRenderCountriesData = useMemo(() => {
+    if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {
+      return renderCountriesData;
+    }
+
+    const pov = cameraPOV;
+    const renderRadius = getMobileRenderRadius(zoomLevel);
+
+    return renderCountriesData.filter(feature => {
+      const admin = getFeatureAdmin(feature);
+      if (!admin) return false;
+      if (admin === selectedCountry) return true;
+
+      const data = countryDataMap[admin];
+      if (!data || data.lat === undefined || data.lng === undefined) return true;
+
+      const size = countrySizes[admin] || 1;
+      const sizeBuffer = Math.min(70, Math.max(8, size * 0.75));
+      const distToCenter = getLngLatDistance(data.lng, data.lat, pov.lng, pov.lat);
+
+      return distToCenter <= renderRadius + sizeBuffer;
+    });
+  }, [
+    cameraPOV,
+    countrySizes,
+    isEndScreen,
+    isHomeScreen,
+    perfProfile?.cullOffscreenCountries,
+    renderCountriesData,
+    selectedCountry,
+    zoomLevel
+  ]);
 
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
@@ -746,6 +788,29 @@ const GlobeMap = ({
       }));
   }, [countriesWithGeometry, tinyCountries]);
 
+  const visibleMarkersData = useMemo(() => {
+    if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {
+      return markersData;
+    }
+
+    const pov = cameraPOV;
+    const renderRadius = getMobileRenderRadius(zoomLevel);
+
+    return markersData.filter(marker => {
+      if (marker.admin === selectedCountry) return true;
+      const distToCenter = getLngLatDistance(marker.lng, marker.lat, pov.lng, pov.lat);
+      return distToCenter <= renderRadius + 12;
+    });
+  }, [
+    cameraPOV,
+    isEndScreen,
+    isHomeScreen,
+    markersData,
+    perfProfile?.cullOffscreenCountries,
+    selectedCountry,
+    zoomLevel
+  ]);
+
   const getPointColor = useCallback((d) => {
     const isFound = foundSet.has(d.admin) || mode === 'learn';
     const isSelected = d.admin === selectedCountry;
@@ -891,7 +956,7 @@ const GlobeMap = ({
             rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
-            polygonsData={renderCountriesData}
+            polygonsData={visibleRenderCountriesData}
             polygonGeoJsonGeometry="renderGeometry"
             polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
             polygonAltitude={getPolygonAltitude}
@@ -901,7 +966,7 @@ const GlobeMap = ({
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
             polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
-            pointsData={markersData}
+            pointsData={visibleMarkersData}
             pointLat="lat"
             pointLng="lng"
             pointColor={getPointColor}
@@ -919,7 +984,7 @@ const GlobeMap = ({
             ringPropagationSpeed={perfProfile?.isMobile ? 0.35 : 0.5}
             ringRepeatPeriod={perfProfile?.isMobile ? 2400 : 2000}
             ringAltitude={GLOBE_LAYER_ALTITUDE.selected}
-            onBackgroundClick={() => selectCountry(null)}
+            onBackgroundClick={isHomeScreen ? undefined : () => selectCountry(null)}
           />
         </div>
     </div>

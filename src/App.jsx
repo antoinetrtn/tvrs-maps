@@ -493,18 +493,19 @@ function App() {
     const isMobile = viewport.width < 768;
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = isMobile ? Math.min(devicePixelRatio, 2) : Math.min(devicePixelRatio, 1.75);
+    const pixelRatio = isMobile ? Math.min(devicePixelRatio, 1.35) : Math.min(devicePixelRatio, 1.75);
     return {
       isMobile,
       isTablet,
       pixelRatio,
       enableAutoRotate: true,
       enablePointerInteraction: true,
-      maxLabels: isMobile ? 8 : (isTablet ? 15 : 30),
+      maxLabels: isMobile ? 5 : (isTablet ? 12 : 30),
       showAtmosphere: false,
       useImageTextures: false,
+      cullOffscreenCountries: isMobile || isTablet,
       // Robust curvature resolution for quality and stability
-      polygonCapCurvatureResolution: isMobile ? 2.5 : (isTablet ? 2.0 : 1.5)
+      polygonCapCurvatureResolution: isMobile ? 4 : (isTablet ? 3 : 1.5)
     };
   }, [viewport.width]);
 
