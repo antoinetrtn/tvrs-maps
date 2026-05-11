@@ -239,10 +239,8 @@
   background: var(--glass-bg);
   box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   border-color: var(--accent);
+  color: var(--accent);
 }
-
-.home-btn.mode-countries:hover { color: var(--accent); }
-.home-btn.mode-capitals:hover { color: var(--accent); border-color: var(--accent); }
 
 .home-btn.disabled {
   opacity: 0.5;
