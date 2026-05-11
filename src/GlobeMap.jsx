@@ -681,6 +681,30 @@ const GlobeMap = ({
     };
   }, [globeMaterial]);
 
+  const styleGlobeGraticules = useCallback(() => {
+    const scene = globeEl.current?.scene?.();
+    if (!scene) return;
+
+    scene.traverse((obj) => {
+      const material = obj.material;
+      if (
+        obj.type === 'LineSegments' &&
+        material?.type === 'LineBasicMaterial' &&
+        material.transparent === true
+      ) {
+        material.color.set(isLight ? '#64748b' : 'lightgrey');
+        material.opacity = isLight ? 0.32 : 0.1;
+        material.depthWrite = false;
+        material.needsUpdate = true;
+      }
+    });
+  }, [isLight]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(styleGlobeGraticules);
+    return () => cancelAnimationFrame(frame);
+  }, [styleGlobeGraticules]);
+
   const isMobileKeyboardOpen = viewport.width < 1024 && isKeyboardMode;
   if (!isMobileKeyboardOpen) {
     layoutViewportRef.current = {
@@ -860,6 +884,7 @@ const GlobeMap = ({
             showAtmosphere={!!perfProfile?.showAtmosphere}
             atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
+            onGlobeReady={styleGlobeGraticules}
             backgroundColor="rgba(0,0,0,0)"
             lineHoverPrecision={0}
             showGraticules={true}
