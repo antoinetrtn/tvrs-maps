@@ -136,7 +136,8 @@ const GlobeMap = ({
   isHomeScreen,
   isKeyboardMode,
   isEndScreen,
-  isPerfectScore
+  isPerfectScore,
+  onPreserveInputFocus
 }) => {
   const globeEl = useRef();
   const tapRef = useRef(null);
@@ -378,11 +379,10 @@ const GlobeMap = ({
   }, [selectableFeatureIndex, selectCountry]);
 
   const handlePointerDown = useCallback((event) => {
-    if (event.target?.tagName !== 'CANVAS') return;
-    
     // Prevent focus shift (keyboard flicker) on mobile when interacting with the globe
     if (event.pointerType === 'touch' && isKeyboardMode && viewport.width < 1024) {
       event.preventDefault();
+      onPreserveInputFocus?.();
     }
 
     tapRef.current = {
@@ -391,7 +391,7 @@ const GlobeMap = ({
       y: event.clientY,
       t: performance.now()
     };
-  }, [isKeyboardMode, viewport.width]);
+  }, [isKeyboardMode, onPreserveInputFocus, viewport.width]);
 
   const handlePointerUp = useCallback((event) => {
     const tap = tapRef.current;
@@ -404,6 +404,11 @@ const GlobeMap = ({
     const elapsed = performance.now() - tap.t;
     if (moved > 10 || elapsed > 600 || !globeEl.current?.toGlobeCoords) return;
 
+    if (event.pointerType === 'touch' && isKeyboardMode && viewport.width < 1024) {
+      event.preventDefault();
+      onPreserveInputFocus?.();
+    }
+
     const coords = globeEl.current.toGlobeCoords(event.clientX, event.clientY);
     if (coords) {
       selectCountryAtLngLat(coords.lng, coords.lat);
@@ -411,7 +416,7 @@ const GlobeMap = ({
       // Clicked in space (not on the globe sphere)
       selectCountry(null);
     }
-  }, [selectCountryAtLngLat, selectCountry]);
+  }, [isKeyboardMode, onPreserveInputFocus, selectCountryAtLngLat, selectCountry, viewport.width]);
 
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
   const REGION_COLORS_ATTENUATED = useMemo(() => CONTINENT_COLORS_ATTENUATED[theme] || CONTINENT_COLORS_ATTENUATED.dark, [theme]);

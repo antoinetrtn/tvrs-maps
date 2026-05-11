@@ -233,6 +233,18 @@ function App() {
     return () => clearTimeout(closeTimer);
   }, [keyboardModeCandidate]);
 
+  const preserveInputFocus = useCallback(() => {
+    const input = extInputRef.current;
+    if (!input) return;
+    if (document.activeElement !== input) {
+      try {
+        input.focus({ preventScroll: true });
+      } catch {
+        input.focus();
+      }
+    }
+  }, []);
+
   const resetGame = useCallback((newMode) => {
     setMode(newMode);
     setFoundList([]);
@@ -588,6 +600,7 @@ function App() {
         isKeyboardMode={effectiveKeyboardMode}
         isEndScreen={showEndScreen}
         isPerfectScore={foundList.length === totalPossible}
+        onPreserveInputFocus={preserveInputFocus}
       />
 
       {showEndScreen && (
