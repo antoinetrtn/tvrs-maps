@@ -91,6 +91,26 @@ async function run() {
     "Palau": {
        name_en: "Palau",
        name_fr: "Palaos"
+    },
+    "Aland": {
+       name_en: "Åland Islands",
+       name_fr: "Åland"
+    },
+    "Myanmar": {
+       name_en: "Myanmar",
+       name_fr: "Myanmar"
+    },
+    "Swaziland": {
+       name_en: "Eswatini",
+       name_fr: "Eswatini"
+    },
+    "Western Sahara": {
+       name_en: "Western Sahara",
+       name_fr: "Sahara occidental"
+    },
+    "Sint Maarten": {
+       name_en: "Sint Maarten",
+       name_fr: "Saint-Martin néerlandais"
     }
   };
   
@@ -104,7 +124,7 @@ async function run() {
     if (!match && admin === 'Norway') match = restMap['NO'];
 
     if (match) {
-        const capital = match.capital ? match.capital[0] : null;
+        let capital = match.capital?.length ? match.capital[0] : null;
         
         // Use capital-specific coordinates if available in match (restcountries)
         // Note: capitalInfo.latlng is the standard field for capital coords in restcountries
@@ -158,6 +178,27 @@ async function run() {
         if (finalIso2 === "FR") {
            lat = 48.8566;
            lng = 2.3522;
+        }
+
+        // restcountries currently exposes the Western Sahara capital coordinates
+        // with latitude/longitude inverted in this dataset path.
+        if (finalIso2 === "EH" || admin === "Western Sahara") {
+           lat = 27.15;
+           lng = -13.2;
+           name_fr = "Sahara occidental";
+        }
+
+        if (finalIso2 === "GD" || admin === "Grenada") {
+           lat = 12.05;
+           lng = -61.75;
+        }
+
+        if (finalIso2 === "MO" || admin === "Macao S.A.R") {
+           capital = "Macao";
+           capital_fr = "Macao";
+           lat = 22.16666666;
+           lng = 113.55;
+           name_fr = "Macao";
         }
 
         finalMap[admin] = {

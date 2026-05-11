@@ -54,7 +54,7 @@ export const countryDataMap = {
   "Aland": {
     "iso2": "AX",
     "name_en": "Åland Islands",
-    "name_fr": "Ahvenanmaa",
+    "name_fr": "Åland",
     "capital": "Mariehamn",
     "capital_fr": "Mariehamn",
     "lat": 60.12,
@@ -833,8 +833,8 @@ export const countryDataMap = {
     "name_fr": "Grenade",
     "capital": "St. George's",
     "capital_fr": "Saint-Georges",
-    "lat": 32.38,
-    "lng": -64.68,
+    "lat": 12.05,
+    "lng": -61.75,
     "region": "Americas"
   },
   "Greenland": {
@@ -1277,6 +1277,10 @@ export const countryDataMap = {
     "iso2": "MO",
     "name_en": "Macau",
     "name_fr": "Macao",
+    "capital": "Macao",
+    "capital_fr": "Macao",
+    "lat": 22.16666666,
+    "lng": 113.55,
     "region": "Asia"
   },
   "Saint Martin": {
@@ -1392,7 +1396,7 @@ export const countryDataMap = {
   "Myanmar": {
     "iso2": "MM",
     "name_en": "Myanmar",
-    "name_fr": "Birmanie",
+    "name_fr": "Myanmar",
     "capital": "Naypyidaw",
     "capital_fr": "Naypyidaw",
     "lat": 19.76,
@@ -1802,11 +1806,11 @@ export const countryDataMap = {
   "Western Sahara": {
     "iso2": "EH",
     "name_en": "Western Sahara",
-    "name_fr": "Sahara Occidental",
+    "name_fr": "Sahara occidental",
     "capital": "El Aaiún",
     "capital_fr": "El Aaiún",
-    "lat": -13.28,
-    "lng": 27.14,
+    "lat": 27.15,
+    "lng": -13.2,
     "region": "Africa"
   },
   "Saudi Arabia": {
@@ -2002,7 +2006,7 @@ export const countryDataMap = {
   "Swaziland": {
     "iso2": "SZ",
     "name_en": "Eswatini",
-    "name_fr": "Swaziland",
+    "name_fr": "Eswatini",
     "capital": "Mbabane",
     "capital_fr": "Mbabane",
     "lat": -26.32,
@@ -2012,7 +2016,7 @@ export const countryDataMap = {
   "Sint Maarten": {
     "iso2": "SX",
     "name_en": "Sint Maarten",
-    "name_fr": "Saint-Martin",
+    "name_fr": "Saint-Martin néerlandais",
     "capital": "Philipsburg",
     "capital_fr": "Philipsburg",
     "lat": 18.02,
