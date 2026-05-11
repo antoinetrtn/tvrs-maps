@@ -287,7 +287,7 @@ function App() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/data/countries-110m.json').then(res => res.json()),
+      fetch('/data/countries-50m-low.json').then(res => res.json()),
       fetch('/data/countries-50m.json').then(res => {
         if (!res.ok) throw new Error(`Unable to load 50m countries`);
         return res.json();

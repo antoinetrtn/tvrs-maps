@@ -38,6 +38,11 @@ Une expérience interactive et immersive pour tester vos connaissances géograph
     npm run dev
     ```
 
+    Pour lancer le serveur local sur le port 5001 :
+    ```bash
+    npm run dev:5001
+    ```
+
 ## 🛠️ Stack Technique
 
 *   **Framework :** React 19

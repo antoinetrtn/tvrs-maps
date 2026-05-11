@@ -572,7 +572,13 @@ const GlobeMap = ({
     if (globeLightingEnabled) {
       if (admin === selectedCountry) {
         if (isError) return isLight ? '#991b1b' : '#7f1d1d';
-        return isLight ? '#1e3a8a' : '#172554';
+        
+        // Base color for the side when selected under lighting
+        const sideBaseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
+          ? (REGION_COLORS[region] || UI_COLORS.success)
+          : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
+          
+        return lerpColor(sideBaseColor, '#000000', isLight ? 0.35 : 0.6);
       }
       if (!isHomeScreen && (foundSet.has(admin) || mode === 'learn')) {
         return isLight ? '#334155' : '#0f172a';
@@ -1255,7 +1261,7 @@ const GlobeMap = ({
             ringMaxRadius={perfProfile?.isMobile ? 1.0 : 1.4}
             ringPropagationSpeed={perfProfile?.isMobile ? 0.35 : 0.5}
             ringRepeatPeriod={perfProfile?.isMobile ? 2400 : 2000}
-            ringAltitude={GLOBE_LAYER_ALTITUDE.selected}
+            ringAltitude={GLOBE_LAYER_ALTITUDE.selected * (globeLightingEnabled ? 1.8 : 1)}
             onBackgroundClick={isHomeScreen ? undefined : () => selectCountry(null)}
           />
         </div>
