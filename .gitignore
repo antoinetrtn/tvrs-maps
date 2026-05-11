@@ -25,3 +25,6 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# Generated map source snapshots
+public/data/*-raw.json

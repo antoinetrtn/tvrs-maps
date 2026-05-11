@@ -21,25 +21,62 @@ const getFeaturePolygons = (feature) => {
   return [];
 };
 
-const getExteriorPolygonForRendering = (polygon) => (
-  polygon?.[0] ? [polygon[0]] : polygon
+const areLngLatPointsEqual = (a, b) => (
+  Array.isArray(a) &&
+  Array.isArray(b) &&
+  a.length >= 2 &&
+  b.length >= 2 &&
+  a[0] === b[0] &&
+  a[1] === b[1]
 );
+
+const getCleanRingForRendering = (ring) => {
+  if (!Array.isArray(ring)) return null;
+
+  const cleanRing = ring.reduce((points, point) => {
+    if (!Array.isArray(point) || point.length < 2) return points;
+    const normalizedPoint = [Number(point[0]), Number(point[1])];
+    if (!Number.isFinite(normalizedPoint[0]) || !Number.isFinite(normalizedPoint[1])) return points;
+    if (points.length && areLngLatPointsEqual(points[points.length - 1], normalizedPoint)) return points;
+    points.push(normalizedPoint);
+    return points;
+  }, []);
+
+  if (cleanRing.length < 3) return null;
+
+  if (!areLngLatPointsEqual(cleanRing[0], cleanRing[cleanRing.length - 1])) {
+    cleanRing.push([...cleanRing[0]]);
+  }
+
+  return cleanRing.length >= 4 ? cleanRing : null;
+};
+
+const getExteriorPolygonForRendering = (polygon) => {
+  const exteriorRing = getCleanRingForRendering(polygon?.[0]);
+  return exteriorRing ? [exteriorRing] : null;
+};
 
 const getRenderGeometry = (feature) => {
   const geometry = feature?.geometry;
   if (!geometry) return null;
 
   if (geometry.type === 'Polygon') {
+    const coordinates = getExteriorPolygonForRendering(geometry.coordinates);
+    if (!coordinates) return null;
     return {
       ...geometry,
-      coordinates: getExteriorPolygonForRendering(geometry.coordinates)
+      coordinates
     };
   }
 
   if (geometry.type === 'MultiPolygon') {
+    const coordinates = geometry.coordinates
+      .map(getExteriorPolygonForRendering)
+      .filter(Boolean);
+    if (!coordinates.length) return null;
     return {
       ...geometry,
-      coordinates: geometry.coordinates.map(getExteriorPolygonForRendering)
+      coordinates
     };
   }
 
@@ -121,16 +158,17 @@ const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
-const getCountryLayerAltitude = (admin, foundSet, selectedCountry) => {
-  if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected;
-  if (foundSet.has(admin)) return GLOBE_LAYER_ALTITUDE.found;
-  return GLOBE_LAYER_ALTITUDE.base;
+const getCountryLayerAltitude = (admin, foundSet, selectedCountry, extrusionScale = 1) => {
+  if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected * extrusionScale;
+  if (foundSet.has(admin)) return GLOBE_LAYER_ALTITUDE.found * extrusionScale;
+  return GLOBE_LAYER_ALTITUDE.base * extrusionScale;
 };
 
 const GlobeMap = ({
   mode,
   lang,
   countriesData,
+  highResCountriesByAdmin,
   foundList,
   onCountrySelect,
   shouldAutoRotate,
@@ -339,12 +377,28 @@ const GlobeMap = ({
     return countriesData.filter(feature => countryDataMap[getFeatureAdmin(feature)]);
   }, [countriesData]);
 
-  const renderCountriesData = useMemo(() => {
+  const baseRenderCountriesData = useMemo(() => {
     return selectableCountriesData.map(feature => ({
       ...feature,
       renderGeometry: getRenderGeometry(feature)
     }));
   }, [selectableCountriesData]);
+
+  const renderCountriesData = useMemo(() => {
+    if (!selectedCountry || !highResCountriesByAdmin) return baseRenderCountriesData;
+
+    return baseRenderCountriesData.map(baseItem => {
+      const admin = getFeatureAdmin(baseItem);
+      if (admin === selectedCountry && highResCountriesByAdmin.has(admin)) {
+        const highResFeature = highResCountriesByAdmin.get(admin);
+        return {
+          ...highResFeature,
+          renderGeometry: getRenderGeometry(highResFeature)
+        };
+      }
+      return baseItem;
+    });
+  }, [baseRenderCountriesData, highResCountriesByAdmin, selectedCountry]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData.map(feature => {
@@ -483,18 +537,20 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
-      // Vibrant continent color for selection edge, pulsing towards white/light
       const baseStroke = (isHomeScreen ? UI_COLORS.accent : (REGION_COLORS[region] || UI_COLORS.accent));
-      return lerpColor(baseStroke, '#ffffff', pulse * 0.7);
+      return lerpColor(baseStroke, isLight ? '#0f172a' : '#ffffff', pulse * 0.55);
     }
-    
-    // Normal borders: dark version of the base color
+
+    if (isHomeScreen || (!foundSet.has(admin) && mode !== 'learn')) {
+      return isLight ? '#94a3b8' : lerpColor(UI_COLORS.mapBase, '#000000', 0.4);
+    }
+
     const baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
       ? (REGION_COLORS[region] || UI_COLORS.success)
       : UI_COLORS.mapBase;
-      
-    return lerpColor(baseColor, '#000000', 0.4); 
-  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen]);
+
+    return lerpColor(baseColor, isLight ? '#0f172a' : '#000000', isLight ? 0.58 : 0.4); 
+  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen, isLight]);
 
   const getPolygonSideColor = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -513,6 +569,17 @@ const GlobeMap = ({
         : UI_COLORS.mapBase;
     }
 
+    if (globeLightingEnabled) {
+      if (admin === selectedCountry) {
+        if (isError) return isLight ? '#991b1b' : '#7f1d1d';
+        return isLight ? '#1e3a8a' : '#172554';
+      }
+      if (!isHomeScreen && (foundSet.has(admin) || mode === 'learn')) {
+        return isLight ? '#334155' : '#0f172a';
+      }
+      return isLight ? '#64748b' : '#1e293b';
+    }
+
     if (admin === selectedCountry) {
       if (isError) return isLight ? '#dc7f7f' : '#991b1b';
       
@@ -520,32 +587,44 @@ const GlobeMap = ({
         ? lerpColor(REGION_COLORS[region] || UI_COLORS.success, '#ffffff', pulse * 0.4)
         : lerpColor(REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
         
-      // Sides are very bright and tinted (only 10% black blend) to make the block 'glow'
-      return lerpColor(capColor, '#000000', 0.1);
+      return lerpColor(capColor, '#000000', isLight ? 0.34 : 0.1);
     }
     
-    // Regular sides: slightly darkened version (30% blend for a soft relief)
-    return lerpColor(baseColor, '#000000', 0.3);
-  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, pulse, mode, isHomeScreen]);
+    return lerpColor(baseColor, '#000000', isLight ? 0.5 : 0.3);
+  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, pulse, mode, isHomeScreen]);
 
   const getPolygonMaterial = useCallback((d, kind) => {
     const admin = getFeatureAdmin(d) || 'unknown';
     const cache = polygonMaterialCacheRef.current[kind];
     const color = kind === 'cap' ? getPolygonColor(d) : getPolygonSideColor(d);
+    const useFlatLightingSideMaterial = kind === 'side' && globeLightingEnabled;
     let material = cache.get(admin);
 
+    if (
+      material &&
+      ((useFlatLightingSideMaterial && !material.isMeshBasicMaterial) ||
+        (!useFlatLightingSideMaterial && !material.isMeshPhongMaterial))
+    ) {
+      material.dispose();
+      cache.delete(admin);
+      material = null;
+    }
+
     if (!material) {
-      material = new THREE.MeshPhongMaterial({
+      material = useFlatLightingSideMaterial ? new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.DoubleSide
+      }) : new THREE.MeshPhongMaterial({
         color,
         specular: globeLightingEnabled
           ? (isLight ? new THREE.Color('#cbd5e1') : new THREE.Color('#475569'))
           : new THREE.Color('#111827'),
         emissive: globeLightingEnabled ? new THREE.Color(color) : new THREE.Color('#000000'),
         emissiveIntensity: globeLightingEnabled
-          ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.08 : 0.12))
+          ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.015 : 0.12))
           : 0,
         shininess: globeLightingEnabled
-          ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 3 : 4))
+          ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 1 : 4))
           : 0.7,
         side: kind === 'cap' ? THREE.DoubleSide : THREE.FrontSide
       });
@@ -553,14 +632,16 @@ const GlobeMap = ({
     }
 
     material.color.set(color);
-    material.specular.set(globeLightingEnabled ? (isLight ? '#cbd5e1' : '#475569') : '#111827');
-    material.emissive.set(globeLightingEnabled ? color : '#000000');
-    material.emissiveIntensity = globeLightingEnabled
-      ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.08 : 0.12))
-      : 0;
-    material.shininess = globeLightingEnabled
-      ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 3 : 4))
-      : 0.7;
+    if (material.isMeshPhongMaterial) {
+      material.specular.set(globeLightingEnabled ? (isLight ? '#cbd5e1' : '#475569') : '#111827');
+      material.emissive.set(globeLightingEnabled ? color : '#000000');
+      material.emissiveIntensity = globeLightingEnabled
+        ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.015 : 0.12))
+        : 0;
+      material.shininess = globeLightingEnabled
+        ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 1 : 4))
+        : 0.7;
+    }
     material.needsUpdate = true;
 
     return material;
@@ -586,15 +667,16 @@ const GlobeMap = ({
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
-    return getCountryLayerAltitude(admin, foundSet, selectedCountry);
-  }, [selectedCountry, foundSet]);
+    return getCountryLayerAltitude(admin, foundSet, selectedCountry, globeLightingEnabled ? 1.8 : 1);
+  }, [globeLightingEnabled, selectedCountry, foundSet]);
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     // Increased thickness for selection
     if (admin === selectedCountry) return perfProfile?.isMobile ? 1.7 : 2.5;
+    if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
     return perfProfile?.isMobile ? 0.25 : 0.4;
-  }, [perfProfile?.isMobile, selectedCountry]);
+  }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry]);
 
   const countrySizes = useMemo(() => {
     const sizes = {};

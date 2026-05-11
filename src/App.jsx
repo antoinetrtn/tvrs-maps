@@ -211,6 +211,7 @@ function App() {
   
   // Game countries loaded from GeoJSON
   const [countriesData, setCountriesData] = useState([]);
+  const [highResCountriesByAdmin, setHighResCountriesByAdmin] = useState(() => new Map());
 
   const keyboardModeCandidate = window.innerWidth < 1024 && (
     viewport.height < initialHeight.current * 0.85 ||
@@ -285,11 +286,26 @@ function App() {
   }, [foundList.length, isPlaying, isGameOver]);
 
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/110m/cultural/ne_110m_admin_0_countries.json')
-      .then(res => res.json())
-      .then(data => {
-        setCountriesData(data.features);
-      });
+    Promise.all([
+      fetch('/data/countries-110m.json').then(res => res.json()),
+      fetch('/data/countries-50m.json').then(res => {
+        if (!res.ok) throw new Error(`Unable to load 50m countries`);
+        return res.json();
+      }).catch(() => null)
+    ])
+    .then(([data110m, data50m]) => {
+      if (data110m && data110m.features) {
+        setCountriesData(data110m.features);
+      }
+      if (data50m && data50m.features) {
+        const map = new Map(data50m.features.map(f => [
+          f.properties?.ADMIN || f.properties?.name || f.properties?.NAME,
+          f
+        ]));
+        setHighResCountriesByAdmin(map);
+      }
+    })
+    .catch(err => console.error("Failed to load map data", err));
   }, []);
 
   useEffect(() => {
@@ -591,6 +607,7 @@ function App() {
         mode={mode} 
         lang={lang}
         countriesData={countriesData} 
+        highResCountriesByAdmin={highResCountriesByAdmin}
         foundList={foundList} 
         selectedCountry={selectedCountry}
         shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
