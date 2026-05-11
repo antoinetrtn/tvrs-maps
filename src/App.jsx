@@ -46,6 +46,7 @@ function App() {
   const [popupWarning, setPopupWarning] = useState(false);
   const [popupSuccess, setPopupSuccess] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [globeLightingEnabled, setGlobeLightingEnabled] = useState(true);
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -520,6 +521,8 @@ function App() {
           setLang={setLang}
           gameDuration={gameDuration}
           setGameDuration={setGameDuration}
+          globeLightingEnabled={globeLightingEnabled}
+          setGlobeLightingEnabled={setGlobeLightingEnabled}
         />
       ) : (
         !showEndScreen && (
@@ -602,6 +605,7 @@ function App() {
         isEndScreen={showEndScreen}
         isPerfectScore={foundList.length === totalPossible}
         onPreserveInputFocus={preserveInputFocus}
+        globeLightingEnabled={globeLightingEnabled}
       />
 
       {showEndScreen && (

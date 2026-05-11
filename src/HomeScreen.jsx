@@ -1,9 +1,19 @@
 import React, { useRef } from 'react';
-import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus } from 'lucide-react';
+import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Sparkles } from 'lucide-react';
 import Logo from './Logo';
 import './HomeScreen.css';
 
-const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang, gameDuration, setGameDuration }) => {
+const HomeScreen = ({
+  onStartGame,
+  theme,
+  setTheme,
+  lang,
+  setLang,
+  gameDuration,
+  setGameDuration,
+  globeLightingEnabled,
+  setGlobeLightingEnabled
+}) => {
   const cardRef = useRef(null);
   const isDraggingRef = useRef(false);
 
@@ -138,6 +148,14 @@ const HomeScreen = ({ onStartGame, theme, setTheme, lang, setLang, gameDuration,
         </div>
         <button className="theme-toggle-btn glass-panel" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+        <button
+          className={`theme-toggle-btn glass-panel ${globeLightingEnabled ? 'active' : ''}`}
+          onClick={() => setGlobeLightingEnabled(prev => !prev)}
+          title={lang === 'fr' ? 'Éclairage du globe' : 'Globe lighting'}
+          aria-pressed={globeLightingEnabled}
+        >
+          <Sparkles size={20} />
         </button>
       </div>
     </div>

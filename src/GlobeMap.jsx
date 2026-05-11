@@ -144,9 +144,12 @@ const GlobeMap = ({
   isKeyboardMode,
   isEndScreen,
   isPerfectScore,
-  onPreserveInputFocus
+  onPreserveInputFocus,
+  globeLightingEnabled = true
 }) => {
   const globeEl = useRef();
+  const globeLightingRef = useRef(null);
+  const polygonMaterialCacheRef = useRef({ cap: new Map(), side: new Map() });
   const tapRef = useRef(null);
   const previousSelectedCountryRef = useRef(null);
   const lastTargetRef = useRef(null);
@@ -525,6 +528,62 @@ const GlobeMap = ({
     return lerpColor(baseColor, '#000000', 0.3);
   }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, pulse, mode, isHomeScreen]);
 
+  const getPolygonMaterial = useCallback((d, kind) => {
+    const admin = getFeatureAdmin(d) || 'unknown';
+    const cache = polygonMaterialCacheRef.current[kind];
+    const color = kind === 'cap' ? getPolygonColor(d) : getPolygonSideColor(d);
+    let material = cache.get(admin);
+
+    if (!material) {
+      material = new THREE.MeshPhongMaterial({
+        color,
+        specular: globeLightingEnabled
+          ? (isLight ? new THREE.Color('#cbd5e1') : new THREE.Color('#475569'))
+          : new THREE.Color('#111827'),
+        emissive: globeLightingEnabled ? new THREE.Color(color) : new THREE.Color('#000000'),
+        emissiveIntensity: globeLightingEnabled
+          ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.08 : 0.12))
+          : 0,
+        shininess: globeLightingEnabled
+          ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 3 : 4))
+          : 0.7,
+        side: kind === 'cap' ? THREE.DoubleSide : THREE.FrontSide
+      });
+      cache.set(admin, material);
+    }
+
+    material.color.set(color);
+    material.specular.set(globeLightingEnabled ? (isLight ? '#cbd5e1' : '#475569') : '#111827');
+    material.emissive.set(globeLightingEnabled ? color : '#000000');
+    material.emissiveIntensity = globeLightingEnabled
+      ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.08 : 0.12))
+      : 0;
+    material.shininess = globeLightingEnabled
+      ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 3 : 4))
+      : 0.7;
+    material.needsUpdate = true;
+
+    return material;
+  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled]);
+
+  const getPolygonCapMaterial = useCallback((d) => (
+    getPolygonMaterial(d, 'cap')
+  ), [getPolygonMaterial]);
+
+  const getPolygonSideMaterial = useCallback((d) => (
+    getPolygonMaterial(d, 'side')
+  ), [getPolygonMaterial]);
+
+  useEffect(() => {
+    const materialCache = polygonMaterialCacheRef.current;
+    return () => {
+      materialCache.cap.forEach(material => material.dispose());
+      materialCache.side.forEach(material => material.dispose());
+      materialCache.cap.clear();
+      materialCache.side.clear();
+    };
+  }, []);
+
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     return getCountryLayerAltitude(admin, foundSet, selectedCountry);
@@ -711,17 +770,135 @@ const GlobeMap = ({
   const globeMaterial = useMemo(() => {
     return new THREE.MeshPhongMaterial({
       color: UI_COLORS.mapSea,
+      emissive: globeLightingEnabled
+        ? (isLight ? new THREE.Color('#dbeafe') : new THREE.Color('#0ea5e9'))
+        : new THREE.Color('#000000'),
+      emissiveIntensity: globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0,
+      specular: globeLightingEnabled
+        ? (isLight ? new THREE.Color('#dbeafe') : new THREE.Color('#67e8f9'))
+        : new THREE.Color('#111827'),
       transparent: false,
       opacity: 1,
-      shininess: 0.7
+      shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7
     });
-  }, [UI_COLORS]);
+  }, [UI_COLORS, isLight, globeLightingEnabled]);
 
   useEffect(() => {
     return () => {
       globeMaterial.dispose();
     };
   }, [globeMaterial]);
+
+  const updateGlobeLighting = useCallback(() => {
+    const scene = globeEl.current?.scene?.();
+    if (!scene) return false;
+
+    if (!globeLightingEnabled) {
+      if (globeLightingRef.current?.group?.parent) {
+        globeLightingRef.current.group.parent.remove(globeLightingRef.current.group);
+      }
+      globeLightingRef.current?.innerGlow?.geometry?.dispose();
+      globeLightingRef.current?.innerGlow?.material?.dispose();
+      globeLightingRef.current = null;
+      return true;
+    }
+
+    if (!globeLightingRef.current) {
+      const group = new THREE.Group();
+      group.name = 'globe-accent-lighting';
+
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1);
+      keyLight.name = 'globe-key-light';
+      keyLight.position.set(-3.5, 2.4, 4.2);
+
+      const rimLight = new THREE.DirectionalLight(0x78a8ff, 1);
+      rimLight.name = 'globe-rim-light';
+      rimLight.position.set(3.8, 1.3, -3.6);
+
+      const fillLight = new THREE.HemisphereLight(0x9cc4ff, 0x020617, 1);
+      fillLight.name = 'globe-fill-light';
+      fillLight.position.set(0, 2.2, 0);
+
+      const studioLight = new THREE.AmbientLight(0xbfdcff, 1);
+      studioLight.name = 'globe-studio-ambient';
+
+      const studioLeft = new THREE.DirectionalLight(0xffffff, 1);
+      studioLeft.name = 'globe-studio-left';
+      studioLeft.position.set(-4.5, 2.5, 3.5);
+
+      const studioRight = new THREE.DirectionalLight(0x9fd2ff, 1);
+      studioRight.name = 'globe-studio-right';
+      studioRight.position.set(4.5, -1.2, 2.8);
+
+      const innerGlow = new THREE.Mesh(
+        new THREE.SphereGeometry(1.015, 64, 64),
+        new THREE.MeshBasicMaterial({
+          color: 0x38bdf8,
+          transparent: true,
+          opacity: 0.16,
+          blending: THREE.AdditiveBlending,
+          side: THREE.BackSide,
+          depthWrite: false
+        })
+      );
+      innerGlow.name = 'globe-inner-glow';
+      innerGlow.position.set(0, 0, 0);
+      innerGlow.renderOrder = -1;
+
+      group.add(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, innerGlow);
+      scene.add(group);
+      globeLightingRef.current = {
+        group,
+        keyLight,
+        rimLight,
+        fillLight,
+        studioLight,
+        studioLeft,
+        studioRight,
+        innerGlow
+      };
+    }
+
+    const {
+      keyLight,
+      rimLight,
+      fillLight,
+      studioLight,
+      studioLeft,
+      studioRight,
+      innerGlow
+    } = globeLightingRef.current;
+    keyLight.intensity = isLight ? 0.12 : 0.16;
+    rimLight.intensity = isLight ? 0.14 : 0.24;
+    fillLight.intensity = isLight ? 0.72 : 0.68;
+    studioLight.intensity = isLight ? 0.54 : 0.48;
+    studioLeft.intensity = isLight ? 0.08 : 0.1;
+    studioRight.intensity = isLight ? 0.08 : 0.1;
+    rimLight.color.set(isLight ? '#60a5fa' : '#7dd3fc');
+    fillLight.color.set(isLight ? '#dbeafe' : '#93c5fd');
+    fillLight.groundColor.set(isLight ? '#e2e8f0' : '#020617');
+    studioLight.color.set(isLight ? '#e0f2fe' : '#b9d8ff');
+    studioLeft.color.set(isLight ? '#ffffff' : '#dbeafe');
+    studioRight.color.set(isLight ? '#bfdbfe' : '#93c5fd');
+    innerGlow.material.color.set(isLight ? '#93c5fd' : '#38bdf8');
+    innerGlow.material.opacity = isLight ? 0.06 : 0.11;
+    innerGlow.material.needsUpdate = true;
+
+    return true;
+  }, [isLight, globeLightingEnabled]);
+
+  useEffect(() => {
+    updateGlobeLighting();
+
+    return () => {
+      if (globeLightingRef.current?.group?.parent) {
+        globeLightingRef.current.group.parent.remove(globeLightingRef.current.group);
+      }
+      globeLightingRef.current?.innerGlow?.geometry?.dispose();
+      globeLightingRef.current?.innerGlow?.material?.dispose();
+      globeLightingRef.current = null;
+    };
+  }, [updateGlobeLighting]);
 
   const styleGlobeGraticules = useCallback(() => {
     const scene = globeEl.current?.scene?.();
@@ -746,6 +923,11 @@ const GlobeMap = ({
     const frame = requestAnimationFrame(styleGlobeGraticules);
     return () => cancelAnimationFrame(frame);
   }, [styleGlobeGraticules]);
+
+  const handleGlobeReady = useCallback(() => {
+    styleGlobeGraticules();
+    updateGlobeLighting();
+  }, [styleGlobeGraticules, updateGlobeLighting]);
 
   const isMobileKeyboardOpen = viewport.width < 1024 && isKeyboardMode;
   if (!isMobileKeyboardOpen) {
@@ -939,6 +1121,12 @@ const GlobeMap = ({
            }} />
         </div>
         <div className="globe-content-wrapper" style={{ background: 'transparent' }}>
+          {globeLightingEnabled && (
+            <div
+              className={`globe-studio-overlay ${isLight ? 'light' : 'dark'}`}
+              aria-hidden="true"
+            />
+          )}
           <Globe
             ref={globeEl}
             width={globeWidth}
@@ -949,7 +1137,7 @@ const GlobeMap = ({
             showAtmosphere={!!perfProfile?.showAtmosphere}
             atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
-            onGlobeReady={styleGlobeGraticules}
+            onGlobeReady={handleGlobeReady}
             backgroundColor="rgba(0,0,0,0)"
             lineHoverPrecision={0}
             showGraticules={true}
@@ -961,7 +1149,9 @@ const GlobeMap = ({
             polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
             polygonAltitude={getPolygonAltitude}
             polygonCapColor={getPolygonColor}
+            polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}
             polygonSideColor={getPolygonSideColor}
+            polygonSideMaterial={globeLightingEnabled ? getPolygonSideMaterial : undefined}
             polygonStrokeColor={getPolygonStroke}
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
