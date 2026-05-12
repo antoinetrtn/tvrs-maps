@@ -35,12 +35,14 @@ Une expérience interactive et immersive pour tester vos connaissances géograph
 
 3.  **Lancer le projet :**
     ```bash
-    npm run dev
+    npm run dev:5001
     ```
 
-    Pour lancer le serveur local sur le port 5001 :
+    Le port local du projet est toujours `5001`.
+
+4.  **Vérifier la qualité avant push :**
     ```bash
-    npm run dev:5001
+    npm run check
     ```
 
 ## 🛠️ Stack Technique
@@ -50,6 +52,10 @@ Une expérience interactive et immersive pour tester vos connaissances géograph
 *   **Icônes :** Lucide React
 *   **Build Tool :** Vite
 *   **Déploiement :** Vercel
+
+## ✅ Qualité
+
+Les règles projet sont décrites dans [QUALITY.md](./QUALITY.md). Le script `npm run lint` ne dépend pas d'un package externe : il vérifie les garde-fous du projet, notamment le design system, le port local, et les pièges de perf/rendu du globe.
 
 ## 📄 Licence
 

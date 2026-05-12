@@ -238,7 +238,7 @@
   font-weight: 800;
   z-index: 1;
   color: var(--text-main);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .gauge-item {

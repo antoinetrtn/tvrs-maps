@@ -1343,7 +1343,7 @@ const GlobeMap = ({
             atmosphereColor={UI_COLORS.atmosphere}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
-            backgroundColor="rgba(0,0,0,0)"
+            backgroundColor="transparent"
             lineHoverPrecision={0}
             showGraticules={true}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
