@@ -548,7 +548,11 @@ const GlobeMap = ({
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
       const baseStroke = (isHomeScreen ? UI_COLORS.accent : (REGION_COLORS[region] || UI_COLORS.accent));
-      return lerpColor(baseStroke, isLight ? UI_COLORS.ink : UI_COLORS.paper, pulse * 0.55);
+      return lerpColor(
+        baseStroke,
+        UI_COLORS.paper,
+        GLOBE_STYLE.lighting.selectedStrokeGlow[isLight ? 'light' : 'dark'] + (pulse * 0.12)
+      );
     }
 
     if (isHomeScreen || (!foundSet.has(admin) && mode !== 'learn')) {
@@ -685,16 +689,24 @@ const GlobeMap = ({
         ? GLOBE_STYLE.lighting.selectedSideOpacity[isLight ? 'light' : 'dark']
         : GLOBE_STYLE.lighting.sideOpacity[isLight ? 'light' : 'dark'])
       : 1;
-    material.transparent = kind === 'side' && globeLightingEnabled;
+    material.transparent = kind === 'side' && globeLightingEnabled && material.opacity < 1;
     material.depthWrite = kind === 'cap';
+    material.polygonOffset = kind === 'cap' && admin === selectedCountry;
+    material.polygonOffsetFactor = kind === 'cap' && admin === selectedCountry ? 1 : 0;
+    material.polygonOffsetUnits = kind === 'cap' && admin === selectedCountry ? 1 : 0;
     if (material.isMeshPhongMaterial) {
       material.specular.set(globeLightingEnabled ? UI_COLORS.mapBorder : UI_COLORS.ink);
       material.emissive.set(globeLightingEnabled ? color : UI_COLORS.black);
-      material.emissiveIntensity = globeLightingEnabled
+      const baseEmissiveIntensity = globeLightingEnabled
         ? (kind === 'cap'
           ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
           : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark))
         : 0;
+      material.emissiveIntensity = baseEmissiveIntensity + (
+        globeLightingEnabled && kind === 'cap' && admin === selectedCountry
+          ? GLOBE_STYLE.lighting.selectedEmissiveBoost[isLight ? 'light' : 'dark']
+          : 0
+      );
       material.shininess = globeLightingEnabled
         ? (kind === 'cap'
           ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
@@ -732,7 +744,7 @@ const GlobeMap = ({
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     // Increased thickness for selection
-    if (admin === selectedCountry) return perfProfile?.isMobile ? 1.7 : 2.5;
+    if (admin === selectedCountry) return perfProfile?.isMobile ? 2.1 : 3.0;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
     return perfProfile?.isMobile ? 0.25 : 0.4;
   }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry]);

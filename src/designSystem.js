@@ -138,16 +138,16 @@ export const THEME = {
 export const GLOBE_STYLE = {
   lighting: {
     sideOpacity: {
-      light: 0.54,
-      dark: 0.48
+      light: 1,
+      dark: 1
     },
     capOpacity: {
       light: 0.98,
       dark: 0.96
     },
     selectedSideOpacity: {
-      light: 0.78,
-      dark: 0.7
+      light: 1,
+      dark: 1
     },
     sideDarken: {
       selectedLight: 0.08,
@@ -160,6 +160,14 @@ export const GLOBE_STYLE = {
     capPulseToPaper: {
       light: 0.16,
       dark: 0.28
+    },
+    selectedStrokeGlow: {
+      light: 0.42,
+      dark: 0.5
+    },
+    selectedEmissiveBoost: {
+      light: 0.08,
+      dark: 0.1
     },
     strokeDarken: {
       light: 0.28,

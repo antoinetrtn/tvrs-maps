@@ -213,7 +213,6 @@ function App() {
   // Game countries loaded from GeoJSON
   const [countriesData, setCountriesData] = useState([]);
   const [highResCountriesByAdmin, setHighResCountriesByAdmin] = useState(() => new Map());
-
   const keyboardModeCandidate = window.innerWidth < 1024 && (
     viewport.height < initialHeight.current * 0.85 ||
     viewport.top > 20
@@ -294,16 +293,15 @@ function App() {
         return res.json();
       }).catch(() => null)
     ])
-    .then(([data110m, data50m]) => {
-      if (data110m && data110m.features) {
-        setCountriesData(data110m.features);
+    .then(([lowResData, highResData]) => {
+      if (lowResData && lowResData.features) {
+        setCountriesData(lowResData.features);
       }
-      if (data50m && data50m.features) {
-        const map = new Map(data50m.features.map(f => [
-          f.properties?.ADMIN || f.properties?.name || f.properties?.NAME,
-          f
-        ]));
-        setHighResCountriesByAdmin(map);
+      if (highResData && highResData.features) {
+        setHighResCountriesByAdmin(new Map(highResData.features.map(feature => [
+          feature.properties?.ADMIN || feature.properties?.name || feature.properties?.NAME,
+          feature
+        ])));
       }
     })
     .catch(err => console.error("Failed to load map data", err));
