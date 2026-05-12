@@ -225,16 +225,25 @@ const GlobeMap = ({
     return () => cancelAnimationFrame(animationId);
   }, [selectedCountry]);
 
-  const lerpColor = (a, b, amount) => {
-    const ah = +a.replace('#', '0x'),
-          bh = +b.replace('#', '0x'),
-          ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
-          br = bh >> 16, bg = bh >> 8 & 0xff, bb = bh & 0xff,
-          rr = ar + amount * (br - ar),
-          rg = ag + amount * (bg - ag),
-          rb = ab + amount * (bb - ab);
-    return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + (rb | 0)).toString(16).slice(1);
-  };
+  const safeColor = useCallback((c) => {
+    if (typeof c !== 'string' || !c || c === 'transparent') return '#ffffff';
+    // If it's a valid hex, rgb or rgba, return it. Otherwise fallback.
+    if (c.startsWith('#') || c.startsWith('rgb') || c.startsWith('hsl')) return c;
+    return '#ffffff';
+  }, []);
+
+  const lerpColor = useCallback((a, b, amount) => {
+    try {
+      const colorA = safeColor(a);
+      const colorB = safeColor(b);
+      const c1 = new THREE.Color(colorA);
+      const c2 = new THREE.Color(colorB);
+      c1.lerp(c2, Math.max(0, Math.min(1, amount)));
+      return `#${c1.getHexString()}`;
+    } catch (e) {
+      return safeColor(a);
+    }
+  }, [safeColor]);
   
   // Custom Zoom Logic (Google Maps style: double tap + drag)
   const lastTapRef = useRef(0);
@@ -574,7 +583,7 @@ const GlobeMap = ({
     if (isHomeScreen || (!foundSet.has(admin) && mode !== 'learn')) {
       return isLight
         ? UI_COLORS.mapBorderMuted
-        : lerpColor(UI_COLORS.mapBase, UI_COLORS.black, GLOBE_STYLE.lighting.strokeDarken.dark);
+        : lerpColor(UI_COLORS.mapBase, UI_COLORS.paper, 0.15); // Slight glow instead of darkening
     }
 
     const baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
@@ -583,8 +592,8 @@ const GlobeMap = ({
 
     return lerpColor(
       baseColor,
-      isLight ? UI_COLORS.ink : UI_COLORS.black,
-      isLight ? GLOBE_STYLE.lighting.strokeDarken.light : GLOBE_STYLE.lighting.strokeDarken.dark
+      isLight ? UI_COLORS.ink : UI_COLORS.paper, // Use paper (white/light) for stroke in dark mode
+      isLight ? GLOBE_STYLE.lighting.strokeDarken.light : 0.2 // Reduced darken for dark mode
     );
   }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen, isLight]);
 
@@ -656,81 +665,72 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d) || 'unknown';
     const cache = polygonMaterialCacheRef.current[kind];
     const color = kind === 'cap' ? getPolygonColor(d) : getPolygonSideColor(d);
-    const useFlatLightingSideMaterial = kind === 'side' && globeLightingEnabled;
     let material = cache.get(admin);
 
-    if (
-      material &&
-      ((useFlatLightingSideMaterial && !material.isMeshBasicMaterial) ||
-        (!useFlatLightingSideMaterial && !material.isMeshPhongMaterial))
-    ) {
+    if (material && !material.isMeshPhongMaterial) {
       material.dispose();
       cache.delete(admin);
       material = null;
     }
 
     if (!material) {
-      material = useFlatLightingSideMaterial ? new THREE.MeshBasicMaterial({
-        color,
+      material = new THREE.MeshPhongMaterial({
+        side: kind === 'cap' ? THREE.DoubleSide : THREE.DoubleSide, // Ensure sides are visible from all angles
         transparent: true,
-        opacity: GLOBE_STYLE.lighting.sideOpacity[isLight ? 'light' : 'dark'],
-        side: THREE.DoubleSide,
-        depthWrite: false
-      }) : new THREE.MeshPhongMaterial({
-        color,
-        specular: globeLightingEnabled
-          ? new THREE.Color(UI_COLORS.mapBorder)
-          : new THREE.Color(UI_COLORS.ink),
-        emissive: globeLightingEnabled ? new THREE.Color(color) : new THREE.Color(UI_COLORS.black),
-        emissiveIntensity: globeLightingEnabled
-          ? (kind === 'cap'
-            ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
-            : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark))
-          : 0,
-        shininess: globeLightingEnabled
-          ? (kind === 'cap'
-            ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
-            : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark))
-          : 0.7,
-        transparent: kind === 'side' && globeLightingEnabled,
-        opacity: 1,
-        side: kind === 'cap' ? THREE.DoubleSide : THREE.FrontSide
+        blending: THREE.NormalBlending,
+        depthWrite: true // Re-enable depthWrite for solid volume feel
       });
       cache.set(admin, material);
     }
 
     material.color.set(color);
-    material.opacity = kind === 'side' && globeLightingEnabled
-      ? (admin === selectedCountry
-        ? GLOBE_STYLE.lighting.selectedSideOpacity[isLight ? 'light' : 'dark']
-        : GLOBE_STYLE.lighting.sideOpacity[isLight ? 'light' : 'dark'])
-      : 1;
-    material.transparent = kind === 'side' && globeLightingEnabled && material.opacity < 1;
-    material.depthWrite = kind === 'cap';
-    material.polygonOffset = kind === 'cap' && admin === selectedCountry;
-    material.polygonOffsetFactor = kind === 'cap' && admin === selectedCountry ? 1 : 0;
-    material.polygonOffsetUnits = kind === 'cap' && admin === selectedCountry ? 1 : 0;
-    if (material.isMeshPhongMaterial) {
-      material.specular.set(globeLightingEnabled ? UI_COLORS.mapBorder : UI_COLORS.ink);
-      material.emissive.set(globeLightingEnabled ? color : UI_COLORS.black);
-      const baseEmissiveIntensity = globeLightingEnabled
-        ? (kind === 'cap'
-          ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
-          : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark))
-        : 0;
-      material.emissiveIntensity = baseEmissiveIntensity + (
-        globeLightingEnabled && kind === 'cap' && admin === selectedCountry
-          ? GLOBE_STYLE.lighting.selectedEmissiveBoost[isLight ? 'light' : 'dark']
-          : 0
-      );
-      material.shininess = globeLightingEnabled
-        ? (kind === 'cap'
-          ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
-          : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark))
-        : 0.7;
-    }
-    material.needsUpdate = true;
+    
+    // Opacity from Design System
+    const baseOpacity = kind === 'cap' 
+      ? GLOBE_STYLE.lighting.capOpacity[isLight ? 'light' : 'dark']
+      : GLOBE_STYLE.lighting.sideOpacity[isLight ? 'light' : 'dark'];
+    
+    const selectedOpacity = kind === 'cap' ? 1 : GLOBE_STYLE.lighting.selectedSideOpacity[isLight ? 'light' : 'dark'];
 
+    material.opacity = admin === selectedCountry ? selectedOpacity : baseOpacity;
+    material.transparent = material.opacity < 1;
+    
+    // DepthWrite is critical for visibility over the globe sphere
+    // We keep it true to ensure the "glass" has volume and occludes the sea
+    material.depthWrite = true; 
+    
+    // Apply offset to both to push the entire volume slightly back, 
+    // letting the stroke (lines) always render on top.
+    material.polygonOffset = true;
+    material.polygonOffsetFactor = 1;
+    material.polygonOffsetUnits = 1;
+    
+    if (globeLightingEnabled) {
+      material.specular.set(UI_COLORS.mapBorder);
+      material.emissive.set(color);
+      
+      const baseEmissiveIntensity = (kind === 'cap'
+        ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
+        : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark));
+      
+      // Glass effect: boost emissive in dark mode to recover light
+      const emissiveBoost = !isLight ? 0.18 : 0.05;
+      material.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
+        admin === selectedCountry ? 0.1 : 0
+      );
+      
+      const baseShininess = (kind === 'cap'
+        ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
+        : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
+      
+      material.shininess = baseShininess + (isLight ? 0 : 25);
+    } else {
+      material.emissive.set(0x000000);
+      material.emissiveIntensity = 0;
+      material.shininess = 0.7;
+    }
+    
+    material.needsUpdate = true;
     return material;
   }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry]);
 
@@ -1340,10 +1340,10 @@ const GlobeMap = ({
             globeMaterial={globeMaterial}
             backgroundImageUrl={null}
             showAtmosphere={!!perfProfile?.showAtmosphere}
-            atmosphereColor={UI_COLORS.atmosphere}
+            atmosphereColor={safeColor(UI_COLORS.atmosphere)}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
-            backgroundColor="transparent"
+            backgroundColor="rgba(0,0,0,0)"
             lineHoverPrecision={0}
             showGraticules={true}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
@@ -1353,18 +1353,18 @@ const GlobeMap = ({
             polygonGeoJsonGeometry="renderGeometry"
             polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
             polygonAltitude={getPolygonAltitude}
-            polygonCapColor={getPolygonColor}
+            polygonCapColor={(d) => safeColor(getPolygonColor(d))}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}
-            polygonSideColor={getPolygonSideColor}
+            polygonSideColor={(d) => safeColor(getPolygonSideColor(d))}
             polygonSideMaterial={globeLightingEnabled ? getPolygonSideMaterial : undefined}
-            polygonStrokeColor={getPolygonStroke}
+            polygonStrokeColor={(d) => safeColor(getPolygonStroke(d))}
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
             polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
             pointsData={visibleMarkersData}
             pointLat="lat"
             pointLng="lng"
-            pointColor={getPointColor}
+            pointColor={(d) => safeColor(getPointColor(d))}
             pointRadius={getPointRadius}
             pointAltitude={getPointAltitude}
             pointsTransitionDuration={SELECTION_TRANSITION_DURATION}
@@ -1374,7 +1374,7 @@ const GlobeMap = ({
             htmlLng={d => d.lng}
             htmlAltitude={GLOBE_LAYER_ALTITUDE.label}
             ringsData={ringsData}
-            ringColor={getRingColor}
+            ringColor={(d) => safeColor(getRingColor(d))}
             ringMaxRadius={d => d.maxRadius}
             ringPropagationSpeed={d => d.speed}
             ringRepeatPeriod={d => d.repeat}

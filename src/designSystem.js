@@ -138,16 +138,16 @@ export const THEME = {
 export const GLOBE_STYLE = {
   lighting: {
     sideOpacity: {
-      light: 1,
-      dark: 1
+      light: 0.8,
+      dark: 0.55
     },
     capOpacity: {
-      light: 0.98,
-      dark: 0.96
+      light: 0.9,
+      dark: 0.6
     },
     selectedSideOpacity: {
-      light: 1,
-      dark: 1
+      light: 0.9,
+      dark: 0.7
     },
     sideDarken: {
       selectedLight: 0.08,
