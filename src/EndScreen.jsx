@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import './EndScreen.css';
 import { getGameStats } from './utils';
-import { CONTINENT_COLORS, THEME } from './designSystem';
+import { CONTINENT_COLORS } from './designSystem';
 
 const EndScreen = ({ foundList, totalCountries, countryDataMap, onRestart, onViewTable, theme = 'dark', lang = 'fr' }) => {
   const { stats, CONTINENT_ORDER } = useMemo(() => 
@@ -10,7 +10,6 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, onRestart, onVie
   );
 
   const colors = CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark;
-  const ui = THEME[theme] || THEME.dark;
   const isPerfectScore = foundList.length === totalCountries;
 
   const continentLabels = {

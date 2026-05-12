@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
-import { THEME, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS } from './designSystem';
+import { THEME, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE } from './designSystem';
 
 const getFeatureAdmin = (feature) => feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
 
@@ -205,8 +205,14 @@ const GlobeMap = ({
   useEffect(() => {
     let animationId;
     let start;
+    let lastFrame = 0;
     const animate = (time) => {
       if (!start) start = time;
+      if (time - lastFrame < 33) {
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrame = time;
       const progress = (time - start) / 2400; // Slower 2.4s cycle
       setPulse(Math.sin(progress * Math.PI * 2) * 0.5 + 0.5);
       animationId = requestAnimationFrame(animate);
@@ -516,7 +522,11 @@ const GlobeMap = ({
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
         // Breathing effect for selected found country: between normal and lighter
-        return lerpColor(baseColor, '#ffffff', pulse * 0.4);
+        return lerpColor(
+          baseColor,
+          UI_COLORS.paper,
+          pulse * GLOBE_STYLE.lighting.capPulseToPaper[isLight ? 'light' : 'dark']
+        );
       }
       return baseColor;
     }
@@ -538,18 +548,24 @@ const GlobeMap = ({
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
       const baseStroke = (isHomeScreen ? UI_COLORS.accent : (REGION_COLORS[region] || UI_COLORS.accent));
-      return lerpColor(baseStroke, isLight ? '#0f172a' : '#ffffff', pulse * 0.55);
+      return lerpColor(baseStroke, isLight ? UI_COLORS.ink : UI_COLORS.paper, pulse * 0.55);
     }
 
     if (isHomeScreen || (!foundSet.has(admin) && mode !== 'learn')) {
-      return isLight ? '#94a3b8' : lerpColor(UI_COLORS.mapBase, '#000000', 0.4);
+      return isLight
+        ? UI_COLORS.mapBorderMuted
+        : lerpColor(UI_COLORS.mapBase, UI_COLORS.black, GLOBE_STYLE.lighting.strokeDarken.dark);
     }
 
     const baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
       ? (REGION_COLORS[region] || UI_COLORS.success)
       : UI_COLORS.mapBase;
 
-    return lerpColor(baseColor, isLight ? '#0f172a' : '#000000', isLight ? 0.58 : 0.4); 
+    return lerpColor(
+      baseColor,
+      isLight ? UI_COLORS.ink : UI_COLORS.black,
+      isLight ? GLOBE_STYLE.lighting.strokeDarken.light : GLOBE_STYLE.lighting.strokeDarken.dark
+    );
   }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen, isLight]);
 
   const getPolygonSideColor = useCallback((d) => {
@@ -571,32 +587,49 @@ const GlobeMap = ({
 
     if (globeLightingEnabled) {
       if (admin === selectedCountry) {
-        if (isError) return isLight ? '#991b1b' : '#7f1d1d';
+        if (isError) return isLight ? UI_COLORS.errorDeep : UI_COLORS.errorDeeper;
         
         // Base color for the side when selected under lighting
         const sideBaseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
           ? (REGION_COLORS[region] || UI_COLORS.success)
           : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
           
-        return lerpColor(sideBaseColor, '#000000', isLight ? 0.35 : 0.6);
+        return lerpColor(
+          sideBaseColor,
+          UI_COLORS.black,
+          isLight ? GLOBE_STYLE.lighting.sideDarken.selectedLight : GLOBE_STYLE.lighting.sideDarken.selectedDark
+        );
       }
       if (!isHomeScreen && (foundSet.has(admin) || mode === 'learn')) {
-        return isLight ? '#334155' : '#0f172a';
+        const base = REGION_COLORS[region] || UI_COLORS.success;
+        return lerpColor(
+          base,
+          UI_COLORS.black,
+          isLight ? GLOBE_STYLE.lighting.sideDarken.foundLight : GLOBE_STYLE.lighting.sideDarken.foundDark
+        );
       }
-      return isLight ? '#64748b' : '#1e293b';
+      return lerpColor(
+        UI_COLORS.mapBase,
+        UI_COLORS.black,
+        isLight ? GLOBE_STYLE.lighting.sideDarken.baseLight : GLOBE_STYLE.lighting.sideDarken.baseDark
+      );
     }
 
     if (admin === selectedCountry) {
-      if (isError) return isLight ? '#dc7f7f' : '#991b1b';
+      if (isError) return isLight ? UI_COLORS.errorMuted : UI_COLORS.errorDeep;
       
       const capColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
-        ? lerpColor(REGION_COLORS[region] || UI_COLORS.success, '#ffffff', pulse * 0.4)
+        ? lerpColor(
+          REGION_COLORS[region] || UI_COLORS.success,
+          UI_COLORS.paper,
+          pulse * GLOBE_STYLE.lighting.capPulseToPaper[isLight ? 'light' : 'dark']
+        )
         : lerpColor(REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
         
-      return lerpColor(capColor, '#000000', isLight ? 0.34 : 0.1);
+      return lerpColor(capColor, UI_COLORS.black, isLight ? 0.24 : 0.08);
     }
     
-    return lerpColor(baseColor, '#000000', isLight ? 0.5 : 0.3);
+    return lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
   }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, pulse, mode, isHomeScreen]);
 
   const getPolygonMaterial = useCallback((d, kind) => {
@@ -619,39 +652,59 @@ const GlobeMap = ({
     if (!material) {
       material = useFlatLightingSideMaterial ? new THREE.MeshBasicMaterial({
         color,
-        side: THREE.DoubleSide
+        transparent: true,
+        opacity: GLOBE_STYLE.lighting.sideOpacity[isLight ? 'light' : 'dark'],
+        side: THREE.DoubleSide,
+        depthWrite: false
       }) : new THREE.MeshPhongMaterial({
         color,
         specular: globeLightingEnabled
-          ? (isLight ? new THREE.Color('#cbd5e1') : new THREE.Color('#475569'))
-          : new THREE.Color('#111827'),
-        emissive: globeLightingEnabled ? new THREE.Color(color) : new THREE.Color('#000000'),
+          ? new THREE.Color(UI_COLORS.mapBorder)
+          : new THREE.Color(UI_COLORS.ink),
+        emissive: globeLightingEnabled ? new THREE.Color(color) : new THREE.Color(UI_COLORS.black),
         emissiveIntensity: globeLightingEnabled
-          ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.015 : 0.12))
+          ? (kind === 'cap'
+            ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
+            : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark))
           : 0,
         shininess: globeLightingEnabled
-          ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 1 : 4))
+          ? (kind === 'cap'
+            ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
+            : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark))
           : 0.7,
+        transparent: kind === 'side' && globeLightingEnabled,
+        opacity: 1,
         side: kind === 'cap' ? THREE.DoubleSide : THREE.FrontSide
       });
       cache.set(admin, material);
     }
 
     material.color.set(color);
+    material.opacity = kind === 'side' && globeLightingEnabled
+      ? (admin === selectedCountry
+        ? GLOBE_STYLE.lighting.selectedSideOpacity[isLight ? 'light' : 'dark']
+        : GLOBE_STYLE.lighting.sideOpacity[isLight ? 'light' : 'dark'])
+      : 1;
+    material.transparent = kind === 'side' && globeLightingEnabled;
+    material.depthWrite = kind === 'cap';
     if (material.isMeshPhongMaterial) {
-      material.specular.set(globeLightingEnabled ? (isLight ? '#cbd5e1' : '#475569') : '#111827');
-      material.emissive.set(globeLightingEnabled ? color : '#000000');
+      material.specular.set(globeLightingEnabled ? UI_COLORS.mapBorder : UI_COLORS.ink);
+      material.emissive.set(globeLightingEnabled ? color : UI_COLORS.black);
       material.emissiveIntensity = globeLightingEnabled
-        ? (kind === 'cap' ? (isLight ? 0.16 : 0.22) : (isLight ? 0.015 : 0.12))
+        ? (kind === 'cap'
+          ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
+          : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark))
         : 0;
       material.shininess = globeLightingEnabled
-        ? (kind === 'cap' ? (isLight ? 5 : 6) : (isLight ? 1 : 4))
+        ? (kind === 'cap'
+          ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
+          : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark))
         : 0.7;
     }
     material.needsUpdate = true;
 
     return material;
-  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled]);
+  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry]);
 
   const getPolygonCapMaterial = useCallback((d) => (
     getPolygonMaterial(d, 'cap')
@@ -859,12 +912,12 @@ const GlobeMap = ({
     return new THREE.MeshPhongMaterial({
       color: UI_COLORS.mapSea,
       emissive: globeLightingEnabled
-        ? (isLight ? new THREE.Color('#dbeafe') : new THREE.Color('#0ea5e9'))
-        : new THREE.Color('#000000'),
+        ? new THREE.Color(UI_COLORS.globeEmissive)
+        : new THREE.Color(UI_COLORS.black),
       emissiveIntensity: globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0,
       specular: globeLightingEnabled
-        ? (isLight ? new THREE.Color('#dbeafe') : new THREE.Color('#67e8f9'))
-        : new THREE.Color('#111827'),
+        ? new THREE.Color(UI_COLORS.globeSpecular)
+        : new THREE.Color(UI_COLORS.ink),
       transparent: false,
       opacity: 1,
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7
@@ -921,7 +974,7 @@ const GlobeMap = ({
       const innerGlow = new THREE.Mesh(
         new THREE.SphereGeometry(1.015, 64, 64),
         new THREE.MeshBasicMaterial({
-          color: 0x38bdf8,
+          color: UI_COLORS.globeInnerGlow,
           transparent: true,
           opacity: 0.16,
           blending: THREE.AdditiveBlending,
@@ -957,23 +1010,26 @@ const GlobeMap = ({
       innerGlow
     } = globeLightingRef.current;
     keyLight.intensity = isLight ? 0.12 : 0.16;
+    keyLight.position.set(-3.5, 2.4, 4.2);
     rimLight.intensity = isLight ? 0.14 : 0.24;
+    rimLight.position.set(3.8, 1.3, -3.6);
     fillLight.intensity = isLight ? 0.72 : 0.68;
     studioLight.intensity = isLight ? 0.54 : 0.48;
     studioLeft.intensity = isLight ? 0.08 : 0.1;
+    studioLeft.position.set(-4.5, 2.5, 3.5);
     studioRight.intensity = isLight ? 0.08 : 0.1;
-    rimLight.color.set(isLight ? '#60a5fa' : '#7dd3fc');
-    fillLight.color.set(isLight ? '#dbeafe' : '#93c5fd');
-    fillLight.groundColor.set(isLight ? '#e2e8f0' : '#020617');
-    studioLight.color.set(isLight ? '#e0f2fe' : '#b9d8ff');
-    studioLeft.color.set(isLight ? '#ffffff' : '#dbeafe');
-    studioRight.color.set(isLight ? '#bfdbfe' : '#93c5fd');
-    innerGlow.material.color.set(isLight ? '#93c5fd' : '#38bdf8');
+    studioRight.position.set(4.5, -1.2, 2.8);
+    rimLight.color.set(UI_COLORS.lightingRim);
+    fillLight.color.set(UI_COLORS.lightingFill);
+    fillLight.groundColor.set(UI_COLORS.lightingGround);
+    studioLight.color.set(UI_COLORS.lightingStudio);
+    studioLeft.color.set(UI_COLORS.lightingLeft);
+    studioRight.color.set(UI_COLORS.lightingRight);
+    innerGlow.material.color.set(UI_COLORS.globeInnerGlow);
     innerGlow.material.opacity = isLight ? 0.06 : 0.11;
     innerGlow.material.needsUpdate = true;
-
     return true;
-  }, [isLight, globeLightingEnabled]);
+  }, [isLight, globeLightingEnabled, UI_COLORS]);
 
   useEffect(() => {
     updateGlobeLighting();
@@ -999,13 +1055,15 @@ const GlobeMap = ({
         material?.type === 'LineBasicMaterial' &&
         material.transparent === true
       ) {
-        material.color.set(isLight ? '#64748b' : 'lightgrey');
-        material.opacity = isLight ? 0.32 : 0.1;
+        material.color.set(UI_COLORS.graticule);
+        material.opacity = isLight
+          ? GLOBE_STYLE.lighting.graticuleOpacity.light
+          : GLOBE_STYLE.lighting.graticuleOpacity.dark;
         material.depthWrite = false;
         material.needsUpdate = true;
       }
     });
-  }, [isLight]);
+  }, [isLight, UI_COLORS]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(styleGlobeGraticules);
@@ -1097,7 +1155,11 @@ const GlobeMap = ({
       const baseColor = REGION_COLORS[region] || UI_COLORS.success;
       if (isSelected) {
         if (isError) return UI_COLORS.error;
-        return lerpColor(baseColor, '#ffffff', pulse * 0.4);
+        return lerpColor(
+          baseColor,
+          UI_COLORS.paper,
+          pulse * GLOBE_STYLE.lighting.capPulseToPaper[isLight ? 'light' : 'dark']
+        );
       }
       return baseColor;
     }
@@ -1128,7 +1190,7 @@ const GlobeMap = ({
     if (isError) return UI_COLORS.error;
     const region = countryDataMap[selectedCountry]?.region || 'Unknown';
     // Use the vibrant label color for the radar ring
-    return REGION_COLORS_LABELS[region] || (isLight ? 'rgba(37, 99, 235, 0.6)' : 'rgba(255, 255, 255, 0.5)');
+    return REGION_COLORS_LABELS[region] || UI_COLORS.accentSoft;
   }, [isError, isLight, UI_COLORS, selectedCountry, REGION_COLORS_LABELS]);
 
   const handleGlobeClick = useCallback((coords) => {
@@ -1155,9 +1217,9 @@ const GlobeMap = ({
         height: globeHeight,
         zIndex: 0, 
         overflow: 'hidden',
-        transition: 'top 220ms cubic-bezier(0.2, 0.9, 0.2, 1), left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), width 220ms cubic-bezier(0.2, 0.9, 0.2, 1), height 220ms cubic-bezier(0.2, 0.9, 0.2, 1)',
-        background: isLight 
-          ? 'linear-gradient(to bottom, #f1f5f9 0%, #f8fafc 100%)' 
+        transition: 'top var(--transition-layout), left var(--transition-layout), width var(--transition-layout), height var(--transition-layout)',
+        background: isLight
+          ? 'linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%)'
           : 'transparent'
       }}
     >
@@ -1167,7 +1229,7 @@ const GlobeMap = ({
              position: 'absolute',
              width: '100%',
              height: '100%',
-             backgroundImage: `radial-gradient(${isLight ? 'rgba(15, 23, 42, 0.2)' : 'rgba(255, 255, 255, 0.15)'} 1.1px, transparent 0)`,
+             backgroundImage: `radial-gradient(var(--grid-dot) 1.1px, transparent 0)`,
              backgroundSize: '20px 20px',
              opacity: 1
            }} />
@@ -1189,8 +1251,8 @@ const GlobeMap = ({
              width: '140%', 
              height: '140%', 
              background: isLight 
-                ? `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7) 0%, rgba(241, 245, 249, 0) 60%)`
-                : `radial-gradient(circle at 30% 30%, rgba(58, 118, 240, 0.1) 0%, rgba(2, 6, 23, 0) 70%)`,
+                ? `radial-gradient(circle at 30% 30%, var(--decor-glow-primary) 0%, var(--decor-glow-primary-end) 60%)`
+                : `radial-gradient(circle at 30% 30%, var(--decor-glow-primary) 0%, var(--decor-glow-primary-end) 70%)`,
              filter: 'blur(80px)',
              opacity: 0.7
            }} />
@@ -1202,8 +1264,8 @@ const GlobeMap = ({
              width: '100%', 
              height: '100%', 
              background: isLight 
-                ? `radial-gradient(circle at 70% 70%, rgba(255,255,255,0.5) 0%, rgba(241, 245, 249, 0) 50%)`
-                : `radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.06) 0%, rgba(2, 6, 23, 0) 60%)`,
+                ? `radial-gradient(circle at 70% 70%, var(--decor-glow-secondary) 0%, var(--decor-glow-secondary-end) 50%)`
+                : `radial-gradient(circle at 70% 70%, var(--decor-glow-secondary) 0%, var(--decor-glow-secondary-end) 60%)`,
              filter: 'blur(100px)',
              opacity: 0.5
            }} />
@@ -1223,13 +1285,13 @@ const GlobeMap = ({
             globeMaterial={globeMaterial}
             backgroundImageUrl={null}
             showAtmosphere={!!perfProfile?.showAtmosphere}
-            atmosphereColor={isLight ? "#b0e2ff" : "#3a76f0"}
+            atmosphereColor={UI_COLORS.atmosphere}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
             backgroundColor="rgba(0,0,0,0)"
             lineHoverPrecision={0}
             showGraticules={true}
-            rendererConfig={{ antialias: true, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
+            rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
             polygonsData={visibleRenderCountriesData}

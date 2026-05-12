@@ -16,14 +16,14 @@
   z-index: 1001;
   transform-origin: top center;
   transition:
-    top 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    top var(--transition-layout),
+    transform var(--transition-layout),
     opacity 160ms ease;
   will-change: top, transform, opacity;
 }
 
 .top-hud-bar.learn-mode {
-  grid-template-columns: 44px 1fr 44px;
+  grid-template-columns: var(--control-lg) 1fr var(--control-lg);
 }
 
 .hud-top-left, .hud-top-right {
@@ -62,7 +62,7 @@
   display: flex;
   align-items: center;
   padding: 0 12px;
-  height: 44px;
+  height: var(--control-lg);
   border-radius: 22px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -70,7 +70,7 @@
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   width: 100%;
-  max-width: 500px;
+  max-width: var(--island-width);
   min-width: 300px;
 }
 
@@ -144,7 +144,7 @@
   position: relative;
   z-index: 1;
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), #60a5fa);
+  background: linear-gradient(90deg, var(--accent), var(--accent-glow));
   border-radius: 3px;
   transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 0 10px var(--accent);
@@ -164,7 +164,7 @@
   pointer-events: none;
   z-index: 1000;
   transition:
-    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform var(--transition-layout),
     opacity 160ms ease;
   will-change: transform, opacity;
 }
@@ -176,8 +176,8 @@
 }
 
 .hud-btn-circular {
-  width: 44px; 
-  height: 44px;
+  width: var(--control-lg);
+  height: var(--control-lg);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -193,17 +193,17 @@
 }
 
 .hud-btn-circular.mic-btn.active {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
-  color: #ef4444;
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  background: var(--error-soft-strong);
+  border-color: var(--error);
+  color: var(--error);
+  box-shadow: 0 0 15px var(--error-glow);
   animation: mic-pulse 1.5s infinite ease-in-out;
 }
 
 @keyframes mic-pulse {
-  0% { transform: scale(1); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
-  50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
-  100% { transform: scale(1); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+  0% { transform: scale(1); box-shadow: 0 0 10px var(--error-glow); }
+  50% { transform: scale(1.1); box-shadow: 0 0 20px var(--error-glow-strong); }
+  100% { transform: scale(1); box-shadow: 0 0 10px var(--error-glow); }
 }
 
 .island-sub-gauges {
@@ -214,8 +214,8 @@
 }
 
 .circular-gauge {
-  width: 32px;
-  height: 32px;
+  width: var(--control-sm);
+  height: var(--control-sm);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -282,12 +282,12 @@
   align-items: center;
   gap: 12px;
   width: 92%;
-  max-width: 500px; /* Aligned with central-island-panel */
+  max-width: var(--island-width); /* Aligned with central-island-panel */
   transition:
-    top 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    bottom 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    left 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    top var(--transition-layout),
+    bottom var(--transition-layout),
+    left var(--transition-layout),
+    transform var(--transition-layout);
   will-change: top, bottom, left, transform;
 }
 
@@ -300,7 +300,7 @@
 }
 
 .input-island {
-  height: 44px;
+  height: var(--control-lg);
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -425,7 +425,7 @@
     transform: translateX(-50%);
     width: 90%; /* Match bottom search bar width */
     padding: 0;
-    grid-template-columns: 44px 1fr 44px;
+    grid-template-columns: var(--control-lg) 1fr var(--control-lg);
     row-gap: 14px;
     column-gap: 8px;
     align-items: center;
@@ -444,7 +444,7 @@
   .hud-top-gauges {
     transition:
       opacity 160ms ease,
-      transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+      transform var(--transition-layout);
     will-change: opacity, transform;
   }
 
@@ -455,9 +455,9 @@
   .central-island-panel {
     min-width: 0;
     width: 100%;
-    max-width: 500px;
+    max-width: var(--island-width);
     padding: 0 8px;
-    height: 44px;
+    height: var(--control-lg);
     justify-content: space-between; /* Ensure elements inside stretch */
   }
 
@@ -489,8 +489,8 @@
   .hud-btn-circular,
   .input-island,
   .suggestions-list {
-    backdrop-filter: blur(12px) saturate(140%);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: var(--glass-blur-compact);
+    -webkit-backdrop-filter: var(--glass-blur-compact);
   }
 
   .hud-bottom-right {

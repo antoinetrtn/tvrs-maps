@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import './ResultsModal.css';
 import { getGameStats } from './utils';
-import { CONTINENT_COLORS, CONTINENT_COLORS_LABELS, CONTINENT_COLORS_ATTENUATED, THEME } from './designSystem';
+import { CONTINENT_COLORS, CONTINENT_COLORS_LABELS, CONTINENT_COLORS_ATTENUATED } from './designSystem';
 
 const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr' }) => {
   const { stats, CONTINENT_ORDER } = useMemo(() => 

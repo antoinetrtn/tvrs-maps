@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home, Play } from 'lucide-react';
 import Logo from './Logo';
 import './GameHUD.css';
-import { THEME, CONTINENT_COLORS } from './designSystem';
+import { CONTINENT_COLORS } from './designSystem';
 
 // Check for Speech Recognition API support
 const SpeechRecognition = typeof window !== 'undefined'
@@ -178,8 +178,6 @@ const GameHUD = ({
 
   const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic"];
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
-  const UI_COLORS = useMemo(() => THEME[theme] || THEME.dark, [theme]);
-
   const regionStats = useMemo(() => {
     if (!countryDataMap) return {};
     const stats = {};

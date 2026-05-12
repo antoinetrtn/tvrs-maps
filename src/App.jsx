@@ -4,6 +4,7 @@ import GameHUD from './GameHUD.jsx';
 import HomeScreen from './HomeScreen.jsx';
 import './App.css';
 import { normalizeString as rawNormalize, countryDataMap } from './gameData';
+import { getThemeCssVariables } from './designSystem';
 
 // Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
 const normalizeString = (str) => {
@@ -510,14 +511,17 @@ function App() {
     const isMobile = viewport.width < 768;
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = isMobile ? Math.min(devicePixelRatio, 1.35) : Math.min(devicePixelRatio, 1.75);
+    const pixelRatio = isMobile
+      ? Math.min(devicePixelRatio, 1.15)
+      : (isTablet ? Math.min(devicePixelRatio, 1.3) : Math.min(devicePixelRatio, 1.5));
     return {
       isMobile,
       isTablet,
       pixelRatio,
+      antialias: !(isMobile || isTablet),
       enableAutoRotate: true,
       enablePointerInteraction: true,
-      maxLabels: isMobile ? 5 : (isTablet ? 12 : 30),
+      maxLabels: isMobile ? 4 : (isTablet ? 8 : 20),
       showAtmosphere: false,
       useImageTextures: false,
       cullOffscreenCountries: isMobile || isTablet,
@@ -527,7 +531,7 @@ function App() {
   }, [viewport.width]);
 
   return (
-    <div className={`app-container ${theme}`} data-theme={theme}>
+    <div className={`app-container ${theme}`} data-theme={theme} style={getThemeCssVariables(theme)}>
       {currentScreen === 'home' ? (
         <HomeScreen 
           onStartGame={startGame} 
