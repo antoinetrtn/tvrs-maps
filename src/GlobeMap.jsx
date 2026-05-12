@@ -168,7 +168,6 @@ const GlobeMap = ({
   mode,
   lang,
   countriesData,
-  highResCountriesByAdmin,
   foundList,
   onCountrySelect,
   shouldAutoRotate,
@@ -186,6 +185,7 @@ const GlobeMap = ({
   globeLightingEnabled = true
 }) => {
   const globeEl = useRef();
+  const globeContentWrapperRef = useRef(null);
   const globeLightingRef = useRef(null);
   const polygonMaterialCacheRef = useRef({ cap: new Map(), side: new Map() });
   const tapRef = useRef(null);
@@ -391,20 +391,8 @@ const GlobeMap = ({
   }, [selectableCountriesData]);
 
   const renderCountriesData = useMemo(() => {
-    if (!selectedCountry || !highResCountriesByAdmin) return baseRenderCountriesData;
-
-    return baseRenderCountriesData.map(baseItem => {
-      const admin = getFeatureAdmin(baseItem);
-      if (admin === selectedCountry && highResCountriesByAdmin.has(admin)) {
-        const highResFeature = highResCountriesByAdmin.get(admin);
-        return {
-          ...highResFeature,
-          renderGeometry: getRenderGeometry(highResFeature)
-        };
-      }
-      return baseItem;
-    });
-  }, [baseRenderCountriesData, highResCountriesByAdmin, selectedCountry]);
+    return baseRenderCountriesData;
+  }, [baseRenderCountriesData]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData.map(feature => {
@@ -461,11 +449,39 @@ const GlobeMap = ({
       y: event.clientY,
       t: performance.now()
     };
-  }, [isKeyboardMode, onPreserveInputFocus, viewport.width]);
+
+    if (globeContentWrapperRef.current && !isHomeScreen) {
+      globeContentWrapperRef.current.style.transition = 'transform 80ms linear';
+    }
+  }, [isHomeScreen, isKeyboardMode, onPreserveInputFocus, viewport.width]);
+
+  const handlePointerMove = useCallback((event) => {
+    const tap = tapRef.current;
+    const wrapper = globeContentWrapperRef.current;
+    if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen) return;
+
+    const dx = event.clientX - tap.x;
+    const dy = event.clientY - tap.y;
+    const strength = perfProfile?.isMobile ? 0.035 : 0.045;
+    const limit = perfProfile?.isMobile ? 9 : 16;
+    const nudgeX = Math.max(-limit, Math.min(limit, dx * strength));
+    const nudgeY = Math.max(-limit, Math.min(limit, dy * strength));
+    wrapper.style.setProperty('--globe-nudge-x', `${nudgeX.toFixed(2)}px`);
+    wrapper.style.setProperty('--globe-nudge-y', `${nudgeY.toFixed(2)}px`);
+  }, [isHomeScreen, perfProfile?.isMobile]);
+
+  const resetGlobeNudge = useCallback(() => {
+    const wrapper = globeContentWrapperRef.current;
+    if (!wrapper) return;
+    wrapper.style.transition = 'transform 520ms cubic-bezier(0.18, 0.9, 0.22, 1.18)';
+    wrapper.style.setProperty('--globe-nudge-x', '0px');
+    wrapper.style.setProperty('--globe-nudge-y', '0px');
+  }, []);
 
   const handlePointerUp = useCallback((event) => {
     const tap = tapRef.current;
     tapRef.current = null;
+    resetGlobeNudge();
     if (isHomeScreen) return;
     if (!tap || tap.pointerId !== event.pointerId) return;
 
@@ -487,7 +503,7 @@ const GlobeMap = ({
       // Clicked in space (not on the globe sphere)
       selectCountry(null);
     }
-  }, [isHomeScreen, isKeyboardMode, onPreserveInputFocus, selectCountryAtLngLat, selectCountry, viewport.width]);
+  }, [isHomeScreen, isKeyboardMode, onPreserveInputFocus, resetGlobeNudge, selectCountryAtLngLat, selectCountry, viewport.width]);
 
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
   const REGION_COLORS_ATTENUATED = useMemo(() => CONTINENT_COLORS_ATTENUATED[theme] || CONTINENT_COLORS_ATTENUATED.dark, [theme]);
@@ -738,8 +754,15 @@ const GlobeMap = ({
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
-    return getCountryLayerAltitude(admin, foundSet, selectedCountry, globeLightingEnabled ? 1.8 : 1);
-  }, [globeLightingEnabled, selectedCountry, foundSet]);
+    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, globeLightingEnabled ? 1.8 : 1);
+    if (admin === selectedCountry) return altitude * (1 + pulse * 0.08);
+    return altitude;
+  }, [globeLightingEnabled, selectedCountry, foundSet, pulse]);
+
+  const getSelectionEffectAltitude = useCallback(() => {
+    const selectedAltitude = GLOBE_LAYER_ALTITUDE.selected * (globeLightingEnabled ? 1.8 : 1);
+    return selectedAltitude * (1 + pulse * 0.08) + 0.004;
+  }, [globeLightingEnabled, pulse]);
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -910,15 +933,36 @@ const GlobeMap = ({
   }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen]);
 
   const ringsData = useMemo(() => {
-    const shouldShowRing = selectedCountry;
-    if (shouldShowRing) {
-       const mapped = countryDataMap[selectedCountry];
-       if (mapped && mapped.lat !== undefined) {
-          return [{ lat: mapped.lat, lng: mapped.lng }];
-       }
+    if (selectedCountry) {
+      const mapped = countryDataMap[selectedCountry];
+      const region = mapped?.region || 'Unknown';
+      if (mapped && mapped.lat !== undefined) {
+        const baseColor = isError
+          ? UI_COLORS.error
+          : (REGION_COLORS_LABELS[region] || REGION_COLORS[region] || UI_COLORS.accent);
+        const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
+        return [
+          {
+            lat: mapped.lat,
+            lng: mapped.lng,
+            color: baseColor,
+            maxRadius: perfProfile?.isMobile ? 1.0 : 1.35,
+            speed: perfProfile?.isMobile ? 0.35 : 0.5,
+            repeat: perfProfile?.isMobile ? 2400 : 2000
+          },
+          {
+            lat: mapped.lat,
+            lng: mapped.lng,
+            color: softColor,
+            maxRadius: perfProfile?.isMobile ? 0.52 : 0.72,
+            speed: perfProfile?.isMobile ? 0.22 : 0.32,
+            repeat: perfProfile?.isMobile ? 1700 : 1450
+          }
+        ];
+      }
     }
     return [];
-  }, [selectedCountry, perfProfile?.isMobile, hasActiveFeedback]);
+  }, [isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS]);
 
   const globeMaterial = useMemo(() => {
     return new THREE.MeshPhongMaterial({
@@ -1198,12 +1242,7 @@ const GlobeMap = ({
     REGION_COLORS_LABELS[d.region] || UI_COLORS.warning
   ), [REGION_COLORS_LABELS, UI_COLORS]);
 
-  const getRingColor = useCallback(() => {
-    if (isError) return UI_COLORS.error;
-    const region = countryDataMap[selectedCountry]?.region || 'Unknown';
-    // Use the vibrant label color for the radar ring
-    return REGION_COLORS_LABELS[region] || UI_COLORS.accentSoft;
-  }, [isError, isLight, UI_COLORS, selectedCountry, REGION_COLORS_LABELS]);
+  const getRingColor = useCallback((d) => d.color || UI_COLORS.accentSoft, [UI_COLORS]);
 
   const handleGlobeClick = useCallback((coords) => {
     // This event fires whenever the globe is clicked (anywhere on the surface)
@@ -1219,8 +1258,12 @@ const GlobeMap = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerCancel={() => { tapRef.current = null; }}
+      onPointerCancel={() => {
+        tapRef.current = null;
+        resetGlobeNudge();
+      }}
       style={{ 
         position: 'fixed', 
         top: isMobileKeyboardOpen ? viewport.top : 0, 
@@ -1282,7 +1325,7 @@ const GlobeMap = ({
              opacity: 0.5
            }} />
         </div>
-        <div className="globe-content-wrapper" style={{ background: 'transparent' }}>
+        <div ref={globeContentWrapperRef} className="globe-content-wrapper" style={{ background: 'transparent' }}>
           {globeLightingEnabled && (
             <div
               className={`globe-studio-overlay ${isLight ? 'light' : 'dark'}`}
@@ -1332,10 +1375,10 @@ const GlobeMap = ({
             htmlAltitude={GLOBE_LAYER_ALTITUDE.label}
             ringsData={ringsData}
             ringColor={getRingColor}
-            ringMaxRadius={perfProfile?.isMobile ? 1.0 : 1.4}
-            ringPropagationSpeed={perfProfile?.isMobile ? 0.35 : 0.5}
-            ringRepeatPeriod={perfProfile?.isMobile ? 2400 : 2000}
-            ringAltitude={GLOBE_LAYER_ALTITUDE.selected * (globeLightingEnabled ? 1.8 : 1)}
+            ringMaxRadius={d => d.maxRadius}
+            ringPropagationSpeed={d => d.speed}
+            ringRepeatPeriod={d => d.repeat}
+            ringAltitude={getSelectionEffectAltitude}
             onBackgroundClick={isHomeScreen ? undefined : () => selectCountry(null)}
           />
         </div>

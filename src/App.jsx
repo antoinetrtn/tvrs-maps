@@ -212,7 +212,6 @@ function App() {
   
   // Game countries loaded from GeoJSON
   const [countriesData, setCountriesData] = useState([]);
-  const [highResCountriesByAdmin, setHighResCountriesByAdmin] = useState(() => new Map());
   const keyboardModeCandidate = window.innerWidth < 1024 && (
     viewport.height < initialHeight.current * 0.85 ||
     viewport.top > 20
@@ -286,22 +285,11 @@ function App() {
   }, [foundList.length, isPlaying, isGameOver]);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/data/countries-50m-low.json').then(res => res.json()),
-      fetch('/data/countries-50m.json').then(res => {
-        if (!res.ok) throw new Error(`Unable to load 50m countries`);
-        return res.json();
-      }).catch(() => null)
-    ])
-    .then(([lowResData, highResData]) => {
-      if (lowResData && lowResData.features) {
-        setCountriesData(lowResData.features);
-      }
-      if (highResData && highResData.features) {
-        setHighResCountriesByAdmin(new Map(highResData.features.map(feature => [
-          feature.properties?.ADMIN || feature.properties?.name || feature.properties?.NAME,
-          feature
-        ])));
+    fetch('/data/countries-50m-low.json')
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.features) {
+        setCountriesData(data.features);
       }
     })
     .catch(err => console.error("Failed to load map data", err));
@@ -609,7 +597,6 @@ function App() {
         mode={mode} 
         lang={lang}
         countriesData={countriesData} 
-        highResCountriesByAdmin={highResCountriesByAdmin}
         foundList={foundList} 
         selectedCountry={selectedCountry}
         shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
