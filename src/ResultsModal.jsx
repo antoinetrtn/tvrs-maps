@@ -3,10 +3,11 @@ import './ResultsModal.css';
 import { getGameStats } from './utils';
 import { CONTINENT_COLORS, CONTINENT_COLORS_LABELS, CONTINENT_COLORS_ATTENUATED } from './designSystem';
 
-const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr' }) => {
+const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr' }) => {
+  const dataMap = activeDataMap || countryDataMap;
   const { stats, CONTINENT_ORDER } = useMemo(() => 
-    getGameStats(foundList, countryDataMap, lang), 
-    [foundList, countryDataMap, lang]
+    getGameStats(foundList, dataMap, lang), 
+    [foundList, dataMap, lang]
   );
 
   const colors = CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark;
@@ -34,9 +35,9 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, on
             if (!data || data.total === 0) return null;
             
             const pct = Math.round((data.found / data.total) * 100);
-            const color = colors[region];
-            const labelColor = labelColors[region];
-            const bgColor = attenuatedColors[region];
+            const color = colors[region] || 'var(--accent)';
+            const labelColor = labelColors[region] || 'var(--accent)';
+            const bgColor = attenuatedColors[region] || 'var(--accent-soft)';
 
             const regionLabel = lang === 'fr' ? {
               "Europe": "Europe",
@@ -45,6 +46,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, onRestart, on
               "Africa": "Afrique",
               "Oceania": "Océanie",
               "Antarctic": "Antarctique",
+              "France": "France",
               "Unknown": "Inconnu"
             }[region] || region : region;
 

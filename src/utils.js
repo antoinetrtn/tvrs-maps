@@ -1,6 +1,10 @@
 
 export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
-  const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "Unknown"];
+  const baseOrder = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
+  const dynamicRegions = Object.values(countryDataMap)
+    .map(item => item?.region)
+    .filter(Boolean);
+  const CONTINENT_ORDER = Array.from(new Set([...baseOrder, ...dynamicRegions]));
   const s = {};
   CONTINENT_ORDER.forEach(reg => s[reg] = { total: 0, found: 0, countries: [] });
   

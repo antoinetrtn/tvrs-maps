@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { countryDataMap } from './gameData';
 import { THEME, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE } from './designSystem';
 
-const getFeatureAdmin = (feature) => feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
+const getFeatureAdmin = (feature) => feature?.properties?.code || feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
 
 const getFlagEmoji = (iso2) => {
   if (!iso2 || iso2.length !== 2) return '';
@@ -157,6 +157,7 @@ const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
+const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(['France']);
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry, extrusionScale = 1) => {
   if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected * extrusionScale;
@@ -164,10 +165,17 @@ const getCountryLayerAltitude = (admin, foundSet, selectedCountry, extrusionScal
   return GLOBE_LAYER_ALTITUDE.base * extrusionScale;
 };
 
+const getDepartmentLayerAltitude = (admin, foundSet, selectedCountry) => {
+  if (admin === selectedCountry) return 0.004;
+  if (foundSet.has(admin)) return 0.0028;
+  return 0.0018;
+};
+
 const GlobeMap = ({
   mode,
   lang,
   countriesData,
+  departmentsData = [],
   foundList,
   onCountrySelect,
   shouldAutoRotate,
@@ -182,7 +190,8 @@ const GlobeMap = ({
   isEndScreen,
   isPerfectScore,
   onPreserveInputFocus,
-  globeLightingEnabled = true
+  globeLightingEnabled = true,
+  activeDataMap
 }) => {
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
@@ -200,6 +209,8 @@ const GlobeMap = ({
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
   const [pulse, setPulse] = useState(0);
   const labelsCacheRef = useRef({});
+  const isDepartmentMode = mode === 'departments' && !isHomeScreen;
+  const gameDataMap = isDepartmentMode ? (activeDataMap || {}) : countryDataMap;
 
   // Pulse animation loop for selection
   useEffect(() => {
@@ -334,9 +345,14 @@ const GlobeMap = ({
   useEffect(() => {
     if (isEndScreen && globeEl.current) {
       // Center and zoom out for the end screen
-      globeEl.current.pointOfView({ lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 }, 1200);
+      globeEl.current.pointOfView(
+        isDepartmentMode
+          ? { lat: 46.5, lng: 2.6, altitude: viewport.width < 768 ? 0.74 : 0.54 }
+          : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
+        1200
+      );
     } else if (selectedCountry && globeEl.current) {
-      const data = countryDataMap[selectedCountry];
+      const data = gameDataMap[selectedCountry];
       if (data && data.lat !== undefined) {
         const isMobile = viewport.width < 768;
         const currentPOV = globeEl.current.pointOfView();
@@ -379,18 +395,21 @@ const GlobeMap = ({
       }
     } else if (isHomeScreen && globeEl.current) {
       globeEl.current.pointOfView({ altitude: viewport.width < 768 ? 2.5 : 1 }, 1000);
+    } else if (isDepartmentMode && globeEl.current) {
+      globeEl.current.pointOfView({ lat: 46.5, lng: 2.6, altitude: viewport.width < 768 ? 0.74 : 0.54 }, 700);
     } else if (wasHomeScreenRef.current && globeEl.current) {
       globeEl.current.pointOfView({ lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.35 }, 700);
     }
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
-  }, [selectedCountry, viewport.width, viewport.height, viewport.top, isHomeScreen, perfProfile, isKeyboardMode, isEndScreen]);
+  }, [selectedCountry, viewport.width, viewport.height, viewport.top, isHomeScreen, perfProfile, isKeyboardMode, isEndScreen, isDepartmentMode, gameDataMap]);
 
   const isLight = theme === 'light';
 
   const selectableCountriesData = useMemo(() => {
+    if (isDepartmentMode) return departmentsData.filter(feature => gameDataMap[getFeatureAdmin(feature)]);
     return countriesData.filter(feature => countryDataMap[getFeatureAdmin(feature)]);
-  }, [countriesData]);
+  }, [countriesData, departmentsData, gameDataMap, isDepartmentMode]);
 
   const baseRenderCountriesData = useMemo(() => {
     return selectableCountriesData.map(feature => ({
@@ -400,8 +419,24 @@ const GlobeMap = ({
   }, [selectableCountriesData]);
 
   const renderCountriesData = useMemo(() => {
-    return baseRenderCountriesData;
-  }, [baseRenderCountriesData]);
+    if (!isDepartmentMode) return baseRenderCountriesData;
+
+    const ghostWorld = countriesData
+      .filter(feature => !DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS.has(getFeatureAdmin(feature)))
+      .map(feature => ({
+        ...feature,
+        isGhostCountry: true,
+        renderGeometry: getRenderGeometry(feature)
+      }));
+
+    return [
+      ...ghostWorld,
+      ...baseRenderCountriesData.map(feature => ({
+        ...feature,
+        isDepartmentFeature: true
+      }))
+    ];
+  }, [baseRenderCountriesData, countriesData, isDepartmentMode]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData.map(feature => {
@@ -416,13 +451,24 @@ const GlobeMap = ({
 
   const selectCountry = useCallback((admin) => {
     if (onCountrySelect) {
-      if (!admin || countryDataMap[admin]) {
+      if (!admin || gameDataMap[admin]) {
         onCountrySelect(admin);
       }
     }
-  }, [onCountrySelect]);
+  }, [gameDataMap, onCountrySelect]);
 
   const selectCountryAtLngLat = useCallback((lng, lat) => {
+    if (isDepartmentMode) {
+      let best = null;
+      Object.entries(gameDataMap).forEach(([admin, data]) => {
+        if (data.lat === undefined || data.lng === undefined) return;
+        const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
+        if (!best || dist < best.dist) best = { admin, dist };
+      });
+      selectCountry(best && best.dist < 2.2 ? best.admin : null);
+      return;
+    }
+
     const match = selectableFeatureIndex.find(entry => featureContainsLngLat(entry, lng, lat));
     if (match) {
       selectCountry(match.admin);
@@ -432,7 +478,7 @@ const GlobeMap = ({
     // GeoJSON at 110m is very simplified; a tap near a coast/border can land just
     // outside the polygon. Fall back to the closest capital/country point nearby.
     let best = null;
-    Object.entries(countryDataMap).forEach(([admin, data]) => {
+    Object.entries(gameDataMap).forEach(([admin, data]) => {
       if (data.lat === undefined || data.lng === undefined) return;
       const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
       if (!best || dist < best.dist) best = { admin, dist };
@@ -443,7 +489,7 @@ const GlobeMap = ({
       // Clicked on ocean / far from any country: deselect
       selectCountry(null);
     }
-  }, [selectableFeatureIndex, selectCountry]);
+  }, [gameDataMap, isDepartmentMode, selectableFeatureIndex, selectCountry]);
 
   const handlePointerDown = useCallback((event) => {
     // Prevent focus shift (keyboard flicker) on mobile when interacting with the globe
@@ -522,6 +568,15 @@ const GlobeMap = ({
   const foundSet = useMemo(() => new Set(foundList), [foundList]);
 
   const getPolygonColor = useCallback((d) => {
+    if (isDepartmentMode) {
+      const admin = getFeatureAdmin(d);
+      if (d.isGhostCountry) return UI_COLORS.mapSea;
+      if (isEndScreen && !foundSet.has(admin)) return UI_COLORS.error;
+      if (foundSet.has(admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
+      if (admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
+      return UI_COLORS.mapBase;
+    }
+
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
@@ -564,9 +619,19 @@ const GlobeMap = ({
     }
 
     return UI_COLORS.mapBase;
-  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, pulse, isHomeScreen]);
+  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, pulse, isHomeScreen, isDepartmentMode, isEndScreen, isPerfectScore]);
 
   const getPolygonStroke = useCallback((d) => {
+    if (isDepartmentMode) {
+      const admin = getFeatureAdmin(d);
+      if (d.isGhostCountry) return isLight
+        ? lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.12)
+        : lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.08);
+      if (admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
+      if (foundSet.has(admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
+      return isLight ? UI_COLORS.mapBorderMuted : lerpColor(UI_COLORS.mapBase, UI_COLORS.paper, 0.18);
+    }
+
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
@@ -595,9 +660,14 @@ const GlobeMap = ({
       isLight ? UI_COLORS.ink : UI_COLORS.paper, // Use paper (white/light) for stroke in dark mode
       isLight ? GLOBE_STYLE.lighting.strokeDarken.light : 0.2 // Reduced darken for dark mode
     );
-  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen, isLight]);
+  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen, isLight, isDepartmentMode, lerpColor, isPerfectScore]);
 
   const getPolygonSideColor = useCallback((d) => {
+    if (isDepartmentMode) {
+      if (d.isGhostCountry) return UI_COLORS.mapSea;
+      return lerpColor(getPolygonColor(d), UI_COLORS.black, isLight ? 0.012 : 0.02);
+    }
+
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
     
@@ -659,7 +729,7 @@ const GlobeMap = ({
     }
     
     return lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
-  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, pulse, mode, isHomeScreen]);
+  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, pulse, mode, isHomeScreen, isDepartmentMode, lerpColor, getPolygonColor]);
 
   const getPolygonMaterial = useCallback((d, kind) => {
     const admin = getFeatureAdmin(d) || 'unknown';
@@ -676,7 +746,6 @@ const GlobeMap = ({
     if (!material) {
       material = new THREE.MeshPhongMaterial({
         side: kind === 'cap' ? THREE.DoubleSide : THREE.DoubleSide, // Ensure sides are visible from all angles
-        transparent: true,
         blending: THREE.NormalBlending,
         depthWrite: true // Re-enable depthWrite for solid volume feel
       });
@@ -684,16 +753,34 @@ const GlobeMap = ({
     }
 
     material.color.set(color);
-    
-    // Opacity from Design System
-    const baseOpacity = kind === 'cap' 
-      ? GLOBE_STYLE.lighting.capOpacity[isLight ? 'light' : 'dark']
-      : GLOBE_STYLE.lighting.sideOpacity[isLight ? 'light' : 'dark'];
-    
-    const selectedOpacity = kind === 'cap' ? 1 : GLOBE_STYLE.lighting.selectedSideOpacity[isLight ? 'light' : 'dark'];
 
-    material.opacity = admin === selectedCountry ? selectedOpacity : baseOpacity;
-    material.transparent = material.opacity < 1;
+    if (isDepartmentMode && d.isGhostCountry) {
+      material.opacity = 1;
+      material.transparent = false;
+      material.depthWrite = true;
+      material.polygonOffset = true;
+      material.polygonOffsetFactor = 1.5;
+      material.polygonOffsetUnits = 1.5;
+      material.specular.set(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink);
+      material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
+      material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
+      material.shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
+      material.needsUpdate = true;
+      return material;
+    }
+
+    if (isDepartmentMode) {
+      material.specular.set(UI_COLORS.mapBorder);
+      material.emissive.set(color);
+      material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
+      material.shininess = kind === 'cap' ? 2 : 1;
+      material.flatShading = false;
+      material.needsUpdate = true;
+      return material;
+    }
+    
+    material.opacity = 1;
+    material.transparent = false;
     
     // DepthWrite is critical for visibility over the globe sphere
     // We keep it true to ensure the "glass" has volume and occludes the sea
@@ -732,7 +819,7 @@ const GlobeMap = ({
     
     material.needsUpdate = true;
     return material;
-  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry]);
+  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry, isDepartmentMode]);
 
   const getPolygonCapMaterial = useCallback((d) => (
     getPolygonMaterial(d, 'cap')
@@ -753,24 +840,47 @@ const GlobeMap = ({
   }, []);
 
   const getPolygonAltitude = useCallback((d) => {
+    if (isDepartmentMode && d.isGhostCountry) return 0.003;
     const admin = getFeatureAdmin(d);
+    if (isDepartmentMode) {
+      return getDepartmentLayerAltitude(admin, foundSet, selectedCountry) * (admin === selectedCountry ? (1 + pulse * 0.02) : 1);
+    }
     const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, globeLightingEnabled ? 1.8 : 1);
     if (admin === selectedCountry) return altitude * (1 + pulse * 0.08);
     return altitude;
-  }, [globeLightingEnabled, selectedCountry, foundSet, pulse]);
+  }, [globeLightingEnabled, selectedCountry, foundSet, pulse, isDepartmentMode]);
 
   const getSelectionEffectAltitude = useCallback(() => {
+    if (isDepartmentMode) {
+      return getDepartmentLayerAltitude(selectedCountry, foundSet, selectedCountry) + 0.0006;
+    }
     const selectedAltitude = GLOBE_LAYER_ALTITUDE.selected * (globeLightingEnabled ? 1.8 : 1);
     return selectedAltitude * (1 + pulse * 0.08) + 0.004;
-  }, [globeLightingEnabled, pulse]);
+  }, [globeLightingEnabled, pulse, isDepartmentMode, foundSet, selectedCountry]);
+
+  const getHtmlAltitude = useCallback((d) => {
+    if (isDepartmentMode) {
+      return getDepartmentLayerAltitude(d.admin, foundSet, selectedCountry) + 0.00025;
+    }
+    return getCountryLayerAltitude(
+      d.admin,
+      foundSet,
+      selectedCountry,
+      globeLightingEnabled ? 1.8 : 1
+    ) + 0.002;
+  }, [foundSet, globeLightingEnabled, isDepartmentMode, selectedCountry]);
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
+    if (isDepartmentMode && d.isGhostCountry) {
+      return perfProfile?.isMobile ? 0.045 : 0.06;
+    }
     // Increased thickness for selection
     if (admin === selectedCountry) return perfProfile?.isMobile ? 2.1 : 3.0;
+    if (isDepartmentMode) return perfProfile?.isMobile ? 0.55 : 0.75;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
     return perfProfile?.isMobile ? 0.25 : 0.4;
-  }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry]);
+  }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry, isDepartmentMode]);
 
   const countrySizes = useMemo(() => {
     const sizes = {};
@@ -818,19 +928,25 @@ const GlobeMap = ({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
     
-    const keysToShow = (mode === 'learn' || isHomeScreen || isEndScreen) ? Object.keys(countryDataMap) : foundList;
+    const labelDataMap = isDepartmentMode ? gameDataMap : countryDataMap;
+    const keysToShow = isDepartmentMode
+      ? foundList
+      : ((mode === 'learn' || isHomeScreen || isEndScreen) ? Object.keys(labelDataMap) : foundList);
     const pov = cameraPOV;
 
     const filtered = keysToShow
       .map(adminKey => {
-        const data = countryDataMap[adminKey];
+        const data = labelDataMap[adminKey];
         if (!data) return null;
         
         const isSelected = adminKey === selectedCountry;
+        const isFound = foundSet.has(adminKey);
         const size = countrySizes[adminKey] || 0.5;
         
         // Visibility based on zoom level
-        const visibilityThreshold = isSelected ? 10 : (isHomeScreen ? 1.8 : Math.min(3.0, 0.8 + size * 2.0));
+        const visibilityThreshold = isDepartmentMode
+          ? 1.05
+          : (isSelected ? 10 : (isHomeScreen ? 1.8 : Math.min(3.0, 0.8 + size * 2.0)));
         
         if (zoomLevel > visibilityThreshold) return null;
 
@@ -838,11 +954,11 @@ const GlobeMap = ({
         if (dLng > 180) dLng = 360 - dLng;
         const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
         
-        if (!isSelected && distToCenter > 95) return null;
+        if (!isSelected && distToCenter > (isDepartmentMode ? 7 : 95)) return null;
 
         // Use cached object if available to maintain reference stability
         const cached = labelsCacheRef.current[adminKey];
-        if (cached && cached.isSelected === isSelected && cached.lang === lang) {
+        if (cached && cached.isSelected === isSelected && cached.lang === lang && cached.isFound === isFound && cached.mode === mode) {
            cached.distToCenter = distToCenter; // Update distance for sorting without changing reference
            return cached;
         }
@@ -855,9 +971,12 @@ const GlobeMap = ({
           capital: lang === 'fr' ? (data.capital_fr || data.capital) : data.capital,
           region: data.region,
           flag: getFlagEmoji(data.iso2),
+          code: data.code,
           size,
           distToCenter,
           isSelected,
+          isFound,
+          mode,
           lang // Store lang to invalidate cache if it changes
         };
         labelsCacheRef.current[adminKey] = newLabel;
@@ -870,12 +989,15 @@ const GlobeMap = ({
         return a.distToCenter - b.distToCenter;
       });
 
+    if (isDepartmentMode) return filtered.slice(0, perfProfile?.isMobile ? 10 : 18);
     return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
-  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen]);
+  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen, isDepartmentMode, gameDataMap, foundSet]);
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
-    const color = isHomeScreen ? UI_COLORS.textMuted : (REGION_COLORS_LABELS[d.region] || UI_COLORS.warning);
+    const color = isDepartmentMode
+      ? (d.isFound ? UI_COLORS.success : (d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted))
+      : (isHomeScreen ? UI_COLORS.textMuted : (REGION_COLORS_LABELS[d.region] || UI_COLORS.warning));
     
     // Set root to 0 size so its center is the exact lat/lng
     el.style.width = '0';
@@ -884,7 +1006,18 @@ const GlobeMap = ({
     el.style.pointerEvents = 'none';
     el.style.userSelect = 'none';
 
-    el.innerHTML = `
+    el.innerHTML = isDepartmentMode ? `
+      <div class="globe-label-element department-label-element" style="position: relative; width: 0; height: 0; color: ${color};">
+        <div class="department-label-dot" style="background: ${color};"></div>
+        <div class="department-label-copy">
+          <div class="department-label-main">
+            <span class="department-label-code">${d.code}</span>
+            <span class="department-label-name">${d.country}</span>
+          </div>
+          <div class="department-label-capital">(${d.capital})</div>
+        </div>
+      </div>
+    ` : `
       <div class="globe-label-element" style="position: relative; width: 0; height: 0;">
         <div style="
           position: absolute;
@@ -930,17 +1063,29 @@ const GlobeMap = ({
       </div>
     `;
     return el;
-  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen]);
+  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isDepartmentMode]);
 
   const ringsData = useMemo(() => {
     if (selectedCountry) {
-      const mapped = countryDataMap[selectedCountry];
+      const mapped = gameDataMap[selectedCountry];
       const region = mapped?.region || 'Unknown';
       if (mapped && mapped.lat !== undefined) {
         const baseColor = isError
           ? UI_COLORS.error
           : (REGION_COLORS_LABELS[region] || REGION_COLORS[region] || UI_COLORS.accent);
         const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
+        if (isDepartmentMode) {
+          return [
+            {
+              lat: mapped.lat,
+              lng: mapped.lng,
+              color: baseColor,
+              maxRadius: perfProfile?.isMobile ? 0.22 : 0.32,
+              speed: perfProfile?.isMobile ? 0.12 : 0.16,
+              repeat: perfProfile?.isMobile ? 3200 : 2800
+            }
+          ];
+        }
         return [
           {
             lat: mapped.lat,
@@ -962,7 +1107,7 @@ const GlobeMap = ({
       }
     }
     return [];
-  }, [isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS]);
+  }, [gameDataMap, isDepartmentMode, isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS]);
 
   const globeMaterial = useMemo(() => {
     return new THREE.MeshPhongMaterial({
@@ -1158,6 +1303,8 @@ const GlobeMap = ({
   }, [selectableFeatureIndex]);
 
   const markersData = useMemo(() => {
+    if (isDepartmentMode) return [];
+
     return Object.entries(countryDataMap)
       .filter(([admin, data]) => {
         if (data.lat === undefined || data.lng === undefined) return false;
@@ -1170,7 +1317,7 @@ const GlobeMap = ({
         lng: data.lng,
         region: data.region
       }));
-  }, [countriesWithGeometry, tinyCountries]);
+  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, gameDataMap]);
 
   const visibleMarkersData = useMemo(() => {
     if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {
@@ -1196,6 +1343,13 @@ const GlobeMap = ({
   ]);
 
   const getPointColor = useCallback((d) => {
+    if (isDepartmentMode) {
+      if (isEndScreen && !foundSet.has(d.admin)) return UI_COLORS.error;
+      if (foundSet.has(d.admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
+      if (d.admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
+      return UI_COLORS.mapBorderMuted;
+    }
+
     const isFound = foundSet.has(d.admin) || mode === 'learn';
     const isSelected = d.admin === selectedCountry;
     const region = d.region || 'Unknown';
@@ -1227,11 +1381,13 @@ const GlobeMap = ({
     }
     
     return UI_COLORS.mapBase;
-  }, [REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, foundSet, isError, selectedCountry, mode, pulse]);
+  }, [REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, foundSet, isError, selectedCountry, mode, pulse, isDepartmentMode, isEndScreen, isPerfectScore]);
 
   const getPointRadius = useCallback((d) => (
-    d.admin === selectedCountry ? 0.22 : 0.12
-  ), [selectedCountry]);
+    isDepartmentMode
+      ? (d.admin === selectedCountry ? 0.12 : 0.055)
+      : (d.admin === selectedCountry ? 0.22 : 0.12)
+  ), [isDepartmentMode, selectedCountry]);
 
   const getPointAltitude = useCallback((d) => {
     return getCountryLayerAltitude(d.admin, foundSet, selectedCountry);
@@ -1343,7 +1499,7 @@ const GlobeMap = ({
             atmosphereColor={safeColor(UI_COLORS.atmosphere)}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
-            backgroundColor="transparent"
+            backgroundColor={safeColor(UI_COLORS.bg)}
             lineHoverPrecision={0}
             showGraticules={true}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
@@ -1372,7 +1528,7 @@ const GlobeMap = ({
             htmlElement={createLabelElement}
             htmlLat={d => d.lat}
             htmlLng={d => d.lng}
-            htmlAltitude={GLOBE_LAYER_ALTITUDE.label}
+            htmlAltitude={getHtmlAltitude}
             ringsData={ringsData}
             ringColor={(d) => safeColor(getRingColor(d))}
             ringMaxRadius={d => d.maxRadius}
