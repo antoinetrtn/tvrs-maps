@@ -226,10 +226,10 @@ const GlobeMap = ({
   }, [selectedCountry]);
 
   const safeColor = useCallback((c) => {
-    if (typeof c !== 'string' || !c || c === 'transparent') return '#ffffff';
+    if (typeof c !== 'string' || !c || c === 'transparent') return THEME.dark.paper;
     // If it's a valid hex, rgb or rgba, return it. Otherwise fallback.
     if (c.startsWith('#') || c.startsWith('rgb') || c.startsWith('hsl')) return c;
-    return '#ffffff';
+    return THEME.dark.paper;
   }, []);
 
   const lerpColor = useCallback((a, b, amount) => {
@@ -1343,7 +1343,7 @@ const GlobeMap = ({
             atmosphereColor={safeColor(UI_COLORS.atmosphere)}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
-            backgroundColor="rgba(0,0,0,0)"
+            backgroundColor="transparent"
             lineHoverPrecision={0}
             showGraticules={true}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
