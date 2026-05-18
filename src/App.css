@@ -117,6 +117,65 @@
   will-change: opacity, filter;
 }
 
+.department-label-element {
+  font-family: var(--font-main);
+  letter-spacing: 0;
+}
+
+.department-label-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  left: -3px;
+  top: -3px;
+}
+
+.department-label-copy {
+  position: absolute;
+  left: 8px;
+  top: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 190px;
+  white-space: nowrap;
+}
+
+.department-label-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.department-label-code {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.department-label-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.department-label-capital {
+  margin-top: 2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
 .globe-content-wrapper {
   --globe-layout-x: 0px;
   --globe-nudge-x: 0px;

@@ -4,6 +4,7 @@ import GameHUD from './GameHUD.jsx';
 import HomeScreen from './HomeScreen.jsx';
 import './App.css';
 import { normalizeString as rawNormalize, countryDataMap } from './gameData';
+import { departmentsDataMap } from './departmentsData';
 import { getThemeCssVariables } from './designSystem';
 
 // Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
@@ -32,7 +33,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => (
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home'); // 'home' or 'game'
-  const [mode, setMode] = useState('countries'); // 'countries' or 'capitals'
+  const [mode, setMode] = useState('countries'); // 'countries', 'capitals', 'learn' or 'departments'
   const [foundList, setFoundList] = useState([]);
   const [score, setScore] = useState(0);
   const [gameDuration, setGameDuration] = useState(15 * 60);
@@ -109,27 +110,32 @@ function App() {
     };
   }, [getViewport]);
 
-  // Build a sorted list of all unfound country keys for prev/next navigation
-  const allCountryKeys = useMemo(() => Object.keys(countryDataMap), []);
+  const isDepartmentsMode = mode === 'departments';
+  const activeDataMap = useMemo(() => (
+    isDepartmentsMode ? departmentsDataMap : countryDataMap
+  ), [isDepartmentsMode]);
+
+  // Build a sorted list of all unfound keys for prev/next navigation
+  const allCountryKeys = useMemo(() => Object.keys(activeDataMap), [activeDataMap]);
   const totalPossible = allCountryKeys.length;
 
   const getClosestUnfound = useCallback((fromAdmin, currentFound) => {
      let minList = [];
-     const c1 = countryDataMap[fromAdmin];
+     const c1 = activeDataMap[fromAdmin];
      if (!c1 || c1.lat === undefined) return null;
 
-     Object.keys(countryDataMap).forEach(key => {
-        if (!currentFound.includes(key) && countryDataMap[key].lat !== undefined) {
-           let dLng = Math.abs(c1.lng - countryDataMap[key].lng);
+     Object.keys(activeDataMap).forEach(key => {
+        if (!currentFound.includes(key) && activeDataMap[key].lat !== undefined) {
+           let dLng = Math.abs(c1.lng - activeDataMap[key].lng);
            if (dLng > 180) dLng = 360 - dLng;
-           const dist = Math.hypot(c1.lat - countryDataMap[key].lat, dLng);
+           const dist = Math.hypot(c1.lat - activeDataMap[key].lat, dLng);
            minList.push({ key, dist });
         }
      });
 
      minList.sort((a,b) => a.dist - b.dist);
      return minList.length > 0 ? minList[0].key : null;
-  }, []);
+  }, [activeDataMap]);
 
   const resetNavigationTrail = useCallback((country) => {
     navigationTrailRef.current = country ? [country] : [];
@@ -138,7 +144,7 @@ function App() {
 
   // Navigate to next/previous unfound country in focus mode
   const navigateFocus = useCallback((direction) => {
-    const unfoundKeys = allCountryKeys.filter(k => !foundList.includes(k) && countryDataMap[k]?.lat !== undefined);
+    const unfoundKeys = allCountryKeys.filter(k => !foundList.includes(k) && activeDataMap[k]?.lat !== undefined);
     if (unfoundKeys.length === 0) return;
 
     if (!isPlaying && mode !== 'learn') setIsPlaying(true);
@@ -196,7 +202,7 @@ function App() {
          if (extInputRef.current) extInputRef.current.focus();
        }, 50);
     }
-  }, [selectedCountry, foundList, allCountryKeys, isPlaying, getClosestUnfound, resetNavigationTrail]);
+  }, [selectedCountry, foundList, allCountryKeys, activeDataMap, isPlaying, mode, getClosestUnfound, resetNavigationTrail]);
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -212,6 +218,7 @@ function App() {
   
   // Game countries loaded from GeoJSON
   const [countriesData, setCountriesData] = useState([]);
+  const [departmentsGeoData, setDepartmentsGeoData] = useState([]);
   const keyboardModeCandidate = window.innerWidth < 1024 && (
     viewport.height < initialHeight.current * 0.85 ||
     viewport.top > 20
@@ -277,12 +284,12 @@ function App() {
   }, [gameDuration, currentScreen]);
 
   useEffect(() => {
-    if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= Object.keys(countryDataMap).length) {
+    if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= totalPossible) {
       setIsGameOver(true);
       setIsPlaying(false);
       setShowEndScreen(true);
     }
-  }, [foundList.length, isPlaying, isGameOver]);
+  }, [foundList.length, isPlaying, isGameOver, totalPossible]);
 
   useEffect(() => {
     fetch('/data/countries-50m-low.json')
@@ -293,6 +300,17 @@ function App() {
       }
     })
     .catch(err => console.error("Failed to load map data", err));
+  }, []);
+
+  useEffect(() => {
+    fetch('/data/departements-1000m.geojson')
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.features) {
+        setDepartmentsGeoData(data.features);
+      }
+    })
+    .catch(err => console.error("Failed to load departments map data", err));
   }, []);
 
   useEffect(() => {
@@ -318,8 +336,8 @@ function App() {
 
   const handleInput = useCallback((inputVal) => {
     if (inputVal === "WIN100") {
-      setFoundList(Object.keys(countryDataMap));
-      setScore(Object.keys(countryDataMap).length);
+      setFoundList(Object.keys(activeDataMap));
+      setScore(Object.keys(activeDataMap).length);
       return true;
     }
     if (inputVal === "LOSE100") {
@@ -334,10 +352,11 @@ function App() {
     if (!normalizedInput) return false;
     let matchFound = null;
 
-    for (let adminKey of Object.keys(countryDataMap)) {
-      const mapped = countryDataMap[adminKey];
+    for (let adminKey of Object.keys(activeDataMap)) {
+      const mapped = activeDataMap[adminKey];
       let matchName = null;
       let matchCapital = null;
+      const aliases = mapped?.aliases || [];
 
       if (mapped) {
         matchName = lang === 'fr' ? normalizeString(mapped.name_fr || mapped.name_en || adminKey) : normalizeString(mapped.name_en || adminKey);
@@ -346,8 +365,8 @@ function App() {
         matchName = normalizeString(adminKey);
       }
 
-      if (mode === 'countries') {
-        if (matchName === normalizedInput) {
+      if (mode === 'countries' || mode === 'departments') {
+        if (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput)) {
           matchFound = adminKey;
           break;
         }
@@ -389,11 +408,11 @@ function App() {
       return "SUCCESS";
     }
     return "ERROR";
-  }, [foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, effectiveKeyboardMode]);
+  }, [activeDataMap, foundList, isPlaying, lang, mode, selectedCountry, getClosestUnfound, effectiveKeyboardMode]);
 
   const specificCountryGuess = useCallback((inputVal) => {
     if (!selectedCountry) return false;
-    const mapped = countryDataMap[selectedCountry];
+    const mapped = activeDataMap[selectedCountry];
     if (!mapped) return false;
 
     if (!isPlaying && mode !== 'learn') setIsPlaying(true);
@@ -401,9 +420,10 @@ function App() {
     const normalizedInput = normalizeString(inputVal);
     let matchName = lang === 'fr' ? normalizeString(mapped.name_fr) : normalizeString(mapped.name_en);
     let matchCapital = lang === 'fr' && mapped.capital_fr ? normalizeString(mapped.capital_fr) : (mapped.capital ? normalizeString(mapped.capital) : null);
+    const aliases = mapped.aliases || [];
 
     let isSuccess = false;
-    if (mode === 'countries' && matchName === normalizedInput) {
+    if ((mode === 'countries' || mode === 'departments') && (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput))) {
       isSuccess = true;
     } else if (mode === 'capitals' && matchCapital === normalizedInput) {
       isSuccess = true;
@@ -448,7 +468,7 @@ function App() {
       setTimeout(() => setPopupError(false), 500);
       return "ERROR";
     }
-  }, [foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, effectiveKeyboardMode]);
+  }, [activeDataMap, foundList, isPlaying, lang, mode, score, selectedCountry, getClosestUnfound, effectiveKeyboardMode]);
 
   const handleCountrySelect = useCallback((c) => {
     if (c === selectedCountry && c !== null) {
@@ -472,8 +492,8 @@ function App() {
     const normalizedInput = normalizeString(inputVal);
     if (!normalizedInput) return false;
 
-    for (let adminKey of Object.keys(countryDataMap)) {
-      const mapped = countryDataMap[adminKey];
+    for (let adminKey of Object.keys(activeDataMap)) {
+      const mapped = activeDataMap[adminKey];
       if (!mapped) continue;
       
       const matchName = lang === 'fr' ? normalizeString(mapped.name_fr || mapped.name_en || adminKey) : normalizeString(mapped.name_en || adminKey);
@@ -485,7 +505,7 @@ function App() {
       }
     }
     return false;
-  }, [lang, handleCountrySelect]);
+  }, [activeDataMap, lang, handleCountrySelect]);
 
   const shouldAutoRotate = currentScreen === 'home';
 
@@ -584,7 +604,7 @@ function App() {
             inputSuccess={popupSuccess}
             extInputRef={extInputRef}
             foundList={foundList}
-            countryDataMap={countryDataMap}
+            countryDataMap={activeDataMap}
             theme={theme}
             viewport={viewport}
             isKeyboardMode={effectiveKeyboardMode}
@@ -597,6 +617,7 @@ function App() {
         mode={mode} 
         lang={lang}
         countriesData={countriesData} 
+        departmentsData={departmentsGeoData}
         foundList={foundList} 
         selectedCountry={selectedCountry}
         shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
@@ -612,6 +633,7 @@ function App() {
         isPerfectScore={foundList.length === totalPossible}
         onPreserveInputFocus={preserveInputFocus}
         globeLightingEnabled={globeLightingEnabled}
+        activeDataMap={activeDataMap}
       />
 
       {showEndScreen && (
@@ -619,6 +641,8 @@ function App() {
           foundList={foundList}
           totalCountries={totalPossible}
           countryDataMap={countryDataMap}
+          activeDataMap={activeDataMap}
+          mode={mode}
           onRestart={goHome}
           onViewTable={() => {
             setShowEndScreen(false);
@@ -634,6 +658,7 @@ function App() {
           foundList={foundList}
           totalCountries={totalPossible}
           countryDataMap={countryDataMap}
+          activeDataMap={activeDataMap}
           onRestart={isGameOver ? goHome : () => handleCustomConfirm(
             lang === 'fr' ? "Recommencer une partie ?" : "Restart game?",
             () => { resetGame(mode); setShowInfoModal(false); }

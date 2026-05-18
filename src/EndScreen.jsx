@@ -3,10 +3,11 @@ import './EndScreen.css';
 import { getGameStats } from './utils';
 import { CONTINENT_COLORS } from './designSystem';
 
-const EndScreen = ({ foundList, totalCountries, countryDataMap, onRestart, onViewTable, theme = 'dark', lang = 'fr' }) => {
+const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, mode, onRestart, onViewTable, theme = 'dark', lang = 'fr' }) => {
+  const dataMap = activeDataMap || countryDataMap;
   const { stats, CONTINENT_ORDER } = useMemo(() => 
-    getGameStats(foundList, countryDataMap, lang), 
-    [foundList, countryDataMap, lang]
+    getGameStats(foundList, dataMap, lang), 
+    [foundList, dataMap, lang]
   );
 
   const colors = CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark;
@@ -20,6 +21,7 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, onRestart, onVie
       "Africa": "Afrique",
       "Oceania": "Océanie",
       "Antarctic": "Antarctique",
+      "France": "France",
       "Unknown": "Inconnu"
     },
     en: {
@@ -29,6 +31,7 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, onRestart, onVie
       "Africa": "Africa",
       "Oceania": "Oceania",
       "Antarctic": "Antarctica",
+      "France": "France",
       "Unknown": "Unknown"
     }
   };
@@ -39,6 +42,7 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, onRestart, onVie
   };
 
   const getSubTitle = () => {
+    if (isPerfectScore && mode === 'departments') return lang === 'fr' ? "Vous maîtrisez la carte de France !" : "You mastered the map of France!";
     if (isPerfectScore) return lang === 'fr' ? "Vous avez conquis le monde !" : "You conquered the world!";
     return lang === 'fr' ? "Vous avez trouvé :" : "You found:";
   };
@@ -62,7 +66,7 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, onRestart, onVie
           {CONTINENT_ORDER.filter(reg => reg !== 'Unknown' && stats[reg].total > 0).map(region => {
             const data = stats[region];
             const pct = (data.found / data.total) * 100;
-            const color = colors[region];
+            const color = colors[region] || 'var(--accent)';
             const label = continentLabels[lang][region] || region;
 
             return (

@@ -127,7 +127,7 @@ const GameHUD = ({
             }
           }
         } else {
-          let targetMatch = mode === 'countries' ? nameToMatch : capitalToMatch;
+          let targetMatch = (mode === 'countries' || mode === 'departments') ? nameToMatch : capitalToMatch;
           if (targetMatch && normalizeString(targetMatch).startsWith(normalizedInput)) {
             const ratio = val.length / targetMatch.length;
             const hasSeparator = val.includes(' ') || val.includes('-');
@@ -144,7 +144,7 @@ const GameHUD = ({
               newSuggestions.push({ 
                 key: adminKey, 
                 display: targetMatch, 
-                subtext: mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital) 
+                subtext: mode === 'departments' ? mapped.code : (mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital))
               });
             }
           }
@@ -176,7 +176,7 @@ const GameHUD = ({
     }
   };
 
-  const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic"];
+  const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France"];
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
   const regionStats = useMemo(() => {
     if (!countryDataMap) return {};
@@ -194,12 +194,18 @@ const GameHUD = ({
   }, [foundList, countryDataMap]);
 
   const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
+  const isDepartmentsMode = mode === 'departments';
 
   // Determine which continent to highlight
   const activeContinent = useMemo(() => {
     if (!selectedCountry || !countryDataMap) return null;
     return countryDataMap[selectedCountry]?.region;
   }, [selectedCountry, countryDataMap]);
+
+  const gaugeRegions = isDepartmentsMode ? ["France"] : CONTINENT_ORDER.filter(region => region !== "France");
+  const getRegionColor = useCallback((region) => (
+    REGION_COLORS[region] || (isDepartmentsMode ? 'var(--accent)' : 'var(--warning)')
+  ), [REGION_COLORS, isDepartmentsMode]);
 
   return (
     <>
@@ -274,12 +280,12 @@ const GameHUD = ({
 
           {/* Mobile Only Gauges (Now separate row in grid) */}
           <div className="hud-top-gauges mobile-only animation-fade-in">
-            {CONTINENT_ORDER.map(reg => {
+            {gaugeRegions.map(reg => {
               const isActive = activeContinent === reg;
               const isFaded = activeContinent && activeContinent !== reg;
               return (
                 <div key={reg} className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} title={reg}>
-                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": getRegionColor(reg) }}>
                     <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
                   </div>
                 </div>
@@ -293,7 +299,7 @@ const GameHUD = ({
       {mode !== 'learn' && (
         <div className={`hud-bottom-right desktop-only ${isKeyboardMode ? 'keyboard-mode' : ''}`}>
           <div className="island-sub-gauges animation-fade-in">
-            {CONTINENT_ORDER.map(reg => {
+            {gaugeRegions.map(reg => {
               const isActive = activeContinent === reg;
               const isFaded = activeContinent && activeContinent !== reg;
               
@@ -303,7 +309,7 @@ const GameHUD = ({
                   className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} 
                   title={reg}
                 >
-                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": REGION_COLORS[reg] }}>
+                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": getRegionColor(reg) }}>
                     <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
                   </div>
                 </div>
@@ -333,9 +339,11 @@ const GameHUD = ({
                     ? (lang === 'fr' 
                         ? (countryDataMap[selectedCountry]?.name_fr || selectedCountry) 
                         : (countryDataMap[selectedCountry]?.name_en || selectedCountry))
-                    : (mode === 'countries' 
+                    : (mode === 'departments'
+                        ? (lang === 'fr' ? `Département ${countryDataMap[selectedCountry]?.code || selectedCountry}` : `Department ${countryDataMap[selectedCountry]?.code || selectedCountry}`)
+                        : (mode === 'countries' 
                         ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') 
-                        : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital'))
+                        : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')))
                   }
                 </span>
                 <button className="focus-close-btn" onClick={onClearFocus} onPointerDown={(e) => e.preventDefault()}>
@@ -412,7 +420,7 @@ const GameHUD = ({
                 id="quiz-response-field"
                 inputMode="text"
                 enterKeyHint="done"
-                placeholder={isListening ? '...' : (mode === 'learn' ? (lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...') : (isFocusedCountry ? (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')) : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...')))}
+                placeholder={isListening ? '...' : (mode === 'learn' ? (lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...') : (isFocusedCountry ? (mode === 'departments' ? (lang === 'fr' ? 'Nom du département...' : 'Department name...') : (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital'))) : (mode === 'departments' ? (lang === 'fr' ? 'Saisir un département...' : 'Enter a department...') : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))))}
                 className="input-field"
                 value={inputValue}
                 onChange={handleTextChange}

@@ -234,6 +234,34 @@
   text-align: left;
 }
 
+.home-btn .btn-title {
+  flex: 1;
+}
+
+.beta-slop-badge {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  transform: rotate(-2deg);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.beta-slop-badge small {
+  font-size: 0.54rem;
+  font-weight: 800;
+  opacity: 0.72;
+}
+
 .home-btn:hover:not(.disabled) {
   transform: translateY(-2px);
   background: var(--glass-bg);

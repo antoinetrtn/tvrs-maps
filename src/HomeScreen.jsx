@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Sparkles } from 'lucide-react';
+import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Sparkles, Hash } from 'lucide-react';
 import Logo from './Logo';
 import './HomeScreen.css';
 
@@ -108,6 +108,12 @@ const HomeScreen = ({
           <button className="home-btn mode-capitals" onClick={() => onStartGame('capitals')}>
             <MapPin size={20} />
             <span className="btn-title">{lang === 'fr' ? 'Capitales' : 'Capitals'}</span>
+          </button>
+
+          <button className="home-btn mode-departments" onClick={() => onStartGame('departments')}>
+            <Hash size={20} />
+            <span className="btn-title">{lang === 'fr' ? 'Départements' : 'Departments'}</span>
+            <span className="beta-slop-badge">BETA <small>weird map sauce</small></span>
           </button>
 
           <button className="home-btn mode-learn" onClick={() => onStartGame('learn')}>
