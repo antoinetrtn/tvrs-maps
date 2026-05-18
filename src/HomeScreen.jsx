@@ -111,7 +111,7 @@ const HomeScreen = ({
           </button>
 
           <button className="home-btn mode-departments" onClick={() => onStartGame('departments')}>
-            <Hash size={20} />
+            <Hash size={18} strokeWidth={2.4} className="home-btn-icon hash-icon" />
             <span className="btn-title">{lang === 'fr' ? 'Départements' : 'Departments'}</span>
             <span className="beta-slop-badge">BETA <small>weird map sauce</small></span>
           </button>
