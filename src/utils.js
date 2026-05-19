@@ -1,6 +1,6 @@
 
 export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
-  const baseOrder = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
+  const baseOrder = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
   const dynamicRegions = Object.values(countryDataMap)
     .map(item => item?.region)
     .filter(Boolean);

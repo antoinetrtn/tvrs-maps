@@ -127,7 +127,7 @@ const GameHUD = ({
             }
           }
         } else {
-          let targetMatch = (mode === 'countries' || mode === 'departments') ? nameToMatch : capitalToMatch;
+          let targetMatch = (mode === 'countries' || mode === 'departments' || mode === 'beef') ? nameToMatch : capitalToMatch;
           if (targetMatch && normalizeString(targetMatch).startsWith(normalizedInput)) {
             const ratio = val.length / targetMatch.length;
             const hasSeparator = val.includes(' ') || val.includes('-');
@@ -144,7 +144,7 @@ const GameHUD = ({
               newSuggestions.push({ 
                 key: adminKey, 
                 display: targetMatch, 
-                subtext: mode === 'departments' ? mapped.code : (mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital))
+                subtext: (mode === 'departments' || mode === 'beef') ? mapped.code : (mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital))
               });
             }
           }
@@ -184,6 +184,7 @@ const GameHUD = ({
     CONTINENT_ORDER.forEach(r => stats[r] = { total: 0, found: 0 });
     Object.keys(countryDataMap).forEach(k => {
       const reg = countryDataMap[k]?.region;
+      if (reg && !stats[reg]) stats[reg] = { total: 0, found: 0 };
       if (reg && stats[reg]) stats[reg].total++;
     });
     if (foundList) foundList.forEach(k => {
@@ -195,6 +196,7 @@ const GameHUD = ({
 
   const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
   const isDepartmentsMode = mode === 'departments';
+  const isBeefMode = mode === 'beef';
 
   // Determine which continent to highlight
   const activeContinent = useMemo(() => {
@@ -202,10 +204,12 @@ const GameHUD = ({
     return countryDataMap[selectedCountry]?.region;
   }, [selectedCountry, countryDataMap]);
 
-  const gaugeRegions = isDepartmentsMode ? ["France"] : CONTINENT_ORDER.filter(region => region !== "France");
+  const gaugeRegions = isDepartmentsMode
+    ? ["France"]
+    : (isBeefMode ? ["Boeuf"] : CONTINENT_ORDER.filter(region => region !== "France"));
   const getRegionColor = useCallback((region) => (
-    REGION_COLORS[region] || (isDepartmentsMode ? 'var(--accent)' : 'var(--warning)')
-  ), [REGION_COLORS, isDepartmentsMode]);
+    REGION_COLORS[region] || ((isDepartmentsMode || isBeefMode) ? 'var(--accent)' : 'var(--warning)')
+  ), [REGION_COLORS, isDepartmentsMode, isBeefMode]);
 
   return (
     <>
@@ -341,9 +345,11 @@ const GameHUD = ({
                         : (countryDataMap[selectedCountry]?.name_en || selectedCountry))
                     : (mode === 'departments'
                         ? (lang === 'fr' ? `Département ${countryDataMap[selectedCountry]?.code || selectedCountry}` : `Department ${countryDataMap[selectedCountry]?.code || selectedCountry}`)
+                        : (mode === 'beef'
+                        ? (lang === 'fr' ? `Pièce ${countryDataMap[selectedCountry]?.code || selectedCountry}` : `Cut ${countryDataMap[selectedCountry]?.code || selectedCountry}`)
                         : (mode === 'countries' 
                         ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') 
-                        : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')))
+                        : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital'))))
                   }
                 </span>
                 <button className="focus-close-btn" onClick={onClearFocus} onPointerDown={(e) => e.preventDefault()}>
@@ -420,7 +426,7 @@ const GameHUD = ({
                 id="quiz-response-field"
                 inputMode="text"
                 enterKeyHint="done"
-                placeholder={isListening ? '...' : (mode === 'learn' ? (lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...') : (isFocusedCountry ? (mode === 'departments' ? (lang === 'fr' ? 'Nom du département...' : 'Department name...') : (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital'))) : (mode === 'departments' ? (lang === 'fr' ? 'Saisir un département...' : 'Enter a department...') : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...'))))}
+                placeholder={isListening ? '...' : (mode === 'learn' ? (lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...') : (isFocusedCountry ? (mode === 'departments' ? (lang === 'fr' ? 'Nom du département...' : 'Department name...') : (mode === 'beef' ? (lang === 'fr' ? 'Nom de la pièce...' : 'Cut name...') : (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')))) : (mode === 'departments' ? (lang === 'fr' ? 'Saisir un département...' : 'Enter a department...') : (mode === 'beef' ? (lang === 'fr' ? 'Saisir une pièce...' : 'Enter a cut...') : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...')))))}
                 className="input-field"
                 value={inputValue}
                 onChange={handleTextChange}

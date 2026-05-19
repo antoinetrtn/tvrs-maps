@@ -47,6 +47,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
               "Oceania": "Océanie",
               "Antarctic": "Antarctique",
               "France": "France",
+              "Boeuf": "Bœuf",
               "Unknown": "Inconnu"
             }[region] || region : region;
 

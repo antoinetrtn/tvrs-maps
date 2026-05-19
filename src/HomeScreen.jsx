@@ -116,6 +116,12 @@ const HomeScreen = ({
             <span className="beta-slop-badge">BETA <small>weird map sauce</small></span>
           </button>
 
+          <button className="home-btn mode-beef" onClick={() => onStartGame('beef')}>
+            <MapPin size={20} />
+            <span className="btn-title">{lang === 'fr' ? 'Pièces de bœuf' : 'Beef cuts'}</span>
+            <span className="beta-slop-badge">LOL <small>sans globe</small></span>
+          </button>
+
           <button className="home-btn mode-learn" onClick={() => onStartGame('learn')}>
             <GraduationCap size={20} />
             <span className="btn-title">{lang === 'fr' ? 'Apprendre' : 'Learn'}</span>

@@ -68,6 +68,12 @@ export const THEME = {
     departmentLabelDotShadow: '0 2px 8px rgba(0, 0, 0, 0.28)',
     departmentLabelShadow: '0 8px 20px rgba(0, 0, 0, 0.18)',
     departmentLabelInsetShadow: '0 0 0 1px rgba(255, 255, 255, 0.1) inset',
+    beefDiagramBody: '#f8fafc',
+    beefDiagramGlow: 'rgba(239, 68, 68, 0.12)',
+    beefMapShadow: 'rgba(15, 23, 42, 0.14)',
+    beefCutIdle: '#fee2e2',
+    beefCutLine: '#991b1b',
+    beefLabelBg: '#ffffff',
     decorGlowPrimary: 'rgba(255, 255, 255, 0.7)',
     decorGlowPrimaryEnd: 'rgba(241, 245, 249, 0)',
     decorGlowSecondary: 'rgba(255, 255, 255, 0.5)',
@@ -138,6 +144,12 @@ export const THEME = {
     departmentLabelDotShadow: '0 2px 8px rgba(0, 0, 0, 0.28)',
     departmentLabelShadow: '0 8px 20px rgba(0, 0, 0, 0.18)',
     departmentLabelInsetShadow: '0 0 0 1px rgba(255, 255, 255, 0.1) inset',
+    beefDiagramBody: '#1e293b',
+    beefDiagramGlow: 'rgba(239, 68, 68, 0.1)',
+    beefMapShadow: 'rgba(0, 0, 0, 0.44)',
+    beefCutIdle: '#4a1a1a',
+    beefCutLine: '#fca5a5',
+    beefLabelBg: '#020617',
     decorGlowPrimary: 'rgba(58, 118, 240, 0.1)',
     decorGlowPrimaryEnd: 'rgba(2, 6, 23, 0)',
     decorGlowSecondary: 'rgba(139, 92, 246, 0.06)',
@@ -213,6 +225,7 @@ export const CONTINENT_COLORS = {
     "Africa": "#A8EBC0",
     "Oceania": "#E0B8F5",
     "Antarctic": "#DDE4F0",
+    "Boeuf": "#FCA5A5",
     "Unknown": "#cbd5e1"
   },
   dark: {
@@ -222,6 +235,7 @@ export const CONTINENT_COLORS = {
     "Africa": "#2A8A50",
     "Oceania": "#6E3A9C",
     "Antarctic": "#2A3A5A",
+    "Boeuf": "#991B1B",
     "Unknown": "#64748b"
   }
 };
@@ -234,6 +248,7 @@ export const CONTINENT_COLORS_LABELS = {
     "Africa": "#1A5C35",
     "Oceania": "#5A1A8C",
     "Antarctic": "#3A4A6A",
+    "Boeuf": "#991B1B",
     "Unknown": "#1e293b"
   },
   dark: {
@@ -243,6 +258,7 @@ export const CONTINENT_COLORS_LABELS = {
     "Africa": "#A8EBC0",
     "Oceania": "#E0B8F5",
     "Antarctic": "#DDE4F0",
+    "Boeuf": "#FCA5A5",
     "Unknown": "#94a3b8"
   }
 };
@@ -255,6 +271,7 @@ export const CONTINENT_COLORS_ATTENUATED = {
     "Africa": "#D1F5DD",
     "Oceania": "#F0D1FF",
     "Antarctic": "#F0F4FF",
+    "Boeuf": "#FEE2E2",
     "Unknown": "#e2e8f0"
   },
   dark: {
@@ -264,6 +281,7 @@ export const CONTINENT_COLORS_ATTENUATED = {
     "Africa": "#123D26",
     "Oceania": "#2D1A4A",
     "Antarctic": "#121A2D",
+    "Boeuf": "#4A1A1A",
     "Unknown": "#334155"
   }
 };
@@ -349,6 +367,16 @@ export const getThemeCssVariables = (themeName = 'dark') => {
     '--highlight-soft': theme.highlightSoft,
     '--map-border': theme.mapBorder,
     '--grid-dot': theme.gridDot,
+    '--beef-diagram-body': theme.beefDiagramBody,
+    '--beef-diagram-glow': theme.beefDiagramGlow,
+    '--beef-map-shadow': theme.beefMapShadow,
+    '--beef-cut-idle': theme.beefCutIdle,
+    '--beef-cut-line': theme.beefCutLine,
+    '--beef-label-bg': theme.beefLabelBg,
+    '--department-label-border': theme.departmentLabelBorder,
+    '--department-label-dot-shadow': theme.departmentLabelDotShadow,
+    '--department-label-shadow': theme.departmentLabelShadow,
+    '--department-label-inset-shadow': theme.departmentLabelInsetShadow,
     '--decor-glow-primary': theme.decorGlowPrimary,
     '--decor-glow-primary-end': theme.decorGlowPrimaryEnd,
     '--decor-glow-secondary': theme.decorGlowSecondary,
