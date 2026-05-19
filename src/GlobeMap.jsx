@@ -158,6 +158,22 @@ const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(['France']);
+const DEPARTMENT_MODE_FRANCE_VIEW = {
+  lat: 46.5,
+  lng: 2.6,
+  altitude: {
+    mobile: 0.62,
+    desktop: 0.42
+  }
+};
+
+const getDepartmentModeFrancePointOfView = (width) => ({
+  lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
+  lng: DEPARTMENT_MODE_FRANCE_VIEW.lng,
+  altitude: width < 768
+    ? DEPARTMENT_MODE_FRANCE_VIEW.altitude.mobile
+    : DEPARTMENT_MODE_FRANCE_VIEW.altitude.desktop
+});
 
 const getCountryLayerAltitude = (admin, foundSet, selectedCountry, extrusionScale = 1) => {
   if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected * extrusionScale;
@@ -347,7 +363,7 @@ const GlobeMap = ({
       // Center and zoom out for the end screen
       globeEl.current.pointOfView(
         isDepartmentMode
-          ? { lat: 46.5, lng: 2.6, altitude: viewport.width < 768 ? 0.74 : 0.54 }
+          ? getDepartmentModeFrancePointOfView(viewport.width)
           : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
         1200
       );
@@ -396,7 +412,7 @@ const GlobeMap = ({
     } else if (isHomeScreen && globeEl.current) {
       globeEl.current.pointOfView({ altitude: viewport.width < 768 ? 2.5 : 1 }, 1000);
     } else if (isDepartmentMode && globeEl.current) {
-      globeEl.current.pointOfView({ lat: 46.5, lng: 2.6, altitude: viewport.width < 768 ? 0.74 : 0.54 }, 700);
+      globeEl.current.pointOfView(getDepartmentModeFrancePointOfView(viewport.width), 700);
     } else if (wasHomeScreenRef.current && globeEl.current) {
       globeEl.current.pointOfView({ lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.35 }, 700);
     }
@@ -1007,8 +1023,24 @@ const GlobeMap = ({
     el.style.userSelect = 'none';
 
     el.innerHTML = isDepartmentMode ? `
-      <div class="globe-label-element department-label-element" style="position: relative; width: 0; height: 0; color: ${color};">
-        <div class="department-label-dot" style="background: ${color};"></div>
+      <div
+        class="globe-label-element department-label-element"
+        style="
+          position: relative;
+          width: 0;
+          height: 0;
+          --department-label-accent: ${color};
+          --department-label-bg: ${UI_COLORS.departmentLabelBg};
+          --department-label-text: ${UI_COLORS.textMain};
+          --department-label-subtle-text: ${UI_COLORS.textMuted};
+          --department-label-border: ${UI_COLORS.departmentLabelBorder};
+          --department-label-code-text: ${UI_COLORS.textInverse};
+          --department-label-dot-shadow: ${UI_COLORS.departmentLabelDotShadow};
+          --department-label-shadow: ${UI_COLORS.departmentLabelShadow};
+          --department-label-inset-shadow: ${UI_COLORS.departmentLabelInsetShadow};
+        "
+      >
+        <div class="department-label-dot"></div>
         <div class="department-label-copy">
           <div class="department-label-main">
             <span class="department-label-code">${d.code}</span>

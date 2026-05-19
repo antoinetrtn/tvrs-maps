@@ -124,16 +124,21 @@
 
 .department-label-dot {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  left: -3px;
-  top: -3px;
+  left: -5px;
+  top: -5px;
+  background: var(--department-label-bg);
+  border: 3px solid var(--department-label-accent);
+  box-shadow:
+    0 0 0 2px var(--department-label-bg),
+    var(--department-label-dot-shadow);
 }
 
 .department-label-copy {
   position: absolute;
-  left: 8px;
+  left: 12px;
   top: 0;
   transform: translateY(-50%);
   display: flex;
@@ -141,6 +146,15 @@
   align-items: flex-start;
   max-width: 190px;
   white-space: nowrap;
+  padding: 4px 7px 5px;
+  color: var(--department-label-text);
+  background: var(--department-label-bg);
+  border: 1px solid var(--department-label-border);
+  border-radius: 7px;
+  box-shadow:
+    var(--department-label-shadow),
+    var(--department-label-inset-shadow);
+  backdrop-filter: blur(8px);
 }
 
 .department-label-main {
@@ -152,8 +166,16 @@
 
 .department-label-code {
   flex: 0 0 auto;
-  font-size: 13px;
+  min-width: 24px;
+  padding: 1px 5px 2px;
+  border-radius: 5px;
+  color: var(--department-label-code-text);
+  background: var(--department-label-accent);
+  box-shadow: 0 0 0 1px var(--department-label-bg);
+  font-size: 12px;
   font-weight: 750;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .department-label-name {
@@ -172,7 +194,7 @@
   text-overflow: ellipsis;
   font-size: 11px;
   font-weight: 400;
-  opacity: 0.7;
+  color: var(--department-label-subtle-text);
   white-space: nowrap;
 }
 
