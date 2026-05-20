@@ -1,6 +1,14 @@
 /**
- * Design System - Colors & Style Tokens
+ * Design System - Colors, Themes & Style Tokens
  */
+
+export const THEMES_LIST = [
+  { id: 'glass', name_fr: 'Verre Moderne', name_en: 'Sleek Glass' },
+  { id: 'lowpoly', name_fr: 'Low-Poly Biomes', name_en: 'Low-Poly Biomes' },
+  { id: 'synthwave', name_fr: 'Cyber Synthwave', name_en: 'Cyber Synthwave' },
+  { id: 'vintage', name_fr: 'Cartographe Rétro', name_en: 'Retro Cartographer' },
+  { id: 'blueprint', name_fr: 'Tech Hologramme', name_en: 'Tech Blueprint' }
+];
 
 export const THEME = {
   light: {
@@ -157,6 +165,200 @@ export const THEME = {
   }
 };
 
+export const THEME_OVERRIDES = {
+  glass: {},
+  lowpoly: {
+    light: {
+      mapBase: '#d9e2ec',
+      mapSea: '#bcccdc',
+      mapBorder: '#829ab1',
+      graticule: 'rgba(98, 125, 152, 0.2)',
+      globeInnerGlow: 'rgba(188, 204, 220, 0.3)'
+    },
+    dark: {
+      mapBase: '#102a43',
+      mapSea: '#07162c',
+      mapBorder: '#1f3a52',
+      graticule: 'rgba(31, 58, 82, 0.25)',
+      globeInnerGlow: 'rgba(31, 58, 82, 0.3)'
+    }
+  },
+  synthwave: {
+    light: {
+      bg: '#0f051d',
+      bgElevated: '#1c0b34',
+      bgGradientStart: '#0f051d',
+      bgGradientEnd: '#1c0b34',
+      textMain: '#00f0ff',
+      textMuted: '#ff007f',
+      accent: '#ff007f',
+      accentHover: '#ff3399',
+      glassBg: 'rgba(28, 11, 52, 0.8)',
+      glassBorder: 'rgba(0, 240, 255, 0.35)',
+      mapBase: '#1f0d3d',
+      mapSea: '#06010f',
+      mapBorder: '#ff007f',
+      mapBorderMuted: '#3d0a66',
+      gridDot: 'rgba(255, 0, 127, 0.25)',
+      graticule: '#ff007f',
+      atmosphere: '#ff007f',
+      globeEmissive: '#06010f',
+      globeSpecular: '#ff007f',
+      globeInnerGlow: '#ff007f',
+      lightingRim: '#ff007f',
+      lightingFill: '#1f0d3d',
+      decorGlowPrimary: 'rgba(255, 0, 127, 0.25)',
+      decorGlowPrimaryEnd: 'rgba(15, 5, 29, 0)',
+      decorGlowSecondary: 'rgba(0, 240, 255, 0.2)',
+      decorGlowSecondaryEnd: 'rgba(15, 5, 29, 0)'
+    },
+    dark: {
+      bg: '#0f051d',
+      bgElevated: '#1c0b34',
+      bgGradientStart: '#0f051d',
+      bgGradientEnd: '#1c0b34',
+      textMain: '#00f0ff',
+      textMuted: '#ff007f',
+      accent: '#ff007f',
+      accentHover: '#ff3399',
+      glassBg: 'rgba(28, 11, 52, 0.8)',
+      glassBorder: 'rgba(0, 240, 255, 0.35)',
+      mapBase: '#1f0d3d',
+      mapSea: '#06010f',
+      mapBorder: '#ff007f',
+      mapBorderMuted: '#3d0a66',
+      gridDot: 'rgba(255, 0, 127, 0.25)',
+      graticule: '#ff007f',
+      atmosphere: '#ff007f',
+      globeEmissive: '#06010f',
+      globeSpecular: '#ff007f',
+      globeInnerGlow: '#ff007f',
+      lightingRim: '#ff007f',
+      lightingFill: '#1f0d3d',
+      decorGlowPrimary: 'rgba(255, 0, 127, 0.25)',
+      decorGlowPrimaryEnd: 'rgba(15, 5, 29, 0)',
+      decorGlowSecondary: 'rgba(0, 240, 255, 0.2)',
+      decorGlowSecondaryEnd: 'rgba(15, 5, 29, 0)'
+    }
+  },
+  vintage: {
+    light: {
+      bg: '#f4ecd8',
+      bgElevated: '#ebdcb9',
+      bgGradientStart: '#f4ecd8',
+      bgGradientEnd: '#ebdcb9',
+      textMain: '#332211',
+      textMuted: '#7c654e',
+      accent: '#8b5a2b',
+      accentHover: '#5c3a1a',
+      glassBg: 'rgba(244, 236, 216, 0.9)',
+      glassBorder: 'rgba(139, 90, 43, 0.22)',
+      mapBase: '#fdfaf2',
+      mapSea: '#dfd3b6',
+      mapBorder: '#8b5a2b',
+      mapBorderMuted: '#c4b595',
+      gridDot: 'rgba(139, 90, 43, 0.15)',
+      graticule: '#8b5a2b',
+      atmosphere: '#dfd3b6',
+      globeEmissive: '#dfd3b6',
+      globeSpecular: '#dfd3b6',
+      globeInnerGlow: '#8b5a2b',
+      lightingRim: '#ebdcb9',
+      lightingFill: '#dfd3b6',
+      decorGlowPrimary: 'rgba(139, 90, 43, 0.15)',
+      decorGlowPrimaryEnd: 'rgba(244, 236, 216, 0)',
+      decorGlowSecondary: 'rgba(124, 101, 78, 0.08)',
+      decorGlowSecondaryEnd: 'rgba(244, 236, 216, 0)'
+    },
+    dark: {
+      bg: '#1f160e',
+      bgElevated: '#2d2015',
+      bgGradientStart: '#1f160e',
+      bgGradientEnd: '#2d2015',
+      textMain: '#dfd3b6',
+      textMuted: '#b0a080',
+      accent: '#bfae8f',
+      accentHover: '#dfd3b6',
+      glassBg: 'rgba(45, 32, 21, 0.85)',
+      glassBorder: 'rgba(191, 174, 143, 0.2)',
+      mapBase: '#2a1e14',
+      mapSea: '#120d09',
+      mapBorder: '#b0a080',
+      mapBorderMuted: '#3d2b1d',
+      gridDot: 'rgba(176, 160, 128, 0.15)',
+      graticule: '#b0a080',
+      atmosphere: '#120d09',
+      globeEmissive: '#120d09',
+      globeSpecular: '#2a1e14',
+      globeInnerGlow: '#b0a080',
+      lightingRim: '#2d2015',
+      lightingFill: '#120d09',
+      decorGlowPrimary: 'rgba(176, 160, 128, 0.1)',
+      decorGlowPrimaryEnd: 'rgba(31, 22, 14, 0)',
+      decorGlowSecondary: 'rgba(45, 32, 21, 0.15)',
+      decorGlowSecondaryEnd: 'rgba(31, 22, 14, 0)'
+    }
+  },
+  blueprint: {
+    light: {
+      bg: '#001122',
+      bgElevated: '#002244',
+      bgGradientStart: '#001122',
+      bgGradientEnd: '#002244',
+      textMain: '#00ffff',
+      textMuted: '#00aaff',
+      accent: '#00ffff',
+      accentHover: '#80ffff',
+      glassBg: 'rgba(0, 34, 68, 0.85)',
+      glassBorder: 'rgba(0, 255, 255, 0.3)',
+      mapBase: '#001e3d',
+      mapSea: '#000b14',
+      mapBorder: '#00ffff',
+      mapBorderMuted: '#003366',
+      gridDot: 'rgba(0, 255, 255, 0.2)',
+      graticule: '#0088ff',
+      atmosphere: '#0088ff',
+      globeEmissive: '#000b14',
+      globeSpecular: '#0088ff',
+      globeInnerGlow: '#00ffff',
+      lightingRim: '#00ffff',
+      lightingFill: '#001e3d',
+      decorGlowPrimary: 'rgba(0, 255, 255, 0.25)',
+      decorGlowPrimaryEnd: 'rgba(0, 17, 34, 0)',
+      decorGlowSecondary: 'rgba(0, 170, 255, 0.15)',
+      decorGlowSecondaryEnd: 'rgba(0, 17, 34, 0)'
+    },
+    dark: {
+      bg: '#001122',
+      bgElevated: '#002244',
+      bgGradientStart: '#001122',
+      bgGradientEnd: '#002244',
+      textMain: '#00ffff',
+      textMuted: '#00aaff',
+      accent: '#00ffff',
+      accentHover: '#80ffff',
+      glassBg: 'rgba(0, 34, 68, 0.85)',
+      glassBorder: 'rgba(0, 255, 255, 0.3)',
+      mapBase: '#001e3d',
+      mapSea: '#000b14',
+      mapBorder: '#00ffff',
+      mapBorderMuted: '#003366',
+      gridDot: 'rgba(0, 255, 255, 0.2)',
+      graticule: '#0088ff',
+      atmosphere: '#0088ff',
+      globeEmissive: '#000b14',
+      globeSpecular: '#0088ff',
+      globeInnerGlow: '#00ffff',
+      lightingRim: '#00ffff',
+      lightingFill: '#001e3d',
+      decorGlowPrimary: 'rgba(0, 255, 255, 0.25)',
+      decorGlowPrimaryEnd: 'rgba(0, 17, 34, 0)',
+      decorGlowSecondary: 'rgba(0, 170, 255, 0.15)',
+      decorGlowSecondaryEnd: 'rgba(0, 17, 34, 0)'
+    }
+  }
+};
+
 export const GLOBE_STYLE = {
   lighting: {
     sideOpacity: {
@@ -215,7 +417,6 @@ export const GLOBE_STYLE = {
     lightOpacity: 0.48
   }
 };
-
 
 export const CONTINENT_COLORS = {
   light: {
@@ -322,8 +523,15 @@ export const STYLE_TOKENS = {
   }
 };
 
-export const getThemeCssVariables = (themeName = 'dark') => {
-  const theme = THEME[themeName] || THEME.dark;
+export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass') => {
+  const baseTheme = THEME[systemTheme] || THEME.dark;
+  const overrides = THEME_OVERRIDES[globeTheme]?.[systemTheme] || {};
+  
+  // Merge theme overrides
+  const theme = {
+    ...baseTheme,
+    ...overrides
+  };
 
   return {
     '--bg-color': theme.bg,
@@ -381,6 +589,11 @@ export const getThemeCssVariables = (themeName = 'dark') => {
     '--decor-glow-primary-end': theme.decorGlowPrimaryEnd,
     '--decor-glow-secondary': theme.decorGlowSecondary,
     '--decor-glow-secondary-end': theme.decorGlowSecondaryEnd,
+    '--theme-dot-glass': '#0ea5e9',
+    '--theme-dot-lowpoly': '#10b981',
+    '--theme-dot-synthwave': '#ff007f',
+    '--theme-dot-vintage': '#bfae8f',
+    '--theme-dot-blueprint': '#00ffff',
     '--radius-sm': STYLE_TOKENS.radius.sm,
     '--radius-md': STYLE_TOKENS.radius.md,
     '--radius-lg': STYLE_TOKENS.radius.lg,

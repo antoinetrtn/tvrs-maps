@@ -57,6 +57,7 @@ function App() {
     }
     return 'dark';
   }); // System default theme
+  const [globeTheme, setGlobeTheme] = useState('glass');
   
   // New States for Advanced UX
   const [menuOpen, setMenuOpen] = useState(false);
@@ -540,7 +541,7 @@ function App() {
   }, [viewport.width]);
 
   return (
-    <div className={`app-container ${theme}`} data-theme={theme} style={getThemeCssVariables(theme)}>
+    <div className={`app-container ${theme}`} data-theme={theme} style={getThemeCssVariables(theme, globeTheme)}>
       {currentScreen === 'home' ? (
         <HomeScreen 
           onStartGame={startGame} 
@@ -552,6 +553,8 @@ function App() {
           setGameDuration={setGameDuration}
           globeLightingEnabled={globeLightingEnabled}
           setGlobeLightingEnabled={setGlobeLightingEnabled}
+          globeTheme={globeTheme}
+          setGlobeTheme={setGlobeTheme}
         />
       ) : (
         !showEndScreen && (
@@ -612,6 +615,8 @@ function App() {
             viewport={viewport}
             isKeyboardMode={effectiveKeyboardMode}
             selectedCountry={selectedCountry}
+            globeTheme={globeTheme}
+            setGlobeTheme={setGlobeTheme}
           />
         )
       )}
@@ -649,6 +654,7 @@ function App() {
           onPreserveInputFocus={preserveInputFocus}
           globeLightingEnabled={globeLightingEnabled}
           activeDataMap={activeDataMap}
+          globeTheme={globeTheme}
         />
       )}
 

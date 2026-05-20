@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
-import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Sparkles, Hash } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Sparkles, Hash, Palette } from 'lucide-react';
 import Logo from './Logo';
+import { THEMES_LIST } from './designSystem';
 import './HomeScreen.css';
 
 const HomeScreen = ({
@@ -12,10 +13,13 @@ const HomeScreen = ({
   gameDuration,
   setGameDuration,
   globeLightingEnabled,
-  setGlobeLightingEnabled
+  setGlobeLightingEnabled,
+  globeTheme,
+  setGlobeTheme
 }) => {
   const cardRef = useRef(null);
   const isDraggingRef = useRef(false);
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
   const resetCardTilt = () => {
     const card = cardRef.current;
@@ -169,6 +173,33 @@ const HomeScreen = ({
         >
           <Sparkles size={20} />
         </button>
+
+        <div className="globe-theme-container">
+          <button 
+            className={`theme-toggle-btn glass-panel ${themeMenuOpen ? 'active' : ''}`}
+            onClick={() => setThemeMenuOpen(prev => !prev)}
+            title={lang === 'fr' ? 'Thème du globe' : 'Globe theme'}
+          >
+            <Palette size={20} />
+          </button>
+          {themeMenuOpen && (
+            <div className="globe-theme-menu glass-panel animation-fade-in">
+              {THEMES_LIST.map(t => (
+                <button 
+                  key={t.id} 
+                  className={`globe-theme-menu-item ${globeTheme === t.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setGlobeTheme(t.id);
+                    setThemeMenuOpen(false);
+                  }}
+                >
+                  <span className={`theme-dot ${t.id}`} />
+                  <span className="theme-name">{lang === 'fr' ? t.name_fr : t.name_en}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

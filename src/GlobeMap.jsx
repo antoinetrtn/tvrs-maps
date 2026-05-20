@@ -3,6 +3,8 @@ import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
 import { THEME, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE } from './designSystem';
+import { createBiomeAsset, disposeBiomeCache } from './LowPolyBiomes';
+
 
 const getFeatureAdmin = (feature) => feature?.properties?.code || feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
 
@@ -207,7 +209,8 @@ const GlobeMap = ({
   isPerfectScore,
   onPreserveInputFocus,
   globeLightingEnabled = true,
-  activeDataMap
+  activeDataMap,
+  globeTheme = 'glass'
 }) => {
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
@@ -753,15 +756,20 @@ const GlobeMap = ({
     const color = kind === 'cap' ? getPolygonColor(d) : getPolygonSideColor(d);
     let material = cache.get(admin);
 
-    if (material && !material.isMeshPhongMaterial) {
+    const ExpectedMaterialClass = perfProfile?.isMobile ? THREE.MeshLambertMaterial : THREE.MeshPhongMaterial;
+    const isCorrectClass = perfProfile?.isMobile
+      ? material && material.isMeshLambertMaterial
+      : material && material.isMeshPhongMaterial;
+
+    if (material && !isCorrectClass) {
       material.dispose();
       cache.delete(admin);
       material = null;
     }
 
     if (!material) {
-      material = new THREE.MeshPhongMaterial({
-        side: kind === 'cap' ? THREE.DoubleSide : THREE.DoubleSide, // Ensure sides are visible from all angles
+      material = new ExpectedMaterialClass({
+        side: THREE.DoubleSide, // Ensure sides are visible from all angles
         blending: THREE.NormalBlending,
         depthWrite: true // Re-enable depthWrite for solid volume feel
       });
@@ -770,6 +778,27 @@ const GlobeMap = ({
 
     material.color.set(color);
 
+    // DepthWrite is critical for visibility over the globe sphere
+    material.depthWrite = true; 
+    
+    // Set polygonOffset to false to eliminate holes and gaps perfectly
+    material.polygonOffset = false;
+
+    // Handle flat shading for the low-poly theme
+    material.flatShading = (globeTheme === 'lowpoly');
+
+    // Handle wireframe/opacity for the hologram blueprint theme
+    const isFound = foundSet.has(admin) || mode === 'learn';
+    if (globeTheme === 'blueprint') {
+      material.wireframe = !isFound && admin !== selectedCountry;
+      material.opacity = isFound || admin === selectedCountry ? 0.45 : 0.15;
+      material.transparent = true;
+    } else {
+      material.wireframe = false;
+      material.opacity = 1;
+      material.transparent = false;
+    }
+
     if (isDepartmentMode && d.isGhostCountry) {
       material.opacity = 1;
       material.transparent = false;
@@ -777,65 +806,73 @@ const GlobeMap = ({
       material.polygonOffset = true;
       material.polygonOffsetFactor = 1.5;
       material.polygonOffsetUnits = 1.5;
-      material.specular.set(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink);
-      material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
-      material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
-      material.shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
+      if (material.isMeshPhongMaterial) {
+        material.specular.set(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink);
+        material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
+        material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
+        material.shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
+      } else {
+        material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
+        material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
+      }
       material.needsUpdate = true;
       return material;
     }
 
     if (isDepartmentMode) {
-      material.specular.set(UI_COLORS.mapBorder);
-      material.emissive.set(color);
-      material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
-      material.shininess = kind === 'cap' ? 2 : 1;
-      material.flatShading = false;
+      if (material.isMeshPhongMaterial) {
+        material.specular.set(UI_COLORS.mapBorder);
+        material.emissive.set(color);
+        material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
+        material.shininess = kind === 'cap' ? 2 : 1;
+      } else {
+        material.emissive.set(color);
+        material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
+      }
+      material.flatShading = (globeTheme === 'lowpoly');
       material.needsUpdate = true;
       return material;
     }
     
-    material.opacity = 1;
-    material.transparent = false;
-    
-    // DepthWrite is critical for visibility over the globe sphere
-    // We keep it true to ensure the "glass" has volume and occludes the sea
-    material.depthWrite = true; 
-    
-    // Apply offset to both to push the entire volume slightly back, 
-    // letting the stroke (lines) always render on top.
-    material.polygonOffset = true;
-    material.polygonOffsetFactor = 1;
-    material.polygonOffsetUnits = 1;
-    
     if (globeLightingEnabled) {
-      material.specular.set(UI_COLORS.mapBorder);
       material.emissive.set(color);
       
       const baseEmissiveIntensity = (kind === 'cap'
         ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
         : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark));
       
-      // Glass effect: boost emissive in dark mode to recover light
-      const emissiveBoost = !isLight ? 0.18 : 0.05;
+      // Glass/Neon effect: boost emissive in dark mode or synthwave theme
+      const emissiveBoost = globeTheme === 'synthwave'
+        ? (admin === selectedCountry ? 0.35 : 0.22)
+        : (!isLight ? 0.18 : 0.05);
+
       material.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
         admin === selectedCountry ? 0.1 : 0
       );
       
-      const baseShininess = (kind === 'cap'
-        ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
-        : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
-      
-      material.shininess = baseShininess + (isLight ? 0 : 25);
+      if (material.isMeshPhongMaterial) {
+        material.specular.set(admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder);
+        const baseShininess = (kind === 'cap'
+          ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
+          : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
+        
+        // Polished premium shine for selected country, matte for vintage
+        material.shininess = globeTheme === 'vintage' ? 0 : (baseShininess + (admin === selectedCountry ? 30 : (isLight ? 0 : 25)));
+        if (globeTheme === 'vintage') {
+          material.specular.set(0x000000);
+        }
+      }
     } else {
       material.emissive.set(0x000000);
       material.emissiveIntensity = 0;
-      material.shininess = 0.7;
+      if (material.isMeshPhongMaterial) {
+        material.shininess = 0.7;
+      }
     }
     
     material.needsUpdate = true;
     return material;
-  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry, isDepartmentMode]);
+  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry, isDepartmentMode, foundSet, globeTheme, mode, perfProfile]);
 
   const getPolygonCapMaterial = useCallback((d) => (
     getPolygonMaterial(d, 'cap')
@@ -1097,6 +1134,106 @@ const GlobeMap = ({
     return el;
   }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isDepartmentMode]);
 
+  const biomePointsCacheRef = useRef({});
+
+  // Clean biome cache on restart or theme switch
+  useEffect(() => {
+    if (foundList.length === 0) {
+      biomePointsCacheRef.current = {};
+      disposeBiomeCache();
+    }
+  }, [foundList]);
+
+  // Clean biome cache on unmount
+  useEffect(() => {
+    return () => {
+      biomePointsCacheRef.current = {};
+      disposeBiomeCache();
+    };
+  }, []);
+
+  const getBiomeAssetsData = useMemo(() => {
+    if (globeTheme !== 'lowpoly' || isHomeScreen) return [];
+
+    const assets = [];
+    foundList.forEach(admin => {
+      const data = gameDataMap[admin];
+      if (!data || data.lat === undefined) return;
+
+      const size = countrySizes[admin] || 1;
+      const numModels = isDepartmentMode ? 1 : Math.min(5, Math.max(1, Math.floor(size * 0.3)));
+
+      if (!biomePointsCacheRef.current[admin]) {
+        const generated = [];
+        const featureEntry = selectableFeatureIndex.find(entry => entry.admin === admin);
+        
+        let biomeType = data.region || 'Unknown';
+        if (admin === 'France' || isDepartmentMode) {
+          biomeType = 'France';
+        }
+
+        if (featureEntry && featureEntry.polygons.length > 0) {
+          const bounds = featureEntry.bounds;
+          for (let i = 0; i < numModels; i++) {
+            let point = null;
+            // Up to 15 tries to sample a point inside the polygon
+            for (let attempt = 0; attempt < 15; attempt++) {
+              const testLng = bounds.minLng + Math.random() * (bounds.maxLng - bounds.minLng);
+              const testLat = bounds.minLat + Math.random() * (bounds.maxLat - bounds.minLat);
+              if (featureEntry.polygons.some(poly => pointInPolygon(testLng, testLat, poly))) {
+                point = { lat: testLat, lng: testLng };
+                break;
+              }
+            }
+            // Fallback to center with a minor jitter
+            if (!point) {
+              point = {
+                lat: data.lat + (Math.random() - 0.5) * Math.min(0.2, size * 0.2),
+                lng: data.lng + (Math.random() - 0.5) * Math.min(0.2, size * 0.2)
+              };
+            }
+            generated.push({
+              admin,
+              lat: point.lat,
+              lng: point.lng,
+              biomeType,
+              scale: 0.8 + Math.random() * 0.4,
+              rotation: Math.random() * Math.PI * 2
+            });
+          }
+        } else {
+          // No boundary coords, fallback to center point
+          generated.push({
+            admin,
+            lat: data.lat,
+            lng: data.lng,
+            biomeType,
+            scale: 0.9,
+            rotation: Math.random() * Math.PI * 2
+          });
+        }
+        biomePointsCacheRef.current[admin] = generated;
+      }
+
+      assets.push(...biomePointsCacheRef.current[admin]);
+    });
+
+    return assets;
+  }, [globeTheme, foundList, gameDataMap, countrySizes, selectableFeatureIndex, isDepartmentMode, isHomeScreen]);
+
+  const createBiomeThreeObject = useCallback((d) => {
+    const asset = createBiomeAsset(d.biomeType, theme);
+    // Scale the custom model down to fit the globe nicely
+    asset.scale.setScalar(d.scale * 0.38);
+    return asset;
+  }, [theme]);
+
+  const updateBiomeThreeObject = useCallback((obj, d) => {
+    // Rotate to point away from the sphere center
+    obj.rotation.x = Math.PI / 2;
+    obj.rotation.y = d.rotation;
+  }, []);
+
   const ringsData = useMemo(() => {
     if (selectedCountry) {
       const mapped = gameDataMap[selectedCountry];
@@ -1242,6 +1379,23 @@ const GlobeMap = ({
       studioRight,
       innerGlow
     } = globeLightingRef.current;
+
+    const isMobile = perfProfile?.isMobile;
+
+    if (isMobile) {
+      rimLight.visible = false;
+      studioLight.visible = false;
+      studioLeft.visible = false;
+      studioRight.visible = false;
+      innerGlow.visible = false;
+    } else {
+      rimLight.visible = true;
+      studioLight.visible = true;
+      studioLeft.visible = true;
+      studioRight.visible = true;
+      innerGlow.visible = true;
+    }
+
     keyLight.intensity = isLight ? 0.12 : 0.16;
     keyLight.position.set(-3.5, 2.4, 4.2);
     rimLight.intensity = isLight ? 0.14 : 0.24;
@@ -1262,7 +1416,7 @@ const GlobeMap = ({
     innerGlow.material.opacity = isLight ? 0.06 : 0.11;
     innerGlow.material.needsUpdate = true;
     return true;
-  }, [isLight, globeLightingEnabled, UI_COLORS]);
+  }, [isLight, globeLightingEnabled, UI_COLORS, perfProfile?.isMobile]);
 
   useEffect(() => {
     updateGlobeLighting();
@@ -1439,6 +1593,13 @@ const GlobeMap = ({
     selectCountryAtLngLat(coords.lng, coords.lat);
   }, [selectCountryAtLngLat]);
 
+  const effectiveResolution = useMemo(() => {
+    if (globeTheme === 'lowpoly') {
+      return selectedCountry ? 2 : 12;
+    }
+    return perfProfile?.polygonCapCurvatureResolution ?? 8;
+  }, [globeTheme, selectedCountry, perfProfile]);
+
   return (
     <div 
       className={`globe-map-shell ${isHomeScreen ? 'home-layout' : 'game-layout'}`}
@@ -1539,7 +1700,7 @@ const GlobeMap = ({
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
             polygonsData={visibleRenderCountriesData}
             polygonGeoJsonGeometry="renderGeometry"
-            polygonCapCurvatureResolution={perfProfile?.polygonCapCurvatureResolution ?? 8}
+            polygonCapCurvatureResolution={effectiveResolution}
             polygonAltitude={getPolygonAltitude}
             polygonCapColor={(d) => safeColor(getPolygonColor(d))}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}
@@ -1567,6 +1728,9 @@ const GlobeMap = ({
             ringPropagationSpeed={d => d.speed}
             ringRepeatPeriod={d => d.repeat}
             ringAltitude={getSelectionEffectAltitude}
+            customLayerData={getBiomeAssetsData}
+            customThreeObject={createBiomeThreeObject}
+            customThreeObjectUpdate={updateBiomeThreeObject}
             onBackgroundClick={isHomeScreen ? undefined : () => selectCountry(null)}
           />
         </div>
