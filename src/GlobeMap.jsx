@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
-import { THEME, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE } from './designSystem';
+import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE } from './designSystem';
 import { createBiomeAsset, disposeBiomeCache } from './LowPolyBiomes';
 
 
@@ -582,7 +582,14 @@ const GlobeMap = ({
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
   const REGION_COLORS_ATTENUATED = useMemo(() => CONTINENT_COLORS_ATTENUATED[theme] || CONTINENT_COLORS_ATTENUATED.dark, [theme]);
   const REGION_COLORS_LABELS = useMemo(() => CONTINENT_COLORS_LABELS[theme] || CONTINENT_COLORS_LABELS.dark, [theme]);
-  const UI_COLORS = useMemo(() => THEME[theme] || THEME.dark, [theme]);
+  const UI_COLORS = useMemo(() => {
+    const baseTheme = THEME[theme] || THEME.dark;
+    const overrides = THEME_OVERRIDES[globeTheme]?.[theme] || {};
+    return {
+      ...baseTheme,
+      ...overrides
+    };
+  }, [theme, globeTheme]);
 
   const foundSet = useMemo(() => new Set(foundList), [foundList]);
 
@@ -1221,6 +1228,19 @@ const GlobeMap = ({
     return assets;
   }, [globeTheme, foundList, gameDataMap, countrySizes, selectableFeatureIndex, isDepartmentMode, isHomeScreen]);
 
+  const getBiomeAltitude = useCallback((d) => {
+    const admin = d.admin;
+    if (isDepartmentMode) {
+      const alt = getDepartmentLayerAltitude(admin, foundSet, selectedCountry);
+      return admin === selectedCountry ? alt * (1 + pulse * 0.02) + 0.0005 : alt + 0.0005;
+    }
+    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, globeLightingEnabled ? 1.8 : 1);
+    if (admin === selectedCountry) {
+      return altitude * (1 + pulse * 0.08) + 0.0015; // Slightly above cap to prevent clipping
+    }
+    return altitude + 0.0015;
+  }, [globeLightingEnabled, selectedCountry, foundSet, pulse, isDepartmentMode]);
+
   const createBiomeThreeObject = useCallback((d) => {
     const asset = createBiomeAsset(d.biomeType, theme);
     // Scale the custom model down to fit the globe nicely
@@ -1595,10 +1615,10 @@ const GlobeMap = ({
 
   const effectiveResolution = useMemo(() => {
     if (globeTheme === 'lowpoly') {
-      return selectedCountry ? 2 : 12;
+      return 3;
     }
     return perfProfile?.polygonCapCurvatureResolution ?? 8;
-  }, [globeTheme, selectedCountry, perfProfile]);
+  }, [globeTheme, perfProfile]);
 
   return (
     <div 
@@ -1692,7 +1712,7 @@ const GlobeMap = ({
             atmosphereColor={safeColor(UI_COLORS.atmosphere)}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
-            backgroundColor={safeColor(UI_COLORS.bg)}
+            backgroundColor="transparent"
             lineHoverPrecision={0}
             showGraticules={true}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
@@ -1729,6 +1749,7 @@ const GlobeMap = ({
             ringRepeatPeriod={d => d.repeat}
             ringAltitude={getSelectionEffectAltitude}
             customLayerData={getBiomeAssetsData}
+            customLayerAltitude={getBiomeAltitude}
             customThreeObject={createBiomeThreeObject}
             customThreeObjectUpdate={updateBiomeThreeObject}
             onBackgroundClick={isHomeScreen ? undefined : () => selectCountry(null)}
