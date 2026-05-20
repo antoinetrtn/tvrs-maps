@@ -30,22 +30,121 @@ export const disposeBiomeCache = () => {
   cache.materials = {};
 };
 
+const addLake = (group, tone = 'temperate') => {
+  const waterMat = getMaterial(`lake-${tone}`, () => new THREE.MeshLambertMaterial({
+    color: tone === 'ice' ? 0xb8f1ff : 0x2f9fd8,
+    flatShading: true
+  }));
+  const shoreMat = getMaterial(`shore-${tone}`, () => new THREE.MeshLambertMaterial({
+    color: tone === 'ice' ? 0xe7f8fb : 0x9a8758,
+    flatShading: true
+  }));
+  const shore = new THREE.Mesh(
+    getGeometry('lakeShore', () => new THREE.CylinderGeometry(0.24, 0.28, 0.025, 7)),
+    shoreMat
+  );
+  shore.position.y = 0.012;
+  shore.scale.set(1.15, 1, 0.72);
+  group.add(shore);
+
+  const water = new THREE.Mesh(
+    getGeometry('lakeWater', () => new THREE.CylinderGeometry(0.2, 0.23, 0.03, 7)),
+    waterMat
+  );
+  water.position.y = 0.03;
+  water.scale.set(1.1, 1, 0.66);
+  water.rotation.y = 0.35;
+  group.add(water);
+};
+
+const addRockCluster = (group, tone = 'stone') => {
+  const rockMat = getMaterial(`rocks-${tone}`, () => new THREE.MeshLambertMaterial({
+    color: tone === 'warm' ? 0xb36b32 : tone === 'ice' ? 0xc9e2e8 : 0x7d8272,
+    flatShading: true
+  }));
+  const rockGeo = getGeometry('clusterRock', () => new THREE.DodecahedronGeometry(0.09, 0));
+  for (let i = 0; i < 3; i++) {
+    const rock = new THREE.Mesh(rockGeo, rockMat);
+    rock.position.set((i - 1) * 0.11, 0.045 + i * 0.01, (i % 2) * 0.07);
+    rock.scale.set(1 + i * 0.18, 0.7 + i * 0.16, 0.85 + i * 0.12);
+    rock.rotation.set(0.2 * i, 0.8 * i, 0.1 * i);
+    group.add(rock);
+  }
+};
+
+const addDeer = (group) => {
+  const bodyMat = getMaterial('deerBody', () => new THREE.MeshLambertMaterial({ color: 0x8a5a2f, flatShading: true }));
+  const antlerMat = getMaterial('deerAntler', () => new THREE.MeshLambertMaterial({ color: 0xe6d2a3, flatShading: true }));
+  const body = new THREE.Mesh(getGeometry('deerBody', () => new THREE.BoxGeometry(0.22, 0.1, 0.09)), bodyMat);
+  body.position.y = 0.13;
+  group.add(body);
+
+  const head = new THREE.Mesh(getGeometry('deerHead', () => new THREE.BoxGeometry(0.08, 0.075, 0.07)), bodyMat);
+  head.position.set(0.13, 0.18, 0);
+  group.add(head);
+
+  const legGeo = getGeometry('deerLeg', () => new THREE.CylinderGeometry(0.012, 0.014, 0.12, 4));
+  [-0.07, 0.07].forEach(x => {
+    [-0.028, 0.028].forEach(z => {
+      const leg = new THREE.Mesh(legGeo, bodyMat);
+      leg.position.set(x, 0.06, z);
+      group.add(leg);
+    });
+  });
+
+  const antlerGeo = getGeometry('deerAntler', () => new THREE.CylinderGeometry(0.006, 0.006, 0.1, 4));
+  [-0.025, 0.025].forEach(z => {
+    const antler = new THREE.Mesh(antlerGeo, antlerMat);
+    antler.position.set(0.16, 0.245, z);
+    antler.rotation.z = -0.35;
+    group.add(antler);
+  });
+};
+
+const addDeciduousTree = (group, trunkMat, foliageKey = 'deciduousFoliage', foliageColor = 0x4f7942) => {
+  const trunkGeo = getGeometry(`${foliageKey}Trunk`, () => new THREE.CylinderGeometry(0.025, 0.04, 0.16, 4));
+  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+  trunk.position.y = 0.08;
+  group.add(trunk);
+
+  const foliageMat = getMaterial(foliageKey, () => new THREE.MeshLambertMaterial({ color: foliageColor, flatShading: true }));
+  const leafGeo = getGeometry(`${foliageKey}Leaves`, () => new THREE.DodecahedronGeometry(0.13, 0));
+  const leaves = new THREE.Mesh(leafGeo, foliageMat);
+  leaves.position.y = 0.2;
+  leaves.scale.set(1.1, 0.9, 1);
+  group.add(leaves);
+};
+
 /**
  * Procedural low-poly 3D models generators.
  * All models have their origin at the base (Y = 0) to align perfectly with the globe surface.
  */
-export const createBiomeAsset = (type, themeName = 'dark') => {
+export const createBiomeAsset = (type, themeName = 'dark', variant = null) => {
   const isLight = themeName === 'light';
   const group = new THREE.Group();
-  group.name = `biome-asset-${type}`;
+  group.name = `biome-asset-${type}-${variant || 'default'}`;
 
   // Common materials
   const trunkMat = getMaterial('trunk', () => new THREE.MeshLambertMaterial({ color: 0x5c4033 }));
   const sandRockMat = getMaterial('sandRock', () => new THREE.MeshLambertMaterial({ color: 0xc2b280, flatShading: true }));
   const canyonRockMat = getMaterial('canyonRock', () => new THREE.MeshLambertMaterial({ color: 0xc04000, flatShading: true }));
+
+  if (variant === 'lake') {
+    addLake(group);
+  } else if (variant === 'iceLake') {
+    addLake(group, 'ice');
+  } else if (variant === 'rocks') {
+    addRockCluster(group, type === 'Africa' || type === 'Americas' ? 'warm' : type === 'Antarctic' ? 'ice' : 'stone');
+  } else if (variant === 'deer') {
+    addDeer(group);
+  } else {
   
   switch (type) {
     case 'Europe': { // Green Pine Tree
+      if (variant === 'deciduous') {
+        addDeciduousTree(group, trunkMat, 'europeDeciduous', 0x5f8f4a);
+        break;
+      }
       const trunkGeo = getGeometry('pineTrunk', () => new THREE.CylinderGeometry(0.04, 0.05, 0.2, 4));
       const trunk = new THREE.Mesh(trunkGeo, trunkMat);
       trunk.position.y = 0.1;
@@ -60,8 +159,7 @@ export const createBiomeAsset = (type, themeName = 'dark') => {
     }
 
     case 'Africa': { // Acacia or Cactus
-      // 50% chance of acacia, 50% cactus
-      if (Math.random() > 0.5) {
+      if (variant !== 'cactus') {
         // Low-poly Acacia
         const trunkGeo = getGeometry('acaciaTrunk', () => new THREE.CylinderGeometry(0.03, 0.05, 0.35, 4));
         const trunk = new THREE.Mesh(trunkGeo, trunkMat);
@@ -104,7 +202,7 @@ export const createBiomeAsset = (type, themeName = 'dark') => {
     }
 
     case 'Americas': { // Tall Pine Tree or Canyon rock spire
-      if (Math.random() > 0.4) {
+      if (variant !== 'canyon') {
         // Redwoods/Conifer
         const trunkGeo = getGeometry('tallTrunk', () => new THREE.CylinderGeometry(0.03, 0.05, 0.25, 4));
         const trunk = new THREE.Mesh(trunkGeo, trunkMat);
@@ -133,7 +231,7 @@ export const createBiomeAsset = (type, themeName = 'dark') => {
     }
 
     case 'Asia': { // Cherry Blossom (Sakura) or Bamboo
-      if (Math.random() > 0.5) {
+      if (variant !== 'bamboo') {
         // Sakura
         const trunkGeo = getGeometry('sakuraTrunk', () => new THREE.CylinderGeometry(0.04, 0.06, 0.22, 4));
         const trunk = new THREE.Mesh(trunkGeo, trunkMat);
@@ -201,16 +299,19 @@ export const createBiomeAsset = (type, themeName = 'dark') => {
     }
 
     case 'France': { // Cute small low poly deciduous tree (green / yellow)
-      const trunkGeo = getGeometry('franceTrunk', () => new THREE.CylinderGeometry(0.025, 0.04, 0.15, 4));
-      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-      trunk.position.y = 0.075;
-      group.add(trunk);
-
-      const foliageMat = getMaterial('franceFoliage', () => new THREE.MeshLambertMaterial({ color: 0x4f7942, flatShading: true }));
-      const leafGeo = getGeometry('franceLeaves', () => new THREE.DodecahedronGeometry(0.12, 0));
-      const leaves = new THREE.Mesh(leafGeo, foliageMat);
-      leaves.position.set(0, 0.18, 0);
-      group.add(leaves);
+      if (variant === 'pine') {
+        const trunkGeo = getGeometry('francePineTrunk', () => new THREE.CylinderGeometry(0.025, 0.04, 0.18, 4));
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = 0.09;
+        group.add(trunk);
+        const foliageMat = getMaterial('francePineFoliage', () => new THREE.MeshLambertMaterial({ color: 0x356b3a, flatShading: true }));
+        const foliageGeo = getGeometry('francePineFoliage', () => new THREE.CylinderGeometry(0, 0.16, 0.32, 4));
+        const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+        foliage.position.y = 0.28;
+        group.add(foliage);
+      } else {
+        addDeciduousTree(group, trunkMat, 'franceFoliage', 0x4f7942);
+      }
       break;
     }
 
@@ -223,6 +324,7 @@ export const createBiomeAsset = (type, themeName = 'dark') => {
       group.add(rock);
       break;
     }
+  }
   }
 
   // Force frustum culling on all child meshes

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
-import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE } from './designSystem';
+import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, LOW_POLY_TERRAIN_COLORS, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor } from './designSystem';
 import { createBiomeAsset, disposeBiomeCache } from './LowPolyBiomes';
 
 
@@ -168,6 +168,67 @@ const DEPARTMENT_MODE_FRANCE_VIEW = {
     desktop: 0.42
   }
 };
+const BIOME_SCENE_SCALE = 9.2;
+const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;
+const BIOME_SAMPLE_CANDIDATES = 8;
+const BIOME_SAMPLE_ATTEMPTS = 28;
+const BIOME_VARIANTS = {
+  Europe: ['pine', 'deciduous', 'rocks', 'deer'],
+  Africa: ['acacia', 'cactus', 'rocks', 'deer'],
+  Americas: ['redwood', 'canyon', 'pine', 'rocks', 'deer'],
+  Asia: ['sakura', 'bamboo', 'rocks', 'deer'],
+  Oceania: ['palm', 'rocks', 'deer'],
+  Antarctic: ['iceberg', 'rocks'],
+  France: ['deciduous', 'pine', 'rocks'],
+  Unknown: ['rocks']
+};
+
+const getBiomeModelCount = (size, isDepartmentMode) => {
+  if (isDepartmentMode) return 1;
+  return Math.min(10, Math.max(2, Math.ceil(size * 0.5)));
+};
+
+const getBiomeVariant = (biomeType) => {
+  const variants = BIOME_VARIANTS[biomeType] || BIOME_VARIANTS.Unknown;
+  return variants[Math.floor(Math.random() * variants.length)];
+};
+
+const getBiomeFallbackPoint = (data, size) => ({
+  lat: data.lat + (Math.random() - 0.5) * Math.min(0.55, size * 0.22),
+  lng: data.lng + (Math.random() - 0.5) * Math.min(0.55, size * 0.22)
+});
+
+const getSampledBiomePoint = (featureEntry, data, size, generated) => {
+  if (!featureEntry?.polygons?.length) return getBiomeFallbackPoint(data, size);
+
+  const bounds = featureEntry.bounds;
+  let bestPoint = null;
+  let bestDistance = -1;
+
+  for (let candidate = 0; candidate < BIOME_SAMPLE_CANDIDATES; candidate++) {
+    let point = null;
+    for (let attempt = 0; attempt < BIOME_SAMPLE_ATTEMPTS; attempt++) {
+      const testLng = bounds.minLng + Math.random() * (bounds.maxLng - bounds.minLng);
+      const testLat = bounds.minLat + Math.random() * (bounds.maxLat - bounds.minLat);
+      if (featureEntry.polygons.some(poly => pointInPolygon(testLng, testLat, poly))) {
+        point = { lat: testLat, lng: testLng };
+        break;
+      }
+    }
+    if (!point) continue;
+
+    const nearestDistance = generated.length
+      ? Math.min(...generated.map(existing => getLngLatDistance(point.lng, point.lat, existing.lng, existing.lat)))
+      : Infinity;
+
+    if (nearestDistance > bestDistance) {
+      bestDistance = nearestDistance;
+      bestPoint = point;
+    }
+  }
+
+  return bestPoint || getBiomeFallbackPoint(data, size);
+};
 
 const getDepartmentModeFrancePointOfView = (width) => ({
   lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
@@ -255,12 +316,7 @@ const GlobeMap = ({
     return () => cancelAnimationFrame(animationId);
   }, [selectedCountry]);
 
-  const safeColor = useCallback((c) => {
-    if (typeof c !== 'string' || !c || c === 'transparent') return THEME.dark.paper;
-    // If it's a valid hex, rgb or rgba, return it. Otherwise fallback.
-    if (c.startsWith('#') || c.startsWith('rgb') || c.startsWith('hsl')) return c;
-    return THEME.dark.paper;
-  }, []);
+  const safeColor = useCallback((c) => getOpaqueThreeColor(c), []);
 
   const lerpColor = useCallback((a, b, amount) => {
     try {
@@ -582,6 +638,7 @@ const GlobeMap = ({
   const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
   const REGION_COLORS_ATTENUATED = useMemo(() => CONTINENT_COLORS_ATTENUATED[theme] || CONTINENT_COLORS_ATTENUATED.dark, [theme]);
   const REGION_COLORS_LABELS = useMemo(() => CONTINENT_COLORS_LABELS[theme] || CONTINENT_COLORS_LABELS.dark, [theme]);
+  const TERRAIN_COLORS = useMemo(() => LOW_POLY_TERRAIN_COLORS[theme] || LOW_POLY_TERRAIN_COLORS.dark, [theme]);
   const UI_COLORS = useMemo(() => {
     const baseTheme = THEME[theme] || THEME.dark;
     const overrides = THEME_OVERRIDES[globeTheme]?.[theme] || {};
@@ -598,6 +655,12 @@ const GlobeMap = ({
     const themeMul = globeTheme === 'lowpoly' ? 1.3 : 1;
     return lightingMul * themeMul;
   }, [globeLightingEnabled, globeTheme]);
+
+  const getRegionSurfaceColor = useCallback((region) => (
+    globeTheme === 'lowpoly'
+      ? (TERRAIN_COLORS[region] || TERRAIN_COLORS.Unknown)
+      : (REGION_COLORS[region] || UI_COLORS.success)
+  ), [globeTheme, REGION_COLORS, TERRAIN_COLORS, UI_COLORS.success]);
 
   const getPolygonColor = useCallback((d) => {
     if (isDepartmentMode) {
@@ -630,7 +693,7 @@ const GlobeMap = ({
     }
 
     if (foundSet.has(admin) || mode === 'learn') {
-      const baseColor = REGION_COLORS[region] || UI_COLORS.success;
+      const baseColor = getRegionSurfaceColor(region);
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
         // Breathing effect for selected found country: between normal and lighter
@@ -645,13 +708,18 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
-      const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
+      const baseColor = globeTheme === 'lowpoly'
+        ? lerpColor(getRegionSurfaceColor(region), UI_COLORS.mapBase, isLight ? 0.28 : 0.18)
+        : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
+      const targetColor = globeTheme === 'lowpoly'
+        ? getRegionSurfaceColor(region)
+        : (REGION_COLORS[region] || UI_COLORS.accent);
       // Breathing effect for selected unfound country
-      return lerpColor(baseColor, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
+      return lerpColor(baseColor, targetColor, pulse * 0.6);
     }
 
     return UI_COLORS.mapBase;
-  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, pulse, isHomeScreen, isDepartmentMode, isEndScreen, isPerfectScore]);
+  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, pulse, isHomeScreen, isDepartmentMode, isEndScreen, isPerfectScore, getRegionSurfaceColor, globeTheme, isLight, lerpColor]);
 
   const getPolygonStroke = useCallback((d) => {
     if (isDepartmentMode) {
@@ -669,7 +737,7 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
-      const baseStroke = (isHomeScreen ? UI_COLORS.accent : (REGION_COLORS[region] || UI_COLORS.accent));
+      const baseStroke = (isHomeScreen ? UI_COLORS.accent : getRegionSurfaceColor(region));
       return lerpColor(
         baseStroke,
         UI_COLORS.paper,
@@ -684,7 +752,7 @@ const GlobeMap = ({
     }
 
     const baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
-      ? (REGION_COLORS[region] || UI_COLORS.success)
+      ? getRegionSurfaceColor(region)
       : UI_COLORS.mapBase;
 
     return lerpColor(
@@ -692,7 +760,7 @@ const GlobeMap = ({
       isLight ? UI_COLORS.ink : UI_COLORS.paper, // Use paper (white/light) for stroke in dark mode
       isLight ? GLOBE_STYLE.lighting.strokeDarken.light : 0.2 // Reduced darken for dark mode
     );
-  }, [selectedCountry, UI_COLORS, REGION_COLORS, isError, foundSet, pulse, mode, isHomeScreen, isLight, isDepartmentMode, lerpColor, isPerfectScore]);
+  }, [selectedCountry, UI_COLORS, isError, foundSet, pulse, mode, isHomeScreen, isLight, isDepartmentMode, lerpColor, isPerfectScore, getRegionSurfaceColor]);
 
   const getPolygonSideColor = useCallback((d) => {
     if (isDepartmentMode) {
@@ -712,7 +780,7 @@ const GlobeMap = ({
       }
     } else {
       baseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
-        ? (REGION_COLORS[region] || UI_COLORS.success)
+        ? getRegionSurfaceColor(region)
         : UI_COLORS.mapBase;
     }
 
@@ -722,8 +790,10 @@ const GlobeMap = ({
         
         // Base color for the side when selected under lighting
         const sideBaseColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
-          ? (REGION_COLORS[region] || UI_COLORS.success)
-          : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
+          ? getRegionSurfaceColor(region)
+          : (globeTheme === 'lowpoly'
+            ? getRegionSurfaceColor(region)
+            : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent));
           
         return lerpColor(
           sideBaseColor,
@@ -732,7 +802,7 @@ const GlobeMap = ({
         );
       }
       if (!isHomeScreen && (foundSet.has(admin) || mode === 'learn')) {
-        const base = REGION_COLORS[region] || UI_COLORS.success;
+        const base = getRegionSurfaceColor(region);
         return lerpColor(
           base,
           UI_COLORS.black,
@@ -751,17 +821,25 @@ const GlobeMap = ({
       
       const capColor = (!isHomeScreen && (foundSet.has(admin) || mode === 'learn'))
         ? lerpColor(
-          REGION_COLORS[region] || UI_COLORS.success,
+          getRegionSurfaceColor(region),
           UI_COLORS.paper,
           pulse * GLOBE_STYLE.lighting.capPulseToPaper[isLight ? 'light' : 'dark']
         )
-        : lerpColor(REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
+        : lerpColor(
+          globeTheme === 'lowpoly'
+            ? lerpColor(getRegionSurfaceColor(region), UI_COLORS.mapBase, isLight ? 0.28 : 0.18)
+            : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent),
+          globeTheme === 'lowpoly'
+            ? getRegionSurfaceColor(region)
+            : (REGION_COLORS[region] || UI_COLORS.accent),
+          pulse * 0.6
+        );
         
       return lerpColor(capColor, UI_COLORS.black, isLight ? 0.24 : 0.08);
     }
     
     return lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
-  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, pulse, mode, isHomeScreen, isDepartmentMode, lerpColor, getPolygonColor]);
+  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, pulse, mode, isHomeScreen, isDepartmentMode, lerpColor, getPolygonColor, getRegionSurfaceColor, globeTheme]);
 
   const getPolygonMaterial = useCallback((d, kind) => {
     const admin = getFeatureAdmin(d) || 'unknown';
@@ -1170,7 +1248,7 @@ const GlobeMap = ({
   }, []);
 
   const getBiomeAssetsData = useMemo(() => {
-    if (globeTheme !== 'lowpoly') return [];
+    if (globeTheme !== 'lowpoly' || isDepartmentMode) return [];
 
     const assets = [];
     const allAdmins = Object.keys(gameDataMap);
@@ -1180,8 +1258,10 @@ const GlobeMap = ({
       if (!data || data.lat === undefined) return;
 
       const isFound = !isHomeScreen && (foundSet.has(admin) || mode === 'learn');
+      if (!isFound) return;
+
       const size = countrySizes[admin] || 1;
-      const maxModels = isDepartmentMode ? 1 : Math.min(5, Math.max(1, Math.floor(size * 0.3)));
+      const maxModels = getBiomeModelCount(size, isDepartmentMode);
 
       if (!biomePointsCacheRef.current[admin]) {
         const generated = [];
@@ -1193,52 +1273,37 @@ const GlobeMap = ({
         }
 
         if (featureEntry && featureEntry.polygons.length > 0) {
-          const bounds = featureEntry.bounds;
           for (let i = 0; i < maxModels; i++) {
-            let point = null;
-            // Up to 15 tries to sample a point inside the polygon
-            for (let attempt = 0; attempt < 15; attempt++) {
-              const testLng = bounds.minLng + Math.random() * (bounds.maxLng - bounds.minLng);
-              const testLat = bounds.minLat + Math.random() * (bounds.maxLat - bounds.minLat);
-              if (featureEntry.polygons.some(poly => pointInPolygon(testLng, testLat, poly))) {
-                point = { lat: testLat, lng: testLng };
-                break;
-              }
-            }
-            // Fallback to center with a minor jitter
-            if (!point) {
-              point = {
-                lat: data.lat + (Math.random() - 0.5) * Math.min(0.2, size * 0.2),
-                lng: data.lng + (Math.random() - 0.5) * Math.min(0.2, size * 0.2)
-              };
-            }
+            const point = getSampledBiomePoint(featureEntry, data, size, generated);
             generated.push({
               admin,
               lat: point.lat,
               lng: point.lng,
               biomeType,
-              scale: 0.8 + Math.random() * 0.4,
-              rotation: Math.random() * Math.PI * 2
+              variant: getBiomeVariant(biomeType),
+              scale: 0.7 + Math.random() * 1.05,
+              rotation: Math.random() * 360
             });
           }
         } else {
-          // No boundary coords, fallback to center point
-          generated.push({
-            admin,
-            lat: data.lat,
-            lng: data.lng,
-            biomeType,
-            scale: 0.9,
-            rotation: Math.random() * Math.PI * 2
-          });
+          for (let i = 0; i < maxModels; i++) {
+            const point = getBiomeFallbackPoint(data, size);
+            generated.push({
+              admin,
+              lat: point.lat,
+              lng: point.lng,
+              biomeType,
+              variant: getBiomeVariant(biomeType),
+              scale: 0.75 + Math.random() * 0.9,
+              rotation: Math.random() * 360
+            });
+          }
         }
         biomePointsCacheRef.current[admin] = generated;
       }
 
-      // Show all cached points for found countries, just 1 small preview for unfound
       const cached = biomePointsCacheRef.current[admin];
-      const useCount = isFound ? cached.length : Math.min(1, cached.length);
-      for (let i = 0; i < useCount; i++) {
+      for (let i = 0; i < cached.length; i++) {
         assets.push({ ...cached[i], isFound });
       }
     });
@@ -1260,26 +1325,16 @@ const GlobeMap = ({
   }, [extrusionScale, selectedCountry, foundSet, pulse, isDepartmentMode]);
 
   const createBiomeThreeObject = useCallback((d) => {
-    const asset = createBiomeAsset(d.biomeType, theme);
-    const baseScale = d.scale * 0.38;
-    // Unfound countries get smaller preview biomes
-    asset.scale.setScalar(d.isFound ? baseScale : baseScale * 0.5);
-    return asset;
-  }, [theme]);
+    const asset = createBiomeAsset(d.biomeType, theme, d.variant);
+    const alignedAsset = new THREE.Group();
+    asset.rotation.x = BIOME_SURFACE_ALIGNMENT_RADIANS;
+    alignedAsset.add(asset);
 
-  const updateBiomeThreeObject = useCallback((obj, d) => {
-    // Rotate to point away from the sphere center
-    obj.rotation.x = Math.PI / 2;
-    obj.rotation.y = d.rotation;
-    // Dynamic scale: small for unfound, normal for found, boosted + pulse for selected
-    const baseScale = d.scale * 0.38;
-    const isSelected = d.admin === selectedCountry;
-    if (d.isFound) {
-      obj.scale.setScalar(isSelected ? baseScale * 1.15 * (1 + pulse * 0.04) : baseScale);
-    } else {
-      obj.scale.setScalar(baseScale * 0.5);
-    }
-  }, [selectedCountry, pulse]);
+    const baseScale = d.scale * BIOME_SCENE_SCALE;
+    // Unfound countries get smaller preview biomes
+    alignedAsset.scale.setScalar(d.isFound ? baseScale : baseScale * 0.5);
+    return alignedAsset;
+  }, [theme]);
 
   const ringsData = useMemo(() => {
     if (selectedCountry) {
@@ -1391,7 +1446,7 @@ const GlobeMap = ({
       const innerGlow = new THREE.Mesh(
         new THREE.SphereGeometry(1.015, 64, 64),
         new THREE.MeshBasicMaterial({
-          color: UI_COLORS.globeInnerGlow,
+          color: getOpaqueThreeColor(UI_COLORS.globeInnerGlow),
           transparent: true,
           opacity: 0.16,
           blending: THREE.AdditiveBlending,
@@ -1459,7 +1514,7 @@ const GlobeMap = ({
     studioLight.color.set(UI_COLORS.lightingStudio);
     studioLeft.color.set(UI_COLORS.lightingLeft);
     studioRight.color.set(UI_COLORS.lightingRight);
-    innerGlow.material.color.set(UI_COLORS.globeInnerGlow);
+    innerGlow.material.color.set(getOpaqueThreeColor(UI_COLORS.globeInnerGlow));
     innerGlow.material.opacity = isLight ? 0.06 : 0.11;
     innerGlow.material.needsUpdate = true;
     return true;
@@ -1489,7 +1544,7 @@ const GlobeMap = ({
         material?.type === 'LineBasicMaterial' &&
         material.transparent === true
       ) {
-        material.color.set(UI_COLORS.graticule);
+        material.color.set(getOpaqueThreeColor(UI_COLORS.graticule));
         material.opacity = isLight
           ? GLOBE_STYLE.lighting.graticuleOpacity.light
           : GLOBE_STYLE.lighting.graticuleOpacity.dark;
@@ -1518,6 +1573,10 @@ const GlobeMap = ({
   }
   const globeWidth = isMobileKeyboardOpen ? viewport.width : layoutViewportRef.current.width;
   const globeHeight = isMobileKeyboardOpen ? viewport.height : layoutViewportRef.current.height;
+  const homeGlobeOffset = isHomeScreen && !isMobileKeyboardOpen && globeWidth >= 769
+    ? Math.round(globeWidth * 0.18)
+    : 0;
+  const globeRenderWidth = globeWidth + (homeGlobeOffset * 2);
 
   const countriesWithGeometry = useMemo(() => {
     return new Set(renderCountriesData.map(getFeatureAdmin));
@@ -1595,7 +1654,7 @@ const GlobeMap = ({
     }
 
     if (isFound) {
-      const baseColor = REGION_COLORS[region] || UI_COLORS.success;
+      const baseColor = getRegionSurfaceColor(region);
       if (isSelected) {
         if (isError) return UI_COLORS.error;
         return lerpColor(
@@ -1609,12 +1668,17 @@ const GlobeMap = ({
     
     if (isSelected) {
       if (isError) return UI_COLORS.error;
-      const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
-      return lerpColor(baseColor, REGION_COLORS[region] || UI_COLORS.accent, pulse * 0.6);
+      const baseColor = globeTheme === 'lowpoly'
+        ? lerpColor(getRegionSurfaceColor(region), UI_COLORS.mapBase, isLight ? 0.28 : 0.18)
+        : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
+      const targetColor = globeTheme === 'lowpoly'
+        ? getRegionSurfaceColor(region)
+        : (REGION_COLORS[region] || UI_COLORS.accent);
+      return lerpColor(baseColor, targetColor, pulse * 0.6);
     }
     
     return UI_COLORS.mapBase;
-  }, [REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, foundSet, isError, selectedCountry, mode, pulse, isDepartmentMode, isEndScreen, isPerfectScore]);
+  }, [REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, foundSet, isError, selectedCountry, mode, pulse, isDepartmentMode, isEndScreen, isPerfectScore, getRegionSurfaceColor, globeTheme, isLight, lerpColor]);
 
   const getPointRadius = useCallback((d) => (
     isDepartmentMode
@@ -1721,7 +1785,15 @@ const GlobeMap = ({
              opacity: 0.5
            }} />
         </div>
-        <div ref={globeContentWrapperRef} className="globe-content-wrapper" style={{ background: 'transparent' }}>
+        <div
+          ref={globeContentWrapperRef}
+          className="globe-content-wrapper"
+          style={{
+            background: 'transparent',
+            width: globeRenderWidth,
+            left: -homeGlobeOffset
+          }}
+        >
           {globeLightingEnabled && (
             <div
               className={`globe-studio-overlay ${isLight ? 'light' : 'dark'}`}
@@ -1730,7 +1802,7 @@ const GlobeMap = ({
           )}
           <Globe
             ref={globeEl}
-            width={globeWidth}
+            width={globeRenderWidth}
             height={globeHeight}
             globeImageUrl={null}
             globeMaterial={globeMaterial}
@@ -1739,7 +1811,7 @@ const GlobeMap = ({
             atmosphereColor={safeColor(UI_COLORS.atmosphere)}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
-            backgroundColor="transparent"
+            backgroundColor={GLOBE_TRANSPARENT_BACKGROUND}
             lineHoverPrecision={0}
             showGraticules={true}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
@@ -1775,10 +1847,13 @@ const GlobeMap = ({
             ringPropagationSpeed={d => d.speed}
             ringRepeatPeriod={d => d.repeat}
             ringAltitude={getSelectionEffectAltitude}
-            customLayerData={getBiomeAssetsData}
-            customLayerAltitude={getBiomeAltitude}
-            customThreeObject={createBiomeThreeObject}
-            customThreeObjectUpdate={updateBiomeThreeObject}
+            objectsData={getBiomeAssetsData}
+            objectLat="lat"
+            objectLng="lng"
+            objectAltitude={getBiomeAltitude}
+            objectFacesSurface={true}
+            objectRotation={d => ({ z: d.rotation })}
+            objectThreeObject={createBiomeThreeObject}
             onBackgroundClick={isHomeScreen ? undefined : () => selectCountry(null)}
           />
         </div>

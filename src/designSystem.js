@@ -165,6 +165,34 @@ export const THEME = {
   }
 };
 
+export const GLOBE_TRANSPARENT_BACKGROUND = 'rgba(0, 0, 0, 0)';
+
+export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
+  if (typeof color !== 'string') return fallback;
+  const normalized = color.trim();
+  if (!normalized || normalized === 'transparent') return fallback;
+
+  const rgbaMatch = normalized.match(/^rgba\((.+)\)$/i);
+  if (rgbaMatch) {
+    const channels = rgbaMatch[1].split(',').map(channel => channel.trim());
+    if (channels.length >= 3) {
+      return `rgb(${channels.slice(0, 3).join(', ')})`;
+    }
+    return fallback;
+  }
+
+  if (
+    normalized.startsWith('#') ||
+    normalized.startsWith('rgb(') ||
+    normalized.startsWith('hsl(') ||
+    normalized.startsWith('hsla(')
+  ) {
+    return normalized;
+  }
+
+  return fallback;
+};
+
 export const THEME_OVERRIDES = {
   glass: {},
   lowpoly: {
@@ -461,6 +489,29 @@ export const CONTINENT_COLORS_LABELS = {
     "Antarctic": "#DDE4F0",
     "Boeuf": "#FCA5A5",
     "Unknown": "#94a3b8"
+  }
+};
+
+export const LOW_POLY_TERRAIN_COLORS = {
+  light: {
+    Europe: '#6fa66a',
+    Americas: '#9b7a4a',
+    Asia: '#b7a35d',
+    Africa: '#c6a45b',
+    Oceania: '#67a88b',
+    Antarctic: '#d8eef2',
+    France: '#78a95f',
+    Unknown: '#8aa071'
+  },
+  dark: {
+    Europe: '#315f3c',
+    Americas: '#6c4f32',
+    Asia: '#71652f',
+    Africa: '#7a5a2a',
+    Oceania: '#2f6b58',
+    Antarctic: '#7ea9b8',
+    France: '#3f6f38',
+    Unknown: '#455f42'
   }
 };
 
