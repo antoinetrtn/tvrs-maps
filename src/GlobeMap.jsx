@@ -593,6 +593,12 @@ const GlobeMap = ({
 
   const foundSet = useMemo(() => new Set(foundList), [foundList]);
 
+  const extrusionScale = useMemo(() => {
+    const lightingMul = globeLightingEnabled ? 1.8 : 1;
+    const themeMul = globeTheme === 'lowpoly' ? 1.3 : 1;
+    return lightingMul * themeMul;
+  }, [globeLightingEnabled, globeTheme]);
+
   const getPolygonColor = useCallback((d) => {
     if (isDepartmentMode) {
       const admin = getFeatureAdmin(d);
@@ -851,7 +857,9 @@ const GlobeMap = ({
       // Glass/Neon effect: boost emissive in dark mode or synthwave theme
       const emissiveBoost = globeTheme === 'synthwave'
         ? (admin === selectedCountry ? 0.35 : 0.22)
-        : (!isLight ? 0.18 : 0.05);
+        : globeTheme === 'lowpoly'
+          ? (admin === selectedCountry ? 0.12 : 0.02)
+          : (!isLight ? 0.18 : 0.05);
 
       material.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
         admin === selectedCountry ? 0.1 : 0
@@ -905,18 +913,18 @@ const GlobeMap = ({
     if (isDepartmentMode) {
       return getDepartmentLayerAltitude(admin, foundSet, selectedCountry) * (admin === selectedCountry ? (1 + pulse * 0.02) : 1);
     }
-    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, globeLightingEnabled ? 1.8 : 1);
+    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, extrusionScale);
     if (admin === selectedCountry) return altitude * (1 + pulse * 0.08);
     return altitude;
-  }, [globeLightingEnabled, selectedCountry, foundSet, pulse, isDepartmentMode]);
+  }, [extrusionScale, selectedCountry, foundSet, pulse, isDepartmentMode]);
 
   const getSelectionEffectAltitude = useCallback(() => {
     if (isDepartmentMode) {
       return getDepartmentLayerAltitude(selectedCountry, foundSet, selectedCountry) + 0.0006;
     }
-    const selectedAltitude = GLOBE_LAYER_ALTITUDE.selected * (globeLightingEnabled ? 1.8 : 1);
+    const selectedAltitude = GLOBE_LAYER_ALTITUDE.selected * extrusionScale;
     return selectedAltitude * (1 + pulse * 0.08) + 0.004;
-  }, [globeLightingEnabled, pulse, isDepartmentMode, foundSet, selectedCountry]);
+  }, [extrusionScale, pulse, isDepartmentMode, foundSet, selectedCountry]);
 
   const getHtmlAltitude = useCallback((d) => {
     if (isDepartmentMode) {
@@ -926,9 +934,9 @@ const GlobeMap = ({
       d.admin,
       foundSet,
       selectedCountry,
-      globeLightingEnabled ? 1.8 : 1
+      extrusionScale
     ) + 0.002;
-  }, [foundSet, globeLightingEnabled, isDepartmentMode, selectedCountry]);
+  }, [foundSet, extrusionScale, isDepartmentMode, selectedCountry]);
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -937,10 +945,12 @@ const GlobeMap = ({
     }
     // Increased thickness for selection
     if (admin === selectedCountry) return perfProfile?.isMobile ? 2.1 : 3.0;
+    // Low-poly theme: no flat 2D strokes — let 3D facets define the shape
+    if (globeTheme === 'lowpoly') return 0;
     if (isDepartmentMode) return perfProfile?.isMobile ? 0.55 : 0.75;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
     return perfProfile?.isMobile ? 0.25 : 0.4;
-  }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry, isDepartmentMode]);
+  }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry, isDepartmentMode, globeTheme]);
 
   const countrySizes = useMemo(() => {
     const sizes = {};
@@ -1160,15 +1170,18 @@ const GlobeMap = ({
   }, []);
 
   const getBiomeAssetsData = useMemo(() => {
-    if (globeTheme !== 'lowpoly' || isHomeScreen) return [];
+    if (globeTheme !== 'lowpoly') return [];
 
     const assets = [];
-    foundList.forEach(admin => {
+    const allAdmins = Object.keys(gameDataMap);
+
+    allAdmins.forEach(admin => {
       const data = gameDataMap[admin];
       if (!data || data.lat === undefined) return;
 
+      const isFound = !isHomeScreen && (foundSet.has(admin) || mode === 'learn');
       const size = countrySizes[admin] || 1;
-      const numModels = isDepartmentMode ? 1 : Math.min(5, Math.max(1, Math.floor(size * 0.3)));
+      const maxModels = isDepartmentMode ? 1 : Math.min(5, Math.max(1, Math.floor(size * 0.3)));
 
       if (!biomePointsCacheRef.current[admin]) {
         const generated = [];
@@ -1181,7 +1194,7 @@ const GlobeMap = ({
 
         if (featureEntry && featureEntry.polygons.length > 0) {
           const bounds = featureEntry.bounds;
-          for (let i = 0; i < numModels; i++) {
+          for (let i = 0; i < maxModels; i++) {
             let point = null;
             // Up to 15 tries to sample a point inside the polygon
             for (let attempt = 0; attempt < 15; attempt++) {
@@ -1222,11 +1235,16 @@ const GlobeMap = ({
         biomePointsCacheRef.current[admin] = generated;
       }
 
-      assets.push(...biomePointsCacheRef.current[admin]);
+      // Show all cached points for found countries, just 1 small preview for unfound
+      const cached = biomePointsCacheRef.current[admin];
+      const useCount = isFound ? cached.length : Math.min(1, cached.length);
+      for (let i = 0; i < useCount; i++) {
+        assets.push({ ...cached[i], isFound });
+      }
     });
 
     return assets;
-  }, [globeTheme, foundList, gameDataMap, countrySizes, selectableFeatureIndex, isDepartmentMode, isHomeScreen]);
+  }, [globeTheme, foundList, gameDataMap, countrySizes, selectableFeatureIndex, isDepartmentMode, isHomeScreen, mode, foundSet]);
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
@@ -1234,17 +1252,18 @@ const GlobeMap = ({
       const alt = getDepartmentLayerAltitude(admin, foundSet, selectedCountry);
       return admin === selectedCountry ? alt * (1 + pulse * 0.02) + 0.0005 : alt + 0.0005;
     }
-    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, globeLightingEnabled ? 1.8 : 1);
+    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, extrusionScale);
     if (admin === selectedCountry) {
       return altitude * (1 + pulse * 0.08) + 0.0015; // Slightly above cap to prevent clipping
     }
     return altitude + 0.0015;
-  }, [globeLightingEnabled, selectedCountry, foundSet, pulse, isDepartmentMode]);
+  }, [extrusionScale, selectedCountry, foundSet, pulse, isDepartmentMode]);
 
   const createBiomeThreeObject = useCallback((d) => {
     const asset = createBiomeAsset(d.biomeType, theme);
-    // Scale the custom model down to fit the globe nicely
-    asset.scale.setScalar(d.scale * 0.38);
+    const baseScale = d.scale * 0.38;
+    // Unfound countries get smaller preview biomes
+    asset.scale.setScalar(d.isFound ? baseScale : baseScale * 0.5);
     return asset;
   }, [theme]);
 
@@ -1252,7 +1271,15 @@ const GlobeMap = ({
     // Rotate to point away from the sphere center
     obj.rotation.x = Math.PI / 2;
     obj.rotation.y = d.rotation;
-  }, []);
+    // Dynamic scale: small for unfound, normal for found, boosted + pulse for selected
+    const baseScale = d.scale * 0.38;
+    const isSelected = d.admin === selectedCountry;
+    if (d.isFound) {
+      obj.scale.setScalar(isSelected ? baseScale * 1.15 * (1 + pulse * 0.04) : baseScale);
+    } else {
+      obj.scale.setScalar(baseScale * 0.5);
+    }
+  }, [selectedCountry, pulse]);
 
   const ringsData = useMemo(() => {
     if (selectedCountry) {
@@ -1596,8 +1623,8 @@ const GlobeMap = ({
   ), [isDepartmentMode, selectedCountry]);
 
   const getPointAltitude = useCallback((d) => {
-    return getCountryLayerAltitude(d.admin, foundSet, selectedCountry);
-  }, [foundSet, selectedCountry]);
+    return getCountryLayerAltitude(d.admin, foundSet, selectedCountry, extrusionScale);
+  }, [foundSet, selectedCountry, extrusionScale]);
 
 
   const getLabelColor = useCallback((d) => (
