@@ -1,18 +1,41 @@
 import React, { useMemo } from 'react';
 import './ResultsModal.css';
 import { getGameStats } from './utils';
-import { CONTINENT_COLORS, CONTINENT_COLORS_LABELS, CONTINENT_COLORS_ATTENUATED } from './designSystem';
+import { getThemeRegionColor, getThemeRegionColorLabel, getThemeRegionColorAttenuated } from './designSystem';
 
-const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr' }) => {
+const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr', globeTheme = 'glass' }) => {
   const dataMap = activeDataMap || countryDataMap;
   const { stats, CONTINENT_ORDER } = useMemo(() => 
     getGameStats(foundList, dataMap, lang), 
     [foundList, dataMap, lang]
   );
 
-  const colors = CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark;
-  const labelColors = CONTINENT_COLORS_LABELS[theme] || CONTINENT_COLORS_LABELS.dark;
-  const attenuatedColors = CONTINENT_COLORS_ATTENUATED[theme] || CONTINENT_COLORS_ATTENUATED.dark;
+  const colors = useMemo(() => {
+    const res = {};
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    regions.forEach(r => {
+      res[r] = getThemeRegionColor(globeTheme, theme, r);
+    });
+    return res;
+  }, [globeTheme, theme]);
+
+  const labelColors = useMemo(() => {
+    const res = {};
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    regions.forEach(r => {
+      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
+    });
+    return res;
+  }, [globeTheme, theme]);
+
+  const attenuatedColors = useMemo(() => {
+    const res = {};
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    regions.forEach(r => {
+      res[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
+    });
+    return res;
+  }, [globeTheme, theme]);
 
   return (
     <div className="modal-overlay">

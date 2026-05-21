@@ -57,7 +57,7 @@ function App() {
     }
     return 'dark';
   }); // System default theme
-  const [globeTheme, setGlobeTheme] = useState('glass');
+  const [globeTheme, setGlobeTheme] = useState('lowpoly');
   
   // New States for Advanced UX
   const [menuOpen, setMenuOpen] = useState(false);
@@ -534,14 +534,14 @@ function App() {
       maxLabels: isMobile ? 4 : (isTablet ? 8 : 20),
       showAtmosphere: false,
       useImageTextures: false,
-      cullOffscreenCountries: isMobile || isTablet,
-      // Robust curvature resolution for quality and stability
+      cullOffscreenCountries: false,
+      // High-performance curvature resolution for quality and speed
       polygonCapCurvatureResolution: isMobile ? 4 : (isTablet ? 3 : 1.5)
     };
   }, [viewport.width]);
 
   return (
-    <div className={`app-container ${theme}`} data-theme={theme} style={getThemeCssVariables(theme, globeTheme)}>
+    <div className={`app-container ${theme}`} data-theme={theme} style={getThemeCssVariables(theme, globeTheme, selectedCountry, activeDataMap)}>
       {currentScreen === 'home' ? (
         <HomeScreen 
           onStartGame={startGame} 
@@ -551,8 +551,6 @@ function App() {
           setLang={setLang}
           gameDuration={gameDuration}
           setGameDuration={setGameDuration}
-          globeLightingEnabled={globeLightingEnabled}
-          setGlobeLightingEnabled={setGlobeLightingEnabled}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
         />
@@ -616,7 +614,6 @@ function App() {
             isKeyboardMode={effectiveKeyboardMode}
             selectedCountry={selectedCountry}
             globeTheme={globeTheme}
-            setGlobeTheme={setGlobeTheme}
           />
         )
       )}
@@ -672,6 +669,7 @@ function App() {
           }}
           theme={theme}
           lang={lang}
+          globeTheme={globeTheme}
         />
       )}
 
@@ -696,6 +694,7 @@ function App() {
           mode={mode}
           theme={theme}
           lang={lang}
+          globeTheme={globeTheme}
         />
       )}
 

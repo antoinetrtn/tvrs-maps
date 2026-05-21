@@ -197,18 +197,32 @@ export const THEME_OVERRIDES = {
   glass: {},
   lowpoly: {
     light: {
+      accent: '#10b981',
+      accentHover: '#059669',
+      accentSoft: 'rgba(16, 185, 129, 0.15)',
+      accentGlow: '#34d399',
+      accentContrast: '#ffffff',
       mapBase: '#d9e2ec',
       mapSea: '#bcccdc',
       mapBorder: '#829ab1',
       graticule: 'rgba(98, 125, 152, 0.2)',
-      globeInnerGlow: 'rgba(188, 204, 220, 0.3)'
+      globeInnerGlow: 'rgba(188, 204, 220, 0.3)',
+      glassBg: 'rgba(255, 255, 255, 0.65)',
+      glassBorder: 'rgba(16, 185, 129, 0.22)'
     },
     dark: {
+      accent: '#10b981',
+      accentHover: '#34d399',
+      accentSoft: 'rgba(16, 185, 129, 0.18)',
+      accentGlow: '#059669',
+      accentContrast: '#07162c',
       mapBase: '#102a43',
       mapSea: '#07162c',
       mapBorder: '#1f3a52',
       graticule: 'rgba(31, 58, 82, 0.25)',
-      globeInnerGlow: 'rgba(31, 58, 82, 0.3)'
+      globeInnerGlow: 'rgba(31, 58, 82, 0.3)',
+      glassBg: 'rgba(11, 28, 50, 0.55)',
+      glassBorder: 'rgba(16, 185, 129, 0.24)'
     }
   },
   synthwave: {
@@ -221,6 +235,9 @@ export const THEME_OVERRIDES = {
       textMuted: '#ff007f',
       accent: '#ff007f',
       accentHover: '#ff3399',
+      accentSoft: 'rgba(255, 0, 127, 0.2)',
+      accentGlow: '#ff007f',
+      accentContrast: '#0f051d',
       glassBg: 'rgba(28, 11, 52, 0.8)',
       glassBorder: 'rgba(0, 240, 255, 0.35)',
       mapBase: '#1f0d3d',
@@ -249,6 +266,9 @@ export const THEME_OVERRIDES = {
       textMuted: '#ff007f',
       accent: '#ff007f',
       accentHover: '#ff3399',
+      accentSoft: 'rgba(255, 0, 127, 0.2)',
+      accentGlow: '#ff007f',
+      accentContrast: '#0f051d',
       glassBg: 'rgba(28, 11, 52, 0.8)',
       glassBorder: 'rgba(0, 240, 255, 0.35)',
       mapBase: '#1f0d3d',
@@ -279,6 +299,9 @@ export const THEME_OVERRIDES = {
       textMuted: '#7c654e',
       accent: '#8b5a2b',
       accentHover: '#5c3a1a',
+      accentSoft: 'rgba(139, 90, 43, 0.15)',
+      accentGlow: '#8b5a2b',
+      accentContrast: '#ffffff',
       glassBg: 'rgba(244, 236, 216, 0.9)',
       glassBorder: 'rgba(139, 90, 43, 0.22)',
       mapBase: '#fdfaf2',
@@ -307,6 +330,9 @@ export const THEME_OVERRIDES = {
       textMuted: '#b0a080',
       accent: '#bfae8f',
       accentHover: '#dfd3b6',
+      accentSoft: 'rgba(191, 174, 143, 0.18)',
+      accentGlow: '#bfae8f',
+      accentContrast: '#1f160e',
       glassBg: 'rgba(45, 32, 21, 0.85)',
       glassBorder: 'rgba(191, 174, 143, 0.2)',
       mapBase: '#2a1e14',
@@ -337,6 +363,9 @@ export const THEME_OVERRIDES = {
       textMuted: '#00aaff',
       accent: '#00ffff',
       accentHover: '#80ffff',
+      accentSoft: 'rgba(0, 255, 255, 0.2)',
+      accentGlow: '#00ffff',
+      accentContrast: '#001122',
       glassBg: 'rgba(0, 34, 68, 0.85)',
       glassBorder: 'rgba(0, 255, 255, 0.3)',
       mapBase: '#001e3d',
@@ -365,6 +394,9 @@ export const THEME_OVERRIDES = {
       textMuted: '#00aaff',
       accent: '#00ffff',
       accentHover: '#80ffff',
+      accentSoft: 'rgba(0, 255, 255, 0.2)',
+      accentGlow: '#00ffff',
+      accentContrast: '#001122',
       glassBg: 'rgba(0, 34, 68, 0.85)',
       glassBorder: 'rgba(0, 255, 255, 0.3)',
       mapBase: '#001e3d',
@@ -574,15 +606,27 @@ export const STYLE_TOKENS = {
   }
 };
 
-export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass') => {
+export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass', selectedCountry = null, activeDataMap = null) => {
   const baseTheme = THEME[systemTheme] || THEME.dark;
   const overrides = THEME_OVERRIDES[globeTheme]?.[systemTheme] || {};
-  
+
   // Merge theme overrides
   const theme = {
     ...baseTheme,
     ...overrides
   };
+
+  // Dynamically override accent color based on active country's continent using the active theme's colors
+  if (selectedCountry && activeDataMap && activeDataMap[selectedCountry]) {
+    const region = activeDataMap[selectedCountry].region;
+    const regionColor = getThemeRegionColor(globeTheme, systemTheme, region);
+    if (regionColor) {
+      theme.accent = regionColor;
+      theme.accentHover = regionColor;
+      theme.accentSoft = `${regionColor}33`; // 20% opacity hex
+      theme.accentGlow = regionColor;
+    }
+  }
 
   return {
     '--bg-color': theme.bg,
@@ -664,4 +708,232 @@ export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass')
     '--control-lg': STYLE_TOKENS.size.controlLg,
     '--island-width': STYLE_TOKENS.size.islandWidth
   };
+};
+
+export const PROCEDURAL_OCEAN_COLORS = {
+  vintage: {
+    base: '#f3e8cd',
+    grad0: 'rgba(139, 90, 43, 0)',
+    grad78: 'rgba(139, 90, 43, 0.08)',
+    grad1: 'rgba(92, 54, 23, 0.26)',
+    line12: 'rgba(139, 90, 43, 0.12)',
+    line28: 'rgba(139, 90, 43, 0.28)',
+    line07: 'rgba(139, 90, 43, 0.07)'
+  },
+  synthwave: {
+    base: '#09041a',
+    line: 'rgba(255, 0, 127, 0.28)',
+    gradTop: 'rgba(0, 240, 255, 0.06)',
+    gradCenter: 'rgba(255, 0, 127, 0.12)',
+    gradBottom: 'rgba(0, 240, 255, 0.06)'
+  },
+  blueprint: {
+    base: '#061326',
+    lineMajor: 'rgba(0, 240, 255, 0.22)',
+    lineMinor: 'rgba(0, 240, 255, 0.07)'
+  }
+};
+
+export const SURFACE_THEME_COLORS = {
+  synthwave: {
+    Europe: '#ff007f',
+    Americas: '#00f0ff',
+    Africa: '#ffea00',
+    Asia: '#9d4edd',
+    Oceania: '#00ff66',
+    Antarctic: '#ffffff',
+    Unknown: '#00f0ff'
+  },
+  blueprint: {
+    base: '#00bfff'
+  },
+  vintage: {
+    Europe: '#e59866',
+    Americas: '#a9dfbf',
+    Africa: '#f9e79f',
+    Asia: '#f5cbf7',
+    Oceania: '#a3e4d7',
+    Antarctic: '#fbfcfc',
+    Unknown: '#f9e79f'
+  }
+};
+
+export const STROKE_THEME_COLORS = {
+  synthwave: {
+    unfound: '#2a1a3a',
+    foundEuropeAsia: '#ff00ff',
+    foundOther: '#00ffff'
+  },
+  blueprint: {
+    unfound: 'rgba(0, 240, 255, 0.2)',
+    found: '#00ffff'
+  },
+  vintage: {
+    unfound: '#c2a67e',
+    found: '#5c3617'
+  }
+};
+
+export const ATMOSPHERE_THEME_COLORS = {
+  lowpoly: '#38bdf8',
+  synthwave: '#ff007f',
+  blueprint: '#00ffff',
+  vintage: '#e5c158'
+};
+
+export const SYNTHWAVE_REGION_COLORS_ATTENUATED = {
+  light: {
+    "Europe": "#ffe6f0",
+    "Americas": "#e6fcff",
+    "Africa": "#ffffe6",
+    "Asia": "#f9e6ff",
+    "Oceania": "#e6ffe8",
+    "Antarctic": "#f5f5f5",
+    "Unknown": "#e6fcff"
+  },
+  dark: {
+    "Europe": "#4a0025",
+    "Americas": "#003a3d",
+    "Africa": "#3d3a00",
+    "Asia": "#25003d",
+    "Oceania": "#003d18",
+    "Antarctic": "#333333",
+    "Unknown": "#003a3d"
+  }
+};
+
+export const BLUEPRINT_REGION_COLORS_ATTENUATED = {
+  light: {
+    "Europe": "#e6ffff",
+    "Americas": "#e6ffff",
+    "Africa": "#e6ffff",
+    "Asia": "#e6ffff",
+    "Oceania": "#e6ffff",
+    "Antarctic": "#e6ffff",
+    "Unknown": "#e6ffff"
+  },
+  dark: {
+    "Europe": "#002b3d",
+    "Americas": "#002b3d",
+    "Africa": "#002b3d",
+    "Asia": "#002b3d",
+    "Oceania": "#002b3d",
+    "Antarctic": "#002b3d",
+    "Unknown": "#002b3d"
+  }
+};
+
+export const VINTAGE_REGION_COLORS_ATTENUATED = {
+  light: {
+    "Europe": "#fdf2e9",
+    "Americas": "#ebf5fb",
+    "Africa": "#fef9e7",
+    "Asia": "#fdf2fa",
+    "Oceania": "#e8f8f5",
+    "Antarctic": "#fdfefe",
+    "Unknown": "#fef9e7"
+  },
+  dark: {
+    "Europe": "#4a2711",
+    "Americas": "#193d25",
+    "Africa": "#3d3511",
+    "Asia": "#3d1a3f",
+    "Oceania": "#143d34",
+    "Antarctic": "#333333",
+    "Unknown": "#3d3511"
+  }
+};
+
+export const VINTAGE_REGION_COLORS_LABELS = {
+  light: {
+    "Europe": "#78281f",
+    "Americas": "#1e8449",
+    "Africa": "#7d6608",
+    "Asia": "#6c3483",
+    "Oceania": "#117864",
+    "Antarctic": "#1b2631",
+    "Unknown": "#7d6608"
+  },
+  dark: {
+    "Europe": "#ffdca8",
+    "Americas": "#d5f5e3",
+    "Africa": "#fcf3cf",
+    "Asia": "#fcdcfc",
+    "Oceania": "#d1f2eb",
+    "Antarctic": "#ffffff",
+    "Unknown": "#fcf3cf"
+  }
+};
+
+export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
+  if (region === 'France') {
+    if (globeTheme === 'lowpoly') {
+      return LOW_POLY_TERRAIN_COLORS[systemTheme]?.France || LOW_POLY_TERRAIN_COLORS[systemTheme]?.Europe;
+    }
+    region = 'Europe';
+  }
+
+  if (region === 'Boeuf') {
+    return CONTINENT_COLORS[systemTheme]?.Boeuf || THEME[systemTheme]?.accent;
+  }
+
+  if (globeTheme === 'lowpoly') {
+    return LOW_POLY_TERRAIN_COLORS[systemTheme]?.[region] || LOW_POLY_TERRAIN_COLORS[systemTheme]?.Unknown;
+  }
+  if (globeTheme === 'synthwave') {
+    return SURFACE_THEME_COLORS.synthwave[region] || SURFACE_THEME_COLORS.synthwave.Unknown || '#00f0ff';
+  }
+  if (globeTheme === 'blueprint') {
+    return SURFACE_THEME_COLORS.blueprint.base || '#00ffff';
+  }
+  if (globeTheme === 'vintage') {
+    return SURFACE_THEME_COLORS.vintage[region] || SURFACE_THEME_COLORS.vintage.Unknown || '#8b5a2b';
+  }
+  return CONTINENT_COLORS[systemTheme]?.[region] || CONTINENT_COLORS[systemTheme]?.Unknown;
+};
+
+export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) => {
+  if (region === 'France') {
+    region = 'Europe';
+  }
+  if (region === 'Boeuf') {
+    return globeTheme === 'synthwave' ? '#4a0025' : '#4A1A1A';
+  }
+
+  if (globeTheme === 'lowpoly') {
+    return LOW_POLY_TERRAIN_COLORS[systemTheme]?.[region] || LOW_POLY_TERRAIN_COLORS[systemTheme]?.Unknown;
+  }
+  if (globeTheme === 'synthwave') {
+    return SYNTHWAVE_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || SYNTHWAVE_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#003a3d';
+  }
+  if (globeTheme === 'blueprint') {
+    return BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#002b3d';
+  }
+  if (globeTheme === 'vintage') {
+    return VINTAGE_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || VINTAGE_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#4a2711';
+  }
+  return CONTINENT_COLORS_ATTENUATED[systemTheme]?.[region] || CONTINENT_COLORS_ATTENUATED[systemTheme]?.Unknown;
+};
+
+export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
+  if (region === 'France') {
+    region = 'Europe';
+  }
+  if (region === 'Boeuf') {
+    return '#991B1B';
+  }
+
+  if (globeTheme === 'lowpoly') {
+    return systemTheme === 'light' ? '#1e293b' : '#f8fafc';
+  }
+  if (globeTheme === 'synthwave') {
+    return SURFACE_THEME_COLORS.synthwave[region] || '#00f0ff';
+  }
+  if (globeTheme === 'blueprint') {
+    return '#00ffff';
+  }
+  if (globeTheme === 'vintage') {
+    return VINTAGE_REGION_COLORS_LABELS[systemTheme]?.[region] || VINTAGE_REGION_COLORS_LABELS[systemTheme]?.Unknown || '#8b5a2b';
+  }
+  return CONTINENT_COLORS_LABELS[systemTheme]?.[region] || CONTINENT_COLORS_LABELS[systemTheme]?.Unknown;
 };

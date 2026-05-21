@@ -1,16 +1,23 @@
 import React, { useMemo } from 'react';
 import './EndScreen.css';
 import { getGameStats } from './utils';
-import { CONTINENT_COLORS } from './designSystem';
+import { getThemeRegionColor } from './designSystem';
 
-const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, mode, onRestart, onViewTable, theme = 'dark', lang = 'fr' }) => {
+const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, mode, onRestart, onViewTable, theme = 'dark', lang = 'fr', globeTheme = 'glass' }) => {
   const dataMap = activeDataMap || countryDataMap;
   const { stats, CONTINENT_ORDER } = useMemo(() => 
     getGameStats(foundList, dataMap, lang), 
     [foundList, dataMap, lang]
   );
 
-  const colors = CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark;
+  const colors = useMemo(() => {
+    const res = {};
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    regions.forEach(r => {
+      res[r] = getThemeRegionColor(globeTheme, theme, r);
+    });
+    return res;
+  }, [globeTheme, theme]);
   const isPerfectScore = foundList.length === totalCountries;
 
   const continentLabels = {

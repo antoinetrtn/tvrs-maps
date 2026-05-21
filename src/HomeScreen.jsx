@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Sparkles, Hash, Palette } from 'lucide-react';
+import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Hash, Palette } from 'lucide-react';
 import Logo from './Logo';
 import { THEMES_LIST } from './designSystem';
 import './HomeScreen.css';
@@ -12,8 +12,6 @@ const HomeScreen = ({
   setLang,
   gameDuration,
   setGameDuration,
-  globeLightingEnabled,
-  setGlobeLightingEnabled,
   globeTheme,
   setGlobeTheme
 }) => {
@@ -162,22 +160,15 @@ const HomeScreen = ({
             EN
           </button>
         </div>
-        <button className="theme-toggle-btn glass-panel" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+        <button className="theme-toggle-btn glass-panel" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title={lang === 'fr' ? 'Mode sombre/clair' : 'Dark/light mode'}>
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
-        <button
-          className={`theme-toggle-btn glass-panel ${globeLightingEnabled ? 'active' : ''}`}
-          onClick={() => setGlobeLightingEnabled(prev => !prev)}
-          title={lang === 'fr' ? 'Éclairage du globe' : 'Globe lighting'}
-          aria-pressed={globeLightingEnabled}
-        >
-          <Sparkles size={20} />
         </button>
 
         <div className="globe-theme-container">
           <button 
             className={`theme-toggle-btn glass-panel ${themeMenuOpen ? 'active' : ''}`}
             onClick={() => setThemeMenuOpen(prev => !prev)}
+            onPointerDown={(e) => e.preventDefault()}
             title={lang === 'fr' ? 'Thème du globe' : 'Globe theme'}
           >
             <Palette size={20} />
@@ -192,6 +183,7 @@ const HomeScreen = ({
                     setGlobeTheme(t.id);
                     setThemeMenuOpen(false);
                   }}
+                  onPointerDown={(e) => e.preventDefault()}
                 >
                   <span className={`theme-dot ${t.id}`} />
                   <span className="theme-name">{lang === 'fr' ? t.name_fr : t.name_en}</span>

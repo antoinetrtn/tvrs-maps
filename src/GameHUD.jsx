@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home, Play, Palette } from 'lucide-react';
+import { Globe, MapPin, Info, Square, X, ChevronLeft, ChevronRight, Mic, MicOff, Home, Play } from 'lucide-react';
 import Logo from './Logo';
 import './GameHUD.css';
-import { CONTINENT_COLORS, THEMES_LIST } from './designSystem';
+import { getThemeRegionColor } from './designSystem';
 
 // Check for Speech Recognition API support
 const SpeechRecognition = typeof window !== 'undefined'
@@ -14,12 +14,11 @@ const GameHUD = ({
   onInput, onEnter, isPlaying, isGameOver, onStop, onInfo,
   isFocusedCountry, onClearFocus, onNavigateFocus, inputError, inputSuccess, inputWarning, extInputRef,
   foundList, countryDataMap, theme, viewport, isKeyboardMode, selectedCountry,
-  globeTheme, setGlobeTheme
+  globeTheme
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [isListening, setIsListening] = useState(false);
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const recognitionRef = useRef(null);
   
   // Use a ref to store the latest onEnter callback so the Speech API never uses a stale closure
@@ -179,7 +178,14 @@ const GameHUD = ({
   };
 
   const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France"];
-  const REGION_COLORS = useMemo(() => CONTINENT_COLORS[theme] || CONTINENT_COLORS.dark, [theme]);
+  const REGION_COLORS = useMemo(() => {
+    const colors = {};
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    regions.forEach(r => {
+      colors[r] = getThemeRegionColor(globeTheme, theme, r);
+    });
+    return colors;
+  }, [globeTheme, theme]);
   const regionStats = useMemo(() => {
     if (!countryDataMap) return {};
     const stats = {};
@@ -455,34 +461,7 @@ const GameHUD = ({
               </button>
             )}
 
-            <div className="hud-theme-container">
-              <button 
-                className={`hud-btn-circular glass-panel ${themeMenuOpen ? 'active' : ''}`}
-                onClick={() => setThemeMenuOpen(prev => !prev)}
-                onPointerDown={(e) => e.preventDefault()}
-                title={lang === 'fr' ? 'Thème du globe' : 'Globe theme'}
-              >
-                <Palette size={18} />
-              </button>
-              {themeMenuOpen && (
-                <div className="hud-theme-menu glass-panel animation-fade-in">
-                  {THEMES_LIST.map(t => (
-                    <button 
-                      key={t.id} 
-                      className={`hud-theme-menu-item ${globeTheme === t.id ? 'active' : ''}`}
-                      onClick={() => {
-                        setGlobeTheme(t.id);
-                        setThemeMenuOpen(false);
-                      }}
-                      onPointerDown={(e) => e.preventDefault()}
-                    >
-                      <span className={`theme-dot ${t.id}`} />
-                      <span className="theme-name">{lang === 'fr' ? t.name_fr : t.name_en}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+
           </div>
         </div>
     </>
