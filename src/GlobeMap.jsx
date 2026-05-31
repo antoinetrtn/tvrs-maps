@@ -827,7 +827,8 @@ const GlobeMap = ({
 
   const labelsCacheRef = useRef({});
   const isDepartmentMode = mode === 'departments' && !isHomeScreen;
-  const gameDataMap = isDepartmentMode ? (activeDataMap || {}) : countryDataMap;
+  const isRiversMountainsMode = mode === 'rivers_mountains';
+  const gameDataMap = (isDepartmentMode || isRiversMountainsMode) ? (activeDataMap || {}) : countryDataMap;
 
   const safeColor = useCallback((c) => getOpaqueThreeColor(c), []);
 
@@ -1853,7 +1854,7 @@ const GlobeMap = ({
       Object.keys(gameDataMap).forEach(k => {
         const data = gameDataMap[k];
         if (!data || data.lat === undefined) return;
-        const isFound = foundSet.has(k) || mode === 'learn';
+        const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
         assets.push({
           admin: k,
           lat: data.lat,
