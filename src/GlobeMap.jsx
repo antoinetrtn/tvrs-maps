@@ -1468,7 +1468,7 @@ const GlobeMap = ({
       cache.set(admin, material);
     }
 
-    material.color.set(color);
+    material.color.set(safeColor(color));
 
     // DepthWrite is critical for visibility over the globe sphere
     if (material.depthWrite !== true) {
@@ -1524,12 +1524,12 @@ const GlobeMap = ({
 
     if (isDepartmentMode && d.isGhostCountry) {
       if (material.isMeshPhongMaterial) {
-        material.specular.set(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink);
-        material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
+        material.specular.set(safeColor(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink));
+        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
         material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
         material.shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
       } else {
-        material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
+        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
         material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
       }
       return material;
@@ -1537,19 +1537,19 @@ const GlobeMap = ({
 
     if (isDepartmentMode) {
       if (material.isMeshPhongMaterial) {
-        material.specular.set(UI_COLORS.mapBorder);
-        material.emissive.set(color);
+        material.specular.set(safeColor(UI_COLORS.mapBorder));
+        material.emissive.set(safeColor(color));
         material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
         material.shininess = kind === 'cap' ? 2 : 1;
       } else {
-        material.emissive.set(color);
+        material.emissive.set(safeColor(color));
         material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
       }
       return material;
     }
 
     if (globeLightingEnabled) {
-      material.emissive.set(color);
+      material.emissive.set(safeColor(color));
 
       const baseEmissiveIntensity = (kind === 'cap'
         ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
@@ -1567,7 +1567,7 @@ const GlobeMap = ({
       );
 
       if (material.isMeshPhongMaterial) {
-        material.specular.set(admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder);
+        material.specular.set(safeColor(admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder));
         const baseShininess = (kind === 'cap'
           ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
           : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
@@ -2319,12 +2319,12 @@ const GlobeMap = ({
     studioLeft.position.set(-4.5, 2.5, 3.5);
     studioRight.intensity = isLight ? 0.08 : 0.1;
     studioRight.position.set(4.5, -1.2, 2.8);
-    rimLight.color.set(UI_COLORS.lightingRim);
-    fillLight.color.set(UI_COLORS.lightingFill);
-    fillLight.groundColor.set(UI_COLORS.lightingGround);
-    studioLight.color.set(UI_COLORS.lightingStudio);
-    studioLeft.color.set(UI_COLORS.lightingLeft);
-    studioRight.color.set(UI_COLORS.lightingRight);
+    rimLight.color.set(safeColor(UI_COLORS.lightingRim));
+    fillLight.color.set(safeColor(UI_COLORS.lightingFill));
+    fillLight.groundColor.set(safeColor(UI_COLORS.lightingGround));
+    studioLight.color.set(safeColor(UI_COLORS.lightingStudio));
+    studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
+    studioRight.color.set(safeColor(UI_COLORS.lightingRight));
 
     let glowColorHex = 0x3a76f0; // Deep royal blue (less neon)
     let glowPower = 1.2;
@@ -2363,7 +2363,7 @@ const GlobeMap = ({
     targetGlowCoefRef.current = glowCoef;
 
     return true;
-  }, [isLight, globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, globeTheme, selectedCountry, activeDataMap, REGION_COLORS]);
+  }, [isLight, globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, globeTheme, selectedCountry, activeDataMap, REGION_COLORS, safeColor]);
 
   useEffect(() => {
     updateGlobeLighting();
