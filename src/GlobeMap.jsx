@@ -764,12 +764,12 @@ const FRESNEL_FRAGMENT_SHADER = `
     // Thus, the dot product is positive on the back hemisphere.
     float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
-    // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.55)
+    // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.62)
     // to 0.0 at the outer limit of space (x = 0.0).
-    float edgeFade = smoothstep(0.0, 0.55, x);
+    float edgeFade = smoothstep(0.0, 0.62, x);
 
     // Higher exponent creates a more gentle, soft, and diffuse gradient transition
-    float exponent = max(2.2, power * 2.5);
+    float exponent = max(1.8, power * 2.0);
     float intensity = pow(edgeFade, exponent) * coef;
 
     gl_FragColor = vec4(glowColor, intensity);
@@ -2122,7 +2122,7 @@ const GlobeMap = ({
       studioRight.position.set(4.5, -1.2, 2.8);
 
       const innerGlow = new THREE.Mesh(
-        new THREE.SphereGeometry(120.0, 64, 64),
+        new THREE.SphereGeometry(128.0, 64, 64),
         new THREE.ShaderMaterial({
           vertexShader: FRESNEL_VERTEX_SHADER,
           fragmentShader: FRESNEL_FRAGMENT_SHADER,
@@ -2205,7 +2205,7 @@ const GlobeMap = ({
 
     let glowColorHex = 0x3a76f0; // Deep royal blue (less neon)
     let glowPower = 1.2;
-    let glowCoef = 0.11; // Default extremely soft opacity
+    let glowCoef = 0.08; // Default extremely soft opacity
 
     if (selectedCountry && activeDataMap && activeDataMap[selectedCountry]) {
       const region = activeDataMap[selectedCountry].region;
@@ -2213,24 +2213,24 @@ const GlobeMap = ({
       if (rColor) {
         glowColorHex = parseInt(rColor.replace('#', '0x'), 16);
       }
-      glowCoef = 0.16; // Slightly boosted but still very faint for selected country
+      glowCoef = 0.12; // Slightly boosted but still very faint for selected country
     } else {
       if (globeTheme === 'synthwave') {
         glowColorHex = 0xbd00ff; // Muted magenta/purple
         glowPower = 1.0;
-        glowCoef = 0.16;
+        glowCoef = 0.12;
       } else if (globeTheme === 'blueprint') {
         glowColorHex = 0x0ea5e9; // Deep blue-cyan
         glowPower = 1.2;
-        glowCoef = 0.10;
+        glowCoef = 0.07;
       } else if (globeTheme === 'vintage') {
         glowColorHex = 0xc2945c; // Muted gold
         glowPower = 1.1;
-        glowCoef = 0.08;
+        glowCoef = 0.05;
       } else if (globeTheme === 'lowpoly') {
         glowColorHex = 0x0284c7; // Deep sky blue
         glowPower = 1.2;
-        glowCoef = 0.10;
+        glowCoef = 0.07;
       }
     }
 
