@@ -738,47 +738,44 @@ const getDepartmentLayerAltitude = (admin, foundSet, selectedCountry) => {
 };
 
 const FRESNEL_VERTEX_SHADER = `
-  varying vec3 vNormal;
-  varying vec3 vViewPosition;
+  varying vec3 vAtmosphereNormal;
+  varying vec3 vAtmosphereViewPos;
   void main() {
-    vNormal = normalize(normalMatrix * normal);
+    vAtmosphereNormal = normalize(normalMatrix * normal);
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    vViewPosition = -mvPosition.xyz;
+    vAtmosphereViewPos = mvPosition.xyz;
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
 
 const FRESNEL_FRAGMENT_SHADER = `
-  varying vec3 vNormal;
-  varying vec3 vViewPosition;
+  varying vec3 vAtmosphereNormal;
+  varying vec3 vAtmosphereViewPos;
   uniform vec3 glowColor;
   uniform float coef;
   uniform float power;
   void main() {
-    vec3 normal = normalize(vNormal);
-    vec3 viewDir = normalize(vViewPosition);
+    vec3 normal = normalize(vAtmosphereNormal);
+    vec3 viewDir = normalize(vAtmosphereViewPos);
 
-    // True perspective dot product between view direction and surface normal
+    // True perspective dot product between view direction and surface normal.
+    // For BackSide rendering, normal points outwards, and viewDir points from camera
+    // to the vertex (which is also generally away from the camera).
+    // Thus, the dot product is positive on the back hemisphere.
     float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
-    // Peak intensity is at the globe horizon (x = 0.55).
-    // Fades smoothly to 0.0 outwards towards space (x = 0.0).
-    // Fades smoothly to 0.0 inwards on the globe (x = 0.75) to leave the center clean.
-    float edgeFade = 0.0;
-    if (x < 0.55) {
-      edgeFade = smoothstep(0.0, 0.55, x);
-    } else {
-      edgeFade = 1.0 - smoothstep(0.55, 0.75, x);
-    }
+    // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.55)
+    // to 0.0 at the outer limit of space (x = 0.0).
+    float edgeFade = smoothstep(0.0, 0.55, x);
 
-    // Exponent > 1.0 guarantees that the slope at both boundaries (x=0.0 and x=0.75) is flat (0.0),
-    // which completely eliminates any sharp geometric cutoff.
-    float exponent = max(1.2, power * 1.25);
+    // Higher exponent creates a more gentle, soft, and diffuse gradient transition
+    float exponent = max(1.5, power * 2.0);
     float intensity = pow(edgeFade, exponent) * coef;
 
     gl_FragColor = vec4(glowColor, intensity);
   }
 `;
+
 
 
 
@@ -2136,7 +2133,7 @@ const GlobeMap = ({
           },
           transparent: true,
           blending: THREE.NormalBlending,
-          side: THREE.FrontSide,
+          side: THREE.BackSide,
           depthWrite: false
         })
       );
@@ -2208,7 +2205,7 @@ const GlobeMap = ({
 
     let glowColorHex = 0x64b5f6;
     let glowPower = 1.2;
-    let glowCoef = 0.78; // Default soft opacity
+    let glowCoef = 0.22; // Default soft opacity
 
     if (selectedCountry && activeDataMap && activeDataMap[selectedCountry]) {
       const region = activeDataMap[selectedCountry].region;
@@ -2216,24 +2213,24 @@ const GlobeMap = ({
       if (rColor) {
         glowColorHex = parseInt(rColor.replace('#', '0x'), 16);
       }
-      glowCoef = 0.88; // Slightly boosted for selected country
+      glowCoef = 0.30; // Slightly boosted for selected country
     } else {
       if (globeTheme === 'synthwave') {
         glowColorHex = 0xff007f;
         glowPower = 1.0;
-        glowCoef = 0.85;
+        glowCoef = 0.32;
       } else if (globeTheme === 'blueprint') {
         glowColorHex = 0x00ffff;
         glowPower = 1.2;
-        glowCoef = 0.65;
+        glowCoef = 0.20;
       } else if (globeTheme === 'vintage') {
         glowColorHex = 0xd4a373;
         glowPower = 1.1;
-        glowCoef = 0.55;
+        glowCoef = 0.15;
       } else if (globeTheme === 'lowpoly') {
         glowColorHex = 0x38bdf8;
         glowPower = 1.2;
-        glowCoef = 0.75;
+        glowCoef = 0.20;
       }
     }
 
