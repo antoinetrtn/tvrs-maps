@@ -739,28 +739,34 @@ const getDepartmentLayerAltitude = (admin, foundSet, selectedCountry) => {
 
 const FRESNEL_VERTEX_SHADER = `
   varying vec3 vNormal;
+  varying vec3 vViewPosition;
   void main() {
     vNormal = normalize(normalMatrix * normal);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    vViewPosition = -mvPosition.xyz;
+    gl_Position = projectionMatrix * mvPosition;
   }
 `;
 
 const FRESNEL_FRAGMENT_SHADER = `
   varying vec3 vNormal;
+  varying vec3 vViewPosition;
   uniform vec3 glowColor;
   uniform float coef;
   uniform float power;
   void main() {
-    // Normalize the interpolated normal vector to ensure mathematical precision
     vec3 normal = normalize(vNormal);
-    float x = clamp(abs(normal.z), 0.0, 1.0);
+    vec3 viewDir = normalize(vViewPosition);
 
-    // Premium atmosphere glow with smooth space blending:
-    // We end the fade at 0.32 instead of 0.0 to prevent the sharp geometric sphere edge.
-    // This creates an extremely soft, misty, and diffuse halo.
-    float edgeFade = smoothstep(0.32, 0.55, x);
+    // True perspective dot product between view direction and surface normal
+    float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
-    // Dynamic power-based exponent (minimum of 2.0 to ensure zero slope at the outer boundary, avoiding sharp edges)
+    // Gradient goes from center (globe surface x=0.55) to outside space (x=0.0)
+    // By ending at 0.0, it fades to exactly 0.0 at the outer boundary.
+    float edgeFade = smoothstep(0.0, 0.55, x);
+
+    // Exponent >= 2.0 guarantees that the slope at the outer boundary is flat (0.0),
+    // which completely eliminates any sharp geometric cutoff.
     float exponent = max(2.0, power * 2.2);
     float intensity = pow(edgeFade, exponent) * coef;
 
