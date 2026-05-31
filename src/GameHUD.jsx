@@ -148,7 +148,7 @@ const GameHUD = ({
                 subtext: mode === 'departments' 
                   ? mapped.code 
                   : mode === 'rivers_mountains'
-                    ? (mapped.type === 'mountain' ? `${mapped.height}m` : `${mapped.length}km`)
+                    ? (mapped.type === 'mountain_range' ? `${mapped.height}m` : `${mapped.length}km`)
                     : (mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital))
               });
             }
@@ -221,8 +221,8 @@ const GameHUD = ({
       }
       if (mode === 'rivers_mountains') {
         const type = countryDataMap[selectedCountry]?.type;
-        if (type === 'mountain') {
-          return lang === 'fr' ? 'Nom de la montagne...' : 'Mountain name...';
+        if (type === 'mountain_range') {
+          return lang === 'fr' ? 'Nom de la chaîne de montagnes...' : 'Mountain range name...';
         }
         return lang === 'fr' ? 'Nom du fleuve...' : 'River name...';
       }
@@ -389,8 +389,8 @@ const GameHUD = ({
                     : (mode === 'departments'
                         ? (lang === 'fr' ? `Département ${countryDataMap[selectedCountry]?.code || selectedCountry}` : `Department ${countryDataMap[selectedCountry]?.code || selectedCountry}`)
                         : (mode === 'rivers_mountains'
-                        ? (countryDataMap[selectedCountry]?.type === 'mountain'
-                            ? (lang === 'fr' ? 'Devinez cette montagne' : 'Guess this mountain')
+                        ? (countryDataMap[selectedCountry]?.type === 'mountain_range'
+                            ? (lang === 'fr' ? 'Devinez cette chaîne de montagnes' : 'Guess this mountain range')
                             : (lang === 'fr' ? 'Devinez ce fleuve' : 'Guess this river'))
                         : (mode === 'countries' 
                         ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') 

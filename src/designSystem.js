@@ -5,10 +5,7 @@
 export const THEMES_LIST = [
   { id: 'glass', name_fr: 'Verre Moderne', name_en: 'Sleek Glass' },
   { id: 'realistic', name_fr: 'Satellite Réaliste', name_en: 'Realistic Satellite' },
-  { id: 'lowpoly', name_fr: 'Low-Poly Biomes', name_en: 'Low-Poly Biomes' },
-  { id: 'synthwave', name_fr: 'Cyber Synthwave', name_en: 'Cyber Synthwave' },
-  { id: 'vintage', name_fr: 'Cartographe Rétro', name_en: 'Retro Cartographer' },
-  { id: 'blueprint', name_fr: 'Tech Hologramme', name_en: 'Tech Blueprint' }
+  { id: 'lowpoly', name_fr: 'Low-Poly Biomes', name_en: 'Low-Poly Biomes' }
 ];
 
 export const THEME = {
@@ -88,9 +85,9 @@ export const THEME = {
     decorGlowSecondary: 'rgba(255, 255, 255, 0.5)',
     decorGlowSecondaryEnd: 'rgba(241, 245, 249, 0)',
     riverActive: '#0ea5e9',
-    riverInactive: 'rgba(148, 163, 184, 0.4)',
-    riverSelectedFound: '#38bdf8',
-    riverSelectedUnfound: 'rgba(255, 255, 255, 0.8)'
+    riverInactive: 'rgba(56, 189, 248, 0.22)',
+    riverSelectedFound: '#10b981',
+    riverSelectedUnfound: 'rgba(56, 189, 248, 0.65)'
   },
   dark: {
     bg: '#020617',
@@ -168,9 +165,9 @@ export const THEME = {
     decorGlowSecondary: 'rgba(139, 92, 246, 0.06)',
     decorGlowSecondaryEnd: 'rgba(2, 6, 23, 0)',
     riverActive: '#0ea5e9',
-    riverInactive: 'rgba(148, 163, 184, 0.4)',
-    riverSelectedFound: '#38bdf8',
-    riverSelectedUnfound: 'rgba(255, 255, 255, 0.8)'
+    riverInactive: 'rgba(56, 189, 248, 0.22)',
+    riverSelectedFound: '#10b981',
+    riverSelectedUnfound: 'rgba(56, 189, 248, 0.65)'
   }
 };
 
