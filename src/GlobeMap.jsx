@@ -3,7 +3,7 @@ import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
 import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, LOW_POLY_TERRAIN_COLORS, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel } from './designSystem';
-import { createBiomeAsset, disposeBiomeCache } from './LowPolyBiomes';
+import { createBiomeAsset, disposeBiomeCache, createMountainFeature, createRiverFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
 
 
 const getFeatureAdmin = (feature) => feature?.properties?.code || feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
@@ -1059,6 +1059,17 @@ const GlobeMap = ({
   }, [gameDataMap, onCountrySelect]);
 
   const selectCountryAtLngLat = useCallback((lng, lat) => {
+    if (mode === 'rivers_mountains') {
+      let best = null;
+      Object.entries(gameDataMap).forEach(([admin, data]) => {
+        if (data.lat === undefined || data.lng === undefined) return;
+        const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
+        if (!best || dist < best.dist) best = { admin, dist };
+      });
+      selectCountry(best && best.dist < 3.5 ? best.admin : null);
+      return;
+    }
+
     if (isDepartmentMode) {
       let best = null;
       Object.entries(gameDataMap).forEach(([admin, data]) => {
@@ -1837,6 +1848,25 @@ const GlobeMap = ({
   }, []);
 
   const getBiomeAssetsData = useMemo(() => {
+    if (mode === 'rivers_mountains') {
+      const assets = [];
+      Object.keys(gameDataMap).forEach(k => {
+        const data = gameDataMap[k];
+        if (!data || data.lat === undefined) return;
+        const isFound = foundSet.has(k) || mode === 'learn';
+        assets.push({
+          admin: k,
+          lat: data.lat,
+          lng: data.lng,
+          isFound,
+          type: data.type,
+          scale: data.type === 'mountain' ? 1.0 : 0.8,
+          rotation: 0
+        });
+      });
+      return assets;
+    }
+
     if (isDepartmentMode || globeTheme === 'glass') return [];
 
     const assets = [];
@@ -1912,6 +1942,9 @@ const GlobeMap = ({
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
+    if (mode === 'rivers_mountains') {
+      return admin === selectedCountry ? 0.006 : 0.0015;
+    }
     if (globeTheme === 'vintage') {
       return 0.0012; // Vintage assets float exactly at sea level
     }
@@ -1927,13 +1960,23 @@ const GlobeMap = ({
   }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, globeTheme]);
 
   const createBiomeThreeObject = useCallback((d) => {
-    const key = `${d.admin || 'unknown'}_${d.biomeType || 'none'}_${d.variant || 'none'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
+    const key = `${d.admin || 'unknown'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
     if (biomeObjectsCacheRef.current.has(key)) {
       return biomeObjectsCacheRef.current.get(key);
     }
 
     let asset;
-    if (globeTheme === 'vintage') {
+    if (mode === 'rivers_mountains') {
+      if (!d.isFound) {
+        asset = createUnfoundPlaceholder(d.type, theme);
+      } else {
+        if (d.type === 'mountain') {
+          asset = createMountainFeature(theme);
+        } else {
+          asset = createRiverFeature(theme);
+        }
+      }
+    } else if (globeTheme === 'vintage') {
       if (d.variant === 'ship') {
         asset = createVintageShip();
       } else {
@@ -2791,6 +2834,11 @@ const GlobeMap = ({
             objectFacesSurface={true}
             objectRotation={getObjectRotationWrapped}
             objectThreeObject={createBiomeThreeObject}
+            onObjectClick={(obj) => {
+              if (!isHomeScreen) {
+                selectCountry(obj.admin);
+              }
+            }}
             onBackgroundClick={handleBackgroundClick}
           />
         </div>

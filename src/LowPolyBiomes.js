@@ -613,3 +613,124 @@ export const createBiomeAsset = (type, themeName = 'dark', variant = null) => {
 
   return group;
 };
+
+export const createMountainFeature = (themeName = 'dark') => {
+  const group = new THREE.Group();
+  addMountain(group, 'alpine');
+  
+  // Add a tiny pine tree at the base
+  const trunkMat = getMaterial('trunk', () => new THREE.MeshLambertMaterial({ color: 0x5c4033 }));
+  const foliageMat = getMaterial('tallFoliage', () => new THREE.MeshLambertMaterial({ color: 0x1c4a2a, flatShading: true }));
+  
+  const treeGroup = new THREE.Group();
+  const trunkGeo = getGeometry('miniTrunk', () => new THREE.CylinderGeometry(0.015, 0.025, 0.1, 4));
+  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+  trunk.position.y = 0.05;
+  treeGroup.add(trunk);
+  
+  const foliageGeo = getGeometry('miniFoliage', () => new THREE.CylinderGeometry(0, 0.07, 0.16, 4));
+  const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+  foliage.position.y = 0.16;
+  treeGroup.add(foliage);
+  
+  treeGroup.position.set(-0.08, 0, 0.08);
+  treeGroup.scale.set(0.6, 0.6, 0.6);
+  group.add(treeGroup);
+  
+  // Force frustum culling on all child meshes
+  group.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow = false;
+      child.receiveShadow = false;
+      child.frustumCulled = true;
+    }
+  });
+  
+  return group;
+};
+
+export const createRiverFeature = (themeName = 'dark') => {
+  const group = new THREE.Group();
+  
+  const waterMat = getMaterial('riverWater', () => new THREE.MeshLambertMaterial({
+    color: 0x0ea5e9, // River blue
+    flatShading: true
+  }));
+  
+  // River segment 1
+  const seg1Geo = getGeometry('riverSeg1', () => new THREE.BoxGeometry(0.16, 0.015, 0.04));
+  const seg1 = new THREE.Mesh(seg1Geo, waterMat);
+  seg1.position.set(-0.06, 0.0075, -0.04);
+  seg1.rotation.y = 0.4;
+  group.add(seg1);
+  
+  // River segment 2
+  const seg2 = new THREE.Mesh(seg1Geo, waterMat);
+  seg2.position.set(0, 0.0075, 0);
+  seg2.rotation.y = -0.4;
+  group.add(seg2);
+  
+  // River segment 3
+  const seg3 = new THREE.Mesh(seg1Geo, waterMat);
+  seg3.position.set(0.06, 0.0075, 0.04);
+  seg3.rotation.y = 0.4;
+  group.add(seg3);
+  
+  // Add a small rock on the bank
+  const rockMat = getMaterial('riverRock', () => new THREE.MeshLambertMaterial({ color: 0x7d8272, flatShading: true }));
+  const rockGeo = getGeometry('riverRockGeo', () => new THREE.DodecahedronGeometry(0.04, 0));
+  const rock = new THREE.Mesh(rockGeo, rockMat);
+  rock.position.set(0.04, 0.02, -0.06);
+  group.add(rock);
+  
+  // Force culling
+  group.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow = false;
+      child.receiveShadow = false;
+      child.frustumCulled = true;
+    }
+  });
+  
+  return group;
+};
+
+export const createUnfoundPlaceholder = (type, themeName = 'dark') => {
+  const group = new THREE.Group();
+  
+  if (type === 'mountain') {
+    const mat = getMaterial('placeholderMountainMat', () => new THREE.MeshBasicMaterial({
+      color: 0x94a3b8, // Slate grey
+      transparent: true,
+      opacity: 0.5,
+      wireframe: true
+    }));
+    const geo = getGeometry('placeholderMountainGeo', () => new THREE.ConeGeometry(0.08, 0.16, 4));
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = 0.08;
+    group.add(mesh);
+  } else {
+    const mat = getMaterial('placeholderRiverMat', () => new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, // Sky blue
+      transparent: true,
+      opacity: 0.5,
+      wireframe: true
+    }));
+    const geo = getGeometry('placeholderRiverGeo', () => new THREE.SphereGeometry(0.05, 5, 5));
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = 0.05;
+    group.add(mesh);
+  }
+  
+  // Force culling
+  group.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow = false;
+      child.receiveShadow = false;
+      child.frustumCulled = true;
+    }
+  });
+  
+  return group;
+};
+

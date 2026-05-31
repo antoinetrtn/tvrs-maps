@@ -5,7 +5,7 @@ import HomeScreen from './HomeScreen.jsx';
 import './App.css';
 import { normalizeString as rawNormalize, countryDataMap } from './gameData';
 import { departmentsDataMap } from './departmentsData';
-
+import { riversMountainsDataMap } from './riversMountainsData';
 import { getThemeCssVariables } from './designSystem';
 
 // Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
@@ -113,9 +113,11 @@ function App() {
   }, [getViewport]);
 
   const isDepartmentsMode = mode === 'departments';
-  const activeDataMap = useMemo(() => (
-    isDepartmentsMode ? departmentsDataMap : countryDataMap
-  ), [isDepartmentsMode]);
+  const isRiversMountainsMode = mode === 'rivers_mountains';
+  const activeDataMap = useMemo(() => {
+    if (isRiversMountainsMode) return riversMountainsDataMap;
+    return isDepartmentsMode ? departmentsDataMap : countryDataMap;
+  }, [isDepartmentsMode, isRiversMountainsMode]);
 
   // Build a sorted list of all unfound keys for prev/next navigation
   const allCountryKeys = useMemo(() => Object.keys(activeDataMap), [activeDataMap]);
@@ -367,7 +369,7 @@ function App() {
         matchName = normalizeString(adminKey);
       }
 
-      if (mode === 'countries' || mode === 'departments') {
+      if (mode === 'countries' || mode === 'departments' || mode === 'rivers_mountains') {
         if (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput)) {
           matchFound = adminKey;
           break;
@@ -425,7 +427,7 @@ function App() {
     const aliases = mapped.aliases || [];
 
     let isSuccess = false;
-    if ((mode === 'countries' || mode === 'departments') && (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput))) {
+    if ((mode === 'countries' || mode === 'departments' || mode === 'rivers_mountains') && (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput))) {
       isSuccess = true;
     } else if (mode === 'capitals' && matchCapital === normalizedInput) {
       isSuccess = true;
