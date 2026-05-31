@@ -4,10 +4,8 @@
 
 export const THEMES_LIST = [
   { id: 'glass', name_fr: 'Verre Moderne', name_en: 'Sleek Glass' },
-  { id: 'lowpoly', name_fr: 'Low-Poly Biomes', name_en: 'Low-Poly Biomes' },
-  { id: 'synthwave', name_fr: 'Cyber Synthwave', name_en: 'Cyber Synthwave' },
-  { id: 'vintage', name_fr: 'Cartographe Rétro', name_en: 'Retro Cartographer' },
-  { id: 'blueprint', name_fr: 'Tech Hologramme', name_en: 'Tech Blueprint' }
+  { id: 'realistic', name_fr: 'Satellite Réaliste', name_en: 'Realistic Satellite' },
+  { id: 'lowpoly', name_fr: 'Low-Poly Biomes', name_en: 'Low-Poly Biomes' }
 ];
 
 export const THEME = {
@@ -85,7 +83,11 @@ export const THEME = {
     decorGlowPrimary: 'rgba(255, 255, 255, 0.7)',
     decorGlowPrimaryEnd: 'rgba(241, 245, 249, 0)',
     decorGlowSecondary: 'rgba(255, 255, 255, 0.5)',
-    decorGlowSecondaryEnd: 'rgba(241, 245, 249, 0)'
+    decorGlowSecondaryEnd: 'rgba(241, 245, 249, 0)',
+    riverActive: '#0ea5e9',
+    riverInactive: 'rgba(56, 189, 248, 0.45)',
+    riverSelectedFound: '#10b981',
+    riverSelectedUnfound: 'rgba(56, 189, 248, 0.75)'
   },
   dark: {
     bg: '#020617',
@@ -161,7 +163,11 @@ export const THEME = {
     decorGlowPrimary: 'rgba(58, 118, 240, 0.1)',
     decorGlowPrimaryEnd: 'rgba(2, 6, 23, 0)',
     decorGlowSecondary: 'rgba(139, 92, 246, 0.06)',
-    decorGlowSecondaryEnd: 'rgba(2, 6, 23, 0)'
+    decorGlowSecondaryEnd: 'rgba(2, 6, 23, 0)',
+    riverActive: '#38bdf8',
+    riverInactive: 'rgba(56, 189, 248, 0.55)',
+    riverSelectedFound: '#34d399',
+    riverSelectedUnfound: 'rgba(56, 189, 248, 0.80)'
   }
 };
 
@@ -195,6 +201,34 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
 
 export const THEME_OVERRIDES = {
   glass: {},
+  realistic: {
+    light: {
+      accent: '#059669',
+      accentHover: '#047857',
+      accentSoft: 'rgba(5, 150, 105, 0.15)',
+      accentGlow: '#34d399',
+      accentContrast: '#ffffff',
+      mapBase: 'rgba(255, 255, 255, 0.25)',
+      mapSea: '#0d1f3d',
+      mapBorder: 'rgba(255, 255, 255, 0.65)',
+      mapBorderMuted: 'rgba(15, 23, 42, 0.2)',
+      graticule: 'rgba(255, 255, 255, 0.18)',
+      globeInnerGlow: 'rgba(255, 255, 255, 0.15)'
+    },
+    dark: {
+      accent: '#34d399',
+      accentHover: '#6ee7b7',
+      accentSoft: 'rgba(52, 211, 153, 0.18)',
+      accentGlow: '#059669',
+      accentContrast: '#022c22',
+      mapBase: 'rgba(255, 255, 255, 0.15)',
+      mapSea: '#020617',
+      mapBorder: 'rgba(255, 255, 255, 0.55)',
+      mapBorderMuted: 'rgba(255, 255, 255, 0.25)',
+      graticule: 'rgba(255, 255, 255, 0.12)',
+      globeInnerGlow: 'rgba(52, 211, 153, 0.12)'
+    }
+  },
   lowpoly: {
     light: {
       accent: '#10b981',
@@ -679,6 +713,7 @@ export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass',
     '--decor-glow-secondary': theme.decorGlowSecondary,
     '--decor-glow-secondary-end': theme.decorGlowSecondaryEnd,
     '--theme-dot-glass': '#0ea5e9',
+    '--theme-dot-realistic': '#34d399',
     '--theme-dot-lowpoly': '#10b981',
     '--theme-dot-synthwave': '#ff007f',
     '--theme-dot-vintage': '#bfae8f',

@@ -92,7 +92,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
                         className={`country-pill ${c.found ? 'found' : 'missed'}`}
                         title={isRevealed ? label : '???'}
                       >
-                        {label}
+                        {isRevealed ? label : '???'}
                       </div>
                     );
                   })}

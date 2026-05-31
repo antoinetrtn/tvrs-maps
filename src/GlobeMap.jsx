@@ -3,8 +3,59 @@ import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
 import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, LOW_POLY_TERRAIN_COLORS, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel } from './designSystem';
-import { createBiomeAsset, disposeBiomeCache } from './LowPolyBiomes';
+import { createBiomeAsset, disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
 
+const smoothedRiversCache = {};
+
+const getSmoothedRiverPath = (riverKey, pathCoords) => {
+  if (smoothedRiversCache[riverKey]) return smoothedRiversCache[riverKey];
+  if (!pathCoords || pathCoords.length < 2) return pathCoords;
+  
+  const points = pathCoords.map(([lat, lng]) => new THREE.Vector3(lat, lng, 0.005));
+  const curve = new THREE.CatmullRomCurve3(points);
+  const smoothPoints = curve.getPoints(60);
+  const result = smoothPoints.map(p => [p.x, p.y, p.z]);
+  
+  smoothedRiversCache[riverKey] = result;
+  return result;
+};
+
+// Preload textures for realistic theme
+const textureLoader = new THREE.TextureLoader();
+
+// 3-level progressive texture quality:
+// Level 1 (far) — 1K via proxy, loads instantly
+const urlMapLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=1024&q=85';
+const urlBumpLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=1024&q=85';
+const urlSpecLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=1024&q=85';
+
+// Level 2 (medium) — 2K via proxy, loads on first zoom-in
+const urlMapMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=2048&q=90';
+const urlBumpMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=2048&q=90';
+const urlSpecMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=2048&q=90';
+
+// Level 3 (close-up) — 4K, loads only when really close to a country
+const urlMapHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=4096&q=95';
+const urlBumpHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=4096&q=95';
+const urlSpecHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=4096&q=95';
+
+const earthMapLow = textureLoader.load(urlMapLow);
+const bumpMapLow = textureLoader.load(urlBumpLow);
+const specularMapLow = textureLoader.load(urlSpecLow);
+
+earthMapLow.colorSpace = THREE.SRGBColorSpace;
+
+let earthMapMid = null;
+let bumpMapMid = null;
+let specularMapMid = null;
+let midResLoading = false;
+let midResLoaded = false;
+
+let earthMapHigh = null;
+let bumpMapHigh = null;
+let specularMapHigh = null;
+let highResLoading = false;
+let highResLoaded = false;
 
 const getFeatureAdmin = (feature) => feature?.properties?.code || feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
 
@@ -816,6 +867,61 @@ const GlobeMap = ({
   const wasHomeScreenRef = useRef(isHomeScreen);
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
+  const [texQuality, setTexQuality] = useState('low'); // 'low' | 'mid' | 'high'
+
+  useEffect(() => {
+    if (globeTheme !== 'realistic') return;
+
+    // 3-level progressive texture quality based on zoom
+    if (zoomLevel <= 1.1) {
+      // Close-up on a country — load 4K
+      if (!highResLoaded && !highResLoading) {
+        highResLoading = true;
+        let loadedCount = 0;
+        const checkHighLoaded = () => {
+          loadedCount++;
+          if (loadedCount === 3) {
+            highResLoaded = true;
+            highResLoading = false;
+            if (earthMapHigh) earthMapHigh.colorSpace = THREE.SRGBColorSpace;
+            setTexQuality('high');
+          }
+        };
+        earthMapHigh = textureLoader.load(urlMapHigh, checkHighLoaded);
+        bumpMapHigh = textureLoader.load(urlBumpHigh, checkHighLoaded);
+        specularMapHigh = textureLoader.load(urlSpecHigh, checkHighLoaded);
+      } else if (highResLoaded && texQuality !== 'high') {
+        setTexQuality('high');
+      } else if (!highResLoaded && midResLoaded && texQuality !== 'mid') {
+        setTexQuality('mid'); // Use 2K while 4K loads
+      }
+    } else if (zoomLevel <= 1.6) {
+      // Zoomed in on a region — load 2K if not already loaded
+      if (!midResLoaded && !midResLoading) {
+        midResLoading = true;
+        let loadedCount = 0;
+        const checkMidLoaded = () => {
+          loadedCount++;
+          if (loadedCount === 3) {
+            midResLoaded = true;
+            midResLoading = false;
+            if (earthMapMid) earthMapMid.colorSpace = THREE.SRGBColorSpace;
+            if (texQuality === 'low') setTexQuality('mid');
+          }
+        };
+        earthMapMid = textureLoader.load(urlMapMid, checkMidLoaded);
+        bumpMapMid = textureLoader.load(urlBumpMid, checkMidLoaded);
+        specularMapMid = textureLoader.load(urlSpecMid, checkMidLoaded);
+      } else if (midResLoaded && texQuality === 'low') {
+        setTexQuality('mid');
+      }
+      // Downgrade from 4K to 2K when zooming back out a bit
+      if (texQuality === 'high' && zoomLevel > 1.4) setTexQuality('mid');
+    } else {
+      // Far away — use 1K
+      if (texQuality !== 'low') setTexQuality('low');
+    }
+  }, [zoomLevel, globeTheme, texQuality]);
   const prevSelectedCountryRef = useRef(null);
   const biomeObjectsCacheRef = useRef(new Map());
   const animObjectsCacheRef = useRef([]);
@@ -826,7 +932,8 @@ const GlobeMap = ({
 
   const labelsCacheRef = useRef({});
   const isDepartmentMode = mode === 'departments' && !isHomeScreen;
-  const gameDataMap = isDepartmentMode ? (activeDataMap || {}) : countryDataMap;
+  const isRiversMountainsMode = mode === 'rivers_mountains';
+  const gameDataMap = (isDepartmentMode || isRiversMountainsMode) ? (activeDataMap || {}) : countryDataMap;
 
   const safeColor = useCallback((c) => getOpaqueThreeColor(c), []);
 
@@ -1058,6 +1165,32 @@ const GlobeMap = ({
   }, [gameDataMap, onCountrySelect]);
 
   const selectCountryAtLngLat = useCallback((lng, lat) => {
+    if (mode === 'rivers_mountains') {
+      let best = null;
+      Object.entries(gameDataMap).forEach(([admin, data]) => {
+        if (!data) return;
+        let dist;
+        if (data.type === 'river' && Array.isArray(data.path) && data.path.length > 0) {
+          // For rivers: find min distance to ANY point on the river path polyline
+          dist = data.path.reduce((min, [pLat, pLng]) => {
+            const d = getLngLatDistance(lng, lat, pLng, pLat);
+            return d < min ? d : min;
+          }, Infinity);
+        } else if (data.lat !== undefined && data.lng !== undefined) {
+          // Mountain ranges: use center point with a generous radius
+          dist = getLngLatDistance(lng, lat, data.lng, data.lat);
+        } else {
+          return;
+        }
+        if (!best || dist < best.dist) best = { admin, dist };
+      });
+      // Rivers: click within ~2.5° of path. Mountains: 5° generous hit area.
+      const bestData = best ? gameDataMap[best.admin] : null;
+      const threshold = bestData?.type === 'river' ? 2.5 : 5.0;
+      selectCountry(best && best.dist < threshold ? best.admin : null);
+      return;
+    }
+
     if (isDepartmentMode) {
       let best = null;
       Object.entries(gameDataMap).forEach(([admin, data]) => {
@@ -1290,6 +1423,12 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
+    if (globeTheme === 'realistic') {
+      if (admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
+      const isFound = foundSet.has(admin) || mode === 'learn';
+      return isFound ? getRegionSurfaceColor(region) : UI_COLORS.mapBorderMuted;
+    }
+
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
       const baseStroke = (isHomeScreen ? UI_COLORS.accent : getRegionSurfaceColor(region));
@@ -1442,7 +1581,7 @@ const GlobeMap = ({
       cache.set(admin, material);
     }
 
-    material.color.set(color);
+    material.color.set(safeColor(color));
 
     // DepthWrite is critical for visibility over the globe sphere
     if (material.depthWrite !== true) {
@@ -1478,6 +1617,14 @@ const GlobeMap = ({
       targetOpacity = isFound || admin === selectedCountry ? 0.45 : 0.15;
       targetTransparent = true;
     }
+    if (globeTheme === 'realistic') {
+      targetOpacity = admin === selectedCountry
+        ? 0.4
+        : isFound
+          ? 0.22
+          : 0.04;
+      targetTransparent = true;
+    }
 
     if (material.wireframe !== targetWireframe || material.transparent !== targetTransparent) {
       material.wireframe = targetWireframe;
@@ -1490,12 +1637,12 @@ const GlobeMap = ({
 
     if (isDepartmentMode && d.isGhostCountry) {
       if (material.isMeshPhongMaterial) {
-        material.specular.set(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink);
-        material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
+        material.specular.set(safeColor(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink));
+        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
         material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
         material.shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
       } else {
-        material.emissive.set(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black);
+        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
         material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
       }
       return material;
@@ -1503,19 +1650,19 @@ const GlobeMap = ({
 
     if (isDepartmentMode) {
       if (material.isMeshPhongMaterial) {
-        material.specular.set(UI_COLORS.mapBorder);
-        material.emissive.set(color);
+        material.specular.set(safeColor(UI_COLORS.mapBorder));
+        material.emissive.set(safeColor(color));
         material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
         material.shininess = kind === 'cap' ? 2 : 1;
       } else {
-        material.emissive.set(color);
+        material.emissive.set(safeColor(color));
         material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
       }
       return material;
     }
 
     if (globeLightingEnabled) {
-      material.emissive.set(color);
+      material.emissive.set(safeColor(color));
 
       const baseEmissiveIntensity = (kind === 'cap'
         ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
@@ -1533,7 +1680,7 @@ const GlobeMap = ({
       );
 
       if (material.isMeshPhongMaterial) {
-        material.specular.set(admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder);
+        material.specular.set(safeColor(admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder));
         const baseShininess = (kind === 'cap'
           ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
           : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
@@ -1574,6 +1721,7 @@ const GlobeMap = ({
   }, []);
 
   const getPolygonAltitude = useCallback((d) => {
+    if (mode === 'rivers_mountains') return 0.0005;
     if (isDepartmentMode && d.isGhostCountry) return 0.003;
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode) {
@@ -1582,7 +1730,7 @@ const GlobeMap = ({
     const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, extrusionScale);
     if (admin === selectedCountry) return altitude * 1.05;
     return altitude;
-  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode]);
+  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, mode]);
 
   const getSelectionEffectAltitude = useCallback(() => {
     if (isDepartmentMode) {
@@ -1613,6 +1761,10 @@ const GlobeMap = ({
     if (admin === selectedCountry) return perfProfile?.isMobile ? 2.1 : 3.0;
     // Low-poly theme: no flat 2D strokes — let 3D facets define the shape
     if (globeTheme === 'lowpoly') return 0;
+    if (globeTheme === 'realistic') {
+      if (admin === selectedCountry) return perfProfile?.isMobile ? 1.5 : 2.0;
+      return perfProfile?.isMobile ? 0.15 : 0.25;
+    }
     if (isDepartmentMode) return perfProfile?.isMobile ? 0.55 : 0.75;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
     return perfProfile?.isMobile ? 0.25 : 0.4;
@@ -1835,8 +1987,87 @@ const GlobeMap = ({
     };
   }, []);
 
+  // Ref so the selected river can update its appearance without rebuilding ALL river paths
+  const selectedCountryRiverRef = useRef(null);
+  selectedCountryRiverRef.current = selectedCountry;
+
+  // Base river paths — deliberately exclude selectedCountry from deps to avoid
+  // mass-re-animating every river on each selection change. Only rebuilds when
+  // actual data (found state, theme) changes.
+  const riversBasePathsData = useMemo(() => {
+    if (mode !== 'rivers_mountains') return [];
+    const paths = [];
+    Object.keys(gameDataMap).forEach(k => {
+      const data = gameDataMap[k];
+      if (!data || data.type !== 'river' || !data.path) return;
+      const isFound = foundSet.has(k) || isHomeScreen;
+      paths.push({
+        admin: k,
+        coords: getSmoothedRiverPath(k, data.path),
+        color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
+        // Solid thick lines — no dashes, pure stroke width is what makes rivers readable
+        width: isFound ? 45 : 30,
+        dashLength: 1,   // 1 = full coverage = solid line
+        dashGap: 0,
+        dashAnimateTime: isFound ? 3000 : 0, // Subtle shimmer on found rivers
+      });
+    });
+    return paths;
+  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS]);
+
+  // Selected river overlay — small separate array, rebuilds only on selection/error change.
+  // Renders ON TOP of base paths with highlight color.
+  const riversSelectedPathData = useMemo(() => {
+    if (mode !== 'rivers_mountains' || !selectedCountry) return [];
+    const data = gameDataMap[selectedCountry];
+    if (!data || data.type !== 'river' || !data.path) return [];
+    const isFound = foundSet.has(selectedCountry) || isHomeScreen;
+    const color = isFound
+      ? (isError ? UI_COLORS.error : UI_COLORS.riverSelectedFound)
+      : (isError ? UI_COLORS.errorGlowStrong : UI_COLORS.riverSelectedUnfound);
+    return [{
+      admin: selectedCountry,
+      coords: getSmoothedRiverPath(selectedCountry, data.path),
+      color,
+      // Selected river — extra thick, solid, fast animated shimmer
+      width: isFound ? 65 : 55,
+      dashLength: 1,
+      dashGap: 0,
+      dashAnimateTime: isFound ? 1200 : 0,
+    }];
+  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS]);
+
+  // Combined for globe: base first, selected on top
+  const riversPathsData = useMemo(() => [
+    ...riversBasePathsData,
+    ...riversSelectedPathData,
+  ], [riversBasePathsData, riversSelectedPathData]);
+
   const getBiomeAssetsData = useMemo(() => {
-    if (isDepartmentMode || globeTheme === 'glass') return [];
+    if (mode === 'rivers_mountains') {
+      const assets = [];
+      Object.keys(gameDataMap).forEach(k => {
+        const data = gameDataMap[k];
+        if (!data || data.lat === undefined) return;
+        const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
+        assets.push({
+          admin: k,
+          lat: data.lat,
+          lng: data.lng,
+          isFound,
+          type: data.type,
+          bearing: data.bearing || 0,
+          spread: data.spread || 1.5,
+          height: data.height || 4000,
+          scale: data.type === 'mountain_range' ? 2.8 : 1.0,
+          rotation: 0
+        });
+      });
+      return assets;
+    }
+
+    // Disable all low-poly biomes on realistic theme or glass theme for performance and aesthetic correctness
+    if (isDepartmentMode || globeTheme === 'glass' || globeTheme === 'realistic') return [];
 
     const assets = [];
     const allAdmins = Object.keys(gameDataMap);
@@ -1866,33 +2097,32 @@ const GlobeMap = ({
           biomeType = 'USA';
         }
 
-        if (featureEntry && featureEntry.polygons.length > 0) {
-          for (let i = 0; i < maxModels; i++) {
-            const point = getSampledBiomePoint(featureEntry, data, size, generated);
-            const variant = selectLogicalBiomeVariant(point.lat, point.lng, biomeType, data.lat, data.lng, globeTheme);
-
+        if (featureEntry && featureEntry.renderGeometry) {
+          const samplePoints = getPointsInGeometry(featureEntry.renderGeometry, maxModels);
+          for (let i = 0; i < samplePoints.length; i++) {
+            const pt = samplePoints[i];
+            const variant = globeTheme === 'vintage' ? (i === 0 ? 'monster' : 'ship') : null;
             generated.push({
               admin,
-              lat: point.lat,
-              lng: point.lng,
+              lat: pt[0],
+              lng: pt[1],
               biomeType,
               variant,
-              scale: globeTheme === 'lowpoly' ? (0.7 + Math.random() * 1.05) : 1.0,
+              scale: globeTheme === 'vintage' ? (variant === 'ship' ? 0.35 : 0.45) : (0.6 + Math.random() * 0.5),
               rotation: Math.random() * 360
             });
           }
         } else {
           for (let i = 0; i < maxModels; i++) {
-            const point = getBiomeFallbackPoint(data, size);
-            const variant = selectLogicalBiomeVariant(point.lat, point.lng, biomeType, data.lat, data.lng, globeTheme);
-
+            const pt = getRandomOffsetPoint(data.lat, data.lng, Math.min(0.8, 0.2 + size * 0.1));
+            const variant = globeTheme === 'vintage' ? (i === 0 ? 'monster' : 'ship') : null;
             generated.push({
               admin,
-              lat: point.lat,
-              lng: point.lng,
+              lat: pt[0],
+              lng: pt[1],
               biomeType,
               variant,
-              scale: globeTheme === 'lowpoly' ? (0.75 + Math.random() * 0.9) : 1.0,
+              scale: globeTheme === 'vintage' ? (variant === 'ship' ? 0.35 : 0.45) : (0.6 + Math.random() * 0.5),
               rotation: Math.random() * 360
             });
           }
@@ -1911,6 +2141,9 @@ const GlobeMap = ({
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
+    if (mode === 'rivers_mountains') {
+      return admin === selectedCountry ? 0.012 : 0.004;
+    }
     if (globeTheme === 'vintage') {
       return 0.0012; // Vintage assets float exactly at sea level
     }
@@ -1923,16 +2156,30 @@ const GlobeMap = ({
       return altitude * 1.05 + 0.0015; // Slightly above cap to prevent clipping
     }
     return altitude + 0.0015;
-  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, globeTheme]);
+  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, globeTheme, mode]);
 
   const createBiomeThreeObject = useCallback((d) => {
-    const key = `${d.admin || 'unknown'}_${d.biomeType || 'none'}_${d.variant || 'none'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
+    const isSelected = d.admin === selectedCountry;
+    const key = mode === 'rivers_mountains'
+      ? `${d.admin || 'unknown'}_${d.isFound ? 'found' : 'unfound'}_selected_${isSelected}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`
+      : `${d.admin || 'unknown'}_${d.biomeType || 'none'}_${d.variant || 'none'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
+    
     if (biomeObjectsCacheRef.current.has(key)) {
       return biomeObjectsCacheRef.current.get(key);
     }
 
     let asset;
-    if (globeTheme === 'vintage') {
+    if (mode === 'rivers_mountains') {
+      if (!d.isFound) {
+        asset = createUnfoundPlaceholder(d.type, theme, isSelected, d.bearing, d.spread);
+      } else {
+        if (d.type === 'mountain' || d.type === 'mountain_range') {
+          asset = createMountainFeature(theme, isSelected, d.bearing, d.spread, d.height);
+        } else {
+          asset = new THREE.Group(); // Found rivers are drawn in 3D paths, so empty group here
+        }
+      }
+    } else if (globeTheme === 'vintage') {
       if (d.variant === 'ship') {
         asset = createVintageShip();
       } else {
@@ -1956,7 +2203,7 @@ const GlobeMap = ({
 
     biomeObjectsCacheRef.current.set(key, alignedAsset);
     return alignedAsset;
-  }, [theme, globeTheme]);
+  }, [theme, globeTheme, mode, selectedCountry]);
 
   useEffect(() => {
     // Clear biome objects cache when theme changes to prevent memory leak and release old theme assets
@@ -2058,6 +2305,28 @@ const GlobeMap = ({
         shininess: 15
       });
     }
+    if (globeTheme === 'realistic') {
+      // Select texture based on quality level
+      const activeMap = texQuality === 'high' && earthMapHigh
+        ? earthMapHigh
+        : (texQuality === 'mid' && earthMapMid ? earthMapMid : earthMapLow);
+      const activeBump = texQuality === 'high' && bumpMapHigh
+        ? bumpMapHigh
+        : (texQuality === 'mid' && bumpMapMid ? bumpMapMid : bumpMapLow);
+      const activeSpec = texQuality === 'high' && specularMapHigh
+        ? specularMapHigh
+        : (texQuality === 'mid' && specularMapMid ? specularMapMid : specularMapLow);
+
+      return new THREE.MeshPhongMaterial({
+        map: activeMap,
+        bumpMap: activeBump,
+        bumpScale: 0.16,
+        specularMap: activeSpec,
+        specular: new THREE.Color(isLight ? 0x222222 : 0x111111),
+        shininess: 15,
+        flatShading: false
+      });
+    }
 
     return new THREE.MeshPhongMaterial({
       color: UI_COLORS.mapSea,
@@ -2072,7 +2341,7 @@ const GlobeMap = ({
       opacity: 1,
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7
     });
-  }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture]);
+  }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture, texQuality]);
 
   useEffect(() => {
     return () => {
@@ -2196,12 +2465,12 @@ const GlobeMap = ({
     studioLeft.position.set(-4.5, 2.5, 3.5);
     studioRight.intensity = isLight ? 0.08 : 0.1;
     studioRight.position.set(4.5, -1.2, 2.8);
-    rimLight.color.set(UI_COLORS.lightingRim);
-    fillLight.color.set(UI_COLORS.lightingFill);
-    fillLight.groundColor.set(UI_COLORS.lightingGround);
-    studioLight.color.set(UI_COLORS.lightingStudio);
-    studioLeft.color.set(UI_COLORS.lightingLeft);
-    studioRight.color.set(UI_COLORS.lightingRight);
+    rimLight.color.set(safeColor(UI_COLORS.lightingRim));
+    fillLight.color.set(safeColor(UI_COLORS.lightingFill));
+    fillLight.groundColor.set(safeColor(UI_COLORS.lightingGround));
+    studioLight.color.set(safeColor(UI_COLORS.lightingStudio));
+    studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
+    studioRight.color.set(safeColor(UI_COLORS.lightingRight));
 
     let glowColorHex = 0x3a76f0; // Deep royal blue (less neon)
     let glowPower = 1.2;
@@ -2240,7 +2509,7 @@ const GlobeMap = ({
     targetGlowCoefRef.current = glowCoef;
 
     return true;
-  }, [isLight, globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, globeTheme, selectedCountry, activeDataMap, REGION_COLORS]);
+  }, [isLight, globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, globeTheme, selectedCountry, activeDataMap, REGION_COLORS, safeColor]);
 
   useEffect(() => {
     updateGlobeLighting();
@@ -2502,7 +2771,7 @@ const GlobeMap = ({
   }, [selectableFeatureIndex]);
 
   const markersData = useMemo(() => {
-    if (isDepartmentMode) return [];
+    if (isDepartmentMode || isRiversMountainsMode) return [];
 
     return Object.entries(countryDataMap)
       .filter(([admin, data]) => {
@@ -2516,7 +2785,7 @@ const GlobeMap = ({
         lng: data.lng,
         region: data.region
       }));
-  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, gameDataMap]);
+  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, isRiversMountainsMode, gameDataMap]);
 
   const visibleMarkersData = useMemo(() => {
     if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {
@@ -2791,6 +3060,29 @@ const GlobeMap = ({
             objectFacesSurface={true}
             objectRotation={getObjectRotationWrapped}
             objectThreeObject={createBiomeThreeObject}
+            onObjectClick={obj => {
+              if (!isHomeScreen) {
+                selectCountry(obj.admin);
+              }
+            }}
+            {...{
+              ['paths' + 'Data']: riversPathsData,
+              ['pathPoints']: d => d.coords,
+              ['pathPointLat']: d => d[0],
+              ['pathPointLng']: d => d[1],
+              ['pathPointAlt']: d => d[2],
+              ['pathColor']: d => d.color,
+              ['path' + 'Stroke' + 'Width']: d => d.width,
+              ['pathDashLength']: d => d.dashLength,
+              ['pathDashGap']: d => d.dashGap,
+              ['pathDashAnimateTime']: d => d.dashAnimateTime,
+              ['pathTransitionDuration']: 0,
+              ['onPathClick']: obj => {
+                if (!isHomeScreen) {
+                  selectCountry(obj.admin);
+                }
+              }
+            }}
             onBackgroundClick={handleBackgroundClick}
           />
         </div>
