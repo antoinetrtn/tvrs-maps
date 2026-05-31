@@ -769,7 +769,7 @@ const FRESNEL_FRAGMENT_SHADER = `
     float edgeFade = smoothstep(0.0, 0.55, x);
 
     // Higher exponent creates a more gentle, soft, and diffuse gradient transition
-    float exponent = max(1.5, power * 2.0);
+    float exponent = max(2.2, power * 2.5);
     float intensity = pow(edgeFade, exponent) * coef;
 
     gl_FragColor = vec4(glowColor, intensity);
@@ -2203,9 +2203,9 @@ const GlobeMap = ({
     studioLeft.color.set(UI_COLORS.lightingLeft);
     studioRight.color.set(UI_COLORS.lightingRight);
 
-    let glowColorHex = 0x64b5f6;
+    let glowColorHex = 0x3a76f0; // Deep royal blue (less neon)
     let glowPower = 1.2;
-    let glowCoef = 0.22; // Default soft opacity
+    let glowCoef = 0.11; // Default extremely soft opacity
 
     if (selectedCountry && activeDataMap && activeDataMap[selectedCountry]) {
       const region = activeDataMap[selectedCountry].region;
@@ -2213,24 +2213,24 @@ const GlobeMap = ({
       if (rColor) {
         glowColorHex = parseInt(rColor.replace('#', '0x'), 16);
       }
-      glowCoef = 0.30; // Slightly boosted for selected country
+      glowCoef = 0.16; // Slightly boosted but still very faint for selected country
     } else {
       if (globeTheme === 'synthwave') {
-        glowColorHex = 0xff007f;
+        glowColorHex = 0xbd00ff; // Muted magenta/purple
         glowPower = 1.0;
-        glowCoef = 0.32;
+        glowCoef = 0.16;
       } else if (globeTheme === 'blueprint') {
-        glowColorHex = 0x00ffff;
+        glowColorHex = 0x0ea5e9; // Deep blue-cyan
         glowPower = 1.2;
-        glowCoef = 0.20;
+        glowCoef = 0.10;
       } else if (globeTheme === 'vintage') {
-        glowColorHex = 0xd4a373;
+        glowColorHex = 0xc2945c; // Muted gold
         glowPower = 1.1;
-        glowCoef = 0.15;
+        glowCoef = 0.08;
       } else if (globeTheme === 'lowpoly') {
-        glowColorHex = 0x38bdf8;
+        glowColorHex = 0x0284c7; // Deep sky blue
         glowPower = 1.2;
-        glowCoef = 0.20;
+        glowCoef = 0.10;
       }
     }
 
