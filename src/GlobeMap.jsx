@@ -756,23 +756,13 @@ const FRESNEL_FRAGMENT_SHADER = `
     float x = clamp(abs(normal.z), 0.0, 1.0);
 
     // Premium atmosphere glow with smooth space blending:
-    // Starts fading extremely close to the physical sphere edge (0.01) and reaches
-    // full intensity at the globe's physical boundary (0.55).
-    // This allows a wide, gorgeous volume shell for the atmosphere.
-    float edgeFade = smoothstep(0.01, 0.55, x);
+    // We end the fade at 0.18 instead of 0.0 to prevent the sharp geometric sphere edge.
+    // This creates an extremely soft, misty, and diffuse halo.
+    float edgeFade = smoothstep(0.18, 0.55, x);
 
-    // Core glow component: bright and intense near the globe surface
-    float density = pow(edgeFade, power * 3.0);
-
-    // Gaseous corona component: very wide, diffuse, and misty to create a premium soft halo
-    float corona = pow(edgeFade, power * 0.55);
-
-    // Space merge attenuation: ensures that the outer edge of the atmosphere shell
-    // dissolves with absolute perfection into the dark vacuum of space, eliminating sharp lines.
-    float spaceMerge = smoothstep(0.0, 0.25, edgeFade);
-
-    // Weight the gaseous corona higher (60% corona, 40% density) for a more diffuse and misty feel
-    float intensity = (density * 0.4 + corona * 0.6) * spaceMerge * coef;
+    // Dynamic power-based exponent (minimum of 2.0 to ensure zero slope at the outer boundary, avoiding sharp edges)
+    float exponent = max(2.0, power * 2.2);
+    float intensity = pow(edgeFade, exponent) * coef;
 
     gl_FragColor = vec4(glowColor, intensity);
   }
@@ -1587,6 +1577,7 @@ const GlobeMap = ({
   }, []);
 
   const getPolygonAltitude = useCallback((d) => {
+    if (mode === 'rivers_mountains') return 0.0005;
     if (isDepartmentMode && d.isGhostCountry) return 0.003;
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode) {
@@ -1595,7 +1586,7 @@ const GlobeMap = ({
     const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, extrusionScale);
     if (admin === selectedCountry) return altitude * 1.05;
     return altitude;
-  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode]);
+  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, mode]);
 
   const getSelectionEffectAltitude = useCallback(() => {
     if (isDepartmentMode) {
@@ -2546,7 +2537,7 @@ const GlobeMap = ({
   }, [selectableFeatureIndex]);
 
   const markersData = useMemo(() => {
-    if (isDepartmentMode) return [];
+    if (isDepartmentMode || mode === 'rivers_mountains') return [];
 
     return Object.entries(countryDataMap)
       .filter(([admin, data]) => {
@@ -2560,7 +2551,7 @@ const GlobeMap = ({
         lng: data.lng,
         region: data.region
       }));
-  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, gameDataMap]);
+  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, gameDataMap, mode]);
 
   const visibleMarkersData = useMemo(() => {
     if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {

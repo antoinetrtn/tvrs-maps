@@ -657,30 +657,30 @@ export const createRiverFeature = (themeName = 'dark') => {
     flatShading: true
   }));
   
-  // River segment 1
-  const seg1Geo = getGeometry('riverSeg1', () => new THREE.BoxGeometry(0.16, 0.015, 0.04));
+  // River segment 1: Much thicker (height=0.08) and wider (width=0.09) to avoid clipping and stand out
+  const seg1Geo = getGeometry('riverSeg1', () => new THREE.BoxGeometry(0.24, 0.08, 0.09));
   const seg1 = new THREE.Mesh(seg1Geo, waterMat);
-  seg1.position.set(-0.06, 0.0075, -0.04);
-  seg1.rotation.y = 0.4;
+  seg1.position.set(-0.16, 0.04, -0.08);
+  seg1.rotation.y = 0.45;
   group.add(seg1);
   
   // River segment 2
   const seg2 = new THREE.Mesh(seg1Geo, waterMat);
-  seg2.position.set(0, 0.0075, 0);
-  seg2.rotation.y = -0.4;
+  seg2.position.set(0, 0.04, 0);
+  seg2.rotation.y = -0.45;
   group.add(seg2);
   
   // River segment 3
   const seg3 = new THREE.Mesh(seg1Geo, waterMat);
-  seg3.position.set(0.06, 0.0075, 0.04);
-  seg3.rotation.y = 0.4;
+  seg3.position.set(0.16, 0.04, 0.08);
+  seg3.rotation.y = 0.45;
   group.add(seg3);
   
-  // Add a small rock on the bank
+  // Add a nice low-poly rock on the bank
   const rockMat = getMaterial('riverRock', () => new THREE.MeshLambertMaterial({ color: 0x7d8272, flatShading: true }));
-  const rockGeo = getGeometry('riverRockGeo', () => new THREE.DodecahedronGeometry(0.04, 0));
+  const rockGeo = getGeometry('riverRockGeo', () => new THREE.DodecahedronGeometry(0.07, 0));
   const rock = new THREE.Mesh(rockGeo, rockMat);
-  rock.position.set(0.04, 0.02, -0.06);
+  rock.position.set(0.08, 0.035, -0.1);
   group.add(rock);
   
   // Force culling
@@ -699,26 +699,26 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark') => {
   const group = new THREE.Group();
   
   if (type === 'mountain') {
+    // Solid slate grey cone for mountains
     const mat = getMaterial('placeholderMountainMat', () => new THREE.MeshBasicMaterial({
       color: 0x94a3b8, // Slate grey
       transparent: true,
-      opacity: 0.5,
-      wireframe: true
+      opacity: 0.8
     }));
-    const geo = getGeometry('placeholderMountainGeo', () => new THREE.ConeGeometry(0.08, 0.16, 4));
+    const geo = getGeometry('placeholderMountainGeo', () => new THREE.ConeGeometry(0.12, 0.24, 5));
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.y = 0.08;
+    mesh.position.y = 0.12;
     group.add(mesh);
   } else {
+    // Solid blue sphere for rivers
     const mat = getMaterial('placeholderRiverMat', () => new THREE.MeshBasicMaterial({
-      color: 0x38bdf8, // Sky blue
+      color: 0x0ea5e9, // Bright sky blue
       transparent: true,
-      opacity: 0.5,
-      wireframe: true
+      opacity: 0.8
     }));
-    const geo = getGeometry('placeholderRiverGeo', () => new THREE.SphereGeometry(0.05, 5, 5));
+    const geo = getGeometry('placeholderRiverGeo', () => new THREE.SphereGeometry(0.08, 8, 8));
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.y = 0.05;
+    mesh.position.y = 0.08;
     group.add(mesh);
   }
   
