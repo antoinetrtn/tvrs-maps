@@ -2005,10 +2005,11 @@ const GlobeMap = ({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
         color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
-        width: isFound ? 14.0 : 8.0,
-        dashLength: isFound ? 0.08 : 0.05,
-        dashGap: isFound ? 0.012 : 0.1,
-        dashAnimateTime: isFound ? 2000 : 0,
+        // Solid thick lines — no dashes, pure stroke width is what makes rivers readable
+        width: isFound ? 45 : 30,
+        dashLength: 1,   // 1 = full coverage = solid line
+        dashGap: 0,
+        dashAnimateTime: isFound ? 3000 : 0, // Subtle shimmer on found rivers
       });
     });
     return paths;
@@ -2028,10 +2029,11 @@ const GlobeMap = ({
       admin: selectedCountry,
       coords: getSmoothedRiverPath(selectedCountry, data.path),
       color,
-      width: isFound ? 20.0 : 12.0,
-      dashLength: isFound ? 0.09 : 0.07,
-      dashGap: isFound ? 0.01 : 0.025,
-      dashAnimateTime: isFound ? 900 : 0,
+      // Selected river — extra thick, solid, fast animated shimmer
+      width: isFound ? 65 : 55,
+      dashLength: 1,
+      dashGap: 0,
+      dashAnimateTime: isFound ? 1200 : 0,
     }];
   }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS]);
 
