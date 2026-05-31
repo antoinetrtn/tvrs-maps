@@ -23,10 +23,12 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
 // Preload textures for realistic theme
 const textureLoader = new THREE.TextureLoader();
 
-const urlMapLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=512&q=80';
-const urlBumpLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=512&q=80';
-const urlSpecLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=512&q=80';
+// Low quality (1K) — good baseline when zoomed out, still sharp
+const urlMapLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=1024&q=85';
+const urlBumpLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=1024&q=85';
+const urlSpecLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=1024&q=85';
 
+// High quality — 4K satellite direct from source (loaded on zoom-in)
 const urlMapHigh = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
 const urlBumpHigh = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
 const urlSpecHigh = 'https://unpkg.com/three-globe/example/img/earth-water.png';
@@ -858,7 +860,8 @@ const GlobeMap = ({
   useEffect(() => {
     if (globeTheme !== 'realistic') return;
 
-    if (zoomLevel <= 1.05) {
+    // Trigger high-res at zoom <= 1.3 (close-up on a region/country)
+    if (zoomLevel <= 1.3) {
       if (!highResLoaded && !highResLoading) {
         highResLoading = true;
         let loadedCount = 0;
@@ -877,7 +880,8 @@ const GlobeMap = ({
       } else if (highResLoaded && !highResActive) {
         setHighResActive(true);
       }
-    } else if (zoomLevel > 1.35 && highResActive) {
+    } else if (zoomLevel > 1.7 && highResActive) {
+      // Fall back to 1K only when zoomed far out
       setHighResActive(false);
     }
   }, [zoomLevel, globeTheme, highResActive]);
@@ -1931,50 +1935,59 @@ const GlobeMap = ({
     };
   }, []);
 
-  const riversPathsData = useMemo(() => {
+  // Ref so the selected river can update its appearance without rebuilding ALL river paths
+  const selectedCountryRiverRef = useRef(null);
+  selectedCountryRiverRef.current = selectedCountry;
+
+  // Base river paths — deliberately exclude selectedCountry from deps to avoid
+  // mass-re-animating every river on each selection change. Only rebuilds when
+  // actual data (found state, theme) changes.
+  const riversBasePathsData = useMemo(() => {
     if (mode !== 'rivers_mountains') return [];
-    
     const paths = [];
     Object.keys(gameDataMap).forEach(k => {
       const data = gameDataMap[k];
       if (!data || data.type !== 'river' || !data.path) return;
-      
-      const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
-      
-      let color = isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive;
-      let width = isFound ? 4.0 : 1.8;
-      let dashLength = isFound ? 0.06 : 0.03;
-      let dashGap = isFound ? 0.015 : 0.03;
-      let dashAnimateTime = isFound ? 2000 : 0;
-
-      if (k === selectedCountry) {
-        if (!isFound) {
-          color = isError ? UI_COLORS.errorGlowStrong : UI_COLORS.riverSelectedUnfound;
-          width = 3.0;
-          dashLength = 0.05;
-          dashGap = 0.02;
-          dashAnimateTime = 0;
-        } else {
-          color = isError ? UI_COLORS.error : UI_COLORS.riverSelectedFound;
-          width = 5.5;
-          dashLength = 0.06;
-          dashGap = 0.015;
-          dashAnimateTime = 1000; // flows faster when selected!
-        }
-      }
-
+      const isFound = foundSet.has(k) || isHomeScreen;
       paths.push({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
-        color,
-        width,
-        dashLength,
-        dashGap,
-        dashAnimateTime
+        color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
+        width: isFound ? 4.5 : 2.8,
+        dashLength: isFound ? 0.06 : 0.04,
+        dashGap: isFound ? 0.015 : 0.08,
+        dashAnimateTime: isFound ? 2000 : 0,
       });
     });
     return paths;
-  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, isLight, UI_COLORS]);
+  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS]);
+
+  // Selected river overlay — small separate array, rebuilds only on selection/error change.
+  // Renders ON TOP of base paths with highlight color.
+  const riversSelectedPathData = useMemo(() => {
+    if (mode !== 'rivers_mountains' || !selectedCountry) return [];
+    const data = gameDataMap[selectedCountry];
+    if (!data || data.type !== 'river' || !data.path) return [];
+    const isFound = foundSet.has(selectedCountry) || isHomeScreen;
+    const color = isFound
+      ? (isError ? UI_COLORS.error : UI_COLORS.riverSelectedFound)
+      : (isError ? UI_COLORS.errorGlowStrong : UI_COLORS.riverSelectedUnfound);
+    return [{
+      admin: selectedCountry,
+      coords: getSmoothedRiverPath(selectedCountry, data.path),
+      color,
+      width: isFound ? 6.5 : 4.0,
+      dashLength: isFound ? 0.07 : 0.06,
+      dashGap: isFound ? 0.012 : 0.025,
+      dashAnimateTime: isFound ? 900 : 0,
+    }];
+  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS]);
+
+  // Combined for globe: base first, selected on top
+  const riversPathsData = useMemo(() => [
+    ...riversBasePathsData,
+    ...riversSelectedPathData,
+  ], [riversBasePathsData, riversSelectedPathData]);
 
   const getBiomeAssetsData = useMemo(() => {
     if (mode === 'rivers_mountains') {
@@ -3002,7 +3015,7 @@ const GlobeMap = ({
               ['pathDashLength']: d => d.dashLength,
               ['pathDashGap']: d => d.dashGap,
               ['pathDashAnimateTime']: d => d.dashAnimateTime,
-              ['pathTransitionDuration']: 400,
+              ['pathTransitionDuration']: 0,
               ['onPathClick']: obj => {
                 if (!isHomeScreen) {
                   selectCountry(obj.admin);

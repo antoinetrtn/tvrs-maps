@@ -85,9 +85,9 @@ export const THEME = {
     decorGlowSecondary: 'rgba(255, 255, 255, 0.5)',
     decorGlowSecondaryEnd: 'rgba(241, 245, 249, 0)',
     riverActive: '#0ea5e9',
-    riverInactive: 'rgba(56, 189, 248, 0.22)',
+    riverInactive: 'rgba(56, 189, 248, 0.45)',
     riverSelectedFound: '#10b981',
-    riverSelectedUnfound: 'rgba(56, 189, 248, 0.65)'
+    riverSelectedUnfound: 'rgba(56, 189, 248, 0.75)'
   },
   dark: {
     bg: '#020617',
@@ -164,10 +164,10 @@ export const THEME = {
     decorGlowPrimaryEnd: 'rgba(2, 6, 23, 0)',
     decorGlowSecondary: 'rgba(139, 92, 246, 0.06)',
     decorGlowSecondaryEnd: 'rgba(2, 6, 23, 0)',
-    riverActive: '#0ea5e9',
-    riverInactive: 'rgba(56, 189, 248, 0.22)',
-    riverSelectedFound: '#10b981',
-    riverSelectedUnfound: 'rgba(56, 189, 248, 0.65)'
+    riverActive: '#38bdf8',
+    riverInactive: 'rgba(56, 189, 248, 0.55)',
+    riverSelectedFound: '#34d399',
+    riverSelectedUnfound: 'rgba(56, 189, 248, 0.80)'
   }
 };
 
