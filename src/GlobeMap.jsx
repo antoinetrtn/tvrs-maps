@@ -765,9 +765,9 @@ const FRESNEL_FRAGMENT_SHADER = `
     // By ending at 0.0, it fades to exactly 0.0 at the outer boundary.
     float edgeFade = smoothstep(0.0, 0.55, x);
 
-    // Exponent >= 2.0 guarantees that the slope at the outer boundary is flat (0.0),
-    // which completely eliminates any sharp geometric cutoff.
-    float exponent = max(2.0, power * 2.2);
+    // Exponent > 1.0 guarantees that the slope at the outer boundary is flat (0.0),
+    // which completely eliminates any sharp geometric cutoff, while keeping it thick.
+    float exponent = max(1.2, power * 1.25);
     float intensity = pow(edgeFade, exponent) * coef;
 
     gl_FragColor = vec4(glowColor, intensity);
@@ -2202,7 +2202,7 @@ const GlobeMap = ({
 
     let glowColorHex = 0x64b5f6;
     let glowPower = 1.2;
-    let glowCoef = 0.28; // Default soft opacity
+    let glowCoef = 0.78; // Default soft opacity
 
     if (selectedCountry && activeDataMap && activeDataMap[selectedCountry]) {
       const region = activeDataMap[selectedCountry].region;
@@ -2210,24 +2210,24 @@ const GlobeMap = ({
       if (rColor) {
         glowColorHex = parseInt(rColor.replace('#', '0x'), 16);
       }
-      glowCoef = 0.38; // Slightly boosted for selected country but still very soft
+      glowCoef = 0.88; // Slightly boosted for selected country
     } else {
       if (globeTheme === 'synthwave') {
         glowColorHex = 0xff007f;
         glowPower = 1.0;
-        glowCoef = 0.40;
+        glowCoef = 0.85;
       } else if (globeTheme === 'blueprint') {
         glowColorHex = 0x00ffff;
         glowPower = 1.2;
-        glowCoef = 0.28;
+        glowCoef = 0.65;
       } else if (globeTheme === 'vintage') {
         glowColorHex = 0xd4a373;
         glowPower = 1.1;
-        glowCoef = 0.20;
+        glowCoef = 0.55;
       } else if (globeTheme === 'lowpoly') {
         glowColorHex = 0x38bdf8;
         glowPower = 1.2;
-        glowCoef = 0.28;
+        glowCoef = 0.75;
       }
     }
 
