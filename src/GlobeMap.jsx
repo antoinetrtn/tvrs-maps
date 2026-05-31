@@ -23,21 +23,33 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
 // Preload textures for realistic theme
 const textureLoader = new THREE.TextureLoader();
 
-// Low quality (1K) — good baseline when zoomed out, still sharp
+// 3-level progressive texture quality:
+// Level 1 (far) — 1K via proxy, loads instantly
 const urlMapLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=1024&q=85';
 const urlBumpLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=1024&q=85';
 const urlSpecLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=1024&q=85';
 
-// High quality — 4K satellite direct from source (loaded on zoom-in)
-const urlMapHigh = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
-const urlBumpHigh = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
-const urlSpecHigh = 'https://unpkg.com/three-globe/example/img/earth-water.png';
+// Level 2 (medium) — 2K via proxy, loads on first zoom-in
+const urlMapMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=2048&q=90';
+const urlBumpMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=2048&q=90';
+const urlSpecMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=2048&q=90';
+
+// Level 3 (close-up) — 4K, loads only when really close to a country
+const urlMapHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=4096&q=95';
+const urlBumpHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=4096&q=95';
+const urlSpecHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=4096&q=95';
 
 const earthMapLow = textureLoader.load(urlMapLow);
 const bumpMapLow = textureLoader.load(urlBumpLow);
 const specularMapLow = textureLoader.load(urlSpecLow);
 
 earthMapLow.colorSpace = THREE.SRGBColorSpace;
+
+let earthMapMid = null;
+let bumpMapMid = null;
+let specularMapMid = null;
+let midResLoading = false;
+let midResLoaded = false;
 
 let earthMapHigh = null;
 let bumpMapHigh = null;
@@ -855,36 +867,61 @@ const GlobeMap = ({
   const wasHomeScreenRef = useRef(isHomeScreen);
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
-  const [highResActive, setHighResActive] = useState(false);
+  const [texQuality, setTexQuality] = useState('low'); // 'low' | 'mid' | 'high'
 
   useEffect(() => {
     if (globeTheme !== 'realistic') return;
 
-    // Trigger high-res at zoom <= 1.3 (close-up on a region/country)
-    if (zoomLevel <= 1.3) {
+    // 3-level progressive texture quality based on zoom
+    if (zoomLevel <= 1.1) {
+      // Close-up on a country — load 4K
       if (!highResLoaded && !highResLoading) {
         highResLoading = true;
         let loadedCount = 0;
-        const checkLoaded = () => {
+        const checkHighLoaded = () => {
           loadedCount++;
           if (loadedCount === 3) {
             highResLoaded = true;
             highResLoading = false;
             if (earthMapHigh) earthMapHigh.colorSpace = THREE.SRGBColorSpace;
-            setHighResActive(true);
+            setTexQuality('high');
           }
         };
-        earthMapHigh = textureLoader.load(urlMapHigh, checkLoaded);
-        bumpMapHigh = textureLoader.load(urlBumpHigh, checkLoaded);
-        specularMapHigh = textureLoader.load(urlSpecHigh, checkLoaded);
-      } else if (highResLoaded && !highResActive) {
-        setHighResActive(true);
+        earthMapHigh = textureLoader.load(urlMapHigh, checkHighLoaded);
+        bumpMapHigh = textureLoader.load(urlBumpHigh, checkHighLoaded);
+        specularMapHigh = textureLoader.load(urlSpecHigh, checkHighLoaded);
+      } else if (highResLoaded && texQuality !== 'high') {
+        setTexQuality('high');
+      } else if (!highResLoaded && midResLoaded && texQuality !== 'mid') {
+        setTexQuality('mid'); // Use 2K while 4K loads
       }
-    } else if (zoomLevel > 1.7 && highResActive) {
-      // Fall back to 1K only when zoomed far out
-      setHighResActive(false);
+    } else if (zoomLevel <= 1.6) {
+      // Zoomed in on a region — load 2K if not already loaded
+      if (!midResLoaded && !midResLoading) {
+        midResLoading = true;
+        let loadedCount = 0;
+        const checkMidLoaded = () => {
+          loadedCount++;
+          if (loadedCount === 3) {
+            midResLoaded = true;
+            midResLoading = false;
+            if (earthMapMid) earthMapMid.colorSpace = THREE.SRGBColorSpace;
+            if (texQuality === 'low') setTexQuality('mid');
+          }
+        };
+        earthMapMid = textureLoader.load(urlMapMid, checkMidLoaded);
+        bumpMapMid = textureLoader.load(urlBumpMid, checkMidLoaded);
+        specularMapMid = textureLoader.load(urlSpecMid, checkMidLoaded);
+      } else if (midResLoaded && texQuality === 'low') {
+        setTexQuality('mid');
+      }
+      // Downgrade from 4K to 2K when zooming back out a bit
+      if (texQuality === 'high' && zoomLevel > 1.4) setTexQuality('mid');
+    } else {
+      // Far away — use 1K
+      if (texQuality !== 'low') setTexQuality('low');
     }
-  }, [zoomLevel, globeTheme, highResActive]);
+  }, [zoomLevel, globeTheme, texQuality]);
   const prevSelectedCountryRef = useRef(null);
   const biomeObjectsCacheRef = useRef(new Map());
   const animObjectsCacheRef = useRef([]);
@@ -1131,11 +1168,26 @@ const GlobeMap = ({
     if (mode === 'rivers_mountains') {
       let best = null;
       Object.entries(gameDataMap).forEach(([admin, data]) => {
-        if (data.lat === undefined || data.lng === undefined) return;
-        const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
+        if (!data) return;
+        let dist;
+        if (data.type === 'river' && Array.isArray(data.path) && data.path.length > 0) {
+          // For rivers: find min distance to ANY point on the river path polyline
+          dist = data.path.reduce((min, [pLat, pLng]) => {
+            const d = getLngLatDistance(lng, lat, pLng, pLat);
+            return d < min ? d : min;
+          }, Infinity);
+        } else if (data.lat !== undefined && data.lng !== undefined) {
+          // Mountain ranges: use center point with a generous radius
+          dist = getLngLatDistance(lng, lat, data.lng, data.lat);
+        } else {
+          return;
+        }
         if (!best || dist < best.dist) best = { admin, dist };
       });
-      selectCountry(best && best.dist < 3.5 ? best.admin : null);
+      // Rivers: click within ~2.5° of path. Mountains: 5° generous hit area.
+      const bestData = best ? gameDataMap[best.admin] : null;
+      const threshold = bestData?.type === 'river' ? 2.5 : 5.0;
+      selectCountry(best && best.dist < threshold ? best.admin : null);
       return;
     }
 
@@ -1953,9 +2005,9 @@ const GlobeMap = ({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
         color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
-        width: isFound ? 4.5 : 2.8,
-        dashLength: isFound ? 0.06 : 0.04,
-        dashGap: isFound ? 0.015 : 0.08,
+        width: isFound ? 14.0 : 8.0,
+        dashLength: isFound ? 0.08 : 0.05,
+        dashGap: isFound ? 0.012 : 0.1,
         dashAnimateTime: isFound ? 2000 : 0,
       });
     });
@@ -1976,9 +2028,9 @@ const GlobeMap = ({
       admin: selectedCountry,
       coords: getSmoothedRiverPath(selectedCountry, data.path),
       color,
-      width: isFound ? 6.5 : 4.0,
-      dashLength: isFound ? 0.07 : 0.06,
-      dashGap: isFound ? 0.012 : 0.025,
+      width: isFound ? 20.0 : 12.0,
+      dashLength: isFound ? 0.09 : 0.07,
+      dashGap: isFound ? 0.01 : 0.025,
       dashAnimateTime: isFound ? 900 : 0,
     }];
   }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS]);
@@ -2005,7 +2057,7 @@ const GlobeMap = ({
           bearing: data.bearing || 0,
           spread: data.spread || 1.5,
           height: data.height || 4000,
-          scale: 1.0,
+          scale: data.type === 'mountain_range' ? 2.8 : 1.0,
           rotation: 0
         });
       });
@@ -2088,7 +2140,7 @@ const GlobeMap = ({
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
     if (mode === 'rivers_mountains') {
-      return admin === selectedCountry ? 0.006 : 0.0015;
+      return admin === selectedCountry ? 0.012 : 0.004;
     }
     if (globeTheme === 'vintage') {
       return 0.0012; // Vintage assets float exactly at sea level
@@ -2252,9 +2304,16 @@ const GlobeMap = ({
       });
     }
     if (globeTheme === 'realistic') {
-      const activeMap = highResActive && earthMapHigh ? earthMapHigh : earthMapLow;
-      const activeBump = highResActive && bumpMapHigh ? bumpMapHigh : bumpMapLow;
-      const activeSpec = highResActive && specularMapHigh ? specularMapHigh : specularMapLow;
+      // Select texture based on quality level
+      const activeMap = texQuality === 'high' && earthMapHigh
+        ? earthMapHigh
+        : (texQuality === 'mid' && earthMapMid ? earthMapMid : earthMapLow);
+      const activeBump = texQuality === 'high' && bumpMapHigh
+        ? bumpMapHigh
+        : (texQuality === 'mid' && bumpMapMid ? bumpMapMid : bumpMapLow);
+      const activeSpec = texQuality === 'high' && specularMapHigh
+        ? specularMapHigh
+        : (texQuality === 'mid' && specularMapMid ? specularMapMid : specularMapLow);
 
       return new THREE.MeshPhongMaterial({
         map: activeMap,
@@ -2280,7 +2339,7 @@ const GlobeMap = ({
       opacity: 1,
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7
     });
-  }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture, highResActive]);
+  }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture, texQuality]);
 
   useEffect(() => {
     return () => {
