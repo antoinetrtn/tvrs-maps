@@ -3,7 +3,15 @@ import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
 import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, LOW_POLY_TERRAIN_COLORS, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel } from './designSystem';
-import { createBiomeAsset, disposeBiomeCache } from './LowPolyBiomes';
+import { createBiomeAsset, disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
+
+// Preload textures for realistic theme
+const textureLoader = new THREE.TextureLoader();
+const earthMap = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+const bumpMap = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-topology.png');
+const specularMap = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-water.png');
+
+earthMap.colorSpace = THREE.SRGBColorSpace;
 
 
 const getFeatureAdmin = (feature) => feature?.properties?.code || feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
@@ -826,7 +834,8 @@ const GlobeMap = ({
 
   const labelsCacheRef = useRef({});
   const isDepartmentMode = mode === 'departments' && !isHomeScreen;
-  const gameDataMap = isDepartmentMode ? (activeDataMap || {}) : countryDataMap;
+  const isRiversMountainsMode = mode === 'rivers_mountains';
+  const gameDataMap = (isDepartmentMode || isRiversMountainsMode) ? (activeDataMap || {}) : countryDataMap;
 
   const safeColor = useCallback((c) => getOpaqueThreeColor(c), []);
 
@@ -1058,6 +1067,17 @@ const GlobeMap = ({
   }, [gameDataMap, onCountrySelect]);
 
   const selectCountryAtLngLat = useCallback((lng, lat) => {
+    if (mode === 'rivers_mountains') {
+      let best = null;
+      Object.entries(gameDataMap).forEach(([admin, data]) => {
+        if (data.lat === undefined || data.lng === undefined) return;
+        const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
+        if (!best || dist < best.dist) best = { admin, dist };
+      });
+      selectCountry(best && best.dist < 3.5 ? best.admin : null);
+      return;
+    }
+
     if (isDepartmentMode) {
       let best = null;
       Object.entries(gameDataMap).forEach(([admin, data]) => {
@@ -1290,6 +1310,12 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
+    if (globeTheme === 'realistic') {
+      if (admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
+      const isFound = foundSet.has(admin) || mode === 'learn';
+      return isFound ? getRegionSurfaceColor(region) : UI_COLORS.mapBorderMuted;
+    }
+
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
       const baseStroke = (isHomeScreen ? UI_COLORS.accent : getRegionSurfaceColor(region));
@@ -1478,6 +1504,14 @@ const GlobeMap = ({
       targetOpacity = isFound || admin === selectedCountry ? 0.45 : 0.15;
       targetTransparent = true;
     }
+    if (globeTheme === 'realistic') {
+      targetOpacity = admin === selectedCountry
+        ? 0.4
+        : isFound
+          ? 0.22
+          : 0.04;
+      targetTransparent = true;
+    }
 
     if (material.wireframe !== targetWireframe || material.transparent !== targetTransparent) {
       material.wireframe = targetWireframe;
@@ -1574,6 +1608,7 @@ const GlobeMap = ({
   }, []);
 
   const getPolygonAltitude = useCallback((d) => {
+    if (mode === 'rivers_mountains') return 0.0005;
     if (isDepartmentMode && d.isGhostCountry) return 0.003;
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode) {
@@ -1582,7 +1617,7 @@ const GlobeMap = ({
     const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, extrusionScale);
     if (admin === selectedCountry) return altitude * 1.05;
     return altitude;
-  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode]);
+  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, mode]);
 
   const getSelectionEffectAltitude = useCallback(() => {
     if (isDepartmentMode) {
@@ -1613,6 +1648,10 @@ const GlobeMap = ({
     if (admin === selectedCountry) return perfProfile?.isMobile ? 2.1 : 3.0;
     // Low-poly theme: no flat 2D strokes — let 3D facets define the shape
     if (globeTheme === 'lowpoly') return 0;
+    if (globeTheme === 'realistic') {
+      if (admin === selectedCountry) return perfProfile?.isMobile ? 1.5 : 2.0;
+      return perfProfile?.isMobile ? 0.15 : 0.25;
+    }
     if (isDepartmentMode) return perfProfile?.isMobile ? 0.55 : 0.75;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
     return perfProfile?.isMobile ? 0.25 : 0.4;
@@ -1835,7 +1874,65 @@ const GlobeMap = ({
     };
   }, []);
 
+  const riversPathsData = useMemo(() => {
+    if (mode !== 'rivers_mountains') return [];
+    
+    const paths = [];
+    Object.keys(gameDataMap).forEach(k => {
+      const data = gameDataMap[k];
+      if (!data || data.type !== 'river' || !data.path) return;
+      
+      const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
+      
+      let color = isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive;
+      let width = isFound ? 3.2 : 1.2;
+      let dashLength = isFound ? 0.06 : 0;
+      let dashGap = isFound ? 0.015 : 0;
+      let dashAnimateTime = isFound ? 2000 : 0;
+
+      if (k === selectedCountry) {
+        if (!isFound) {
+          color = isError ? UI_COLORS.errorGlowStrong : UI_COLORS.riverSelectedUnfound;
+          width = 2.4;
+        } else {
+          color = isError ? UI_COLORS.error : UI_COLORS.riverSelectedFound;
+          width = 4.5;
+        }
+      }
+
+      paths.push({
+        admin: k,
+        coords: data.path.map(([lat, lng]) => [lat, lng, 0.005]),
+        color,
+        width,
+        dashLength,
+        dashGap,
+        dashAnimateTime
+      });
+    });
+    return paths;
+  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, isLight, UI_COLORS]);
+
   const getBiomeAssetsData = useMemo(() => {
+    if (mode === 'rivers_mountains') {
+      const assets = [];
+      Object.keys(gameDataMap).forEach(k => {
+        const data = gameDataMap[k];
+        if (!data || data.lat === undefined) return;
+        const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
+        assets.push({
+          admin: k,
+          lat: data.lat,
+          lng: data.lng,
+          isFound,
+          type: data.type,
+          scale: data.type === 'mountain' ? 1.0 : 0.8,
+          rotation: 0
+        });
+      });
+      return assets;
+    }
+
     if (isDepartmentMode || globeTheme === 'glass') return [];
 
     const assets = [];
@@ -1911,6 +2008,9 @@ const GlobeMap = ({
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
+    if (mode === 'rivers_mountains') {
+      return admin === selectedCountry ? 0.006 : 0.0015;
+    }
     if (globeTheme === 'vintage') {
       return 0.0012; // Vintage assets float exactly at sea level
     }
@@ -1923,16 +2023,28 @@ const GlobeMap = ({
       return altitude * 1.05 + 0.0015; // Slightly above cap to prevent clipping
     }
     return altitude + 0.0015;
-  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, globeTheme]);
+  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, globeTheme, mode]);
 
   const createBiomeThreeObject = useCallback((d) => {
-    const key = `${d.admin || 'unknown'}_${d.biomeType || 'none'}_${d.variant || 'none'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
+    const key = mode === 'rivers_mountains'
+      ? `${d.admin || 'unknown'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`
+      : `${d.admin || 'unknown'}_${d.biomeType || 'none'}_${d.variant || 'none'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
     if (biomeObjectsCacheRef.current.has(key)) {
       return biomeObjectsCacheRef.current.get(key);
     }
 
     let asset;
-    if (globeTheme === 'vintage') {
+    if (mode === 'rivers_mountains') {
+      if (!d.isFound) {
+        asset = createUnfoundPlaceholder(d.type, theme);
+      } else {
+        if (d.type === 'mountain') {
+          asset = createMountainFeature(theme);
+        } else {
+          asset = new THREE.Group(); // Found rivers are drawn in 3D paths, so empty group here
+        }
+      }
+    } else if (globeTheme === 'vintage') {
       if (d.variant === 'ship') {
         asset = createVintageShip();
       } else {
@@ -1956,7 +2068,7 @@ const GlobeMap = ({
 
     biomeObjectsCacheRef.current.set(key, alignedAsset);
     return alignedAsset;
-  }, [theme, globeTheme]);
+  }, [theme, globeTheme, mode]);
 
   useEffect(() => {
     // Clear biome objects cache when theme changes to prevent memory leak and release old theme assets
@@ -2056,6 +2168,17 @@ const GlobeMap = ({
         opacity: 0.95,
         specular: 0x2288ff,
         shininess: 15
+      });
+    }
+    if (globeTheme === 'realistic') {
+      return new THREE.MeshPhongMaterial({
+        map: earthMap,
+        bumpMap: bumpMap,
+        bumpScale: 0.16,
+        specularMap: specularMap,
+        specular: new THREE.Color(isLight ? 0x222222 : 0x111111),
+        shininess: 15,
+        flatShading: false
       });
     }
 
@@ -2502,7 +2625,7 @@ const GlobeMap = ({
   }, [selectableFeatureIndex]);
 
   const markersData = useMemo(() => {
-    if (isDepartmentMode) return [];
+    if (isDepartmentMode || isRiversMountainsMode) return [];
 
     return Object.entries(countryDataMap)
       .filter(([admin, data]) => {
@@ -2516,7 +2639,7 @@ const GlobeMap = ({
         lng: data.lng,
         region: data.region
       }));
-  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, gameDataMap]);
+  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, isRiversMountainsMode, gameDataMap]);
 
   const visibleMarkersData = useMemo(() => {
     if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {
@@ -2791,6 +2914,29 @@ const GlobeMap = ({
             objectFacesSurface={true}
             objectRotation={getObjectRotationWrapped}
             objectThreeObject={createBiomeThreeObject}
+            onObjectClick={obj => {
+              if (!isHomeScreen) {
+                selectCountry(obj.admin);
+              }
+            }}
+            {...{
+              ['paths' + 'Data']: riversPathsData,
+              ['pathPoints']: d => d.coords,
+              ['pathPointLat']: d => d[0],
+              ['pathPointLng']: d => d[1],
+              ['pathPointAlt']: d => d[2],
+              ['pathColor']: d => d.color,
+              ['path' + 'Stroke' + 'Width']: d => d.width,
+              ['pathDashLength']: d => d.dashLength,
+              ['pathDashGap']: d => d.dashGap,
+              ['pathDashAnimateTime']: d => d.dashAnimateTime,
+              ['pathTransitionDuration']: 400,
+              ['onPathClick']: obj => {
+                if (!isHomeScreen) {
+                  selectCountry(obj.admin);
+                }
+              }
+            }}
             onBackgroundClick={handleBackgroundClick}
           />
         </div>

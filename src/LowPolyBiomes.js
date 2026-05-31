@@ -613,3 +613,142 @@ export const createBiomeAsset = (type, themeName = 'dark', variant = null) => {
 
   return group;
 };
+
+export const createMountainFeature = (themeName = 'dark') => {
+  const group = new THREE.Group();
+  
+  // Realistic mountain material (dark gray rock, matte)
+  const rockMat = getMaterial('realisticMountainRock', () => new THREE.MeshStandardMaterial({
+    color: 0x5a5a5a,
+    roughness: 0.9,
+    metalness: 0.1,
+    flatShading: true
+  }));
+
+  // Realistic snow cap material (shiny white)
+  const snowMat = getMaterial('realisticMountainSnow', () => new THREE.MeshStandardMaterial({
+    color: 0xfcfcfc,
+    roughness: 0.5,
+    metalness: 0.1,
+    flatShading: true
+  }));
+
+  // Main rugged peak
+  const peakGeo = new THREE.ConeGeometry(0.15, 0.35, 12, 6);
+  const pos = peakGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+    // Only distort vertices above base
+    if (y > -0.16) {
+      const angle = Math.atan2(z, x);
+      const noise = Math.sin(angle * 4) * 0.035 + Math.cos(y * 16) * 0.015;
+      pos.setX(i, x + x * noise);
+      pos.setZ(i, z + z * noise);
+    }
+  }
+  peakGeo.computeVertexNormals();
+  
+  const peak = new THREE.Mesh(peakGeo, rockMat);
+  peak.position.set(0, 0.175, 0);
+  group.add(peak);
+
+  // Rugged snow cap on top of the main peak
+  const snowGeo = new THREE.ConeGeometry(0.07, 0.15, 12, 4);
+  const spos = snowGeo.attributes.position;
+  for (let i = 0; i < spos.count; i++) {
+    const x = spos.getX(i);
+    const y = spos.getY(i);
+    const z = spos.getZ(i);
+    if (y > -0.07) {
+      const angle = Math.atan2(z, x);
+      const noise = Math.sin(angle * 4) * 0.03;
+      spos.setX(i, x + x * noise);
+      spos.setZ(i, z + z * noise);
+    }
+  }
+  snowGeo.computeVertexNormals();
+  
+  const snow = new THREE.Mesh(snowGeo, snowMat);
+  snow.position.set(0, 0.275, 0);
+  group.add(snow);
+
+  // Secondary smaller peak next to it to make it look like a natural range
+  const secPeakGeo = new THREE.ConeGeometry(0.09, 0.22, 10, 4);
+  const secPos = secPeakGeo.attributes.position;
+  for (let i = 0; i < secPos.count; i++) {
+    const x = secPos.getX(i);
+    const y = secPos.getY(i);
+    const z = secPos.getZ(i);
+    if (y > -0.1) {
+      const angle = Math.atan2(z, x);
+      const noise = Math.sin(angle * 3) * 0.02;
+      secPos.setX(i, x + x * noise);
+      secPos.setZ(i, z + z * noise);
+    }
+  }
+  secPeakGeo.computeVertexNormals();
+  
+  const secPeak = new THREE.Mesh(secPeakGeo, rockMat);
+  secPeak.position.set(0.09, 0.11, 0.05);
+  secPeak.rotation.y = 0.8;
+  group.add(secPeak);
+
+  const secSnowGeo = new THREE.ConeGeometry(0.045, 0.10, 10, 3);
+  const secSnow = new THREE.Mesh(secSnowGeo, snowMat);
+  secSnow.position.set(0.09, 0.17, 0.05);
+  secSnow.rotation.y = 0.8;
+  group.add(secSnow);
+
+  // Force culling and optimize
+  group.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow = false;
+      child.receiveShadow = false;
+      child.frustumCulled = true;
+    }
+  });
+
+  return group;
+};
+
+export const createUnfoundPlaceholder = (type, themeName = 'dark') => {
+  const group = new THREE.Group();
+  
+  if (type === 'mountain') {
+    // Holographic glowing peak
+    const mat = getMaterial('placeholderMountainMat', () => new THREE.MeshBasicMaterial({
+      color: 0x94a3b8, // Slate gray
+      transparent: true,
+      opacity: 0.6,
+      wireframe: true
+    }));
+    const geo = getGeometry('placeholderMountainGeo', () => new THREE.ConeGeometry(0.10, 0.20, 5));
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = 0.10;
+    group.add(mesh);
+  } else {
+    // Holographic glowing droplet/sphere for rivers
+    const mat = getMaterial('placeholderRiverMat', () => new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, // Sky blue
+      transparent: true,
+      opacity: 0.7,
+      wireframe: true
+    }));
+    const geo = getGeometry('placeholderRiverGeo', () => new THREE.SphereGeometry(0.06, 6, 6));
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = 0.06;
+    group.add(mesh);
+  }
+  
+  group.traverse(child => {
+    if (child.isMesh) {
+      child.castShadow = false;
+      child.receiveShadow = false;
+      child.frustumCulled = true;
+    }
+  });
+  
+  return group;
+};

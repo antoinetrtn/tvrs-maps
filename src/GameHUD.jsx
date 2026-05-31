@@ -128,7 +128,7 @@ const GameHUD = ({
             }
           }
         } else {
-          let targetMatch = (mode === 'countries' || mode === 'departments' || mode === 'beef') ? nameToMatch : capitalToMatch;
+          let targetMatch = (mode === 'countries' || mode === 'departments' || mode === 'rivers_mountains') ? nameToMatch : capitalToMatch;
           if (targetMatch && normalizeString(targetMatch).startsWith(normalizedInput)) {
             const ratio = val.length / targetMatch.length;
             const hasSeparator = val.includes(' ') || val.includes('-');
@@ -145,7 +145,11 @@ const GameHUD = ({
               newSuggestions.push({ 
                 key: adminKey, 
                 display: targetMatch, 
-                subtext: (mode === 'departments' || mode === 'beef') ? mapped.code : (mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital))
+                subtext: mode === 'departments' 
+                  ? mapped.code 
+                  : mode === 'rivers_mountains'
+                    ? (mapped.type === 'mountain' ? `${mapped.height}m` : `${mapped.length}km`)
+                    : (mode === 'capitals' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped?.capital_fr || mapped?.capital))
               });
             }
           }
@@ -204,6 +208,38 @@ const GameHUD = ({
 
   const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
   const isDepartmentsMode = mode === 'departments';
+
+  const placeholderText = useMemo(() => {
+    if (isListening) return '...';
+    if (mode === 'learn') {
+      return lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...';
+    }
+    
+    if (isFocusedCountry) {
+      if (mode === 'departments') {
+        return lang === 'fr' ? 'Nom du département...' : 'Department name...';
+      }
+      if (mode === 'rivers_mountains') {
+        const type = countryDataMap[selectedCountry]?.type;
+        if (type === 'mountain') {
+          return lang === 'fr' ? 'Nom de la montagne...' : 'Mountain name...';
+        }
+        return lang === 'fr' ? 'Nom du fleuve...' : 'River name...';
+      }
+      if (mode === 'countries') {
+        return lang === 'fr' ? 'Devinez ce pays' : 'Guess this country';
+      }
+      return lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital';
+    }
+    
+    if (mode === 'departments') {
+      return lang === 'fr' ? 'Saisir un département...' : 'Enter a department...';
+    }
+    if (mode === 'rivers_mountains') {
+      return lang === 'fr' ? 'Saisir un relief ou un fleuve...' : 'Enter a peak or river...';
+    }
+    return lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...';
+  }, [isListening, mode, isFocusedCountry, selectedCountry, countryDataMap, lang]);
 
   // Determine which continent to highlight
   const activeContinent = useMemo(() => {
@@ -352,8 +388,10 @@ const GameHUD = ({
                         : (countryDataMap[selectedCountry]?.name_en || selectedCountry))
                     : (mode === 'departments'
                         ? (lang === 'fr' ? `Département ${countryDataMap[selectedCountry]?.code || selectedCountry}` : `Department ${countryDataMap[selectedCountry]?.code || selectedCountry}`)
-                        : (mode === 'beef'
-                        ? (lang === 'fr' ? `Pièce ${countryDataMap[selectedCountry]?.code || selectedCountry}` : `Cut ${countryDataMap[selectedCountry]?.code || selectedCountry}`)
+                        : (mode === 'rivers_mountains'
+                        ? (countryDataMap[selectedCountry]?.type === 'mountain'
+                            ? (lang === 'fr' ? 'Devinez cette montagne' : 'Guess this mountain')
+                            : (lang === 'fr' ? 'Devinez ce fleuve' : 'Guess this river'))
                         : (mode === 'countries' 
                         ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') 
                         : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital'))))
@@ -433,7 +471,7 @@ const GameHUD = ({
                 id="quiz-response-field"
                 inputMode="text"
                 enterKeyHint="done"
-                placeholder={isListening ? '...' : (mode === 'learn' ? (lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...') : (isFocusedCountry ? (mode === 'departments' ? (lang === 'fr' ? 'Nom du département...' : 'Department name...') : (mode === 'beef' ? (lang === 'fr' ? 'Nom de la pièce...' : 'Cut name...') : (mode === 'countries' ? (lang === 'fr' ? 'Devinez ce pays' : 'Guess this country') : (lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital')))) : (mode === 'departments' ? (lang === 'fr' ? 'Saisir un département...' : 'Enter a department...') : (mode === 'beef' ? (lang === 'fr' ? 'Saisir une pièce...' : 'Enter a cut...') : (lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...')))))}
+                placeholder={placeholderText}
                 className="input-field"
                 value={inputValue}
                 onChange={handleTextChange}
