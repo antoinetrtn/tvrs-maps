@@ -761,12 +761,18 @@ const FRESNEL_FRAGMENT_SHADER = `
     // True perspective dot product between view direction and surface normal
     float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
-    // Gradient goes from center (globe surface x=0.55) to outside space (x=0.0)
-    // By ending at 0.0, it fades to exactly 0.0 at the outer boundary.
-    float edgeFade = smoothstep(0.0, 0.55, x);
+    // Peak intensity is at the globe horizon (x = 0.55).
+    // Fades smoothly to 0.0 outwards towards space (x = 0.0).
+    // Fades smoothly to 0.0 inwards on the globe (x = 0.75) to leave the center clean.
+    float edgeFade = 0.0;
+    if (x < 0.55) {
+      edgeFade = smoothstep(0.0, 0.55, x);
+    } else {
+      edgeFade = 1.0 - smoothstep(0.55, 0.75, x);
+    }
 
-    // Exponent > 1.0 guarantees that the slope at the outer boundary is flat (0.0),
-    // which completely eliminates any sharp geometric cutoff, while keeping it thick.
+    // Exponent > 1.0 guarantees that the slope at both boundaries (x=0.0 and x=0.75) is flat (0.0),
+    // which completely eliminates any sharp geometric cutoff.
     float exponent = max(1.2, power * 1.25);
     float intensity = pow(edgeFade, exponent) * coef;
 
@@ -2130,7 +2136,7 @@ const GlobeMap = ({
           },
           transparent: true,
           blending: THREE.NormalBlending,
-          side: THREE.BackSide,
+          side: THREE.FrontSide,
           depthWrite: false
         })
       );
