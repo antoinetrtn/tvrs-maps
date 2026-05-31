@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GlobeMap from './GlobeMap.jsx';
-import BeefCutsMap from './BeefCutsMap.jsx';
 import GameHUD from './GameHUD.jsx';
 import HomeScreen from './HomeScreen.jsx';
 import './App.css';
 import { normalizeString as rawNormalize, countryDataMap } from './gameData';
 import { departmentsDataMap } from './departmentsData';
-import { beefCutsDataMap } from './beefCutsData';
+
 import { getThemeCssVariables } from './designSystem';
 
 // Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
@@ -35,7 +34,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => (
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home'); // 'home' or 'game'
-  const [mode, setMode] = useState('countries'); // 'countries', 'capitals', 'learn', 'departments' or 'beef'
+  const [mode, setMode] = useState('countries'); // 'countries', 'capitals', 'learn', 'departments'
   const [foundList, setFoundList] = useState([]);
   const [score, setScore] = useState(0);
   const [gameDuration, setGameDuration] = useState(15 * 60);
@@ -57,7 +56,7 @@ function App() {
     }
     return 'dark';
   }); // System default theme
-  const [globeTheme, setGlobeTheme] = useState('lowpoly');
+  const [globeTheme, setGlobeTheme] = useState('glass');
   
   // New States for Advanced UX
   const [menuOpen, setMenuOpen] = useState(false);
@@ -114,10 +113,9 @@ function App() {
   }, [getViewport]);
 
   const isDepartmentsMode = mode === 'departments';
-  const isBeefMode = mode === 'beef';
   const activeDataMap = useMemo(() => (
-    isBeefMode ? beefCutsDataMap : (isDepartmentsMode ? departmentsDataMap : countryDataMap)
-  ), [isBeefMode, isDepartmentsMode]);
+    isDepartmentsMode ? departmentsDataMap : countryDataMap
+  ), [isDepartmentsMode]);
 
   // Build a sorted list of all unfound keys for prev/next navigation
   const allCountryKeys = useMemo(() => Object.keys(activeDataMap), [activeDataMap]);
@@ -369,7 +367,7 @@ function App() {
         matchName = normalizeString(adminKey);
       }
 
-      if (mode === 'countries' || mode === 'departments' || mode === 'beef') {
+      if (mode === 'countries' || mode === 'departments') {
         if (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput)) {
           matchFound = adminKey;
           break;
@@ -427,7 +425,7 @@ function App() {
     const aliases = mapped.aliases || [];
 
     let isSuccess = false;
-    if ((mode === 'countries' || mode === 'departments' || mode === 'beef') && (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput))) {
+    if ((mode === 'countries' || mode === 'departments') && (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput))) {
       isSuccess = true;
     } else if (mode === 'capitals' && matchCapital === normalizedInput) {
       isSuccess = true;
@@ -618,42 +616,29 @@ function App() {
         )
       )}
       
-      {isBeefMode && currentScreen !== 'home' ? (
-        <BeefCutsMap
-          lang={lang}
-          foundList={foundList}
-          selectedCountry={selectedCountry}
-          onCutSelect={handleCountrySelect}
-          isHomeScreen={currentScreen === 'home'}
-          isEndScreen={showEndScreen}
-          isError={popupError}
-          isPerfectScore={foundList.length === totalPossible}
-        />
-      ) : (
-        <GlobeMap  
-          mode={mode} 
-          lang={lang}
-          countriesData={countriesData} 
-          departmentsData={departmentsGeoData}
-          foundList={foundList} 
-          selectedCountry={selectedCountry}
-          shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
-          onCountrySelect={handleCountrySelect}
-          theme={theme}
-          viewport={viewport}
-          isError={popupError}
-          hasActiveFeedback={popupError || popupSuccess}
-          perfProfile={perfProfile}
-          isHomeScreen={currentScreen === 'home'}
-          isKeyboardMode={effectiveKeyboardMode}
-          isEndScreen={showEndScreen}
-          isPerfectScore={foundList.length === totalPossible}
-          onPreserveInputFocus={preserveInputFocus}
-          globeLightingEnabled={globeLightingEnabled}
-          activeDataMap={activeDataMap}
-          globeTheme={globeTheme}
-        />
-      )}
+      <GlobeMap  
+        mode={mode} 
+        lang={lang}
+        countriesData={countriesData} 
+        departmentsData={departmentsGeoData}
+        foundList={foundList} 
+        selectedCountry={selectedCountry}
+        shouldAutoRotate={shouldAutoRotate && perfProfile.enableAutoRotate}
+        onCountrySelect={handleCountrySelect}
+        theme={theme}
+        viewport={viewport}
+        isError={popupError}
+        hasActiveFeedback={popupError || popupSuccess}
+        perfProfile={perfProfile}
+        isHomeScreen={currentScreen === 'home'}
+        isKeyboardMode={effectiveKeyboardMode}
+        isEndScreen={showEndScreen}
+        isPerfectScore={foundList.length === totalPossible}
+        onPreserveInputFocus={preserveInputFocus}
+        globeLightingEnabled={globeLightingEnabled}
+        activeDataMap={activeDataMap}
+        globeTheme={globeTheme}
+      />
 
       {showEndScreen && (
         <EndScreen 

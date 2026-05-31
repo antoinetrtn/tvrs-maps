@@ -180,7 +180,7 @@ const GameHUD = ({
   const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France"];
   const REGION_COLORS = useMemo(() => {
     const colors = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       colors[r] = getThemeRegionColor(globeTheme, theme, r);
     });
@@ -204,7 +204,6 @@ const GameHUD = ({
 
   const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
   const isDepartmentsMode = mode === 'departments';
-  const isBeefMode = mode === 'beef';
 
   // Determine which continent to highlight
   const activeContinent = useMemo(() => {
@@ -214,10 +213,10 @@ const GameHUD = ({
 
   const gaugeRegions = isDepartmentsMode
     ? ["France"]
-    : (isBeefMode ? ["Boeuf"] : CONTINENT_ORDER.filter(region => region !== "France"));
+    : CONTINENT_ORDER.filter(region => region !== "France");
   const getRegionColor = useCallback((region) => (
-    REGION_COLORS[region] || ((isDepartmentsMode || isBeefMode) ? 'var(--accent)' : 'var(--warning)')
-  ), [REGION_COLORS, isDepartmentsMode, isBeefMode]);
+    REGION_COLORS[region] || (isDepartmentsMode ? 'var(--accent)' : 'var(--warning)')
+  ), [REGION_COLORS, isDepartmentsMode]);
 
   return (
     <>

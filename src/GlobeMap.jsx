@@ -1163,7 +1163,7 @@ const GlobeMap = ({
 
   const REGION_COLORS = useMemo(() => {
     const colors = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       colors[r] = getThemeRegionColor(globeTheme, theme, r);
     });
@@ -1172,7 +1172,7 @@ const GlobeMap = ({
 
   const REGION_COLORS_ATTENUATED = useMemo(() => {
     const colors = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       colors[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
     });
@@ -1181,7 +1181,7 @@ const GlobeMap = ({
 
   const REGION_COLORS_LABELS = useMemo(() => {
     const colors = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       colors[r] = getThemeRegionColorLabel(globeTheme, theme, r);
     });

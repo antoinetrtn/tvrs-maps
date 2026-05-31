@@ -486,7 +486,6 @@ export const CONTINENT_COLORS = {
     "Africa": "#A8EBC0",
     "Oceania": "#E0B8F5",
     "Antarctic": "#DDE4F0",
-    "Boeuf": "#FCA5A5",
     "Unknown": "#cbd5e1"
   },
   dark: {
@@ -496,7 +495,6 @@ export const CONTINENT_COLORS = {
     "Africa": "#2A8A50",
     "Oceania": "#6E3A9C",
     "Antarctic": "#2A3A5A",
-    "Boeuf": "#991B1B",
     "Unknown": "#64748b"
   }
 };
@@ -509,7 +507,6 @@ export const CONTINENT_COLORS_LABELS = {
     "Africa": "#1A5C35",
     "Oceania": "#5A1A8C",
     "Antarctic": "#3A4A6A",
-    "Boeuf": "#991B1B",
     "Unknown": "#1e293b"
   },
   dark: {
@@ -519,7 +516,6 @@ export const CONTINENT_COLORS_LABELS = {
     "Africa": "#A8EBC0",
     "Oceania": "#E0B8F5",
     "Antarctic": "#DDE4F0",
-    "Boeuf": "#FCA5A5",
     "Unknown": "#94a3b8"
   }
 };
@@ -555,7 +551,6 @@ export const CONTINENT_COLORS_ATTENUATED = {
     "Africa": "#D1F5DD",
     "Oceania": "#F0D1FF",
     "Antarctic": "#F0F4FF",
-    "Boeuf": "#FEE2E2",
     "Unknown": "#e2e8f0"
   },
   dark: {
@@ -565,7 +560,6 @@ export const CONTINENT_COLORS_ATTENUATED = {
     "Africa": "#123D26",
     "Oceania": "#2D1A4A",
     "Antarctic": "#121A2D",
-    "Boeuf": "#4A1A1A",
     "Unknown": "#334155"
   }
 };
@@ -873,10 +867,6 @@ export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
     region = 'Europe';
   }
 
-  if (region === 'Boeuf') {
-    return CONTINENT_COLORS[systemTheme]?.Boeuf || THEME[systemTheme]?.accent;
-  }
-
   if (globeTheme === 'lowpoly') {
     return LOW_POLY_TERRAIN_COLORS[systemTheme]?.[region] || LOW_POLY_TERRAIN_COLORS[systemTheme]?.Unknown;
   }
@@ -895,9 +885,6 @@ export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
 export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) => {
   if (region === 'France') {
     region = 'Europe';
-  }
-  if (region === 'Boeuf') {
-    return globeTheme === 'synthwave' ? '#4a0025' : '#4A1A1A';
   }
 
   if (globeTheme === 'lowpoly') {
@@ -918,9 +905,6 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
 export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
   if (region === 'France') {
     region = 'Europe';
-  }
-  if (region === 'Boeuf') {
-    return '#991B1B';
   }
 
   if (globeTheme === 'lowpoly') {

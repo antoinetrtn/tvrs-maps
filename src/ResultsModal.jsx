@@ -12,7 +12,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
 
   const colors = useMemo(() => {
     const res = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       res[r] = getThemeRegionColor(globeTheme, theme, r);
     });
@@ -21,7 +21,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
 
   const labelColors = useMemo(() => {
     const res = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
     });
@@ -30,7 +30,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
 
   const attenuatedColors = useMemo(() => {
     const res = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       res[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
     });
@@ -70,7 +70,6 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
               "Oceania": "Océanie",
               "Antarctic": "Antarctique",
               "France": "France",
-              "Boeuf": "Bœuf",
               "Unknown": "Inconnu"
             }[region] || region : region;
 

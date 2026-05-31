@@ -12,7 +12,7 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, m
 
   const colors = useMemo(() => {
     const res = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Boeuf", "Unknown"];
+    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
     regions.forEach(r => {
       res[r] = getThemeRegionColor(globeTheme, theme, r);
     });
@@ -29,7 +29,6 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, m
       "Oceania": "Océanie",
       "Antarctic": "Antarctique",
       "France": "France",
-      "Boeuf": "Bœuf",
       "Unknown": "Inconnu"
     },
     en: {
@@ -40,7 +39,6 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, m
       "Oceania": "Oceania",
       "Antarctic": "Antarctica",
       "France": "France",
-      "Boeuf": "Beef",
       "Unknown": "Unknown"
     }
   };
@@ -52,7 +50,6 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, m
 
   const getSubTitle = () => {
     if (isPerfectScore && mode === 'departments') return lang === 'fr' ? "Vous maîtrisez la carte de France !" : "You mastered the map of France!";
-    if (isPerfectScore && mode === 'beef') return lang === 'fr' ? "Vous maîtrisez la vache, sans globe." : "You mastered the cow, no globe needed.";
     if (isPerfectScore) return lang === 'fr' ? "Vous avez conquis le monde !" : "You conquered the world!";
     return lang === 'fr' ? "Vous avez trouvé :" : "You found:";
   };
