@@ -865,6 +865,7 @@ const GlobeMap = ({
     height: window.innerHeight
   });
   const wasHomeScreenRef = useRef(isHomeScreen);
+  const isInteractingRef = useRef(false);
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
   const [texQuality, setTexQuality] = useState('low'); // 'low' | 'mid' | 'high'
@@ -986,6 +987,8 @@ const GlobeMap = ({
   useEffect(() => {
     let controlsReference = null;
     let changeHandler = null;
+    let startHandler = null;
+    let endHandler = null;
 
     if (globeEl.current) {
       try {
@@ -1011,6 +1014,7 @@ const GlobeMap = ({
 
           // Track POV changes with a stable threshold to avoid jittery re-renders
           changeHandler = () => {
+             if (isInteractingRef.current) return;
              if (globeEl.current) {
                 const pov = globeEl.current.pointOfView();
                 setZoomLevel(prev => {
@@ -1027,7 +1031,23 @@ const GlobeMap = ({
                 });
              }
           };
+
+          startHandler = () => {
+             isInteractingRef.current = true;
+          };
+
+          endHandler = () => {
+             isInteractingRef.current = false;
+             if (globeEl.current) {
+                const pov = globeEl.current.pointOfView();
+                setZoomLevel(pov.altitude);
+                setCameraPOV({ lat: pov.lat, lng: pov.lng });
+             }
+          };
+
           controls.addEventListener('change', changeHandler);
+          controls.addEventListener('start', startHandler);
+          controls.addEventListener('end', endHandler);
         }
 
         const camera = globeEl.current.camera();
@@ -1041,9 +1061,11 @@ const GlobeMap = ({
     }
 
     return () => {
-      if (controlsReference && changeHandler) {
+      if (controlsReference) {
         try {
-          controlsReference.removeEventListener('change', changeHandler);
+          if (changeHandler) controlsReference.removeEventListener('change', changeHandler);
+          if (startHandler) controlsReference.removeEventListener('start', startHandler);
+          if (endHandler) controlsReference.removeEventListener('end', endHandler);
         } catch (e) {}
       }
     };
@@ -1817,9 +1839,11 @@ const GlobeMap = ({
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
 
     const labelDataMap = isDepartmentMode ? gameDataMap : countryDataMap;
-    const keysToShow = isDepartmentMode
-      ? foundList
-      : ((mode === 'learn' || isHomeScreen || isEndScreen) ? Object.keys(labelDataMap) : foundList);
+    const keysToShow = perfProfile?.isMobile
+      ? (selectedCountry ? [selectedCountry] : [])
+      : (isDepartmentMode
+        ? foundList
+        : ((mode === 'learn' || isHomeScreen || isEndScreen) ? Object.keys(labelDataMap) : foundList));
     const pov = cameraPOV;
 
     const filtered = keysToShow
@@ -2066,8 +2090,8 @@ const GlobeMap = ({
       return assets;
     }
 
-    // Disable all low-poly biomes on realistic theme or glass theme for performance and aesthetic correctness
-    if (isDepartmentMode || globeTheme === 'glass' || globeTheme === 'realistic') return [];
+    // Disable all low-poly biomes on realistic theme, glass theme, or on mobile for performance
+    if (isDepartmentMode || globeTheme === 'glass' || globeTheme === 'realistic' || perfProfile?.isMobile) return [];
 
     const assets = [];
     const allAdmins = Object.keys(gameDataMap);
@@ -3019,11 +3043,11 @@ const GlobeMap = ({
             onGlobeReady={handleGlobeReady}
             backgroundColor={GLOBE_TRANSPARENT_BACKGROUND}
             lineHoverPrecision={0}
-            showGraticules={true}
+            showGraticules={!perfProfile?.isMobile}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
-            polygonsData={visibleRenderCountriesData}
+            polygonsData={perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen ? visibleRenderCountriesData : renderCountriesData}
             polygonGeoJsonGeometry="renderGeometry"
             polygonCapCurvatureResolution={effectiveResolution}
             polygonAltitude={getPolygonAltitude}
@@ -3035,7 +3059,7 @@ const GlobeMap = ({
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
             polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
-            pointsData={visibleMarkersData}
+            pointsData={perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen ? visibleMarkersData : markersData}
             pointLat="lat"
             pointLng="lng"
             pointColor={getPointColorWrapped}
