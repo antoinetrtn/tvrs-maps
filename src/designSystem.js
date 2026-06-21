@@ -4,8 +4,10 @@
 
 export const THEMES_LIST = [
   { id: 'glass', name_fr: 'Verre Moderne', name_en: 'Sleek Glass' },
-  { id: 'realistic', name_fr: 'Satellite Réaliste', name_en: 'Realistic Satellite' },
-  { id: 'lowpoly', name_fr: 'Low-Poly Biomes', name_en: 'Low-Poly Biomes' }
+  { id: 'synthwave', name_fr: 'Midnight Cyber', name_en: 'Midnight Cyber' },
+  { id: 'vintage', name_fr: 'Vintage Rétro', name_en: 'Vintage Retro' },
+  { id: 'blueprint', name_fr: 'Plan Blueprint', name_en: 'Blueprint Plan' },
+  { id: 'aurora', name_fr: 'Aurore Nordique', name_en: 'Aurora Nordic' }
 ];
 
 export const THEME = {
@@ -145,7 +147,7 @@ export const THEME = {
     globeInnerGlow: '#38bdf8',
     lightingRim: '#7dd3fc',
     lightingFill: '#93c5fd',
-    lightingGround: '#020617',
+    lightingGround: '#1e293b',
     lightingStudio: '#b9d8ff',
     lightingLeft: '#dbeafe',
     lightingRight: '#93c5fd',
@@ -201,64 +203,6 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
 
 export const THEME_OVERRIDES = {
   glass: {},
-  realistic: {
-    light: {
-      accent: '#059669',
-      accentHover: '#047857',
-      accentSoft: 'rgba(5, 150, 105, 0.15)',
-      accentGlow: '#34d399',
-      accentContrast: '#ffffff',
-      mapBase: 'rgba(255, 255, 255, 0.25)',
-      mapSea: '#0d1f3d',
-      mapBorder: 'rgba(255, 255, 255, 0.65)',
-      mapBorderMuted: 'rgba(15, 23, 42, 0.2)',
-      graticule: 'rgba(255, 255, 255, 0.18)',
-      globeInnerGlow: 'rgba(255, 255, 255, 0.15)'
-    },
-    dark: {
-      accent: '#34d399',
-      accentHover: '#6ee7b7',
-      accentSoft: 'rgba(52, 211, 153, 0.18)',
-      accentGlow: '#059669',
-      accentContrast: '#022c22',
-      mapBase: 'rgba(255, 255, 255, 0.15)',
-      mapSea: '#020617',
-      mapBorder: 'rgba(255, 255, 255, 0.55)',
-      mapBorderMuted: 'rgba(255, 255, 255, 0.25)',
-      graticule: 'rgba(255, 255, 255, 0.12)',
-      globeInnerGlow: 'rgba(52, 211, 153, 0.12)'
-    }
-  },
-  lowpoly: {
-    light: {
-      accent: '#10b981',
-      accentHover: '#059669',
-      accentSoft: 'rgba(16, 185, 129, 0.15)',
-      accentGlow: '#34d399',
-      accentContrast: '#ffffff',
-      mapBase: '#d9e2ec',
-      mapSea: '#bcccdc',
-      mapBorder: '#829ab1',
-      graticule: 'rgba(98, 125, 152, 0.2)',
-      globeInnerGlow: 'rgba(188, 204, 220, 0.3)',
-      glassBg: 'rgba(255, 255, 255, 0.65)',
-      glassBorder: 'rgba(16, 185, 129, 0.22)'
-    },
-    dark: {
-      accent: '#10b981',
-      accentHover: '#34d399',
-      accentSoft: 'rgba(16, 185, 129, 0.18)',
-      accentGlow: '#059669',
-      accentContrast: '#07162c',
-      mapBase: '#102a43',
-      mapSea: '#07162c',
-      mapBorder: '#1f3a52',
-      graticule: 'rgba(31, 58, 82, 0.25)',
-      globeInnerGlow: 'rgba(31, 58, 82, 0.3)',
-      glassBg: 'rgba(11, 28, 50, 0.55)',
-      glassBorder: 'rgba(16, 185, 129, 0.24)'
-    }
-  },
   synthwave: {
     light: {
       bg: '#0f051d',
@@ -450,6 +394,70 @@ export const THEME_OVERRIDES = {
       decorGlowSecondary: 'rgba(0, 170, 255, 0.15)',
       decorGlowSecondaryEnd: 'rgba(0, 17, 34, 0)'
     }
+  },
+  aurora: {
+    light: {
+      bg: '#f0f7f4',
+      bgElevated: '#ffffff',
+      bgGradientStart: '#f0f7f4',
+      bgGradientEnd: '#e2f0ea',
+      textMain: '#0d2c22',
+      textMuted: '#4a6b5d',
+      accent: '#10b981',
+      accentHover: '#059669',
+      accentSoft: 'rgba(16, 185, 129, 0.15)',
+      accentGlow: '#34d399',
+      accentContrast: '#ffffff',
+      glassBg: 'rgba(255, 255, 255, 0.75)',
+      glassBorder: 'rgba(16, 185, 129, 0.12)',
+      mapBase: '#e2f0ea',
+      mapSea: '#cadad2',
+      mapBorder: '#8ba89b',
+      mapBorderMuted: '#cadad2',
+      gridDot: 'rgba(16, 185, 129, 0.2)',
+      graticule: '#8ba89b',
+      atmosphere: '#10b981',
+      globeEmissive: '#064e3b',
+      globeSpecular: '#a7f3d0',
+      globeInnerGlow: '#34d399',
+      lightingRim: '#a7f3d0',
+      lightingFill: '#e2f0ea',
+      decorGlowPrimary: 'rgba(16, 185, 129, 0.2)',
+      decorGlowPrimaryEnd: 'rgba(240, 247, 244, 0)',
+      decorGlowSecondary: 'rgba(14, 165, 233, 0.15)',
+      decorGlowSecondaryEnd: 'rgba(240, 247, 244, 0)'
+    },
+    dark: {
+      bg: '#020813',
+      bgElevated: '#06152a',
+      bgGradientStart: '#020813',
+      bgGradientEnd: '#021a14',
+      textMain: '#e6f9f3',
+      textMuted: '#628c80',
+      accent: '#10b981',
+      accentHover: '#34d399',
+      accentSoft: 'rgba(16, 185, 129, 0.18)',
+      accentGlow: '#059669',
+      accentContrast: '#021a14',
+      glassBg: 'rgba(6, 21, 42, 0.7)',
+      glassBorder: 'rgba(16, 185, 129, 0.18)',
+      mapBase: '#0d2d24',
+      mapSea: '#010d18',
+      mapBorder: '#1a4d3e',
+      mapBorderMuted: '#061e18',
+      gridDot: 'rgba(16, 185, 129, 0.25)',
+      graticule: '#1a4d3e',
+      atmosphere: '#10b981',
+      globeEmissive: '#022c22',
+      globeSpecular: '#34d399',
+      globeInnerGlow: '#10b981',
+      lightingRim: '#34d399',
+      lightingFill: '#0d2d24',
+      decorGlowPrimary: 'rgba(16, 185, 129, 0.18)',
+      decorGlowPrimaryEnd: 'rgba(2, 8, 19, 0)',
+      decorGlowSecondary: 'rgba(14, 165, 233, 0.15)',
+      decorGlowSecondaryEnd: 'rgba(2, 8, 19, 0)'
+    }
   }
 };
 
@@ -514,86 +522,63 @@ export const GLOBE_STYLE = {
 
 export const CONTINENT_COLORS = {
   light: {
-    "Europe": "#7AABF0",
-    "Americas": "#F5A8A8",
-    "Asia": "#FAE8A0",
-    "Africa": "#A8EBC0",
-    "Oceania": "#E0B8F5",
-    "Antarctic": "#DDE4F0",
+    "Europe": "#849bb3",
+    "Americas": "#cfa29b",
+    "Asia": "#cfba9b",
+    "Africa": "#9bcfaf",
+    "Oceania": "#b89bcf",
+    "Antarctic": "#cbd4db",
     "Unknown": "#cbd5e1"
   },
   dark: {
-    "Europe": "#3A6AAC",
-    "Americas": "#AC3A3A",
-    "Asia": "#9C8020",
-    "Africa": "#2A8A50",
-    "Oceania": "#6E3A9C",
-    "Antarctic": "#2A3A5A",
+    "Europe": "#38526c",
+    "Americas": "#854d45",
+    "Asia": "#857045",
+    "Africa": "#458557",
+    "Oceania": "#704585",
+    "Antarctic": "#394a59",
     "Unknown": "#64748b"
   }
 };
 
 export const CONTINENT_COLORS_LABELS = {
   light: {
-    "Europe": "#1A3D7A",
-    "Americas": "#8C2020",
-    "Asia": "#7A6000",
-    "Africa": "#1A5C35",
-    "Oceania": "#5A1A8C",
-    "Antarctic": "#3A4A6A",
+    "Europe": "#1f344a",
+    "Americas": "#54251e",
+    "Asia": "#54411e",
+    "Africa": "#1e542d",
+    "Oceania": "#411e54",
+    "Antarctic": "#233240",
     "Unknown": "#1e293b"
   },
   dark: {
-    "Europe": "#A8C8F5",
-    "Americas": "#F5A8A8",
-    "Asia": "#FAE8A0",
-    "Africa": "#A8EBC0",
-    "Oceania": "#E0B8F5",
-    "Antarctic": "#DDE4F0",
+    "Europe": "#bcd0e8",
+    "Americas": "#e8beb7",
+    "Asia": "#e8d6be",
+    "Africa": "#bee8cb",
+    "Oceania": "#d6bee8",
+    "Antarctic": "#cbd9e5",
     "Unknown": "#94a3b8"
-  }
-};
-
-export const LOW_POLY_TERRAIN_COLORS = {
-  light: {
-    Europe: '#6fa66a',
-    Americas: '#9b7a4a',
-    Asia: '#b7a35d',
-    Africa: '#c6a45b',
-    Oceania: '#67a88b',
-    Antarctic: '#d8eef2',
-    France: '#78a95f',
-    Unknown: '#8aa071'
-  },
-  dark: {
-    Europe: '#315f3c',
-    Americas: '#6c4f32',
-    Asia: '#71652f',
-    Africa: '#7a5a2a',
-    Oceania: '#2f6b58',
-    Antarctic: '#7ea9b8',
-    France: '#3f6f38',
-    Unknown: '#455f42'
   }
 };
 
 export const CONTINENT_COLORS_ATTENUATED = {
   light: {
-    "Europe": "#B3CDFF",
-    "Americas": "#FFD1D1",
-    "Asia": "#FFF4D1",
-    "Africa": "#D1F5DD",
-    "Oceania": "#F0D1FF",
-    "Antarctic": "#F0F4FF",
+    "Europe": "#eaf0f6",
+    "Americas": "#f6ecea",
+    "Asia": "#f6f0ea",
+    "Africa": "#eaf6ee",
+    "Oceania": "#f0eaf6",
+    "Antarctic": "#f1f4f6",
     "Unknown": "#e2e8f0"
   },
   dark: {
-    "Europe": "#1A2D4A",
-    "Americas": "#4A1A1A",
-    "Asia": "#4A3D0A",
-    "Africa": "#123D26",
-    "Oceania": "#2D1A4A",
-    "Antarctic": "#121A2D",
+    "Europe": "#142332",
+    "Americas": "#321411",
+    "Asia": "#322711",
+    "Africa": "#11321c",
+    "Oceania": "#271132",
+    "Antarctic": "#151e26",
     "Unknown": "#334155"
   }
 };
@@ -637,24 +622,11 @@ export const STYLE_TOKENS = {
 export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass', selectedCountry = null, activeDataMap = null) => {
   const baseTheme = THEME[systemTheme] || THEME.dark;
   const overrides = THEME_OVERRIDES[globeTheme]?.[systemTheme] || {};
-
-  // Merge theme overrides
+  // Theme overrides merged
   const theme = {
     ...baseTheme,
     ...overrides
   };
-
-  // Dynamically override accent color based on active country's continent using the active theme's colors
-  if (selectedCountry && activeDataMap && activeDataMap[selectedCountry]) {
-    const region = activeDataMap[selectedCountry].region;
-    const regionColor = getThemeRegionColor(globeTheme, systemTheme, region);
-    if (regionColor) {
-      theme.accent = regionColor;
-      theme.accentHover = regionColor;
-      theme.accentSoft = `${regionColor}33`; // 20% opacity hex
-      theme.accentGlow = regionColor;
-    }
-  }
 
   return {
     '--bg-color': theme.bg,
@@ -713,11 +685,10 @@ export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass',
     '--decor-glow-secondary': theme.decorGlowSecondary,
     '--decor-glow-secondary-end': theme.decorGlowSecondaryEnd,
     '--theme-dot-glass': '#0ea5e9',
-    '--theme-dot-realistic': '#34d399',
-    '--theme-dot-lowpoly': '#10b981',
     '--theme-dot-synthwave': '#ff007f',
     '--theme-dot-vintage': '#bfae8f',
     '--theme-dot-blueprint': '#00ffff',
+    '--theme-dot-aurora': '#10b981',
     '--radius-sm': STYLE_TOKENS.radius.sm,
     '--radius-md': STYLE_TOKENS.radius.md,
     '--radius-lg': STYLE_TOKENS.radius.lg,
@@ -784,6 +755,24 @@ export const SURFACE_THEME_COLORS = {
     Oceania: '#a3e4d7',
     Antarctic: '#fbfcfc',
     Unknown: '#f9e79f'
+  },
+  aurora: {
+    Europe: '#a5f3fc',
+    Americas: '#99f6e4',
+    Africa: '#a7f3d0',
+    Asia: '#c7d2fe',
+    Oceania: '#e9d5ff',
+    Antarctic: '#f8fafc',
+    Unknown: '#e2f0ea'
+  },
+  aurora_dark: {
+    Europe: '#0891b2',
+    Americas: '#0d9488',
+    Africa: '#059669',
+    Asia: '#4f46e5',
+    Oceania: '#7c3aed',
+    Antarctic: '#64748b',
+    Unknown: '#0d2d24'
   }
 };
 
@@ -804,10 +793,10 @@ export const STROKE_THEME_COLORS = {
 };
 
 export const ATMOSPHERE_THEME_COLORS = {
-  lowpoly: '#38bdf8',
   synthwave: '#ff007f',
   blueprint: '#00ffff',
-  vintage: '#e5c158'
+  vintage: '#e5c158',
+  aurora: '#10b981'
 };
 
 export const SYNTHWAVE_REGION_COLORS_ATTENUATED = {
@@ -873,6 +862,27 @@ export const VINTAGE_REGION_COLORS_ATTENUATED = {
   }
 };
 
+export const AURORA_REGION_COLORS_ATTENUATED = {
+  light: {
+    "Europe": "#e0f2fe",
+    "Americas": "#ccfbf1",
+    "Africa": "#d1fae5",
+    "Asia": "#e0e7ff",
+    "Oceania": "#f3e8ff",
+    "Antarctic": "#f8fafc",
+    "Unknown": "#f1f5f9"
+  },
+  dark: {
+    "Europe": "#083344",
+    "Americas": "#042f2e",
+    "Africa": "#022c22",
+    "Asia": "#1e1b4b",
+    "Oceania": "#2e1065",
+    "Antarctic": "#0f172a",
+    "Unknown": "#0f172a"
+  }
+};
+
 export const VINTAGE_REGION_COLORS_LABELS = {
   light: {
     "Europe": "#78281f",
@@ -896,15 +906,9 @@ export const VINTAGE_REGION_COLORS_LABELS = {
 
 export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
   if (region === 'France') {
-    if (globeTheme === 'lowpoly') {
-      return LOW_POLY_TERRAIN_COLORS[systemTheme]?.France || LOW_POLY_TERRAIN_COLORS[systemTheme]?.Europe;
-    }
     region = 'Europe';
   }
 
-  if (globeTheme === 'lowpoly') {
-    return LOW_POLY_TERRAIN_COLORS[systemTheme]?.[region] || LOW_POLY_TERRAIN_COLORS[systemTheme]?.Unknown;
-  }
   if (globeTheme === 'synthwave') {
     return SURFACE_THEME_COLORS.synthwave[region] || SURFACE_THEME_COLORS.synthwave.Unknown || '#00f0ff';
   }
@@ -914,6 +918,11 @@ export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
   if (globeTheme === 'vintage') {
     return SURFACE_THEME_COLORS.vintage[region] || SURFACE_THEME_COLORS.vintage.Unknown || '#8b5a2b';
   }
+  if (globeTheme === 'aurora') {
+    return systemTheme === 'light'
+      ? (SURFACE_THEME_COLORS.aurora[region] || '#10b981')
+      : (SURFACE_THEME_COLORS.aurora_dark[region] || '#059669');
+  }
   return CONTINENT_COLORS[systemTheme]?.[region] || CONTINENT_COLORS[systemTheme]?.Unknown;
 };
 
@@ -922,9 +931,6 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
     region = 'Europe';
   }
 
-  if (globeTheme === 'lowpoly') {
-    return LOW_POLY_TERRAIN_COLORS[systemTheme]?.[region] || LOW_POLY_TERRAIN_COLORS[systemTheme]?.Unknown;
-  }
   if (globeTheme === 'synthwave') {
     return SYNTHWAVE_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || SYNTHWAVE_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#003a3d';
   }
@@ -934,6 +940,9 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
   if (globeTheme === 'vintage') {
     return VINTAGE_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || VINTAGE_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#4a2711';
   }
+  if (globeTheme === 'aurora') {
+    return AURORA_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || AURORA_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#022c22';
+  }
   return CONTINENT_COLORS_ATTENUATED[systemTheme]?.[region] || CONTINENT_COLORS_ATTENUATED[systemTheme]?.Unknown;
 };
 
@@ -942,9 +951,6 @@ export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
     region = 'Europe';
   }
 
-  if (globeTheme === 'lowpoly') {
-    return systemTheme === 'light' ? '#1e293b' : '#f8fafc';
-  }
   if (globeTheme === 'synthwave') {
     return SURFACE_THEME_COLORS.synthwave[region] || '#00f0ff';
   }
@@ -953,6 +959,9 @@ export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
   }
   if (globeTheme === 'vintage') {
     return VINTAGE_REGION_COLORS_LABELS[systemTheme]?.[region] || VINTAGE_REGION_COLORS_LABELS[systemTheme]?.Unknown || '#8b5a2b';
+  }
+  if (globeTheme === 'aurora') {
+    return systemTheme === 'light' ? '#0d2c22' : '#e6f9f3';
   }
   return CONTINENT_COLORS_LABELS[systemTheme]?.[region] || CONTINENT_COLORS_LABELS[systemTheme]?.Unknown;
 };

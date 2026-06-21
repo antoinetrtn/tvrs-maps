@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
-import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, LOW_POLY_TERRAIN_COLORS, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel } from './designSystem';
-import { createBiomeAsset, disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
+import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel } from './designSystem';
+import { disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
 
 const smoothedRiversCache = {};
 
@@ -20,42 +20,7 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
   return result;
 };
 
-// Preload textures for realistic theme
-const textureLoader = new THREE.TextureLoader();
-
-// 3-level progressive texture quality:
-// Level 1 (far) — 1K via proxy, loads instantly
-const urlMapLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=1024&q=85';
-const urlBumpLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=1024&q=85';
-const urlSpecLow = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=1024&q=85';
-
-// Level 2 (medium) — 2K via proxy, loads on first zoom-in
-const urlMapMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=2048&q=90';
-const urlBumpMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=2048&q=90';
-const urlSpecMid = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=2048&q=90';
-
-// Level 3 (close-up) — 4K, loads only when really close to a country
-const urlMapHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg&w=4096&q=95';
-const urlBumpHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-topology.png&w=4096&q=95';
-const urlSpecHigh = 'https://images.weserv.nl/?url=https://unpkg.com/three-globe/example/img/earth-water.png&w=4096&q=95';
-
-const earthMapLow = textureLoader.load(urlMapLow);
-const bumpMapLow = textureLoader.load(urlBumpLow);
-const specularMapLow = textureLoader.load(urlSpecLow);
-
-earthMapLow.colorSpace = THREE.SRGBColorSpace;
-
-let earthMapMid = null;
-let bumpMapMid = null;
-let specularMapMid = null;
-let midResLoading = false;
-let midResLoaded = false;
-
-let earthMapHigh = null;
-let bumpMapHigh = null;
-let specularMapHigh = null;
-let highResLoading = false;
-let highResLoaded = false;
+// Realistic theme progressive texture loading has been retired
 
 const getFeatureAdmin = (feature) => feature?.properties?.code || feature?.properties?.ADMIN || feature?.properties?.name || feature?.properties?.NAME;
 
@@ -851,12 +816,13 @@ const GlobeMap = ({
   onPreserveInputFocus,
   globeLightingEnabled = true,
   activeDataMap,
-  globeTheme = 'lowpoly'
+  globeTheme = 'glass'
 }) => {
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
   const globeLightingRef = useRef(null);
   const polygonMaterialCacheRef = useRef({ cap: new Map(), side: new Map() });
+  const sharedMaterialsRef = useRef(new Map());
   const tapRef = useRef(null);
   const previousSelectedCountryRef = useRef(null);
   const lastTargetRef = useRef(null);
@@ -868,61 +834,8 @@ const GlobeMap = ({
   const isInteractingRef = useRef(false);
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
-  const [texQuality, setTexQuality] = useState('low'); // 'low' | 'mid' | 'high'
 
-  useEffect(() => {
-    if (globeTheme !== 'realistic') return;
-
-    // 3-level progressive texture quality based on zoom
-    if (zoomLevel <= 1.1) {
-      // Close-up on a country — load 4K
-      if (!highResLoaded && !highResLoading) {
-        highResLoading = true;
-        let loadedCount = 0;
-        const checkHighLoaded = () => {
-          loadedCount++;
-          if (loadedCount === 3) {
-            highResLoaded = true;
-            highResLoading = false;
-            if (earthMapHigh) earthMapHigh.colorSpace = THREE.SRGBColorSpace;
-            setTexQuality('high');
-          }
-        };
-        earthMapHigh = textureLoader.load(urlMapHigh, checkHighLoaded);
-        bumpMapHigh = textureLoader.load(urlBumpHigh, checkHighLoaded);
-        specularMapHigh = textureLoader.load(urlSpecHigh, checkHighLoaded);
-      } else if (highResLoaded && texQuality !== 'high') {
-        setTexQuality('high');
-      } else if (!highResLoaded && midResLoaded && texQuality !== 'mid') {
-        setTexQuality('mid'); // Use 2K while 4K loads
-      }
-    } else if (zoomLevel <= 1.6) {
-      // Zoomed in on a region — load 2K if not already loaded
-      if (!midResLoaded && !midResLoading) {
-        midResLoading = true;
-        let loadedCount = 0;
-        const checkMidLoaded = () => {
-          loadedCount++;
-          if (loadedCount === 3) {
-            midResLoaded = true;
-            midResLoading = false;
-            if (earthMapMid) earthMapMid.colorSpace = THREE.SRGBColorSpace;
-            if (texQuality === 'low') setTexQuality('mid');
-          }
-        };
-        earthMapMid = textureLoader.load(urlMapMid, checkMidLoaded);
-        bumpMapMid = textureLoader.load(urlBumpMid, checkMidLoaded);
-        specularMapMid = textureLoader.load(urlSpecMid, checkMidLoaded);
-      } else if (midResLoaded && texQuality === 'low') {
-        setTexQuality('mid');
-      }
-      // Downgrade from 4K to 2K when zooming back out a bit
-      if (texQuality === 'high' && zoomLevel > 1.4) setTexQuality('mid');
-    } else {
-      // Far away — use 1K
-      if (texQuality !== 'low') setTexQuality('low');
-    }
-  }, [zoomLevel, globeTheme, texQuality]);
+  // Texture quality effect removed
   const prevSelectedCountryRef = useRef(null);
   const biomeObjectsCacheRef = useRef(new Map());
   const animObjectsCacheRef = useRef([]);
@@ -1341,7 +1254,6 @@ const GlobeMap = ({
     });
     return colors;
   }, [globeTheme, theme]);
-  const TERRAIN_COLORS = useMemo(() => LOW_POLY_TERRAIN_COLORS[theme] || LOW_POLY_TERRAIN_COLORS.dark, [theme]);
   const UI_COLORS = useMemo(() => {
     const baseTheme = THEME[theme] || THEME.dark;
     const overrides = THEME_OVERRIDES[globeTheme]?.[theme] || {};
@@ -1359,15 +1271,10 @@ const GlobeMap = ({
   }, [foundList, isHomeScreen, gameDataMap]);
 
   const extrusionScale = useMemo(() => {
-    const lightingMul = globeLightingEnabled ? 1.8 : 1;
-    const themeMul = globeTheme === 'lowpoly' ? 1.3 : 1;
-    return lightingMul * themeMul;
-  }, [globeLightingEnabled, globeTheme]);
+    return globeLightingEnabled ? 1.8 : 1;
+  }, [globeLightingEnabled]);
 
   const getRegionSurfaceColor = useCallback((region) => {
-    if (globeTheme === 'lowpoly') {
-      return TERRAIN_COLORS[region] || TERRAIN_COLORS.Unknown;
-    }
     if (globeTheme === 'synthwave') {
       return SURFACE_THEME_COLORS.synthwave[region] || SURFACE_THEME_COLORS.synthwave.Unknown;
     }
@@ -1377,8 +1284,13 @@ const GlobeMap = ({
     if (globeTheme === 'vintage') {
       return SURFACE_THEME_COLORS.vintage[region] || SURFACE_THEME_COLORS.vintage.Unknown;
     }
+    if (globeTheme === 'aurora') {
+      return isLight
+        ? (SURFACE_THEME_COLORS.aurora[region] || SURFACE_THEME_COLORS.aurora.Unknown)
+        : (SURFACE_THEME_COLORS.aurora_dark[region] || SURFACE_THEME_COLORS.aurora_dark.Unknown);
+    }
     return REGION_COLORS[region] || UI_COLORS.success;
-  }, [globeTheme, REGION_COLORS, TERRAIN_COLORS, UI_COLORS.success]);
+  }, [globeTheme, REGION_COLORS, UI_COLORS.success, isLight]);
 
   const getPolygonColor = useCallback((d) => {
     if (isDepartmentMode) {
@@ -1418,12 +1330,8 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
-      const baseColor = globeTheme === 'lowpoly'
-        ? lerpColor(getRegionSurfaceColor(region), UI_COLORS.mapBase, isLight ? 0.28 : 0.18)
-        : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
-      const targetColor = globeTheme === 'lowpoly'
-        ? getRegionSurfaceColor(region)
-        : (REGION_COLORS[region] || UI_COLORS.accent);
+      const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
+      const targetColor = REGION_COLORS[region] || UI_COLORS.accent;
       // Resting selected unfound country color (slightly highlighted)
       return lerpColor(baseColor, targetColor, 0.1);
     }
@@ -1445,11 +1353,7 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
-    if (globeTheme === 'realistic') {
-      if (admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
-      const isFound = foundSet.has(admin) || mode === 'learn';
-      return isFound ? getRegionSurfaceColor(region) : UI_COLORS.mapBorderMuted;
-    }
+
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
@@ -1527,9 +1431,7 @@ const GlobeMap = ({
         // Base color for the side when selected under lighting
         const sideBaseColor = (foundSet.has(admin) || mode === 'learn')
           ? getRegionSurfaceColor(region)
-          : (globeTheme === 'lowpoly'
-            ? getRegionSurfaceColor(region)
-            : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent));
+          : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
 
         return lerpColor(
           sideBaseColor,
@@ -1562,12 +1464,8 @@ const GlobeMap = ({
           0.1 * GLOBE_STYLE.lighting.capPulseToPaper[isLight ? 'light' : 'dark']
         )
         : lerpColor(
-          globeTheme === 'lowpoly'
-            ? lerpColor(getRegionSurfaceColor(region), UI_COLORS.mapBase, isLight ? 0.28 : 0.18)
-            : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent),
-          globeTheme === 'lowpoly'
-            ? getRegionSurfaceColor(region)
-            : (REGION_COLORS[region] || UI_COLORS.accent),
+          REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent,
+          REGION_COLORS[region] || UI_COLORS.accent,
           0.1
         );
 
@@ -1581,52 +1479,8 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d) || 'unknown';
     const cache = polygonMaterialCacheRef.current[kind];
     const color = kind === 'cap' ? getPolygonColor(d) : getPolygonSideColor(d);
-    let material = cache.get(admin);
 
     const ExpectedMaterialClass = perfProfile?.isMobile ? THREE.MeshLambertMaterial : THREE.MeshPhongMaterial;
-    const isCorrectClass = perfProfile?.isMobile
-      ? material && material.isMeshLambertMaterial
-      : material && material.isMeshPhongMaterial;
-
-    if (material && !isCorrectClass) {
-      material.dispose();
-      cache.delete(admin);
-      material = null;
-    }
-
-    if (!material) {
-      material = new ExpectedMaterialClass({
-        side: THREE.DoubleSide, // Ensure sides are visible from all angles
-        blending: THREE.NormalBlending,
-        depthWrite: true // Re-enable depthWrite for solid volume feel
-      });
-      cache.set(admin, material);
-    }
-
-    material.color.set(safeColor(color));
-
-    // DepthWrite is critical for visibility over the globe sphere
-    if (material.depthWrite !== true) {
-      material.depthWrite = true;
-    }
-
-    // Set polygonOffset to false to eliminate holes and gaps perfectly
-    const targetPolygonOffset = (isDepartmentMode && d.isGhostCountry);
-    if (material.polygonOffset !== targetPolygonOffset) {
-      material.polygonOffset = targetPolygonOffset;
-      if (targetPolygonOffset) {
-        material.polygonOffsetFactor = 1.5;
-        material.polygonOffsetUnits = 1.5;
-      }
-      material.needsUpdate = true;
-    }
-
-    // Handle flat shading for the low-poly theme
-    const targetFlatShading = (globeTheme === 'lowpoly');
-    if (material.flatShading !== targetFlatShading) {
-      material.flatShading = targetFlatShading;
-      material.needsUpdate = true;
-    }
 
     // Handle wireframe/opacity for the hologram blueprint theme
     const isFound = foundSet.has(admin) || mode === 'learn';
@@ -1639,87 +1493,91 @@ const GlobeMap = ({
       targetOpacity = isFound || admin === selectedCountry ? 0.45 : 0.15;
       targetTransparent = true;
     }
-    if (globeTheme === 'realistic') {
-      targetOpacity = admin === selectedCountry
-        ? 0.4
-        : isFound
-          ? 0.22
-          : 0.04;
-      targetTransparent = true;
-    }
 
-    if (material.wireframe !== targetWireframe || material.transparent !== targetTransparent) {
-      material.wireframe = targetWireframe;
-      material.transparent = targetTransparent;
-      material.needsUpdate = true;
-    }
-    if (material.opacity !== targetOpacity) {
-      material.opacity = targetOpacity;
-    }
+    let emissiveHex = UI_COLORS.black;
+    let emissiveIntensity = 0;
+    let specularHex = UI_COLORS.black;
+    let shininess = 0.7;
 
     if (isDepartmentMode && d.isGhostCountry) {
-      if (material.isMeshPhongMaterial) {
-        material.specular.set(safeColor(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink));
-        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
-        material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
-        material.shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
-      } else {
-        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
-        material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
-      }
-      return material;
-    }
-
-    if (isDepartmentMode) {
-      if (material.isMeshPhongMaterial) {
-        material.specular.set(safeColor(UI_COLORS.mapBorder));
-        material.emissive.set(safeColor(color));
-        material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
-        material.shininess = kind === 'cap' ? 2 : 1;
-      } else {
-        material.emissive.set(safeColor(color));
-        material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
-      }
-      return material;
-    }
-
-    if (globeLightingEnabled) {
-      material.emissive.set(safeColor(color));
+      emissiveHex = globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black;
+      emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
+      specularHex = globeLightingEnabled ? (isLight ? UI_COLORS.globeSpecular : UI_COLORS.ink) : UI_COLORS.black;
+      shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
+    } else if (isDepartmentMode) {
+      emissiveHex = color;
+      emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
+      specularHex = UI_COLORS.mapBorder;
+      shininess = kind === 'cap' ? 2 : 1;
+    } else if (globeLightingEnabled) {
+      emissiveHex = color;
 
       const baseEmissiveIntensity = (kind === 'cap'
         ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
         : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark));
 
-      // Glass/Neon effect: boost emissive in dark mode or synthwave theme
+      // Glass/Neon/Aurora effect: boost emissive in dark mode or synthwave/aurora theme
       const emissiveBoost = globeTheme === 'synthwave'
         ? (admin === selectedCountry ? 0.35 : 0.22)
-        : globeTheme === 'lowpoly'
-          ? (admin === selectedCountry ? 0.12 : 0.02)
+        : globeTheme === 'aurora'
+          ? (admin === selectedCountry ? 0.25 : 0.15)
           : (!isLight ? 0.18 : 0.05);
 
-      material.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
+      emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
         admin === selectedCountry ? 0.1 : 0
       );
 
-      if (material.isMeshPhongMaterial) {
-        material.specular.set(safeColor(admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder));
-        const baseShininess = (kind === 'cap'
-          ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
-          : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
+      specularHex = admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder;
+      const baseShininess = (kind === 'cap'
+        ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
+        : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
 
-        // Polished premium shine for selected country, matte for vintage
-        material.shininess = globeTheme === 'vintage' ? 0 : (baseShininess + (admin === selectedCountry ? 30 : (isLight ? 0 : 25)));
-        if (globeTheme === 'vintage') {
-          material.specular.set(0x000000);
-        }
-      }
-    } else {
-      material.emissive.set(0x000000);
-      material.emissiveIntensity = 0;
-      if (material.isMeshPhongMaterial) {
-        material.shininess = 0.7;
+      // Polished premium shine for selected country, matte for vintage
+      shininess = globeTheme === 'vintage' ? 0 : (baseShininess + (admin === selectedCountry ? 30 : (isLight ? 0 : 25)));
+      if (globeTheme === 'vintage') {
+        specularHex = UI_COLORS.black;
       }
     }
+
+    const isIsolated = admin === selectedCountry;
+    const isMobileStr = perfProfile?.isMobile ? 'mobile' : 'desktop';
+
+    // Construct cache/pool key
+    const cacheKey = isIsolated
+      ? `isolated-${admin}-${kind}-${isMobileStr}`
+      : `${kind}-${color}-${targetWireframe}-${targetOpacity}-${targetTransparent}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}`;
+
+    let material = sharedMaterialsRef.current.get(cacheKey);
+
+    if (!material) {
+      material = new ExpectedMaterialClass({
+        side: THREE.DoubleSide,
+        blending: THREE.NormalBlending,
+        depthWrite: true
+      });
+
+      material.color.set(safeColor(color));
+      material.wireframe = targetWireframe;
+      material.transparent = targetTransparent;
+      material.opacity = targetOpacity;
+      material.flatShading = false;
+
+      material.emissive.set(safeColor(emissiveHex));
+      material.emissiveIntensity = emissiveIntensity;
+
+      if (material.isMeshPhongMaterial) {
+        material.specular.set(safeColor(specularHex));
+        material.shininess = shininess;
+      }
+
+      material.userData.isIsolated = isIsolated;
+      material.userData.isShared = !isIsolated;
+
+      sharedMaterialsRef.current.set(cacheKey, material);
+    }
+
+    // Keep country mapping updated for the animation loop
+    cache.set(admin, material);
 
     return material;
   }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry, isDepartmentMode, foundSet, globeTheme, mode, perfProfile]);
@@ -1734,13 +1592,14 @@ const GlobeMap = ({
 
   useEffect(() => {
     const materialCache = polygonMaterialCacheRef.current;
+    const sharedPool = sharedMaterialsRef.current;
     return () => {
-      materialCache.cap.forEach(material => material.dispose());
-      materialCache.side.forEach(material => material.dispose());
       materialCache.cap.clear();
       materialCache.side.clear();
+      sharedPool.forEach(material => material.dispose());
+      sharedPool.clear();
     };
-  }, []);
+  }, [isLight, globeTheme, globeLightingEnabled, mode, isDepartmentMode]);
 
   const getPolygonAltitude = useCallback((d) => {
     if (mode === 'rivers_mountains') return 0.0005;
@@ -1781,12 +1640,6 @@ const GlobeMap = ({
     }
     // Increased thickness for selection
     if (admin === selectedCountry) return perfProfile?.isMobile ? 2.1 : 3.0;
-    // Low-poly theme: no flat 2D strokes — let 3D facets define the shape
-    if (globeTheme === 'lowpoly') return 0;
-    if (globeTheme === 'realistic') {
-      if (admin === selectedCountry) return perfProfile?.isMobile ? 1.5 : 2.0;
-      return perfProfile?.isMobile ? 0.15 : 0.25;
-    }
     if (isDepartmentMode) return perfProfile?.isMobile ? 0.55 : 0.75;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
     return perfProfile?.isMobile ? 0.25 : 0.4;
@@ -2090,86 +1943,13 @@ const GlobeMap = ({
       return assets;
     }
 
-    // Disable all low-poly biomes on realistic theme, glass theme, or on mobile for performance
-    if (isDepartmentMode || globeTheme === 'glass' || globeTheme === 'realistic' || perfProfile?.isMobile) return [];
-
-    const assets = [];
-    const allAdmins = Object.keys(gameDataMap);
-
-    allAdmins.forEach(admin => {
-      const data = gameDataMap[admin];
-      if (!data || data.lat === undefined) return;
-
-      const isFound = foundSet.has(admin) || mode === 'learn';
-      if (!isFound) return;
-
-      const size = countrySizes[admin] || 1;
-      const maxModels = globeTheme === 'lowpoly' ? getBiomeModelCount(size, isDepartmentMode) : 1;
-
-      if (!biomePointsCacheRef.current[admin]) {
-        biomePointsCacheRef.current[admin] = {};
-      }
-
-      if (!biomePointsCacheRef.current[admin][globeTheme]) {
-        const generated = [];
-        const featureEntry = selectableFeatureIndex.find(entry => entry.admin === admin);
-
-        let biomeType = data.region || 'Unknown';
-        if (admin === 'France' || isDepartmentMode) {
-          biomeType = 'France';
-        } else if (admin === 'United States of America') {
-          biomeType = 'USA';
-        }
-
-        if (featureEntry && featureEntry.renderGeometry) {
-          const samplePoints = getPointsInGeometry(featureEntry.renderGeometry, maxModels);
-          for (let i = 0; i < samplePoints.length; i++) {
-            const pt = samplePoints[i];
-            const variant = globeTheme === 'vintage' ? (i === 0 ? 'monster' : 'ship') : null;
-            generated.push({
-              admin,
-              lat: pt[0],
-              lng: pt[1],
-              biomeType,
-              variant,
-              scale: globeTheme === 'vintage' ? (variant === 'ship' ? 0.35 : 0.45) : (0.6 + Math.random() * 0.5),
-              rotation: Math.random() * 360
-            });
-          }
-        } else {
-          for (let i = 0; i < maxModels; i++) {
-            const pt = getRandomOffsetPoint(data.lat, data.lng, Math.min(0.8, 0.2 + size * 0.1));
-            const variant = globeTheme === 'vintage' ? (i === 0 ? 'monster' : 'ship') : null;
-            generated.push({
-              admin,
-              lat: pt[0],
-              lng: pt[1],
-              biomeType,
-              variant,
-              scale: globeTheme === 'vintage' ? (variant === 'ship' ? 0.35 : 0.45) : (0.6 + Math.random() * 0.5),
-              rotation: Math.random() * 360
-            });
-          }
-        }
-        biomePointsCacheRef.current[admin][globeTheme] = generated;
-      }
-
-      const cached = biomePointsCacheRef.current[admin][globeTheme];
-      for (let i = 0; i < cached.length; i++) {
-        assets.push({ ...cached[i], isFound });
-      }
-    });
-
-    return assets;
-  }, [globeTheme, foundList, gameDataMap, countrySizes, selectableFeatureIndex, isDepartmentMode, isHomeScreen, mode, foundSet, perfProfile]);
+    return [];
+  }, [gameDataMap, mode, foundSet, isHomeScreen]);
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
     if (mode === 'rivers_mountains') {
       return admin === selectedCountry ? 0.012 : 0.004;
-    }
-    if (globeTheme === 'vintage') {
-      return 0.0012; // Vintage assets float exactly at sea level
     }
     if (isDepartmentMode) {
       const alt = getDepartmentLayerAltitude(admin, foundSet, selectedCountry);
@@ -2184,9 +1964,7 @@ const GlobeMap = ({
 
   const createBiomeThreeObject = useCallback((d) => {
     const isSelected = d.admin === selectedCountry;
-    const key = mode === 'rivers_mountains'
-      ? `${d.admin || 'unknown'}_${d.isFound ? 'found' : 'unfound'}_selected_${isSelected}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`
-      : `${d.admin || 'unknown'}_${d.biomeType || 'none'}_${d.variant || 'none'}_${d.isFound ? 'found' : 'unfound'}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
+    const key = `${d.admin || 'unknown'}_${d.isFound ? 'found' : 'unfound'}_selected_${isSelected}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
     
     if (biomeObjectsCacheRef.current.has(key)) {
       return biomeObjectsCacheRef.current.get(key);
@@ -2203,18 +1981,8 @@ const GlobeMap = ({
           asset = new THREE.Group(); // Found rivers are drawn in 3D paths, so empty group here
         }
       }
-    } else if (globeTheme === 'vintage') {
-      if (d.variant === 'ship') {
-        asset = createVintageShip();
-      } else {
-        asset = createVintageKraken();
-      }
-    } else if (globeTheme === 'synthwave') {
-      asset = createSynthwavePyramid();
-    } else if (globeTheme === 'blueprint') {
-      asset = createBlueprintNode();
     } else {
-      asset = createBiomeAsset(d.biomeType, theme, d.variant);
+      asset = new THREE.Group();
     }
 
     const alignedAsset = new THREE.Group();
@@ -2329,26 +2097,13 @@ const GlobeMap = ({
         shininess: 15
       });
     }
-    if (globeTheme === 'realistic') {
-      // Select texture based on quality level
-      const activeMap = texQuality === 'high' && earthMapHigh
-        ? earthMapHigh
-        : (texQuality === 'mid' && earthMapMid ? earthMapMid : earthMapLow);
-      const activeBump = texQuality === 'high' && bumpMapHigh
-        ? bumpMapHigh
-        : (texQuality === 'mid' && bumpMapMid ? bumpMapMid : bumpMapLow);
-      const activeSpec = texQuality === 'high' && specularMapHigh
-        ? specularMapHigh
-        : (texQuality === 'mid' && specularMapMid ? specularMapMid : specularMapLow);
-
+    if (globeTheme === 'aurora') {
       return new THREE.MeshPhongMaterial({
-        map: activeMap,
-        bumpMap: activeBump,
-        bumpScale: 0.16,
-        specularMap: activeSpec,
-        specular: new THREE.Color(isLight ? 0x222222 : 0x111111),
-        shininess: 15,
-        flatShading: false
+        color: UI_COLORS.mapSea,
+        specular: 0x34d399,
+        shininess: 25,
+        emissive: isLight ? 0x064e3b : 0x022c22,
+        emissiveIntensity: isLight ? 0.05 : 0.15
       });
     }
 
@@ -2365,7 +2120,7 @@ const GlobeMap = ({
       opacity: 1,
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7
     });
-  }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture, texQuality]);
+  }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture]);
 
   useEffect(() => {
     return () => {
@@ -2448,7 +2203,7 @@ const GlobeMap = ({
       };
 
       // Initialize target refs and uniform values to prevent initial transition jump
-      const initialHex = globeTheme === 'synthwave' ? 0xff007f : (globeTheme === 'blueprint' ? 0x00ffff : (globeTheme === 'vintage' ? 0xd4a373 : 0x38bdf8));
+      const initialHex = globeTheme === 'synthwave' ? 0xff007f : (globeTheme === 'blueprint' ? 0x00ffff : (globeTheme === 'vintage' ? 0xd4a373 : (globeTheme === 'aurora' ? 0x10b981 : 0x38bdf8)));
       targetGlowColorRef.current.setHex(initialHex);
       innerGlow.material.uniforms.glowColor.value.copy(targetGlowColorRef.current);
     }
@@ -2520,10 +2275,10 @@ const GlobeMap = ({
         glowColorHex = 0xc2945c; // Muted gold
         glowPower = 1.1;
         glowCoef = 0.05;
-      } else if (globeTheme === 'lowpoly') {
-        glowColorHex = 0x0284c7; // Deep sky blue
-        glowPower = 1.2;
-        glowCoef = 0.07;
+      } else if (globeTheme === 'aurora') {
+        glowColorHex = 0x10b981; // Aurora green
+        glowPower = 1.1;
+        glowCoef = 0.09;
       }
     }
 
@@ -2702,8 +2457,8 @@ const GlobeMap = ({
                 : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark));
               const emissiveBoost = globeTheme === 'synthwave'
                 ? 0.22
-                : globeTheme === 'lowpoly'
-                  ? 0.02
+                : globeTheme === 'aurora'
+                  ? 0.15
                   : (!isLight ? 0.18 : 0.05);
               mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost;
             } else {
@@ -2732,8 +2487,8 @@ const GlobeMap = ({
 
             const emissiveBoost = globeTheme === 'synthwave'
               ? 0.35
-              : globeTheme === 'lowpoly'
-                ? 0.12
+              : globeTheme === 'aurora'
+                ? 0.25
                 : (!isLight ? 0.18 : 0.05);
 
             mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + 0.1 + (pulseVal * 0.15);
@@ -2868,12 +2623,8 @@ const GlobeMap = ({
 
     if (isSelected) {
       if (isError) return UI_COLORS.error;
-      const baseColor = globeTheme === 'lowpoly'
-        ? lerpColor(getRegionSurfaceColor(region), UI_COLORS.mapBase, isLight ? 0.28 : 0.18)
-        : (REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent);
-      const targetColor = globeTheme === 'lowpoly'
-        ? getRegionSurfaceColor(region)
-        : (REGION_COLORS[region] || UI_COLORS.accent);
+      const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
+      const targetColor = REGION_COLORS[region] || UI_COLORS.accent;
       return lerpColor(baseColor, targetColor, 0.3);
     }
 
@@ -2904,9 +2655,20 @@ const GlobeMap = ({
     selectCountryAtLngLat(coords.lng, coords.lat);
   }, [selectCountryAtLngLat]);
 
-  const effectiveResolution = useMemo(() => {
-    return perfProfile?.polygonCapCurvatureResolution ?? 1.5;
-  }, [perfProfile]);
+  const getPolygonCurvatureResolution = useCallback((d) => {
+    const admin = getFeatureAdmin(d) || 'unknown';
+    const baseRes = perfProfile?.polygonCapCurvatureResolution ?? 1.5;
+    const size = countrySizes[admin];
+    if (size === undefined) return baseRes;
+
+    if (size < 4) {
+      return 0.5; // Fine resolution (smaller degrees per step) for small features
+    }
+    if (size > 15) {
+      return baseRes * 1.8; // Coarser resolution (larger degrees per step) for large countries
+    }
+    return baseRes;
+  }, [countrySizes, perfProfile?.polygonCapCurvatureResolution]);
 
   const getPolygonCapColorWrapped = useCallback((d) => safeColor(getPolygonColor(d)), [safeColor, getPolygonColor]);
   const getPolygonSideColorWrapped = useCallback((d) => safeColor(getPolygonSideColor(d)), [safeColor, getPolygonSideColor]);
@@ -2935,8 +2697,8 @@ const GlobeMap = ({
           ? ATMOSPHERE_THEME_COLORS.blueprint
           : globeTheme === 'vintage'
           ? ATMOSPHERE_THEME_COLORS.vintage
-          : globeTheme === 'lowpoly'
-          ? ATMOSPHERE_THEME_COLORS.lowpoly
+          : globeTheme === 'aurora'
+          ? ATMOSPHERE_THEME_COLORS.aurora
           : UI_COLORS.atmosphere)
     );
   }, [selectedCountry, activeDataMap, globeTheme, theme, UI_COLORS.atmosphere, safeColor]);
@@ -3049,7 +2811,7 @@ const GlobeMap = ({
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
             polygonsData={perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen ? visibleRenderCountriesData : renderCountriesData}
             polygonGeoJsonGeometry="renderGeometry"
-            polygonCapCurvatureResolution={effectiveResolution}
+            polygonCapCurvatureResolution={getPolygonCurvatureResolution}
             polygonAltitude={getPolygonAltitude}
             polygonCapColor={getPolygonCapColorWrapped}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}

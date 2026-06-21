@@ -121,7 +121,7 @@ const HomeScreen = ({
           <button className="home-btn mode-rivers-mountains" onClick={() => onStartGame('rivers_mountains')}>
             <Mountain size={20} />
             <span className="btn-title">{lang === 'fr' ? 'Reliefs & Fleuves' : 'Rivers & Peaks'}</span>
-            <span className="beta-slop-badge">NEW <small>realistic</small></span>
+            <span className="beta-slop-badge">NEW <small>reliefs</small></span>
           </button>
 
 
