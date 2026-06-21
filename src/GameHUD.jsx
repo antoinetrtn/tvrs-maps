@@ -461,8 +461,7 @@ const GameHUD = ({
             )}
 
             <div 
-              className={`input-island glass-panel ${inputError ? 'error' : ''} ${inputWarning ? 'warning' : ''} ${inputSuccess ? 'success' : ''} ${activeContinent ? 'has-continent' : ''}`}
-              style={{ "--continent-color": activeContinent ? REGION_COLORS[activeContinent] : 'transparent' }}
+              className={`input-island glass-panel ${inputError ? 'error' : ''} ${inputWarning ? 'warning' : ''} ${inputSuccess ? 'success' : ''}`}
             >
               <input
                 ref={extInputRef}

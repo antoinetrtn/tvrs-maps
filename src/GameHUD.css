@@ -571,8 +571,8 @@
   background: var(--theme-dot-glass);
 }
 
-.theme-dot.lowpoly {
-  background: var(--theme-dot-lowpoly);
+.theme-dot.aurora {
+  background: var(--theme-dot-aurora);
 }
 
 .theme-dot.synthwave {

@@ -291,10 +291,7 @@ function App() {
   const startGame = useCallback((selectedMode) => {
     resetGame(selectedMode);
     setCurrentScreen('game');
-    if (selectedMode === 'rivers_mountains') {
-      setGlobeTheme('realistic');
-    }
-  }, [resetGame, setGlobeTheme]);
+  }, [resetGame]);
 
   const goHome = useCallback(() => {
     resetGame(mode);
