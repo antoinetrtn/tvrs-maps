@@ -865,6 +865,7 @@ const GlobeMap = ({
     height: window.innerHeight
   });
   const wasHomeScreenRef = useRef(isHomeScreen);
+  const isInteractingRef = useRef(false);
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
   const [texQuality, setTexQuality] = useState('low'); // 'low' | 'mid' | 'high'
@@ -986,6 +987,8 @@ const GlobeMap = ({
   useEffect(() => {
     let controlsReference = null;
     let changeHandler = null;
+    let startHandler = null;
+    let endHandler = null;
 
     if (globeEl.current) {
       try {
@@ -1011,6 +1014,7 @@ const GlobeMap = ({
 
           // Track POV changes with a stable threshold to avoid jittery re-renders
           changeHandler = () => {
+             if (isInteractingRef.current) return;
              if (globeEl.current) {
                 const pov = globeEl.current.pointOfView();
                 setZoomLevel(prev => {
@@ -1027,7 +1031,23 @@ const GlobeMap = ({
                 });
              }
           };
+
+          startHandler = () => {
+             isInteractingRef.current = true;
+          };
+
+          endHandler = () => {
+             isInteractingRef.current = false;
+             if (globeEl.current) {
+                const pov = globeEl.current.pointOfView();
+                setZoomLevel(pov.altitude);
+                setCameraPOV({ lat: pov.lat, lng: pov.lng });
+             }
+          };
+
           controls.addEventListener('change', changeHandler);
+          controls.addEventListener('start', startHandler);
+          controls.addEventListener('end', endHandler);
         }
 
         const camera = globeEl.current.camera();
@@ -1041,9 +1061,11 @@ const GlobeMap = ({
     }
 
     return () => {
-      if (controlsReference && changeHandler) {
+      if (controlsReference) {
         try {
-          controlsReference.removeEventListener('change', changeHandler);
+          if (changeHandler) controlsReference.removeEventListener('change', changeHandler);
+          if (startHandler) controlsReference.removeEventListener('start', startHandler);
+          if (endHandler) controlsReference.removeEventListener('end', endHandler);
         } catch (e) {}
       }
     };

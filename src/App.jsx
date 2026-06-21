@@ -556,7 +556,7 @@ function App() {
       maxLabels: isMobile ? 4 : (isTablet ? 8 : 20),
       showAtmosphere: false,
       useImageTextures: false,
-      cullOffscreenCountries: false,
+      cullOffscreenCountries: isMobile,
       // High-performance curvature resolution for quality and speed
       polygonCapCurvatureResolution: isMobile ? 4 : (isTablet ? 3 : 1.5)
     };
