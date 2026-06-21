@@ -125,21 +125,34 @@ function App() {
   const totalPossible = allCountryKeys.length;
 
   const getClosestUnfound = useCallback((fromAdmin, currentFound) => {
-     let minList = [];
      const c1 = activeDataMap[fromAdmin];
      if (!c1 || c1.lat === undefined) return null;
+
+     let sameRegionList = [];
+     let otherRegionList = [];
 
      Object.keys(activeDataMap).forEach(key => {
         if (!currentFound.includes(key) && activeDataMap[key].lat !== undefined) {
            let dLng = Math.abs(c1.lng - activeDataMap[key].lng);
            if (dLng > 180) dLng = 360 - dLng;
            const dist = Math.hypot(c1.lat - activeDataMap[key].lat, dLng);
-           minList.push({ key, dist });
+           
+           if (c1.region && activeDataMap[key].region === c1.region) {
+              sameRegionList.push({ key, dist });
+           } else {
+              otherRegionList.push({ key, dist });
+           }
         }
      });
 
-     minList.sort((a,b) => a.dist - b.dist);
-     return minList.length > 0 ? minList[0].key : null;
+     if (sameRegionList.length > 0) {
+        sameRegionList.sort((a, b) => a.dist - b.dist);
+        return sameRegionList[0].key;
+     } else if (otherRegionList.length > 0) {
+        otherRegionList.sort((a, b) => a.dist - b.dist);
+        return otherRegionList[0].key;
+     }
+     return null;
   }, [activeDataMap]);
 
   const resetNavigationTrail = useCallback((country) => {
@@ -212,6 +225,9 @@ function App() {
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
       if (selectedCountry) {
         if (e.key === 'ArrowRight') navigateFocus('next');
         if (e.key === 'ArrowLeft') navigateFocus('prev');
@@ -300,7 +316,9 @@ function App() {
   }, [foundList.length, isPlaying, isGameOver, totalPossible]);
 
   useEffect(() => {
-    fetch('/data/countries-50m-low.json')
+    const isMobile = window.innerWidth < 768;
+    const url = isMobile ? '/data/countries-110m.json' : '/data/countries-50m-low.json';
+    fetch(url)
     .then(res => res.json())
     .then(data => {
       if (data && data.features) {
@@ -526,8 +544,8 @@ function App() {
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
     const devicePixelRatio = window.devicePixelRatio || 1;
     const pixelRatio = isMobile
-      ? Math.min(devicePixelRatio, 1.15)
-      : (isTablet ? Math.min(devicePixelRatio, 1.3) : Math.min(devicePixelRatio, 1.5));
+      ? Math.min(devicePixelRatio, 1.0)
+      : (isTablet ? Math.min(devicePixelRatio, 1.15) : Math.min(devicePixelRatio, 1.4));
     return {
       isMobile,
       isTablet,
