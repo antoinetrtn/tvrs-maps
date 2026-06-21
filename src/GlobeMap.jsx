@@ -822,6 +822,7 @@ const GlobeMap = ({
   const globeContentWrapperRef = useRef(null);
   const globeLightingRef = useRef(null);
   const polygonMaterialCacheRef = useRef({ cap: new Map(), side: new Map() });
+  const sharedMaterialsRef = useRef(new Map());
   const tapRef = useRef(null);
   const previousSelectedCountryRef = useRef(null);
   const lastTargetRef = useRef(null);
@@ -1478,41 +1479,8 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d) || 'unknown';
     const cache = polygonMaterialCacheRef.current[kind];
     const color = kind === 'cap' ? getPolygonColor(d) : getPolygonSideColor(d);
-    let material = cache.get(admin);
 
     const ExpectedMaterialClass = perfProfile?.isMobile ? THREE.MeshLambertMaterial : THREE.MeshPhongMaterial;
-    const isCorrectClass = perfProfile?.isMobile
-      ? material && material.isMeshLambertMaterial
-      : material && material.isMeshPhongMaterial;
-
-    if (material && !isCorrectClass) {
-      material.dispose();
-      cache.delete(admin);
-      material = null;
-    }
-
-    if (!material) {
-      material = new ExpectedMaterialClass({
-        side: THREE.DoubleSide, // Ensure sides are visible from all angles
-        blending: THREE.NormalBlending,
-        depthWrite: true // Re-enable depthWrite for solid volume feel
-      });
-      cache.set(admin, material);
-    }
-
-    material.color.set(safeColor(color));
-
-    // DepthWrite is critical for visibility over the globe sphere
-    if (material.depthWrite !== true) {
-      material.depthWrite = true;
-    }
-
-    // Handle flat shading for the low-poly theme
-    const targetFlatShading = false;
-    if (material.flatShading !== targetFlatShading) {
-      material.flatShading = targetFlatShading;
-      material.needsUpdate = true;
-    }
 
     // Handle wireframe/opacity for the hologram blueprint theme
     const isFound = foundSet.has(admin) || mode === 'learn';
@@ -1526,43 +1494,23 @@ const GlobeMap = ({
       targetTransparent = true;
     }
 
-    if (material.wireframe !== targetWireframe || material.transparent !== targetTransparent) {
-      material.wireframe = targetWireframe;
-      material.transparent = targetTransparent;
-      material.needsUpdate = true;
-    }
-    if (material.opacity !== targetOpacity) {
-      material.opacity = targetOpacity;
-    }
+    let emissiveHex = UI_COLORS.black;
+    let emissiveIntensity = 0;
+    let specularHex = UI_COLORS.black;
+    let shininess = 0.7;
 
     if (isDepartmentMode && d.isGhostCountry) {
-      if (material.isMeshPhongMaterial) {
-        material.specular.set(safeColor(globeLightingEnabled ? UI_COLORS.globeSpecular : UI_COLORS.ink));
-        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
-        material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
-        material.shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
-      } else {
-        material.emissive.set(safeColor(globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black));
-        material.emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
-      }
-      return material;
-    }
-
-    if (isDepartmentMode) {
-      if (material.isMeshPhongMaterial) {
-        material.specular.set(safeColor(UI_COLORS.mapBorder));
-        material.emissive.set(safeColor(color));
-        material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
-        material.shininess = kind === 'cap' ? 2 : 1;
-      } else {
-        material.emissive.set(safeColor(color));
-        material.emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
-      }
-      return material;
-    }
-
-    if (globeLightingEnabled) {
-      material.emissive.set(safeColor(color));
+      emissiveHex = globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black;
+      emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
+      specularHex = globeLightingEnabled ? (isLight ? UI_COLORS.globeSpecular : UI_COLORS.ink) : UI_COLORS.black;
+      shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
+    } else if (isDepartmentMode) {
+      emissiveHex = color;
+      emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
+      specularHex = UI_COLORS.mapBorder;
+      shininess = kind === 'cap' ? 2 : 1;
+    } else if (globeLightingEnabled) {
+      emissiveHex = color;
 
       const baseEmissiveIntensity = (kind === 'cap'
         ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
@@ -1575,29 +1523,61 @@ const GlobeMap = ({
           ? (admin === selectedCountry ? 0.25 : 0.15)
           : (!isLight ? 0.18 : 0.05);
 
-      material.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
+      emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
         admin === selectedCountry ? 0.1 : 0
       );
 
-      if (material.isMeshPhongMaterial) {
-        material.specular.set(safeColor(admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder));
-        const baseShininess = (kind === 'cap'
-          ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
-          : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
+      specularHex = admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder;
+      const baseShininess = (kind === 'cap'
+        ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
+        : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
 
-        // Polished premium shine for selected country, matte for vintage
-        material.shininess = globeTheme === 'vintage' ? 0 : (baseShininess + (admin === selectedCountry ? 30 : (isLight ? 0 : 25)));
-        if (globeTheme === 'vintage') {
-          material.specular.set(0x000000);
-        }
-      }
-    } else {
-      material.emissive.set(0x000000);
-      material.emissiveIntensity = 0;
-      if (material.isMeshPhongMaterial) {
-        material.shininess = 0.7;
+      // Polished premium shine for selected country, matte for vintage
+      shininess = globeTheme === 'vintage' ? 0 : (baseShininess + (admin === selectedCountry ? 30 : (isLight ? 0 : 25)));
+      if (globeTheme === 'vintage') {
+        specularHex = UI_COLORS.black;
       }
     }
+
+    const isIsolated = admin === selectedCountry;
+    const isMobileStr = perfProfile?.isMobile ? 'mobile' : 'desktop';
+
+    // Construct cache/pool key
+    const cacheKey = isIsolated
+      ? `isolated-${admin}-${kind}-${isMobileStr}`
+      : `${kind}-${color}-${targetWireframe}-${targetOpacity}-${targetTransparent}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}`;
+
+    let material = sharedMaterialsRef.current.get(cacheKey);
+
+    if (!material) {
+      material = new ExpectedMaterialClass({
+        side: THREE.DoubleSide,
+        blending: THREE.NormalBlending,
+        depthWrite: true
+      });
+
+      material.color.set(safeColor(color));
+      material.wireframe = targetWireframe;
+      material.transparent = targetTransparent;
+      material.opacity = targetOpacity;
+      material.flatShading = false;
+
+      material.emissive.set(safeColor(emissiveHex));
+      material.emissiveIntensity = emissiveIntensity;
+
+      if (material.isMeshPhongMaterial) {
+        material.specular.set(safeColor(specularHex));
+        material.shininess = shininess;
+      }
+
+      material.userData.isIsolated = isIsolated;
+      material.userData.isShared = !isIsolated;
+
+      sharedMaterialsRef.current.set(cacheKey, material);
+    }
+
+    // Keep country mapping updated for the animation loop
+    cache.set(admin, material);
 
     return material;
   }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry, isDepartmentMode, foundSet, globeTheme, mode, perfProfile]);
@@ -1612,13 +1592,14 @@ const GlobeMap = ({
 
   useEffect(() => {
     const materialCache = polygonMaterialCacheRef.current;
+    const sharedPool = sharedMaterialsRef.current;
     return () => {
-      materialCache.cap.forEach(material => material.dispose());
-      materialCache.side.forEach(material => material.dispose());
       materialCache.cap.clear();
       materialCache.side.clear();
+      sharedPool.forEach(material => material.dispose());
+      sharedPool.clear();
     };
-  }, []);
+  }, [isLight, globeTheme, globeLightingEnabled, mode, isDepartmentMode]);
 
   const getPolygonAltitude = useCallback((d) => {
     if (mode === 'rivers_mountains') return 0.0005;
@@ -2674,9 +2655,20 @@ const GlobeMap = ({
     selectCountryAtLngLat(coords.lng, coords.lat);
   }, [selectCountryAtLngLat]);
 
-  const effectiveResolution = useMemo(() => {
-    return perfProfile?.polygonCapCurvatureResolution ?? 1.5;
-  }, [perfProfile]);
+  const getPolygonCurvatureResolution = useCallback((d) => {
+    const admin = getFeatureAdmin(d) || 'unknown';
+    const baseRes = perfProfile?.polygonCapCurvatureResolution ?? 1.5;
+    const size = countrySizes[admin];
+    if (size === undefined) return baseRes;
+
+    if (size < 4) {
+      return 0.5; // Fine resolution (smaller degrees per step) for small features
+    }
+    if (size > 15) {
+      return baseRes * 1.8; // Coarser resolution (larger degrees per step) for large countries
+    }
+    return baseRes;
+  }, [countrySizes, perfProfile?.polygonCapCurvatureResolution]);
 
   const getPolygonCapColorWrapped = useCallback((d) => safeColor(getPolygonColor(d)), [safeColor, getPolygonColor]);
   const getPolygonSideColorWrapped = useCallback((d) => safeColor(getPolygonSideColor(d)), [safeColor, getPolygonSideColor]);
@@ -2819,7 +2811,7 @@ const GlobeMap = ({
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
             polygonsData={perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen ? visibleRenderCountriesData : renderCountriesData}
             polygonGeoJsonGeometry="renderGeometry"
-            polygonCapCurvatureResolution={effectiveResolution}
+            polygonCapCurvatureResolution={getPolygonCurvatureResolution}
             polygonAltitude={getPolygonAltitude}
             polygonCapColor={getPolygonCapColorWrapped}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}

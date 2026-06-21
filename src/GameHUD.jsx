@@ -31,6 +31,24 @@ const GameHUD = ({
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[-'']/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
   };
 
+  // Pre-normalize names, capitals, and aliases once per countryDataMap change
+  const preNormalizedData = useMemo(() => {
+    if (!countryDataMap) return {};
+    const result = {};
+    Object.entries(countryDataMap).forEach(([key, value]) => {
+      if (!value) return;
+      result[key] = {
+        ...value,
+        normalizedNameFr: normalizeString(value.name_fr || value.name_en || key),
+        normalizedNameEn: normalizeString(value.name_en || key),
+        normalizedCapitalFr: value.capital_fr ? normalizeString(value.capital_fr) : (value.capital ? normalizeString(value.capital) : ''),
+        normalizedCapitalEn: value.capital ? normalizeString(value.capital) : '',
+        normalizedAliases: (value.aliases || []).map(alias => normalizeString(alias))
+      };
+    });
+    return result;
+  }, [countryDataMap]);
+
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
@@ -101,23 +119,27 @@ const GameHUD = ({
       const normalizedInput = normalizeString(val);
       const newSuggestions = [];
       const keysToCheck = mode === 'learn' 
-        ? Object.keys(countryDataMap || {}) 
-        : Object.keys(countryDataMap || {}).filter(k => !foundList.includes(k));
+        ? Object.keys(preNormalizedData) 
+        : Object.keys(preNormalizedData).filter(k => !foundList.includes(k));
       
       for (const adminKey of keysToCheck) {
-        const mapped = countryDataMap[adminKey];
+        const mapped = preNormalizedData[adminKey];
         if (!mapped) continue;
-        let nameToMatch = lang === 'fr' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped.name_en || adminKey);
-        let capitalToMatch = lang === 'fr' && mapped.capital_fr ? mapped.capital_fr : (mapped.capital || null);
+        
+        let normalizedNameToMatch = lang === 'fr' ? mapped.normalizedNameFr : mapped.normalizedNameEn;
+        let normalizedCapitalToMatch = lang === 'fr' ? mapped.normalizedCapitalFr : mapped.normalizedCapitalEn;
+        
+        let nameDisplay = lang === 'fr' ? (mapped.name_fr || mapped.name_en || adminKey) : (mapped.name_en || adminKey);
+        let capitalDisplay = lang === 'fr' && mapped.capital_fr ? mapped.capital_fr : (mapped.capital || null);
         
         // In learn mode, match both name and capital
         if (mode === 'learn') {
-          const matchName = normalizeString(nameToMatch).includes(normalizedInput);
-          const matchCap = capitalToMatch && normalizeString(capitalToMatch).includes(normalizedInput);
+          const matchName = normalizedNameToMatch.includes(normalizedInput);
+          const matchCap = normalizedCapitalToMatch && normalizedCapitalToMatch.includes(normalizedInput);
           
           // Suggestions should help with long/complex names
           if (matchName || matchCap) {
-            const target = matchName ? nameToMatch : capitalToMatch;
+            const target = matchName ? nameDisplay : capitalDisplay;
             // Only suggest if input is long enough or target is complex (has spaces/hyphens)
             if (val.length >= 5 || target.includes(' ') || target.includes('-')) {
               newSuggestions.push({ 
@@ -128,11 +150,13 @@ const GameHUD = ({
             }
           }
         } else {
-          let targetMatch = (mode === 'countries' || mode === 'departments' || mode === 'rivers_mountains') ? nameToMatch : capitalToMatch;
-          if (targetMatch && normalizeString(targetMatch).startsWith(normalizedInput)) {
-            const ratio = val.length / targetMatch.length;
+          let targetNormalized = (mode === 'countries' || mode === 'departments' || mode === 'rivers_mountains') ? normalizedNameToMatch : normalizedCapitalToMatch;
+          let targetDisplay = (mode === 'countries' || mode === 'departments' || mode === 'rivers_mountains') ? nameDisplay : capitalDisplay;
+          
+          if (targetNormalized && targetNormalized.startsWith(normalizedInput)) {
+            const ratio = val.length / targetDisplay.length;
             const hasSeparator = val.includes(' ') || val.includes('-');
-            const isTargetCompound = targetMatch.includes(' ') || targetMatch.includes('-');
+            const isTargetCompound = targetDisplay.includes(' ') || targetDisplay.includes('-');
             
             // Logic for game mode:
             // 1. If single word: must be at least 80% finished (e.g. "Franc" -> "France")
@@ -144,7 +168,7 @@ const GameHUD = ({
             if (isAlmostFinishedSingle || isSignificantCompoundMatch) {
               newSuggestions.push({ 
                 key: adminKey, 
-                display: targetMatch, 
+                display: targetDisplay, 
                 subtext: mode === 'departments' 
                   ? mapped.code 
                   : mode === 'rivers_mountains'
