@@ -92,7 +92,7 @@ input, button, textarea, select {
 }
 
 /* Explicitly target the quiz input by its ID to kill the browser default */
-#quiz-response-field {
+#q-resp-field {
   outline: none !important;
   box-shadow: none !important;
   border: none !important;

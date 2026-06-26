@@ -2719,7 +2719,9 @@ const GlobeMap = ({
         height: globeHeight,
         zIndex: 0,
         overflow: 'hidden',
-        transition: 'top var(--transition-layout), left var(--transition-layout), width var(--transition-layout), height var(--transition-layout)',
+        transition: isMobileKeyboardOpen
+          ? 'none'
+          : 'top var(--transition-layout), left var(--transition-layout), width var(--transition-layout), height var(--transition-layout)',
         background: isLight
           ? 'linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%)'
           : 'transparent'

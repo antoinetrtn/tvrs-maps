@@ -236,34 +236,10 @@ const GameHUD = ({
   const placeholderText = useMemo(() => {
     if (isListening) return '...';
     if (mode === 'learn') {
-      return lang === 'fr' ? 'Rechercher un pays ou une capitale...' : 'Search for a country or capital...';
+      return lang === 'fr' ? 'Rechercher...' : 'Search...';
     }
-    
-    if (isFocusedCountry) {
-      if (mode === 'departments') {
-        return lang === 'fr' ? 'Nom du département...' : 'Department name...';
-      }
-      if (mode === 'rivers_mountains') {
-        const type = countryDataMap[selectedCountry]?.type;
-        if (type === 'mountain_range') {
-          return lang === 'fr' ? 'Nom de la chaîne de montagnes...' : 'Mountain range name...';
-        }
-        return lang === 'fr' ? 'Nom du fleuve...' : 'River name...';
-      }
-      if (mode === 'countries') {
-        return lang === 'fr' ? 'Devinez ce pays' : 'Guess this country';
-      }
-      return lang === 'fr' ? 'Trouvez la capitale' : 'Find the capital';
-    }
-    
-    if (mode === 'departments') {
-      return lang === 'fr' ? 'Saisir un département...' : 'Enter a department...';
-    }
-    if (mode === 'rivers_mountains') {
-      return lang === 'fr' ? 'Saisir un relief ou un fleuve...' : 'Enter a peak or river...';
-    }
-    return lang === 'fr' ? 'Saisir un pays...' : 'Enter a country...';
-  }, [isListening, mode, isFocusedCountry, selectedCountry, countryDataMap, lang]);
+    return lang === 'fr' ? 'Votre réponse...' : 'Your answer...';
+  }, [isListening, mode, lang]);
 
   // Determine which continent to highlight
   const activeContinent = useMemo(() => {
@@ -287,67 +263,84 @@ const GameHUD = ({
         } : {}}
       >
           <div className="hud-top-left">
-            <button 
-              className="hud-btn-circular glass-panel mobile-only" 
-              onClick={onGoHome} 
-              onPointerDown={(e) => e.preventDefault()}
-              title={lang === 'fr' ? 'Accueil' : 'Home'}
-            >
-              <Home size={18} />
-            </button>
-            <div 
-              className="desktop-only hud-logo-clickable" 
-              onClick={onGoHome}
-              onPointerDown={(e) => e.preventDefault()}
-              title={lang === 'fr' ? 'Retour à l\'accueil' : 'Return home'}
-              style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-            >
-              <Logo size="small" variant="hud" />
-            </div>
+            {isKeyboardMode && mode !== 'learn' ? (
+              <div className="hud-mini-pill score-pill glass-panel">
+                <span className="mini-pill-val">{score}</span>
+                <span className="mini-pill-sub">/{totalPossible}</span>
+              </div>
+            ) : (
+              <>
+                <button 
+                  className="hud-btn-circular glass-panel mobile-only" 
+                  onClick={onGoHome} 
+                  onPointerDown={(e) => e.preventDefault()}
+                  title={lang === 'fr' ? 'Accueil' : 'Home'}
+                >
+                  <Home size={18} />
+                </button>
+                <div 
+                  className="desktop-only hud-logo-clickable" 
+                  onClick={onGoHome}
+                  onPointerDown={(e) => e.preventDefault()}
+                  title={lang === 'fr' ? 'Retour à l\'accueil' : 'Return home'}
+                  style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+                >
+                  <Logo size="small" variant="hud" />
+                </div>
+              </>
+            )}
           </div>
 
           {mode !== 'learn' && (
             <>
               <div className="hud-top-center">
-            <div className="central-island-panel glass-panel" onClick={onInfo} onPointerDown={(e) => e.preventDefault()}>
-               <div className="island-timer">{formatTime(timeLeft)}</div>
-               <div className="island-divider" />
-               <div className="island-progress-wrap">
-                  <div className="progress-linear-container">
-                     <div className="progress-linear-fill" style={{ width: `${progressPercent}%` }} />
+                {!isKeyboardMode && (
+                  <div className="central-island-panel glass-panel" onClick={onInfo} onPointerDown={(e) => e.preventDefault()}>
+                     <div className="island-timer">{formatTime(timeLeft)}</div>
+                     <div className="island-divider" />
+                     <div className="island-progress-wrap">
+                        <div className="progress-linear-container">
+                           <div className="progress-linear-fill" style={{ width: `${progressPercent}%` }} />
+                        </div>
+                     </div>
+                     <div className="island-divider" />
+                     <div className="island-score">
+                        <span className="score-current">{score}</span>
+                        <span className="score-total">/{totalPossible}</span>
+                     </div>
                   </div>
-               </div>
-               <div className="island-divider" />
-               <div className="island-score">
-                  <span className="score-current">{score}</span>
-                  <span className="score-total">/{totalPossible}</span>
-               </div>
-            </div>
-          </div>
+                )}
+              </div>
 
-          <div className="hud-top-right">
-            {isPlaying && !isGameOver ? (
-              <button 
-                className="hud-btn-circular glass-panel" 
-                style={{ color: 'var(--error)' }} 
-                onClick={onStop} 
-                onPointerDown={(e) => e.preventDefault()}
-                title={lang === 'fr' ? 'Arrêter' : 'Stop'}
-              >
-                <Square size={18} fill="currentColor" />
-              </button>
-            ) : (
-              <button 
-                className="hud-btn-circular glass-panel" 
-                style={{ color: 'var(--success)' }} 
-                onClick={() => onNavigateFocus('next')} 
-                onPointerDown={(e) => e.preventDefault()}
-                title={lang === 'fr' ? 'Jouer' : 'Play'}
-              >
-                <Play size={18} fill="currentColor" />
-              </button>
-            )}
-          </div>
+              <div className="hud-top-right">
+                {isKeyboardMode ? (
+                  <div className="hud-mini-pill timer-pill glass-panel">
+                    <span className="mini-pill-val">{formatTime(timeLeft)}</span>
+                  </div>
+                ) : (
+                  isPlaying && !isGameOver ? (
+                    <button 
+                      className="hud-btn-circular glass-panel" 
+                      style={{ color: 'var(--error)' }} 
+                      onClick={onStop} 
+                      onPointerDown={(e) => e.preventDefault()}
+                      title={lang === 'fr' ? 'Arrêter' : 'Stop'}
+                    >
+                      <Square size={18} fill="currentColor" />
+                    </button>
+                  ) : (
+                    <button 
+                      className="hud-btn-circular glass-panel" 
+                      style={{ color: 'var(--success)' }} 
+                      onClick={() => onNavigateFocus('next')} 
+                      onPointerDown={(e) => e.preventDefault()}
+                      title={lang === 'fr' ? 'Jouer' : 'Play'}
+                    >
+                      <Play size={18} fill="currentColor" />
+                    </button>
+                  )
+                )}
+              </div>
 
           {/* Mobile Only Gauges (Now separate row in grid) */}
           <div className="hud-top-gauges mobile-only animation-fade-in">
@@ -436,7 +429,7 @@ const GameHUD = ({
       )}
 
         <div 
-          className="bottom-hud-container"
+          className={`bottom-hud-container ${isKeyboardMode ? 'keyboard-mode' : ''}`}
           style={window.innerWidth < 1024 ? {
             position: 'absolute',
             bottom: 'auto',
@@ -465,7 +458,7 @@ const GameHUD = ({
           )}
 
           <div className="bottom-hud-islands">
-            {isFocusedCountry && mode !== 'learn' && (
+            {isFocusedCountry && mode !== 'learn' && !isKeyboardMode && (
               <>
                 <button 
                   className="hud-btn-circular glass-panel" 
@@ -489,9 +482,9 @@ const GameHUD = ({
             >
               <input
                 ref={extInputRef}
-                type="text"
-                name="quiz-response"
-                id="quiz-response-field"
+                type="search"
+                name="q-resp"
+                id="q-resp-field"
                 inputMode="text"
                 enterKeyHint="done"
                 placeholder={placeholderText}
@@ -500,7 +493,7 @@ const GameHUD = ({
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
                 readOnly={isListening}
-                autoComplete="new-password"
+                autoComplete="one-time-code"
                 autoCorrect="off"
                 autoCapitalize="none"
                 spellCheck="false"
@@ -511,7 +504,7 @@ const GameHUD = ({
               />
             </div>
 
-            {SpeechRecognition && mode !== 'learn' && (
+            {SpeechRecognition && mode !== 'learn' && !isKeyboardMode && (
               <button 
                 className={`hud-btn-circular glass-panel mic-btn ${isListening ? 'active' : ''}`} 
                 onClick={toggleMic}

@@ -598,3 +598,45 @@
   }
 }
 
+/* Prevents transition lag when mobile keyboard opens/resizes visual viewport */
+.bottom-hud-container.keyboard-mode {
+  transition: none !important;
+}
+
+/* Hide Webkit Search decoration and cancel buttons */
+.input-field[type="search"]::-webkit-search-decoration,
+.input-field[type="search"]::-webkit-search-cancel-button,
+.input-field[type="search"]::-webkit-search-results-button,
+.input-field[type="search"]::-webkit-search-results-decoration {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Minimalist HUD pills for active keyboard entry on mobile */
+.hud-mini-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.85rem;
+  pointer-events: auto;
+}
+
+.hud-mini-pill .mini-pill-val {
+  color: var(--accent);
+}
+
+.hud-mini-pill .mini-pill-sub {
+  opacity: 0.5;
+  font-size: 0.75rem;
+}
+
