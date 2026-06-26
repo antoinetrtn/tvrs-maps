@@ -1340,6 +1340,9 @@ const GlobeMap = ({
   }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, isHomeScreen, isDepartmentMode, isEndScreen, isPerfectScore, getRegionSurfaceColor, globeTheme, isLight, lerpColor]);
 
   const getPolygonStroke = useCallback((d) => {
+    if (isHomeScreen) {
+      return lerpColor(UI_COLORS.mapSea, UI_COLORS.mapBorderMuted, 0.45);
+    }
     if (isDepartmentMode) {
       const admin = getFeatureAdmin(d);
       if (d.isGhostCountry) return isLight
@@ -1357,12 +1360,7 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
-      const baseStroke = (isHomeScreen ? UI_COLORS.accent : getRegionSurfaceColor(region));
-      return lerpColor(
-        baseStroke,
-        UI_COLORS.paper,
-        GLOBE_STYLE.lighting.selectedStrokeGlow[isLight ? 'light' : 'dark'] + 0.06
-      );
+      return UI_COLORS.accent;
     }
 
     if (!foundSet.has(admin) && mode !== 'learn') {
@@ -1494,9 +1492,14 @@ const GlobeMap = ({
       targetTransparent = true;
     }
 
+    if (isHomeScreen) {
+      targetOpacity = 0.0;
+      targetTransparent = true;
+    }
+
     let emissiveHex = UI_COLORS.black;
     let emissiveIntensity = 0;
-    let specularHex = UI_COLORS.black;
+    let specularHex = THREE.Color ? new THREE.Color(UI_COLORS.black) : UI_COLORS.black;
     let shininess = 0.7;
 
     if (isDepartmentMode && d.isGhostCountry) {
@@ -1580,7 +1583,7 @@ const GlobeMap = ({
     cache.set(admin, material);
 
     return material;
-  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry, isDepartmentMode, foundSet, globeTheme, mode, perfProfile]);
+  }, [getPolygonColor, getPolygonSideColor, isLight, globeLightingEnabled, UI_COLORS, selectedCountry, isDepartmentMode, foundSet, globeTheme, mode, perfProfile, isHomeScreen]);
 
   const getPolygonCapMaterial = useCallback((d) => (
     getPolygonMaterial(d, 'cap')
@@ -1602,17 +1605,21 @@ const GlobeMap = ({
   }, [isLight, globeTheme, globeLightingEnabled, mode, isDepartmentMode]);
 
   const getPolygonAltitude = useCallback((d) => {
+    const admin = getFeatureAdmin(d);
     if (isDepartmentMode && d.isGhostCountry) return 0.0002;
+    if (admin === selectedCountry) return 0.008; // Lift selected country to avoid z-fighting/border conflicts
     return 0.001;
-  }, [isDepartmentMode]);
+  }, [isDepartmentMode, selectedCountry]);
 
   const getSelectionEffectAltitude = useCallback(() => {
+    if (selectedCountry) return 0.01; // Raise above selected country (0.008)
     return 0.0015;
-  }, []);
+  }, [selectedCountry]);
 
   const getHtmlAltitude = useCallback((d) => {
+    if (selectedCountry && d.admin === selectedCountry) return 0.01; // Raise above selected country (0.008)
     return 0.002;
-  }, []);
+  }, [selectedCountry]);
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -1620,7 +1627,7 @@ const GlobeMap = ({
       return perfProfile?.isMobile ? 0.1 : 0.15;
     }
     // Increased thickness for selection
-    if (admin === selectedCountry) return perfProfile?.isMobile ? 2.5 : 3.0;
+    if (admin === selectedCountry) return perfProfile?.isMobile ? 3.5 : 4.5;
     if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.75 : 0.95;
     return perfProfile?.isMobile ? 0.55 : 0.75;
@@ -2467,7 +2474,7 @@ const GlobeMap = ({
       }
 
       if (selectedCountry) {
-        const pulseVal = Math.sin((time / 2400) * Math.PI * 2) * 0.5 + 0.5;
+        const pulseVal = Math.sin((time / 1000) * Math.PI * 2) * 0.5 + 0.5; // Faster 1-second pulse cycle
         const capMat = polygonMaterialCacheRef.current.cap.get(selectedCountry);
         const sideMat = polygonMaterialCacheRef.current.side.get(selectedCountry);
 
@@ -2486,14 +2493,16 @@ const GlobeMap = ({
                 ? 0.25
                 : (!isLight ? 0.18 : 0.05);
 
-            mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + 0.1 + (pulseVal * 0.15);
+            // Amplified pulsing glow
+            mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + 0.15 + (pulseVal * 0.35);
           } else {
             if (!mat.userData.originalColor) {
               mat.userData.originalColor = mat.color.clone();
             }
             const paperColor = new THREE.Color(UI_COLORS.paper);
             const lerped = mat.userData.originalColor.clone();
-            lerped.lerp(paperColor, pulseVal * 0.15);
+            // Stronger visual highlight pulse
+            lerped.lerp(paperColor, pulseVal * 0.25);
             mat.color.copy(lerped);
           }
         });
@@ -2633,8 +2642,9 @@ const GlobeMap = ({
   ), [isDepartmentMode, selectedCountry]);
 
   const getPointAltitude = useCallback((d) => {
+    if (selectedCountry && d.admin === selectedCountry) return 0.01; // Raise above selected country (0.008)
     return 0.0015;
-  }, []);
+  }, [selectedCountry]);
 
 
   const getLabelColor = useCallback((d) => (

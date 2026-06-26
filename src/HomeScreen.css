@@ -336,12 +336,14 @@
   }
 
   .home-bottom-right {
-    position: fixed;
-    left: 50%;
+    position: relative;
+    left: auto;
     right: auto;
-    bottom: max(var(--spacing-sm), env(safe-area-inset-bottom));
-    width: min(360px, calc(100dvw - (var(--spacing-sm) * 2) - env(safe-area-inset-left) - env(safe-area-inset-right)));
-    transform: translateX(-50%);
+    bottom: auto;
+    width: 100%;
+    max-width: 320px;
+    transform: none;
+    margin-top: 8px;
     gap: 6px;
     flex-wrap: nowrap;
     justify-content: center;
