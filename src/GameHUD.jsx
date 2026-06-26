@@ -343,21 +343,23 @@ const GameHUD = ({
               </div>
 
           {/* Mobile Only Gauges (Now separate row in grid) */}
-          <div className="hud-top-gauges mobile-only animation-fade-in">
-            {gaugeRegions.map(reg => {
-              const isActive = activeContinent === reg;
-              const isFaded = activeContinent && activeContinent !== reg;
-              return (
-                <div key={reg} className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} title={reg}>
-                  <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": getRegionColor(reg) }}>
-                    <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
+          {!isKeyboardMode && (
+            <div className="hud-top-gauges mobile-only animation-fade-in">
+              {gaugeRegions.map(reg => {
+                const isActive = activeContinent === reg;
+                const isFaded = activeContinent && activeContinent !== reg;
+                return (
+                  <div key={reg} className={`gauge-item ${isActive ? 'highlight' : ''} ${isFaded ? 'faded' : ''}`} title={reg}>
+                    <div className="circular-gauge" style={{ "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`, "--color": getRegionColor(reg) }}>
+                      <span className="gauge-val">{reg === 'Americas' ? 'AM' : (reg === 'Antarctic' ? 'AN' : reg.substring(0, 2).toUpperCase())}</span>
+                    </div>
                   </div>
-                </div>
-              );
+                );
               })}
-              </div>
-              </>
-              )}
+            </div>
+          )}
+          </>
+          )}
               </div>
       {/* Desktop Only Gauges in Bottom Right */}
       {mode !== 'learn' && (
