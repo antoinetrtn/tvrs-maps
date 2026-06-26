@@ -1617,13 +1617,13 @@ const GlobeMap = ({
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode && d.isGhostCountry) {
-      return perfProfile?.isMobile ? 0.045 : 0.06;
+      return perfProfile?.isMobile ? 0.1 : 0.15;
     }
     // Increased thickness for selection
-    if (admin === selectedCountry) return perfProfile?.isMobile ? 2.1 : 3.0;
-    if (isDepartmentMode) return perfProfile?.isMobile ? 0.55 : 0.75;
-    if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.45 : 0.65;
-    return perfProfile?.isMobile ? 0.25 : 0.4;
+    if (admin === selectedCountry) return perfProfile?.isMobile ? 2.5 : 3.0;
+    if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
+    if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.75 : 0.95;
+    return perfProfile?.isMobile ? 0.55 : 0.75;
   }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry, isDepartmentMode, globeTheme]);
 
   const countrySizes = useMemo(() => {

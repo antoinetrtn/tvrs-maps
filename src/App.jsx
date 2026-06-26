@@ -538,14 +538,12 @@ function App() {
     const isMobile = viewport.width < 768;
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = isMobile
-      ? Math.min(devicePixelRatio, 1.35)
-      : (isTablet ? Math.min(devicePixelRatio, 1.5) : Math.min(devicePixelRatio, 2.0));
+    const pixelRatio = Math.min(devicePixelRatio, 2.0);
     return {
       isMobile,
       isTablet,
       pixelRatio,
-      antialias: !(isMobile || isTablet),
+      antialias: true,
       enableAutoRotate: true,
       enablePointerInteraction: true,
       maxLabels: isMobile ? 4 : (isTablet ? 8 : 20),
