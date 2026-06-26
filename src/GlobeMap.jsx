@@ -792,7 +792,7 @@ const FRESNEL_FRAGMENT_SHADER = `
   }
 `;
 
-
+const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
 
 
 const GlobeMap = ({
@@ -1587,8 +1587,8 @@ const GlobeMap = ({
   ), [getPolygonMaterial]);
 
   const getPolygonSideMaterial = useCallback((d) => (
-    getPolygonMaterial(d, 'side')
-  ), [getPolygonMaterial]);
+    invisibleMaterial
+  ), []);
 
   useEffect(() => {
     const materialCache = polygonMaterialCacheRef.current;
@@ -1602,36 +1602,17 @@ const GlobeMap = ({
   }, [isLight, globeTheme, globeLightingEnabled, mode, isDepartmentMode]);
 
   const getPolygonAltitude = useCallback((d) => {
-    if (mode === 'rivers_mountains') return 0.0005;
-    if (isDepartmentMode && d.isGhostCountry) return 0.003;
-    const admin = getFeatureAdmin(d);
-    if (isDepartmentMode) {
-      return getDepartmentLayerAltitude(admin, foundSet, selectedCountry) * (admin === selectedCountry ? 1.03 : 1);
-    }
-    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, extrusionScale);
-    if (admin === selectedCountry) return altitude * 1.05;
-    return altitude;
-  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, mode]);
+    if (isDepartmentMode && d.isGhostCountry) return 0.0002;
+    return 0.001;
+  }, [isDepartmentMode]);
 
   const getSelectionEffectAltitude = useCallback(() => {
-    if (isDepartmentMode) {
-      return getDepartmentLayerAltitude(selectedCountry, foundSet, selectedCountry) + 0.0006;
-    }
-    const selectedAltitude = GLOBE_LAYER_ALTITUDE.selected * extrusionScale;
-    return selectedAltitude * 1.05 + 0.004;
-  }, [extrusionScale, isDepartmentMode, foundSet, selectedCountry]);
+    return 0.0015;
+  }, []);
 
   const getHtmlAltitude = useCallback((d) => {
-    if (isDepartmentMode) {
-      return getDepartmentLayerAltitude(d.admin, foundSet, selectedCountry) + 0.00025;
-    }
-    return getCountryLayerAltitude(
-      d.admin,
-      foundSet,
-      selectedCountry,
-      extrusionScale
-    ) + 0.002;
-  }, [foundSet, extrusionScale, isDepartmentMode, selectedCountry]);
+    return 0.002;
+  }, []);
 
   const getPolygonStrokeWidth = useCallback((d) => {
     const admin = getFeatureAdmin(d);
@@ -1971,18 +1952,10 @@ const GlobeMap = ({
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
     if (mode === 'rivers_mountains') {
-      return admin === selectedCountry ? 0.012 : 0.004;
+      return admin === selectedCountry ? 0.003 : 0.0015;
     }
-    if (isDepartmentMode) {
-      const alt = getDepartmentLayerAltitude(admin, foundSet, selectedCountry);
-      return admin === selectedCountry ? alt * 1.03 + 0.0005 : alt + 0.0005;
-    }
-    const altitude = getCountryLayerAltitude(admin, foundSet, selectedCountry, extrusionScale);
-    if (admin === selectedCountry) {
-      return altitude * 1.05 + 0.0015; // Slightly above cap to prevent clipping
-    }
-    return altitude + 0.0015;
-  }, [extrusionScale, selectedCountry, foundSet, isDepartmentMode, globeTheme, mode]);
+    return admin === selectedCountry ? 0.0025 : 0.0015;
+  }, [selectedCountry, mode]);
 
   const createBiomeThreeObject = useCallback((d) => {
     const isSelected = d.admin === selectedCountry;
@@ -2660,8 +2633,8 @@ const GlobeMap = ({
   ), [isDepartmentMode, selectedCountry]);
 
   const getPointAltitude = useCallback((d) => {
-    return getCountryLayerAltitude(d.admin, foundSet, selectedCountry, extrusionScale);
-  }, [foundSet, selectedCountry, extrusionScale]);
+    return 0.0015;
+  }, []);
 
 
   const getLabelColor = useCallback((d) => (
@@ -2684,10 +2657,10 @@ const GlobeMap = ({
     if (size === undefined) return baseRes;
 
     if (size < 4) {
-      return 0.5; // Fine resolution (smaller degrees per step) for small features
+      return baseRes * 2.5; // Coarser resolution for small features since curvature is imperceptible
     }
     if (size > 15) {
-      return baseRes * 1.8; // Coarser resolution (larger degrees per step) for large countries
+      return baseRes * 0.8; // Finer resolution for large features to follow the sphere curve smoothly
     }
     return baseRes;
   }, [countrySizes, perfProfile?.polygonCapCurvatureResolution]);
@@ -2838,7 +2811,7 @@ const GlobeMap = ({
             polygonCapColor={getPolygonCapColorWrapped}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}
             polygonSideColor={getPolygonSideColorWrapped}
-            polygonSideMaterial={globeLightingEnabled ? getPolygonSideMaterial : undefined}
+            polygonSideMaterial={getPolygonSideMaterial}
             polygonStrokeColor={getPolygonStrokeColorWrapped}
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}

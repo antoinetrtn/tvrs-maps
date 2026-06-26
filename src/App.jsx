@@ -313,9 +313,7 @@ function App() {
   }, [foundList.length, isPlaying, isGameOver, totalPossible]);
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    const url = isMobile ? '/data/countries-110m.json' : '/data/countries-50m-low.json';
-    fetch(url)
+    fetch('/data/countries-50m-low.json')
     .then(res => res.json())
     .then(data => {
       if (data && data.features) {
@@ -541,8 +539,8 @@ function App() {
     const isTablet = viewport.width >= 768 && viewport.width < 1024;
     const devicePixelRatio = window.devicePixelRatio || 1;
     const pixelRatio = isMobile
-      ? Math.min(devicePixelRatio, 1.0)
-      : (isTablet ? Math.min(devicePixelRatio, 1.15) : Math.min(devicePixelRatio, 1.4));
+      ? Math.min(devicePixelRatio, 1.35)
+      : (isTablet ? Math.min(devicePixelRatio, 1.5) : Math.min(devicePixelRatio, 2.0));
     return {
       isMobile,
       isTablet,
@@ -555,7 +553,7 @@ function App() {
       useImageTextures: false,
       cullOffscreenCountries: isMobile,
       // High-performance curvature resolution for quality and speed
-      polygonCapCurvatureResolution: isMobile ? 4 : (isTablet ? 3 : 1.5)
+      polygonCapCurvatureResolution: isMobile ? 1.5 : (isTablet ? 1.2 : 1.0)
     };
   }, [viewport.width]);
 
