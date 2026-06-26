@@ -494,6 +494,11 @@
   background: var(--theme-dot-satellite);
 }
 
+.theme-dot.blackout {
+  background: var(--theme-dot-blackout);
+  border: 1px solid var(--glass-border);
+}
+
 @keyframes theme-menu-scale-in {
   from {
     opacity: 0;

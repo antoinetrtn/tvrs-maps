@@ -5,7 +5,8 @@
 export const THEMES_LIST = [
   { id: 'glass', name_fr: 'Verre Moderne', name_en: 'Sleek Glass' },
   { id: 'blueprint', name_fr: 'Plan Blueprint', name_en: 'Blueprint Plan' },
-  { id: 'satellite', name_fr: 'Satellite', name_en: 'Satellite' }
+  { id: 'satellite', name_fr: 'Satellite', name_en: 'Satellite' },
+  { id: 'blackout', name_fr: 'Noir & Blanc', name_en: 'Blacked Out' }
 ];
 
 export const THEME = {
@@ -328,6 +329,74 @@ export const THEME_OVERRIDES = {
       decorGlowSecondary: 'rgba(14, 165, 233, 0.08)',
       decorGlowSecondaryEnd: 'rgba(3, 7, 18, 0)'
     }
+  },
+  blackout: {
+    light: {
+      bg: '#000000',
+      bgElevated: '#0f0f0f',
+      bgGradientStart: '#000000',
+      bgGradientEnd: '#000000',
+      textMain: '#ffffff',
+      textMuted: '#888888',
+      accent: '#ffffff',
+      accentHover: '#cccccc',
+      accentSoft: 'rgba(255, 255, 255, 0.15)',
+      accentGlow: '#ffffff',
+      accentContrast: '#000000',
+      glassBg: 'rgba(15, 15, 15, 0.85)',
+      glassBorder: 'rgba(255, 255, 255, 0.15)',
+      glassBorderStrong: 'rgba(255, 255, 255, 0.3)',
+      glassHover: 'rgba(255, 255, 255, 0.05)',
+      mapBase: '#0d0d0d',
+      mapSea: '#000000',
+      mapBorder: '#ffffff',
+      mapBorderMuted: '#333333',
+      gridDot: 'rgba(255, 255, 255, 0.1)',
+      graticule: '#333333',
+      atmosphere: '#111111',
+      globeEmissive: '#000000',
+      globeSpecular: '#000000',
+      globeInnerGlow: '#000000',
+      lightingRim: '#222222',
+      lightingFill: '#000000',
+      decorGlowPrimary: 'rgba(255, 255, 255, 0.05)',
+      decorGlowPrimaryEnd: 'rgba(0, 0, 0, 0)',
+      decorGlowSecondary: 'rgba(255, 255, 255, 0.02)',
+      decorGlowSecondaryEnd: 'rgba(0, 0, 0, 0)'
+    },
+    dark: {
+      bg: '#000000',
+      bgElevated: '#0f0f0f',
+      bgGradientStart: '#000000',
+      bgGradientEnd: '#000000',
+      textMain: '#ffffff',
+      textMuted: '#888888',
+      accent: '#ffffff',
+      accentHover: '#cccccc',
+      accentSoft: 'rgba(255, 255, 255, 0.15)',
+      accentGlow: '#ffffff',
+      accentContrast: '#000000',
+      glassBg: 'rgba(15, 15, 15, 0.85)',
+      glassBorder: 'rgba(255, 255, 255, 0.15)',
+      glassBorderStrong: 'rgba(255, 255, 255, 0.3)',
+      glassHover: 'rgba(255, 255, 255, 0.05)',
+      mapBase: '#0d0d0d',
+      mapSea: '#000000',
+      mapBorder: '#ffffff',
+      mapBorderMuted: '#333333',
+      gridDot: 'rgba(255, 255, 255, 0.1)',
+      graticule: '#333333',
+      atmosphere: '#111111',
+      globeEmissive: '#000000',
+      globeSpecular: '#000000',
+      globeInnerGlow: '#000000',
+      lightingRim: '#222222',
+      lightingFill: '#000000',
+      decorGlowPrimary: 'rgba(255, 255, 255, 0.05)',
+      decorGlowPrimaryEnd: 'rgba(0, 0, 0, 0)',
+      decorGlowSecondary: 'rgba(255, 255, 255, 0.02)',
+      decorGlowSecondaryEnd: 'rgba(0, 0, 0, 0)'
+    }
   }
 };
 
@@ -583,6 +652,7 @@ export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass',
     '--theme-dot-glass': '#0ea5e9',
     '--theme-dot-blueprint': '#00ffff',
     '--theme-dot-satellite': '#10b981',
+    '--theme-dot-blackout': '#ffffff',
     '--radius-sm': STYLE_TOKENS.radius.sm,
     '--radius-md': STYLE_TOKENS.radius.md,
     '--radius-lg': STYLE_TOKENS.radius.lg,
@@ -615,6 +685,9 @@ export const PROCEDURAL_OCEAN_COLORS = {
 export const SURFACE_THEME_COLORS = {
   blueprint: {
     base: '#00bfff'
+  },
+  blackout: {
+    base: '#e5e5e5'
   }
 };
 
@@ -626,12 +699,17 @@ export const STROKE_THEME_COLORS = {
   satellite: {
     unfound: 'rgba(255, 255, 255, 0.25)',
     found: '#10b981'
+  },
+  blackout: {
+    unfound: 'rgba(255, 255, 255, 0.15)',
+    found: '#ffffff'
   }
 };
 
 export const ATMOSPHERE_THEME_COLORS = {
   blueprint: '#00ffff',
-  satellite: '#10b981'
+  satellite: '#10b981',
+  blackout: '#ffffff'
 };
 
 export const BLUEPRINT_REGION_COLORS_ATTENUATED = {

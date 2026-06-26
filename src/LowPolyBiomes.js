@@ -69,7 +69,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
 
   // Add a flat translucent capsule representing the range "zone"
   const zoneLength = localSpread;
-  const zoneRadius = localSpread * 0.25 + 0.07;
+  const zoneRadius = localSpread * 0.05 + 0.025;
   const zoneGeoKey = `zoneGeo_${zoneLength}_${zoneRadius}`;
   const zoneGeo = getGeometry(zoneGeoKey, () => {
     const shape = new THREE.Shape();
@@ -95,6 +95,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
   zoneMesh.rotation.x = Math.PI / 2;
   zoneMesh.rotation.z = rad; // Align with the ridge bearing angle!
   zoneMesh.position.y = 0.001; // Lift slightly to avoid z-fighting with ocean
+  zoneMesh.raycast = () => {}; // Visual only! Clicks pass through to background/rivers
   group.add(zoneMesh);
 
   for (let i = 0; i < N; i++) {
@@ -208,7 +209,7 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
 
     // Add a flat translucent capsule representing the unfound range "zone" boundary
     const zoneLength = localSpread;
-    const zoneRadius = localSpread * 0.25 + 0.07;
+    const zoneRadius = localSpread * 0.05 + 0.025;
     const zoneGeoKey = `unfoundZoneGeo_${zoneLength}_${zoneRadius}`;
     const zoneGeo = getGeometry(zoneGeoKey, () => {
       const shape = new THREE.Shape();
@@ -219,7 +220,7 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
       shape.lineTo(-halfL, -zoneRadius);
       shape.absarc(-halfL, 0, zoneRadius, -Math.PI / 2, Math.PI / 2, true);
       
-      const holeRadius = zoneRadius * 0.82;
+      const holeRadius = zoneRadius * 0.7;
       const hole = new THREE.Path();
       hole.moveTo(-halfL, holeRadius);
       hole.lineTo(halfL, holeRadius);
@@ -244,6 +245,7 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
     zoneMesh.rotation.x = Math.PI / 2;
     zoneMesh.rotation.z = rad; // Align with the ridge bearing angle!
     zoneMesh.position.y = 0.001;
+    zoneMesh.raycast = () => {}; // Visual only! Clicks pass through to background/rivers
     group.add(zoneMesh);
 
     // Render 3 smaller wireframe cones representing the range ridge

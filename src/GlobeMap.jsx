@@ -580,6 +580,7 @@ const GlobeMap = ({
   const targetGlowColorRef = useRef(new THREE.Color(0x38bdf8));
   const targetGlowPowerRef = useRef(1.2);
   const targetGlowCoefRef = useRef(1.0);
+  const selectedStrokeObjRef = useRef(null);
 
   const labelsCacheRef = useRef({});
   const isDepartmentMode = mode === 'departments' && !isHomeScreen;
@@ -624,7 +625,7 @@ const GlobeMap = ({
     const deltaY = touch.clientY - startY.current;
     const currentPOV = globeEl.current.pointOfView();
     const zoomSpeed = 0.005;
-    const newAlt = Math.max(0.1, Math.min(4, currentPOV.altitude + deltaY * zoomSpeed));
+    const newAlt = Math.max(0.1, Math.min(4, currentPOV.altitude - deltaY * zoomSpeed));
     globeEl.current.pointOfView({ altitude: newAlt }, 0);
     startY.current = touch.clientY;
     e.preventDefault();
@@ -1015,6 +1016,9 @@ const GlobeMap = ({
     if (globeTheme === 'blueprint') {
       return SURFACE_THEME_COLORS.blueprint.base;
     }
+    if (globeTheme === 'blackout') {
+      return SURFACE_THEME_COLORS.blackout.base;
+    }
     return REGION_COLORS[region] || UI_COLORS.success;
   }, [globeTheme, REGION_COLORS, UI_COLORS.success]);
 
@@ -1029,6 +1033,8 @@ const GlobeMap = ({
 
       if (globeTheme === 'blueprint') {
         baseColor = SURFACE_THEME_COLORS.blueprint.base;
+      } else if (globeTheme === 'blackout') {
+        baseColor = SURFACE_THEME_COLORS.blackout.base;
       }
 
       if (foundSet.has(admin) || mode === 'learn') {
@@ -1117,6 +1123,9 @@ const GlobeMap = ({
       if (globeTheme === 'blueprint') {
         return STROKE_THEME_COLORS.blueprint.unfound;
       }
+      if (globeTheme === 'blackout') {
+        return STROKE_THEME_COLORS.blackout.unfound;
+      }
       return isLight
         ? UI_COLORS.mapBorderMuted
         : lerpColor(UI_COLORS.mapBase, UI_COLORS.paper, 0.15); // Slight glow instead of darkening
@@ -1125,6 +1134,9 @@ const GlobeMap = ({
     // Found / Learned / Homepage countries
     if (globeTheme === 'blueprint') {
       return STROKE_THEME_COLORS.blueprint.found;
+    }
+    if (globeTheme === 'blackout') {
+      return STROKE_THEME_COLORS.blackout.found;
     }
 
     const baseColor = (foundSet.has(admin) || mode === 'learn')
@@ -1339,7 +1351,7 @@ const GlobeMap = ({
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode && d.isGhostCountry) return 0.001;
-    if (admin === selectedCountry) return 0.008; // Lift selected country to avoid z-fighting/border conflicts
+    if (admin === selectedCountry) return 0.0011; // Lift slightly to avoid z-fighting while remaining flat (no 3D vertical wall extrusion)
     return 0.001;
   }, [isDepartmentMode, selectedCountry]);
 
@@ -1358,8 +1370,8 @@ const GlobeMap = ({
     if (isDepartmentMode && d.isGhostCountry) {
       return perfProfile?.isMobile ? 0.1 : 0.15;
     }
-    // Increased thickness for selection
-    if (admin === selectedCountry) return perfProfile?.isMobile ? 3.5 : 4.5;
+    // Increased thickness for selection (contour plus visible)
+    if (admin === selectedCountry) return perfProfile?.isMobile ? 5.5 : 7.5;
     if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.75 : 0.95;
     return perfProfile?.isMobile ? 0.55 : 0.75;
@@ -2043,6 +2055,9 @@ const GlobeMap = ({
     } else if (globeTheme === 'satellite') {
       graticuleColor = new THREE.Color(0x10b981);
       graticuleOpacity = 0.25;
+    } else if (globeTheme === 'blackout') {
+      graticuleColor = new THREE.Color(0x333333);
+      graticuleOpacity = 0.2;
     }
 
     scene.traverse((obj) => {
@@ -2142,8 +2157,32 @@ const GlobeMap = ({
               }
             }
           });
+
+          // Restore old stroke object properties
+          if (selectedStrokeObjRef.current) {
+            const mat = selectedStrokeObjRef.current.material;
+            if (mat && mat.userData.originalColor) {
+              mat.color.copy(mat.userData.originalColor);
+            }
+            selectedStrokeObjRef.current = null;
+          }
         }
         prevSelectedCountryRef.current = selectedCountry;
+
+        // Traverse once to find and cache the stroke object of the new selected country
+        if (selectedCountry) {
+          scene.traverse((obj) => {
+            if (obj.userData && getFeatureAdmin(obj.userData) === selectedCountry) {
+              const isStroke = obj.isLine || 
+                               obj.type === 'LineSegments' || 
+                               obj.type === 'Line' || 
+                               (obj.material && (obj.material.type === 'LineBasicMaterial' || obj.material.type === 'Line2Material' || obj.material.type === 'ShaderMaterial'));
+              if (isStroke) {
+                selectedStrokeObjRef.current = obj;
+              }
+            }
+          });
+        }
       }
 
       if (selectedCountry) {
@@ -2175,6 +2214,22 @@ const GlobeMap = ({
             mat.color.copy(lerped);
           }
         });
+
+        // Pulse the cached selected country stroke outline color (contour plus visible et animé)
+        if (selectedStrokeObjRef.current && selectedStrokeObjRef.current.material) {
+          const mat = selectedStrokeObjRef.current.material;
+          if (!mat.userData.originalColor) {
+            mat.userData.originalColor = mat.color.clone();
+          }
+          const paperColor = new THREE.Color(UI_COLORS.paper);
+          const lerped = mat.userData.originalColor.clone();
+          // Pulse the stroke between its base selected color (accent) and paper (white)
+          lerped.lerp(paperColor, pulseVal * 0.7);
+          mat.color.copy(lerped);
+          if (mat.needsUpdate !== undefined) {
+            mat.needsUpdate = true;
+          }
+        }
       }
 
       animFrameId = requestAnimationFrame(animateScene);
@@ -2210,26 +2265,14 @@ const GlobeMap = ({
     return new Set(renderCountriesData.map(getFeatureAdmin));
   }, [renderCountriesData]);
 
-  const tinyCountries = useMemo(() => {
-    // Countries that HAVE geometry but it's too small to see/tap easily (< 0.5 deg)
-    return new Set(
-      selectableFeatureIndex
-        .filter(entry => {
-          const b = entry.bounds;
-          return (b.maxLng - b.minLng < 0.5) && (b.maxLat - b.minLat < 0.5);
-        })
-        .map(entry => entry.admin)
-    );
-  }, [selectableFeatureIndex]);
-
   const markersData = useMemo(() => {
     if (isDepartmentMode || isRiversMountainsMode) return [];
 
     return Object.entries(countryDataMap)
       .filter(([admin, data]) => {
         if (data.lat === undefined || data.lng === undefined) return false;
-        // Marker if: No geometry OR Tiny geometry
-        return !countriesWithGeometry.has(admin) || tinyCountries.has(admin);
+        // Marker if: No geometry at all (truly unclickable without marker)
+        return !countriesWithGeometry.has(admin);
       })
       .map(([admin, data]) => ({
         admin,
@@ -2237,7 +2280,7 @@ const GlobeMap = ({
         lng: data.lng,
         region: data.region
       }));
-  }, [countriesWithGeometry, tinyCountries, isDepartmentMode, isRiversMountainsMode, gameDataMap]);
+  }, [countriesWithGeometry, isDepartmentMode, isRiversMountainsMode, gameDataMap]);
 
   const visibleMarkersData = useMemo(() => {
     if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {
