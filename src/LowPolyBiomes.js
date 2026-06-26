@@ -67,6 +67,36 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
   const perpX = -dz;
   const perpZ = dx;
 
+  // Add a flat translucent capsule representing the range "zone"
+  const zoneLength = localSpread;
+  const zoneRadius = localSpread * 0.25 + 0.07;
+  const zoneGeoKey = `zoneGeo_${zoneLength}_${zoneRadius}`;
+  const zoneGeo = getGeometry(zoneGeoKey, () => {
+    const shape = new THREE.Shape();
+    const halfL = zoneLength / 2;
+    shape.moveTo(-halfL, zoneRadius);
+    shape.lineTo(halfL, zoneRadius);
+    shape.absarc(halfL, 0, zoneRadius, Math.PI / 2, -Math.PI / 2, true);
+    shape.lineTo(-halfL, -zoneRadius);
+    shape.absarc(-halfL, 0, zoneRadius, -Math.PI / 2, Math.PI / 2, true);
+    return new THREE.ShapeGeometry(shape);
+  });
+  
+  const zoneMatKey = 'mountainZoneMat' + (isSelected ? '_sel' : '');
+  const zoneMat = getMaterial(zoneMatKey, () => new THREE.MeshBasicMaterial({
+    color: isSelected ? 0x10b981 : 0x64748b, // Muted slate or vibrant green
+    transparent: true,
+    opacity: isSelected ? 0.35 : 0.12,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  }));
+
+  const zoneMesh = new THREE.Mesh(zoneGeo, zoneMat);
+  zoneMesh.rotation.x = Math.PI / 2;
+  zoneMesh.rotation.z = rad; // Align with the ridge bearing angle!
+  zoneMesh.position.y = 0.001; // Lift slightly to avoid z-fighting with ocean
+  group.add(zoneMesh);
+
   for (let i = 0; i < N; i++) {
     const t = (N > 1) ? ((i / (N - 1)) - 0.5) : 0;
     
@@ -164,19 +194,60 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
   const group = new THREE.Group();
   
   if (type === 'mountain' || type === 'mountain_range') {
+    const localSpread = spread * 0.16;
     // Holographic glowing peak range
     const colorKey = isSelected ? 'selPlaceholder' : 'unfoundPlaceholder';
     const mat = getMaterial(colorKey + 'Mat', () => new THREE.MeshBasicMaterial({
-      color: isSelected ? 0x34d399 : 0x94a3b8, // Slate gray or glowing green
+      color: isSelected ? 0x34d399 : 0x64748b, // Slate gray or glowing green
       transparent: true,
       opacity: isSelected ? 0.8 : 0.45,
       wireframe: true
     }));
 
+    const rad = (bearing || 0) * Math.PI / 180;
+
+    // Add a flat translucent capsule representing the unfound range "zone" boundary
+    const zoneLength = localSpread;
+    const zoneRadius = localSpread * 0.25 + 0.07;
+    const zoneGeoKey = `unfoundZoneGeo_${zoneLength}_${zoneRadius}`;
+    const zoneGeo = getGeometry(zoneGeoKey, () => {
+      const shape = new THREE.Shape();
+      const halfL = zoneLength / 2;
+      shape.moveTo(-halfL, zoneRadius);
+      shape.lineTo(halfL, zoneRadius);
+      shape.absarc(halfL, 0, zoneRadius, Math.PI / 2, -Math.PI / 2, true);
+      shape.lineTo(-halfL, -zoneRadius);
+      shape.absarc(-halfL, 0, zoneRadius, -Math.PI / 2, Math.PI / 2, true);
+      
+      const holeRadius = zoneRadius * 0.82;
+      const hole = new THREE.Path();
+      hole.moveTo(-halfL, holeRadius);
+      hole.lineTo(halfL, holeRadius);
+      hole.absarc(halfL, 0, holeRadius, Math.PI / 2, -Math.PI / 2, true);
+      hole.lineTo(-halfL, -holeRadius);
+      hole.absarc(-halfL, 0, holeRadius, -Math.PI / 2, Math.PI / 2, true);
+      
+      shape.holes.push(hole);
+      return new THREE.ShapeGeometry(shape);
+    });
+    
+    const zoneMatKey = 'unfoundMountainZoneMat' + (isSelected ? '_sel' : '');
+    const zoneMat = getMaterial(zoneMatKey, () => new THREE.MeshBasicMaterial({
+      color: isSelected ? 0x34d399 : 0x64748b,
+      transparent: true,
+      opacity: isSelected ? 0.4 : 0.15,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    }));
+
+    const zoneMesh = new THREE.Mesh(zoneGeo, zoneMat);
+    zoneMesh.rotation.x = Math.PI / 2;
+    zoneMesh.rotation.z = rad; // Align with the ridge bearing angle!
+    zoneMesh.position.y = 0.001;
+    group.add(zoneMesh);
+
     // Render 3 smaller wireframe cones representing the range ridge
     const N = 3;
-    const localSpread = spread * 0.16;
-    const rad = (bearing || 0) * Math.PI / 180;
     const dx = Math.cos(rad);
     const dz = Math.sin(rad);
 

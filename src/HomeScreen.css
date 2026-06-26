@@ -486,20 +486,12 @@
   background: var(--theme-dot-glass);
 }
 
-.theme-dot.aurora {
-  background: var(--theme-dot-aurora);
-}
-
-.theme-dot.synthwave {
-  background: var(--theme-dot-synthwave);
-}
-
-.theme-dot.vintage {
-  background: var(--theme-dot-vintage);
-}
-
 .theme-dot.blueprint {
   background: var(--theme-dot-blueprint);
+}
+
+.theme-dot.satellite {
+  background: var(--theme-dot-satellite);
 }
 
 @keyframes theme-menu-scale-in {

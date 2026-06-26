@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
-import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel } from './designSystem';
+import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel, FRENCH_REGION_COLORS } from './designSystem';
 import { disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
 
 const smoothedRiversCache = {};
@@ -202,148 +202,10 @@ const BIOME_VARIANTS = {
 
 // --- PROCEDURAL THEMED OCEAN TEXTURE GENERATORS ---
 
-const createVintageParchmentTexture = () => {
+const createBlueprintGridTexture = () => {
   const canvas = document.createElement('canvas');
   canvas.width = 2048;
   canvas.height = 1024;
-  const ctx = canvas.getContext('2d');
-
-  // Base parchment beige/cream color
-  ctx.fillStyle = PROCEDURAL_OCEAN_COLORS.vintage.base;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Granular parchment noise
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imgData.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const noise = (Math.random() - 0.5) * 11;
-    data[i] = Math.max(0, Math.min(255, data[i] + noise));
-    data[i+1] = Math.max(0, Math.min(255, data[i+1] + noise - 2));
-    data[i+2] = Math.max(0, Math.min(255, data[i+2] + noise - 5));
-  }
-  ctx.putImageData(imgData, 0, 0);
-
-  // Stains / Vignette gradient
-  const grad = ctx.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, 200,
-    canvas.width / 2, canvas.height / 2, canvas.width * 0.72
-  );
-  grad.addColorStop(0, PROCEDURAL_OCEAN_COLORS.vintage.grad0);
-  grad.addColorStop(0.78, PROCEDURAL_OCEAN_COLORS.vintage.grad78);
-  grad.addColorStop(1, PROCEDURAL_OCEAN_COLORS.vintage.grad1);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Rhumb / Windrose mariner lines
-  ctx.strokeStyle = PROCEDURAL_OCEAN_COLORS.vintage.line12;
-  ctx.lineWidth = 1;
-  const centers = [
-    { x: canvas.width * 0.28, y: canvas.height * 0.38 },
-    { x: canvas.width * 0.72, y: canvas.height * 0.62 }
-  ];
-  centers.forEach(c => {
-    // Rays
-    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-      ctx.beginPath();
-      ctx.moveTo(c.x, c.y);
-      ctx.lineTo(c.x + Math.cos(angle) * 800, c.y + Math.sin(angle) * 800);
-      ctx.stroke();
-    }
-
-    // Windrose concentric circles
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, 40, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, 46, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Compass stars
-    ctx.fillStyle = PROCEDURAL_OCEAN_COLORS.vintage.line28;
-    for (let i = 0; i < 8; i++) {
-      const angle = (i * Math.PI * 2) / 8;
-      const nextAngle = ((i + 1) * Math.PI * 2) / 8;
-      const midAngle = angle + Math.PI / 8;
-
-      ctx.beginPath();
-      ctx.moveTo(c.x, c.y);
-      ctx.lineTo(c.x + Math.cos(angle) * 35, c.y + Math.sin(angle) * 35);
-      ctx.lineTo(c.x + Math.cos(midAngle) * 12, c.y + Math.sin(midAngle) * 12);
-      ctx.closePath();
-      ctx.fill();
-    }
-  });
-
-  // Waves in ocean
-  ctx.strokeStyle = PROCEDURAL_OCEAN_COLORS.vintage.line07;
-  ctx.lineWidth = 1.6;
-  for (let y = 80; y < canvas.height - 80; y += 180) {
-    for (let x = 60; x < canvas.width; x += 220) {
-      if (centers.some(c => Math.hypot(c.x - x, c.y - y) < 140)) continue;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.bezierCurveTo(x + 20, y - 8, x + 40, y + 8, x + 60, y);
-      ctx.bezierCurveTo(x + 80, y - 8, x + 100, y + 8, x + 120, y);
-      ctx.stroke();
-    }
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  return texture;
-};
-
-const createSynthwaveGridTexture = () => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-
-  // Deep space violet
-  ctx.fillStyle = PROCEDURAL_OCEAN_COLORS.synthwave.base;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Laser grid lines
-  ctx.strokeStyle = PROCEDURAL_OCEAN_COLORS.synthwave.line; // neon pink grid
-  ctx.lineWidth = 1.8;
-
-  const rows = 20;
-  for (let i = 0; i <= rows; i++) {
-    const y = (i / rows) * canvas.height;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(canvas.width, y);
-    ctx.stroke();
-  }
-
-  const cols = 40;
-  for (let i = 0; i <= cols; i++) {
-    const x = (i / cols) * canvas.width;
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, canvas.height);
-    ctx.stroke();
-  }
-
-  // Neon sky/sunset gradients
-  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  grad.addColorStop(0, PROCEDURAL_OCEAN_COLORS.synthwave.gradTop); // cyan glow top
-  grad.addColorStop(0.5, PROCEDURAL_OCEAN_COLORS.synthwave.gradCenter); // magenta glow center
-  grad.addColorStop(1, PROCEDURAL_OCEAN_COLORS.synthwave.gradBottom); // cyan glow bottom
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  return texture;
-};
-
-const createBlueprintGridTexture = () => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
   const ctx = canvas.getContext('2d');
 
   // Blueprint navy/dark paper
@@ -351,14 +213,14 @@ const createBlueprintGridTexture = () => {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Precision technical blueprint lines
-  const rows = 36;
-  const cols = 72;
+  const rows = 64;
+  const cols = 128;
 
   for (let i = 0; i <= rows; i++) {
     const y = (i / rows) * canvas.height;
     ctx.beginPath();
-    ctx.strokeStyle = i % 5 === 0 ? PROCEDURAL_OCEAN_COLORS.blueprint.lineMajor : PROCEDURAL_OCEAN_COLORS.blueprint.lineMinor;
-    ctx.lineWidth = i % 5 === 0 ? 1.2 : 0.8;
+    ctx.strokeStyle = i % 8 === 0 ? PROCEDURAL_OCEAN_COLORS.blueprint.lineMajor : PROCEDURAL_OCEAN_COLORS.blueprint.lineMinor;
+    ctx.lineWidth = i % 8 === 0 ? 2.5 : 1.2;
     ctx.moveTo(0, y);
     ctx.lineTo(canvas.width, y);
     ctx.stroke();
@@ -367,8 +229,8 @@ const createBlueprintGridTexture = () => {
   for (let i = 0; i <= cols; i++) {
     const x = (i / cols) * canvas.width;
     ctx.beginPath();
-    ctx.strokeStyle = i % 5 === 0 ? PROCEDURAL_OCEAN_COLORS.blueprint.lineMajor : PROCEDURAL_OCEAN_COLORS.blueprint.lineMinor;
-    ctx.lineWidth = i % 5 === 0 ? 1.2 : 0.8;
+    ctx.strokeStyle = i % 8 === 0 ? PROCEDURAL_OCEAN_COLORS.blueprint.lineMajor : PROCEDURAL_OCEAN_COLORS.blueprint.lineMinor;
+    ctx.lineWidth = i % 8 === 0 ? 2.5 : 1.2;
     ctx.moveTo(x, 0);
     ctx.lineTo(x, canvas.height);
     ctx.stroke();
@@ -377,136 +239,15 @@ const createBlueprintGridTexture = () => {
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   return texture;
 };
 
 // --- PROCEDURAL THEMED 3D MODELS BUILDERS ---
 
-const createVintageShip = () => {
-  const group = new THREE.Group();
-  group.name = 'vintage-ship';
-  group.userData = { offset: Math.random() * 1000 };
 
-  // Hull
-  const hullMat = new THREE.MeshLambertMaterial({ color: 0x503a27, flatShading: true });
-  const hull = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.045, 0.08), hullMat);
-  hull.position.y = 0.0225;
-  hull.scale.set(1.25, 1, 1);
-  group.add(hull);
-
-  // Bow (cone)
-  const bow = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.08, 4), hullMat);
-  bow.position.set(0.12, 0.0225, 0);
-  bow.rotation.z = -Math.PI / 2;
-  bow.rotation.y = Math.PI / 4;
-  group.add(bow);
-
-  // Masts & Sails
-  const mastMat = new THREE.MeshLambertMaterial({ color: 0x362519 });
-  const sailMat = new THREE.MeshLambertMaterial({ color: 0xf5eedc, flatShading: true });
-
-  const mastGeo = new THREE.CylinderGeometry(0.005, 0.007, 0.15, 4);
-  const sailGeo = new THREE.BoxGeometry(0.008, 0.065, 0.08);
-
-  // Main Mast
-  const mainMast = new THREE.Mesh(mastGeo, mastMat);
-  mainMast.position.set(0, 0.095, 0);
-  group.add(mainMast);
-
-  const mainSail = new THREE.Mesh(sailGeo, sailMat);
-  mainSail.position.set(-0.015, 0.105, 0);
-  mainSail.rotation.y = 0.12;
-  group.add(mainSail);
-
-  // Fore Mast
-  const foreMast = new THREE.Mesh(mastGeo, mastMat);
-  foreMast.scale.set(0.8, 0.8, 0.8);
-  foreMast.position.set(0.055, 0.075, 0);
-  group.add(foreMast);
-
-  const foreSail = new THREE.Mesh(sailGeo, sailMat);
-  foreSail.scale.set(0.8, 0.8, 0.8);
-  foreSail.position.set(0.043, 0.085, 0);
-  foreSail.rotation.y = 0.08;
-  group.add(foreSail);
-
-  return group;
-};
-
-const createVintageKraken = () => {
-  const group = new THREE.Group();
-  group.name = 'vintage-kraken';
-  group.userData = { offset: Math.random() * 1000 };
-
-  const skinMat = new THREE.MeshLambertMaterial({ color: 0x1f5146, flatShading: true }); // dark sea green
-  const cupMat = new THREE.MeshLambertMaterial({ color: 0xe0cca7 });
-
-  const segments = 5;
-  let prevSegment = null;
-
-  for (let i = 0; i < segments; i++) {
-    const scale = 1 - (i * 0.15);
-    const segGeo = new THREE.CylinderGeometry(0.018 * scale, 0.024 * scale, 0.06, 5);
-    const seg = new THREE.Mesh(segGeo, skinMat);
-    seg.name = 'kraken-segment';
-    seg.userData = { index: i };
-
-    if (i === 0) {
-      seg.position.set(0, 0.03, 0);
-      group.add(seg);
-    } else {
-      seg.position.set(0, 0.05, 0);
-      seg.rotation.z = 0.22;
-      seg.rotation.y = 0.08;
-      prevSegment.add(seg);
-    }
-
-    // Suction cup
-    const cup = new THREE.Mesh(new THREE.DodecahedronGeometry(0.009 * scale, 0), cupMat);
-    cup.position.set(-0.014 * scale, 0, 0);
-    seg.add(cup);
-
-    prevSegment = seg;
-  }
-
-  return group;
-};
-
-const createSynthwavePyramid = () => {
-  const group = new THREE.Group();
-  group.name = 'synthwave-pyramid';
-  group.userData = { offset: Math.random() * 1000 };
-
-  // Neon outer wireframe pyramid
-  const wireMat = new THREE.MeshPhongMaterial({
-    color: 0x00ffff,
-    emissive: 0x00ffff,
-    emissiveIntensity: 2.2,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.78
-  });
-  const outer = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.17, 4), wireMat);
-  outer.name = 'synthwave-outer';
-  outer.position.y = 0.085;
-  outer.rotation.y = Math.PI / 4;
-  group.add(outer);
-
-  // Inner glowing core
-  const coreMat = new THREE.MeshPhongMaterial({
-    color: 0xff007f,
-    emissive: 0xff007f,
-    emissiveIntensity: 1.6,
-    shininess: 28
-  });
-  const inner = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.09, 4), coreMat);
-  inner.name = 'synthwave-inner';
-  inner.position.y = 0.085;
-  inner.rotation.y = Math.PI / 4;
-  group.add(inner);
-
-  return group;
-};
 
 const createBlueprintNode = () => {
   const group = new THREE.Group();
@@ -627,11 +368,7 @@ const getBiomeModelCount = (size, isDepartmentMode) => {
 };
 
 const selectLogicalBiomeVariant = (lat, lng, biomeType, dataLat, dataLng, globeTheme) => {
-  if (globeTheme === 'vintage') {
-    return Math.random() < 0.6 ? 'ship' : 'kraken';
-  } else if (globeTheme === 'synthwave') {
-    return 'pyramid';
-  } else if (globeTheme === 'blueprint') {
+  if (globeTheme === 'blueprint') {
     return 'scan';
   }
 
@@ -1275,30 +1012,38 @@ const GlobeMap = ({
   }, [globeLightingEnabled]);
 
   const getRegionSurfaceColor = useCallback((region) => {
-    if (globeTheme === 'synthwave') {
-      return SURFACE_THEME_COLORS.synthwave[region] || SURFACE_THEME_COLORS.synthwave.Unknown;
-    }
     if (globeTheme === 'blueprint') {
       return SURFACE_THEME_COLORS.blueprint.base;
     }
-    if (globeTheme === 'vintage') {
-      return SURFACE_THEME_COLORS.vintage[region] || SURFACE_THEME_COLORS.vintage.Unknown;
-    }
-    if (globeTheme === 'aurora') {
-      return isLight
-        ? (SURFACE_THEME_COLORS.aurora[region] || SURFACE_THEME_COLORS.aurora.Unknown)
-        : (SURFACE_THEME_COLORS.aurora_dark[region] || SURFACE_THEME_COLORS.aurora_dark.Unknown);
-    }
     return REGION_COLORS[region] || UI_COLORS.success;
-  }, [globeTheme, REGION_COLORS, UI_COLORS.success, isLight]);
+  }, [globeTheme, REGION_COLORS, UI_COLORS.success]);
 
   const getPolygonColor = useCallback((d) => {
     if (isDepartmentMode) {
       const admin = getFeatureAdmin(d);
-      if (d.isGhostCountry) return UI_COLORS.mapSea;
+      if (d.isGhostCountry) return UI_COLORS.mapBase;
       if (isEndScreen && !foundSet.has(admin)) return UI_COLORS.error;
-      if (foundSet.has(admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-      if (admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
+
+      const regionCode = d.properties?.region || 'Unknown';
+      let baseColor = FRENCH_REGION_COLORS[regionCode] || UI_COLORS.mapBase;
+
+      if (globeTheme === 'blueprint') {
+        baseColor = SURFACE_THEME_COLORS.blueprint.base;
+      }
+
+      if (foundSet.has(admin) || mode === 'learn') {
+        if (admin === selectedCountry) {
+          if (isError) return UI_COLORS.error;
+          return lerpColor(baseColor, UI_COLORS.paper, 0.15);
+        }
+        return baseColor;
+      }
+
+      if (admin === selectedCountry) {
+        if (isError) return UI_COLORS.error;
+        return lerpColor(baseColor, UI_COLORS.paper, 0.1);
+      }
+
       return UI_COLORS.mapBase;
     }
 
@@ -1356,22 +1101,21 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     const region = countryDataMap[admin]?.region || 'Unknown';
 
-
-
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
       return UI_COLORS.accent;
     }
 
-    if (!foundSet.has(admin) && mode !== 'learn') {
-      if (globeTheme === 'synthwave') {
-        return STROKE_THEME_COLORS.synthwave.unfound;
+    if (globeTheme === 'satellite') {
+      if (foundSet.has(admin) || mode === 'learn') {
+        return REGION_COLORS_LABELS[region] || UI_COLORS.accent;
       }
+      return STROKE_THEME_COLORS.satellite.unfound;
+    }
+
+    if (!foundSet.has(admin) && mode !== 'learn') {
       if (globeTheme === 'blueprint') {
         return STROKE_THEME_COLORS.blueprint.unfound;
-      }
-      if (globeTheme === 'vintage') {
-        return STROKE_THEME_COLORS.vintage.unfound;
       }
       return isLight
         ? UI_COLORS.mapBorderMuted
@@ -1379,14 +1123,8 @@ const GlobeMap = ({
     }
 
     // Found / Learned / Homepage countries
-    if (globeTheme === 'synthwave') {
-      return region === 'Europe' || region === 'Asia' ? STROKE_THEME_COLORS.synthwave.foundEuropeAsia : STROKE_THEME_COLORS.synthwave.foundOther;
-    }
     if (globeTheme === 'blueprint') {
       return STROKE_THEME_COLORS.blueprint.found;
-    }
-    if (globeTheme === 'vintage') {
-      return STROKE_THEME_COLORS.vintage.found;
     }
 
     const baseColor = (foundSet.has(admin) || mode === 'learn')
@@ -1398,7 +1136,7 @@ const GlobeMap = ({
       isLight ? UI_COLORS.ink : UI_COLORS.paper, // Use paper (white/light) for stroke in dark mode
       isLight ? GLOBE_STYLE.lighting.strokeDarken.light : 0.2 // Reduced darken for dark mode
     );
-  }, [selectedCountry, UI_COLORS, isError, foundSet, mode, isHomeScreen, isLight, isDepartmentMode, lerpColor, isPerfectScore, getRegionSurfaceColor, globeTheme]);
+  }, [selectedCountry, UI_COLORS, isError, foundSet, mode, isHomeScreen, isLight, isDepartmentMode, lerpColor, isPerfectScore, getRegionSurfaceColor, globeTheme, REGION_COLORS_LABELS]);
 
   const getPolygonSideColor = useCallback((d) => {
     if (isDepartmentMode) {
@@ -1486,13 +1224,20 @@ const GlobeMap = ({
     let targetOpacity = 1;
     let targetTransparent = false;
 
-    if (globeTheme === 'blueprint') {
-      targetWireframe = !isFound && admin !== selectedCountry;
-      targetOpacity = isFound || admin === selectedCountry ? 0.45 : 0.15;
+    if (globeTheme === 'satellite') {
       targetTransparent = true;
+      if (isHomeScreen) {
+        targetOpacity = 0.0;
+      } else if (admin === selectedCountry) {
+        targetOpacity = 0.45;
+      } else if (isFound) {
+        targetOpacity = 0.25;
+      } else {
+        targetOpacity = 0.0;
+      }
     }
 
-    if (isHomeScreen) {
+    if (isHomeScreen && globeTheme !== 'satellite') {
       targetOpacity = 0.0;
       targetTransparent = true;
     }
@@ -1502,12 +1247,7 @@ const GlobeMap = ({
     let specularHex = THREE.Color ? new THREE.Color(UI_COLORS.black) : UI_COLORS.black;
     let shininess = 0.7;
 
-    if (isDepartmentMode && d.isGhostCountry) {
-      emissiveHex = globeLightingEnabled ? UI_COLORS.globeEmissive : UI_COLORS.black;
-      emissiveIntensity = globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0;
-      specularHex = globeLightingEnabled ? (isLight ? UI_COLORS.globeSpecular : UI_COLORS.ink) : UI_COLORS.black;
-      shininess = globeLightingEnabled ? (isLight ? 4 : 8) : 0.7;
-    } else if (isDepartmentMode) {
+    if (isDepartmentMode && !d.isGhostCountry) {
       emissiveHex = color;
       emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
       specularHex = UI_COLORS.mapBorder;
@@ -1519,12 +1259,8 @@ const GlobeMap = ({
         ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
         : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark));
 
-      // Glass/Neon/Aurora effect: boost emissive in dark mode or synthwave/aurora theme
-      const emissiveBoost = globeTheme === 'synthwave'
-        ? (admin === selectedCountry ? 0.35 : 0.22)
-        : globeTheme === 'aurora'
-          ? (admin === selectedCountry ? 0.25 : 0.15)
-          : (!isLight ? 0.18 : 0.05);
+      // Standard emissive boost in dark mode
+      const emissiveBoost = !isLight ? 0.18 : 0.05;
 
       emissiveIntensity = baseEmissiveIntensity + emissiveBoost + (
         admin === selectedCountry ? 0.1 : 0
@@ -1535,11 +1271,7 @@ const GlobeMap = ({
         ? (isLight ? GLOBE_STYLE.lighting.material.capShininessLight : GLOBE_STYLE.lighting.material.capShininessDark)
         : (isLight ? GLOBE_STYLE.lighting.material.sideShininessLight : GLOBE_STYLE.lighting.material.sideShininessDark));
 
-      // Polished premium shine for selected country, matte for vintage
-      shininess = globeTheme === 'vintage' ? 0 : (baseShininess + (admin === selectedCountry ? 30 : (isLight ? 0 : 25)));
-      if (globeTheme === 'vintage') {
-        specularHex = UI_COLORS.black;
-      }
+      shininess = baseShininess + (admin === selectedCountry ? 30 : (isLight ? 0 : 25));
     }
 
     const isIsolated = admin === selectedCountry;
@@ -1606,7 +1338,7 @@ const GlobeMap = ({
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
-    if (isDepartmentMode && d.isGhostCountry) return 0.0002;
+    if (isDepartmentMode && d.isGhostCountry) return 0.001;
     if (admin === selectedCountry) return 0.008; // Lift selected country to avoid z-fighting/border conflicts
     return 0.001;
   }, [isDepartmentMode, selectedCountry]);
@@ -1680,10 +1412,10 @@ const GlobeMap = ({
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
 
     const labelDataMap = (isDepartmentMode || isRiversMountainsMode) ? gameDataMap : countryDataMap;
-    const keysToShow = perfProfile?.isMobile
-      ? (selectedCountry ? [selectedCountry] : [])
-      : (mode === 'learn' || isHomeScreen || isEndScreen
-        ? Object.keys(labelDataMap)
+    const keysToShow = (mode === 'learn' || isHomeScreen || isEndScreen)
+      ? Object.keys(labelDataMap)
+      : (perfProfile?.isMobile
+        ? (selectedCountry ? [selectedCountry] : [])
         : (selectedCountry && !foundList.includes(selectedCountry) ? [...foundList, selectedCountry] : foundList));
     const pov = cameraPOV;
 
@@ -1751,6 +1483,7 @@ const GlobeMap = ({
       });
 
     if (isDepartmentMode) return filtered.slice(0, perfProfile?.isMobile ? 10 : 18);
+    if (mode === 'learn') return filtered.slice(0, perfProfile?.isMobile ? 12 : 24);
     return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
   }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen, isDepartmentMode, isRiversMountainsMode, gameDataMap, foundSet]);
 
@@ -1902,8 +1635,6 @@ const GlobeMap = ({
     return paths;
   }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS]);
 
-  // Selected river overlay — small separate array, rebuilds only on selection/error change.
-  // Renders ON TOP of base paths with highlight color.
   const riversSelectedPathData = useMemo(() => {
     if (mode !== 'rivers_mountains' || !selectedCountry) return [];
     const data = gameDataMap[selectedCountry];
@@ -1912,16 +1643,31 @@ const GlobeMap = ({
     const color = isFound
       ? (isError ? UI_COLORS.error : UI_COLORS.riverSelectedFound)
       : (isError ? UI_COLORS.errorGlowStrong : UI_COLORS.riverSelectedUnfound);
-    return [{
-      admin: selectedCountry,
-      coords: getSmoothedRiverPath(selectedCountry, data.path),
-      color,
-      // Selected river — extra thick, solid, fast animated shimmer
-      width: isFound ? 65 : 55,
-      dashLength: 1,
-      dashGap: 0,
-      dashAnimateTime: isFound ? 1200 : 0,
-    }];
+    
+    const smoothedPath = getSmoothedRiverPath(selectedCountry, data.path);
+
+    return [
+      // Layer 1: Extra thick base highlight path
+      {
+        admin: selectedCountry,
+        coords: smoothedPath,
+        color,
+        width: isFound ? 75 : 65,
+        dashLength: 1,
+        dashGap: 0,
+        dashAnimateTime: 0
+      },
+      // Layer 2: Thinner, animated glowing white core representing current flow
+      {
+        admin: `${selectedCountry}_core`,
+        coords: smoothedPath,
+        color: UI_COLORS.paper,
+        width: isFound ? 24 : 18,
+        dashLength: 0.25,
+        dashGap: 0.15,
+        dashAnimateTime: 800
+      }
+    ];
   }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS]);
 
   // Combined for globe: base first, selected on top
@@ -2007,6 +1753,7 @@ const GlobeMap = ({
   const ringsData = useMemo(() => {
     if (selectedCountry) {
       const mapped = gameDataMap[selectedCountry];
+      if (mapped?.type === 'river') return [];
       const region = mapped?.region || 'Unknown';
       if (mapped && mapped.lat !== undefined) {
         const baseColor = isError
@@ -2049,14 +1796,15 @@ const GlobeMap = ({
   }, [gameDataMap, isDepartmentMode, isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS]);
 
   const customGlobeTexture = useMemo(() => {
-    if (globeTheme === 'vintage') {
-      return createVintageParchmentTexture();
-    }
-    if (globeTheme === 'synthwave') {
-      return createSynthwaveGridTexture();
-    }
     if (globeTheme === 'blueprint') {
       return createBlueprintGridTexture();
+    }
+    if (globeTheme === 'satellite') {
+      const loader = new THREE.TextureLoader();
+      const texture = loader.load('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      return texture;
     }
     return null;
   }, [globeTheme]);
@@ -2070,42 +1818,23 @@ const GlobeMap = ({
   }, [customGlobeTexture]);
 
   const globeMaterial = useMemo(() => {
-    if (globeTheme === 'vintage') {
-      return new THREE.MeshPhongMaterial({
-        map: customGlobeTexture,
-        color: 0xffffff,
-        specular: 0x111111,
-        shininess: 2,
-        flatShading: false
-      });
-    }
-    if (globeTheme === 'synthwave') {
-      return new THREE.MeshPhongMaterial({
-        map: customGlobeTexture,
-        color: 0xffffff,
-        specular: 0x555555,
-        shininess: 30,
-        emissive: 0x110022,
-        emissiveIntensity: 0.8
-      });
-    }
     if (globeTheme === 'blueprint') {
       return new THREE.MeshPhongMaterial({
         map: customGlobeTexture,
         color: 0xffffff,
-        transparent: true,
-        opacity: 0.95,
+        transparent: false,
+        opacity: 1,
         specular: 0x2288ff,
         shininess: 15
       });
     }
-    if (globeTheme === 'aurora') {
+    if (globeTheme === 'satellite') {
       return new THREE.MeshPhongMaterial({
-        color: UI_COLORS.mapSea,
-        specular: 0x34d399,
-        shininess: 25,
-        emissive: isLight ? 0x064e3b : 0x022c22,
-        emissiveIntensity: isLight ? 0.05 : 0.15
+        map: customGlobeTexture,
+        color: 0xffffff,
+        specular: 0x333333,
+        shininess: 15,
+        flatShading: false
       });
     }
 
@@ -2205,7 +1934,7 @@ const GlobeMap = ({
       };
 
       // Initialize target refs and uniform values to prevent initial transition jump
-      const initialHex = globeTheme === 'synthwave' ? 0xff007f : (globeTheme === 'blueprint' ? 0x00ffff : (globeTheme === 'vintage' ? 0xd4a373 : (globeTheme === 'aurora' ? 0x10b981 : 0x38bdf8)));
+      const initialHex = globeTheme === 'blueprint' ? 0x00ffff : (globeTheme === 'satellite' ? 0x10b981 : 0x38bdf8);
       targetGlowColorRef.current.setHex(initialHex);
       innerGlow.material.uniforms.glowColor.value.copy(targetGlowColorRef.current);
     }
@@ -2265,20 +1994,12 @@ const GlobeMap = ({
       }
       glowCoef = 0.12; // Slightly boosted but still very faint for selected country
     } else {
-      if (globeTheme === 'synthwave') {
-        glowColorHex = 0xbd00ff; // Muted magenta/purple
-        glowPower = 1.0;
-        glowCoef = 0.12;
-      } else if (globeTheme === 'blueprint') {
+      if (globeTheme === 'blueprint') {
         glowColorHex = 0x0ea5e9; // Deep blue-cyan
         glowPower = 1.2;
         glowCoef = 0.07;
-      } else if (globeTheme === 'vintage') {
-        glowColorHex = 0xc2945c; // Muted gold
-        glowPower = 1.1;
-        glowCoef = 0.05;
-      } else if (globeTheme === 'aurora') {
-        glowColorHex = 0x10b981; // Aurora green
+      } else if (globeTheme === 'satellite') {
+        glowColorHex = 0x10b981; // Earth green glow
         glowPower = 1.1;
         glowCoef = 0.09;
       }
@@ -2316,15 +2037,12 @@ const GlobeMap = ({
       ? GLOBE_STYLE.lighting.graticuleOpacity.light
       : GLOBE_STYLE.lighting.graticuleOpacity.dark;
 
-    if (globeTheme === 'synthwave') {
-      graticuleColor = new THREE.Color(0xff007f);
-      graticuleOpacity = 0.45;
-    } else if (globeTheme === 'blueprint') {
+    if (globeTheme === 'blueprint') {
       graticuleColor = new THREE.Color(0x00ffff);
       graticuleOpacity = 0.45;
-    } else if (globeTheme === 'vintage') {
-      graticuleColor = new THREE.Color(0x8b5a2b);
-      graticuleOpacity = 0.18;
+    } else if (globeTheme === 'satellite') {
+      graticuleColor = new THREE.Color(0x10b981);
+      graticuleOpacity = 0.25;
     }
 
     scene.traverse((obj) => {
@@ -2362,10 +2080,6 @@ const GlobeMap = ({
         const animList = [];
         scene.traverse((obj) => {
           if (
-            obj.name === 'vintage-ship' ||
-            obj.name === 'kraken-segment' ||
-            obj.name === 'synthwave-outer' ||
-            obj.name === 'synthwave-inner' ||
             obj.name === 'blueprint-cone' ||
             obj.name === 'blueprint-ring'
           ) {
@@ -2381,45 +2095,8 @@ const GlobeMap = ({
       for (let i = 0; i < animList.length; i++) {
         const obj = animList[i];
 
-        // Sway ships
-        if (obj.name === 'vintage-ship') {
-          const offset = obj.userData?.offset || 0;
-          const shipTime = time + offset;
-          obj.rotation.z = Math.sin(shipTime * 0.002) * 0.04;
-          obj.rotation.x = Math.PI / 2 + Math.cos(shipTime * 0.0015) * 0.03;
-          obj.position.y = Math.sin(shipTime * 0.003) * 0.005;
-        }
-
-        // Ripple kraken tentacles
-        else if (obj.name === 'kraken-segment') {
-          const depth = obj.userData?.index || 0;
-          let root = obj.parent;
-          while (root && root.name !== 'vintage-kraken') {
-            root = root.parent;
-          }
-          const offset = root?.userData?.offset || 0;
-          const krakenTime = time + offset;
-
-          obj.rotation.z = 0.18 + Math.sin(krakenTime * 0.0025 + depth * 0.8) * 0.08;
-          obj.rotation.y = 0.06 + Math.cos(krakenTime * 0.0018 + depth * 0.6) * 0.05;
-        }
-
-        // Spin synthwave pyramids
-        else if (obj.name === 'synthwave-outer') {
-          const offset = obj.parent?.userData?.offset || 0;
-          const pTime = time + offset;
-          obj.rotation.y = pTime * 0.0008;
-          obj.position.y = 0.085 + Math.sin(pTime * 0.002) * 0.012;
-        }
-        else if (obj.name === 'synthwave-inner') {
-          const offset = obj.parent?.userData?.offset || 0;
-          const pTime = time + offset;
-          obj.rotation.y = -pTime * 0.0014;
-          obj.position.y = 0.085 + Math.sin(pTime * 0.002) * 0.012;
-        }
-
         // Pulse blueprint beacons
-        else if (obj.name === 'blueprint-cone') {
+        if (obj.name === 'blueprint-cone') {
           obj.rotation.y = time * 0.0005;
           const scalePulse = 0.85 + Math.sin(time * 0.003) * 0.15;
           obj.scale.set(scalePulse, 1.0, scalePulse);
@@ -2457,11 +2134,7 @@ const GlobeMap = ({
               const baseEmissiveIntensity = (isCap
                 ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
                 : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark));
-              const emissiveBoost = globeTheme === 'synthwave'
-                ? 0.22
-                : globeTheme === 'aurora'
-                  ? 0.15
-                  : (!isLight ? 0.18 : 0.05);
+              const emissiveBoost = !isLight ? 0.18 : 0.05;
               mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost;
             } else {
               if (mat.userData.originalColor) {
@@ -2487,11 +2160,7 @@ const GlobeMap = ({
               ? (isLight ? GLOBE_STYLE.lighting.material.capEmissiveLight : GLOBE_STYLE.lighting.material.capEmissiveDark)
               : (isLight ? GLOBE_STYLE.lighting.material.sideEmissiveLight : GLOBE_STYLE.lighting.material.sideEmissiveDark));
 
-            const emissiveBoost = globeTheme === 'synthwave'
-              ? 0.35
-              : globeTheme === 'aurora'
-                ? 0.25
-                : (!isLight ? 0.18 : 0.05);
+            const emissiveBoost = !isLight ? 0.18 : 0.05;
 
             // Amplified pulsing glow
             mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost + 0.15 + (pulseVal * 0.35);
@@ -2696,14 +2365,10 @@ const GlobeMap = ({
     return safeColor(
       selectedCountry && activeDataMap && activeDataMap[selectedCountry]
         ? getThemeRegionColor(globeTheme, theme, activeDataMap[selectedCountry].region)
-        : (globeTheme === 'synthwave'
-          ? ATMOSPHERE_THEME_COLORS.synthwave
-          : globeTheme === 'blueprint'
+        : (globeTheme === 'blueprint'
           ? ATMOSPHERE_THEME_COLORS.blueprint
-          : globeTheme === 'vintage'
-          ? ATMOSPHERE_THEME_COLORS.vintage
-          : globeTheme === 'aurora'
-          ? ATMOSPHERE_THEME_COLORS.aurora
+          : globeTheme === 'satellite'
+          ? ATMOSPHERE_THEME_COLORS.satellite
           : UI_COLORS.atmosphere)
     );
   }, [selectedCountry, activeDataMap, globeTheme, theme, UI_COLORS.atmosphere, safeColor]);

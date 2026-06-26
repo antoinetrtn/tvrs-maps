@@ -115,13 +115,11 @@ const HomeScreen = ({
           <button className="home-btn mode-departments" onClick={() => onStartGame('departments')}>
             <Hash size={18} strokeWidth={2.4} className="home-btn-icon hash-icon" />
             <span className="btn-title">{lang === 'fr' ? 'Départements' : 'Departments'}</span>
-            <span className="beta-slop-badge">BETA <small>weird map sauce</small></span>
           </button>
 
           <button className="home-btn mode-rivers-mountains" onClick={() => onStartGame('rivers_mountains')}>
             <Mountain size={20} />
             <span className="btn-title">{lang === 'fr' ? 'Reliefs & Fleuves' : 'Rivers & Peaks'}</span>
-            <span className="beta-slop-badge">NEW <small>reliefs</small></span>
           </button>
 
 

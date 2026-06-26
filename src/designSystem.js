@@ -4,10 +4,8 @@
 
 export const THEMES_LIST = [
   { id: 'glass', name_fr: 'Verre Moderne', name_en: 'Sleek Glass' },
-  { id: 'synthwave', name_fr: 'Midnight Cyber', name_en: 'Midnight Cyber' },
-  { id: 'vintage', name_fr: 'Vintage Rétro', name_en: 'Vintage Retro' },
   { id: 'blueprint', name_fr: 'Plan Blueprint', name_en: 'Blueprint Plan' },
-  { id: 'aurora', name_fr: 'Aurore Nordique', name_en: 'Aurora Nordic' }
+  { id: 'satellite', name_fr: 'Satellite', name_en: 'Satellite' }
 ];
 
 export const THEME = {
@@ -203,134 +201,6 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
 
 export const THEME_OVERRIDES = {
   glass: {},
-  synthwave: {
-    light: {
-      bg: '#0f051d',
-      bgElevated: '#1c0b34',
-      bgGradientStart: '#0f051d',
-      bgGradientEnd: '#1c0b34',
-      textMain: '#00f0ff',
-      textMuted: '#ff007f',
-      accent: '#ff007f',
-      accentHover: '#ff3399',
-      accentSoft: 'rgba(255, 0, 127, 0.2)',
-      accentGlow: '#ff007f',
-      accentContrast: '#0f051d',
-      glassBg: 'rgba(28, 11, 52, 0.8)',
-      glassBorder: 'rgba(0, 240, 255, 0.35)',
-      mapBase: '#1f0d3d',
-      mapSea: '#06010f',
-      mapBorder: '#ff007f',
-      mapBorderMuted: '#3d0a66',
-      gridDot: 'rgba(255, 0, 127, 0.25)',
-      graticule: '#ff007f',
-      atmosphere: '#ff007f',
-      globeEmissive: '#06010f',
-      globeSpecular: '#ff007f',
-      globeInnerGlow: '#ff007f',
-      lightingRim: '#ff007f',
-      lightingFill: '#1f0d3d',
-      decorGlowPrimary: 'rgba(255, 0, 127, 0.25)',
-      decorGlowPrimaryEnd: 'rgba(15, 5, 29, 0)',
-      decorGlowSecondary: 'rgba(0, 240, 255, 0.2)',
-      decorGlowSecondaryEnd: 'rgba(15, 5, 29, 0)'
-    },
-    dark: {
-      bg: '#0f051d',
-      bgElevated: '#1c0b34',
-      bgGradientStart: '#0f051d',
-      bgGradientEnd: '#1c0b34',
-      textMain: '#00f0ff',
-      textMuted: '#ff007f',
-      accent: '#ff007f',
-      accentHover: '#ff3399',
-      accentSoft: 'rgba(255, 0, 127, 0.2)',
-      accentGlow: '#ff007f',
-      accentContrast: '#0f051d',
-      glassBg: 'rgba(28, 11, 52, 0.8)',
-      glassBorder: 'rgba(0, 240, 255, 0.35)',
-      mapBase: '#1f0d3d',
-      mapSea: '#06010f',
-      mapBorder: '#ff007f',
-      mapBorderMuted: '#3d0a66',
-      gridDot: 'rgba(255, 0, 127, 0.25)',
-      graticule: '#ff007f',
-      atmosphere: '#ff007f',
-      globeEmissive: '#06010f',
-      globeSpecular: '#ff007f',
-      globeInnerGlow: '#ff007f',
-      lightingRim: '#ff007f',
-      lightingFill: '#1f0d3d',
-      decorGlowPrimary: 'rgba(255, 0, 127, 0.25)',
-      decorGlowPrimaryEnd: 'rgba(15, 5, 29, 0)',
-      decorGlowSecondary: 'rgba(0, 240, 255, 0.2)',
-      decorGlowSecondaryEnd: 'rgba(15, 5, 29, 0)'
-    }
-  },
-  vintage: {
-    light: {
-      bg: '#f4ecd8',
-      bgElevated: '#ebdcb9',
-      bgGradientStart: '#f4ecd8',
-      bgGradientEnd: '#ebdcb9',
-      textMain: '#332211',
-      textMuted: '#7c654e',
-      accent: '#8b5a2b',
-      accentHover: '#5c3a1a',
-      accentSoft: 'rgba(139, 90, 43, 0.15)',
-      accentGlow: '#8b5a2b',
-      accentContrast: '#ffffff',
-      glassBg: 'rgba(244, 236, 216, 0.9)',
-      glassBorder: 'rgba(139, 90, 43, 0.22)',
-      mapBase: '#fdfaf2',
-      mapSea: '#dfd3b6',
-      mapBorder: '#8b5a2b',
-      mapBorderMuted: '#c4b595',
-      gridDot: 'rgba(139, 90, 43, 0.15)',
-      graticule: '#8b5a2b',
-      atmosphere: '#dfd3b6',
-      globeEmissive: '#dfd3b6',
-      globeSpecular: '#dfd3b6',
-      globeInnerGlow: '#8b5a2b',
-      lightingRim: '#ebdcb9',
-      lightingFill: '#dfd3b6',
-      decorGlowPrimary: 'rgba(139, 90, 43, 0.15)',
-      decorGlowPrimaryEnd: 'rgba(244, 236, 216, 0)',
-      decorGlowSecondary: 'rgba(124, 101, 78, 0.08)',
-      decorGlowSecondaryEnd: 'rgba(244, 236, 216, 0)'
-    },
-    dark: {
-      bg: '#1f160e',
-      bgElevated: '#2d2015',
-      bgGradientStart: '#1f160e',
-      bgGradientEnd: '#2d2015',
-      textMain: '#dfd3b6',
-      textMuted: '#b0a080',
-      accent: '#bfae8f',
-      accentHover: '#dfd3b6',
-      accentSoft: 'rgba(191, 174, 143, 0.18)',
-      accentGlow: '#bfae8f',
-      accentContrast: '#1f160e',
-      glassBg: 'rgba(45, 32, 21, 0.85)',
-      glassBorder: 'rgba(191, 174, 143, 0.2)',
-      mapBase: '#2a1e14',
-      mapSea: '#120d09',
-      mapBorder: '#b0a080',
-      mapBorderMuted: '#3d2b1d',
-      gridDot: 'rgba(176, 160, 128, 0.15)',
-      graticule: '#b0a080',
-      atmosphere: '#120d09',
-      globeEmissive: '#120d09',
-      globeSpecular: '#2a1e14',
-      globeInnerGlow: '#b0a080',
-      lightingRim: '#2d2015',
-      lightingFill: '#120d09',
-      decorGlowPrimary: 'rgba(176, 160, 128, 0.1)',
-      decorGlowPrimaryEnd: 'rgba(31, 22, 14, 0)',
-      decorGlowSecondary: 'rgba(45, 32, 21, 0.15)',
-      decorGlowSecondaryEnd: 'rgba(31, 22, 14, 0)'
-    }
-  },
   blueprint: {
     light: {
       bg: '#001122',
@@ -395,68 +265,68 @@ export const THEME_OVERRIDES = {
       decorGlowSecondaryEnd: 'rgba(0, 17, 34, 0)'
     }
   },
-  aurora: {
+  satellite: {
     light: {
-      bg: '#f0f7f4',
-      bgElevated: '#ffffff',
-      bgGradientStart: '#f0f7f4',
-      bgGradientEnd: '#e2f0ea',
-      textMain: '#0d2c22',
-      textMuted: '#4a6b5d',
-      accent: '#10b981',
-      accentHover: '#059669',
-      accentSoft: 'rgba(16, 185, 129, 0.15)',
-      accentGlow: '#34d399',
-      accentContrast: '#ffffff',
-      glassBg: 'rgba(255, 255, 255, 0.75)',
-      glassBorder: 'rgba(16, 185, 129, 0.12)',
-      mapBase: '#e2f0ea',
-      mapSea: '#cadad2',
-      mapBorder: '#8ba89b',
-      mapBorderMuted: '#cadad2',
-      gridDot: 'rgba(16, 185, 129, 0.2)',
-      graticule: '#8ba89b',
-      atmosphere: '#10b981',
-      globeEmissive: '#064e3b',
-      globeSpecular: '#a7f3d0',
-      globeInnerGlow: '#34d399',
-      lightingRim: '#a7f3d0',
-      lightingFill: '#e2f0ea',
-      decorGlowPrimary: 'rgba(16, 185, 129, 0.2)',
-      decorGlowPrimaryEnd: 'rgba(240, 247, 244, 0)',
-      decorGlowSecondary: 'rgba(14, 165, 233, 0.15)',
-      decorGlowSecondaryEnd: 'rgba(240, 247, 244, 0)'
-    },
-    dark: {
-      bg: '#020813',
-      bgElevated: '#06152a',
-      bgGradientStart: '#020813',
-      bgGradientEnd: '#021a14',
-      textMain: '#e6f9f3',
-      textMuted: '#628c80',
+      bg: '#030712',
+      bgElevated: '#0b0f19',
+      bgGradientStart: '#030712',
+      bgGradientEnd: '#0b0f19',
+      textMain: '#f9fafb',
+      textMuted: '#9ca3af',
       accent: '#10b981',
       accentHover: '#34d399',
       accentSoft: 'rgba(16, 185, 129, 0.18)',
       accentGlow: '#059669',
-      accentContrast: '#021a14',
-      glassBg: 'rgba(6, 21, 42, 0.7)',
-      glassBorder: 'rgba(16, 185, 129, 0.18)',
-      mapBase: '#0d2d24',
-      mapSea: '#010d18',
-      mapBorder: '#1a4d3e',
-      mapBorderMuted: '#061e18',
-      gridDot: 'rgba(16, 185, 129, 0.25)',
-      graticule: '#1a4d3e',
+      accentContrast: '#ffffff',
+      glassBg: 'rgba(11, 15, 25, 0.85)',
+      glassBorder: 'rgba(16, 185, 129, 0.25)',
+      mapBase: 'rgba(255, 255, 255, 0.1)',
+      mapSea: '#000814',
+      mapBorder: '#10b981',
+      mapBorderMuted: 'rgba(16, 185, 129, 0.25)',
+      gridDot: 'rgba(16, 185, 129, 0.15)',
+      graticule: 'rgba(16, 185, 129, 0.25)',
       atmosphere: '#10b981',
-      globeEmissive: '#022c22',
-      globeSpecular: '#34d399',
+      globeEmissive: '#000814',
+      globeSpecular: '#10b981',
       globeInnerGlow: '#10b981',
       lightingRim: '#34d399',
-      lightingFill: '#0d2d24',
-      decorGlowPrimary: 'rgba(16, 185, 129, 0.18)',
-      decorGlowPrimaryEnd: 'rgba(2, 8, 19, 0)',
-      decorGlowSecondary: 'rgba(14, 165, 233, 0.15)',
-      decorGlowSecondaryEnd: 'rgba(2, 8, 19, 0)'
+      lightingFill: '#000814',
+      decorGlowPrimary: 'rgba(16, 185, 129, 0.15)',
+      decorGlowPrimaryEnd: 'rgba(3, 7, 18, 0)',
+      decorGlowSecondary: 'rgba(14, 165, 233, 0.08)',
+      decorGlowSecondaryEnd: 'rgba(3, 7, 18, 0)'
+    },
+    dark: {
+      bg: '#030712',
+      bgElevated: '#0b0f19',
+      bgGradientStart: '#030712',
+      bgGradientEnd: '#0b0f19',
+      textMain: '#f9fafb',
+      textMuted: '#9ca3af',
+      accent: '#10b981',
+      accentHover: '#34d399',
+      accentSoft: 'rgba(16, 185, 129, 0.18)',
+      accentGlow: '#059669',
+      accentContrast: '#ffffff',
+      glassBg: 'rgba(11, 15, 25, 0.85)',
+      glassBorder: 'rgba(16, 185, 129, 0.25)',
+      mapBase: 'rgba(255, 255, 255, 0.1)',
+      mapSea: '#000814',
+      mapBorder: '#10b981',
+      mapBorderMuted: 'rgba(16, 185, 129, 0.25)',
+      gridDot: 'rgba(16, 185, 129, 0.15)',
+      graticule: 'rgba(16, 185, 129, 0.25)',
+      atmosphere: '#10b981',
+      globeEmissive: '#000814',
+      globeSpecular: '#10b981',
+      globeInnerGlow: '#10b981',
+      lightingRim: '#34d399',
+      lightingFill: '#000814',
+      decorGlowPrimary: 'rgba(16, 185, 129, 0.15)',
+      decorGlowPrimaryEnd: 'rgba(3, 7, 18, 0)',
+      decorGlowSecondary: 'rgba(14, 165, 233, 0.08)',
+      decorGlowSecondaryEnd: 'rgba(3, 7, 18, 0)'
     }
   }
 };
@@ -540,6 +410,32 @@ export const CONTINENT_COLORS = {
     "Unknown": "#64748b"
   }
 };
+
+export const FRENCH_REGION_COLORS = {
+  '11': '#e11d48', // Île-de-France (Rose/Red)
+  '24': '#f59e0b', // Centre-Val de Loire (Orange)
+  '27': '#d97706', // Bourgogne-Franche-Comté (Dark Orange)
+  '28': '#059669', // Normandie (Green)
+  '32': '#0284c7', // Hauts-de-France (Blue)
+  '44': '#7c3aed', // Grand Est (Purple)
+  '52': '#10b981', // Pays de la Loire (Teal)
+  '53': '#2563eb', // Bretagne (Royal Blue)
+  '75': '#0d9488', // Nouvelle-Aquitaine (Teal/Green)
+  '76': '#ea580c', // Occitanie (Red-Orange)
+  '84': '#4f46e5', // Auvergne-Rhône-Alpes (Indigo)
+  '93': '#db2777', // Provence-Alpes-Côte d'Azur (Pink)
+  '94': '#4b5563', // Corse (Grey)
+  '01': '#06b6d4', // Guadeloupe
+  '02': '#0891b2', // Martinique
+  '03': '#0ea5e9', // Guyane
+  '04': '#3b82f6', // La Réunion
+  '06': '#6366f1'  // Mayotte
+};
+
+export const FRENCH_REGION_SYNTHWAVE_COLORS = ['#ff007f', '#00f0ff', '#ffea00', '#9d4edd', '#00ff66'];
+export const FRENCH_REGION_VINTAGE_COLORS = ['#e59866', '#a9dfbf', '#f9e79f', '#f5cbf7', '#a3e4d7', '#d5dbdb'];
+export const FRENCH_REGION_AURORA_COLORS_LIGHT = ['#a5f3fc', '#99f6e4', '#a7f3d0', '#c7d2fe', '#e9d5ff'];
+export const FRENCH_REGION_AURORA_COLORS_DARK = ['#0891b2', '#0d9488', '#059669', '#4f46e5', '#7c3aed'];
 
 export const CONTINENT_COLORS_LABELS = {
   light: {
@@ -685,10 +581,8 @@ export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass',
     '--decor-glow-secondary': theme.decorGlowSecondary,
     '--decor-glow-secondary-end': theme.decorGlowSecondaryEnd,
     '--theme-dot-glass': '#0ea5e9',
-    '--theme-dot-synthwave': '#ff007f',
-    '--theme-dot-vintage': '#bfae8f',
     '--theme-dot-blueprint': '#00ffff',
-    '--theme-dot-aurora': '#10b981',
+    '--theme-dot-satellite': '#10b981',
     '--radius-sm': STYLE_TOKENS.radius.sm,
     '--radius-md': STYLE_TOKENS.radius.md,
     '--radius-lg': STYLE_TOKENS.radius.lg,
@@ -711,22 +605,6 @@ export const getThemeCssVariables = (systemTheme = 'dark', globeTheme = 'glass',
 };
 
 export const PROCEDURAL_OCEAN_COLORS = {
-  vintage: {
-    base: '#f3e8cd',
-    grad0: 'rgba(139, 90, 43, 0)',
-    grad78: 'rgba(139, 90, 43, 0.08)',
-    grad1: 'rgba(92, 54, 23, 0.26)',
-    line12: 'rgba(139, 90, 43, 0.12)',
-    line28: 'rgba(139, 90, 43, 0.28)',
-    line07: 'rgba(139, 90, 43, 0.07)'
-  },
-  synthwave: {
-    base: '#09041a',
-    line: 'rgba(255, 0, 127, 0.28)',
-    gradTop: 'rgba(0, 240, 255, 0.06)',
-    gradCenter: 'rgba(255, 0, 127, 0.12)',
-    gradBottom: 'rgba(0, 240, 255, 0.06)'
-  },
   blueprint: {
     base: '#061326',
     lineMajor: 'rgba(0, 240, 255, 0.22)',
@@ -735,89 +613,25 @@ export const PROCEDURAL_OCEAN_COLORS = {
 };
 
 export const SURFACE_THEME_COLORS = {
-  synthwave: {
-    Europe: '#ff007f',
-    Americas: '#00f0ff',
-    Africa: '#ffea00',
-    Asia: '#9d4edd',
-    Oceania: '#00ff66',
-    Antarctic: '#ffffff',
-    Unknown: '#00f0ff'
-  },
   blueprint: {
     base: '#00bfff'
-  },
-  vintage: {
-    Europe: '#e59866',
-    Americas: '#a9dfbf',
-    Africa: '#f9e79f',
-    Asia: '#f5cbf7',
-    Oceania: '#a3e4d7',
-    Antarctic: '#fbfcfc',
-    Unknown: '#f9e79f'
-  },
-  aurora: {
-    Europe: '#a5f3fc',
-    Americas: '#99f6e4',
-    Africa: '#a7f3d0',
-    Asia: '#c7d2fe',
-    Oceania: '#e9d5ff',
-    Antarctic: '#f8fafc',
-    Unknown: '#e2f0ea'
-  },
-  aurora_dark: {
-    Europe: '#0891b2',
-    Americas: '#0d9488',
-    Africa: '#059669',
-    Asia: '#4f46e5',
-    Oceania: '#7c3aed',
-    Antarctic: '#64748b',
-    Unknown: '#0d2d24'
   }
 };
 
 export const STROKE_THEME_COLORS = {
-  synthwave: {
-    unfound: '#2a1a3a',
-    foundEuropeAsia: '#ff00ff',
-    foundOther: '#00ffff'
-  },
   blueprint: {
     unfound: 'rgba(0, 240, 255, 0.2)',
     found: '#00ffff'
   },
-  vintage: {
-    unfound: '#c2a67e',
-    found: '#5c3617'
+  satellite: {
+    unfound: 'rgba(255, 255, 255, 0.25)',
+    found: '#10b981'
   }
 };
 
 export const ATMOSPHERE_THEME_COLORS = {
-  synthwave: '#ff007f',
   blueprint: '#00ffff',
-  vintage: '#e5c158',
-  aurora: '#10b981'
-};
-
-export const SYNTHWAVE_REGION_COLORS_ATTENUATED = {
-  light: {
-    "Europe": "#ffe6f0",
-    "Americas": "#e6fcff",
-    "Africa": "#ffffe6",
-    "Asia": "#f9e6ff",
-    "Oceania": "#e6ffe8",
-    "Antarctic": "#f5f5f5",
-    "Unknown": "#e6fcff"
-  },
-  dark: {
-    "Europe": "#4a0025",
-    "Americas": "#003a3d",
-    "Africa": "#3d3a00",
-    "Asia": "#25003d",
-    "Oceania": "#003d18",
-    "Antarctic": "#333333",
-    "Unknown": "#003a3d"
-  }
+  satellite: '#10b981'
 };
 
 export const BLUEPRINT_REGION_COLORS_ATTENUATED = {
@@ -841,87 +655,13 @@ export const BLUEPRINT_REGION_COLORS_ATTENUATED = {
   }
 };
 
-export const VINTAGE_REGION_COLORS_ATTENUATED = {
-  light: {
-    "Europe": "#fdf2e9",
-    "Americas": "#ebf5fb",
-    "Africa": "#fef9e7",
-    "Asia": "#fdf2fa",
-    "Oceania": "#e8f8f5",
-    "Antarctic": "#fdfefe",
-    "Unknown": "#fef9e7"
-  },
-  dark: {
-    "Europe": "#4a2711",
-    "Americas": "#193d25",
-    "Africa": "#3d3511",
-    "Asia": "#3d1a3f",
-    "Oceania": "#143d34",
-    "Antarctic": "#333333",
-    "Unknown": "#3d3511"
-  }
-};
-
-export const AURORA_REGION_COLORS_ATTENUATED = {
-  light: {
-    "Europe": "#e0f2fe",
-    "Americas": "#ccfbf1",
-    "Africa": "#d1fae5",
-    "Asia": "#e0e7ff",
-    "Oceania": "#f3e8ff",
-    "Antarctic": "#f8fafc",
-    "Unknown": "#f1f5f9"
-  },
-  dark: {
-    "Europe": "#083344",
-    "Americas": "#042f2e",
-    "Africa": "#022c22",
-    "Asia": "#1e1b4b",
-    "Oceania": "#2e1065",
-    "Antarctic": "#0f172a",
-    "Unknown": "#0f172a"
-  }
-};
-
-export const VINTAGE_REGION_COLORS_LABELS = {
-  light: {
-    "Europe": "#78281f",
-    "Americas": "#1e8449",
-    "Africa": "#7d6608",
-    "Asia": "#6c3483",
-    "Oceania": "#117864",
-    "Antarctic": "#1b2631",
-    "Unknown": "#7d6608"
-  },
-  dark: {
-    "Europe": "#ffdca8",
-    "Americas": "#d5f5e3",
-    "Africa": "#fcf3cf",
-    "Asia": "#fcdcfc",
-    "Oceania": "#d1f2eb",
-    "Antarctic": "#ffffff",
-    "Unknown": "#fcf3cf"
-  }
-};
-
 export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
   if (region === 'France') {
     region = 'Europe';
   }
 
-  if (globeTheme === 'synthwave') {
-    return SURFACE_THEME_COLORS.synthwave[region] || SURFACE_THEME_COLORS.synthwave.Unknown || '#00f0ff';
-  }
   if (globeTheme === 'blueprint') {
     return SURFACE_THEME_COLORS.blueprint.base || '#00ffff';
-  }
-  if (globeTheme === 'vintage') {
-    return SURFACE_THEME_COLORS.vintage[region] || SURFACE_THEME_COLORS.vintage.Unknown || '#8b5a2b';
-  }
-  if (globeTheme === 'aurora') {
-    return systemTheme === 'light'
-      ? (SURFACE_THEME_COLORS.aurora[region] || '#10b981')
-      : (SURFACE_THEME_COLORS.aurora_dark[region] || '#059669');
   }
   return CONTINENT_COLORS[systemTheme]?.[region] || CONTINENT_COLORS[systemTheme]?.Unknown;
 };
@@ -931,17 +671,8 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
     region = 'Europe';
   }
 
-  if (globeTheme === 'synthwave') {
-    return SYNTHWAVE_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || SYNTHWAVE_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#003a3d';
-  }
   if (globeTheme === 'blueprint') {
     return BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#002b3d';
-  }
-  if (globeTheme === 'vintage') {
-    return VINTAGE_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || VINTAGE_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#4a2711';
-  }
-  if (globeTheme === 'aurora') {
-    return AURORA_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || AURORA_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#022c22';
   }
   return CONTINENT_COLORS_ATTENUATED[systemTheme]?.[region] || CONTINENT_COLORS_ATTENUATED[systemTheme]?.Unknown;
 };
@@ -951,17 +682,9 @@ export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
     region = 'Europe';
   }
 
-  if (globeTheme === 'synthwave') {
-    return SURFACE_THEME_COLORS.synthwave[region] || '#00f0ff';
-  }
   if (globeTheme === 'blueprint') {
     return '#00ffff';
   }
-  if (globeTheme === 'vintage') {
-    return VINTAGE_REGION_COLORS_LABELS[systemTheme]?.[region] || VINTAGE_REGION_COLORS_LABELS[systemTheme]?.Unknown || '#8b5a2b';
-  }
-  if (globeTheme === 'aurora') {
-    return systemTheme === 'light' ? '#0d2c22' : '#e6f9f3';
-  }
   return CONTINENT_COLORS_LABELS[systemTheme]?.[region] || CONTINENT_COLORS_LABELS[systemTheme]?.Unknown;
 };
+
