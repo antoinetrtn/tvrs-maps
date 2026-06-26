@@ -577,6 +577,7 @@ const GlobeMap = ({
   const biomeObjectsCacheRef = useRef(new Map());
   const animObjectsCacheRef = useRef([]);
   const lastAnimCacheTimeRef = useRef(0);
+  const lastAnimFrameTimeRef = useRef(0);
   const targetGlowColorRef = useRef(new THREE.Color(0x38bdf8));
   const targetGlowPowerRef = useRef(1.2);
   const targetGlowCoefRef = useRef(1.0);
@@ -606,6 +607,7 @@ const GlobeMap = ({
   const lastTapRef = useRef(0);
   const isZoomDragging = useRef(false);
   const startY = useRef(0);
+  const savedControlsEnabledRef = useRef(true);
 
   const handleTouchStart = useCallback((e) => {
     if (e.touches.length !== 1) return;
@@ -614,6 +616,14 @@ const GlobeMap = ({
     if (now - lastTapRef.current < 300) {
       isZoomDragging.current = true;
       startY.current = touch.clientY;
+      // Disable OrbitControls rotation so the globe doesn't spin during zoom drag
+      try {
+        const controls = globeEl.current?.controls?.();
+        if (controls) {
+          savedControlsEnabledRef.current = controls.enableRotate;
+          controls.enableRotate = false;
+        }
+      } catch (_) {}
       e.preventDefault();
     }
     lastTapRef.current = now;
@@ -632,6 +642,15 @@ const GlobeMap = ({
   }, []);
 
   const handleTouchEnd = useCallback(() => {
+    if (isZoomDragging.current) {
+      // Re-enable OrbitControls rotation
+      try {
+        const controls = globeEl.current?.controls?.();
+        if (controls) {
+          controls.enableRotate = savedControlsEnabledRef.current;
+        }
+      } catch (_) {}
+    }
     isZoomDragging.current = false;
   }, []);
 
@@ -656,7 +675,7 @@ const GlobeMap = ({
           controls.autoRotateSpeed = 0.3;
           controls.enableZoom = true;
           controls.enableDamping = true;
-          controls.dampingFactor = perfProfile?.isMobile ? 0.08 : 0.05;
+          controls.dampingFactor = perfProfile?.isMobile ? 0.12 : 0.08;
           controls.rotateSpeed = perfProfile?.isMobile ? 0.75 : 0.9;
           controls.zoomSpeed = perfProfile?.isMobile ? 0.75 : 1;
           controls.zoomToCursor = false;
@@ -1333,9 +1352,14 @@ const GlobeMap = ({
     getPolygonMaterial(d, 'cap')
   ), [getPolygonMaterial]);
 
-  const getPolygonSideMaterial = useCallback((d) => (
-    invisibleMaterial
-  ), []);
+  const getPolygonSideMaterial = useCallback((d) => {
+    const admin = getFeatureAdmin(d);
+    if (admin === selectedCountry) {
+      // Selected country gets a visible, brightly colored side wall acting as a thick highlighted border
+      return getPolygonMaterial(d, 'side');
+    }
+    return invisibleMaterial;
+  }, [selectedCountry, getPolygonMaterial]);
 
   useEffect(() => {
     const materialCache = polygonMaterialCacheRef.current;
@@ -1351,17 +1375,17 @@ const GlobeMap = ({
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode && d.isGhostCountry) return 0.001;
-    if (admin === selectedCountry) return 0.0011; // Lift slightly to avoid z-fighting while remaining flat (no 3D vertical wall extrusion)
+    if (admin === selectedCountry) return 0.006; // Raise selected country for visible side-border extrusion
     return 0.001;
   }, [isDepartmentMode, selectedCountry]);
 
   const getSelectionEffectAltitude = useCallback(() => {
-    if (selectedCountry) return 0.01; // Raise above selected country (0.008)
+    if (selectedCountry) return 0.0025; // Just above the polygon surface
     return 0.0015;
   }, [selectedCountry]);
 
   const getHtmlAltitude = useCallback((d) => {
-    if (selectedCountry && d.admin === selectedCountry) return 0.01; // Raise above selected country (0.008)
+    if (selectedCountry && d.admin === selectedCountry) return 0.007; // Just above selected country
     return 0.002;
   }, [selectedCountry]);
 
@@ -2090,6 +2114,16 @@ const GlobeMap = ({
 
       const time = performance.now();
 
+      // Throttle animation loop on mobile to ~30fps for better fluidity
+      if (perfProfile?.isMobile && lastAnimFrameTimeRef.current) {
+        const elapsed = time - lastAnimFrameTimeRef.current;
+        if (elapsed < 30) { // ~33ms target = 30fps
+          animFrameId = requestAnimationFrame(animateScene);
+          return;
+        }
+      }
+      lastAnimFrameTimeRef.current = time;
+
       // Update/rebuild the animObjectsCache every 1000ms
       if (time - lastAnimCacheTimeRef.current > 1000) {
         const animList = [];
@@ -2412,6 +2446,8 @@ const GlobeMap = ({
           ? ATMOSPHERE_THEME_COLORS.blueprint
           : globeTheme === 'satellite'
           ? ATMOSPHERE_THEME_COLORS.satellite
+          : globeTheme === 'blackout'
+          ? ATMOSPHERE_THEME_COLORS.blackout
           : UI_COLORS.atmosphere)
     );
   }, [selectedCountry, activeDataMap, globeTheme, theme, UI_COLORS.atmosphere, safeColor]);

@@ -349,8 +349,8 @@ export const THEME_OVERRIDES = {
       glassHover: 'rgba(255, 255, 255, 0.05)',
       mapBase: '#0d0d0d',
       mapSea: '#000000',
-      mapBorder: '#ffffff',
-      mapBorderMuted: '#333333',
+      mapBorder: '#666666',
+      mapBorderMuted: '#2a2a2a',
       gridDot: 'rgba(255, 255, 255, 0.1)',
       graticule: '#333333',
       atmosphere: '#111111',
@@ -382,8 +382,8 @@ export const THEME_OVERRIDES = {
       glassHover: 'rgba(255, 255, 255, 0.05)',
       mapBase: '#0d0d0d',
       mapSea: '#000000',
-      mapBorder: '#ffffff',
-      mapBorderMuted: '#333333',
+      mapBorder: '#666666',
+      mapBorderMuted: '#2a2a2a',
       gridDot: 'rgba(255, 255, 255, 0.1)',
       graticule: '#333333',
       atmosphere: '#111111',
@@ -687,7 +687,7 @@ export const SURFACE_THEME_COLORS = {
     base: '#00bfff'
   },
   blackout: {
-    base: '#e5e5e5'
+    base: '#4a4a4a'
   }
 };
 
@@ -701,15 +701,15 @@ export const STROKE_THEME_COLORS = {
     found: '#10b981'
   },
   blackout: {
-    unfound: 'rgba(255, 255, 255, 0.15)',
-    found: '#ffffff'
+    unfound: 'rgba(255, 255, 255, 0.08)',
+    found: '#aaaaaa'
   }
 };
 
 export const ATMOSPHERE_THEME_COLORS = {
   blueprint: '#00ffff',
   satellite: '#10b981',
-  blackout: '#ffffff'
+  blackout: '#555555'
 };
 
 export const BLUEPRINT_REGION_COLORS_ATTENUATED = {
