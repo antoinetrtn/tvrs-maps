@@ -1691,12 +1691,12 @@ const GlobeMap = ({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
 
-    const labelDataMap = isDepartmentMode ? gameDataMap : countryDataMap;
+    const labelDataMap = (isDepartmentMode || isRiversMountainsMode) ? gameDataMap : countryDataMap;
     const keysToShow = perfProfile?.isMobile
       ? (selectedCountry ? [selectedCountry] : [])
-      : (isDepartmentMode
-        ? foundList
-        : ((mode === 'learn' || isHomeScreen || isEndScreen) ? Object.keys(labelDataMap) : foundList));
+      : (mode === 'learn' || isHomeScreen || isEndScreen
+        ? Object.keys(labelDataMap)
+        : (selectedCountry && !foundList.includes(selectedCountry) ? [...foundList, selectedCountry] : foundList));
     const pov = cameraPOV;
 
     const filtered = keysToShow
@@ -1707,6 +1707,14 @@ const GlobeMap = ({
         const isSelected = adminKey === selectedCountry;
         const isFound = foundSet.has(adminKey);
         const size = countrySizes[adminKey] || 0.5;
+
+        // Skip unfound labels in play mode for countries and rivers/mountains
+        const isPlayMode = mode !== 'learn' && !isHomeScreen && !isEndScreen;
+        if (isPlayMode && !isFound) {
+          if (mode === 'countries' || mode === 'rivers_mountains') {
+            return null;
+          }
+        }
 
         // Visibility based on zoom level
         const visibilityThreshold = isDepartmentMode
@@ -1756,7 +1764,7 @@ const GlobeMap = ({
 
     if (isDepartmentMode) return filtered.slice(0, perfProfile?.isMobile ? 10 : 18);
     return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
-  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen, isDepartmentMode, gameDataMap, foundSet]);
+  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen, isDepartmentMode, isRiversMountainsMode, gameDataMap, foundSet]);
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
@@ -1771,80 +1779,94 @@ const GlobeMap = ({
     el.style.pointerEvents = 'none';
     el.style.userSelect = 'none';
 
-    el.innerHTML = isDepartmentMode ? `
-      <div
-        class="globe-label-element department-label-element"
-        style="
-          position: relative;
-          width: 0;
-          height: 0;
-          --department-label-accent: ${color};
-          --department-label-bg: ${UI_COLORS.departmentLabelBg};
-          --department-label-text: ${UI_COLORS.textMain};
-          --department-label-subtle-text: ${UI_COLORS.textMuted};
-          --department-label-border: ${UI_COLORS.departmentLabelBorder};
-          --department-label-code-text: ${UI_COLORS.textInverse};
-          --department-label-dot-shadow: ${UI_COLORS.departmentLabelDotShadow};
-          --department-label-shadow: ${UI_COLORS.departmentLabelShadow};
-          --department-label-inset-shadow: ${UI_COLORS.departmentLabelInsetShadow};
-        "
-      >
-        <div class="department-label-dot"></div>
-        <div class="department-label-copy">
-          <div class="department-label-main">
-            <span class="department-label-code">${d.code}</span>
-            <span class="department-label-name">${d.country}</span>
+    const isPlayMode = d.mode !== 'learn' && !isHomeScreen && !isEndScreen;
+    const revealAll = !isPlayMode || d.isFound;
+
+    if (isDepartmentMode) {
+      const displayName = revealAll ? d.country : '???';
+      const displayCapital = revealAll ? d.capital : '???';
+
+      el.innerHTML = `
+        <div
+          class="globe-label-element department-label-element"
+          style="
+            position: relative;
+            width: 0;
+            height: 0;
+            --department-label-accent: ${color};
+            --department-label-bg: ${UI_COLORS.departmentLabelBg};
+            --department-label-text: ${UI_COLORS.textMain};
+            --department-label-subtle-text: ${UI_COLORS.textMuted};
+            --department-label-border: ${UI_COLORS.departmentLabelBorder};
+            --department-label-code-text: ${UI_COLORS.textInverse};
+            --department-label-dot-shadow: ${UI_COLORS.departmentLabelDotShadow};
+            --department-label-shadow: ${UI_COLORS.departmentLabelShadow};
+            --department-label-inset-shadow: ${UI_COLORS.departmentLabelInsetShadow};
+          "
+        >
+          <div class="department-label-dot"></div>
+          <div class="department-label-copy">
+            <div class="department-label-main">
+              <span class="department-label-code">${d.code}</span>
+              <span class="department-label-name">${displayName}</span>
+            </div>
+            <div class="department-label-capital">(${displayCapital})</div>
           </div>
-          <div class="department-label-capital">(${d.capital})</div>
         </div>
-      </div>
-    ` : `
-      <div class="globe-label-element" style="position: relative; width: 0; height: 0;">
-        <div style="
-          position: absolute;
-          width: 6px;
-          height: 6px;
-          background: ${color};
-          border-radius: 50%;
-          left: -3px;
-          top: -3px;
-          opacity: ${isHomeScreen ? 0.5 : 1};
-        "></div>
-        <div style="
-          position: absolute;
-          left: 8px;
-          top: 0;
-          transform: translateY(-50%);
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          font-family: var(--font-main);
-          white-space: nowrap;
-        ">
+      `;
+    } else {
+      const showCapital = revealAll;
+
+      el.innerHTML = `
+        <div class="globe-label-element" style="position: relative; width: 0; height: 0;">
           <div style="
-            color: ${color};
-            font-weight: 600;
-            font-size: 13px;
-            line-height: 1.2;
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: ${color};
+            border-radius: 50%;
+            left: -3px;
+            top: -3px;
+            opacity: ${isHomeScreen ? 0.5 : 1};
+          "></div>
+          <div style="
+            position: absolute;
+            left: 8px;
+            top: 0;
+            transform: translateY(-50%);
             display: flex;
-            align-items: center;
-            gap: 4px;
+            flex-direction: column;
+            align-items: flex-start;
+            font-family: var(--font-main);
+            white-space: nowrap;
           ">
-            <span>${d.flag}</span>
-            <span>${d.country}</span>
+            <div style="
+              color: ${color};
+              font-weight: 600;
+              font-size: 13px;
+              line-height: 1.2;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            ">
+              <span>${d.flag || ''}</span>
+              <span>${d.country}</span>
+            </div>
+            ${showCapital && d.capital ? `
+              <div style="
+                color: ${color};
+                font-weight: 400;
+                font-size: 11px;
+                line-height: 1.2;
+                opacity: 0.7;
+              ">(${d.capital})</div>
+            ` : ''}
           </div>
-          <div style="
-            color: ${color};
-            font-weight: 400;
-            font-size: 11px;
-            line-height: 1.2;
-            opacity: 0.7;
-          ">(${d.capital})</div>
         </div>
-      </div>
-    `;
+      `;
+    }
     return el;
-  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isDepartmentMode]);
+  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, isDepartmentMode]);
 
   const biomePointsCacheRef = useRef({});
 
