@@ -17,7 +17,8 @@ export const isPlayMode = (mode, { isHomeScreen = false, isEndScreen = false } =
  * every guessable mode — countries, capitals, departments and rivers/mountains all
  * scramble the answer until it is found.
  */
-export const shouldScrambleLabel = (mode, { isFound, isHomeScreen = false, isEndScreen = false, isSelected = false } = {}) => {
+export const shouldScrambleLabel = (mode, { isFound, isHomeScreen = false, isEndScreen = false, isSelected = false, isLearn = false } = {}) => {
+  if (isLearn) return false; // learn mode reveals everything — never scramble
   if (isHomeScreen) return isSelected; // home showcases a single scrambling target
   if (!isPlayMode(mode, { isHomeScreen, isEndScreen })) return false;
   return !isFound;

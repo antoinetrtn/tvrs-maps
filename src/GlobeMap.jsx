@@ -1806,7 +1806,8 @@ const GlobeMap = ({
       isFound: d.isFound,
       isHomeScreen,
       isEndScreen,
-      isSelected: d.isSelected
+      isSelected: d.isSelected,
+      isLearn: mode === 'learn'
     });
 
     // Local helper to scramble text with glitched characters (100% scrambled to prevent reading letters)
