@@ -2331,7 +2331,7 @@ const GlobeMap = ({
 
     const isMobile = perfProfile?.isMobile;
 
-    if (isMobile) {
+    if (isMobile || globeTheme === 'blackout') {
       rimLight.visible = false;
       studioLight.visible = false;
       studioLeft.visible = false;
@@ -2934,7 +2934,7 @@ const GlobeMap = ({
             globeImageUrl={null}
             globeMaterial={globeMaterial}
             backgroundImageUrl={null}
-            showAtmosphere={!!perfProfile?.showAtmosphere}
+            showAtmosphere={globeTheme !== 'blackout' && !!perfProfile?.showAtmosphere}
             atmosphereColor={activeAtmosphereColor}
             atmosphereDayQuotient={isLight ? 0.2 : 0.1}
             onGlobeReady={handleGlobeReady}
