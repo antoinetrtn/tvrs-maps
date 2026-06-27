@@ -1506,8 +1506,8 @@ const GlobeMap = ({
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode && d.isGhostCountry) return 0.001;
-    if (admin === selectedCountry) return 0.006; // Raise selected country for visible side-border extrusion
-    return 0.001;
+    if (admin === selectedCountry) return 0.008; // Raise selected country for visible side-border extrusion
+    return 0.0022; // Raised from 0.001 to prevent graticules clipping through polygons on mobile (due to chordal curvature error)
   }, [isDepartmentMode, selectedCountry]);
 
   const getSelectionEffectAltitude = useCallback(() => {
@@ -2360,12 +2360,12 @@ const GlobeMap = ({
     });
 
     if (globeTheme === 'blackout') {
-      // Balanced soft ambient/hemisphere lighting for 3D volume on the entire globe (no dark southern hemisphere)
-      keyLight.intensity = isLight ? 0.22 : 0.36;
+      // Balanced soft ambient/hemisphere lighting for 3D volume on the entire globe (no dark southern hemisphere) - slightly boosted for legibility
+      keyLight.intensity = isLight ? 0.28 : 0.44;
       keyLight.position.set(-3.5, 2.4, 4.2);
       rimLight.intensity = 0; // Disabled
-      fillLight.intensity = isLight ? 0.38 : 0.22; // Soft top/bottom ambient lighting
-      studioLight.intensity = isLight ? 0.25 : 0.12; // Flat base light to illuminate all angles
+      fillLight.intensity = isLight ? 0.44 : 0.32; // Soft top/bottom ambient lighting
+      studioLight.intensity = isLight ? 0.30 : 0.18; // Flat base light to illuminate all angles
       studioLeft.intensity = 0;
       studioLeft.position.set(-4.5, 2.5, 3.5);
       studioRight.intensity = 0;
