@@ -2235,16 +2235,27 @@ const GlobeMap = ({
     if (!scene) return false;
 
     if (!globeLightingEnabled) {
-      if (globeLightingRef.current?.group?.parent) {
-        globeLightingRef.current.group.parent.remove(globeLightingRef.current.group);
+      if (globeLightingRef.current) {
+        const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, group } = globeLightingRef.current;
+        const camera = globeEl.current?.camera?.();
+        if (camera) {
+          camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
+        }
+        if (group && group.parent) {
+          group.parent.remove(group);
+        }
+        globeLightingRef.current?.innerGlow?.geometry?.dispose();
+        globeLightingRef.current?.innerGlow?.material?.dispose();
+        globeLightingRef.current = null;
       }
-      globeLightingRef.current?.innerGlow?.geometry?.dispose();
-      globeLightingRef.current?.innerGlow?.material?.dispose();
-      globeLightingRef.current = null;
       return true;
     }
 
     if (!globeLightingRef.current) {
+      const camera = globeEl.current?.camera?.();
+      if (!camera) return false;
+      scene.add(camera); // Make camera part of scene hierarchy so children lights propagate
+
       const group = new THREE.Group();
       group.name = 'globe-accent-lighting';
 
@@ -2291,8 +2302,13 @@ const GlobeMap = ({
       innerGlow.position.set(0, 0, 0);
       innerGlow.renderOrder = -1;
 
-      group.add(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, innerGlow);
+      // Add innerGlow (positioned at center of Earth) to group, and add group to scene
+      group.add(innerGlow);
       scene.add(group);
+
+      // Add the directional/ambient lights to the CAMERA so they move/rotate with the viewer's head
+      camera.add(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
+
       globeLightingRef.current = {
         group,
         keyLight,
@@ -2413,12 +2429,19 @@ const GlobeMap = ({
     updateGlobeLighting();
 
     return () => {
-      if (globeLightingRef.current?.group?.parent) {
-        globeLightingRef.current.group.parent.remove(globeLightingRef.current.group);
+      if (globeLightingRef.current) {
+        const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, group } = globeLightingRef.current;
+        const camera = globeEl.current?.camera?.();
+        if (camera) {
+          camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
+        }
+        if (group && group.parent) {
+          group.parent.remove(group);
+        }
+        globeLightingRef.current?.innerGlow?.geometry?.dispose();
+        globeLightingRef.current?.innerGlow?.material?.dispose();
+        globeLightingRef.current = null;
       }
-      globeLightingRef.current?.innerGlow?.geometry?.dispose();
-      globeLightingRef.current?.innerGlow?.material?.dispose();
-      globeLightingRef.current = null;
     };
   }, [updateGlobeLighting]);
 
