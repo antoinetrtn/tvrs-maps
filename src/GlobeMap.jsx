@@ -199,6 +199,7 @@ const GlobeMap = ({
   const animateSceneRef = useRef(null);
   const needsGraticuleStyleRef = useRef(true);
   const graticuleStyleUntilRef = useRef(0);
+  const lastGraticuleStyleTimeRef = useRef(0);
   // Keep the loop-facing refs current on every render so the running rAF loop
   // reads fresh selection/feedback state without being part of its dep array.
   selectedCountryRef.current = selectedCountry;
@@ -474,6 +475,23 @@ const GlobeMap = ({
     isDepartmentMode,
     gameDataMap,
   ]);
+
+  useEffect(() => {
+    if (isEndScreen) {
+      polygonMaterialCacheRef.current.cap.forEach((mat, adminKey) => {
+        if (mat && mat.userData.shader) {
+          const shader = mat.userData.shader;
+          const isFound = foundSet.has(adminKey);
+          if (shader.uniforms.uIsError) {
+            shader.uniforms.uIsError.value = !isFound ? 1.0 : 0.0;
+          }
+          if (shader.uniforms.uIsSuccess) {
+            shader.uniforms.uIsSuccess.value = isFound ? 1.0 : 0.0;
+          }
+        }
+      });
+    }
+  }, [isEndScreen, foundSet]);
 
   const isLight = theme === "light";
 
@@ -2671,8 +2689,12 @@ const GlobeMap = ({
 
       // Style graticules only during the bounded window after ready/theme change,
       // so async Three-Globe elements are caught without traversing the scene forever.
+      // Throttle scene traversal to once every 120ms to prevent start-up lag.
       if (needsGraticuleStyleRef.current) {
-        styleGlobeGraticules();
+        if (time - lastGraticuleStyleTimeRef.current > 120) {
+          styleGlobeGraticules();
+          lastGraticuleStyleTimeRef.current = time;
+        }
         if (time > graticuleStyleUntilRef.current) {
           needsGraticuleStyleRef.current = false;
         }
@@ -2713,6 +2735,13 @@ const GlobeMap = ({
         if (oldAdmin) {
           const oldCapMat = polygonMaterialCacheRef.current.cap.get(oldAdmin);
           const oldSideMat = polygonMaterialCacheRef.current.side.get(oldAdmin);
+
+          // Reset shader uniforms for the unselected country
+          if (oldCapMat && oldCapMat.userData.shader) {
+            const shader = oldCapMat.userData.shader;
+            if (shader.uniforms.uIsError) shader.uniforms.uIsError.value = 0.0;
+            if (shader.uniforms.uIsSuccess) shader.uniforms.uIsSuccess.value = 0.0;
+          }
           [oldCapMat, oldSideMat].forEach((mat, index) => {
             if (!mat) return;
             const isCap = index === 0;
@@ -2774,25 +2803,19 @@ const GlobeMap = ({
         const sideMat =
           polygonMaterialCacheRef.current.side.get(selectedCountry);
 
-        // Update uTime and uniforms for all cap materials that use the shader
-        polygonMaterialCacheRef.current.cap.forEach((mat, adminKey) => {
-          if (mat && mat.userData.shader) {
-            if (mat.userData.shader.uniforms.uTime) {
-              mat.userData.shader.uniforms.uTime.value = time / 1000;
-            }
-            if (mat.userData.shader.uniforms.uIsError) {
-              const isMissed = isEndScreen && !foundSet.has(adminKey);
-              mat.userData.shader.uniforms.uIsError.value =
-                isMissed || (adminKey === selectedCountry && isError)
-                  ? 1.0
-                  : 0.0;
-            }
-            if (mat.userData.shader.uniforms.uIsSuccess) {
-              mat.userData.shader.uniforms.uIsSuccess.value =
-                adminKey === selectedCountry && isSuccess ? 1.0 : 0.0;
-            }
+        // Update uTime and uniforms ONLY for the selected country's cap material
+        if (capMat && capMat.userData.shader) {
+          const shader = capMat.userData.shader;
+          if (shader.uniforms.uTime) {
+            shader.uniforms.uTime.value = time / 1000;
           }
-        });
+          if (shader.uniforms.uIsError) {
+            shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
+          }
+          if (shader.uniforms.uIsSuccess) {
+            shader.uniforms.uIsSuccess.value = isSuccess ? 1.0 : 0.0;
+          }
+        }
 
         // Specifically pulse emissive or color for selected cap & side materials
 
