@@ -495,7 +495,30 @@ export const GLOBE_THEMES = {
         selectionRingColor: "#ffffff",
       },
     },
-    continents: DEFAULT_CONTINENT_COLORS,
+    continents: {
+      surface: {
+        light: {
+          Europe: "#4a4a4a",
+          Americas: "#636363",
+          Asia: "#7c7c7c",
+          Africa: "#969696",
+          Oceania: "#b0b0b0",
+          Antarctic: "#c9c9c9",
+          France: "#4a4a4a",
+          Unknown: "#888888",
+        },
+        dark: {
+          Europe: "#eeeeee",
+          Americas: "#d4d4d4",
+          Asia: "#bbbbbb",
+          Africa: "#a1a1a1",
+          Oceania: "#888888",
+          Antarctic: "#6e6e6e",
+          France: "#eeeeee",
+          Unknown: "#cccccc",
+        },
+      },
+    },
     departments: {
       type: "monochrome",
     },
@@ -672,11 +695,25 @@ export const getThemeRegionColorAttenuated = (
     return colors[normRegion] || colors.Unknown;
   }
 
-  // Blackout fallbacks: mix surface shade with bg/paper
+  // Blackout fallbacks: programmatically blend colors to avoid browser-only CSS color-mix in ThreeJS
   const baseColor = getThemeRegionColor(globeTheme, systemTheme, normRegion);
-  return sysTheme === "light"
-    ? `color-mix(in srgb, ${baseColor} 50%, #ffffff)`
-    : `color-mix(in srgb, ${baseColor} 40%, #000000)`;
+  if (baseColor.startsWith("#")) {
+    const r = parseInt(baseColor.substring(1, 3), 16);
+    const g = parseInt(baseColor.substring(3, 5), 16);
+    const b = parseInt(baseColor.substring(5, 7), 16);
+    if (sysTheme === "light") {
+      const mr = Math.round(r * 0.5 + 255 * 0.5);
+      const mg = Math.round(g * 0.5 + 255 * 0.5);
+      const mb = Math.round(b * 0.5 + 255 * 0.5);
+      return `#${mr.toString(16).padStart(2, '0')}${mg.toString(16).padStart(2, '0')}${mb.toString(16).padStart(2, '0')}`;
+    } else {
+      const mr = Math.round(r * 0.4);
+      const mg = Math.round(g * 0.4);
+      const mb = Math.round(b * 0.4);
+      return `#${mr.toString(16).padStart(2, '0')}${mg.toString(16).padStart(2, '0')}${mb.toString(16).padStart(2, '0')}`;
+    }
+  }
+  return baseColor;
 };
 
 export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {

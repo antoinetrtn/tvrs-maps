@@ -224,19 +224,19 @@ const HomeScreen = ({
           </button>
           {themeMenuOpen && (
             <div className="globe-theme-menu glass-panel animation-fade-in">
-              {THEMES_LIST.map((t) => (
+              {THEMES_LIST.map((themeObj) => (
                 <button
-                  key={t.id}
-                  className={`globe-theme-menu-item ${globeTheme === t.id ? "active" : ""}`}
+                  key={themeObj.id}
+                  className={`globe-theme-menu-item ${globeTheme === themeObj.id ? "active" : ""}`}
                   onClick={() => {
-                    setGlobeTheme(t.id);
+                    setGlobeTheme(themeObj.id);
                     setThemeMenuOpen(false);
                   }}
                   onPointerDown={(e) => e.preventDefault()}
                 >
-                  <span className={`theme-dot ${t.id}`} />
+                  <span className={`theme-dot ${themeObj.id}`} />
                   <span className="theme-name">
-                    {t(`theme_${t.id}`)}
+                    {t(`theme_${themeObj.id}`)}
                   </span>
                 </button>
               ))}
