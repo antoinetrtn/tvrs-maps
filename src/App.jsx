@@ -52,6 +52,11 @@ function App() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [globeLightingEnabled, setGlobeLightingEnabled] = useState(true);
   const [theme, setTheme] = useState(() => {
+    try {
+      const cached = localStorage.getItem('tvrs-globe-theme');
+      // If cached theme is blackout, default to dark. If no cache, we default to blackout so default is dark.
+      if (!cached || cached === 'blackout') return 'dark';
+    } catch (_) {}
     if (typeof window !== 'undefined' && window.matchMedia) {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
@@ -62,12 +67,15 @@ function App() {
       const cached = localStorage.getItem('tvrs-globe-theme');
       if (cached && ['glass', 'satellite', 'blackout'].includes(cached)) return cached;
     } catch (_) {}
-    return 'glass';
+    return 'blackout'; // Default to blackout theme
   });
   const setGlobeTheme = useCallback((t) => {
     setGlobeThemeRaw(t);
+    if (t === 'blackout') {
+      setTheme('dark');
+    }
     try { localStorage.setItem('tvrs-globe-theme', t); } catch (_) {}
-  }, []);
+  }, [setTheme]);
   
   // New States for Advanced UX
   const [menuOpen, setMenuOpen] = useState(false);

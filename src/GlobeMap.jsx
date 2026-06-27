@@ -1250,7 +1250,7 @@ const GlobeMap = ({
     const cache = polygonMaterialCacheRef.current[kind];
     const color = kind === 'cap' ? getPolygonColor(d) : getPolygonSideColor(d);
 
-    const ExpectedMaterialClass = perfProfile?.isMobile ? THREE.MeshLambertMaterial : THREE.MeshPhongMaterial;
+    const ExpectedMaterialClass = THREE.MeshPhongMaterial;
 
     // Handle wireframe/opacity for the hologram blueprint theme
     const isFound = foundSet.has(admin) || mode === 'learn';
@@ -1271,7 +1271,7 @@ const GlobeMap = ({
       }
     }
 
-    if (isHomeScreen && globeTheme !== 'satellite') {
+    if (isHomeScreen && globeTheme !== 'satellite' && admin !== selectedCountry) {
       targetOpacity = 0.0;
       targetTransparent = true;
     }
@@ -2436,7 +2436,7 @@ const GlobeMap = ({
 
     if (globeTheme === 'blackout') {
       graticuleColor = new THREE.Color(UI_COLORS.textMuted);
-      graticuleOpacity = isLight ? 0.15 : 0.28;
+      graticuleOpacity = isLight ? 0.02 : 0.05;
     } else if (globeTheme === 'satellite') {
       graticuleColor = new THREE.Color(0x10b981);
       graticuleOpacity = 0.25;
@@ -2799,10 +2799,12 @@ const GlobeMap = ({
     if (size === undefined) return baseRes;
 
     if (size < 4) {
-      return baseRes * 2.5; // Coarser resolution for small features since curvature is imperceptible
+      // Coarser resolution (fewer segments) for small features is fine since curvature is imperceptible
+      return Math.max(0.5, baseRes * 0.6);
     }
     if (size > 15) {
-      return baseRes * 0.8; // Finer resolution for large features to follow the sphere curve smoothly
+      // Finer resolution (more segments) for large features to follow the sphere curve smoothly and avoid clipping inside the globe
+      return baseRes * 3.0;
     }
     return baseRes;
   }, [countrySizes, perfProfile?.polygonCapCurvatureResolution]);
