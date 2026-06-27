@@ -1051,6 +1051,7 @@ const GlobeMap = ({
       if (foundSet.has(admin) || mode === 'learn') {
         if (admin === selectedCountry) {
           if (isError) return UI_COLORS.error;
+          if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
           return lerpColor(baseColor, UI_COLORS.paper, 0.15);
         }
         return baseColor;
@@ -1058,6 +1059,7 @@ const GlobeMap = ({
 
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
+        if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
         return lerpColor(baseColor, UI_COLORS.paper, 0.1);
       }
 
@@ -1080,6 +1082,7 @@ const GlobeMap = ({
       const baseColor = getRegionSurfaceColor(region);
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
+        if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
         // Resting selected found country color (slightly lighter than base)
         return lerpColor(
           baseColor,
@@ -1092,6 +1095,7 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
+      if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
       const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
       const targetColor = REGION_COLORS[region] || UI_COLORS.accent;
       // Resting selected unfound country color (slightly highlighted)
@@ -1186,6 +1190,7 @@ const GlobeMap = ({
     if (globeLightingEnabled) {
       if (admin === selectedCountry) {
         if (isError) return isLight ? UI_COLORS.errorDeep : UI_COLORS.errorDeeper;
+        if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
 
         // Base color for the side when selected under lighting
         const sideBaseColor = (foundSet.has(admin) || mode === 'learn')
@@ -1215,6 +1220,7 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return isLight ? UI_COLORS.errorMuted : UI_COLORS.errorDeep;
+      if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
 
       const capColor = (foundSet.has(admin) || mode === 'learn')
         ? lerpColor(
@@ -1326,6 +1332,39 @@ const GlobeMap = ({
       if (material.isMeshPhongMaterial) {
         material.specular.set(safeColor(specularHex));
         material.shininess = shininess;
+      }
+
+      if (isIsolated && globeTheme === 'blackout' && kind === 'cap') {
+        material.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = { value: 0 };
+          shader.uniforms.uIsError = { value: 0 };
+          material.userData.shader = shader;
+
+          shader.fragmentShader = `
+            uniform float uTime;
+            uniform float uIsError;
+            float hash(vec2 p) {
+              return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+            }
+          ` + shader.fragmentShader;
+
+          shader.fragmentShader = shader.fragmentShader.replace(
+            `#include <dithering_fragment>`,
+            `#include <dithering_fragment>
+             vec2 uv = gl_FragCoord.xy;
+             float t = uTime * 28.0;
+             float noise = hash(uv + sin(t));
+             float scanline = sin(uv.y * 1.5 + uTime * 5.0) * 0.08;
+             float staticColor = mix(0.12, 0.72, noise) + scanline;
+             
+             vec3 finalColor = vec3(staticColor);
+             if (uIsError > 0.5) {
+               finalColor = mix(finalColor, vec3(0.85, 0.12, 0.12), 0.5);
+             }
+             gl_FragColor.rgb = finalColor;
+            `
+          );
+        };
       }
 
       material.userData.isIsolated = isIsolated;
@@ -2284,6 +2323,15 @@ const GlobeMap = ({
         [capMat, sideMat].forEach((mat, index) => {
           if (!mat) return;
           const isCap = index === 0;
+
+          if (mat.userData.shader) {
+            if (mat.userData.shader.uniforms.uTime) {
+              mat.userData.shader.uniforms.uTime.value = time / 1000;
+            }
+            if (mat.userData.shader.uniforms.uIsError) {
+              mat.userData.shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
+            }
+          }
 
           if (globeLightingEnabled) {
             const baseEmissiveIntensity = (isCap
