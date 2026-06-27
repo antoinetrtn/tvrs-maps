@@ -1334,15 +1334,21 @@ const GlobeMap = ({
         material.shininess = shininess;
       }
 
-      if (isIsolated && globeTheme === 'blackout' && kind === 'cap') {
+      if (isIsolated && kind === 'cap') {
         material.onBeforeCompile = (shader) => {
           shader.uniforms.uTime = { value: 0 };
           shader.uniforms.uIsError = { value: 0 };
+          shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
+          shader.uniforms.uTheme = { value: (
+            globeTheme === 'blackout' ? 1.0 : (globeTheme === 'blueprint' ? 2.0 : 0.0)
+          )};
           material.userData.shader = shader;
 
           shader.fragmentShader = `
             uniform float uTime;
             uniform float uIsError;
+            uniform float uIsLight;
+            uniform float uTheme;
             float hash(vec2 p) {
               return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
             }
@@ -1354,12 +1360,30 @@ const GlobeMap = ({
              vec2 uv = gl_FragCoord.xy;
              float t = uTime * 28.0;
              float noise = hash(uv + sin(t));
-             float scanline = sin(uv.y * 1.5 + uTime * 5.0) * 0.08;
-             float staticColor = mix(0.12, 0.72, noise) + scanline;
              
-             vec3 finalColor = vec3(staticColor);
+             // Dynamic static range: bright static in light theme, dark static in dark theme
+             float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
+             float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
+             float scanline = sin(uv.y * 1.5 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
+             
+             float staticColor = mix(baseMin, baseMax, noise) + scanline;
+             vec3 staticVec = vec3(staticColor);
+             
+             vec3 finalColor = gl_FragColor.rgb;
+             if (uTheme > 0.9 && uTheme < 1.1) {
+               // Blackout theme: 100% monochrome static
+               finalColor = staticVec;
+             } else if (uTheme > 1.9 && uTheme < 2.1) {
+               // Blueprint theme: blue-tinted static
+               vec3 blueStatic = vec3(staticColor * 0.15, staticColor * 0.50, staticColor * 0.95);
+               finalColor = mix(gl_FragColor.rgb, blueStatic, 0.80);
+             } else {
+               // Other themes (modern glass, satellite): subtle holographic noise overlay
+               finalColor = mix(gl_FragColor.rgb, staticVec, 0.40);
+             }
+             
              if (uIsError > 0.5) {
-               finalColor = mix(finalColor, vec3(0.85, 0.12, 0.12), 0.5);
+               finalColor = mix(finalColor, vec3(0.85, 0.12, 0.12), 0.50);
              }
              gl_FragColor.rgb = finalColor;
             `
@@ -1604,57 +1628,172 @@ const GlobeMap = ({
       `;
     } else {
       const showCapital = revealAll;
+      const labelBg = isLight ? `color-mix(in srgb, ${UI_COLORS.paper} 94%, transparent)` : `color-mix(in srgb, ${UI_COLORS.black} 88%, transparent)`;
+      const labelText = UI_COLORS.textMain;
+      const labelSubText = UI_COLORS.textMuted;
+      const labelBorder = color;
 
-      el.innerHTML = `
-        <div class="globe-label-element" style="position: relative; width: 0; height: 0;">
-          <div style="
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: ${color};
-            border-radius: 50%;
-            left: -3px;
-            top: -3px;
-            opacity: ${isHomeScreen ? 0.5 : 1};
-          "></div>
-          <div style="
-            position: absolute;
-            left: 8px;
-            top: 0;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            font-family: var(--font-main);
-            white-space: nowrap;
-          ">
+      const isGlitchMode = d.mode === 'capitals' && !revealAll;
+
+      // Local helper to scramble text with glitched characters
+      const localScrambleText = (text, seed = 0) => {
+        if (!text) return '';
+        const glyphs = '@#$%&?*¢¤§░▒▓█▲▼◆◇';
+        return text.split('').map((char, index) => {
+          if (char === ' ' || char === '-' || char === "'") return char;
+          const hash = Math.sin(index * 13.5 + seed * 7.1) * 10000;
+          const rand = Math.abs(hash) % 1.0;
+          if (rand < 0.65) {
+            const glyphIndex = Math.floor(rand * glyphs.length);
+            return glyphs[glyphIndex];
+          }
+          return char;
+        }).join('');
+      };
+
+      if (isGlitchMode) {
+        // Glitched/scrambled animated callout box
+        el.innerHTML = `
+          <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
+            <!-- Dot -->
             <div style="
-              color: ${color};
-              font-weight: 600;
-              font-size: 13px;
-              line-height: 1.2;
+              position: absolute;
+              width: 8px;
+              height: 8px;
+              background: ${color};
+              border-radius: 50%;
+              left: -4px;
+              top: -4px;
+              box-shadow: 0 0 10px ${color};
+              opacity: ${isHomeScreen ? 0.5 : 1};
+            "></div>
+            <!-- Stalk Line -->
+            <div style="
+              position: absolute;
+              width: 1.5px;
+              height: 32px;
+              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 40%, transparent) 100%);
+              left: -0.75px;
+              bottom: 4px;
+              opacity: ${isHomeScreen ? 0.5 : 1};
+            "></div>
+            <!-- Glassmorphic Box at the top of the stalk -->
+            <div style="
+              position: absolute;
+              left: 10px;
+              bottom: 16px;
               display: flex;
-              align-items: center;
-              gap: 4px;
+              flex-direction: column;
+              align-items: flex-start;
+              font-family: monospace;
+              white-space: nowrap;
+              background: ${labelBg};
+              border: 1.5px solid ${labelBorder};
+              padding: 4px 8px;
+              border-radius: 6px;
+              box-shadow: 0 4px 15px color-mix(in srgb, ${UI_COLORS.black} 50%, transparent);
+              color: ${labelText};
+              opacity: ${isHomeScreen ? 0.6 : 1};
             ">
-              <span>${(d.mode === 'capitals' && !revealAll) ? '' : (d.flag || '')}</span>
-              <span>${(d.mode === 'capitals' && !revealAll) ? '???' : d.country}</span>
+              <div style="font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                <span class="glitch-flag">▒▒</span>
+                <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
+              </div>
+              <div style="font-weight: 500; font-size: 11px; color: ${labelSubText}; opacity: 0.85; margin-top: 2px;">
+                <span class="glitch-capital" data-text="${d.capital}">${localScrambleText(d.capital)}</span>
+              </div>
             </div>
-            ${showCapital && d.capital ? `
-              <div style="
-                color: ${color};
-                font-weight: 400;
-                font-size: 11px;
-                line-height: 1.2;
-                opacity: 0.7;
-              ">(${d.capital})</div>
-            ` : ''}
           </div>
-        </div>
-      `;
+        `;
+
+        // Start dynamic scrambling interval
+        const interval = setInterval(() => {
+          if (!document.body.contains(el)) {
+            clearInterval(interval);
+            return;
+          }
+          const countryEl = el.querySelector('.glitch-country');
+          const capitalEl = el.querySelector('.glitch-capital');
+          const flagEl = el.querySelector('.glitch-flag');
+          
+          const glyphs = '░▒▓█▲▼◆◇@#$%&?*¢¤§';
+          if (countryEl) {
+            const raw = countryEl.getAttribute('data-text') || '';
+            countryEl.innerText = localScrambleText(raw, Math.random());
+          }
+          if (capitalEl) {
+            const raw = capitalEl.getAttribute('data-text') || '';
+            capitalEl.innerText = localScrambleText(raw, Math.random());
+          }
+          if (flagEl) {
+            flagEl.innerText = glyphs[Math.floor(Math.random() * glyphs.length)] + glyphs[Math.floor(Math.random() * glyphs.length)];
+          }
+        }, 150);
+
+      } else {
+        // Normal clean callout box
+        const iconSymbol = d.mode === 'rivers_mountains' 
+          ? (gameDataMap[d.admin]?.type === 'mountain_range' ? '🏔️ ' : '💧 ')
+          : '';
+
+        el.innerHTML = `
+          <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
+            <!-- Dot -->
+            <div style="
+              position: absolute;
+              width: 8px;
+              height: 8px;
+              background: ${color};
+              border-radius: 50%;
+              left: -4px;
+              top: -4px;
+              box-shadow: 0 0 10px ${color};
+              opacity: ${isHomeScreen ? 0.5 : 1};
+            "></div>
+            <!-- Stalk Line -->
+            <div style="
+              position: absolute;
+              width: 1.5px;
+              height: 32px;
+              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 40%, transparent) 100%);
+              left: -0.75px;
+              bottom: 4px;
+              opacity: ${isHomeScreen ? 0.5 : 1};
+            "></div>
+            <!-- Glassmorphic Box at the top of the stalk -->
+            <div style="
+              position: absolute;
+              left: 10px;
+              bottom: 16px;
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+              font-family: var(--font-main), sans-serif;
+              white-space: nowrap;
+              background: ${labelBg};
+              border: 1.5px solid ${labelBorder};
+              padding: 4px 8px;
+              border-radius: 6px;
+              box-shadow: 0 4px 15px color-mix(in srgb, ${UI_COLORS.black} 50%, transparent);
+              color: ${labelText};
+              opacity: ${isHomeScreen ? 0.6 : 1};
+            ">
+              <div style="font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                <span>${iconSymbol || d.flag || ''}</span>
+                <span>${d.country}</span>
+              </div>
+              ${(showCapital && d.capital) ? `
+                <div style="font-weight: 500; font-size: 11px; color: ${labelSubText}; opacity: 0.85; margin-top: 2px;">
+                  (${d.capital})
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }
     }
     return el;
-  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, isDepartmentMode]);
+  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, isDepartmentMode, isLight, gameDataMap]);
 
   const biomePointsCacheRef = useRef({});
 
@@ -1885,7 +2024,7 @@ const GlobeMap = ({
   const ringsData = useMemo(() => {
     if (selectedCountry) {
       const mapped = gameDataMap[selectedCountry];
-      if (mapped?.type === 'river') return [];
+      if (mapped?.type === 'river' || mode === 'capitals') return [];
       const region = mapped?.region || 'Unknown';
       if (mapped && mapped.lat !== undefined) {
         const baseColor = isError
@@ -2330,6 +2469,14 @@ const GlobeMap = ({
             }
             if (mat.userData.shader.uniforms.uIsError) {
               mat.userData.shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
+            }
+            if (mat.userData.shader.uniforms.uIsLight) {
+              mat.userData.shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
+            }
+            if (mat.userData.shader.uniforms.uTheme) {
+              mat.userData.shader.uniforms.uTheme.value = (
+                globeTheme === 'blackout' ? 1.0 : (globeTheme === 'blueprint' ? 2.0 : 0.0)
+              );
             }
           }
 
