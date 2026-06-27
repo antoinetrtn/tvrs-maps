@@ -476,22 +476,7 @@ const GlobeMap = ({
     gameDataMap,
   ]);
 
-  useEffect(() => {
-    if (isEndScreen) {
-      polygonMaterialCacheRef.current.cap.forEach((mat, adminKey) => {
-        if (mat && mat.userData.shader) {
-          const shader = mat.userData.shader;
-          const isFound = foundSet.has(adminKey);
-          if (shader.uniforms.uIsError) {
-            shader.uniforms.uIsError.value = !isFound ? 1.0 : 0.0;
-          }
-          if (shader.uniforms.uIsSuccess) {
-            shader.uniforms.uIsSuccess.value = isFound ? 1.0 : 0.0;
-          }
-        }
-      });
-    }
-  }, [isEndScreen, foundSet]);
+
 
   const isLight = theme === "light";
 
@@ -828,6 +813,23 @@ const GlobeMap = ({
     }
     return new Set(foundList);
   }, [foundList, isHomeScreen, gameDataMap]);
+
+  useEffect(() => {
+    if (isEndScreen) {
+      polygonMaterialCacheRef.current.cap.forEach((mat, adminKey) => {
+        if (mat && mat.userData.shader) {
+          const shader = mat.userData.shader;
+          const isFound = foundSet.has(adminKey);
+          if (shader.uniforms.uIsError) {
+            shader.uniforms.uIsError.value = !isFound ? 1.0 : 0.0;
+          }
+          if (shader.uniforms.uIsSuccess) {
+            shader.uniforms.uIsSuccess.value = isFound ? 1.0 : 0.0;
+          }
+        }
+      });
+    }
+  }, [isEndScreen, foundSet]);
 
   const extrusionScale = useMemo(() => {
     return globeLightingEnabled ? 1.8 : 1;
