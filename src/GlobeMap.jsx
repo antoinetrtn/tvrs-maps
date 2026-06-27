@@ -759,14 +759,16 @@ const GlobeMap = ({
           ? currentPOV.altitude
           : fallbackAltitude;
         const isKeyboardOpen = isMobile && isKeyboardMode;
-        const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.top);
-        const keyboardRatio = keyboardHeight / window.innerHeight;
+        const layoutHeight = layoutViewportRef.current?.height || window.innerHeight;
+        const keyboardHeight = Math.max(0, layoutHeight - viewport.height);
+        const keyboardRatio = keyboardHeight / layoutHeight;
         const bottomHUDRatio = isMobile ? 0.14 : 0;
         const occlusionRatio = isKeyboardOpen ? keyboardRatio : bottomHUDRatio;
 
         // Dynamic latitude offset: scale offset degrees proportional to the camera altitude (zoom level)
+        // Shifting camera target south (negative latitude offset) centers country in upper visible portion.
         const visibleHeightDegrees = 110 * preservedAltitude;
-        const latOffset = visibleHeightDegrees * (occlusionRatio / 2);
+        const latOffset = -visibleHeightDegrees * (occlusionRatio / 2);
 
         const target = {
           lat: data.lat + latOffset,
