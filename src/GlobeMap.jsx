@@ -2345,16 +2345,30 @@ const GlobeMap = ({
       innerGlow.visible = true;
     }
 
-    keyLight.intensity = isLight ? 0.12 : 0.16;
-    keyLight.position.set(-3.5, 2.4, 4.2);
-    rimLight.intensity = isLight ? 0.14 : 0.24;
-    rimLight.position.set(3.8, 1.3, -3.6);
-    fillLight.intensity = isLight ? 0.72 : 0.68;
-    studioLight.intensity = isLight ? 0.54 : 0.48;
-    studioLeft.intensity = isLight ? 0.08 : 0.1;
-    studioLeft.position.set(-4.5, 2.5, 3.5);
-    studioRight.intensity = isLight ? 0.08 : 0.1;
-    studioRight.position.set(4.5, -1.2, 2.8);
+    if (globeTheme === 'blackout') {
+      keyLight.intensity = isLight ? 0.08 : 0.12;
+      keyLight.position.set(-3.5, 2.4, 4.2);
+      rimLight.intensity = isLight ? 0.05 : 0.15;
+      rimLight.position.set(3.8, 1.3, -3.6);
+      fillLight.intensity = isLight ? 0.08 : 0.04; // Toned down to prevent washing out
+      studioLight.intensity = 0.0; // Disable ambient to keep matte dark background
+      studioLeft.intensity = 0.0;
+      studioLeft.position.set(-4.5, 2.5, 3.5);
+      studioRight.intensity = 0.0;
+      studioRight.position.set(4.5, -1.2, 2.8);
+    } else {
+      keyLight.intensity = isLight ? 0.12 : 0.16;
+      keyLight.position.set(-3.5, 2.4, 4.2);
+      rimLight.intensity = isLight ? 0.14 : 0.24;
+      rimLight.position.set(3.8, 1.3, -3.6);
+      fillLight.intensity = isLight ? 0.72 : 0.68;
+      studioLight.intensity = isLight ? 0.54 : 0.48;
+      studioLeft.intensity = isLight ? 0.08 : 0.1;
+      studioLeft.position.set(-4.5, 2.5, 3.5);
+      studioRight.intensity = isLight ? 0.08 : 0.1;
+      studioRight.position.set(4.5, -1.2, 2.8);
+    }
+
     rimLight.color.set(safeColor(UI_COLORS.lightingRim));
     fillLight.color.set(safeColor(UI_COLORS.lightingFill));
     fillLight.groundColor.set(safeColor(UI_COLORS.lightingGround));
@@ -2382,6 +2396,10 @@ const GlobeMap = ({
         glowColorHex = 0x10b981; // Earth green glow
         glowPower = 1.1;
         glowCoef = 0.09;
+      } else if (globeTheme === 'blackout') {
+        glowColorHex = isLight ? 0x888888 : 0x444444; // Faint gray glow for blackout theme
+        glowPower = 1.5;
+        glowCoef = 0.06;
       }
     }
 
