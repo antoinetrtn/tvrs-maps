@@ -105,20 +105,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
-  padding-right: 4px;
-  mask-image: linear-gradient(to bottom, transparent 0, black 18px, black calc(100% - 28px), transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 18px, black calc(100% - 28px), transparent 100%);
+  /* Only fade the bottom edge so the first row ("Europe") is never clipped. */
+  mask-image: linear-gradient(to bottom, black 0, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0, black calc(100% - 28px), transparent 100%);
+  /* Hidden scrollbar — the bottom fade already signals more content. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .continents-grid::-webkit-scrollbar {
-  width: 4px;
-}
-.continents-grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-.continents-grid::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: var(--radius-full);
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .continent-row {
@@ -238,35 +236,37 @@
 
 .modal-actions {
   display: flex;
-  gap: var(--spacing-sm);
-  justify-content: flex-end;
+  gap: var(--spacing-md);
+  justify-content: center;
 }
 
 .restart-btn {
-  padding: 12px 28px;
+  padding: 14px 28px;
+  min-width: 160px;
   background: var(--accent);
   color: var(--accent-contrast);
-  border: none;
-  border-radius: var(--radius-full);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .restart-btn:hover {
   background: var(--accent-hover);
-  transform: translateY(-1px);
+  border-color: var(--accent-hover);
+  transform: translateY(-2px);
 }
 
 .stop-btn {
-  padding: 12px 24px;
+  padding: 14px 24px;
   background: transparent;
   color: var(--text-muted);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-lg);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all var(--transition-fast);
 }

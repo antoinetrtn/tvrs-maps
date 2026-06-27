@@ -5,6 +5,7 @@ import { countryDataMap } from './gameData';
 import { riversMountainsDataMap } from './riversMountainsData';
 import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel, FRENCH_REGION_COLORS } from './designSystem';
 import { disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
+import { shouldScrambleLabel, getPolygonAltitudeFor, isReliefVisible, RELIEF } from './gameConfig';
 
 // Hoisted PURE accessors for the <Globe> paths layer. Keeping their identities
 // stable across renders prevents react-globe.gl from marking the path/object
@@ -185,14 +186,6 @@ const getLabelRenderRadius = (zoomLevel, isMobile) => {
   return 96;
 };
 
-const GLOBE_LAYER_ALTITUDE = {
-  // Keep geometry far enough from the globe surface to avoid depth-buffer
-  // flickering when the globe is zoomed out, especially on mobile GPUs.
-  base: 0.01,
-  found: 0.014,
-  selected: 0.02,
-  label: 0.024
-};
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(['France']);
@@ -498,18 +491,6 @@ const getDepartmentModeFrancePointOfView = (width) => ({
     : DEPARTMENT_MODE_FRANCE_VIEW.altitude.desktop
 });
 
-const getCountryLayerAltitude = (admin, foundSet, selectedCountry, extrusionScale = 1) => {
-  if (admin === selectedCountry) return GLOBE_LAYER_ALTITUDE.selected * extrusionScale;
-  if (foundSet.has(admin)) return GLOBE_LAYER_ALTITUDE.found * extrusionScale;
-  return GLOBE_LAYER_ALTITUDE.base * extrusionScale;
-};
-
-const getDepartmentLayerAltitude = (admin, foundSet, selectedCountry) => {
-  if (admin === selectedCountry) return 0.004;
-  if (foundSet.has(admin)) return 0.0028;
-  return 0.0018;
-};
-
 const FRESNEL_VERTEX_SHADER = `
   varying vec3 vAtmosphereNormal;
   varying vec3 vAtmosphereViewPos;
@@ -788,7 +769,7 @@ const GlobeMap = ({
           : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
         1200
       );
-    } else if (selectedCountry && globeEl.current) {
+    } else if (selectedCountry && !isHomeScreen && globeEl.current) {
       const data = gameDataMap[selectedCountry];
       if (data && data.lat !== undefined) {
         const isMobile = viewport.width < 768;
@@ -825,7 +806,16 @@ const GlobeMap = ({
         lastTargetRef.current = target;
       }
     } else if (isHomeScreen && globeEl.current) {
-      globeEl.current.pointOfView({ altitude: viewport.width < 768 ? 2.5 : 1 }, 1000);
+      // On home the auto-target loop still highlights countries, but the camera stays in a
+      // calm overview (auto-rotate keeps spinning). When arriving from a game, re-level the
+      // latitude so a game that ended zoomed on a pole doesn't leave the globe tilted.
+      const overviewAltitude = viewport.width < 768 ? 2.5 : 1;
+      if (!wasHomeScreenRef.current) {
+        const currentPOV = globeEl.current.pointOfView();
+        globeEl.current.pointOfView({ lat: 18, lng: currentPOV?.lng ?? 20, altitude: overviewAltitude }, 1000);
+      } else {
+        globeEl.current.pointOfView({ altitude: overviewAltitude }, 1000);
+      }
     } else if (isDepartmentMode && globeEl.current) {
       globeEl.current.pointOfView(getDepartmentModeFrancePointOfView(viewport.width), 700);
     } else if (wasHomeScreenRef.current && globeEl.current) {
@@ -1565,9 +1555,13 @@ const GlobeMap = ({
 
   const getPolygonAltitude = useCallback((d) => {
     const admin = getFeatureAdmin(d);
-    if (isDepartmentMode && d.isGhostCountry) return 0.001;
-    if (admin === selectedCountry) return 0.008; // Raise selected country for visible side-border extrusion
-    return 0.0025; // Raised to 0.0025 to prevent graticules clipping through polygons on mobile (due to chordal curvature error)
+    // Uniform extrusion via gameConfig — department mode is viewed up close so its
+    // selected altitude is scaled down to match a world-view country's apparent height.
+    return getPolygonAltitudeFor({
+      isDepartmentMode,
+      isGhostCountry: !!(isDepartmentMode && d.isGhostCountry),
+      isSelected: admin === selectedCountry
+    });
   }, [isDepartmentMode, selectedCountry]);
 
   const getSelectionEffectAltitude = useCallback(() => {
@@ -1806,7 +1800,14 @@ const GlobeMap = ({
     const isPlayMode = mode !== 'learn' && d.mode !== 'learn' && !isHomeScreen && !isEndScreen;
     const revealAll = !isPlayMode || d.isFound;
 
-    const isGlitchMode = ((d.mode === 'capitals' || d.mode === 'countries') && !revealAll) || (isHomeScreen && d.isSelected);
+    // Uniform scramble across every guessable mode (countries, capitals, departments,
+    // rivers/mountains) so no mode leaks its answer as readable text.
+    const isGlitchMode = shouldScrambleLabel(d.mode, {
+      isFound: d.isFound,
+      isHomeScreen,
+      isEndScreen,
+      isSelected: d.isSelected
+    });
 
     // Local helper to scramble text with glitched characters (100% scrambled to prevent reading letters)
     const localScrambleText = (text, seed = 0) => {
@@ -1823,8 +1824,20 @@ const GlobeMap = ({
 
     if (isGlitchMode) {
       const isCapitalsMode = d.mode === 'capitals';
+      const isDeptMode = d.mode === 'departments';
+      const isReliefMode = d.mode === 'rivers_mountains';
+      const reliefIcon = isReliefMode
+        ? ((gameDataMap[d.admin]?.type === 'mountain_range' || riversMountainsDataMap[d.admin]?.type === 'mountain_range') ? '🏔️' : '💧')
+        : '';
       const glitchLine1Raw = isCapitalsMode ? d.capital : d.country;
       const glitchLine1Class = isCapitalsMode ? 'glitch-capital' : 'glitch-country';
+      // Keep the department code / relief icon legible (it is the question, not the answer);
+      // only the name itself scrambles. Other modes keep the animated glyph marker.
+      const prefixHtml = isDeptMode && d.code
+        ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: 9px; line-height: 1.1;">${d.code}</span>`
+        : isReliefMode
+          ? `<span style="font-size: 10px;">${reliefIcon}</span>`
+          : `<span class="glitch-flag">▒</span>`;
 
       // Glitched/scrambled animated callout box (Minimalist, centered on top of stalk)
       el.innerHTML = `
@@ -1867,7 +1880,7 @@ const GlobeMap = ({
             opacity: ${isHomeScreen ? 0.6 : 1};
           ">
             <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-              <span class="glitch-flag">▒</span>
+              ${prefixHtml}
               <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}">${localScrambleText(glitchLine1Raw)}</span>
             </div>
             ${isCapitalsMode ? `
@@ -1966,7 +1979,7 @@ const GlobeMap = ({
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: var(--font-display, monospace);
+            font-family: var(--font-main);
             white-space: nowrap;
             color: ${UI_COLORS.textMain};
             text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
@@ -2021,15 +2034,19 @@ const GlobeMap = ({
       const data = dataMap[k];
       if (!data || data.type !== 'river' || !data.path) return;
       const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
+      // Only reveal found rivers here — the active (selected) target, found or not, is
+      // drawn separately by riversSelectedPathData. Unfound non-target rivers stay hidden
+      // so the answers aren't given away.
+      if (!isFound) return;
       paths.push({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
-        color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
+        color: UI_COLORS.riverActive,
         // Solid thick lines — no dashes, pure stroke width is what makes rivers readable
-        width: isFound ? 45 : 30,
+        width: 45,
         dashLength: 1,   // 1 = full coverage = solid line
         dashGap: 0,
-        dashAnimateTime: isFound ? 3000 : 0, // Subtle shimmer on found rivers
+        dashAnimateTime: 3000, // Subtle shimmer on found rivers
       });
     });
     return paths;
@@ -2154,6 +2171,9 @@ const GlobeMap = ({
         if (!data || data.lat === undefined) return;
         if (data.type !== 'mountain' && data.type !== 'mountain_range') return;
         const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
+        // Hide unfound non-target mountains (same rule as rivers) so the map of answers
+        // isn't revealed; the selected target still shows as a hint.
+        if (!isReliefVisible({ isFound, isSelected: k === selectedCountry, isHomeScreen, isLearn: mode === 'learn' })) return;
         assets.push({
           admin: k,
           lat: data.lat,
@@ -2172,7 +2192,7 @@ const GlobeMap = ({
     }
 
     return [];
-  }, [gameDataMap, mode, foundSet, isHomeScreen, learnShowMountains]);
+  }, [gameDataMap, mode, foundSet, isHomeScreen, selectedCountry, learnShowMountains]);
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
@@ -2211,8 +2231,10 @@ const GlobeMap = ({
     const alignedAsset = new THREE.Group();
     asset.rotation.x = BIOME_SURFACE_ALIGNMENT_RADIANS;
     alignedAsset.add(asset);
-    // Unfound countries get smaller preview biomes, but on home screen they are all fully shown!
-    alignedAsset.scale.setScalar(d.isFound ? baseScale * 0.65 : baseScale * 0.35);
+    // Consistent, geographically-representative size. Only the selected-but-unfound target
+    // is shown here (others are filtered out), at a slightly smaller hint scale — so found
+    // mountains no longer pop from a tiny placeholder to full size.
+    alignedAsset.scale.setScalar(baseScale * (d.isFound ? RELIEF.mountainScale : RELIEF.targetHintScale));
 
     biomeObjectsCacheRef.current.set(key, alignedAsset);
     return alignedAsset;
