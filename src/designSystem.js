@@ -687,7 +687,7 @@ export const SURFACE_THEME_COLORS = {
     base: '#00bfff'
   },
   blackout: {
-    base: '#4a4a4a'
+    base: '#ffffff'
   }
 };
 
@@ -701,8 +701,8 @@ export const STROKE_THEME_COLORS = {
     found: '#10b981'
   },
   blackout: {
-    unfound: 'rgba(255, 255, 255, 0.08)',
-    found: '#aaaaaa'
+    unfound: '#333333',
+    found: '#cccccc'
   }
 };
 

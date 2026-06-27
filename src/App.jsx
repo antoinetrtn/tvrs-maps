@@ -57,7 +57,17 @@ function App() {
     }
     return 'dark';
   }); // System default theme
-  const [globeTheme, setGlobeTheme] = useState('glass');
+  const [globeTheme, setGlobeThemeRaw] = useState(() => {
+    try {
+      const cached = localStorage.getItem('tvrs-globe-theme');
+      if (cached && ['glass', 'blueprint', 'satellite', 'blackout'].includes(cached)) return cached;
+    } catch (_) {}
+    return 'glass';
+  });
+  const setGlobeTheme = useCallback((t) => {
+    setGlobeThemeRaw(t);
+    try { localStorage.setItem('tvrs-globe-theme', t); } catch (_) {}
+  }, []);
   
   // New States for Advanced UX
   const [menuOpen, setMenuOpen] = useState(false);
