@@ -1335,6 +1335,38 @@ const GlobeMap = ({
         material.shininess = shininess;
       }
 
+      if (isIsolated && kind === 'side') {
+        material.transparent = true;
+        material.opacity = 0.55;
+        material.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = { value: 0 };
+          shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
+          material.userData.shader = shader;
+
+          shader.fragmentShader = `
+            uniform float uTime;
+            uniform float uIsLight;
+          ` + shader.fragmentShader;
+
+          shader.fragmentShader = shader.fragmentShader.replace(
+            `#include <dithering_fragment>`,
+            `#include <dithering_fragment>
+             // Holographic scanlines moving vertically on the sides (light beam effect)
+             vec2 uv = gl_FragCoord.xy;
+             float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
+             float noise = fract(sin(dot(uv + uTime, vec2(12.9898,78.233))) * 43758.5453);
+             
+             // Glowing light beam
+             vec3 beamColor = vec3(1.0);
+             
+             // Make it pulse and flow like a laser barrier/energy wall
+             gl_FragColor.rgb = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * noise));
+             gl_FragColor.a = 0.35 + 0.45 * beamPattern;
+            `
+          );
+        };
+      }
+
       if (isIsolated && kind === 'cap') {
         material.onBeforeCompile = (shader) => {
           shader.uniforms.uTime = { value: 0 };
@@ -2153,6 +2185,18 @@ const GlobeMap = ({
         specular: 0x333333,
         shininess: 15,
         flatShading: false
+      });
+    }
+
+    if (globeTheme === 'blackout') {
+      return new THREE.MeshPhongMaterial({
+        color: UI_COLORS.mapSea,
+        emissive: new THREE.Color(0x000000),
+        emissiveIntensity: 0,
+        specular: new THREE.Color(0x050505),
+        transparent: false,
+        opacity: 1,
+        shininess: 1
       });
     }
 
