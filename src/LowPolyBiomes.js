@@ -85,6 +85,11 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       const localX = (pLng - centerLng) * 0.16;
       const localZ = -(pLat - centerLat) * 0.16;
 
+      // Adjust height to follow the sphere's curvature (globe radius R = 128)
+      const R = 128;
+      const d2 = localX * localX + localZ * localZ;
+      const deltaY = R - Math.sqrt(Math.max(0.1, R * R - d2));
+
       // Bell curve height distribution
       const t = tNorm - 0.5; // -0.5 to 0.5
       const bellFactor = Math.cos(t * Math.PI);
@@ -118,7 +123,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       });
 
       const peak = new THREE.Mesh(peakGeo, rockMat);
-      peak.position.set(localX, peakHeight / 2, localZ);
+      peak.position.set(localX, peakHeight / 2 - deltaY, localZ);
       peak.rotation.y = ((i * 19.3) % (Math.PI * 2));
       group.add(peak);
 
@@ -146,7 +151,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
         });
 
         const snow = new THREE.Mesh(snowGeo, snowMat);
-        snow.position.set(localX, peakHeight - snowHeight * 0.58, localZ);
+        snow.position.set(localX, peakHeight - snowHeight * 0.58 - deltaY, localZ);
         snow.rotation.y = peak.rotation.y;
         group.add(snow);
       }
@@ -176,6 +181,11 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       X += randOffsetVal * 0.045 * localSpread * perpX;
       Z += randOffsetVal * 0.045 * localSpread * perpZ;
 
+      // Adjust height to follow the sphere's curvature (globe radius R = 128)
+      const R = 128;
+      const d2 = X * X + Z * Z;
+      const deltaY = R - Math.sqrt(Math.max(0.1, R * R - d2));
+
       const normalizedHeightScale = height / 5000;
       const peakHeight = 0.28 * hFactor * normalizedHeightScale;
       const peakRadius = peakHeight * 0.44 * randomRadiusVar;
@@ -200,7 +210,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       });
 
       const peak = new THREE.Mesh(peakGeo, rockMat);
-      peak.position.set(X, peakHeight / 2, Z);
+      peak.position.set(X, peakHeight / 2 - deltaY, Z);
       peak.rotation.y = ((i * 19.3) % (Math.PI * 2));
       group.add(peak);
 
@@ -228,7 +238,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
         });
 
         const snow = new THREE.Mesh(snowGeo, snowMat);
-        snow.position.set(X, peakHeight - snowHeight * 0.58, Z);
+        snow.position.set(X, peakHeight - snowHeight * 0.58 - deltaY, Z);
         snow.rotation.y = peak.rotation.y;
         group.add(snow);
       }

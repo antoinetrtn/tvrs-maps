@@ -334,7 +334,7 @@
 }
 
 .input-island:focus-within {
-  border-color: var(--accent);
+  border-color: var(--glass-border-strong);
   box-shadow: 0 0 20px var(--accent-soft);
 }
 

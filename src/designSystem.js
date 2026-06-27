@@ -746,6 +746,27 @@ export const BLUEPRINT_REGION_COLORS_ATTENUATED = {
   }
 };
 
+export const BLACKOUT_CONTINENT_COLORS = {
+  light: {
+    "Europe": "#4a4a4a",
+    "Americas": "#636363",
+    "Asia": "#7c7c7c",
+    "Africa": "#969696",
+    "Oceania": "#b0b0b0",
+    "Antarctic": "#c9c9c9",
+    "Unknown": "#888888"
+  },
+  dark: {
+    "Europe": "#eeeeee",
+    "Americas": "#d4d4d4",
+    "Asia": "#bbbbbb",
+    "Africa": "#a1a1a1",
+    "Oceania": "#888888",
+    "Antarctic": "#6e6e6e",
+    "Unknown": "#cccccc"
+  }
+};
+
 export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
   if (region === 'France') {
     region = 'Europe';
@@ -753,6 +774,9 @@ export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
 
   if (globeTheme === 'blueprint') {
     return SURFACE_THEME_COLORS.blueprint.base || '#00ffff';
+  }
+  if (globeTheme === 'blackout') {
+    return BLACKOUT_CONTINENT_COLORS[systemTheme]?.[region] || BLACKOUT_CONTINENT_COLORS[systemTheme]?.Unknown || '#888888';
   }
   return CONTINENT_COLORS[systemTheme]?.[region] || CONTINENT_COLORS[systemTheme]?.Unknown;
 };
@@ -765,6 +789,12 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
   if (globeTheme === 'blueprint') {
     return BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.[region] || BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown || '#002b3d';
   }
+  if (globeTheme === 'blackout') {
+    const baseColor = BLACKOUT_CONTINENT_COLORS[systemTheme]?.[region] || BLACKOUT_CONTINENT_COLORS[systemTheme]?.Unknown || '#888888';
+    return systemTheme === 'light'
+      ? `color-mix(in srgb, ${baseColor} 50%, #ffffff)`
+      : `color-mix(in srgb, ${baseColor} 40%, #000000)`;
+  }
   return CONTINENT_COLORS_ATTENUATED[systemTheme]?.[region] || CONTINENT_COLORS_ATTENUATED[systemTheme]?.Unknown;
 };
 
@@ -775,6 +805,9 @@ export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
 
   if (globeTheme === 'blueprint') {
     return '#00ffff';
+  }
+  if (globeTheme === 'blackout') {
+    return BLACKOUT_CONTINENT_COLORS[systemTheme]?.[region] || BLACKOUT_CONTINENT_COLORS[systemTheme]?.Unknown || '#888888';
   }
   return CONTINENT_COLORS_LABELS[systemTheme]?.[region] || CONTINENT_COLORS_LABELS[systemTheme]?.Unknown;
 };

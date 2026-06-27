@@ -1033,10 +1033,10 @@ const GlobeMap = ({
       return SURFACE_THEME_COLORS.blueprint.base;
     }
     if (globeTheme === 'blackout') {
-      return blackoutSurfaceBase;
+      return getThemeRegionColor(globeTheme, theme, region);
     }
     return REGION_COLORS[region] || UI_COLORS.success;
-  }, [globeTheme, REGION_COLORS, UI_COLORS.success, blackoutSurfaceBase]);
+  }, [globeTheme, REGION_COLORS, UI_COLORS.success, theme]);
 
   const getPolygonColor = useCallback((d) => {
     if (isDepartmentMode) {
@@ -1281,13 +1281,13 @@ const GlobeMap = ({
       if (!isFound && admin !== selectedCountry) {
         emissiveHex = UI_COLORS.black;
         emissiveIntensity = 0;
-        specularHex = new THREE.Color(0x050505);
-        shininess = 1;
+        specularHex = new THREE.Color(0x000000);
+        shininess = 0.0;
       } else {
         emissiveHex = color;
-        emissiveIntensity = isLight ? 0.15 : 0.45;
-        specularHex = new THREE.Color(UI_COLORS.paper);
-        shininess = 20;
+        emissiveIntensity = isLight ? 0.22 : 0.52;
+        specularHex = new THREE.Color(0x000000); // 100% matte
+        shininess = 0.0; // 100% matte
       }
     } else if (isDepartmentMode && !d.isGhostCountry) {
       emissiveHex = color;
@@ -1317,11 +1317,12 @@ const GlobeMap = ({
     }
 
     const isIsolated = admin === selectedCountry;
+    const isShaderCap = kind === 'cap' && (isIsolated || (isEndScreen && !foundSet.has(admin)));
     const isMobileStr = perfProfile?.isMobile ? 'mobile' : 'desktop';
 
     // Construct cache/pool key
-    const cacheKey = isIsolated
-      ? `isolated-${admin}-${kind}-${isMobileStr}`
+    const cacheKey = isShaderCap
+      ? `shader-${admin}-${kind}-${isMobileStr}`
       : `${kind}-${color}-${targetWireframe}-${targetOpacity}-${targetTransparent}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}`;
 
     let material = sharedMaterialsRef.current.get(cacheKey);
@@ -1379,11 +1380,11 @@ const GlobeMap = ({
         };
       }
 
-      if (isIsolated && kind === 'cap') {
+      if (isShaderCap) {
         material.onBeforeCompile = (shader) => {
           shader.uniforms.uTime = { value: 0 };
-          shader.uniforms.uIsError = { value: 0 };
-          shader.uniforms.uIsSuccess = { value: 0 };
+          shader.uniforms.uIsError = { value: (isEndScreen && !foundSet.has(admin)) || (admin === selectedCountry && isError) ? 1.0 : 0.0 };
+          shader.uniforms.uIsSuccess = { value: (admin === selectedCountry && isSuccess) ? 1.0 : 0.0 };
           shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
           shader.uniforms.uTheme = { value: (
             globeTheme === 'blackout' ? 1.0 : (globeTheme === 'blueprint' ? 2.0 : 0.0)
@@ -1467,6 +1468,7 @@ const GlobeMap = ({
 
       material.userData.isIsolated = isIsolated;
       material.userData.isShared = !isIsolated;
+      material.userData.admin = admin;
 
       sharedMaterialsRef.current.set(cacheKey, material);
     }
@@ -2025,13 +2027,11 @@ const GlobeMap = ({
     ];
   }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS, globeTheme, theme]);
 
-  // Combined for globe: base first, selected on top
+  // Combined for globe: base first, selected on top (exclude mountain lines - only show 3D mountains)
   const globePathsData = useMemo(() => [
     ...riversBasePathsData,
-    ...riversSelectedPathData,
-    ...mountainsBasePathsData,
-    ...mountainsSelectedPathData
-  ], [riversBasePathsData, riversSelectedPathData, mountainsBasePathsData, mountainsSelectedPathData]);
+    ...riversSelectedPathData
+  ], [riversBasePathsData, riversSelectedPathData]);
 
   const getBiomeAssetsData = useMemo(() => {
     if (mode === 'rivers_mountains') {
@@ -2336,14 +2336,20 @@ const GlobeMap = ({
       innerGlow.visible = true;
     }
 
+    // Disable built-in Three-Globe lights that are added automatically and override our settings
+    scene.traverse((obj) => {
+      if (obj.isLight && !obj.name.startsWith('globe-')) {
+        obj.intensity = 0;
+      }
+    });
+
     if (globeTheme === 'blackout') {
-      // Kill ALL scene lights - countries use emissive-only rendering, ocean uses MeshBasicMaterial
-      keyLight.intensity = 0;
+      // Balanced soft ambient/hemisphere lighting for 3D volume on the entire globe (no dark southern hemisphere)
+      keyLight.intensity = isLight ? 0.22 : 0.36;
       keyLight.position.set(-3.5, 2.4, 4.2);
-      rimLight.intensity = 0;
-      rimLight.position.set(3.8, 1.3, -3.6);
-      fillLight.intensity = 0;
-      studioLight.intensity = 0;
+      rimLight.intensity = 0; // Disabled
+      fillLight.intensity = isLight ? 0.38 : 0.22; // Soft top/bottom ambient lighting
+      studioLight.intensity = isLight ? 0.25 : 0.12; // Flat base light to illuminate all angles
       studioLeft.intensity = 0;
       studioLeft.position.set(-4.5, 2.5, 3.5);
       studioRight.intensity = 0;
@@ -2587,27 +2593,46 @@ const GlobeMap = ({
         const capMat = polygonMaterialCacheRef.current.cap.get(selectedCountry);
         const sideMat = polygonMaterialCacheRef.current.side.get(selectedCountry);
 
+        // Update uTime and uniforms for all cap materials that use the shader
+        polygonMaterialCacheRef.current.cap.forEach((mat, adminKey) => {
+          if (mat && mat.userData.shader) {
+            if (mat.userData.shader.uniforms.uTime) {
+              mat.userData.shader.uniforms.uTime.value = time / 1000;
+            }
+            if (mat.userData.shader.uniforms.uIsError) {
+              const isMissed = isEndScreen && !foundSet.has(adminKey);
+              mat.userData.shader.uniforms.uIsError.value = isMissed || (adminKey === selectedCountry && isError) ? 1.0 : 0.0;
+            }
+            if (mat.userData.shader.uniforms.uIsSuccess) {
+              mat.userData.shader.uniforms.uIsSuccess.value = adminKey === selectedCountry && isSuccess ? 1.0 : 0.0;
+            }
+          }
+        });
+
+        // Specifically pulse emissive or color for selected cap & side materials
+
         [capMat, sideMat].forEach((mat, index) => {
           if (!mat) return;
           const isCap = index === 0;
 
           if (mat.userData.shader) {
-            if (mat.userData.shader.uniforms.uTime) {
-              mat.userData.shader.uniforms.uTime.value = time / 1000;
-            }
-            if (mat.userData.shader.uniforms.uIsError) {
-              mat.userData.shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
-            }
-            if (mat.userData.shader.uniforms.uIsSuccess) {
-              mat.userData.shader.uniforms.uIsSuccess.value = isSuccess ? 1.0 : 0.0;
-            }
-            if (mat.userData.shader.uniforms.uIsLight) {
-              mat.userData.shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
-            }
-            if (mat.userData.shader.uniforms.uTheme) {
-              mat.userData.shader.uniforms.uTheme.value = (
-                globeTheme === 'blackout' ? 1.0 : (globeTheme === 'blueprint' ? 2.0 : 0.0)
-              );
+            if (isCap) {
+              if (mat.userData.shader.uniforms.uIsLight) {
+                mat.userData.shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
+              }
+              if (mat.userData.shader.uniforms.uTheme) {
+                mat.userData.shader.uniforms.uTheme.value = (
+                  globeTheme === 'blackout' ? 1.0 : (globeTheme === 'blueprint' ? 2.0 : 0.0)
+                );
+              }
+            } else {
+              // Side shader uTime
+              if (mat.userData.shader.uniforms.uTime) {
+                mat.userData.shader.uniforms.uTime.value = time / 1000;
+              }
+              if (mat.userData.shader.uniforms.uIsLight) {
+                mat.userData.shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
+              }
             }
           }
 
