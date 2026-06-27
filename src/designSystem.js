@@ -53,6 +53,13 @@ export const THEMES_LIST = [
   { id: "blackout" },
 ];
 
+// Valid globe-theme ids, derived from THEMES_LIST so the list lives in one place.
+export const GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
+
+// The theme used on a fresh install (before any localStorage preference exists).
+// Blackout is the dark, high-contrast default.
+export const DEFAULT_GLOBE_THEME = "blackout";
+
 export const THEME = {
   light: {
     bg: "#ffffff",
@@ -274,6 +281,18 @@ const DEFAULT_DEPARTMENT_COLORS = {
   "06": "#6366f1", // Mayotte
 };
 
+/**
+ * GLOBE THEMES — per-globe-theme overrides.
+ *
+ * IMPORTANT (theme model): the UI chrome (panels, text, accents, glass…) comes
+ * entirely from the base `THEME[light|dark]` above and is SHARED by every globe
+ * theme. A globe theme (satellite / blackout) must only override GLOBE-scene
+ * concerns — globe material, atmosphere glow, graticules, stroke widths, label
+ * colour mode, continent/department palettes. That is what keeps "switching the
+ * globe theme changes the globe, not the interface" true. `getThemeColors()`
+ * below merges `globeSettings` on top of the base theme, so anything NOT listed
+ * here automatically stays identical across globe themes.
+ */
 export const GLOBE_THEMES = {
   satellite: {
     globeSettings: {

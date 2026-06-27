@@ -22,7 +22,7 @@ import Logo from "./Logo";
 import "./GameHUD.css";
 import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
-import { GAME_REGIONS } from "./gameConfig";
+import { GAME_REGIONS, getRegionAbbr } from "./gameConfig";
 
 const GameHUD = ({
   mode,
@@ -31,7 +31,6 @@ const GameHUD = ({
   score,
   totalPossible,
   timeLeft,
-  onInput,
   onEnter,
   isPlaying,
   isGameOver,
@@ -539,12 +538,7 @@ const GameHUD = ({
                     const pct =
                       (regionStats[reg]?.found / regionStats[reg]?.total) *
                         100 || 0;
-                    const displayVal =
-                      reg === "Americas"
-                        ? "AM"
-                        : reg === "Antarctic"
-                          ? "AN"
-                          : reg.substring(0, 2).toUpperCase();
+                    const displayVal = getRegionAbbr(reg);
                     return (
                       <div
                         key={reg}
@@ -725,7 +719,7 @@ const GameHUD = ({
                 <div
                   key={reg}
                   className={`gauge-item ${isActive ? "highlight" : ""} ${isFaded ? "faded" : ""}`}
-                  title={reg}
+                  title={t(`region_${reg}`)}
                 >
                   <div
                     className="circular-gauge"
@@ -734,13 +728,7 @@ const GameHUD = ({
                       "--color": getRegionColor(reg),
                     }}
                   >
-                    <span className="gauge-val">
-                      {reg === "Americas"
-                        ? "AM"
-                        : reg === "Antarctic"
-                          ? "AN"
-                          : reg.substring(0, 2).toUpperCase()}
-                    </span>
+                    <span className="gauge-val">{getRegionAbbr(reg)}</span>
                   </div>
                 </div>
               );

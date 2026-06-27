@@ -117,7 +117,7 @@ const ResultsModal = ({
                       <div
                         key={c.key}
                         className={`country-pill ${c.found ? "found" : "missed"}`}
-                        title={isRevealed ? label : "???"}
+                        title={isRevealed ? label : t("unrevealed_placeholder")}
                       >
                         {displayLabel}
                       </div>

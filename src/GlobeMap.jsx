@@ -32,7 +32,10 @@ import {
   RELIEF,
   DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS,
   DEPARTMENT_MODE_FRANCE_VIEW,
+  GAME_REGIONS,
 } from "./gameConfig";
+import { useTranslation } from "./i18n";
+import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "./globeShaders";
 import {
   getFeatureAdmin,
   getFlagEmoji,
@@ -81,8 +84,6 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
   return result;
 };
 
-// Realistic theme progressive texture loading has been retired
-
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
@@ -94,45 +95,6 @@ const getDepartmentModeFrancePointOfView = (width) => ({
       ? DEPARTMENT_MODE_FRANCE_VIEW.altitude.mobile
       : DEPARTMENT_MODE_FRANCE_VIEW.altitude.desktop,
 });
-
-const FRESNEL_VERTEX_SHADER = `
-  varying vec3 vAtmosphereNormal;
-  varying vec3 vAtmosphereViewPos;
-  void main() {
-    vAtmosphereNormal = normalize(normalMatrix * normal);
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-    vAtmosphereViewPos = mvPosition.xyz;
-    gl_Position = projectionMatrix * mvPosition;
-  }
-`;
-
-const FRESNEL_FRAGMENT_SHADER = `
-  varying vec3 vAtmosphereNormal;
-  varying vec3 vAtmosphereViewPos;
-  uniform vec3 glowColor;
-  uniform float coef;
-  uniform float power;
-  void main() {
-    vec3 normal = normalize(vAtmosphereNormal);
-    vec3 viewDir = normalize(vAtmosphereViewPos);
-
-    // True perspective dot product between view direction and surface normal.
-    // For BackSide rendering, normal points outwards, and viewDir points from camera
-    // to the vertex (which is also generally away from the camera).
-    // Thus, the dot product is positive on the back hemisphere.
-    float x = clamp(dot(normal, viewDir), 0.0, 1.0);
-
-    // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.62)
-    // to 0.0 at the outer limit of space (x = 0.0).
-    float edgeFade = smoothstep(0.0, 0.62, x);
-
-    // Higher exponent creates a more gentle, soft, and diffuse gradient transition
-    float exponent = max(1.8, power * 2.0);
-    float intensity = pow(edgeFade, exponent) * coef;
-
-    gl_FragColor = vec4(glowColor, intensity);
-  }
-`;
 
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
 
@@ -164,6 +126,7 @@ const GlobeMap = ({
   learnShowRivers = false,
   learnShowMountains = false,
 }) => {
+  const t = useTranslation(lang);
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
   const globeLightingRef = useRef(null);
@@ -179,16 +142,17 @@ const GlobeMap = ({
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
 
-  // Texture quality effect removed
   const prevSelectedCountryRef = useRef(null);
   const biomeObjectsCacheRef = useRef(new Map());
-  const animObjectsCacheRef = useRef([]);
-  const lastAnimCacheTimeRef = useRef(0);
   const lastAnimFrameTimeRef = useRef(0);
   const targetGlowColorRef = useRef(new THREE.Color(0x38bdf8));
   const targetGlowPowerRef = useRef(1.2);
   const targetGlowCoefRef = useRef(1.0);
   const selectedStrokeObjRef = useRef(null);
+  // Coalesce globe "nudge" pointer-drag DOM writes into one update per frame
+  // instead of one per pointermove event (which fires 60+/s and forces reflow).
+  const pointerNudgeRafRef = useRef(null);
+  const pendingNudgeRef = useRef(null);
   // Refs read inside the rAF loop so it can react to selection/feedback changes
   // without tearing down and recreating the loop on every guess/navigation.
   const selectedCountryRef = useRef(null);
@@ -689,8 +653,17 @@ const GlobeMap = ({
       const limit = perfProfile?.isMobile ? 9 : 16;
       const nudgeX = Math.max(-limit, Math.min(limit, dx * strength));
       const nudgeY = Math.max(-limit, Math.min(limit, dy * strength));
-      wrapper.style.setProperty("--globe-nudge-x", `${nudgeX.toFixed(2)}px`);
-      wrapper.style.setProperty("--globe-nudge-y", `${nudgeY.toFixed(2)}px`);
+      pendingNudgeRef.current = { x: nudgeX, y: nudgeY };
+      if (pointerNudgeRafRef.current == null) {
+        pointerNudgeRafRef.current = requestAnimationFrame(() => {
+          pointerNudgeRafRef.current = null;
+          const w = globeContentWrapperRef.current;
+          const n = pendingNudgeRef.current;
+          if (!w || !n) return;
+          w.style.setProperty("--globe-nudge-x", `${n.x.toFixed(2)}px`);
+          w.style.setProperty("--globe-nudge-y", `${n.y.toFixed(2)}px`);
+        });
+      }
     },
     [isHomeScreen, perfProfile?.isMobile],
   );
@@ -698,6 +671,11 @@ const GlobeMap = ({
   const resetGlobeNudge = useCallback(() => {
     const wrapper = globeContentWrapperRef.current;
     if (!wrapper) return;
+    if (pointerNudgeRafRef.current != null) {
+      cancelAnimationFrame(pointerNudgeRafRef.current);
+      pointerNudgeRafRef.current = null;
+    }
+    pendingNudgeRef.current = null;
     wrapper.style.transition =
       "transform 520ms cubic-bezier(0.18, 0.9, 0.22, 1.18)";
     wrapper.style.setProperty("--globe-nudge-x", "0px");
@@ -750,59 +728,25 @@ const GlobeMap = ({
     ],
   );
 
-  const REGION_COLORS = useMemo(() => {
-    const colors = {};
-    const regions = [
-      "Europe",
-      "Americas",
-      "Asia",
-      "Africa",
-      "Oceania",
-      "Antarctic",
-      "France",
-      "Unknown",
-    ];
-    regions.forEach((r) => {
-      colors[r] = getThemeRegionColor(globeTheme, theme, r);
-    });
-    return colors;
-  }, [globeTheme, theme]);
-
-  const REGION_COLORS_ATTENUATED = useMemo(() => {
-    const colors = {};
-    const regions = [
-      "Europe",
-      "Americas",
-      "Asia",
-      "Africa",
-      "Oceania",
-      "Antarctic",
-      "France",
-      "Unknown",
-    ];
-    regions.forEach((r) => {
-      colors[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
-    });
-    return colors;
-  }, [globeTheme, theme]);
-
-  const REGION_COLORS_LABELS = useMemo(() => {
-    const colors = {};
-    const regions = [
-      "Europe",
-      "Americas",
-      "Asia",
-      "Africa",
-      "Oceania",
-      "Antarctic",
-      "France",
-      "Unknown",
-    ];
-    regions.forEach((r) => {
-      colors[r] = getThemeRegionColorLabel(globeTheme, theme, r);
-    });
-    return colors;
-  }, [globeTheme, theme]);
+  // The three region-color palettes (surface / attenuated / label) all share the
+  // same key set (GAME_REGIONS) and the same dependencies (globeTheme + theme),
+  // so they are derived together in one pass instead of three duplicated loops.
+  const { REGION_COLORS, REGION_COLORS_ATTENUATED, REGION_COLORS_LABELS } =
+    useMemo(() => {
+      const surface = {};
+      const attenuated = {};
+      const labels = {};
+      GAME_REGIONS.forEach((r) => {
+        surface[r] = getThemeRegionColor(globeTheme, theme, r);
+        attenuated[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
+        labels[r] = getThemeRegionColorLabel(globeTheme, theme, r);
+      });
+      return {
+        REGION_COLORS: surface,
+        REGION_COLORS_ATTENUATED: attenuated,
+        REGION_COLORS_LABELS: labels,
+      };
+    }, [globeTheme, theme]);
   const UI_COLORS = useMemo(() => {
     return getThemeColors(globeTheme, theme);
   }, [theme, globeTheme]);
@@ -1732,7 +1676,7 @@ const GlobeMap = ({
         }
 
         const prefixHtml = isDeptMode
-          ? `<span style="font-family: monospace; color: ${UI_COLORS.accent}; opacity: 0.85;">Dpt ${d.admin}:</span>`
+          ? `<span style="font-family: monospace; color: ${UI_COLORS.accent}; opacity: 0.85;">${t("dept_abbr")} ${d.admin}:</span>`
           : "";
 
         el.innerHTML = `
@@ -1908,6 +1852,7 @@ const GlobeMap = ({
       gameDataMap,
       globeTheme,
       mode,
+      t,
     ],
   );
 
@@ -2397,7 +2342,14 @@ const GlobeMap = ({
       return true;
     }
 
+    // True only on the frame the lighting rig is first built. Used at the end of
+    // this function to SNAP the atmosphere glow straight to its theme target the
+    // first time, instead of letting the rAF loop slowly lerp it from a default
+    // blue — that lerp was the "globe slowly changes colour on load" flicker.
+    let justCreatedLighting = false;
+
     if (!globeLightingRef.current) {
+      justCreatedLighting = true;
       const camera = globeEl.current?.camera?.();
       if (!camera) return false;
       scene.add(camera); // Make camera part of scene hierarchy so children lights propagate
@@ -2472,13 +2424,8 @@ const GlobeMap = ({
         studioRight,
         innerGlow,
       };
-
-      // Initialize target refs and uniform values to prevent initial transition jump
-      const initialHex = new THREE.Color(UI_COLORS.globeInnerGlow || UI_COLORS.atmosphere).getHex();
-      targetGlowColorRef.current.setHex(initialHex);
-      innerGlow.material.uniforms.glowColor.value.copy(
-        targetGlowColorRef.current,
-      );
+      // The glow's final colour/power/coef are computed below and snapped onto
+      // the uniforms at the end of this function (see justCreatedLighting).
     }
 
     const {
@@ -2555,6 +2502,16 @@ const GlobeMap = ({
     targetGlowColorRef.current.setHex(glowColorHex);
     targetGlowPowerRef.current = glowPower;
     targetGlowCoefRef.current = glowCoef;
+
+    // First build: snap the uniforms straight to target so the glow appears at its
+    // final colour immediately (no slow load-time colour drift). Later theme changes
+    // keep the smooth lerp handled by animateScene.
+    if (justCreatedLighting && innerGlow.material?.uniforms) {
+      const u = innerGlow.material.uniforms;
+      u.glowColor.value.copy(targetGlowColorRef.current);
+      u.power.value = glowPower;
+      u.coef.value = glowCoef;
+    }
 
     return true;
   }, [
@@ -2662,12 +2619,6 @@ const GlobeMap = ({
         }
       }
       lastAnimFrameTimeRef.current = time;
-
-      // Loop through cached animated custom objects instead of scene traversal (0ms traversal overhead)
-      const animList = animObjectsCacheRef.current;
-      for (let i = 0; i < animList.length; i++) {
-        const obj = animList[i];
-      }
 
       // Update custom ocean wireframe grid time uniform
       if (globeMaterial && globeMaterial.userData.shader) {

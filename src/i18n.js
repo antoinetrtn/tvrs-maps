@@ -48,10 +48,12 @@ export const translations = {
 
     // Focus Badge Prompts
     department_prefix: "Département {code}",
+    dept_abbr: "Dpt", // Short prefix shown before a department code on its globe label
     guess_mountain_range: "Devinez cette chaîne de montagnes",
     guess_river: "Devinez ce fleuve",
     guess_country: "Devinez ce pays",
     find_capital: "Trouvez la capitale",
+    unrevealed_placeholder: "???", // Tooltip for a not-yet-found entry in the results table
 
     // End Screen
     incredible: "Incroyable !",
@@ -130,10 +132,12 @@ export const translations = {
 
     // Focus Badge Prompts
     department_prefix: "Department {code}",
+    dept_abbr: "Dept", // Short prefix shown before a department code on its globe label
     guess_mountain_range: "Guess this mountain range",
     guess_river: "Guess this river",
     guess_country: "Guess this country",
     find_capital: "Find the capital",
+    unrevealed_placeholder: "???", // Tooltip for a not-yet-found entry in the results table
 
     // End Screen
     incredible: "Incredible !",

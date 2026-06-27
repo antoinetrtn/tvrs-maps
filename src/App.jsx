@@ -8,7 +8,22 @@ import { departmentsDataMap } from "./departmentsData";
 import { riversMountainsDataMap } from "./riversMountainsData";
 import { useTranslation } from "./i18n";
 
-import { getThemeCssVariables } from "./designSystem";
+import {
+  getThemeCssVariables,
+  GLOBE_THEME_IDS,
+  DEFAULT_GLOBE_THEME,
+} from "./designSystem";
+import {
+  DEFAULT_MODE,
+  DEFAULT_GAME_DURATION_SEC,
+  HOME_AUTOROTATE_INTERVAL_MS,
+  KEYBOARD_CLOSE_DELAY_MS,
+  FEEDBACK_TIMING,
+  BREAKPOINTS,
+  STORAGE_KEYS,
+  DATA_URLS,
+  PERFORMANCE,
+} from "./gameConstants";
 
 // Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
 const normalizeString = (str) => {
@@ -39,11 +54,11 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home' or 'game'
-  const [mode, setMode] = useState("countries"); // 'countries', 'capitals', 'learn', 'departments'
+  const [mode, setMode] = useState(DEFAULT_MODE); // 'countries', 'capitals', 'learn', 'departments'
   const [foundList, setFoundList] = useState([]);
   const [score, setScore] = useState(0);
-  const [gameDuration, setGameDuration] = useState(15 * 60);
-  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr"); // 'fr' or 'en'
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -57,8 +72,8 @@ function App() {
   const [globeLightingEnabled, setGlobeLightingEnabled] = useState(true);
   const [theme, setTheme] = useState(() => {
     try {
-      const cached = localStorage.getItem("tvrs-globe-theme");
-      // If cached theme is blackout, default to dark. If no cache, we default to blackout so default is dark.
+      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
+      // Blackout (or no preference yet) implies the dark UI theme.
       if (!cached || cached === "blackout") return "dark";
     } catch (_) {}
     if (typeof window !== "undefined" && window.matchMedia) {
@@ -70,11 +85,10 @@ function App() {
   }); // System default theme
   const [globeTheme, setGlobeThemeRaw] = useState(() => {
     try {
-      const cached = localStorage.getItem("tvrs-globe-theme");
-      if (cached && ["satellite", "blackout"].includes(cached))
-        return cached;
+      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
+      if (cached && GLOBE_THEME_IDS.includes(cached)) return cached;
     } catch (_) {}
-    return "blackout"; // Default to blackout theme
+    return DEFAULT_GLOBE_THEME;
   });
   const setGlobeTheme = useCallback(
     (t) => {
@@ -83,7 +97,7 @@ function App() {
         setTheme("dark");
       }
       try {
-        localStorage.setItem("tvrs-globe-theme", t);
+        localStorage.setItem(STORAGE_KEYS.globeTheme, t);
       } catch (_) {}
     },
     [setTheme],
@@ -280,7 +294,7 @@ function App() {
       ) {
         setTimeout(() => {
           if (extInputRef.current) extInputRef.current.focus();
-        }, 50);
+        }, FEEDBACK_TIMING.focusKeyboardMs);
       }
     },
     [
@@ -316,7 +330,7 @@ function App() {
   // Only treat a height shrink as a keyboard when the width is unchanged — an
   // orientation change alters both dimensions and must NOT trigger keyboard mode.
   const keyboardModeCandidate =
-    window.innerWidth < 1024 &&
+    window.innerWidth < BREAKPOINTS.desktop &&
     ((Math.abs(viewport.width - initialWidth.current) <= 2 &&
       viewport.height < initialHeight.current * 0.85) ||
       viewport.top > 20);
@@ -337,7 +351,7 @@ function App() {
   }, [viewport.width, viewport.height, viewport.top]);
 
   useEffect(() => {
-    if (window.innerWidth >= 1024) {
+    if (window.innerWidth >= BREAKPOINTS.desktop) {
       setIsKeyboardMode(false);
       return undefined;
     }
@@ -347,7 +361,10 @@ function App() {
       return undefined;
     }
 
-    const closeTimer = setTimeout(() => setIsKeyboardMode(false), 180);
+    const closeTimer = setTimeout(
+      () => setIsKeyboardMode(false),
+      KEYBOARD_CLOSE_DELAY_MS,
+    );
     return () => clearTimeout(closeTimer);
   }, [keyboardModeCandidate]);
 
@@ -419,7 +436,7 @@ function App() {
     const interval = setInterval(() => {
       index = Math.floor(Math.random() * keys.length);
       setSelectedCountry(keys[index]);
-    }, 5500);
+    }, HOME_AUTOROTATE_INTERVAL_MS);
 
     return () => {
       clearInterval(interval);
@@ -441,27 +458,35 @@ function App() {
   }, [foundList.length, isPlaying, isGameOver, totalPossible]);
 
   useEffect(() => {
-    fetch("/data/countries-50m-low.json")
+    let cancelled = false;
+    fetch(DATA_URLS.countriesGeoJson)
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.features) {
+        if (!cancelled && data && data.features) {
           setCountriesData(data.features);
         }
       })
       .catch((err) => console.error("Failed to load map data", err));
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    fetch("/data/departements-1000m.geojson")
+    let cancelled = false;
+    fetch(DATA_URLS.departmentsGeoJson)
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.features) {
+        if (!cancelled && data && data.features) {
           setDepartmentsGeoData(data.features);
         }
       })
       .catch((err) =>
         console.error("Failed to load departments map data", err),
       );
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -576,7 +601,7 @@ function App() {
             }
             return prev;
           });
-        }, 600);
+        }, FEEDBACK_TIMING.successHoldMs);
 
         return "SUCCESS";
       }
@@ -631,7 +656,7 @@ function App() {
       if (isSuccess) {
         if (foundList.includes(selectedCountry)) {
           setPopupWarning(true);
-          setTimeout(() => setPopupWarning(false), 500);
+          setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
           return "ALREADY_FOUND";
         }
 
@@ -665,12 +690,12 @@ function App() {
             }
             return prev;
           });
-        }, 400);
+        }, FEEDBACK_TIMING.successHoldFocusedMs);
 
         return "SUCCESS";
       } else {
         setPopupError(true);
-        setTimeout(() => setPopupError(false), 500);
+        setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
         return "ERROR";
       }
     },
@@ -706,7 +731,7 @@ function App() {
       ) {
         setTimeout(() => {
           if (extInputRef.current) extInputRef.current.focus();
-        }, 80); // Slightly longer delay for stability on globe clicks
+        }, FEEDBACK_TIMING.focusGlobeClickMs); // small delay for stability on globe clicks
       }
     },
     [selectedCountry, resetNavigationTrail],
@@ -795,10 +820,13 @@ function App() {
   };
 
   const perfProfile = useMemo(() => {
-    const isMobile = viewport.width < 768;
-    const isTablet = viewport.width >= 768 && viewport.width < 1024;
+    const isMobile = viewport.width < BREAKPOINTS.mobile;
+    const isTablet =
+      viewport.width >= BREAKPOINTS.mobile &&
+      viewport.width < BREAKPOINTS.desktop;
+    const tier = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = Math.min(devicePixelRatio, 2.0);
+    const pixelRatio = Math.min(devicePixelRatio, PERFORMANCE.maxPixelRatio);
     return {
       isMobile,
       isTablet,
@@ -806,12 +834,14 @@ function App() {
       antialias: true,
       enableAutoRotate: true,
       enablePointerInteraction: true,
-      maxLabels: isMobile ? 4 : isTablet ? 8 : 20,
+      maxLabels: PERFORMANCE.maxLabels[tier],
       showAtmosphere: true,
       useImageTextures: false,
       cullOffscreenCountries: false,
-      // High-performance curvature resolution for quality and speed
-      polygonCapCurvatureResolution: isMobile ? 3.0 : isTablet ? 2.5 : 2.0,
+      // Higher curvature resolution = smoother polygon caps (mobile gets the most
+      // since its globe is smaller on screen); see PERFORMANCE in gameConstants.
+      polygonCapCurvatureResolution:
+        PERFORMANCE.polygonCapCurvatureResolution[tier],
     };
   }, [viewport.width]);
 
@@ -848,13 +878,12 @@ function App() {
             score={score}
             totalPossible={totalPossible}
             timeLeft={timeLeft}
-            onInput={() => {}}
             onEnter={(val) => {
               if (mode === "learn") {
                 const res = handleSearch(val);
                 if (!res) {
                   setPopupError(true);
-                  setTimeout(() => setPopupError(false), 500);
+                  setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
                 }
                 return res;
               }
@@ -866,10 +895,10 @@ function App() {
                 res = handleInput(val);
                 if (res === "ALREADY_FOUND") {
                   setPopupWarning(true);
-                  setTimeout(() => setPopupWarning(false), 500);
+                  setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
                 } else if (res === "ERROR") {
                   setPopupError(true);
-                  setTimeout(() => setPopupError(false), 500);
+                  setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
                 }
               }
               // Return true to clear the input field in GameHUD for any terminal result
@@ -994,7 +1023,7 @@ function App() {
           theme={theme}
           lang={lang}
         />
-      )}{" "}
+      )}
     </div>
   );
 }
