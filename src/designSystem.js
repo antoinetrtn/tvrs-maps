@@ -289,21 +289,21 @@ export const GLOBE_THEMES = {
         glassBorder: "rgba(16, 185, 129, 0.25)",
         mapBase: "rgba(255, 255, 255, 0.1)",
         mapSea: "#000814",
-        mapBorder: "#10b981",
-        mapBorderMuted: "rgba(16, 185, 129, 0.25)",
-        borderFound: "#10b981",
+        mapBorder: "#3b82f6",
+        mapBorderMuted: "rgba(59, 130, 246, 0.25)",
+        borderFound: "#3b82f6",
         borderUnfound: "rgba(255, 255, 255, 0.25)",
-        gridDot: "rgba(16, 185, 129, 0.15)",
-        graticule: "rgba(16, 185, 129, 0.25)",
-        atmosphere: "#10b981",
+        gridDot: "rgba(59, 130, 246, 0.15)",
+        graticule: "rgba(59, 130, 246, 0.25)",
+        atmosphere: "#b0e2ff",
         globeEmissive: "#000814",
-        globeSpecular: "#10b981",
-        globeInnerGlow: "#10b981",
-        lightingRim: "#34d399",
+        globeSpecular: "#3b82f6",
+        globeInnerGlow: "#b0e2ff",
+        lightingRim: "#60a5fa",
         lightingFill: "#000814",
-        decorGlowPrimary: "rgba(16, 185, 129, 0.15)",
+        decorGlowPrimary: "rgba(59, 130, 246, 0.15)",
         decorGlowPrimaryEnd: "rgba(3, 7, 18, 0)",
-        decorGlowSecondary: "rgba(14, 165, 233, 0.08)",
+        decorGlowSecondary: "rgba(96, 165, 250, 0.08)",
         decorGlowSecondaryEnd: "rgba(3, 7, 18, 0)",
         // Theme specific globe settings
         globeTextureUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
@@ -311,7 +311,7 @@ export const GLOBE_THEMES = {
         globeMaterialColor: "#ffffff",
         globeSpecular: "#333333",
         globeShininess: 15,
-        glowColorHex: 0x10b981,
+        glowColorHex: 0xb0e2ff,
         glowPower: 1.1,
         glowCoef: 0.09,
         graticuleOpacity: 0.25,
@@ -336,21 +336,21 @@ export const GLOBE_THEMES = {
         glassBorder: "rgba(16, 185, 129, 0.25)",
         mapBase: "rgba(255, 255, 255, 0.1)",
         mapSea: "#000814",
-        mapBorder: "#10b981",
-        mapBorderMuted: "rgba(16, 185, 129, 0.25)",
-        borderFound: "#10b981",
+        mapBorder: "#3b82f6",
+        mapBorderMuted: "rgba(59, 130, 246, 0.25)",
+        borderFound: "#3b82f6",
         borderUnfound: "rgba(255, 255, 255, 0.25)",
-        gridDot: "rgba(16, 185, 129, 0.15)",
-        graticule: "rgba(16, 185, 129, 0.25)",
-        atmosphere: "#10b981",
+        gridDot: "rgba(59, 130, 246, 0.15)",
+        graticule: "rgba(59, 130, 246, 0.25)",
+        atmosphere: "#3a76f0",
         globeEmissive: "#000814",
-        globeSpecular: "#10b981",
-        globeInnerGlow: "#10b981",
-        lightingRim: "#34d399",
+        globeSpecular: "#3b82f6",
+        globeInnerGlow: "#3a76f0",
+        lightingRim: "#60a5fa",
         lightingFill: "#000814",
-        decorGlowPrimary: "rgba(16, 185, 129, 0.15)",
+        decorGlowPrimary: "rgba(59, 130, 246, 0.15)",
         decorGlowPrimaryEnd: "rgba(3, 7, 18, 0)",
-        decorGlowSecondary: "rgba(14, 165, 233, 0.08)",
+        decorGlowSecondary: "rgba(96, 165, 250, 0.08)",
         decorGlowSecondaryEnd: "rgba(3, 7, 18, 0)",
         // Theme specific globe settings
         globeTextureUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
@@ -358,7 +358,7 @@ export const GLOBE_THEMES = {
         globeMaterialColor: "#ffffff",
         globeSpecular: "#333333",
         globeShininess: 15,
-        glowColorHex: 0x10b981,
+        glowColorHex: 0x3a76f0,
         glowPower: 1.1,
         glowCoef: 0.09,
         graticuleOpacity: 0.25,
@@ -594,10 +594,31 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
   const baseTheme = THEME[systemTheme] || THEME.dark;
   const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
   const overrides = themeCfg.ui?.[systemTheme] || {};
-  return {
-    ...baseTheme,
-    ...overrides,
-  };
+
+  // Separate UI design system variables from WebGL 3D Globe-only variables.
+  // UI keys must always be defined by the main system theme (THEME.light/THEME.dark)
+  // to keep menus, text, panel backgrounds, and buttons completely consistent.
+  const uiKeys = new Set([
+    "bg", "bgElevated", "bgGradientStart", "bgGradientEnd",
+    "textMain", "textMuted", "textInverse",
+    "accent", "accentHover", "accentSoft", "accentGlow", "accentContrast",
+    "success", "successSoft", "error", "errorSoft", "warning", "warningSoft",
+    "glassBg", "glassBorder", "glassBorderStrong", "glassHover",
+    "glassShadow", "glassShadowStrong", "glassShadowDrag",
+    "overlayBg", "modalHeaderBg", "subtleTint", "subtleTintStrong",
+    "highlight", "highlightSoft",
+    "decorGlowPrimary", "decorGlowPrimaryEnd", "decorGlowSecondary", "decorGlowSecondaryEnd",
+    "atmosphere" // Atmosphere is linked to global DS
+  ]);
+
+  const merged = { ...baseTheme };
+  Object.keys(overrides).forEach((key) => {
+    if (!uiKeys.has(key)) {
+      merged[key] = overrides[key];
+    }
+  });
+
+  return merged;
 };
 
 export const getThemeCssVariables = (

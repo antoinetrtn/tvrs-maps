@@ -3185,23 +3185,8 @@ const GlobeMap = ({
   }, [isHomeScreen, selectCountry]);
 
   const activeAtmosphereColor = useMemo(() => {
-    return safeColor(
-      selectedCountry && activeDataMap && activeDataMap[selectedCountry]
-        ? getThemeRegionColor(
-            globeTheme,
-            theme,
-            activeDataMap[selectedCountry].region,
-          )
-        : UI_COLORS.atmosphere,
-    );
-  }, [
-    selectedCountry,
-    activeDataMap,
-    globeTheme,
-    theme,
-    UI_COLORS.atmosphere,
-    safeColor,
-  ]);
+    return safeColor(UI_COLORS.atmosphere);
+  }, [UI_COLORS.atmosphere, safeColor]);
 
   return (
     <div
@@ -3319,9 +3304,7 @@ const GlobeMap = ({
           globeImageUrl={null}
           globeMaterial={globeMaterial}
           backgroundImageUrl={null}
-          showAtmosphere={
-            !UI_COLORS.isBlackoutTheme && !!perfProfile?.showAtmosphere
-          }
+          showAtmosphere={!!perfProfile?.showAtmosphere}
           atmosphereColor={activeAtmosphereColor}
           atmosphereDayQuotient={isLight ? 0.2 : 0.1}
           onGlobeReady={handleGlobeReady}

@@ -807,7 +807,7 @@ function App() {
       enableAutoRotate: true,
       enablePointerInteraction: true,
       maxLabels: isMobile ? 4 : isTablet ? 8 : 20,
-      showAtmosphere: false,
+      showAtmosphere: true,
       useImageTextures: false,
       cullOffscreenCountries: false,
       // High-performance curvature resolution for quality and speed
