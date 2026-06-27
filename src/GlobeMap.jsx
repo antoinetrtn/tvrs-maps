@@ -1277,7 +1277,19 @@ const GlobeMap = ({
     let specularHex = THREE.Color ? new THREE.Color(UI_COLORS.black) : UI_COLORS.black;
     let shininess = 0.7;
 
-    if (isDepartmentMode && !d.isGhostCountry) {
+    if (globeTheme === 'blackout') {
+      if (!isFound && admin !== selectedCountry) {
+        emissiveHex = UI_COLORS.black;
+        emissiveIntensity = 0;
+        specularHex = new THREE.Color(0x050505);
+        shininess = 1;
+      } else {
+        emissiveHex = color;
+        emissiveIntensity = isLight ? 0.15 : 0.45;
+        specularHex = new THREE.Color(UI_COLORS.paper);
+        shininess = 20;
+      }
+    } else if (isDepartmentMode && !d.isGhostCountry) {
       emissiveHex = color;
       emissiveIntensity = kind === 'cap' ? (isLight ? 0.08 : 0.12) : (isLight ? 0.04 : 0.07);
       specularHex = UI_COLORS.mapBorder;
@@ -1583,7 +1595,7 @@ const GlobeMap = ({
 
         // Skip unfound labels in play mode for countries and rivers/mountains
         const isPlayMode = mode !== 'learn' && !isHomeScreen && !isEndScreen;
-        if (isPlayMode && !isFound) {
+        if (isPlayMode && !isFound && !isSelected) {
           if (mode === 'countries' || mode === 'rivers_mountains') {
             return null;
           }
