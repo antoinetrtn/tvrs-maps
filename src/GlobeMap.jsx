@@ -11,14 +11,14 @@ import { countryDataMap } from "./gameData";
 import { riversMountainsDataMap } from "./riversMountainsData";
 import {
   THEME,
-  THEME_OVERRIDES,
   GLOBE_STYLE,
   GLOBE_TRANSPARENT_BACKGROUND,
   getOpaqueThreeColor,
+  getThemeColors,
   getThemeRegionColor,
   getThemeRegionColorAttenuated,
   getThemeRegionColorLabel,
-  FRENCH_REGION_COLORS,
+  getThemeDepartmentColor,
   scrambleText,
 } from "./designSystem";
 import {
@@ -801,12 +801,7 @@ const GlobeMap = ({
     return colors;
   }, [globeTheme, theme]);
   const UI_COLORS = useMemo(() => {
-    const baseTheme = THEME[theme] || THEME.dark;
-    const overrides = THEME_OVERRIDES[globeTheme]?.[theme] || {};
-    return {
-      ...baseTheme,
-      ...overrides,
-    };
+    return getThemeColors(globeTheme, theme);
   }, [theme, globeTheme]);
 
   const foundSet = useMemo(() => {
@@ -822,12 +817,9 @@ const GlobeMap = ({
 
   const getRegionSurfaceColor = useCallback(
     (region) => {
-      if (globeTheme === "blackout") {
-        return getThemeRegionColor(globeTheme, theme, region);
-      }
       return REGION_COLORS[region] || UI_COLORS.success;
     },
-    [globeTheme, REGION_COLORS, UI_COLORS.success, theme],
+    [REGION_COLORS, UI_COLORS.success],
   );
 
   const getPolygonColor = useCallback(
@@ -838,25 +830,19 @@ const GlobeMap = ({
         if (isEndScreen && !foundSet.has(admin)) return UI_COLORS.error;
 
         const regionCode = d.properties?.region || "Unknown";
-        let baseColor = FRENCH_REGION_COLORS[regionCode] || UI_COLORS.mapBase;
-
-        if (globeTheme === "blackout") {
-          baseColor = UI_COLORS.mapSurfaceSelected;
-        }
+        let baseColor = getThemeDepartmentColor(globeTheme, theme, regionCode, UI_COLORS.mapBase);
 
         if (foundSet.has(admin) || mode === "learn") {
           if (admin === selectedCountry) {
             if (isError) return UI_COLORS.error;
-            if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
-            return lerpColor(baseColor, UI_COLORS.paper, 0.15);
+            return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, UI_COLORS.paper, 0.15);
           }
           return baseColor;
         }
 
         if (admin === selectedCountry) {
           if (isError) return UI_COLORS.error;
-          if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
-          return lerpColor(baseColor, UI_COLORS.paper, 0.1);
+          return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, UI_COLORS.paper, 0.1);
         }
 
         return UI_COLORS.mapBase;
@@ -877,9 +863,7 @@ const GlobeMap = ({
         const baseColor = getRegionSurfaceColor(region);
         if (admin === selectedCountry) {
           if (isError) return UI_COLORS.error;
-          if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
-          // Resting selected found country color (slightly lighter than base)
-          return lerpColor(
+          return UI_COLORS.mapSurfaceSelected || lerpColor(
             baseColor,
             UI_COLORS.paper,
             0.1 *
@@ -891,11 +875,9 @@ const GlobeMap = ({
 
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
-        if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
         const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
         const targetColor = REGION_COLORS[region] || UI_COLORS.accent;
-        // Resting selected unfound country color (slightly highlighted)
-        return lerpColor(baseColor, targetColor, 0.1);
+        return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, targetColor, 0.1);
       }
 
       return UI_COLORS.mapBase;
@@ -914,10 +896,11 @@ const GlobeMap = ({
       isPerfectScore,
       getRegionSurfaceColor,
       globeTheme,
+      theme,
       isLight,
-      lerpColor,
     ],
   );
+
   const getPolygonStroke = useCallback(
     (d) => {
       if (isHomeScreen) {
@@ -948,7 +931,7 @@ const GlobeMap = ({
 
       const isFound = foundSet.has(admin) || mode === "learn";
 
-      if (globeTheme === "satellite" && isFound) {
+      if (UI_COLORS.useRegionalBorders && isFound) {
         return REGION_COLORS_LABELS[region] || UI_COLORS.accent;
       }
 
@@ -1001,7 +984,7 @@ const GlobeMap = ({
         if (admin === selectedCountry) {
           if (isError)
             return isLight ? UI_COLORS.errorDeep : UI_COLORS.errorDeeper;
-          if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
+          if (UI_COLORS.mapSurfaceSelected) return UI_COLORS.mapSurfaceSelected;
 
           // Base color for the side when selected under lighting
           const sideBaseColor =
@@ -1039,7 +1022,7 @@ const GlobeMap = ({
       if (admin === selectedCountry) {
         if (isError)
           return isLight ? UI_COLORS.errorMuted : UI_COLORS.errorDeep;
-        if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
+        if (UI_COLORS.mapSurfaceSelected) return UI_COLORS.mapSurfaceSelected;
 
         const capColor =
           foundSet.has(admin) || mode === "learn"
@@ -1098,7 +1081,7 @@ const GlobeMap = ({
         : UI_COLORS.black;
       let shininess = 0.7;
 
-      if (globeTheme === "blackout") {
+      if (UI_COLORS.polyMatMatte) {
         if (!isFound && admin !== selectedCountry) {
           emissiveHex = UI_COLORS.black;
           emissiveIntensity = 0;
@@ -1106,7 +1089,9 @@ const GlobeMap = ({
           shininess = 0.0;
         } else {
           emissiveHex = color;
-          emissiveIntensity = isLight ? 0.22 : 0.52;
+          emissiveIntensity = isLight
+            ? (Number(UI_COLORS.polyMatEmissiveIntensityFoundLight) || 0.22)
+            : (Number(UI_COLORS.polyMatEmissiveIntensityFoundDark) || 0.52);
           specularHex = new THREE.Color(0x000000); // 100% matte
           shininess = 0.0; // 100% matte
         }
@@ -1229,7 +1214,7 @@ const GlobeMap = ({
             };
             shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
             shader.uniforms.uTheme = {
-              value: globeTheme === "blackout" ? 1.0 : 0.0,
+              value: UI_COLORS.isBlackoutTheme ? 1.0 : 0.0,
             };
             material.userData.shader = shader;
 
@@ -1397,12 +1382,14 @@ const GlobeMap = ({
       // Increased thickness for selection (contour plus visible)
       if (admin === selectedCountry) return perfProfile?.isMobile ? 5.5 : 7.5;
       if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
-      if (globeTheme === "blackout") {
-        return perfProfile?.isMobile ? 1.1 : 1.6;
+      const thickness = perfProfile?.isMobile
+        ? (Number(UI_COLORS.strokeWidthMobile) || 0.55)
+        : (Number(UI_COLORS.strokeWidthDesktop) || 0.75);
+
+      if (!UI_COLORS.isBlackoutTheme && (isLight || globeLightingEnabled)) {
+        return thickness + 0.2;
       }
-      if (isLight || globeLightingEnabled)
-        return perfProfile?.isMobile ? 0.75 : 0.95;
-      return perfProfile?.isMobile ? 0.55 : 0.75;
+      return thickness;
     },
     [
       globeLightingEnabled,
@@ -1410,7 +1397,7 @@ const GlobeMap = ({
       perfProfile?.isMobile,
       selectedCountry,
       isDepartmentMode,
-      globeTheme,
+      UI_COLORS,
     ],
   );
 
@@ -1666,21 +1653,22 @@ const GlobeMap = ({
             : UI_COLORS.textMuted;
       } else if (isHomeScreen) {
         color = UI_COLORS.textMuted;
-      } else if (globeTheme === "blackout") {
-        if (d.isFound) {
-          color = UI_COLORS.textMuted;
-        } else {
-          color = d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
-        }
-      } else if (globeTheme === "satellite") {
-        color =
-          d.isFound || d.isSelected ? UI_COLORS.paper : UI_COLORS.textMuted;
       } else {
-        // Modern Glass theme uses regional colors for found/selected
-        color =
-          d.isFound || d.isSelected
+        const isHighlight = d.isFound || d.isSelected;
+        const colorType = UI_COLORS.labelColorType || "regional";
+
+        if (colorType === "monochrome") {
+          color = d.isFound
+            ? UI_COLORS.textMuted
+            : d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
+        } else if (colorType === "paper") {
+          color = isHighlight ? UI_COLORS.paper : UI_COLORS.textMuted;
+        } else {
+          // regional
+          color = isHighlight
             ? REGION_COLORS_LABELS[d.region] || UI_COLORS.accent
             : UI_COLORS.textMuted;
+        }
       }
 
       // Set root to 0 size so its center is the exact lat/lng
@@ -2017,9 +2005,7 @@ const GlobeMap = ({
       const isFound = foundSet.has(k) || mode === "learn" || isHomeScreen;
       const color = isFound
         ? getThemeRegionColor(globeTheme, theme, data.region)
-        : globeTheme === "blackout"
-          ? UI_COLORS.borderUnfound
-          : UI_COLORS.riverInactive;
+        : UI_COLORS.riverInactive;
 
       paths.push({
         admin: k,
@@ -2228,11 +2214,10 @@ const GlobeMap = ({
           ? UI_COLORS.error
           : !isFound
             ? UI_COLORS.textMuted
-            : globeTheme === "blackout"
-              ? UI_COLORS.paper
-              : REGION_COLORS_LABELS[region] ||
-                REGION_COLORS[region] ||
-                UI_COLORS.accent;
+            : UI_COLORS.selectionRingColor ||
+              REGION_COLORS_LABELS[region] ||
+              REGION_COLORS[region] ||
+              UI_COLORS.accent;
         const softColor = lerpColor(
           baseColor,
           UI_COLORS.paper,
@@ -2290,17 +2275,15 @@ const GlobeMap = ({
   ]);
 
   const customGlobeTexture = useMemo(() => {
-    if (globeTheme === "satellite") {
+    if (UI_COLORS.globeTextureUrl) {
       const loader = new THREE.TextureLoader();
-      const texture = loader.load(
-        "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
-      );
+      const texture = loader.load(UI_COLORS.globeTextureUrl);
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.ClampToEdgeWrapping;
       return texture;
     }
     return null;
-  }, [globeTheme]);
+  }, [UI_COLORS.globeTextureUrl]);
 
   useEffect(() => {
     return () => {
@@ -2311,19 +2294,24 @@ const GlobeMap = ({
   }, [customGlobeTexture]);
 
   const globeMaterial = useMemo(() => {
-    if (globeTheme === "satellite") {
+    const matType = UI_COLORS.globeMaterialType || "phong";
+
+    if (matType === "basic") {
+      const baseColor = UI_COLORS.globeMaterialColor
+        ? (UI_COLORS.globeMaterialColor.startsWith("#") ? UI_COLORS.globeMaterialColor : UI_COLORS[UI_COLORS.globeMaterialColor] || UI_COLORS.mapSea)
+        : UI_COLORS.mapSea;
+      return new THREE.MeshBasicMaterial({
+        color: baseColor,
+      });
+    }
+
+    if (UI_COLORS.globeTextureUrl) {
       return new THREE.MeshPhongMaterial({
         map: customGlobeTexture,
         color: 0xffffff,
         specular: 0x333333,
         shininess: 15,
         flatShading: false,
-      });
-    }
-
-    if (globeTheme === "blackout") {
-      return new THREE.MeshBasicMaterial({
-        color: UI_COLORS.mapSea,
       });
     }
 
@@ -2344,7 +2332,6 @@ const GlobeMap = ({
     UI_COLORS,
     isLight,
     globeLightingEnabled,
-    globeTheme,
     customGlobeTexture,
   ]);
 
@@ -2467,7 +2454,7 @@ const GlobeMap = ({
       };
 
       // Initialize target refs and uniform values to prevent initial transition jump
-      const initialHex = globeTheme === "satellite" ? 0x10b981 : 0x38bdf8;
+      const initialHex = new THREE.Color(UI_COLORS.globeInnerGlow || UI_COLORS.atmosphere).getHex();
       targetGlowColorRef.current.setHex(initialHex);
       innerGlow.material.uniforms.glowColor.value.copy(
         targetGlowColorRef.current,
@@ -2486,7 +2473,7 @@ const GlobeMap = ({
 
     const isMobile = perfProfile?.isMobile;
 
-    if (isMobile || globeTheme === "blackout") {
+    if (isMobile || UI_COLORS.isBlackoutTheme) {
       rimLight.visible = false;
       studioLight.visible = false;
       studioLeft.visible = false;
@@ -2507,7 +2494,7 @@ const GlobeMap = ({
       }
     });
 
-    if (globeTheme === "blackout") {
+    if (UI_COLORS.isBlackoutTheme) {
       // Balanced soft ambient/hemisphere lighting for 3D volume on the entire globe (no dark southern hemisphere) - slightly boosted for legibility
       keyLight.intensity = isLight ? 0.28 : 0.44;
       keyLight.position.set(-3.5, 2.4, 4.2);
@@ -2550,15 +2537,11 @@ const GlobeMap = ({
       }
       glowCoef = 0.12; // Slightly boosted but still very faint for selected country
     } else {
-      if (globeTheme === "satellite") {
-        glowColorHex = 0x10b981; // Earth green glow
-        glowPower = 1.1;
-        glowCoef = 0.09;
-      } else if (globeTheme === "blackout") {
-        glowColorHex = isLight ? 0x888888 : 0x444444; // Faint gray glow for blackout theme
-        glowPower = 1.5;
-        glowCoef = 0.06;
-      }
+      glowColorHex = isLight
+        ? (Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0)
+        : (Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0);
+      glowPower = Number(UI_COLORS.glowPower) || 1.2;
+      glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
     }
 
     // Update target refs instead of direct uniform changes to enable smooth lerped transition in animateScene
@@ -2618,18 +2601,10 @@ const GlobeMap = ({
     const scene = globeEl.current?.scene?.();
     if (!scene) return;
 
-    let graticuleColor = getOpaqueThreeColor(UI_COLORS.graticule);
-    let graticuleOpacity = isLight
+    let graticuleColor = new THREE.Color(getOpaqueThreeColor(UI_COLORS.graticule));
+    let graticuleOpacity = Number(UI_COLORS.graticuleOpacity) || (isLight
       ? GLOBE_STYLE.lighting.graticuleOpacity.light
-      : GLOBE_STYLE.lighting.graticuleOpacity.dark;
-
-    if (globeTheme === "blackout") {
-      graticuleColor = new THREE.Color(UI_COLORS.textMuted);
-      graticuleOpacity = isLight ? 0.08 : 0.12;
-    } else if (globeTheme === "satellite") {
-      graticuleColor = new THREE.Color(0x10b981);
-      graticuleOpacity = 0.25;
-    }
+      : GLOBE_STYLE.lighting.graticuleOpacity.dark);
 
     scene.traverse((obj) => {
       const material = obj.material;
@@ -2834,7 +2809,7 @@ const GlobeMap = ({
               }
               if (mat.userData.shader.uniforms.uTheme) {
                 mat.userData.shader.uniforms.uTheme.value =
-                  globeTheme === "blackout" ? 1.0 : 0.0;
+                  UI_COLORS.isBlackoutTheme ? 1.0 : 0.0;
               }
             } else {
               // Side shader uTime
@@ -3263,7 +3238,7 @@ const GlobeMap = ({
         />
 
         {/* Glow Effects - hidden in blackout theme */}
-        {globeTheme !== "blackout" && (
+        {!UI_COLORS.isBlackoutTheme && (
           <>
             <div
               style={{
@@ -3306,7 +3281,7 @@ const GlobeMap = ({
           left: -homeGlobeOffset,
         }}
       >
-        {globeLightingEnabled && globeTheme !== "blackout" && (
+        {globeLightingEnabled && !UI_COLORS.isBlackoutTheme && (
           <div
             className={`globe-studio-overlay ${isLight ? "light" : "dark"}`}
             aria-hidden="true"
@@ -3320,7 +3295,7 @@ const GlobeMap = ({
           globeMaterial={globeMaterial}
           backgroundImageUrl={null}
           showAtmosphere={
-            globeTheme !== "blackout" && !!perfProfile?.showAtmosphere
+            !UI_COLORS.isBlackoutTheme && !!perfProfile?.showAtmosphere
           }
           atmosphereColor={activeAtmosphereColor}
           atmosphereDayQuotient={isLight ? 0.2 : 0.1}

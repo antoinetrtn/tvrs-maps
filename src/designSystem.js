@@ -86,18 +86,9 @@ export const THEME = {
     success: "#10b981",
     successSoft: "rgba(16, 185, 129, 0.1)",
     gold: "#fbbf24",
-    goldSoft: "rgba(251, 191, 36, 0.1)",
-    goldLight: "#fde68a",
     error: "#ef4444",
     errorSoft: "rgba(239, 68, 68, 0.1)",
-    errorSoftStrong: "rgba(239, 68, 68, 0.2)",
-    errorGlow: "rgba(239, 68, 68, 0.4)",
-    errorGlowStrong: "rgba(239, 68, 68, 0.6)",
-    errorDeep: "#991b1b",
-    errorDeeper: "#7f1d1d",
-    errorMuted: "#dc7f7f",
     warning: "#f59e0b",
-    warningSoft: "rgba(245, 158, 11, 0.1)",
     mapBase: "#ffffff",
     mapSea: "#e2e8f0",
     mapBorder: "#cbd5e1",
@@ -116,11 +107,6 @@ export const THEME = {
     lightingStudio: "#e0f2fe",
     lightingLeft: "#ffffff",
     lightingRight: "#bfdbfe",
-    departmentLabelBg: "rgba(255, 255, 255, 0.92)",
-    departmentLabelBorder: "rgba(15, 23, 42, 0.14)",
-    departmentLabelDotShadow: "0 2px 8px rgba(0, 0, 0, 0.28)",
-    departmentLabelShadow: "0 8px 20px rgba(0, 0, 0, 0.18)",
-    departmentLabelInsetShadow: "0 0 0 1px rgba(255, 255, 255, 0.1) inset",
     decorGlowPrimary: "rgba(255, 255, 255, 0.7)",
     decorGlowPrimaryEnd: "rgba(241, 245, 249, 0)",
     decorGlowSecondary: "rgba(255, 255, 255, 0.5)",
@@ -162,18 +148,9 @@ export const THEME = {
     success: "#10b981",
     successSoft: "rgba(16, 185, 129, 0.1)",
     gold: "#fbbf24",
-    goldSoft: "rgba(251, 191, 36, 0.1)",
-    goldLight: "#fde68a",
     error: "#ef4444",
     errorSoft: "rgba(239, 68, 68, 0.1)",
-    errorSoftStrong: "rgba(239, 68, 68, 0.2)",
-    errorGlow: "rgba(239, 68, 68, 0.4)",
-    errorGlowStrong: "rgba(239, 68, 68, 0.6)",
-    errorDeep: "#991b1b",
-    errorDeeper: "#7f1d1d",
-    errorMuted: "#991b1b",
     warning: "#f59e0b",
-    warningSoft: "rgba(245, 158, 11, 0.1)",
     mapBase: "#2a3a4f",
     mapSea: "#0a1425",
     mapBorder: "#475569",
@@ -192,11 +169,6 @@ export const THEME = {
     lightingStudio: "#b9d8ff",
     lightingLeft: "#dbeafe",
     lightingRight: "#93c5fd",
-    departmentLabelBg: "rgba(2, 6, 23, 0.82)",
-    departmentLabelBorder: "rgba(255, 255, 255, 0.18)",
-    departmentLabelDotShadow: "0 2px 8px rgba(0, 0, 0, 0.28)",
-    departmentLabelShadow: "0 8px 20px rgba(0, 0, 0, 0.18)",
-    departmentLabelInsetShadow: "0 0 0 1px rgba(255, 255, 255, 0.1) inset",
     decorGlowPrimary: "rgba(58, 118, 240, 0.1)",
     decorGlowPrimaryEnd: "rgba(2, 6, 23, 0)",
     decorGlowSecondary: "rgba(139, 92, 246, 0.06)",
@@ -208,168 +180,327 @@ export const THEME = {
   },
 };
 
-export const THEME_OVERRIDES = {
-  satellite: {
+// ==========================================
+// 3. GEOGRAPHIC PALETTES & THEMES CONFIG (Continents & Regions)
+// ==========================================
+
+const DEFAULT_CONTINENT_COLORS = {
+  surface: {
     light: {
-      bg: "#030712",
-      bgElevated: "#0b0f19",
-      bgGradientStart: "#030712",
-      bgGradientEnd: "#0b0f19",
-      textMain: "#f9fafb",
-      textMuted: "#9ca3af",
-      accent: "#10b981",
-      accentHover: "#34d399",
-      accentSoft: "rgba(16, 185, 129, 0.18)",
-      accentGlow: "#059669",
-      accentContrast: "#ffffff",
-      glassBg: "rgba(11, 15, 25, 0.85)",
-      glassBorder: "rgba(16, 185, 129, 0.25)",
-      mapBase: "rgba(255, 255, 255, 0.1)",
-      mapSea: "#000814",
-      mapBorder: "#10b981",
-      mapBorderMuted: "rgba(16, 185, 129, 0.25)",
-      borderFound: "#10b981",
-      borderUnfound: "rgba(255, 255, 255, 0.25)",
-      gridDot: "rgba(16, 185, 129, 0.15)",
-      graticule: "rgba(16, 185, 129, 0.25)",
-      atmosphere: "#10b981",
-      globeEmissive: "#000814",
-      globeSpecular: "#10b981",
-      globeInnerGlow: "#10b981",
-      lightingRim: "#34d399",
-      lightingFill: "#000814",
-      decorGlowPrimary: "rgba(16, 185, 129, 0.15)",
-      decorGlowPrimaryEnd: "rgba(3, 7, 18, 0)",
-      decorGlowSecondary: "rgba(14, 165, 233, 0.08)",
-      decorGlowSecondaryEnd: "rgba(3, 7, 18, 0)",
+      Europe: "#849bb3",
+      Americas: "#cfa29b",
+      Asia: "#cfba9b",
+      Africa: "#9bcfaf",
+      Oceania: "#b89bcf",
+      Antarctic: "#cbd4db",
+      Unknown: "#cbd5e1",
     },
     dark: {
-      bg: "#030712",
-      bgElevated: "#0b0f19",
-      bgGradientStart: "#030712",
-      bgGradientEnd: "#0b0f19",
-      textMain: "#f9fafb",
-      textMuted: "#9ca3af",
-      accent: "#10b981",
-      accentHover: "#34d399",
-      accentSoft: "rgba(16, 185, 129, 0.18)",
-      accentGlow: "#059669",
-      accentContrast: "#ffffff",
-      glassBg: "rgba(11, 15, 25, 0.85)",
-      glassBorder: "rgba(16, 185, 129, 0.25)",
-      mapBase: "rgba(255, 255, 255, 0.1)",
-      mapSea: "#000814",
-      mapBorder: "#10b981",
-      mapBorderMuted: "rgba(16, 185, 129, 0.25)",
-      borderFound: "#10b981",
-      borderUnfound: "rgba(255, 255, 255, 0.25)",
-      gridDot: "rgba(16, 185, 129, 0.15)",
-      graticule: "rgba(16, 185, 129, 0.25)",
-      atmosphere: "#10b981",
-      globeEmissive: "#000814",
-      globeSpecular: "#10b981",
-      globeInnerGlow: "#10b981",
-      lightingRim: "#34d399",
-      lightingFill: "#000814",
-      decorGlowPrimary: "rgba(16, 185, 129, 0.15)",
-      decorGlowPrimaryEnd: "rgba(3, 7, 18, 0)",
-      decorGlowSecondary: "rgba(14, 165, 233, 0.08)",
-      decorGlowSecondaryEnd: "rgba(3, 7, 18, 0)",
+      Europe: "#38526c",
+      Americas: "#854d45",
+      Asia: "#857045",
+      Africa: "#458557",
+      Oceania: "#704585",
+      Antarctic: "#394a59",
+      Unknown: "#64748b",
     },
   },
-  blackout: {
+  label: {
     light: {
-      bg: "#ffffff",
-      bgElevated: "#f1f5f9",
-      bgGradientStart: "#ffffff",
-      bgGradientEnd: "#f8fafc",
-      textMain: "#000000",
-      textMuted: "#666666",
-      accent: "#000000",
-      accentHover: "#333333",
-      accentSoft: "rgba(0, 0, 0, 0.08)",
-      accentGlow: "#000000",
-      accentContrast: "#ffffff",
-      success: "#000000",
-      successSoft: "rgba(0, 0, 0, 0.08)",
-      error: "#888888",
-      errorSoft: "rgba(0, 0, 0, 0.04)",
-      warning: "#888888",
-      warningSoft: "rgba(0, 0, 0, 0.04)",
-      glassBg: "rgba(255, 255, 255, 0.85)",
-      glassBorder: "rgba(0, 0, 0, 0.12)",
-      glassBorderStrong: "rgba(0, 0, 0, 0.24)",
-      glassHover: "rgba(0, 0, 0, 0.04)",
-      mapBase: "#f0f0f0",
-      mapSea: "#ffffff",
-      mapBorder: "#cccccc",
-      mapBorderMuted: "#e5e5e5",
-      borderFound: "#cccccc",
-      borderUnfound: "#e5e5e5",
-      mapSurfaceSelected: "#111111",
-      gridDot: "rgba(0, 0, 0, 0.08)",
-      graticule: "#dddddd",
-      atmosphere: "#e0e0e0",
-      globeEmissive: "#ffffff",
-      globeSpecular: "#ffffff",
-      globeInnerGlow: "#e2e8f0",
-      lightingRim: "#dddddd",
-      lightingFill: "#ffffff",
-      decorGlowPrimary: "rgba(0, 0, 0, 0.04)",
-      decorGlowPrimaryEnd: "rgba(255, 255, 255, 0)",
-      decorGlowSecondary: "rgba(0, 0, 0, 0.02)",
-      decorGlowSecondaryEnd: "rgba(255, 255, 255, 0)",
+      Europe: "#1f344a",
+      Americas: "#54251e",
+      Asia: "#54411e",
+      Africa: "#1e542d",
+      Oceania: "#411e54",
+      Antarctic: "#233240",
+      Unknown: "#1e293b",
     },
     dark: {
-      bg: "#000000",
-      bgElevated: "#0f0f0f",
-      bgGradientStart: "#000000",
-      bgGradientEnd: "#000000",
-      textMain: "#ffffff",
-      textMuted: "#888888",
-      accent: "#ffffff",
-      accentHover: "#cccccc",
-      accentSoft: "rgba(255, 255, 255, 0.15)",
-      accentGlow: "#ffffff",
-      accentContrast: "#000000",
-      success: "#ffffff",
-      successSoft: "rgba(255, 255, 255, 0.12)",
-      error: "#888888",
-      errorSoft: "rgba(255, 255, 255, 0.05)",
-      warning: "#888888",
-      warningSoft: "rgba(255, 255, 255, 0.05)",
-      glassBg: "rgba(15, 15, 15, 0.85)",
-      glassBorder: "rgba(255, 255, 255, 0.15)",
-      glassBorderStrong: "rgba(255, 255, 255, 0.3)",
-      glassHover: "rgba(255, 255, 255, 0.05)",
-      mapBase: "#0d0d0d",
-      mapSea: "#0b0b0e",
-      mapBorder: "#888888",
-      mapBorderMuted: "#444444",
-      borderFound: "#ffffff",
-      borderUnfound: "#888888",
-      mapSurfaceSelected: "#ffffff",
-      gridDot: "rgba(255, 255, 255, 0.1)",
-      graticule: "#333333",
-      atmosphere: "#111111",
-      globeEmissive: "#000000",
-      globeSpecular: "#000000",
-      globeInnerGlow: "#000000",
-      lightingRim: "#222222",
-      lightingFill: "#000000",
-      decorGlowPrimary: "rgba(255, 255, 255, 0.05)",
-      decorGlowPrimaryEnd: "rgba(0, 0, 0, 0)",
-      decorGlowSecondary: "rgba(255, 255, 255, 0.02)",
-      decorGlowSecondaryEnd: "rgba(0, 0, 0, 0)",
+      Europe: "#bcd0e8",
+      Americas: "#e8beb7",
+      Asia: "#e8d6be",
+      Africa: "#bee8cb",
+      Oceania: "#d6bee8",
+      Antarctic: "#cbd9e5",
+      Unknown: "#94a3b8",
+    },
+  },
+  attenuated: {
+    light: {
+      Europe: "#eaf0f6",
+      Americas: "#f6ecea",
+      Asia: "#f6f0ea",
+      Africa: "#eaf6ee",
+      Oceania: "#f0eaf6",
+      Antarctic: "#f1f4f6",
+      Unknown: "#e2e8f0",
+    },
+    dark: {
+      Europe: "#142332",
+      Americas: "#321411",
+      Asia: "#322711",
+      Africa: "#11321c",
+      Oceania: "#271132",
+      Antarctic: "#151e26",
+      Unknown: "#334155",
     },
   },
 };
 
-// ==========================================
-// 3. GLOBE & MAP SPECIFIC CONFIGURATIONS
-// ==========================================
-
 export const GLOBE_TRANSPARENT_BACKGROUND = "rgba(0, 0, 0, 0)";
+
+const DEFAULT_DEPARTMENT_COLORS = {
+  11: "#e11d48", // Île-de-France (Rose/Red)
+  24: "#f59e0b", // Centre-Val de Loire (Orange)
+  27: "#d97706", // Bourgogne-Franche-Comté (Dark Orange)
+  28: "#059669", // Normandie (Green)
+  32: "#0284c7", // Hauts-de-France (Blue)
+  44: "#7c3aed", // Grand Est (Purple)
+  52: "#10b981", // Pays de la Loire (Teal)
+  53: "#2563eb", // Bretagne (Royal Blue)
+  75: "#0d9488", // Nouvelle-Aquitaine (Teal/Green)
+  76: "#ea580c", // Occitanie (Red-Orange)
+  84: "#4f46e5", // Auvergne-Rhône-Alpes (Indigo)
+  93: "#db2777", // Provence-Alpes-Côte d'Azur (Pink)
+  94: "#4b5563", // Corse (Grey)
+  "01": "#06b6d4", // Guadeloupe
+  "02": "#0891b2", // Martinique
+  "03": "#0ea5e9", // Guyane
+  "04": "#3b82f6", // La Réunion
+  "06": "#6366f1", // Mayotte
+};
+
+export const GLOBE_THEMES = {
+  satellite: {
+    ui: {
+      light: {
+        bg: "#030712",
+        bgElevated: "#0b0f19",
+        bgGradientStart: "#030712",
+        bgGradientEnd: "#0b0f19",
+        textMain: "#f9fafb",
+        textMuted: "#9ca3af",
+        accent: "#10b981",
+        accentHover: "#34d399",
+        accentSoft: "rgba(16, 185, 129, 0.18)",
+        accentGlow: "#059669",
+        accentContrast: "#ffffff",
+        glassBg: "rgba(11, 15, 25, 0.85)",
+        glassBorder: "rgba(16, 185, 129, 0.25)",
+        mapBase: "rgba(255, 255, 255, 0.1)",
+        mapSea: "#000814",
+        mapBorder: "#10b981",
+        mapBorderMuted: "rgba(16, 185, 129, 0.25)",
+        borderFound: "#10b981",
+        borderUnfound: "rgba(255, 255, 255, 0.25)",
+        gridDot: "rgba(16, 185, 129, 0.15)",
+        graticule: "rgba(16, 185, 129, 0.25)",
+        atmosphere: "#10b981",
+        globeEmissive: "#000814",
+        globeSpecular: "#10b981",
+        globeInnerGlow: "#10b981",
+        lightingRim: "#34d399",
+        lightingFill: "#000814",
+        decorGlowPrimary: "rgba(16, 185, 129, 0.15)",
+        decorGlowPrimaryEnd: "rgba(3, 7, 18, 0)",
+        decorGlowSecondary: "rgba(14, 165, 233, 0.08)",
+        decorGlowSecondaryEnd: "rgba(3, 7, 18, 0)",
+        // Theme specific globe settings
+        globeTextureUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+        globeMaterialType: "phong",
+        globeMaterialColor: "#ffffff",
+        globeSpecular: "#333333",
+        globeShininess: 15,
+        glowColorHex: 0x10b981,
+        glowPower: 1.1,
+        glowCoef: 0.09,
+        graticuleOpacity: 0.25,
+        useRegionalBorders: true,
+        labelColorType: "paper",
+        strokeWidthMobile: 0.55,
+        strokeWidthDesktop: 0.75,
+      },
+      dark: {
+        bg: "#030712",
+        bgElevated: "#0b0f19",
+        bgGradientStart: "#030712",
+        bgGradientEnd: "#0b0f19",
+        textMain: "#f9fafb",
+        textMuted: "#9ca3af",
+        accent: "#10b981",
+        accentHover: "#34d399",
+        accentSoft: "rgba(16, 185, 129, 0.18)",
+        accentGlow: "#059669",
+        accentContrast: "#ffffff",
+        glassBg: "rgba(11, 15, 25, 0.85)",
+        glassBorder: "rgba(16, 185, 129, 0.25)",
+        mapBase: "rgba(255, 255, 255, 0.1)",
+        mapSea: "#000814",
+        mapBorder: "#10b981",
+        mapBorderMuted: "rgba(16, 185, 129, 0.25)",
+        borderFound: "#10b981",
+        borderUnfound: "rgba(255, 255, 255, 0.25)",
+        gridDot: "rgba(16, 185, 129, 0.15)",
+        graticule: "rgba(16, 185, 129, 0.25)",
+        atmosphere: "#10b981",
+        globeEmissive: "#000814",
+        globeSpecular: "#10b981",
+        globeInnerGlow: "#10b981",
+        lightingRim: "#34d399",
+        lightingFill: "#000814",
+        decorGlowPrimary: "rgba(16, 185, 129, 0.15)",
+        decorGlowPrimaryEnd: "rgba(3, 7, 18, 0)",
+        decorGlowSecondary: "rgba(14, 165, 233, 0.08)",
+        decorGlowSecondaryEnd: "rgba(3, 7, 18, 0)",
+        // Theme specific globe settings
+        globeTextureUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+        globeMaterialType: "phong",
+        globeMaterialColor: "#ffffff",
+        globeSpecular: "#333333",
+        globeShininess: 15,
+        glowColorHex: 0x10b981,
+        glowPower: 1.1,
+        glowCoef: 0.09,
+        graticuleOpacity: 0.25,
+        useRegionalBorders: true,
+        labelColorType: "paper",
+        strokeWidthMobile: 0.55,
+        strokeWidthDesktop: 0.75,
+      },
+    },
+    continents: DEFAULT_CONTINENT_COLORS,
+    departments: {
+      type: "colorful",
+      colors: DEFAULT_DEPARTMENT_COLORS,
+    },
+  },
+  blackout: {
+    ui: {
+      light: {
+        bg: "#ffffff",
+        bgElevated: "#f1f5f9",
+        bgGradientStart: "#ffffff",
+        bgGradientEnd: "#f8fafc",
+        textMain: "#000000",
+        textMuted: "#666666",
+        accent: "#000000",
+        accentHover: "#333333",
+        accentSoft: "rgba(0, 0, 0, 0.08)",
+        accentGlow: "#000000",
+        accentContrast: "#ffffff",
+        success: "#000000",
+        successSoft: "rgba(0, 0, 0, 0.08)",
+        error: "#888888",
+        errorSoft: "rgba(0, 0, 0, 0.04)",
+        warning: "#888888",
+        warningSoft: "rgba(0, 0, 0, 0.04)",
+        glassBg: "rgba(255, 255, 255, 0.85)",
+        glassBorder: "rgba(0, 0, 0, 0.12)",
+        glassBorderStrong: "rgba(0, 0, 0, 0.24)",
+        glassHover: "rgba(0, 0, 0, 0.04)",
+        mapBase: "#f0f0f0",
+        mapSea: "#ffffff",
+        mapBorder: "#cccccc",
+        mapBorderMuted: "#e5e5e5",
+        borderFound: "#cccccc",
+        borderUnfound: "#e5e5e5",
+        mapSurfaceSelected: "#111111",
+        gridDot: "rgba(0, 0, 0, 0.08)",
+        graticule: "#666666",
+        atmosphere: "#e0e0e0",
+        globeEmissive: "#ffffff",
+        globeSpecular: "#ffffff",
+        globeInnerGlow: "#e2e8f0",
+        lightingRim: "#dddddd",
+        lightingFill: "#ffffff",
+        decorGlowPrimary: "rgba(0, 0, 0, 0.04)",
+        decorGlowPrimaryEnd: "rgba(255, 255, 255, 0)",
+        decorGlowSecondary: "rgba(0, 0, 0, 0.02)",
+        decorGlowSecondaryEnd: "rgba(255, 255, 255, 0)",
+        // Theme specific globe settings
+        globeMaterialType: "basic",
+        globeMaterialColor: "#ffffff",
+        isBlackoutTheme: true,
+        polyMatMatte: true,
+        polyMatEmissiveIntensityFoundLight: 0.22,
+        polyMatEmissiveIntensityFoundDark: 0.52,
+        glowColorHexLight: 0x888888,
+        glowColorHexDark: 0x444444,
+        glowPower: 1.5,
+        glowCoef: 0.06,
+        graticuleOpacity: 0.08,
+        labelColorType: "monochrome",
+        strokeWidthMobile: 1.1,
+        strokeWidthDesktop: 1.6,
+        riverInactive: "#e5e5e5",
+        selectionRingColor: "#ffffff",
+      },
+      dark: {
+        bg: "#000000",
+        bgElevated: "#0f0f0f",
+        bgGradientStart: "#000000",
+        bgGradientEnd: "#000000",
+        textMain: "#ffffff",
+        textMuted: "#888888",
+        accent: "#ffffff",
+        accentHover: "#cccccc",
+        accentSoft: "rgba(255, 255, 255, 0.15)",
+        accentGlow: "#ffffff",
+        accentContrast: "#000000",
+        success: "#ffffff",
+        successSoft: "rgba(255, 255, 255, 0.12)",
+        error: "#888888",
+        errorSoft: "rgba(255, 255, 255, 0.05)",
+        warning: "#888888",
+        warningSoft: "rgba(255, 255, 255, 0.05)",
+        glassBg: "rgba(15, 15, 15, 0.85)",
+        glassBorder: "rgba(255, 255, 255, 0.15)",
+        glassBorderStrong: "rgba(255, 255, 255, 0.3)",
+        glassHover: "rgba(255, 255, 255, 0.05)",
+        mapBase: "#0d0d0d",
+        mapSea: "#0b0b0e",
+        mapBorder: "#888888",
+        mapBorderMuted: "#444444",
+        borderFound: "#ffffff",
+        borderUnfound: "#888888",
+        mapSurfaceSelected: "#ffffff",
+        gridDot: "rgba(255, 255, 255, 0.1)",
+        graticule: "#888888",
+        atmosphere: "#111111",
+        globeEmissive: "#000000",
+        globeSpecular: "#000000",
+        globeInnerGlow: "#000000",
+        lightingRim: "#222222",
+        lightingFill: "#000000",
+        decorGlowPrimary: "rgba(255, 255, 255, 0.05)",
+        decorGlowPrimaryEnd: "rgba(0, 0, 0, 0)",
+        decorGlowSecondary: "rgba(255, 255, 255, 0.02)",
+        decorGlowSecondaryEnd: "rgba(0, 0, 0, 0)",
+        // Theme specific globe settings
+        globeMaterialType: "basic",
+        globeMaterialColor: "#0b0b0e",
+        isBlackoutTheme: true,
+        polyMatMatte: true,
+        polyMatEmissiveIntensityFoundLight: 0.22,
+        polyMatEmissiveIntensityFoundDark: 0.52,
+        glowColorHexLight: 0x888888,
+        glowColorHexDark: 0x444444,
+        glowPower: 1.5,
+        glowCoef: 0.06,
+        graticuleOpacity: 0.12,
+        labelColorType: "monochrome",
+        strokeWidthMobile: 1.1,
+        strokeWidthDesktop: 1.6,
+        riverInactive: "#888888",
+        selectionRingColor: "#ffffff",
+      },
+    },
+    continents: DEFAULT_CONTINENT_COLORS,
+    departments: {
+      type: "monochrome",
+    },
+  },
+};
 
 export const GLOBE_STYLE = {
   lighting: {
@@ -407,119 +538,7 @@ export const GLOBE_STYLE = {
 };
 
 // ==========================================
-// 4. GEOGRAPHIC PALETTES (Continents & Regions)
-// ==========================================
-
-export const CONTINENT_PALETTES = {
-  default: {
-    surface: {
-      light: {
-        Europe: "#849bb3",
-        Americas: "#cfa29b",
-        Asia: "#cfba9b",
-        Africa: "#9bcfaf",
-        Oceania: "#b89bcf",
-        Antarctic: "#cbd4db",
-        Unknown: "#cbd5e1",
-      },
-      dark: {
-        Europe: "#38526c",
-        Americas: "#854d45",
-        Asia: "#857045",
-        Africa: "#458557",
-        Oceania: "#704585",
-        Antarctic: "#394a59",
-        Unknown: "#64748b",
-      },
-    },
-    label: {
-      light: {
-        Europe: "#1f344a",
-        Americas: "#54251e",
-        Asia: "#54411e",
-        Africa: "#1e542d",
-        Oceania: "#411e54",
-        Antarctic: "#233240",
-        Unknown: "#1e293b",
-      },
-      dark: {
-        Europe: "#bcd0e8",
-        Americas: "#e8beb7",
-        Asia: "#e8d6be",
-        Africa: "#bee8cb",
-        Oceania: "#d6bee8",
-        Antarctic: "#cbd9e5",
-        Unknown: "#94a3b8",
-      },
-    },
-    attenuated: {
-      light: {
-        Europe: "#eaf0f6",
-        Americas: "#f6ecea",
-        Asia: "#f6f0ea",
-        Africa: "#eaf6ee",
-        Oceania: "#f0eaf6",
-        Antarctic: "#f1f4f6",
-        Unknown: "#e2e8f0",
-      },
-      dark: {
-        Europe: "#142332",
-        Americas: "#321411",
-        Asia: "#322711",
-        Africa: "#11321c",
-        Oceania: "#271132",
-        Antarctic: "#151e26",
-        Unknown: "#334155",
-      },
-    },
-  },
-  blackout: {
-    surface: {
-      light: {
-        Europe: "#4a4a4a",
-        Americas: "#636363",
-        Asia: "#7c7c7c",
-        Africa: "#969696",
-        Oceania: "#b0b0b0",
-        Antarctic: "#c9c9c9",
-        Unknown: "#888888",
-      },
-      dark: {
-        Europe: "#eeeeee",
-        Americas: "#d4d4d4",
-        Asia: "#bbbbbb",
-        Africa: "#a1a1a1",
-        Oceania: "#888888",
-        Antarctic: "#6e6e6e",
-        Unknown: "#cccccc",
-      },
-    },
-  },
-};
-
-export const FRENCH_REGION_COLORS = {
-  11: "#e11d48", // Île-de-France (Rose/Red)
-  24: "#f59e0b", // Centre-Val de Loire (Orange)
-  27: "#d97706", // Bourgogne-Franche-Comté (Dark Orange)
-  28: "#059669", // Normandie (Green)
-  32: "#0284c7", // Hauts-de-France (Blue)
-  44: "#7c3aed", // Grand Est (Purple)
-  52: "#10b981", // Pays de la Loire (Teal)
-  53: "#2563eb", // Bretagne (Royal Blue)
-  75: "#0d9488", // Nouvelle-Aquitaine (Teal/Green)
-  76: "#ea580c", // Occitanie (Red-Orange)
-  84: "#4f46e5", // Auvergne-Rhône-Alpes (Indigo)
-  93: "#db2777", // Provence-Alpes-Côte d'Azur (Pink)
-  94: "#4b5563", // Corse (Grey)
-  "01": "#06b6d4", // Guadeloupe
-  "02": "#0891b2", // Martinique
-  "03": "#0ea5e9", // Guyane
-  "04": "#3b82f6", // La Réunion
-  "06": "#6366f1", // Mayotte
-};
-
-// ==========================================
-// 5. UTILITY FUNCTIONS
+// 4. UTILITY FUNCTIONS
 // ==========================================
 
 export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
@@ -550,7 +569,8 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
 
 export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") => {
   const baseTheme = THEME[systemTheme] || THEME.dark;
-  const overrides = THEME_OVERRIDES[globeTheme]?.[systemTheme] || {};
+  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const overrides = themeCfg.ui?.[systemTheme] || {};
   return {
     ...baseTheme,
     ...overrides,
@@ -581,15 +601,9 @@ export const getThemeCssVariables = (
     "--success": theme.success,
     "--success-soft": theme.successSoft,
     "--gold": theme.gold,
-    "--gold-soft": theme.goldSoft,
-    "--gold-light": theme.goldLight,
     "--warning": theme.warning,
-    "--warning-soft": theme.warningSoft,
     "--error": theme.error,
     "--error-soft": theme.errorSoft,
-    "--error-soft-strong": theme.errorSoftStrong,
-    "--error-glow": theme.errorGlow,
-    "--error-glow-strong": theme.errorGlowStrong,
     "--glass-bg": theme.glassBg,
     "--glass-border": theme.glassBorder,
     "--glass-border-strong": theme.glassBorderStrong,
@@ -607,10 +621,6 @@ export const getThemeCssVariables = (
     "--highlight-soft": theme.highlightSoft,
     "--map-border": theme.mapBorder,
     "--grid-dot": theme.gridDot,
-    "--department-label-border": theme.departmentLabelBorder,
-    "--department-label-dot-shadow": theme.departmentLabelDotShadow,
-    "--department-label-shadow": theme.departmentLabelShadow,
-    "--department-label-inset-shadow": theme.departmentLabelInsetShadow,
     "--decor-glow-primary": theme.decorGlowPrimary,
     "--decor-glow-primary-end": theme.decorGlowPrimaryEnd,
     "--decor-glow-secondary": theme.decorGlowSecondary,
@@ -640,7 +650,8 @@ export const getThemeCssVariables = (
 
 export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
   const normRegion = region === "France" ? "Europe" : (region || "Unknown");
-  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.default;
+  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const palette = themeCfg.continents || GLOBE_THEMES.satellite.continents;
   const sysTheme = systemTheme || "dark";
   const colors = palette.surface[sysTheme];
   return colors[normRegion] || colors.Unknown || "#888888";
@@ -652,7 +663,8 @@ export const getThemeRegionColorAttenuated = (
   region,
 ) => {
   const normRegion = region === "France" ? "Europe" : (region || "Unknown");
-  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.default;
+  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const palette = themeCfg.continents || GLOBE_THEMES.satellite.continents;
   const sysTheme = systemTheme || "dark";
 
   if (palette.attenuated) {
@@ -669,7 +681,8 @@ export const getThemeRegionColorAttenuated = (
 
 export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
   const normRegion = region === "France" ? "Europe" : (region || "Unknown");
-  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.default;
+  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const palette = themeCfg.continents || GLOBE_THEMES.satellite.continents;
   const sysTheme = systemTheme || "dark";
 
   if (palette.label) {
@@ -679,6 +692,19 @@ export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
 
   // Blackout fallback: use base surface color shade directly
   return getThemeRegionColor(globeTheme, systemTheme, normRegion);
+};
+
+export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fallbackColor) => {
+  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const deptCfg = themeCfg.departments || { type: "colorful" };
+
+  if (deptCfg.type === "monochrome") {
+    const uiColors = getThemeColors(globeTheme, systemTheme);
+    return uiColors.mapSurfaceSelected || uiColors.mapBase;
+  }
+
+  const colors = deptCfg.colors || DEFAULT_DEPARTMENT_COLORS;
+  return colors[regionCode] || fallbackColor;
 };
 
 /**
