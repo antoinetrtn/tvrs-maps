@@ -1723,19 +1723,16 @@ const GlobeMap = ({
       const showCapital = revealAll;
       const isGlitchMode = ((d.mode === 'capitals' || d.mode === 'countries') && !revealAll) || (isHomeScreen && d.isSelected);
 
-      // Local helper to scramble text with glitched characters
+      // Local helper to scramble text with glitched characters (100% scrambled to prevent reading letters)
       const localScrambleText = (text, seed = 0) => {
         if (!text) return '';
-        const glyphs = '@#$%&?*¢¤§░▒▓█▲▼◆◇';
+        const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%&?*¢¤§░▒▓█▲▼◆◇';
         return text.split('').map((char, index) => {
           if (char === ' ' || char === '-' || char === "'") return char;
           const hash = Math.sin(index * 13.5 + seed * 7.1) * 10000;
           const rand = Math.abs(hash) % 1.0;
-          if (rand < 0.65) {
-            const glyphIndex = Math.floor(rand * glyphs.length);
-            return glyphs[glyphIndex];
-          }
-          return char;
+          const glyphIndex = Math.floor(rand * glyphs.length);
+          return glyphs[glyphIndex];
         }).join('');
       };
 
@@ -2432,7 +2429,7 @@ const GlobeMap = ({
 
     if (globeTheme === 'blackout') {
       graticuleColor = new THREE.Color(UI_COLORS.textMuted);
-      graticuleOpacity = isLight ? 0.02 : 0.05;
+      graticuleOpacity = isLight ? 0.08 : 0.12;
     } else if (globeTheme === 'satellite') {
       graticuleColor = new THREE.Color(0x10b981);
       graticuleOpacity = 0.25;
@@ -2519,6 +2516,11 @@ const GlobeMap = ({
         if (globeMaterial.userData.shader.uniforms.uTime) {
           globeMaterial.userData.shader.uniforms.uTime.value = time / 1000;
         }
+      }
+
+      // Periodically style graticules to ensure async Three-Globe elements are caught
+      if (Math.random() < 0.015) {
+        styleGlobeGraticules();
       }
 
       // Smoothly transition the custom globe atmosphere glow towards target values
