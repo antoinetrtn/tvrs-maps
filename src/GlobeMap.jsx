@@ -5,7 +5,7 @@ import { countryDataMap } from './gameData';
 import { riversMountainsDataMap } from './riversMountainsData';
 import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel, FRENCH_REGION_COLORS } from './designSystem';
 import { disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
-import { shouldScrambleLabel, getPolygonAltitudeFor, isReliefVisible, RELIEF } from './gameConfig';
+import { shouldScrambleLabel, getPolygonAltitudeFor, RELIEF } from './gameConfig';
 
 // Hoisted PURE accessors for the <Globe> paths layer. Keeping their identities
 // stable across renders prevents react-globe.gl from marking the path/object
@@ -2035,19 +2035,17 @@ const GlobeMap = ({
       const data = dataMap[k];
       if (!data || data.type !== 'river' || !data.path) return;
       const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
-      // Only reveal found rivers here — the active (selected) target, found or not, is
-      // drawn separately by riversSelectedPathData. Unfound non-target rivers stay hidden
-      // so the answers aren't given away.
-      if (!isFound) return;
+      // Found rivers read as solid coloured lines; unfound ones stay as a faint dashed
+      // hint so the player still knows where to click — their NAME is hidden (scrambled
+      // label, only shown when selected), so the answer isn't given away.
       paths.push({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
-        color: UI_COLORS.riverActive,
-        // Solid thick lines — no dashes, pure stroke width is what makes rivers readable
-        width: 45,
-        dashLength: 1,   // 1 = full coverage = solid line
-        dashGap: 0,
-        dashAnimateTime: 3000, // Subtle shimmer on found rivers
+        color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
+        width: isFound ? 45 : 24,
+        dashLength: isFound ? 1 : 0.5,
+        dashGap: isFound ? 0 : 0.3,
+        dashAnimateTime: isFound ? 3000 : 0, // Subtle shimmer on found rivers
       });
     });
     return paths;
@@ -2172,9 +2170,8 @@ const GlobeMap = ({
         if (!data || data.lat === undefined) return;
         if (data.type !== 'mountain' && data.type !== 'mountain_range') return;
         const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
-        // Hide unfound non-target mountains (same rule as rivers) so the map of answers
-        // isn't revealed; the selected target still shows as a hint.
-        if (!isReliefVisible({ isFound, isSelected: k === selectedCountry, isHomeScreen, isLearn: mode === 'learn' })) return;
+        // Render every mountain so it stays clickable; unfound ones show as a smaller,
+        // neutral placeholder (their NAME is hidden), found ones at representative size.
         assets.push({
           admin: k,
           lat: data.lat,
@@ -2193,7 +2190,7 @@ const GlobeMap = ({
     }
 
     return [];
-  }, [gameDataMap, mode, foundSet, isHomeScreen, selectedCountry, learnShowMountains]);
+  }, [gameDataMap, mode, foundSet, isHomeScreen, learnShowMountains]);
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
@@ -2232,9 +2229,9 @@ const GlobeMap = ({
     const alignedAsset = new THREE.Group();
     asset.rotation.x = BIOME_SURFACE_ALIGNMENT_RADIANS;
     alignedAsset.add(asset);
-    // Consistent, geographically-representative size. Only the selected-but-unfound target
-    // is shown here (others are filtered out), at a slightly smaller hint scale — so found
-    // mountains no longer pop from a tiny placeholder to full size.
+    // Consistent, geographically-representative size: found mountains at full scale,
+    // unfound ones at a slightly smaller neutral scale — close enough that finding one
+    // no longer makes it pop from a tiny placeholder to full size.
     alignedAsset.scale.setScalar(baseScale * (d.isFound ? RELIEF.mountainScale : RELIEF.targetHintScale));
 
     biomeObjectsCacheRef.current.set(key, alignedAsset);

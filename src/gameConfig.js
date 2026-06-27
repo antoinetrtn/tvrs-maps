@@ -46,19 +46,15 @@ export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSele
 };
 
 /**
- * Rivers & mountains visibility + sizing.
+ * Rivers & mountains sizing.
  *
- * A relief feature is only drawn once it is found OR while it is the active target
- * being guessed — exactly like a country keeps its label hidden until found. This
- * stops every answer's shape/location from being given away at once.
- *
- * Mountains use a single representative scale whether found or shown as a hint, so
- * they no longer pop from a tiny placeholder to full size when found.
+ * Every relief feature is rendered so it stays clickable, but its NAME stays hidden
+ * (scrambled label, only shown when selected) so the answer isn't given away. Found
+ * features are drawn at full representative size, unfound ones at a slightly smaller
+ * neutral scale — close enough that finding one no longer makes it pop from a tiny
+ * placeholder to full size.
  */
 export const RELIEF = {
-  mountainScale: 0.62,   // stable, geographically-representative size
-  targetHintScale: 0.5   // selected-but-unfound target (the current question)
+  mountainScale: 0.62,   // found: stable, geographically-representative size
+  targetHintScale: 0.5   // unfound: neutral, still clearly visible/clickable
 };
-
-export const isReliefVisible = ({ isFound, isSelected, isHomeScreen = false, isLearn = false }) =>
-  isFound || isSelected || isHomeScreen || isLearn;
