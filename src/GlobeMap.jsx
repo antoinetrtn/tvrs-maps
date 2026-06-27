@@ -172,8 +172,6 @@ const GLOBE_LAYER_ALTITUDE = {
   label: 0.024
 };
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
-const MOBILE_SELECTED_COUNTRY_LAT_OFFSET = 0;
-const MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET = 0;
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(['France']);
 const DEPARTMENT_MODE_FRANCE_VIEW = {
@@ -761,22 +759,14 @@ const GlobeMap = ({
           ? currentPOV.altitude
           : fallbackAltitude;
         const isKeyboardOpen = isMobile && isKeyboardMode;
-        const keyboardOcclusion = Math.max(0, window.innerHeight - viewport.height - viewport.top);
-        const keyboardOffsetBoost = isKeyboardOpen
-          ? Math.min(8, Math.max(0, keyboardOcclusion - 180) / 30)
-          : 0;
-        const baseLatOffset = isKeyboardOpen
-          ? MOBILE_KEYBOARD_SELECTED_COUNTRY_LAT_OFFSET - keyboardOffsetBoost
-          : (isMobile ? MOBILE_SELECTED_COUNTRY_LAT_OFFSET : 0);
+        const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.top);
+        const keyboardRatio = keyboardHeight / window.innerHeight;
+        const bottomHUDRatio = isMobile ? 0.14 : 0;
+        const occlusionRatio = isKeyboardOpen ? keyboardRatio : bottomHUDRatio;
 
-        // Dynamic latOffset based on altitude and aspect ratio to prevent over-shifting on short screens or high zoom.
-        // As altitude decreases (zoom in), the same angular offset results in larger pixel displacement.
-        const altitudeFactor = Math.max(0.2, Math.min(1, preservedAltitude / 1.2));
-        // On "short" screens (aspect > 0.7), vertical space is limited; reduce offset to keep country visible.
-        const aspect = viewport.width / viewport.height;
-        const aspectFactor = aspect > 0.7 ? Math.max(0.1, 1 - (aspect - 0.7) * 2.5) : 1;
-
-        const latOffset = baseLatOffset * altitudeFactor * aspectFactor;
+        // Dynamic latitude offset: scale offset degrees proportional to the camera altitude (zoom level)
+        const visibleHeightDegrees = 110 * preservedAltitude;
+        const latOffset = visibleHeightDegrees * (occlusionRatio / 2);
 
         const target = {
           lat: data.lat + latOffset,
