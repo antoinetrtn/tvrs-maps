@@ -1662,9 +1662,9 @@ const GlobeMap = ({
       color = UI_COLORS.textMuted;
     } else if (globeTheme === 'blackout') {
       if (d.isFound) {
-        color = isLight ? `color-mix(in srgb, ${UI_COLORS.black} 93%, transparent)` : `color-mix(in srgb, ${UI_COLORS.black} 80%, transparent)`;
+        color = UI_COLORS.textMuted;
       } else {
-        color = d.isSelected ? `color-mix(in srgb, ${UI_COLORS.paper} 100%, transparent)` : `color-mix(in srgb, ${UI_COLORS.paper} 50%, transparent)`;
+        color = d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
       }
     } else if (globeTheme === 'blueprint') {
       color = (d.isFound || d.isSelected) ? UI_COLORS.accent : UI_COLORS.textMuted;
@@ -2207,14 +2207,8 @@ const GlobeMap = ({
     }
 
     if (globeTheme === 'blackout') {
-      return new THREE.MeshPhongMaterial({
-        color: UI_COLORS.mapSea,
-        emissive: new THREE.Color(0x000000),
-        emissiveIntensity: 0,
-        specular: new THREE.Color(0x050505),
-        transparent: false,
-        opacity: 1,
-        shininess: 1
+      return new THREE.MeshBasicMaterial({
+        color: UI_COLORS.mapSea
       });
     }
 
@@ -2346,15 +2340,16 @@ const GlobeMap = ({
     }
 
     if (globeTheme === 'blackout') {
-      keyLight.intensity = isLight ? 0.08 : 0.12;
+      // Kill ALL scene lights - countries use emissive-only rendering, ocean uses MeshBasicMaterial
+      keyLight.intensity = 0;
       keyLight.position.set(-3.5, 2.4, 4.2);
-      rimLight.intensity = isLight ? 0.05 : 0.15;
+      rimLight.intensity = 0;
       rimLight.position.set(3.8, 1.3, -3.6);
-      fillLight.intensity = isLight ? 0.08 : 0.04; // Toned down to prevent washing out
-      studioLight.intensity = 0.0; // Disable ambient to keep matte dark background
-      studioLeft.intensity = 0.0;
+      fillLight.intensity = 0;
+      studioLight.intensity = 0;
+      studioLeft.intensity = 0;
       studioLeft.position.set(-4.5, 2.5, 3.5);
-      studioRight.intensity = 0.0;
+      studioRight.intensity = 0;
       studioRight.position.set(4.5, -1.2, 2.8);
     } else {
       keyLight.intensity = isLight ? 0.12 : 0.16;
