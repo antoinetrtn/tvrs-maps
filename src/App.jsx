@@ -314,6 +314,32 @@ function App() {
     }
   }, [gameDuration, currentScreen]);
 
+  // Home Screen automatic country targeting simulation loop
+  useEffect(() => {
+    if (currentScreen !== 'home' || !countryDataMap) {
+      if (currentScreen === 'home') {
+        setSelectedCountry(null);
+      }
+      return;
+    }
+
+    const keys = Object.keys(countryDataMap).filter(k => countryDataMap[k]?.lat !== undefined);
+    if (keys.length === 0) return;
+
+    let index = Math.floor(Math.random() * keys.length);
+    setSelectedCountry(keys[index]);
+
+    const interval = setInterval(() => {
+      index = Math.floor(Math.random() * keys.length);
+      setSelectedCountry(keys[index]);
+    }, 5500);
+
+    return () => {
+      clearInterval(interval);
+      setSelectedCountry(null);
+    };
+  }, [currentScreen, countryDataMap]);
+
   useEffect(() => {
     if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= totalPossible) {
       setIsGameOver(true);

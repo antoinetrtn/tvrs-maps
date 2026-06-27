@@ -1709,7 +1709,7 @@ const GlobeMap = ({
       `;
     } else {
       const showCapital = revealAll;
-      const isGlitchMode = d.mode === 'capitals' && !revealAll;
+      const isGlitchMode = ((d.mode === 'capitals' || d.mode === 'countries') && !revealAll) || (isHomeScreen && d.isSelected);
 
       // Local helper to scramble text with glitched characters
       const localScrambleText = (text, seed = 0) => {
@@ -1728,6 +1728,10 @@ const GlobeMap = ({
       };
 
       if (isGlitchMode) {
+        const isCapitalsMode = d.mode === 'capitals';
+        const glitchLine1Raw = isCapitalsMode ? d.capital : d.country;
+        const glitchLine1Class = isCapitalsMode ? 'glitch-capital' : 'glitch-country';
+
         // Glitched/scrambled animated callout box (Minimalist, centered on top of stalk)
         el.innerHTML = `
           <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
@@ -1764,17 +1768,19 @@ const GlobeMap = ({
               align-items: center;
               font-family: var(--font-mono, monospace);
               white-space: nowrap;
-              color: ${color};
+              color: ${UI_COLORS.textMain};
               text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
               <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
                 <span class="glitch-flag">▒</span>
-                <span class="glitch-capital" data-text="${d.capital}">${localScrambleText(d.capital)}</span>
+                <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}">${localScrambleText(glitchLine1Raw)}</span>
               </div>
-              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${color} 70%, transparent); margin-top: 1px;">
-                <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
-              </div>
+              ${isCapitalsMode ? `
+                <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
+                  <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
+                </div>
+              ` : ''}
             </div>
           </div>
         `;
@@ -1847,7 +1853,7 @@ const GlobeMap = ({
               align-items: center;
               font-family: var(--font-mono, monospace);
               white-space: nowrap;
-              color: ${color};
+              color: ${UI_COLORS.textMain};
               text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
@@ -1855,7 +1861,7 @@ const GlobeMap = ({
                 <span>${line1Text}</span>
               </div>
               ${hasCapitalLine ? `
-                <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${color} 70%, transparent); margin-top: 1px;">
+                <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
                   ${d.country}
                 </div>
               ` : ''}
