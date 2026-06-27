@@ -1580,9 +1580,24 @@ const GlobeMap = ({
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
-    const color = isDepartmentMode
-      ? (d.isFound ? UI_COLORS.success : (d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted))
-      : (isHomeScreen ? UI_COLORS.textMuted : (REGION_COLORS_LABELS[d.region] || UI_COLORS.warning));
+    
+    let color;
+    if (isDepartmentMode) {
+      color = d.isFound ? UI_COLORS.success : (d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted);
+    } else if (isHomeScreen) {
+      color = UI_COLORS.textMuted;
+    } else if (globeTheme === 'blackout') {
+      color = (d.isFound || d.isSelected) ? UI_COLORS.paper : UI_COLORS.textMuted;
+    } else if (globeTheme === 'blueprint') {
+      color = (d.isFound || d.isSelected) ? UI_COLORS.accent : UI_COLORS.textMuted;
+    } else if (globeTheme === 'satellite') {
+      color = (d.isFound || d.isSelected) ? UI_COLORS.paper : UI_COLORS.textMuted;
+    } else {
+      // Modern Glass theme uses regional colors for found/selected
+      color = (d.isFound || d.isSelected) 
+        ? (REGION_COLORS_LABELS[d.region] || UI_COLORS.accent) 
+        : UI_COLORS.textMuted;
+    }
 
     // Set root to 0 size so its center is the exact lat/lng
     el.style.width = '0';
@@ -1628,8 +1643,6 @@ const GlobeMap = ({
       `;
     } else {
       const showCapital = revealAll;
-      const labelText = UI_COLORS.textMain;
-      const labelSubText = UI_COLORS.textMuted;
       const isGlitchMode = d.mode === 'capitals' && !revealAll;
 
       // Local helper to scramble text with glitched characters
@@ -1664,36 +1677,36 @@ const GlobeMap = ({
               box-shadow: 0 0 8px ${color};
               opacity: ${isHomeScreen ? 0.5 : 1};
             "></div>
-            <!-- Stalk Line -->
+            <!-- Stalk Line (Shortened to 15px) -->
             <div style="
               position: absolute;
               width: 1.2px;
-              height: 28px;
+              height: 15px;
               background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
               left: -0.6px;
               bottom: 3px;
               opacity: ${isHomeScreen ? 0.4 : 0.85};
             "></div>
-            <!-- Centered Minimalist Label directly above the stalk -->
+            <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
             <div style="
               position: absolute;
               left: 50%;
-              bottom: 34px;
+              bottom: 21px;
               transform: translateX(-50%);
               display: flex;
               flex-direction: column;
               align-items: center;
               font-family: var(--font-mono, monospace);
               white-space: nowrap;
-              color: ${labelText};
+              color: ${color};
               text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent), 0 2px 6px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
-              <div style="font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 4px;">
+              <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
                 <span class="glitch-flag">▒</span>
                 <span class="glitch-capital" data-text="${d.capital}">${localScrambleText(d.capital)}</span>
               </div>
-              <div style="font-weight: 500; font-size: 9.5px; color: ${labelSubText}; opacity: 0.8; margin-top: 1px;">
+              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${color} 70%, transparent); margin-top: 1px;">
                 <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
               </div>
             </div>
@@ -1747,36 +1760,36 @@ const GlobeMap = ({
               box-shadow: 0 0 8px ${color};
               opacity: ${isHomeScreen ? 0.5 : 1};
             "></div>
-            <!-- Stalk Line -->
+            <!-- Stalk Line (Shortened to 15px) -->
             <div style="
               position: absolute;
               width: 1.2px;
-              height: 28px;
+              height: 15px;
               background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
               left: -0.6px;
               bottom: 3px;
               opacity: ${isHomeScreen ? 0.4 : 0.85};
             "></div>
-            <!-- Centered Minimalist Label directly above the stalk -->
+            <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
             <div style="
               position: absolute;
               left: 50%;
-              bottom: 34px;
+              bottom: 21px;
               transform: translateX(-50%);
               display: flex;
               flex-direction: column;
               align-items: center;
               font-family: var(--font-mono, monospace);
               white-space: nowrap;
-              color: ${labelText};
+              color: ${color};
               text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent), 0 2px 6px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
-              <div style="font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 4px;">
+              <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
                 <span>${line1Text}</span>
               </div>
               ${hasCapitalLine ? `
-                <div style="font-weight: 500; font-size: 9.5px; color: ${labelSubText}; opacity: 0.8; margin-top: 1px;">
+                <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${color} 70%, transparent); margin-top: 1px;">
                   ${d.country}
                 </div>
               ` : ''}
@@ -1786,7 +1799,7 @@ const GlobeMap = ({
       }
     }
     return el;
-  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, isDepartmentMode, isLight, gameDataMap]);
+  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, isDepartmentMode, isLight, gameDataMap, globeTheme]);
 
   const biomePointsCacheRef = useRef({});
 
