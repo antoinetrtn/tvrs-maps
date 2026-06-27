@@ -698,7 +698,9 @@ export const SURFACE_THEME_COLORS = {
     base: '#00bfff'
   },
   blackout: {
-    base: '#ffffff'
+    base: '#ffffff',
+    light: '#111111',
+    dark: '#ffffff'
   }
 };
 

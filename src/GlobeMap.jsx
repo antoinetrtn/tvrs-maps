@@ -1024,15 +1024,19 @@ const GlobeMap = ({
     return globeLightingEnabled ? 1.8 : 1;
   }, [globeLightingEnabled]);
 
+  const blackoutSurfaceBase = useMemo(() => {
+    return isLight ? SURFACE_THEME_COLORS.blackout.light : SURFACE_THEME_COLORS.blackout.dark;
+  }, [isLight]);
+
   const getRegionSurfaceColor = useCallback((region) => {
     if (globeTheme === 'blueprint') {
       return SURFACE_THEME_COLORS.blueprint.base;
     }
     if (globeTheme === 'blackout') {
-      return SURFACE_THEME_COLORS.blackout.base;
+      return blackoutSurfaceBase;
     }
     return REGION_COLORS[region] || UI_COLORS.success;
-  }, [globeTheme, REGION_COLORS, UI_COLORS.success]);
+  }, [globeTheme, REGION_COLORS, UI_COLORS.success, blackoutSurfaceBase]);
 
   const getPolygonColor = useCallback((d) => {
     if (isDepartmentMode) {
@@ -1046,13 +1050,13 @@ const GlobeMap = ({
       if (globeTheme === 'blueprint') {
         baseColor = SURFACE_THEME_COLORS.blueprint.base;
       } else if (globeTheme === 'blackout') {
-        baseColor = SURFACE_THEME_COLORS.blackout.base;
+        baseColor = blackoutSurfaceBase;
       }
 
       if (foundSet.has(admin) || mode === 'learn') {
         if (admin === selectedCountry) {
           if (isError) return UI_COLORS.error;
-          if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
+          if (globeTheme === 'blackout') return blackoutSurfaceBase;
           return lerpColor(baseColor, UI_COLORS.paper, 0.15);
         }
         return baseColor;
@@ -1060,7 +1064,7 @@ const GlobeMap = ({
 
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
-        if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
+        if (globeTheme === 'blackout') return blackoutSurfaceBase;
         return lerpColor(baseColor, UI_COLORS.paper, 0.1);
       }
 
@@ -1083,7 +1087,7 @@ const GlobeMap = ({
       const baseColor = getRegionSurfaceColor(region);
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
-        if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
+        if (globeTheme === 'blackout') return blackoutSurfaceBase;
         // Resting selected found country color (slightly lighter than base)
         return lerpColor(
           baseColor,
@@ -1096,7 +1100,7 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return UI_COLORS.error;
-      if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
+      if (globeTheme === 'blackout') return blackoutSurfaceBase;
       const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
       const targetColor = REGION_COLORS[region] || UI_COLORS.accent;
       // Resting selected unfound country color (slightly highlighted)
@@ -1104,7 +1108,7 @@ const GlobeMap = ({
     }
 
     return UI_COLORS.mapBase;
-  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, isHomeScreen, isDepartmentMode, isEndScreen, isPerfectScore, getRegionSurfaceColor, globeTheme, isLight, lerpColor]);
+  }, [selectedCountry, mode, foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, isError, isHomeScreen, isDepartmentMode, isEndScreen, isPerfectScore, getRegionSurfaceColor, globeTheme, isLight, lerpColor, blackoutSurfaceBase]);
 
   const getPolygonStroke = useCallback((d) => {
     if (isHomeScreen) {
@@ -1191,7 +1195,7 @@ const GlobeMap = ({
     if (globeLightingEnabled) {
       if (admin === selectedCountry) {
         if (isError) return isLight ? UI_COLORS.errorDeep : UI_COLORS.errorDeeper;
-        if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
+        if (globeTheme === 'blackout') return blackoutSurfaceBase;
 
         // Base color for the side when selected under lighting
         const sideBaseColor = (foundSet.has(admin) || mode === 'learn')
@@ -1221,7 +1225,7 @@ const GlobeMap = ({
 
     if (admin === selectedCountry) {
       if (isError) return isLight ? UI_COLORS.errorMuted : UI_COLORS.errorDeep;
-      if (globeTheme === 'blackout') return SURFACE_THEME_COLORS.blackout.base;
+      if (globeTheme === 'blackout') return blackoutSurfaceBase;
 
       const capColor = (foundSet.has(admin) || mode === 'learn')
         ? lerpColor(
@@ -1239,7 +1243,7 @@ const GlobeMap = ({
     }
 
     return lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
-  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, mode, isHomeScreen, isDepartmentMode, lerpColor, getPolygonColor, getRegionSurfaceColor, globeTheme]);
+  }, [foundSet, REGION_COLORS, REGION_COLORS_ATTENUATED, UI_COLORS, selectedCountry, isLight, globeLightingEnabled, mode, isHomeScreen, isDepartmentMode, lerpColor, getPolygonColor, getRegionSurfaceColor, globeTheme, blackoutSurfaceBase]);
 
   const getPolygonMaterial = useCallback((d, kind) => {
     const admin = getFeatureAdmin(d) || 'unknown';
@@ -2880,7 +2884,8 @@ const GlobeMap = ({
              opacity: 0.6
            }} />
 
-           {/* Glow Effects (Blue/Purple accents) */}
+           {/* Glow Effects - hidden in blackout theme */}
+           {globeTheme !== 'blackout' && <>
            <div style={{
              position: 'absolute',
              top: '-20%',
@@ -2906,6 +2911,7 @@ const GlobeMap = ({
              filter: 'blur(100px)',
              opacity: 0.5
            }} />
+           </>}
         </div>
         <div
           ref={globeContentWrapperRef}
@@ -2916,7 +2922,7 @@ const GlobeMap = ({
             left: -homeGlobeOffset
           }}
         >
-          {globeLightingEnabled && (
+          {globeLightingEnabled && globeTheme !== 'blackout' && (
             <div
               className={`globe-studio-overlay ${isLight ? 'light' : 'dark'}`}
               aria-hidden="true"
