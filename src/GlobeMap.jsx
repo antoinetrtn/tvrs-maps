@@ -1271,10 +1271,6 @@ const GlobeMap = ({
       }
     }
 
-    if (isHomeScreen && globeTheme !== 'satellite' && admin !== selectedCountry) {
-      targetOpacity = 0.0;
-      targetTransparent = true;
-    }
 
     let emissiveHex = UI_COLORS.black;
     let emissiveIntensity = 0;
