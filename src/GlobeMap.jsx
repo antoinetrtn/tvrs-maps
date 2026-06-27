@@ -276,50 +276,6 @@ const BIOME_VARIANTS = {
 
 // --- PROCEDURAL THEMED 3D MODELS BUILDERS ---
 
-const createBlueprintNode = () => {
-  const group = new THREE.Group();
-  group.name = "blueprint-node";
-
-  const lineMat = new THREE.MeshBasicMaterial({
-    color: 0x00ffff,
-    transparent: true,
-    opacity: 0.72,
-    wireframe: true,
-  });
-
-  // Scan cone
-  const cone = new THREE.Mesh(
-    new THREE.ConeGeometry(0.085, 0.2, 6, 2, true),
-    lineMat,
-  );
-  cone.name = "blueprint-cone";
-  cone.position.y = 0.1;
-  group.add(cone);
-
-  // Holographic ring
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: 0x00ffff,
-    transparent: true,
-    opacity: 0.45,
-  });
-  const ring = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.06, 0.06, 0.004, 12, 1, true),
-    ringMat,
-  );
-  ring.name = "blueprint-ring";
-  ring.position.y = 0.055;
-  ring.userData = { offset: Math.random() * 1000 };
-  group.add(ring);
-
-  // Core beacon dot
-  const dotMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 6), dotMat);
-  dot.position.y = 0.1;
-  group.add(dot);
-
-  return group;
-};
-
 const MOUNTAIN_RANGES = [
   { name: "Alps", minLat: 44, maxLat: 48, minLng: 5, maxLng: 16 },
   { name: "Pyrenees", minLat: 42, maxLat: 43.5, minLng: -2, maxLng: 3.5 },
@@ -431,10 +387,6 @@ const selectLogicalBiomeVariant = (
   dataLng,
   globeTheme,
 ) => {
-  if (globeTheme === "blueprint") {
-    return "scan";
-  }
-
   if (isCoordinateMountainous(lat, lng)) {
     if (biomeType === "Antarctic") {
       return "iceMountain";
@@ -1303,9 +1255,6 @@ const GlobeMap = ({
 
   const getRegionSurfaceColor = useCallback(
     (region) => {
-      if (globeTheme === "blueprint") {
-        return SURFACE_THEME_COLORS.blueprint.base;
-      }
       if (globeTheme === "blackout") {
         return getThemeRegionColor(globeTheme, theme, region);
       }
@@ -1324,9 +1273,7 @@ const GlobeMap = ({
         const regionCode = d.properties?.region || "Unknown";
         let baseColor = FRENCH_REGION_COLORS[regionCode] || UI_COLORS.mapBase;
 
-        if (globeTheme === "blueprint") {
-          baseColor = SURFACE_THEME_COLORS.blueprint.base;
-        } else if (globeTheme === "blackout") {
+        if (globeTheme === "blackout") {
           baseColor = blackoutSurfaceBase;
         }
 
@@ -1442,9 +1389,6 @@ const GlobeMap = ({
       }
 
       if (!foundSet.has(admin) && mode !== "learn") {
-        if (globeTheme === "blueprint") {
-          return STROKE_THEME_COLORS.blueprint.unfound;
-        }
         if (globeTheme === "blackout") {
           return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
         }
@@ -1452,9 +1396,6 @@ const GlobeMap = ({
       }
 
       // Found / Learned / Homepage countries
-      if (globeTheme === "blueprint") {
-        return STROKE_THEME_COLORS.blueprint.found;
-      }
       if (globeTheme === "blackout") {
         return isLight
           ? UI_COLORS.mapBorder
@@ -1612,24 +1553,7 @@ const GlobeMap = ({
 
       const ExpectedMaterialClass = THREE.MeshPhongMaterial;
 
-      // Handle wireframe/opacity for the hologram blueprint theme
       const isFound = foundSet.has(admin) || mode === "learn";
-      let targetWireframe = false;
-      let targetOpacity = 1;
-      let targetTransparent = false;
-
-      if (globeTheme === "satellite") {
-        targetTransparent = true;
-        if (isHomeScreen) {
-          targetOpacity = 0.0;
-        } else if (admin === selectedCountry) {
-          targetOpacity = 0.45;
-        } else if (isFound) {
-          targetOpacity = 0.25;
-        } else {
-          targetOpacity = 0.0;
-        }
-      }
 
       let emissiveHex = UI_COLORS.black;
       let emissiveIntensity = 0;
@@ -1699,7 +1623,7 @@ const GlobeMap = ({
       // Construct cache/pool key
       const cacheKey = isShaderCap
         ? `shader-${admin}-${kind}-${isMobileStr}`
-        : `${kind}-${color}-${targetWireframe}-${targetOpacity}-${targetTransparent}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}`;
+        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}`;
 
       let material = sharedMaterialsRef.current.get(cacheKey);
 
@@ -1711,9 +1635,6 @@ const GlobeMap = ({
         });
 
         material.color.set(safeColor(color));
-        material.wireframe = targetWireframe;
-        material.transparent = targetTransparent;
-        material.opacity = targetOpacity;
         material.flatShading = false;
 
         material.emissive.set(safeColor(emissiveHex));
@@ -1772,12 +1693,7 @@ const GlobeMap = ({
             };
             shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
             shader.uniforms.uTheme = {
-              value:
-                globeTheme === "blackout"
-                  ? 1.0
-                  : globeTheme === "blueprint"
-                    ? 2.0
-                    : 0.0,
+              value: globeTheme === "blackout" ? 1.0 : 0.0,
             };
             material.userData.shader = shader;
 
@@ -1812,10 +1728,6 @@ const GlobeMap = ({
              if (uTheme > 0.9 && uTheme < 1.1) {
                // Blackout theme: 100% monochrome static
                finalColor = staticVec;
-             } else if (uTheme > 1.9 && uTheme < 2.1) {
-               // Blueprint theme: blue-tinted static
-               vec3 blueStatic = vec3(staticColor * 0.15, staticColor * 0.50, staticColor * 0.95);
-               finalColor = mix(gl_FragColor.rgb, blueStatic, 0.80);
              } else {
                // Other themes (modern glass, satellite): subtle holographic noise overlay
                finalColor = mix(gl_FragColor.rgb, staticVec, 0.40);
@@ -2224,9 +2136,6 @@ const GlobeMap = ({
         } else {
           color = d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
         }
-      } else if (globeTheme === "blueprint") {
-        color =
-          d.isFound || d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
       } else if (globeTheme === "satellite") {
         color =
           d.isFound || d.isSelected ? UI_COLORS.paper : UI_COLORS.textMuted;
@@ -2875,9 +2784,6 @@ const GlobeMap = ({
   ]);
 
   const customGlobeTexture = useMemo(() => {
-    if (globeTheme === "blueprint") {
-      return createBlueprintGridTexture();
-    }
     if (globeTheme === "satellite") {
       const loader = new THREE.TextureLoader();
       const texture = loader.load(
@@ -2899,16 +2805,6 @@ const GlobeMap = ({
   }, [customGlobeTexture]);
 
   const globeMaterial = useMemo(() => {
-    if (globeTheme === "blueprint") {
-      return new THREE.MeshPhongMaterial({
-        map: customGlobeTexture,
-        color: 0xffffff,
-        transparent: false,
-        opacity: 1,
-        specular: 0x2288ff,
-        shininess: 15,
-      });
-    }
     if (globeTheme === "satellite") {
       return new THREE.MeshPhongMaterial({
         map: customGlobeTexture,
@@ -3065,12 +2961,7 @@ const GlobeMap = ({
       };
 
       // Initialize target refs and uniform values to prevent initial transition jump
-      const initialHex =
-        globeTheme === "blueprint"
-          ? 0x00ffff
-          : globeTheme === "satellite"
-            ? 0x10b981
-            : 0x38bdf8;
+      const initialHex = globeTheme === "satellite" ? 0x10b981 : 0x38bdf8;
       targetGlowColorRef.current.setHex(initialHex);
       innerGlow.material.uniforms.glowColor.value.copy(
         targetGlowColorRef.current,
@@ -3153,11 +3044,7 @@ const GlobeMap = ({
       }
       glowCoef = 0.12; // Slightly boosted but still very faint for selected country
     } else {
-      if (globeTheme === "blueprint") {
-        glowColorHex = 0x0ea5e9; // Deep blue-cyan
-        glowPower = 1.2;
-        glowCoef = 0.07;
-      } else if (globeTheme === "satellite") {
+      if (globeTheme === "satellite") {
         glowColorHex = 0x10b981; // Earth green glow
         glowPower = 1.1;
         glowCoef = 0.09;
@@ -3288,44 +3175,10 @@ const GlobeMap = ({
       }
       lastAnimFrameTimeRef.current = time;
 
-      // Update/rebuild the animObjectsCache every 1000ms (blueprint theme only).
-      // Avoid full scene.traverse for non-blueprint themes that have no animated cones/rings.
-      if (globeTheme === "blueprint") {
-        if (time - lastAnimCacheTimeRef.current > 1000) {
-          const animList = [];
-          scene.traverse((obj) => {
-            if (
-              obj.name === "blueprint-cone" ||
-              obj.name === "blueprint-ring"
-            ) {
-              animList.push(obj);
-            }
-          });
-          animObjectsCacheRef.current = animList;
-          lastAnimCacheTimeRef.current = time;
-        }
-      } else {
-        animObjectsCacheRef.current = [];
-      }
-
       // Loop through cached animated custom objects instead of scene traversal (0ms traversal overhead)
       const animList = animObjectsCacheRef.current;
       for (let i = 0; i < animList.length; i++) {
         const obj = animList[i];
-
-        // Pulse blueprint beacons
-        if (obj.name === "blueprint-cone") {
-          obj.rotation.y = time * 0.0005;
-          const scalePulse = 0.85 + Math.sin(time * 0.003) * 0.15;
-          obj.scale.set(scalePulse, 1.0, scalePulse);
-        } else if (obj.name === "blueprint-ring") {
-          const offset = obj.userData?.offset || 0;
-          const cycle = ((time + offset) * 0.0008) % 1.0;
-          obj.scale.setScalar(0.4 + cycle * 1.6);
-          if (obj.material) {
-            obj.material.opacity = 0.75 * (1.0 - cycle);
-          }
-        }
       }
 
       // Update custom ocean wireframe grid time uniform
@@ -3475,11 +3328,7 @@ const GlobeMap = ({
               }
               if (mat.userData.shader.uniforms.uTheme) {
                 mat.userData.shader.uniforms.uTheme.value =
-                  globeTheme === "blackout"
-                    ? 1.0
-                    : globeTheme === "blueprint"
-                      ? 2.0
-                      : 0.0;
+                  globeTheme === "blackout" ? 1.0 : 0.0;
               }
             } else {
               // Side shader uTime
@@ -3544,10 +3393,7 @@ const GlobeMap = ({
       // idle states don't peg the CPU. The separate selection effect below
       // re-requests a frame when selection/feedback changes while parked.
       const hasWork =
-        selectedCountry ||
-        (globeTheme === "blueprint" && animObjectsCacheRef.current.length) ||
-        !glowSettled ||
-        needsGraticuleStyleRef.current;
+        selectedCountry || !glowSettled || needsGraticuleStyleRef.current;
 
       if (hasWork) {
         animFrameIdRef.current = requestAnimationFrame(animateScene);
@@ -3840,13 +3686,11 @@ const GlobeMap = ({
             theme,
             activeDataMap[selectedCountry].region,
           )
-        : globeTheme === "blueprint"
-          ? ATMOSPHERE_THEME_COLORS.blueprint
-          : globeTheme === "satellite"
-            ? ATMOSPHERE_THEME_COLORS.satellite
-            : globeTheme === "blackout"
-              ? ATMOSPHERE_THEME_COLORS.blackout
-              : UI_COLORS.atmosphere,
+        : globeTheme === "satellite"
+          ? ATMOSPHERE_THEME_COLORS.satellite
+          : globeTheme === "blackout"
+            ? ATMOSPHERE_THEME_COLORS.blackout
+            : UI_COLORS.atmosphere,
     );
   }, [
     selectedCountry,
