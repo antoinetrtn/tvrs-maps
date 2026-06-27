@@ -60,7 +60,7 @@ function App() {
   const [globeTheme, setGlobeThemeRaw] = useState(() => {
     try {
       const cached = localStorage.getItem('tvrs-globe-theme');
-      if (cached && ['glass', 'blueprint', 'satellite', 'blackout'].includes(cached)) return cached;
+      if (cached && ['glass', 'satellite', 'blackout'].includes(cached)) return cached;
     } catch (_) {}
     return 'glass';
   });

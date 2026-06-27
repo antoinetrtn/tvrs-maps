@@ -2152,7 +2152,7 @@ const GlobeMap = ({
       });
     }
 
-    return new THREE.MeshPhongMaterial({
+    const material = new THREE.MeshPhongMaterial({
       color: UI_COLORS.mapSea,
       emissive: globeLightingEnabled
         ? new THREE.Color(UI_COLORS.globeEmissive)
@@ -2165,6 +2165,36 @@ const GlobeMap = ({
       opacity: 1,
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7
     });
+
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = { value: 0 };
+      material.userData.shader = shader;
+
+      shader.fragmentShader = `
+        uniform float uTime;
+      ` + shader.fragmentShader;
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        `#include <dithering_fragment>`,
+        `#include <dithering_fragment>
+         // Draw a very light wireframe grid
+         float gridX = smoothstep(0.475, 0.50, abs(fract(vUv.x * 72.0) - 0.5));
+         float gridY = smoothstep(0.475, 0.50, abs(fract(vUv.y * 36.0) - 0.5));
+         float grid = max(gridX, gridY);
+         
+         // Slow rolling wave animation to evoke the sea
+         float wave = sin(vUv.x * 24.0 + vUv.y * 16.0 + uTime * 1.2) * 0.5 + 0.5;
+         
+         // Subtle white/gray grid in blackout/dark, and faint dark grid in light mode
+         vec3 gridColor = vec3(1.0);
+         float gridOpacity = grid * (0.04 + 0.08 * wave);
+         
+         gl_FragColor.rgb = mix(gl_FragColor.rgb, gridColor, gridOpacity);
+        `
+      );
+    };
+
+    return material;
   }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture]);
 
   useEffect(() => {
@@ -2435,6 +2465,13 @@ const GlobeMap = ({
           if (obj.material) {
             obj.material.opacity = 0.75 * (1.0 - cycle);
           }
+        }
+      }
+
+      // Update custom ocean wireframe grid time uniform
+      if (globeMaterial && globeMaterial.userData.shader) {
+        if (globeMaterial.userData.shader.uniforms.uTime) {
+          globeMaterial.userData.shader.uniforms.uTime.value = time / 1000;
         }
       }
 

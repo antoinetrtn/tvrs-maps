@@ -4,7 +4,6 @@
 
 export const THEMES_LIST = [
   { id: 'glass', name_fr: 'Verre Moderne', name_en: 'Sleek Glass' },
-  { id: 'blueprint', name_fr: 'Plan Blueprint', name_en: 'Blueprint Plan' },
   { id: 'satellite', name_fr: 'Satellite', name_en: 'Satellite' },
   { id: 'blackout', name_fr: 'Noir & Blanc', name_en: 'Blacked Out' }
 ];
