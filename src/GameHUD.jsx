@@ -259,7 +259,9 @@ const GameHUD = ({
       <div
         className={`top-hud-bar ${isKeyboardMode ? 'keyboard-mode' : ''} ${mode === 'learn' ? 'learn-mode' : ''}`}
         style={window.innerWidth < 1024 ? {
-          top: (viewport?.top || 0) + (isKeyboardMode ? 10 : 24)
+          top: 0,
+          left: '50%',
+          transform: `translate3d(-50%, ${viewport.top + (isKeyboardMode ? 10 : 24)}px, 0)`
         } : {}}
       >
           <div className="hud-top-left">
@@ -390,7 +392,14 @@ const GameHUD = ({
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
       {isFocusedCountry && (
-        <div className="top-hud-container" style={{ top: (viewport?.top || 0) + 24, left: viewport?.left || 0 }}>
+        <div 
+          className="top-hud-container" 
+          style={{ 
+            top: 0, 
+            left: 0, 
+            transform: `translate3d(${viewport.left}px, ${viewport.top + 24}px, 0)` 
+          }}
+        >
           <div className="top-hud-stack" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%' }}>
             <div className="focus-info-card animation-fade-in">
               {isKeyboardMode && mode !== 'learn' && (
@@ -434,10 +443,10 @@ const GameHUD = ({
           className={`bottom-hud-container ${isKeyboardMode ? 'keyboard-mode' : ''}`}
           style={window.innerWidth < 1024 ? {
             position: 'absolute',
-            bottom: 'auto',
-            top: (viewport.top + viewport.height) - 24,
-            transform: `translate(-50%, -100%)`,
-            left: viewport.left + (viewport.width / 2)
+            top: 0,
+            left: '50%',
+            transform: `translate3d(-50%, ${viewport.top + viewport.height - 24}px, 0) translateY(-100%)`,
+            bottom: 'auto'
           } : {}}
         >
           {suggestions.length > 0 && (

@@ -429,6 +429,7 @@
     row-gap: 14px;
     column-gap: 8px;
     align-items: center;
+    transition: opacity var(--transition-normal) !important;
   }
 
   .top-hud-bar.keyboard-mode {
@@ -500,6 +501,7 @@
   .bottom-hud-container {
     bottom: var(--spacing-lg); /* Floating like PC */
     width: 90%;
+    transition: opacity var(--transition-normal) !important;
   }
 }
 

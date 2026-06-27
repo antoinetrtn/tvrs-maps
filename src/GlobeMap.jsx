@@ -2353,8 +2353,9 @@ const GlobeMap = ({
       height: window.innerHeight
     };
   }
-  const globeWidth = isMobileKeyboardOpen ? viewport.width : layoutViewportRef.current.width;
-  const globeHeight = isMobileKeyboardOpen ? viewport.height : layoutViewportRef.current.height;
+  // Keep the WebGL canvas fixed at full window size to avoid continuous canvas resizes when the keyboard opens/closes.
+  const globeWidth = layoutViewportRef.current.width || window.innerWidth;
+  const globeHeight = layoutViewportRef.current.height || window.innerHeight;
   const homeGlobeOffset = isHomeScreen && !isMobileKeyboardOpen && globeWidth >= 769
     ? Math.round(globeWidth * 0.18)
     : 0;
@@ -2532,15 +2533,12 @@ const GlobeMap = ({
       }}
       style={{
         position: 'fixed',
-        top: isMobileKeyboardOpen ? viewport.top : 0,
-        left: isMobileKeyboardOpen ? viewport.left : 0,
+        top: 0,
+        left: 0,
         width: globeWidth,
         height: globeHeight,
         zIndex: 0,
         overflow: 'hidden',
-        transition: isMobileKeyboardOpen
-          ? 'none'
-          : 'top var(--transition-layout), left var(--transition-layout), width var(--transition-layout), height var(--transition-layout)',
         background: isLight
           ? 'linear-gradient(to bottom, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%)'
           : 'transparent'
