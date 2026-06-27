@@ -164,6 +164,14 @@ const getMobileRenderRadius = (zoomLevel) => {
   return 64;
 };
 
+const getLabelRenderRadius = (zoomLevel, isMobile) => {
+  if (isMobile) return getMobileRenderRadius(zoomLevel) * 0.82;
+  if (zoomLevel >= 2.4) return 38;
+  if (zoomLevel >= 1.6) return 58;
+  if (zoomLevel >= 1.05) return 78;
+  return 96;
+};
+
 const GLOBE_LAYER_ALTITUDE = {
   // Keep geometry far enough from the globe surface to avoid depth-buffer
   // flickering when the globe is zoomed out, especially on mobile GPUs.
@@ -1616,9 +1624,14 @@ const GlobeMap = ({
         labelsToProcess.push({ key: k, data: gameDataMap[k], modeName: 'rivers_mountains' });
       });
     } else if (mode === 'learn') {
-      if (learnShowCountryLabels) {
+      if (learnShowCountryLabels || learnShowCapitals) {
         Object.keys(countryDataMap).forEach(k => {
-          labelsToProcess.push({ key: k, data: countryDataMap[k], modeName: 'countries' });
+          labelsToProcess.push({
+            key: k,
+            data: countryDataMap[k],
+            modeName: learnShowCountryLabels ? 'countries' : 'capitals',
+            hideCountryLine: !learnShowCountryLabels
+          });
         });
       }
       if (learnShowRivers) {
@@ -1649,7 +1662,7 @@ const GlobeMap = ({
     const pov = cameraPOV;
 
     const filtered = labelsToProcess
-      .map(({ key, data, modeName }) => {
+      .map(({ key, data, modeName, hideCountryLine = false }) => {
         if (!data) return null;
 
         const isSelected = key === selectedCountry;
@@ -1674,7 +1687,10 @@ const GlobeMap = ({
         if (dLng > 180) dLng = 360 - dLng;
         const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
 
-        if (!isSelected && distToCenter > (isDepartmentMode ? 7 : 95)) return null;
+        const labelRadius = isDepartmentMode
+          ? 7
+          : getLabelRenderRadius(zoomLevel, !!perfProfile?.isMobile);
+        if (!isSelected && distToCenter > labelRadius) return null;
 
         const cacheKey = `${key}_${modeName}`;
         const cached = labelsCacheRef.current[cacheKey];
@@ -1684,7 +1700,8 @@ const GlobeMap = ({
           cached.lang === lang &&
           cached.isFound === isFound &&
           cached.mode === mode &&
-          cached.learnShowCapitals === learnShowCapitals
+          cached.learnShowCapitals === learnShowCapitals &&
+          cached.hideCountryLine === hideCountryLine
         ) {
            cached.distToCenter = distToCenter;
            return cached;
@@ -1705,6 +1722,7 @@ const GlobeMap = ({
           isFound,
           mode: modeName,
           learnShowCapitals,
+          hideCountryLine,
           lang
         };
         labelsCacheRef.current[cacheKey] = newLabel;
@@ -1723,7 +1741,7 @@ const GlobeMap = ({
       return filtered.slice(0, limit);
     }
     return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
-  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen, isDepartmentMode, isRiversMountainsMode, gameDataMap, foundSet, learnShowCountryLabels, learnShowCapitals, learnShowRivers, learnShowMountains]);
+  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, perfProfile?.isMobile, mode, selectedCountry, isHomeScreen, isDepartmentMode, isRiversMountainsMode, gameDataMap, foundSet, learnShowCountryLabels, learnShowCapitals, learnShowRivers, learnShowMountains]);
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
@@ -1882,7 +1900,7 @@ const GlobeMap = ({
       } else {
         const line1Text = hasCapitalLine ? `${d.flag || ''} ${d.capital}` : `${iconSymbol || d.flag || ''} ${d.country}`;
         line1Content = `<span>${line1Text}</span>`;
-        if (hasCapitalLine) {
+        if (hasCapitalLine && !d.hideCountryLine) {
           line2Content = d.country;
         }
       }
