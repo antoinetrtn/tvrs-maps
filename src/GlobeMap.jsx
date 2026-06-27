@@ -1506,7 +1506,7 @@ const GlobeMap = ({
     const keysToShow = (mode === 'learn' || isHomeScreen || isEndScreen)
       ? Object.keys(labelDataMap)
       : (perfProfile?.isMobile
-        ? (selectedCountry ? [selectedCountry] : [])
+        ? (selectedCountry ? [...new Set([selectedCountry, ...foundList.slice(-1)])] : foundList.slice(-2))
         : (selectedCountry && !foundList.includes(selectedCountry) ? [...foundList, selectedCountry] : foundList));
     const pov = cameraPOV;
 
@@ -2029,7 +2029,9 @@ const GlobeMap = ({
       if (mapped && mapped.lat !== undefined) {
         const baseColor = isError
           ? UI_COLORS.error
-          : (REGION_COLORS_LABELS[region] || REGION_COLORS[region] || UI_COLORS.accent);
+          : (globeTheme === 'blackout' 
+              ? UI_COLORS.paper 
+              : (REGION_COLORS_LABELS[region] || REGION_COLORS[region] || UI_COLORS.accent));
         const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
         if (isDepartmentMode) {
           return [
@@ -2064,7 +2066,7 @@ const GlobeMap = ({
       }
     }
     return [];
-  }, [gameDataMap, isDepartmentMode, isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS]);
+  }, [gameDataMap, isDepartmentMode, isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS, mode, globeTheme]);
 
   const customGlobeTexture = useMemo(() => {
     if (globeTheme === 'blueprint') {
