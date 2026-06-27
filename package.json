@@ -20,6 +20,7 @@
   "dependencies": {
     "classnames": "^2.5.1",
     "lucide-react": "^1.8.0",
+    "pixelarticons": "^2.1.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-globe.gl": "^2.37.1",

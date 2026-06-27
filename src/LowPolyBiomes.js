@@ -50,28 +50,35 @@ const interpolatePath = (path, t) => {
   return [lat, lng];
 };
 
-export const createMountainFeature = (themeName = 'dark', isSelected = false, bearing = 0, spread = 1.5, height = 4000, path = null, centerLat = 0, centerLng = 0) => {
+export const createMountainFeature = (themeName = 'dark', isSelected = false, bearing = 0, spread = 1.5, height = 4000, path = null, centerLat = 0, centerLng = 0, groupScale = 9.2) => {
   const group = new THREE.Group();
+  const isBlackoutSelected = themeName === 'blackout' && isSelected;
   
   // Dynamic material based on selection state
-  const rockKey = 'realisticMountainRock' + (isSelected ? '_sel' : '');
+  const rockKey = `realisticMountainRock_${themeName}${isSelected ? '_sel' : ''}`;
   const rockMat = getMaterial(rockKey, () => new THREE.MeshStandardMaterial({
-    color: isSelected ? 0x059669 : 0x5a5a5a,
-    emissive: isSelected ? 0x34d399 : 0x000000,
-    emissiveIntensity: isSelected ? 1.4 : 0.0,
+    color: isBlackoutSelected ? 0xffffff : (isSelected ? 0x059669 : 0x5a5a5a),
+    emissive: isBlackoutSelected ? 0xffffff : (isSelected ? 0x34d399 : 0x000000),
+    emissiveIntensity: isBlackoutSelected ? 0.65 : (isSelected ? 1.4 : 0.0),
     roughness: 0.9,
     metalness: 0.1,
-    flatShading: true
+    flatShading: true,
+    wireframe: isBlackoutSelected,
+    transparent: isBlackoutSelected,
+    opacity: isBlackoutSelected ? 0.72 : 1
   }));
 
-  const snowKey = 'realisticMountainSnow' + (isSelected ? '_sel' : '');
+  const snowKey = `realisticMountainSnow_${themeName}${isSelected ? '_sel' : ''}`;
   const snowMat = getMaterial(snowKey, () => new THREE.MeshStandardMaterial({
-    color: isSelected ? 0xd1fae5 : 0xfcfcfc,
-    emissive: isSelected ? 0x10b981 : 0x000000,
-    emissiveIntensity: isSelected ? 0.3 : 0.0,
+    color: isBlackoutSelected ? 0xffffff : (isSelected ? 0xd1fae5 : 0xfcfcfc),
+    emissive: isBlackoutSelected ? 0xffffff : (isSelected ? 0x10b981 : 0x000000),
+    emissiveIntensity: isBlackoutSelected ? 0.25 : (isSelected ? 0.3 : 0.0),
     roughness: 0.5,
     metalness: 0.1,
-    flatShading: true
+    flatShading: true,
+    wireframe: isBlackoutSelected,
+    transparent: isBlackoutSelected,
+    opacity: isBlackoutSelected ? 0.82 : 1
   }));
 
   if (path && Array.isArray(path) && path.length > 0) {
@@ -81,14 +88,20 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
       const [pLat, pLng] = interpolatePath(path, tNorm);
 
-      // Convert coordinates to local X/Z offsets relative to the group center
-      const localX = (pLng - centerLng) * 0.16;
-      const localZ = -(pLat - centerLat) * 0.16;
+      // Convert coordinates to exact Three.js units on a sphere of radius 100
+      const R = 100;
+      const latRad = pLat * Math.PI / 180;
+      const dx = R * Math.cos(latRad) * (pLng - centerLng) * (Math.PI / 180);
+      const dz = R * (pLat - centerLat) * (Math.PI / 180);
 
-      // Adjust height to follow the sphere's curvature (globe radius R = 128)
-      const R = 128;
-      const d2 = localX * localX + localZ * localZ;
-      const deltaY = R - Math.sqrt(Math.max(0.1, R * R - d2));
+      // Divide by groupScale to get local coordinates inside the scaled group
+      const localX = dx / groupScale;
+      const localZ = -dz / groupScale;
+
+      // Curvature correction: calculate height drop in local coordinates
+      const dWorld = Math.sqrt(localX * localX + localZ * localZ) * groupScale;
+      const deltaYWorld = R - Math.sqrt(Math.max(0.1, R * R - dWorld * dWorld));
+      const deltaY = deltaYWorld / groupScale;
 
       // Bell curve height distribution
       const t = tNorm - 0.5; // -0.5 to 0.5
@@ -159,7 +172,9 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
   } else {
     // Fallback to straight line logic
     const N = Math.max(10, Math.round(spread * 4.5));
-    const localSpread = spread * 0.16;
+    const R = 100;
+    const spreadWorld = R * spread * (Math.PI / 180);
+    const localSpread = spreadWorld / groupScale;
     const rad = (bearing || 0) * Math.PI / 180;
     const dx = Math.cos(rad);
     const dz = Math.sin(rad);
@@ -181,10 +196,10 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       X += randOffsetVal * 0.045 * localSpread * perpX;
       Z += randOffsetVal * 0.045 * localSpread * perpZ;
 
-      // Adjust height to follow the sphere's curvature (globe radius R = 128)
-      const R = 128;
-      const d2 = X * X + Z * Z;
-      const deltaY = R - Math.sqrt(Math.max(0.1, R * R - d2));
+      // Adjust height to follow the sphere's curvature (globe radius R = 100)
+      const dWorld = Math.sqrt(X * X + Z * Z) * groupScale;
+      const deltaYWorld = R - Math.sqrt(Math.max(0.1, R * R - dWorld * dWorld));
+      const deltaY = deltaYWorld / groupScale;
 
       const normalizedHeightScale = height / 5000;
       const peakHeight = 0.28 * hFactor * normalizedHeightScale;
@@ -257,16 +272,17 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
   return group;
 };
 
-export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = false, bearing = 0, spread = 1.5, path = null, centerLat = 0, centerLng = 0) => {
+export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = false, bearing = 0, spread = 1.5, path = null, centerLat = 0, centerLng = 0, groupScale = 9.2) => {
   const group = new THREE.Group();
   
   if (type === 'mountain' || type === 'mountain_range') {
-    const colorKey = isSelected ? 'selPlaceholder' : 'unfoundPlaceholder';
+    const isBlackoutSelected = themeName === 'blackout' && isSelected;
+    const colorKey = `${themeName}_${isSelected ? 'selPlaceholder' : 'unfoundPlaceholder'}`;
     const mat = getMaterial(colorKey + 'MatSolid', () => new THREE.MeshBasicMaterial({
-      color: isSelected ? 0x34d399 : 0x64748b, // Slate gray or glowing green
+      color: isBlackoutSelected ? 0xffffff : (isSelected ? 0x34d399 : 0x64748b),
       transparent: true,
-      opacity: isSelected ? 0.35 : 0.18,      // Translucent solid cones
-      wireframe: false
+      opacity: isBlackoutSelected ? 0.42 : (isSelected ? 0.35 : 0.18),
+      wireframe: isBlackoutSelected
     }));
 
     if (path && Array.isArray(path) && path.length > 0) {
@@ -275,8 +291,20 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
         const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
         const [pLat, pLng] = interpolatePath(path, tNorm);
 
-        const localX = (pLng - centerLng) * 0.16;
-        const localZ = -(pLat - centerLat) * 0.16;
+        // Convert coordinates to exact Three.js units on a sphere of radius 100
+        const R = 100;
+        const latRad = pLat * Math.PI / 180;
+        const dx = R * Math.cos(latRad) * (pLng - centerLng) * (Math.PI / 180);
+        const dz = R * (pLat - centerLat) * (Math.PI / 180);
+
+        // Divide by groupScale to get local coordinates inside the scaled group
+        const localX = dx / groupScale;
+        const localZ = -dz / groupScale;
+
+        // Curvature correction
+        const dWorld = Math.sqrt(localX * localX + localZ * localZ) * groupScale;
+        const deltaYWorld = R - Math.sqrt(Math.max(0.1, R * R - dWorld * dWorld));
+        const deltaY = deltaYWorld / groupScale;
 
         const t = tNorm - 0.5;
         const bell = Math.cos(t * Math.PI);
@@ -287,12 +315,14 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
         const peakGeoKey = `unfoundPeakGeo_${centerLat}_${centerLng}_${i}_v2`;
         const geo = getGeometry(peakGeoKey, () => new THREE.ConeGeometry(peakRadius, peakHeight, 5));
         const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(localX, peakHeight / 2, localZ);
+        mesh.position.set(localX, peakHeight / 2 - deltaY, localZ);
         group.add(mesh);
       }
     } else {
       const N = Math.max(10, Math.round(spread * 4.5));
-      const localSpread = spread * 0.16;
+      const R = 100;
+      const spreadWorld = R * spread * (Math.PI / 180);
+      const localSpread = spreadWorld / groupScale;
       const rad = (bearing || 0) * Math.PI / 180;
       const dx = Math.cos(rad);
       const dz = Math.sin(rad);
@@ -305,13 +335,18 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
         const X = t * localSpread * dx;
         const Z = t * localSpread * dz;
 
+        // Curvature correction
+        const dWorld = Math.sqrt(X * X + Z * Z) * groupScale;
+        const deltaYWorld = R - Math.sqrt(Math.max(0.1, R * R - dWorld * dWorld));
+        const deltaY = deltaYWorld / groupScale;
+
         const peakHeight = 0.22 * bell * randomHeightVar;
         const peakRadius = peakHeight * 0.45;
 
         const peakGeoKey = `unfoundPeakGeo_${bearing}_${spread}_${i}_v2`;
         const geo = getGeometry(peakGeoKey, () => new THREE.ConeGeometry(peakRadius, peakHeight, 5));
         const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(X, peakHeight / 2, Z);
+        mesh.position.set(X, peakHeight / 2 - deltaY, Z);
         group.add(mesh);
       }
     }

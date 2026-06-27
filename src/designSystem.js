@@ -135,8 +135,8 @@ export const THEME = {
     warningSoft: 'rgba(245, 158, 11, 0.1)',
     mapBase: '#2a3a4f',
     mapSea: '#0a1425',
-    mapBorder: '#334155',
-    mapBorderMuted: '#1e293b',
+    mapBorder: '#475569',
+    mapBorderMuted: '#334155',
     gridDot: 'rgba(255, 255, 255, 0.15)',
     graticule: '#d3d3d3',
     atmosphere: '#3a76f0',
@@ -393,8 +393,8 @@ export const THEME_OVERRIDES = {
       glassHover: 'rgba(255, 255, 255, 0.05)',
       mapBase: '#0d0d0d',
       mapSea: '#0b0b0e',
-      mapBorder: '#666666',
-      mapBorderMuted: '#2a2a2a',
+      mapBorder: '#888888',
+      mapBorderMuted: '#444444',
       gridDot: 'rgba(255, 255, 255, 0.1)',
       graticule: '#333333',
       atmosphere: '#111111',
@@ -562,9 +562,9 @@ export const CONTINENT_COLORS_ATTENUATED = {
 export const STYLE_TOKENS = {
   radius: {
     sm: '10px',
-    md: '14px',
-    lg: '20px',
-    xl: '30px',
+    md: 'calc(var(--radius-sm) + var(--spacing-xs))',
+    lg: 'calc(var(--radius-md) + var(--spacing-xs) * 1.5)',
+    xl: 'calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs))',
     full: '9999px'
   },
   spacing: {
@@ -714,8 +714,8 @@ export const STROKE_THEME_COLORS = {
     found: '#10b981'
   },
   blackout: {
-    unfound: '#333333',
-    found: '#cccccc'
+    unfound: '#666666',
+    found: '#ffffff'
   }
 };
 

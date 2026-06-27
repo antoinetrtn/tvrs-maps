@@ -82,6 +82,12 @@ function App() {
   const [hudSide, setHudSide] = useState('right'); // 'left' or 'right'
   const [confirmState, setConfirmState] = useState(null); // { message, onConfirm }
 
+  // Learn Mode Toggles
+  const [learnShowCountryLabels, setLearnShowCountryLabels] = useState(true);
+  const [learnShowCapitals, setLearnShowCapitals] = useState(false);
+  const [learnShowRivers, setLearnShowRivers] = useState(false);
+  const [learnShowMountains, setLearnShowMountains] = useState(false);
+
   const extInputRef = useRef(null);
   const initialHeight = useRef(window.innerHeight);
   const viewportFrameRef = useRef(null);
@@ -563,14 +569,33 @@ function App() {
       
       const matchName = lang === 'fr' ? normalizeString(mapped.name_fr || mapped.name_en || adminKey) : normalizeString(mapped.name_en || adminKey);
       const matchCapital = lang === 'fr' && mapped.capital_fr ? normalizeString(mapped.capital_fr) : (mapped.capital ? normalizeString(mapped.capital) : null);
+      const aliases = mapped.aliases || [];
 
-      if (matchName === normalizedInput || matchCapital === normalizedInput) {
+      if (matchName === normalizedInput || matchCapital === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput)) {
         handleCountrySelect(adminKey);
         return true;
       }
     }
+
+    if (mode === 'learn') {
+      for (let adminKey of Object.keys(riversMountainsDataMap)) {
+        const mapped = riversMountainsDataMap[adminKey];
+        if (!mapped) continue;
+        if (mapped.type === 'river' && !learnShowRivers) continue;
+        if ((mapped.type === 'mountain' || mapped.type === 'mountain_range') && !learnShowMountains) continue;
+
+        const matchName = lang === 'fr' ? normalizeString(mapped.name_fr || mapped.name_en || adminKey) : normalizeString(mapped.name_en || adminKey);
+        const aliases = mapped.aliases || [];
+
+        if (matchName === normalizedInput || aliases.some(alias => normalizeString(alias) === normalizedInput)) {
+          handleCountrySelect(adminKey);
+          return true;
+        }
+      }
+    }
+
     return false;
-  }, [activeDataMap, lang, handleCountrySelect]);
+  }, [activeDataMap, lang, handleCountrySelect, mode, learnShowRivers, learnShowMountains]);
 
   const shouldAutoRotate = currentScreen === 'home';
 
@@ -673,6 +698,14 @@ function App() {
             isKeyboardMode={effectiveKeyboardMode}
             selectedCountry={selectedCountry}
             globeTheme={globeTheme}
+            learnShowCountryLabels={learnShowCountryLabels}
+            setLearnShowCountryLabels={setLearnShowCountryLabels}
+            learnShowCapitals={learnShowCapitals}
+            setLearnShowCapitals={setLearnShowCapitals}
+            learnShowRivers={learnShowRivers}
+            setLearnShowRivers={setLearnShowRivers}
+            learnShowMountains={learnShowMountains}
+            setLearnShowMountains={setLearnShowMountains}
           />
         )
       )}
@@ -700,6 +733,10 @@ function App() {
         globeLightingEnabled={globeLightingEnabled}
         activeDataMap={activeDataMap}
         globeTheme={globeTheme}
+        learnShowCountryLabels={learnShowCountryLabels}
+        learnShowCapitals={learnShowCapitals}
+        learnShowRivers={learnShowRivers}
+        learnShowMountains={learnShowMountains}
       />
 
       {showEndScreen && (

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { countryDataMap } from './gameData';
+import { riversMountainsDataMap } from './riversMountainsData';
 import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel, FRENCH_REGION_COLORS } from './designSystem';
 import { disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
 
@@ -10,12 +11,12 @@ const smoothedRiversCache = {};
 const getSmoothedRiverPath = (riverKey, pathCoords) => {
   if (smoothedRiversCache[riverKey]) return smoothedRiversCache[riverKey];
   if (!pathCoords || pathCoords.length < 2) return pathCoords;
-  
+
   const points = pathCoords.map(([lat, lng]) => new THREE.Vector3(lat, lng, 0.005));
   const curve = new THREE.CatmullRomCurve3(points);
   const smoothPoints = curve.getPoints(60);
   const result = smoothPoints.map(p => [p.x, p.y, p.z]);
-  
+
   smoothedRiversCache[riverKey] = result;
   return result;
 };
@@ -552,7 +553,11 @@ const GlobeMap = ({
   onPreserveInputFocus,
   globeLightingEnabled = true,
   activeDataMap,
-  globeTheme = 'glass'
+  globeTheme = 'glass',
+  learnShowCountryLabels = true,
+  learnShowCapitals = false,
+  learnShowRivers = false,
+  learnShowMountains = false
 }) => {
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
@@ -562,10 +567,8 @@ const GlobeMap = ({
   const tapRef = useRef(null);
   const previousSelectedCountryRef = useRef(null);
   const lastTargetRef = useRef(null);
-  const layoutViewportRef = useRef({
-    width: window.innerWidth,
-    height: window.innerHeight
-  });
+  const maxWindowWidthRef = useRef(window.innerWidth);
+  const maxWindowHeightRef = useRef(window.innerHeight);
   const wasHomeScreenRef = useRef(isHomeScreen);
   const isInteractingRef = useRef(false);
   const [zoomLevel, setZoomLevel] = useState(2.5);
@@ -760,7 +763,7 @@ const GlobeMap = ({
           ? currentPOV.altitude
           : fallbackAltitude;
         const isKeyboardOpen = isMobile && isKeyboardMode;
-        const layoutHeight = layoutViewportRef.current?.height || window.innerHeight;
+        const layoutHeight = maxWindowHeightRef.current;
         const keyboardHeight = Math.max(0, layoutHeight - viewport.height);
         const keyboardRatio = keyboardHeight / layoutHeight;
         const bottomHUDRatio = isMobile ? 0.15 : 0;
@@ -843,17 +846,26 @@ const GlobeMap = ({
 
   const selectCountry = useCallback((admin) => {
     if (onCountrySelect) {
-      if (!admin || gameDataMap[admin]) {
+      if (!admin || gameDataMap[admin] || (mode === 'learn' && riversMountainsDataMap[admin])) {
         onCountrySelect(admin);
       }
     }
-  }, [gameDataMap, onCountrySelect]);
+  }, [gameDataMap, onCountrySelect, mode]);
 
   const selectCountryAtLngLat = useCallback((lng, lat) => {
-    if (mode === 'rivers_mountains') {
+    const isLearnRivers = mode === 'learn' && learnShowRivers;
+    const isLearnMountains = mode === 'learn' && learnShowMountains;
+
+    if (mode === 'rivers_mountains' || isLearnRivers || isLearnMountains) {
       let best = null;
-      Object.entries(gameDataMap).forEach(([admin, data]) => {
+      const dataMap = mode === 'rivers_mountains' ? gameDataMap : riversMountainsDataMap;
+      Object.entries(dataMap).forEach(([admin, data]) => {
         if (!data) return;
+        if (mode === 'learn') {
+          if (data.type === 'river' && !learnShowRivers) return;
+          if ((data.type === 'mountain' || data.type === 'mountain_range') && !learnShowMountains) return;
+        }
+
         let dist;
         if (data.type === 'river' && Array.isArray(data.path) && data.path.length > 0) {
           // For rivers: find min distance to ANY point on the river path polyline
@@ -870,10 +882,18 @@ const GlobeMap = ({
         if (!best || dist < best.dist) best = { admin, dist };
       });
       // Rivers: click within ~5.5° of path. Mountains: 6.0° generous hit area.
-      const bestData = best ? gameDataMap[best.admin] : null;
-      const threshold = bestData?.type === 'river' ? 5.5 : 6.0;
-      selectCountry(best && best.dist < threshold ? best.admin : null);
-      return;
+      const bestData = best ? dataMap[best.admin] : null;
+      if (bestData) {
+        const threshold = bestData.type === 'river' ? 5.5 : 6.0;
+        if (best.dist < threshold) {
+          selectCountry(best.admin);
+          return;
+        }
+      }
+      if (mode !== 'learn') {
+        selectCountry(null);
+        return;
+      }
     }
 
     if (isDepartmentMode) {
@@ -907,7 +927,7 @@ const GlobeMap = ({
       // Clicked on ocean / far from any country: deselect
       selectCountry(null);
     }
-  }, [gameDataMap, isDepartmentMode, selectableFeatureIndex, selectCountry]);
+  }, [gameDataMap, isDepartmentMode, selectableFeatureIndex, selectCountry, mode, learnShowRivers, learnShowMountains]);
 
   const handlePointerDown = useCallback((event) => {
     // Prevent focus shift (keyboard flicker) on mobile when interacting with the globe
@@ -1112,7 +1132,9 @@ const GlobeMap = ({
 
   const getPolygonStroke = useCallback((d) => {
     if (isHomeScreen) {
-      return lerpColor(UI_COLORS.mapSea, UI_COLORS.mapBorderMuted, 0.45);
+      return isLight
+        ? lerpColor(UI_COLORS.mapSea, UI_COLORS.mapBorderMuted, 0.45)
+        : UI_COLORS.mapBorder;
     }
     if (isDepartmentMode) {
       const admin = getFeatureAdmin(d);
@@ -1121,7 +1143,7 @@ const GlobeMap = ({
         : lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.08);
       if (admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
       if (foundSet.has(admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-      return isLight ? UI_COLORS.mapBorderMuted : lerpColor(UI_COLORS.mapBase, UI_COLORS.paper, 0.18);
+      return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
     }
 
     const admin = getFeatureAdmin(d);
@@ -1144,11 +1166,11 @@ const GlobeMap = ({
         return STROKE_THEME_COLORS.blueprint.unfound;
       }
       if (globeTheme === 'blackout') {
-        return STROKE_THEME_COLORS.blackout.unfound;
+        return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
       }
       return isLight
         ? UI_COLORS.mapBorderMuted
-        : lerpColor(UI_COLORS.mapBase, UI_COLORS.paper, 0.15); // Slight glow instead of darkening
+        : UI_COLORS.mapBorder;
     }
 
     // Found / Learned / Homepage countries
@@ -1156,18 +1178,20 @@ const GlobeMap = ({
       return STROKE_THEME_COLORS.blueprint.found;
     }
     if (globeTheme === 'blackout') {
-      return STROKE_THEME_COLORS.blackout.found;
+      return isLight ? UI_COLORS.mapBorder : STROKE_THEME_COLORS.blackout.found;
     }
 
     const baseColor = (foundSet.has(admin) || mode === 'learn')
       ? getRegionSurfaceColor(region)
       : UI_COLORS.mapBase;
 
-    return lerpColor(
-      baseColor,
-      isLight ? UI_COLORS.ink : UI_COLORS.paper, // Use paper (white/light) for stroke in dark mode
-      isLight ? GLOBE_STYLE.lighting.strokeDarken.light : 0.2 // Reduced darken for dark mode
-    );
+    return isLight
+      ? lerpColor(
+          baseColor,
+          UI_COLORS.ink,
+          GLOBE_STYLE.lighting.strokeDarken.light
+        )
+      : UI_COLORS.mapBorder;
   }, [selectedCountry, UI_COLORS, isError, foundSet, mode, isHomeScreen, isLight, isDepartmentMode, lerpColor, isPerfectScore, getRegionSurfaceColor, globeTheme, REGION_COLORS_LABELS]);
 
   const getPolygonSideColor = useCallback((d) => {
@@ -1368,10 +1392,10 @@ const GlobeMap = ({
              vec2 uv = gl_FragCoord.xy;
              float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
              float noise = fract(sin(dot(uv + uTime, vec2(12.9898,78.233))) * 43758.5453);
-             
+
              // Glowing light beam
              vec3 beamColor = vec3(1.0);
-             
+
              // Make it pulse and flow like a laser barrier/energy wall
              gl_FragColor.rgb = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * noise));
              gl_FragColor.a = 0.35 + 0.45 * beamPattern;
@@ -1408,15 +1432,15 @@ const GlobeMap = ({
              vec2 uv = gl_FragCoord.xy;
              float t = uTime * 28.0;
              float noise = hash(uv + sin(t));
-             
+
              // Dynamic static range: bright static in light theme, dark static in dark theme
              float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
              float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
              float scanline = sin(uv.y * 1.5 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
-             
+
              float staticColor = mix(baseMin, baseMax, noise) + scanline;
              vec3 staticVec = vec3(staticColor);
-             
+
              vec3 finalColor = gl_FragColor.rgb;
              if (uTheme > 0.9 && uTheme < 1.1) {
                // Blackout theme: 100% monochrome static
@@ -1429,13 +1453,13 @@ const GlobeMap = ({
                // Other themes (modern glass, satellite): subtle holographic noise overlay
                finalColor = mix(gl_FragColor.rgb, staticVec, 0.40);
              }
-             
+
              if (uIsError > 0.5) {
                // Error / Loose: Analog TV sync roll & static tear
                float syncRoll = step(0.68, sin(uv.y * 0.08 - uTime * 45.0));
                float glitchNoise = hash(uv + sin(uTime * 80.0));
                float glitchStatic = mix(0.05, 0.95, glitchNoise);
-               
+
                if (uTheme > 0.9 && uTheme < 1.1) {
                  // Blackout: pure monochrome rolling bar static tear (Grayscale)
                  finalColor = vec3(mix(glitchStatic, syncRoll, 0.65));
@@ -1445,7 +1469,7 @@ const GlobeMap = ({
                  finalColor = mix(vec3(glitchStatic), bloodRed, 0.60 + syncRoll * 0.40);
                }
              }
-             
+
              if (uIsSuccess > 0.5) {
                // Success: s'illumine with an animated high-contrast flash/pulse
                float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
@@ -1459,7 +1483,7 @@ const GlobeMap = ({
                  finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
                }
              }
-             
+
              gl_FragColor.rgb = finalColor;
             `
           );
@@ -1528,6 +1552,9 @@ const GlobeMap = ({
     // Increased thickness for selection (contour plus visible)
     if (admin === selectedCountry) return perfProfile?.isMobile ? 5.5 : 7.5;
     if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
+    if (globeTheme === 'blackout') {
+      return perfProfile?.isMobile ? 1.1 : 1.6;
+    }
     if (isLight || globeLightingEnabled) return perfProfile?.isMobile ? 0.75 : 0.95;
     return perfProfile?.isMobile ? 0.55 : 0.75;
   }, [globeLightingEnabled, isLight, perfProfile?.isMobile, selectedCountry, isDepartmentMode, globeTheme]);
@@ -1578,35 +1605,68 @@ const GlobeMap = ({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
 
-    const labelDataMap = (isDepartmentMode || isRiversMountainsMode) ? gameDataMap : countryDataMap;
-    const keysToShow = (mode === 'learn' || isHomeScreen || isEndScreen)
-      ? Object.keys(labelDataMap)
-      : (perfProfile?.isMobile
-        ? (selectedCountry ? [...new Set([selectedCountry, ...foundList.slice(-1)])] : foundList.slice(-2))
-        : (selectedCountry && !foundList.includes(selectedCountry) ? [...foundList, selectedCountry] : foundList));
+    let labelsToProcess = [];
+
+    if (isDepartmentMode) {
+      Object.keys(gameDataMap).forEach(k => {
+        labelsToProcess.push({ key: k, data: gameDataMap[k], modeName: 'departments' });
+      });
+    } else if (isRiversMountainsMode) {
+      Object.keys(gameDataMap).forEach(k => {
+        labelsToProcess.push({ key: k, data: gameDataMap[k], modeName: 'rivers_mountains' });
+      });
+    } else if (mode === 'learn') {
+      if (learnShowCountryLabels) {
+        Object.keys(countryDataMap).forEach(k => {
+          labelsToProcess.push({ key: k, data: countryDataMap[k], modeName: 'countries' });
+        });
+      }
+      if (learnShowRivers) {
+        Object.keys(riversMountainsDataMap).forEach(k => {
+          if (riversMountainsDataMap[k].type === 'river') {
+            labelsToProcess.push({ key: k, data: riversMountainsDataMap[k], modeName: 'rivers_mountains' });
+          }
+        });
+      }
+      if (learnShowMountains) {
+        Object.keys(riversMountainsDataMap).forEach(k => {
+          if (riversMountainsDataMap[k].type === 'mountain' || riversMountainsDataMap[k].type === 'mountain_range') {
+            labelsToProcess.push({ key: k, data: riversMountainsDataMap[k], modeName: 'rivers_mountains' });
+          }
+        });
+      }
+    } else {
+      const keys = (isHomeScreen || isEndScreen)
+        ? Object.keys(countryDataMap)
+        : (perfProfile?.isMobile
+          ? (selectedCountry ? [...new Set([selectedCountry, ...foundList.slice(-1)])] : foundList.slice(-2))
+          : (selectedCountry && !foundList.includes(selectedCountry) ? [...foundList, selectedCountry] : foundList));
+      keys.forEach(k => {
+        labelsToProcess.push({ key: k, data: countryDataMap[k], modeName: mode });
+      });
+    }
+
     const pov = cameraPOV;
 
-    const filtered = keysToShow
-      .map(adminKey => {
-        const data = labelDataMap[adminKey];
+    const filtered = labelsToProcess
+      .map(({ key, data, modeName }) => {
         if (!data) return null;
 
-        const isSelected = adminKey === selectedCountry;
-        const isFound = foundSet.has(adminKey);
-        const size = countrySizes[adminKey] || 0.5;
+        const isSelected = key === selectedCountry;
+        const isFound = foundSet.has(key);
+        const size = countrySizes[key] || 0.5;
 
-        // Skip unfound labels in play mode for countries and rivers/mountains
+        // Skip unfound labels in play mode for countries, departments, and rivers/mountains
         const isPlayMode = mode !== 'learn' && !isHomeScreen && !isEndScreen;
         if (isPlayMode && !isFound && !isSelected) {
-          if (mode === 'countries' || mode === 'rivers_mountains') {
-            return null;
-          }
+          return null;
         }
 
         // Visibility based on zoom level
+        const isRivMount = modeName === 'rivers_mountains';
         const visibilityThreshold = isDepartmentMode
           ? 1.05
-          : (isSelected ? 10 : (isHomeScreen ? 1.8 : Math.min(3.0, 0.8 + size * 2.0)));
+          : (isSelected ? 10 : (isHomeScreen ? 1.8 : (isRivMount ? 2.5 : Math.min(3.0, 0.8 + size * 2.0))));
 
         if (zoomLevel > visibilityThreshold) return null;
 
@@ -1616,18 +1676,25 @@ const GlobeMap = ({
 
         if (!isSelected && distToCenter > (isDepartmentMode ? 7 : 95)) return null;
 
-        // Use cached object if available to maintain reference stability
-        const cached = labelsCacheRef.current[adminKey];
-        if (cached && cached.isSelected === isSelected && cached.lang === lang && cached.isFound === isFound && cached.mode === mode) {
-           cached.distToCenter = distToCenter; // Update distance for sorting without changing reference
+        const cacheKey = `${key}_${modeName}`;
+        const cached = labelsCacheRef.current[cacheKey];
+        if (
+          cached &&
+          cached.isSelected === isSelected &&
+          cached.lang === lang &&
+          cached.isFound === isFound &&
+          cached.mode === mode &&
+          cached.learnShowCapitals === learnShowCapitals
+        ) {
+           cached.distToCenter = distToCenter;
            return cached;
         }
 
         const newLabel = {
-          admin: adminKey,
+          admin: key,
           lat: data.lat,
           lng: data.lng,
-          country: lang === 'fr' ? (data.name_fr || adminKey) : (data.name_en || adminKey),
+          country: lang === 'fr' ? (data.name_fr || key) : (data.name_en || key),
           capital: lang === 'fr' ? (data.capital_fr || data.capital) : data.capital,
           region: data.region,
           flag: getFlagEmoji(data.iso2),
@@ -1636,10 +1703,11 @@ const GlobeMap = ({
           distToCenter,
           isSelected,
           isFound,
-          mode,
-          lang // Store lang to invalidate cache if it changes
+          mode: modeName,
+          learnShowCapitals,
+          lang
         };
-        labelsCacheRef.current[adminKey] = newLabel;
+        labelsCacheRef.current[cacheKey] = newLabel;
         return newLabel;
       })
       .filter(d => d !== null)
@@ -1650,15 +1718,18 @@ const GlobeMap = ({
       });
 
     if (isDepartmentMode) return filtered.slice(0, perfProfile?.isMobile ? 10 : 18);
-    if (mode === 'learn') return filtered.slice(0, perfProfile?.isMobile ? 12 : 24);
+    if (mode === 'learn') {
+      const limit = perfProfile?.isMobile ? 20 : 40;
+      return filtered.slice(0, limit);
+    }
     return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
-  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen, isDepartmentMode, isRiversMountainsMode, gameDataMap, foundSet]);
+  }, [foundList, countrySizes, zoomLevel, cameraPOV, lang, perfProfile?.maxLabels, mode, selectedCountry, isHomeScreen, isDepartmentMode, isRiversMountainsMode, gameDataMap, foundSet, learnShowCountryLabels, learnShowCapitals, learnShowRivers, learnShowMountains]);
 
   const createLabelElement = useCallback((d) => {
     const el = document.createElement('div');
-    
+
     let color;
-    if (isDepartmentMode) {
+    if (d.mode === 'departments') {
       color = d.isFound ? UI_COLORS.success : (d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted);
     } else if (isHomeScreen) {
       color = UI_COLORS.textMuted;
@@ -1674,8 +1745,8 @@ const GlobeMap = ({
       color = (d.isFound || d.isSelected) ? UI_COLORS.paper : UI_COLORS.textMuted;
     } else {
       // Modern Glass theme uses regional colors for found/selected
-      color = (d.isFound || d.isSelected) 
-        ? (REGION_COLORS_LABELS[d.region] || UI_COLORS.accent) 
+      color = (d.isFound || d.isSelected)
+        ? (REGION_COLORS_LABELS[d.region] || UI_COLORS.accent)
         : UI_COLORS.textMuted;
     }
 
@@ -1686,203 +1757,189 @@ const GlobeMap = ({
     el.style.pointerEvents = 'none';
     el.style.userSelect = 'none';
 
-    const isPlayMode = d.mode !== 'learn' && !isHomeScreen && !isEndScreen;
+    const isPlayMode = mode !== 'learn' && d.mode !== 'learn' && !isHomeScreen && !isEndScreen;
     const revealAll = !isPlayMode || d.isFound;
 
-    if (isDepartmentMode) {
-      const displayName = revealAll ? d.country : '???';
-      const displayCapital = revealAll ? d.capital : '???';
+    const isGlitchMode = ((d.mode === 'capitals' || d.mode === 'countries') && !revealAll) || (isHomeScreen && d.isSelected);
 
+    // Local helper to scramble text with glitched characters (100% scrambled to prevent reading letters)
+    const localScrambleText = (text, seed = 0) => {
+      if (!text) return '';
+      const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%&?*¢¤§░▒▓█▲▼◆◇';
+      return text.split('').map((char, index) => {
+        if (char === ' ' || char === '-' || char === "'") return char;
+        const hash = Math.sin(index * 13.5 + seed * 7.1) * 10000;
+        const rand = Math.abs(hash) % 1.0;
+        const glyphIndex = Math.floor(rand * glyphs.length);
+        return glyphs[glyphIndex];
+      }).join('');
+    };
+
+    if (isGlitchMode) {
+      const isCapitalsMode = d.mode === 'capitals';
+      const glitchLine1Raw = isCapitalsMode ? d.capital : d.country;
+      const glitchLine1Class = isCapitalsMode ? 'glitch-capital' : 'glitch-country';
+
+      // Glitched/scrambled animated callout box (Minimalist, centered on top of stalk)
       el.innerHTML = `
-        <div
-          class="globe-label-element department-label-element"
-          style="
-            position: relative;
-            width: 0;
-            height: 0;
-            --department-label-accent: ${color};
-            --department-label-bg: ${UI_COLORS.departmentLabelBg};
-            --department-label-text: ${UI_COLORS.textMain};
-            --department-label-subtle-text: ${UI_COLORS.textMuted};
-            --department-label-border: ${UI_COLORS.departmentLabelBorder};
-            --department-label-code-text: ${UI_COLORS.textInverse};
-            --department-label-dot-shadow: ${UI_COLORS.departmentLabelDotShadow};
-            --department-label-shadow: ${UI_COLORS.departmentLabelShadow};
-            --department-label-inset-shadow: ${UI_COLORS.departmentLabelInsetShadow};
-          "
-        >
-          <div class="department-label-dot"></div>
-          <div class="department-label-copy">
-            <div class="department-label-main">
-              <span class="department-label-code">${d.code}</span>
-              <span class="department-label-name">${displayName}</span>
+        <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
+          <!-- Dot -->
+          <div style="
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: ${color};
+            border-radius: 50%;
+            left: -3px;
+            top: -3px;
+            box-shadow: 0 0 8px ${color};
+            opacity: ${isHomeScreen ? 0.5 : 1};
+          "></div>
+          <!-- Stalk Line (Shortened to 15px) -->
+          <div style="
+            position: absolute;
+            width: 1.2px;
+            height: 15px;
+            background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
+            left: -0.6px;
+            bottom: 3px;
+            opacity: ${isHomeScreen ? 0.4 : 0.85};
+          "></div>
+          <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
+          <div style="
+            position: absolute;
+            left: 50%;
+            bottom: 21px;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: var(--font-mono, monospace);
+            white-space: nowrap;
+            color: ${UI_COLORS.textMain};
+            text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
+            opacity: ${isHomeScreen ? 0.6 : 1};
+          ">
+            <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+              <span class="glitch-flag">▒</span>
+              <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}">${localScrambleText(glitchLine1Raw)}</span>
             </div>
-            <div class="department-label-capital">(${displayCapital})</div>
+            ${isCapitalsMode ? `
+              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
+                <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
+
+      // Start dynamic scrambling interval
+      const interval = setInterval(() => {
+        if (!document.body.contains(el)) {
+          clearInterval(interval);
+          return;
+        }
+        const countryEl = el.querySelector('.glitch-country');
+        const capitalEl = el.querySelector('.glitch-capital');
+        const flagEl = el.querySelector('.glitch-flag');
+
+        const glyphs = '░▒▓█▲▼◆◇@#$%&?*¢';
+        if (countryEl) {
+          const raw = countryEl.getAttribute('data-text') || '';
+          countryEl.innerText = localScrambleText(raw, Math.random());
+        }
+        if (capitalEl) {
+          const raw = capitalEl.getAttribute('data-text') || '';
+          capitalEl.innerText = localScrambleText(raw, Math.random());
+        }
+        if (flagEl) {
+          flagEl.innerText = glyphs[Math.floor(Math.random() * glyphs.length)];
+        }
+      }, 150);
+
     } else {
-      const showCapital = revealAll;
-      const isGlitchMode = ((d.mode === 'capitals' || d.mode === 'countries') && !revealAll) || (isHomeScreen && d.isSelected);
+      // Normal clean callout box (Minimalist, centered on top of stalk)
+      const iconSymbol = d.mode === 'rivers_mountains'
+        ? (gameDataMap[d.admin]?.type === 'mountain_range' || riversMountainsDataMap[d.admin]?.type === 'mountain_range' ? '🏔️ ' : '💧 ')
+        : '';
 
-      // Local helper to scramble text with glitched characters (100% scrambled to prevent reading letters)
-      const localScrambleText = (text, seed = 0) => {
-        if (!text) return '';
-        const glyphs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%&?*¢¤§░▒▓█▲▼◆◇';
-        return text.split('').map((char, index) => {
-          if (char === ' ' || char === '-' || char === "'") return char;
-          const hash = Math.sin(index * 13.5 + seed * 7.1) * 10000;
-          const rand = Math.abs(hash) % 1.0;
-          const glyphIndex = Math.floor(rand * glyphs.length);
-          return glyphs[glyphIndex];
-        }).join('');
-      };
+      const displayName = revealAll ? d.country : '???';
+      const displayCapital = revealAll ? d.capital : '???';
 
-      if (isGlitchMode) {
-        const isCapitalsMode = d.mode === 'capitals';
-        const glitchLine1Raw = isCapitalsMode ? d.capital : d.country;
-        const glitchLine1Class = isCapitalsMode ? 'glitch-capital' : 'glitch-country';
+      const hasCapitalLine = (d.mode === 'capitals' || (mode === 'learn' && d.learnShowCapitals)) && d.capital;
 
-        // Glitched/scrambled animated callout box (Minimalist, centered on top of stalk)
-        el.innerHTML = `
-          <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
-            <!-- Dot -->
-            <div style="
-              position: absolute;
-              width: 6px;
-              height: 6px;
-              background: ${color};
-              border-radius: 50%;
-              left: -3px;
-              top: -3px;
-              box-shadow: 0 0 8px ${color};
-              opacity: ${isHomeScreen ? 0.5 : 1};
-            "></div>
-            <!-- Stalk Line (Shortened to 15px) -->
-            <div style="
-              position: absolute;
-              width: 1.2px;
-              height: 15px;
-              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
-              left: -0.6px;
-              bottom: 3px;
-              opacity: ${isHomeScreen ? 0.4 : 0.85};
-            "></div>
-            <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
-            <div style="
-              position: absolute;
-              left: 50%;
-              bottom: 21px;
-              transform: translateX(-50%);
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              font-family: var(--font-mono, monospace);
-              white-space: nowrap;
-              color: ${UI_COLORS.textMain};
-              text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
-              opacity: ${isHomeScreen ? 0.6 : 1};
-            ">
-              <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-                <span class="glitch-flag">▒</span>
-                <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}">${localScrambleText(glitchLine1Raw)}</span>
-              </div>
-              ${isCapitalsMode ? `
-                <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
-                  <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
-                </div>
-              ` : ''}
-            </div>
-          </div>
+      let line1Content;
+      let line2Content = null;
+
+      if (d.mode === 'departments') {
+        line1Content = `
+          ${d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: 9px; line-height: 1.1; margin-right: 3px;">${d.code}</span>` : ''}
+          <span>${displayName}</span>
         `;
-
-        // Start dynamic scrambling interval
-        const interval = setInterval(() => {
-          if (!document.body.contains(el)) {
-            clearInterval(interval);
-            return;
-          }
-          const countryEl = el.querySelector('.glitch-country');
-          const capitalEl = el.querySelector('.glitch-capital');
-          const flagEl = el.querySelector('.glitch-flag');
-          
-          const glyphs = '░▒▓█▲▼◆◇@#$%&?*¢';
-          if (countryEl) {
-            const raw = countryEl.getAttribute('data-text') || '';
-            countryEl.innerText = localScrambleText(raw, Math.random());
-          }
-          if (capitalEl) {
-            const raw = capitalEl.getAttribute('data-text') || '';
-            capitalEl.innerText = localScrambleText(raw, Math.random());
-          }
-          if (flagEl) {
-            flagEl.innerText = glyphs[Math.floor(Math.random() * glyphs.length)];
-          }
-        }, 150);
-
+        if (d.capital) {
+          line2Content = `(${displayCapital})`;
+        }
       } else {
-        // Normal clean callout box (Minimalist, centered on top of stalk)
-        const iconSymbol = d.mode === 'rivers_mountains' 
-          ? (gameDataMap[d.admin]?.type === 'mountain_range' ? '🏔️ ' : '💧 ')
-          : '';
-
-        const hasCapitalLine = showCapital && d.capital && d.mode === 'capitals';
         const line1Text = hasCapitalLine ? `${d.flag || ''} ${d.capital}` : `${iconSymbol || d.flag || ''} ${d.country}`;
-
-        el.innerHTML = `
-          <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
-            <!-- Dot -->
-            <div style="
-              position: absolute;
-              width: 6px;
-              height: 6px;
-              background: ${color};
-              border-radius: 50%;
-              left: -3px;
-              top: -3px;
-              box-shadow: 0 0 8px ${color};
-              opacity: ${isHomeScreen ? 0.5 : 1};
-            "></div>
-            <!-- Stalk Line (Shortened to 15px) -->
-            <div style="
-              position: absolute;
-              width: 1.2px;
-              height: 15px;
-              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
-              left: -0.6px;
-              bottom: 3px;
-              opacity: ${isHomeScreen ? 0.4 : 0.85};
-            "></div>
-            <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
-            <div style="
-              position: absolute;
-              left: 50%;
-              bottom: 21px;
-              transform: translateX(-50%);
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              font-family: var(--font-mono, monospace);
-              white-space: nowrap;
-              color: ${UI_COLORS.textMain};
-              text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
-              opacity: ${isHomeScreen ? 0.6 : 1};
-            ">
-              <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-                <span>${line1Text}</span>
-              </div>
-              ${hasCapitalLine ? `
-                <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
-                  ${d.country}
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        `;
+        line1Content = `<span>${line1Text}</span>`;
+        if (hasCapitalLine) {
+          line2Content = d.country;
+        }
       }
+
+      el.innerHTML = `
+        <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
+          <!-- Dot -->
+          <div style="
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: ${color};
+            border-radius: 50%;
+            left: -3px;
+            top: -3px;
+            box-shadow: 0 0 8px ${color};
+            opacity: ${isHomeScreen ? 0.5 : 1};
+          "></div>
+          <!-- Stalk Line (Shortened to 15px) -->
+          <div style="
+            position: absolute;
+            width: 1.2px;
+            height: 15px;
+            background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
+            left: -0.6px;
+            bottom: 3px;
+            opacity: ${isHomeScreen ? 0.4 : 0.85};
+          "></div>
+          <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
+          <div style="
+            position: absolute;
+            left: 50%;
+            bottom: 21px;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: var(--font-mono, monospace);
+            white-space: nowrap;
+            color: ${UI_COLORS.textMain};
+            text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
+            opacity: ${isHomeScreen ? 0.6 : 1};
+          ">
+            <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+              ${line1Content}
+            </div>
+            ${line2Content ? `
+              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
+                ${line2Content}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
     }
     return el;
-  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, isDepartmentMode, isLight, gameDataMap, globeTheme]);
+  }, [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, isLight, gameDataMap, globeTheme, mode]);
 
   const biomePointsCacheRef = useRef({});
 
@@ -1910,12 +1967,14 @@ const GlobeMap = ({
   // mass-re-animating every river on each selection change. Only rebuilds when
   // actual data (found state, theme) changes.
   const riversBasePathsData = useMemo(() => {
-    if (mode !== 'rivers_mountains') return [];
+    const isLearnRivers = mode === 'learn' && learnShowRivers;
+    if (mode !== 'rivers_mountains' && !isLearnRivers) return [];
     const paths = [];
-    Object.keys(gameDataMap).forEach(k => {
-      const data = gameDataMap[k];
+    const dataMap = isLearnRivers ? riversMountainsDataMap : gameDataMap;
+    Object.keys(dataMap).forEach(k => {
+      const data = dataMap[k];
       if (!data || data.type !== 'river' || !data.path) return;
-      const isFound = foundSet.has(k) || isHomeScreen;
+      const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
       paths.push({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
@@ -1928,17 +1987,19 @@ const GlobeMap = ({
       });
     });
     return paths;
-  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS]);
+  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS, learnShowRivers]);
 
   const riversSelectedPathData = useMemo(() => {
-    if (mode !== 'rivers_mountains' || !selectedCountry) return [];
-    const data = gameDataMap[selectedCountry];
+    const isLearnRivers = mode === 'learn' && learnShowRivers;
+    if ((mode !== 'rivers_mountains' && !isLearnRivers) || !selectedCountry) return [];
+    const dataMap = isLearnRivers ? riversMountainsDataMap : gameDataMap;
+    const data = dataMap[selectedCountry];
     if (!data || data.type !== 'river' || !data.path) return [];
-    const isFound = foundSet.has(selectedCountry) || isHomeScreen;
+    const isFound = foundSet.has(selectedCountry) || mode === 'learn' || isHomeScreen;
     const color = isFound
       ? (isError ? UI_COLORS.error : UI_COLORS.riverSelectedFound)
       : (isError ? UI_COLORS.errorGlowStrong : UI_COLORS.riverSelectedUnfound);
-    
+
     const smoothedPath = getSmoothedRiverPath(selectedCountry, data.path);
 
     return [
@@ -1963,20 +2024,22 @@ const GlobeMap = ({
         dashAnimateTime: 800
       }
     ];
-  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS]);
+  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS, learnShowRivers]);
 
   // Base mountain paths
   const mountainsBasePathsData = useMemo(() => {
-    if (mode !== 'rivers_mountains') return [];
+    const isLearnMountains = mode === 'learn' && learnShowMountains;
+    if (mode !== 'rivers_mountains' && !isLearnMountains) return [];
     const paths = [];
-    Object.keys(gameDataMap).forEach(k => {
-      const data = gameDataMap[k];
+    const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
+    Object.keys(dataMap).forEach(k => {
+      const data = dataMap[k];
       if (!data || data.type !== 'mountain_range' || !data.path) return;
-      const isFound = foundSet.has(k) || isHomeScreen;
-      const color = isFound 
+      const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
+      const color = isFound
         ? getThemeRegionColor(globeTheme, theme, data.region)
         : (globeTheme === 'blackout' ? STROKE_THEME_COLORS.blackout.unfound : UI_COLORS.riverInactive);
-      
+
       paths.push({
         admin: k,
         coords: data.path.map(([lat, lng]) => [lat, lng, 0.002]), // Lifted slightly above surface
@@ -1988,19 +2051,21 @@ const GlobeMap = ({
       });
     });
     return paths;
-  }, [gameDataMap, foundSet, mode, isHomeScreen, globeTheme, theme, UI_COLORS]);
+  }, [gameDataMap, foundSet, mode, isHomeScreen, globeTheme, theme, UI_COLORS, learnShowMountains]);
 
   // Selected mountain paths
   const mountainsSelectedPathData = useMemo(() => {
-    if (mode !== 'rivers_mountains' || !selectedCountry) return [];
-    const data = gameDataMap[selectedCountry];
+    const isLearnMountains = mode === 'learn' && learnShowMountains;
+    if ((mode !== 'rivers_mountains' && !isLearnMountains) || !selectedCountry) return [];
+    const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
+    const data = dataMap[selectedCountry];
     if (!data || data.type !== 'mountain_range' || !data.path) return [];
-    const isFound = foundSet.has(selectedCountry) || isHomeScreen;
+    const isFound = foundSet.has(selectedCountry) || mode === 'learn' || isHomeScreen;
     const regionColor = getThemeRegionColor(globeTheme, theme, data.region);
     const color = isFound
       ? (isError ? UI_COLORS.error : regionColor)
       : (isError ? UI_COLORS.errorGlowStrong : UI_COLORS.textMuted);
-      
+
     const pathPoints = data.path.map(([lat, lng]) => [lat, lng, 0.0035]);
 
     return [
@@ -2025,7 +2090,7 @@ const GlobeMap = ({
         dashAnimateTime: 1200
       }
     ];
-  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS, globeTheme, theme]);
+  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS, globeTheme, theme, learnShowMountains]);
 
   // Combined for globe: base first, selected on top (exclude mountain lines - only show 3D mountains)
   const globePathsData = useMemo(() => [
@@ -2034,11 +2099,14 @@ const GlobeMap = ({
   ], [riversBasePathsData, riversSelectedPathData]);
 
   const getBiomeAssetsData = useMemo(() => {
-    if (mode === 'rivers_mountains') {
+    const isLearnMountains = mode === 'learn' && learnShowMountains;
+    if (mode === 'rivers_mountains' || isLearnMountains) {
       const assets = [];
-      Object.keys(gameDataMap).forEach(k => {
-        const data = gameDataMap[k];
+      const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
+      Object.keys(dataMap).forEach(k => {
+        const data = dataMap[k];
         if (!data || data.lat === undefined) return;
+        if (data.type !== 'mountain' && data.type !== 'mountain_range') return;
         const isFound = foundSet.has(k) || mode === 'learn' || isHomeScreen;
         assets.push({
           admin: k,
@@ -2049,7 +2117,7 @@ const GlobeMap = ({
           bearing: data.bearing || 0,
           spread: data.spread || 1.5,
           height: data.height || 4000,
-          scale: data.type === 'mountain_range' ? 2.8 : 1.0,
+          scale: data.type === 'mountain_range' ? 1.55 : 1.0,
           rotation: 0,
           path: data.path || null
         });
@@ -2058,31 +2126,34 @@ const GlobeMap = ({
     }
 
     return [];
-  }, [gameDataMap, mode, foundSet, isHomeScreen]);
+  }, [gameDataMap, mode, foundSet, isHomeScreen, learnShowMountains]);
 
   const getBiomeAltitude = useCallback((d) => {
     const admin = d.admin;
-    if (mode === 'rivers_mountains') {
+    const isLearnMountains = mode === 'learn' && learnShowMountains;
+    if (mode === 'rivers_mountains' || isLearnMountains) {
       return admin === selectedCountry ? 0.003 : 0.0015;
     }
     return admin === selectedCountry ? 0.0025 : 0.0015;
-  }, [selectedCountry, mode]);
+  }, [selectedCountry, mode, learnShowMountains]);
 
   const createBiomeThreeObject = useCallback((d) => {
     const isSelected = d.admin === selectedCountry;
     const key = `${d.admin || 'unknown'}_${d.isFound ? 'found' : 'unfound'}_selected_${isSelected}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
-    
+
     if (biomeObjectsCacheRef.current.has(key)) {
       return biomeObjectsCacheRef.current.get(key);
     }
 
     let asset;
-    if (mode === 'rivers_mountains') {
+    const isLearnMountains = mode === 'learn' && learnShowMountains;
+    const baseScale = d.scale * BIOME_SCENE_SCALE;
+    if (mode === 'rivers_mountains' || isLearnMountains) {
       if (!d.isFound) {
-        asset = createUnfoundPlaceholder(d.type, theme, isSelected, d.bearing, d.spread, d.path, d.lat, d.lng);
+        asset = createUnfoundPlaceholder(d.type, globeTheme, isSelected, d.bearing, d.spread, d.path, d.lat, d.lng, baseScale);
       } else {
         if (d.type === 'mountain' || d.type === 'mountain_range') {
-          asset = createMountainFeature(theme, isSelected, d.bearing, d.spread, d.height, d.path, d.lat, d.lng);
+          asset = createMountainFeature(globeTheme, isSelected, d.bearing, d.spread, d.height, d.path, d.lat, d.lng, baseScale);
         } else {
           asset = new THREE.Group(); // Found rivers are drawn in 3D paths, so empty group here
         }
@@ -2094,14 +2165,12 @@ const GlobeMap = ({
     const alignedAsset = new THREE.Group();
     asset.rotation.x = BIOME_SURFACE_ALIGNMENT_RADIANS;
     alignedAsset.add(asset);
-
-    const baseScale = d.scale * BIOME_SCENE_SCALE;
     // Unfound countries get smaller preview biomes, but on home screen they are all fully shown!
-    alignedAsset.scale.setScalar(d.isFound ? baseScale : baseScale * 0.5);
+    alignedAsset.scale.setScalar(d.isFound ? baseScale * 0.65 : baseScale * 0.35);
 
     biomeObjectsCacheRef.current.set(key, alignedAsset);
     return alignedAsset;
-  }, [theme, globeTheme, mode, selectedCountry]);
+  }, [theme, globeTheme, mode, selectedCountry, learnShowMountains]);
 
   useEffect(() => {
     // Clear biome objects cache when theme changes to prevent memory leak and release old theme assets
@@ -2119,8 +2188,8 @@ const GlobeMap = ({
           ? UI_COLORS.error
           : (!isFound
               ? UI_COLORS.textMuted
-              : (globeTheme === 'blackout' 
-                  ? UI_COLORS.paper 
+              : (globeTheme === 'blackout'
+                  ? UI_COLORS.paper
                   : (REGION_COLORS_LABELS[region] || REGION_COLORS[region] || UI_COLORS.accent)));
         const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
         if (isDepartmentMode) {
@@ -2135,7 +2204,7 @@ const GlobeMap = ({
             }
           ];
         }
-        
+
         // Tight, high-tech target lock reticle (instead of wide radar waves)
         return [
           {
@@ -2599,9 +2668,9 @@ const GlobeMap = ({
         if (selectedCountry) {
           scene.traverse((obj) => {
             if (obj.userData && getFeatureAdmin(obj.userData) === selectedCountry) {
-              const isStroke = obj.isLine || 
-                               obj.type === 'LineSegments' || 
-                               obj.type === 'Line' || 
+              const isStroke = obj.isLine ||
+                               obj.type === 'LineSegments' ||
+                               obj.type === 'Line' ||
                                (obj.material && (obj.material.type === 'LineBasicMaterial' || obj.material.type === 'Line2Material' || obj.material.type === 'ShaderMaterial'));
               if (isStroke) {
                 selectedStrokeObjRef.current = obj;
@@ -2712,17 +2781,21 @@ const GlobeMap = ({
     updateGlobeLighting();
   }, [styleGlobeGraticules, updateGlobeLighting]);
 
-  const isMobileKeyboardOpen = viewport.width < 1024 && isKeyboardMode;
-  if (!isMobileKeyboardOpen) {
-    layoutViewportRef.current = {
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
+  const isMobileSize = viewport.width < 1024;
+  if (!isKeyboardMode) {
+    const isKeyboardLikelyOpening = isMobileSize &&
+      (window.innerHeight < maxWindowHeightRef.current * 0.85) &&
+      (window.innerWidth === maxWindowWidthRef.current);
+
+    if (!isKeyboardLikelyOpening) {
+      maxWindowWidthRef.current = window.innerWidth;
+      maxWindowHeightRef.current = window.innerHeight;
+    }
   }
-  // Keep the WebGL canvas fixed at full window size to avoid continuous canvas resizes when the keyboard opens/closes.
-  const globeWidth = layoutViewportRef.current.width || window.innerWidth;
-  const globeHeight = layoutViewportRef.current.height || window.innerHeight;
-  const homeGlobeOffset = isHomeScreen && !isMobileKeyboardOpen && globeWidth >= 769
+
+  const globeWidth = maxWindowWidthRef.current;
+  const globeHeight = maxWindowHeightRef.current;
+  const homeGlobeOffset = isHomeScreen && !isKeyboardMode && globeWidth >= 769
     ? Math.round(globeWidth * 0.18)
     : 0;
   const globeRenderWidth = globeWidth + (homeGlobeOffset * 2);

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Globe2, MapPin, GraduationCap, Sun, Moon, Timer, Plus, Minus, Hash, Palette, Mountain } from 'lucide-react';
+import { Globe, MapPin, BookOpen, CloudSun, Moon, Clock, Plus, Minus, Hash, Settings2, TreePine } from 'pixelarticons/react';
 import Logo from './Logo';
 import { THEMES_LIST } from './designSystem';
 import './HomeScreen.css';
@@ -103,28 +103,27 @@ const HomeScreen = ({
         
         <div className="home-buttons">
           <button className="home-btn mode-countries" onClick={() => onStartGame('countries')}>
-            <Globe2 size={20} />
+            <Globe width={20} height={20} />
             <span className="btn-title">{lang === 'fr' ? 'Pays' : 'Countries'}</span>
           </button>
 
           <button className="home-btn mode-capitals" onClick={() => onStartGame('capitals')}>
-            <MapPin size={20} />
+            <MapPin width={20} height={20} />
             <span className="btn-title">{lang === 'fr' ? 'Capitales' : 'Capitals'}</span>
           </button>
 
           <button className="home-btn mode-departments" onClick={() => onStartGame('departments')}>
-            <Hash size={18} strokeWidth={2.4} className="home-btn-icon hash-icon" />
+            <Hash width={18} height={18} className="home-btn-icon hash-icon" />
             <span className="btn-title">{lang === 'fr' ? 'Départements' : 'Departments'}</span>
           </button>
 
           <button className="home-btn mode-rivers-mountains" onClick={() => onStartGame('rivers_mountains')}>
-            <Mountain size={20} />
+            <TreePine width={20} height={20} />
             <span className="btn-title">{lang === 'fr' ? 'Reliefs & Fleuves' : 'Rivers & Peaks'}</span>
           </button>
 
-
           <button className="home-btn mode-learn" onClick={() => onStartGame('learn')}>
-            <GraduationCap size={20} />
+            <BookOpen width={20} height={20} />
             <span className="btn-title">{lang === 'fr' ? 'Apprendre' : 'Learn'}</span>
           </button>
         </div>
@@ -133,14 +132,14 @@ const HomeScreen = ({
       <div className="home-bottom-right">
         <div className="timer-toggle-wrap glass-panel">
           <button className="timer-btn" onClick={() => adjustDuration(-60)} title={lang === 'fr' ? '-1 minute' : '-1 minute'}>
-            <Minus size={16} />
+            <Minus width={16} height={16} />
           </button>
           <div className="timer-display">
-            <Timer size={16} className="timer-icon" />
+            <Clock width={16} height={16} className="timer-icon" />
             <span>{Math.floor(gameDuration / 60)}'</span>
           </div>
           <button className="timer-btn" onClick={() => adjustDuration(60)} title={lang === 'fr' ? '+1 minute' : '+1 minute'}>
-            <Plus size={16} />
+            <Plus width={16} height={16} />
           </button>
         </div>
 
@@ -160,7 +159,7 @@ const HomeScreen = ({
           </button>
         </div>
         <button className="theme-toggle-btn glass-panel" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title={lang === 'fr' ? 'Mode sombre/clair' : 'Dark/light mode'}>
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          {theme === 'dark' ? <CloudSun width={20} height={20} /> : <Moon width={20} height={20} />}
         </button>
 
         <div className="globe-theme-container">
@@ -170,7 +169,7 @@ const HomeScreen = ({
             onPointerDown={(e) => e.preventDefault()}
             title={lang === 'fr' ? 'Thème du globe' : 'Globe theme'}
           >
-            <Palette size={20} />
+            <Settings2 width={20} height={20} />
           </button>
           {themeMenuOpen && (
             <div className="globe-theme-menu glass-panel animation-fade-in">

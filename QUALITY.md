@@ -38,3 +38,10 @@ Selection feedback should stay cheap: material color/emissive, altitude pulse, r
 - Avoid negative letter spacing.
 - Use existing CSS variables for transitions and repeated sizes.
 - For globe drag feel, prefer wrapper-level CSS transforms over extra Three.js objects.
+
+## Theme & Mode Modifying Rules
+
+- **Theme Completeness**: Every theme overrides object in `src/designSystem.js` must declare overrides for all variables defined in the base `THEME` structure to avoid partial variables or broken colors when switching modes or states.
+- **Independent Game Modes**: Any code modifying game layouts, filters, or scoring must be guarded by mode checks (e.g. `mode === 'learn'`, `isDepartmentMode`) to prevent regressions in other modes.
+- **Mobile Layout Consistency**: Never duplicate or split mobile layouts when adding features. Use the unified compact top-HUD and visual popover dropdown system.
+- **Stable Mobile Viewports**: Keep WebGL canvases fixed to un-contracted viewport dimensions (`maxWindowHeightRef`/`maxWindowWidthRef`) to prevent keyboard-resize canvas jumps, adjusting only the Point of View offsets.

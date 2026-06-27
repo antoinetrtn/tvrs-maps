@@ -191,7 +191,6 @@ export const riversMountainsDataMap = {
     name_en: 'Southern Alps',
     type: 'mountain_range',
     path: [[-45,168],[-44.2,169.2],[-43.5,170.5],[-42.8,171.8],[-42,172.8]],
-    path: [[44.5,6.5],[45.2,7.2],[46,8.5],[46.8,10.2],[47.2,12],[47.1,13.8],[46.8,15]],
     lat: -43.6,
     lng: 170.1,
     bearing: 45,

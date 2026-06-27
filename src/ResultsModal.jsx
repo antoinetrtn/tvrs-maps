@@ -1,7 +1,18 @@
 import React, { useMemo } from 'react';
+import { Close } from 'pixelarticons/react';
 import './ResultsModal.css';
 import { getGameStats } from './utils';
 import { getThemeRegionColor, getThemeRegionColorLabel, getThemeRegionColorAttenuated } from './designSystem';
+
+const getGlitchText = (str) => {
+  const chars = '█▒░▄▀█░▒';
+  let out = '';
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    out += chars[code % chars.length];
+  }
+  return out;
+};
 
 const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr', globeTheme = 'glass' }) => {
   const dataMap = activeDataMap || countryDataMap;
@@ -39,7 +50,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
+      <div className={`modal-content ${isGameOver ? 'is-game-over' : ''}`}>
         <header className="modal-header">
           <div className="header-left">
             <h2>{isGameOver ? (lang === 'fr' ? "Partie Terminée" : "Game Over") : (lang === 'fr' ? "Progression" : "Progress")}</h2>
@@ -49,7 +60,11 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
               <span className="score-total">{totalCountries}</span>
             </div>
           </div>
-          {onClose && <button className="close-popup" onClick={onClose}>✕</button>}
+          {onClose && (
+            <button className="close-popup" onClick={onClose} aria-label="Close">
+              <Close width={18} height={18} />
+            </button>
+          )}
         </header>
 
         <div className="continents-grid">
@@ -86,13 +101,14 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
                   {data.countries.map(c => {
                     const label = mode === 'capitals' ? c.capital : c.name;
                     const isRevealed = c.found || isGameOver;
+                    const displayLabel = isRevealed ? label : getGlitchText(label);
                     return (
                       <div 
                         key={c.key} 
                         className={`country-pill ${c.found ? 'found' : 'missed'}`}
                         title={isRevealed ? label : '???'}
                       >
-                        {isRevealed ? label : '???'}
+                        {displayLabel}
                       </div>
                     );
                   })}

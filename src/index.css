@@ -36,9 +36,9 @@
 
   /* DESIGN SYSTEM TOKENS */
   --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 30px;
+  --radius-md: calc(var(--radius-sm) + var(--spacing-xs));
+  --radius-lg: calc(var(--radius-md) + var(--spacing-xs) * 1.5);
+  --radius-xl: calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs));
   --radius-full: 9999px;
 
   --spacing-xs: 4px;
