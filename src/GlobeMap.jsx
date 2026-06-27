@@ -1628,11 +1628,8 @@ const GlobeMap = ({
       `;
     } else {
       const showCapital = revealAll;
-      const labelBg = isLight ? `color-mix(in srgb, ${UI_COLORS.paper} 94%, transparent)` : `color-mix(in srgb, ${UI_COLORS.black} 88%, transparent)`;
       const labelText = UI_COLORS.textMain;
       const labelSubText = UI_COLORS.textMuted;
-      const labelBorder = color;
-
       const isGlitchMode = d.mode === 'capitals' && !revealAll;
 
       // Local helper to scramble text with glitched characters
@@ -1652,55 +1649,52 @@ const GlobeMap = ({
       };
 
       if (isGlitchMode) {
-        // Glitched/scrambled animated callout box
+        // Glitched/scrambled animated callout box (Minimalist, centered on top of stalk)
         el.innerHTML = `
           <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
             <!-- Dot -->
             <div style="
               position: absolute;
-              width: 8px;
-              height: 8px;
+              width: 6px;
+              height: 6px;
               background: ${color};
               border-radius: 50%;
-              left: -4px;
-              top: -4px;
-              box-shadow: 0 0 10px ${color};
+              left: -3px;
+              top: -3px;
+              box-shadow: 0 0 8px ${color};
               opacity: ${isHomeScreen ? 0.5 : 1};
             "></div>
             <!-- Stalk Line -->
             <div style="
               position: absolute;
-              width: 1.5px;
-              height: 32px;
-              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 40%, transparent) 100%);
-              left: -0.75px;
-              bottom: 4px;
-              opacity: ${isHomeScreen ? 0.5 : 1};
+              width: 1.2px;
+              height: 28px;
+              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
+              left: -0.6px;
+              bottom: 3px;
+              opacity: ${isHomeScreen ? 0.4 : 0.85};
             "></div>
-            <!-- Glassmorphic Box at the top of the stalk -->
+            <!-- Centered Minimalist Label directly above the stalk -->
             <div style="
               position: absolute;
-              left: 10px;
-              bottom: 16px;
+              left: 50%;
+              bottom: 34px;
+              transform: translateX(-50%);
               display: flex;
               flex-direction: column;
-              align-items: flex-start;
-              font-family: monospace;
+              align-items: center;
+              font-family: var(--font-mono, monospace);
               white-space: nowrap;
-              background: ${labelBg};
-              border: 1.5px solid ${labelBorder};
-              padding: 4px 8px;
-              border-radius: 6px;
-              box-shadow: 0 4px 15px color-mix(in srgb, ${UI_COLORS.black} 50%, transparent);
               color: ${labelText};
+              text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent), 0 2px 6px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
-              <div style="font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                <span class="glitch-flag">▒▒</span>
-                <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
-              </div>
-              <div style="font-weight: 500; font-size: 11px; color: ${labelSubText}; opacity: 0.85; margin-top: 2px;">
+              <div style="font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 4px;">
+                <span class="glitch-flag">▒</span>
                 <span class="glitch-capital" data-text="${d.capital}">${localScrambleText(d.capital)}</span>
+              </div>
+              <div style="font-weight: 500; font-size: 9.5px; color: ${labelSubText}; opacity: 0.8; margin-top: 1px;">
+                <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
               </div>
             </div>
           </div>
@@ -1716,7 +1710,7 @@ const GlobeMap = ({
           const capitalEl = el.querySelector('.glitch-capital');
           const flagEl = el.querySelector('.glitch-flag');
           
-          const glyphs = '░▒▓█▲▼◆◇@#$%&?*¢¤§';
+          const glyphs = '░▒▓█▲▼◆◇@#$%&?*¢';
           if (countryEl) {
             const raw = countryEl.getAttribute('data-text') || '';
             countryEl.innerText = localScrambleText(raw, Math.random());
@@ -1726,65 +1720,64 @@ const GlobeMap = ({
             capitalEl.innerText = localScrambleText(raw, Math.random());
           }
           if (flagEl) {
-            flagEl.innerText = glyphs[Math.floor(Math.random() * glyphs.length)] + glyphs[Math.floor(Math.random() * glyphs.length)];
+            flagEl.innerText = glyphs[Math.floor(Math.random() * glyphs.length)];
           }
         }, 150);
 
       } else {
-        // Normal clean callout box
+        // Normal clean callout box (Minimalist, centered on top of stalk)
         const iconSymbol = d.mode === 'rivers_mountains' 
           ? (gameDataMap[d.admin]?.type === 'mountain_range' ? '🏔️ ' : '💧 ')
           : '';
+
+        const hasCapitalLine = showCapital && d.capital;
+        const line1Text = hasCapitalLine ? `${d.flag || ''} ${d.capital}` : `${iconSymbol || d.flag || ''} ${d.country}`;
 
         el.innerHTML = `
           <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
             <!-- Dot -->
             <div style="
               position: absolute;
-              width: 8px;
-              height: 8px;
+              width: 6px;
+              height: 6px;
               background: ${color};
               border-radius: 50%;
-              left: -4px;
-              top: -4px;
-              box-shadow: 0 0 10px ${color};
+              left: -3px;
+              top: -3px;
+              box-shadow: 0 0 8px ${color};
               opacity: ${isHomeScreen ? 0.5 : 1};
             "></div>
             <!-- Stalk Line -->
             <div style="
               position: absolute;
-              width: 1.5px;
-              height: 32px;
-              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 40%, transparent) 100%);
-              left: -0.75px;
-              bottom: 4px;
-              opacity: ${isHomeScreen ? 0.5 : 1};
+              width: 1.2px;
+              height: 28px;
+              background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
+              left: -0.6px;
+              bottom: 3px;
+              opacity: ${isHomeScreen ? 0.4 : 0.85};
             "></div>
-            <!-- Glassmorphic Box at the top of the stalk -->
+            <!-- Centered Minimalist Label directly above the stalk -->
             <div style="
               position: absolute;
-              left: 10px;
-              bottom: 16px;
+              left: 50%;
+              bottom: 34px;
+              transform: translateX(-50%);
               display: flex;
               flex-direction: column;
-              align-items: flex-start;
-              font-family: var(--font-main), sans-serif;
+              align-items: center;
+              font-family: var(--font-mono, monospace);
               white-space: nowrap;
-              background: ${labelBg};
-              border: 1.5px solid ${labelBorder};
-              padding: 4px 8px;
-              border-radius: 6px;
-              box-shadow: 0 4px 15px color-mix(in srgb, ${UI_COLORS.black} 50%, transparent);
               color: ${labelText};
+              text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent), 0 2px 6px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
-              <div style="font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                <span>${iconSymbol || d.flag || ''}</span>
-                <span>${d.country}</span>
+              <div style="font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 4px;">
+                <span>${line1Text}</span>
               </div>
-              ${(showCapital && d.capital) ? `
-                <div style="font-weight: 500; font-size: 11px; color: ${labelSubText}; opacity: 0.85; margin-top: 2px;">
-                  (${d.capital})
+              ${hasCapitalLine ? `
+                <div style="font-weight: 500; font-size: 9.5px; color: ${labelSubText}; opacity: 0.8; margin-top: 1px;">
+                  ${d.country}
                 </div>
               ` : ''}
             </div>
@@ -2024,14 +2017,17 @@ const GlobeMap = ({
   const ringsData = useMemo(() => {
     if (selectedCountry) {
       const mapped = gameDataMap[selectedCountry];
-      if (mapped?.type === 'river' || mode === 'capitals') return [];
+      if (mapped?.type === 'river') return [];
       const region = mapped?.region || 'Unknown';
       if (mapped && mapped.lat !== undefined) {
+        const isFound = foundSet.has(selectedCountry) || mode === 'learn' || isHomeScreen;
         const baseColor = isError
           ? UI_COLORS.error
-          : (globeTheme === 'blackout' 
-              ? UI_COLORS.paper 
-              : (REGION_COLORS_LABELS[region] || REGION_COLORS[region] || UI_COLORS.accent));
+          : (!isFound
+              ? UI_COLORS.textMuted
+              : (globeTheme === 'blackout' 
+                  ? UI_COLORS.paper 
+                  : (REGION_COLORS_LABELS[region] || REGION_COLORS[region] || UI_COLORS.accent)));
         const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
         if (isDepartmentMode) {
           return [
@@ -2045,28 +2041,30 @@ const GlobeMap = ({
             }
           ];
         }
+        
+        // Tight, high-tech target lock reticle (instead of wide radar waves)
         return [
           {
             lat: mapped.lat,
             lng: mapped.lng,
             color: baseColor,
-            maxRadius: perfProfile?.isMobile ? 1.0 : 1.35,
-            speed: perfProfile?.isMobile ? 0.35 : 0.5,
-            repeat: perfProfile?.isMobile ? 2400 : 2000
+            maxRadius: 0.30,
+            speed: 0.60,
+            repeat: 800
           },
           {
             lat: mapped.lat,
             lng: mapped.lng,
             color: softColor,
-            maxRadius: perfProfile?.isMobile ? 0.52 : 0.72,
-            speed: perfProfile?.isMobile ? 0.22 : 0.32,
-            repeat: perfProfile?.isMobile ? 1700 : 1450
+            maxRadius: 0.15,
+            speed: 0.30,
+            repeat: 500
           }
         ];
       }
     }
     return [];
-  }, [gameDataMap, isDepartmentMode, isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS, mode, globeTheme]);
+  }, [gameDataMap, isDepartmentMode, isError, isLight, perfProfile?.isMobile, REGION_COLORS, REGION_COLORS_LABELS, selectedCountry, UI_COLORS, mode, globeTheme, foundSet, isHomeScreen]);
 
   const customGlobeTexture = useMemo(() => {
     if (globeTheme === 'blueprint') {
