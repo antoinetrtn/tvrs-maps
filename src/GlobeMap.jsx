@@ -542,6 +542,7 @@ const GlobeMap = ({
   theme,
   viewport,
   isError,
+  isSuccess,
   hasActiveFeedback,
   perfProfile,
   isHomeScreen,
@@ -1338,6 +1339,7 @@ const GlobeMap = ({
         material.onBeforeCompile = (shader) => {
           shader.uniforms.uTime = { value: 0 };
           shader.uniforms.uIsError = { value: 0 };
+          shader.uniforms.uIsSuccess = { value: 0 };
           shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
           shader.uniforms.uTheme = { value: (
             globeTheme === 'blackout' ? 1.0 : (globeTheme === 'blueprint' ? 2.0 : 0.0)
@@ -1347,6 +1349,7 @@ const GlobeMap = ({
           shader.fragmentShader = `
             uniform float uTime;
             uniform float uIsError;
+            uniform float uIsSuccess;
             uniform float uIsLight;
             uniform float uTheme;
             float hash(vec2 p) {
@@ -1383,8 +1386,35 @@ const GlobeMap = ({
              }
              
              if (uIsError > 0.5) {
-               finalColor = mix(finalColor, vec3(0.85, 0.12, 0.12), 0.50);
+               // Error / Loose: Analog TV sync roll & static tear
+               float syncRoll = step(0.68, sin(uv.y * 0.08 - uTime * 45.0));
+               float glitchNoise = hash(uv + sin(uTime * 80.0));
+               float glitchStatic = mix(0.05, 0.95, glitchNoise);
+               
+               if (uTheme > 0.9 && uTheme < 1.1) {
+                 // Blackout: pure monochrome rolling bar static tear (Grayscale)
+                 finalColor = vec3(mix(glitchStatic, syncRoll, 0.65));
+               } else {
+                 // Other themes: mix with red color and rolling sync bar
+                 vec3 bloodRed = vec3(0.85, 0.12, 0.12);
+                 finalColor = mix(vec3(glitchStatic), bloodRed, 0.60 + syncRoll * 0.40);
+               }
              }
+             
+             if (uIsSuccess > 0.5) {
+               // Success: s'illumine with an animated high-contrast flash/pulse
+               float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
+               float sweep = step(fract(uv.y * 0.02 - uTime * 2.0), 0.15) * 0.35;
+               if (uTheme > 0.9 && uTheme < 1.1) {
+                 // Blackout: bright glowing white flash and scanline sweep
+                 finalColor = vec3(pulse + sweep);
+               } else {
+                 // Other themes: neon green flash and sweep
+                 vec3 neonGreen = vec3(0.05, 0.92, 0.52);
+                 finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
+               }
+             }
+             
              gl_FragColor.rgb = finalColor;
             `
           );
@@ -2483,6 +2513,9 @@ const GlobeMap = ({
             if (mat.userData.shader.uniforms.uIsError) {
               mat.userData.shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
             }
+            if (mat.userData.shader.uniforms.uIsSuccess) {
+              mat.userData.shader.uniforms.uIsSuccess.value = isSuccess ? 1.0 : 0.0;
+            }
             if (mat.userData.shader.uniforms.uIsLight) {
               mat.userData.shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
             }
@@ -2539,7 +2572,7 @@ const GlobeMap = ({
     return () => {
       cancelAnimationFrame(animFrameId);
     };
-  }, [globeTheme, isLight, UI_COLORS, styleGlobeGraticules, updateGlobeLighting, selectedCountry, globeLightingEnabled]);
+  }, [globeTheme, isLight, UI_COLORS, styleGlobeGraticules, updateGlobeLighting, selectedCountry, globeLightingEnabled, isError, isSuccess]);
 
   const handleGlobeReady = useCallback(() => {
     styleGlobeGraticules();

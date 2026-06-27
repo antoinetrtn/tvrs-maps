@@ -655,6 +655,7 @@ function App() {
         theme={theme}
         viewport={viewport}
         isError={popupError}
+        isSuccess={popupSuccess}
         hasActiveFeedback={popupError || popupSuccess}
         perfProfile={perfProfile}
         isHomeScreen={currentScreen === 'home'}
