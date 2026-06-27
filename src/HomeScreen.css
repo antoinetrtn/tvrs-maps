@@ -486,10 +486,6 @@
   background: var(--theme-dot-glass);
 }
 
-.theme-dot.blueprint {
-  background: var(--theme-dot-blueprint);
-}
-
 .theme-dot.satellite {
   background: var(--theme-dot-satellite);
 }

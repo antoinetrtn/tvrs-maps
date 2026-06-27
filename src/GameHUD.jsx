@@ -198,7 +198,7 @@ const GameHUD = ({
         style={isMobile ? {
           top: 0,
           left: '50%',
-          transform: `translate3d(-50%, ${viewport.top + 24}px, 0)`
+          transform: `translate3d(-50%, calc(${viewport.top + 24}px + env(safe-area-inset-top, 0px)), 0)`
         } : {}}
       >
         {isMobile ? (
@@ -293,7 +293,7 @@ const GameHUD = ({
                       className="dropdown-action-btn stop"
                       onClick={() => { setMobileMenuOpen(false); onStop(); }}
                       onPointerDown={(e) => e.preventDefault()}
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '36px', borderRadius: '18px', border: '1px solid var(--error)', background: 'transparent', color: 'var(--error)', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '44px', borderRadius: 'var(--radius-full)', border: '1px solid var(--error)', background: 'transparent', color: 'var(--error)', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
                     >
                       <Square width={14} height={14} />
                       <span>{lang === 'fr' ? 'Arrêter' : 'Stop'}</span>
@@ -303,7 +303,7 @@ const GameHUD = ({
                       className="dropdown-action-btn play"
                       onClick={() => { setMobileMenuOpen(false); onNavigateFocus('next'); }}
                       onPointerDown={(e) => e.preventDefault()}
-                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '36px', borderRadius: '18px', border: 'none', background: 'var(--success)', color: 'var(--accent-contrast)', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '44px', borderRadius: 'var(--radius-full)', border: 'none', background: 'var(--success)', color: 'var(--accent-contrast)', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
                     >
                       <Play width={14} height={14} />
                       <span>{lang === 'fr' ? 'Jouer' : 'Play'}</span>
@@ -313,7 +313,7 @@ const GameHUD = ({
                     className="dropdown-action-btn info"
                     onClick={() => { setMobileMenuOpen(false); onInfo(); }}
                     onPointerDown={(e) => e.preventDefault()}
-                    style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--glass-bg)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                    style={{ width: '44px', height: '44px', borderRadius: '50%', border: '1px solid var(--glass-border)', background: 'var(--glass-bg)', color: 'var(--text-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                   >
                     <InfoBox width={16} height={16} />
                   </button>
@@ -549,7 +549,7 @@ const GameHUD = ({
             position: 'absolute',
             top: 0,
             left: '50%',
-            transform: `translate3d(-50%, ${viewport.top + viewport.height - 24}px, 0) translateY(-100%)`,
+            transform: `translate3d(-50%, calc(${viewport.top + viewport.height - 24}px - env(safe-area-inset-bottom, 0px)), 0) translateY(-100%)`,
             bottom: 'auto'
           } : {}}
         >

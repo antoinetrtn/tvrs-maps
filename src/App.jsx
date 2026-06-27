@@ -89,6 +89,7 @@ function App() {
   const [learnShowMountains, setLearnShowMountains] = useState(false);
 
   const extInputRef = useRef(null);
+  const initialWidth = useRef(window.innerWidth);
   const initialHeight = useRef(window.innerHeight);
   const viewportFrameRef = useRef(null);
   const navigationTrailRef = useRef([]);
@@ -264,12 +265,26 @@ function App() {
   // Game countries loaded from GeoJSON
   const [countriesData, setCountriesData] = useState([]);
   const [departmentsGeoData, setDepartmentsGeoData] = useState([]);
+  // Only treat a height shrink as a keyboard when the width is unchanged — an
+  // orientation change alters both dimensions and must NOT trigger keyboard mode.
   const keyboardModeCandidate = window.innerWidth < 1024 && (
-    viewport.height < initialHeight.current * 0.85 ||
+    (Math.abs(viewport.width - initialWidth.current) <= 2 && viewport.height < initialHeight.current * 0.85) ||
     viewport.top > 20
   );
   const [isKeyboardMode, setIsKeyboardMode] = useState(false);
   const effectiveKeyboardMode = keyboardModeCandidate || isKeyboardMode;
+
+  // Re-baseline the no-keyboard viewport whenever it changes for a non-keyboard
+  // reason (e.g. orientation change), mirroring GlobeMap's logic.
+  useEffect(() => {
+    const keyboardLike =
+      viewport.top > 20 ||
+      (Math.abs(viewport.width - initialWidth.current) <= 2 && viewport.height < initialHeight.current * 0.85);
+    if (!keyboardLike) {
+      initialWidth.current = viewport.width;
+      initialHeight.current = viewport.height;
+    }
+  }, [viewport.width, viewport.height, viewport.top]);
 
   useEffect(() => {
     if (window.innerWidth >= 1024) {
@@ -624,8 +639,13 @@ function App() {
     };
   }, [viewport.width]);
 
+  const appStyle = useMemo(
+    () => getThemeCssVariables(theme, globeTheme, selectedCountry, activeDataMap),
+    [theme, globeTheme, selectedCountry, activeDataMap]
+  );
+
   return (
-    <div className={`app-container ${theme}`} data-theme={theme} style={getThemeCssVariables(theme, globeTheme, selectedCountry, activeDataMap)}>
+    <div className={`app-container ${theme}`} data-theme={theme} style={appStyle}>
       {currentScreen === 'home' ? (
         <HomeScreen 
           onStartGame={startGame} 

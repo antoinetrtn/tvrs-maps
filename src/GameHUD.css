@@ -3,7 +3,7 @@
    ========================================================================== */
 .top-hud-bar {
   position: fixed;
-  top: 16px;
+  top: calc(16px + var(--safe-top));
   left: 0;
   width: 100%;
   padding: 0 16px;
@@ -84,15 +84,18 @@
 }
 
 .island-timer {
+  font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-weight: 500;
+  font-size: 1.15rem;
   color: var(--accent);
 }
 
 .island-score {
-  font-weight: 700;
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  font-size: 1.15rem;
   gap: 4px;
 }
 
@@ -155,7 +158,7 @@
    ========================================================================== */
 .hud-bottom-right {
   position: fixed;
-  bottom: var(--spacing-lg);
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom));
   right: var(--spacing-lg);
   display: flex;
   flex-direction: column;
@@ -258,7 +261,7 @@
    ========================================================================== */
 .bottom-hud-container {
   position: fixed;
-  bottom: var(--spacing-lg);
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
@@ -485,7 +488,7 @@
   }
 
   .bottom-hud-container {
-    bottom: var(--spacing-lg); /* Floating like PC */
+    bottom: calc(var(--spacing-lg) + var(--safe-bottom)); /* Floating like PC */
     width: 90%;
     transition: opacity var(--transition-normal) !important;
   }
@@ -494,93 +497,6 @@
 /* Cleanup */
 .top-hud-container, .top-hud-stack, .focus-info-card {
   display: none !important;
-}
-
-/* Globe Theme Selection Menu - HUD */
-.hud-theme-container {
-  position: relative;
-  display: flex;
-}
-
-.hud-theme-menu {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px;
-  min-width: 190px;
-  border-radius: var(--radius-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow-strong);
-  backdrop-filter: var(--glass-blur);
-  z-index: 1010;
-  transform-origin: bottom right;
-  animation: theme-menu-scale-in var(--transition-fast) ease-out;
-}
-
-.hud-theme-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-  text-align: left;
-}
-
-.hud-theme-menu-item:hover {
-  color: var(--text-main);
-  background: var(--glass-hover);
-}
-
-.hud-theme-menu-item.active {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.theme-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-}
-
-.theme-dot.glass {
-  background: var(--theme-dot-glass);
-}
-
-.theme-dot.blueprint {
-  background: var(--theme-dot-blueprint);
-}
-
-.theme-dot.satellite {
-  background: var(--theme-dot-satellite);
-}
-
-.theme-dot.blackout {
-  background: var(--theme-dot-blackout);
-  border: 1px solid var(--glass-border);
-}
-
-@keyframes theme-menu-scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
 }
 
 /* Prevents transition lag when mobile keyboard opens/resizes visual viewport */
@@ -602,9 +518,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 10px;
-  height: 32px;
-  border-radius: 16px;
+  padding: 0 14px;
+  height: 40px;
+  border-radius: var(--radius-full);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -617,7 +533,15 @@
 }
 
 .hud-mini-pill .mini-pill-val {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
   color: var(--accent);
+}
+
+.hud-mini-pill .mini-pill-sub {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
 }
 
 .hud-mini-pill .mini-pill-sub {
@@ -654,13 +578,13 @@
 }
 
 .top-hud-bar.mobile-layout .hud-btn-circular {
-  width: 32px !important;
-  height: 32px !important;
+  width: 40px !important;
+  height: 40px !important;
 }
 
 .top-hud-bar.mobile-layout .hud-btn-circular svg {
-  width: 14px !important;
-  height: 14px !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 
 /* Learn Toggles */
@@ -678,8 +602,8 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;

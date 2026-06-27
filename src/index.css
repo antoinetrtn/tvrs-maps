@@ -1,38 +1,39 @@
 :root {
-  /* COLORS - Core (Dark by default) */
-  --bg-color: #020617;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  
+  /* COLORS - Core (Blackout dark is the default — keep these in sync with
+     THEME_OVERRIDES.blackout.dark so first paint matches before React mounts) */
+  --bg-color: #000000;
+  --text-main: #ffffff;
+  --text-muted: #888888;
+
   /* COLORS - Semantic */
-  --accent: #f8fafc;
-  --accent-hover: #ffffff;
-  --accent-soft: rgba(248, 250, 252, 0.1);
-  --accent-contrast: #020617;
-  --accent-glow: #60a5fa;
-  
-  --success: #10b981;
-  --success-soft: rgba(16, 185, 129, 0.1);
-  
+  --accent: #ffffff;
+  --accent-hover: #cccccc;
+  --accent-soft: rgba(255, 255, 255, 0.15);
+  --accent-contrast: #000000;
+  --accent-glow: #ffffff;
+
+  --success: #ffffff;
+  --success-soft: rgba(255, 255, 255, 0.12);
+
   --gold: #fbbf24;
   --gold-soft: rgba(251, 191, 36, 0.1);
   --gold-light: #fde68a;
-  
-  --warning: #f59e0b;
-  --warning-soft: rgba(245, 158, 11, 0.1);
-  
-  --error: #ef4444;
-  --error-soft: rgba(239, 68, 68, 0.1);
-  
+
+  --warning: #888888;
+  --warning-soft: rgba(255, 255, 255, 0.05);
+
+  --error: #888888;
+  --error-soft: rgba(255, 255, 255, 0.05);
+
   /* GLASSMORPHISM */
-  --glass-bg: rgba(15, 23, 42, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(15, 15, 15, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.15);
   --glass-hover: rgba(255, 255, 255, 0.05);
   --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   --glass-blur: blur(24px) saturate(200%);
   --glass-blur-compact: blur(12px) saturate(140%);
-  --overlay-bg: rgba(2, 6, 23, 0.8);
-  --modal-header-bg: rgba(15, 23, 42, 0.4);
+  --overlay-bg: rgba(0, 0, 0, 0.8);
+  --modal-header-bg: rgba(15, 15, 15, 0.4);
 
   /* DESIGN SYSTEM TOKENS */
   --radius-sm: 10px;
@@ -48,6 +49,8 @@
   --spacing-xl: 32px;
 
   --font-main: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* Display face for headings, scores, timers and large numerals */
+  --font-display: 'Bitcount Single', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -57,6 +60,10 @@
   --control-md: 40px;
   --control-lg: 44px;
   --island-width: 500px;
+
+  /* Safe areas (notch / Dynamic Island / home indicator) — 0 on non-notch devices */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 [data-theme="light"] {

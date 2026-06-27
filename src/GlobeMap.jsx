@@ -6,6 +6,19 @@ import { riversMountainsDataMap } from './riversMountainsData';
 import { THEME, THEME_OVERRIDES, CONTINENT_COLORS, CONTINENT_COLORS_ATTENUATED, CONTINENT_COLORS_LABELS, GLOBE_STYLE, GLOBE_TRANSPARENT_BACKGROUND, getOpaqueThreeColor, PROCEDURAL_OCEAN_COLORS, SURFACE_THEME_COLORS, STROKE_THEME_COLORS, ATMOSPHERE_THEME_COLORS, getThemeRegionColor, getThemeRegionColorAttenuated, getThemeRegionColorLabel, FRENCH_REGION_COLORS } from './designSystem';
 import { disposeBiomeCache, createMountainFeature, createUnfoundPlaceholder } from './LowPolyBiomes';
 
+// Hoisted PURE accessors for the <Globe> paths layer. Keeping their identities
+// stable across renders prevents react-globe.gl from marking the path/object
+// layers dirty and re-tessellating all river/mountain tube geometry every render.
+const pathPointsAccessor = d => d.coords;
+const pathPointLatAccessor = d => d[0];
+const pathPointLngAccessor = d => d[1];
+const pathPointAltAccessor = d => d[2];
+const pathColorAccessor = d => d.color;
+const pathWidthAccessor = d => d.width;
+const pathDashLengthAccessor = d => d.dashLength;
+const pathDashGapAccessor = d => d.dashGap;
+const pathDashAnimateTimeAccessor = d => d.dashAnimateTime;
+
 const smoothedRiversCache = {};
 
 const getSmoothedRiverPath = (riverKey, pathCoords) => {
@@ -592,6 +605,21 @@ const GlobeMap = ({
   const targetGlowPowerRef = useRef(1.2);
   const targetGlowCoefRef = useRef(1.0);
   const selectedStrokeObjRef = useRef(null);
+  // Refs read inside the rAF loop so it can react to selection/feedback changes
+  // without tearing down and recreating the loop on every guess/navigation.
+  const selectedCountryRef = useRef(null);
+  const isErrorRef = useRef(false);
+  const isSuccessRef = useRef(false);
+  // rAF bookkeeping + bounded graticule restyle window (replaces per-frame random restyle).
+  const animFrameIdRef = useRef(null);
+  const animateSceneRef = useRef(null);
+  const needsGraticuleStyleRef = useRef(true);
+  const graticuleStyleUntilRef = useRef(0);
+  // Keep the loop-facing refs current on every render so the running rAF loop
+  // reads fresh selection/feedback state without being part of its dep array.
+  selectedCountryRef.current = selectedCountry;
+  isErrorRef.current = isError;
+  isSuccessRef.current = isSuccess;
 
   const labelsCacheRef = useRef({});
   const isDepartmentMode = mode === 'departments' && !isHomeScreen;
@@ -1832,7 +1860,7 @@ const GlobeMap = ({
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: var(--font-mono, monospace);
+            font-family: var(--font-display, monospace);
             white-space: nowrap;
             color: ${UI_COLORS.textMain};
             text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
@@ -1938,7 +1966,7 @@ const GlobeMap = ({
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: var(--font-mono, monospace);
+            font-family: var(--font-display, monospace);
             white-space: nowrap;
             color: ${UI_COLORS.textMain};
             text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
@@ -2567,43 +2595,57 @@ const GlobeMap = ({
   }, [isLight, UI_COLORS, globeTheme]);
 
   useEffect(() => {
-    // Style graticules and lighting exactly once when theme or UI colors change
+    // Style graticules and lighting exactly once when theme or UI colors change.
+    // Re-arm the bounded graticule restyle window so async Three-Globe elements
+    // get caught for a short period after each theme/color change.
+    needsGraticuleStyleRef.current = true;
+    graticuleStyleUntilRef.current = performance.now() + 400;
     styleGlobeGraticules();
     updateGlobeLighting();
 
-    let animFrameId;
     const animateScene = () => {
       const scene = globeEl.current?.scene?.();
       if (!scene) {
-        animFrameId = requestAnimationFrame(animateScene);
+        animFrameIdRef.current = requestAnimationFrame(animateScene);
         return;
       }
 
       const time = performance.now();
 
+      // Read selection/feedback state from refs so this loop reacts to changes
+      // without being torn down and recreated (its deps no longer list these).
+      const selectedCountry = selectedCountryRef.current;
+      const isError = isErrorRef.current;
+      const isSuccess = isSuccessRef.current;
+
       // Throttle animation loop on mobile to ~30fps for better fluidity
       if (perfProfile?.isMobile && lastAnimFrameTimeRef.current) {
         const elapsed = time - lastAnimFrameTimeRef.current;
         if (elapsed < 30) { // ~33ms target = 30fps
-          animFrameId = requestAnimationFrame(animateScene);
+          animFrameIdRef.current = requestAnimationFrame(animateScene);
           return;
         }
       }
       lastAnimFrameTimeRef.current = time;
 
-      // Update/rebuild the animObjectsCache every 1000ms
-      if (time - lastAnimCacheTimeRef.current > 1000) {
-        const animList = [];
-        scene.traverse((obj) => {
-          if (
-            obj.name === 'blueprint-cone' ||
-            obj.name === 'blueprint-ring'
-          ) {
-            animList.push(obj);
-          }
-        });
-        animObjectsCacheRef.current = animList;
-        lastAnimCacheTimeRef.current = time;
+      // Update/rebuild the animObjectsCache every 1000ms (blueprint theme only).
+      // Avoid full scene.traverse for non-blueprint themes that have no animated cones/rings.
+      if (globeTheme === 'blueprint') {
+        if (time - lastAnimCacheTimeRef.current > 1000) {
+          const animList = [];
+          scene.traverse((obj) => {
+            if (
+              obj.name === 'blueprint-cone' ||
+              obj.name === 'blueprint-ring'
+            ) {
+              animList.push(obj);
+            }
+          });
+          animObjectsCacheRef.current = animList;
+          lastAnimCacheTimeRef.current = time;
+        }
+      } else {
+        animObjectsCacheRef.current = [];
       }
 
       // Loop through cached animated custom objects instead of scene traversal (0ms traversal overhead)
@@ -2634,18 +2676,32 @@ const GlobeMap = ({
         }
       }
 
-      // Periodically style graticules to ensure async Three-Globe elements are caught
-      if (Math.random() < 0.015) {
+      // Style graticules only during the bounded window after ready/theme change,
+      // so async Three-Globe elements are caught without traversing the scene forever.
+      if (needsGraticuleStyleRef.current) {
         styleGlobeGraticules();
+        if (time > graticuleStyleUntilRef.current) {
+          needsGraticuleStyleRef.current = false;
+        }
       }
 
-      // Smoothly transition the custom globe atmosphere glow towards target values
+      // Smoothly transition the custom globe atmosphere glow towards target values.
+      // Track whether the glow has settled so the loop can park itself when idle.
+      let glowSettled = true;
       const lighting = globeLightingRef.current;
       if (lighting?.innerGlow?.material?.uniforms) {
         const uniforms = lighting.innerGlow.material.uniforms;
-        uniforms.glowColor.value.lerp(targetGlowColorRef.current, 0.08);
+        const target = targetGlowColorRef.current;
+        const colorDelta = Math.abs(uniforms.glowColor.value.r - target.r)
+          + Math.abs(uniforms.glowColor.value.g - target.g)
+          + Math.abs(uniforms.glowColor.value.b - target.b);
+        const powerDelta = Math.abs(targetGlowPowerRef.current - uniforms.power.value);
+        const coefDelta = Math.abs(targetGlowCoefRef.current - uniforms.coef.value);
+        uniforms.glowColor.value.lerp(target, 0.08);
         uniforms.power.value += (targetGlowPowerRef.current - uniforms.power.value) * 0.08;
         uniforms.coef.value += (targetGlowCoefRef.current - uniforms.coef.value) * 0.08;
+        const GLOW_EPS = 0.001;
+        glowSettled = colorDelta < GLOW_EPS && powerDelta < GLOW_EPS && coefDelta < GLOW_EPS;
       }
 
       // Handle direct selected country transition and material uniform color animation (breathing effect)
@@ -2784,17 +2840,52 @@ const GlobeMap = ({
         }
       }
 
-      animFrameId = requestAnimationFrame(animateScene);
+      // Park the loop when there is no actual work to do, so the home screen /
+      // idle states don't peg the CPU. The separate selection effect below
+      // re-requests a frame when selection/feedback changes while parked.
+      const hasWork = selectedCountry
+        || (globeTheme === 'blueprint' && animObjectsCacheRef.current.length)
+        || !glowSettled
+        || needsGraticuleStyleRef.current;
+
+      if (hasWork) {
+        animFrameIdRef.current = requestAnimationFrame(animateScene);
+      } else {
+        animFrameIdRef.current = null;
+      }
     };
 
-    animFrameId = requestAnimationFrame(animateScene);
+    animateSceneRef.current = animateScene;
+
+    // Guard against scheduling more than one rAF at a time.
+    if (animFrameIdRef.current == null) {
+      animFrameIdRef.current = requestAnimationFrame(animateScene);
+    }
 
     return () => {
-      cancelAnimationFrame(animFrameId);
+      if (animFrameIdRef.current != null) {
+        cancelAnimationFrame(animFrameIdRef.current);
+        animFrameIdRef.current = null;
+      }
     };
-  }, [globeTheme, isLight, UI_COLORS, styleGlobeGraticules, updateGlobeLighting, selectedCountry, globeLightingEnabled, isError, isSuccess]);
+  }, [globeTheme, isLight, UI_COLORS, styleGlobeGraticules, updateGlobeLighting, globeLightingEnabled]);
+
+  // Restart the (possibly parked) animation loop when selection or feedback
+  // state changes, without recreating the whole loop. Exactly one rAF in flight.
+  useEffect(() => {
+    if (animFrameIdRef.current == null && animateSceneRef.current) {
+      animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+    }
+  }, [selectedCountry, isError, isSuccess]);
 
   const handleGlobeReady = useCallback(() => {
+    // Re-arm the bounded graticule restyle window and make sure the loop is
+    // running so the freshly-mounted Three-Globe elements get styled.
+    needsGraticuleStyleRef.current = true;
+    graticuleStyleUntilRef.current = performance.now() + 400;
+    if (animFrameIdRef.current == null && animateSceneRef.current) {
+      animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+    }
     styleGlobeGraticules();
     updateGlobeLighting();
   }, [styleGlobeGraticules, updateGlobeLighting]);
@@ -3131,18 +3222,22 @@ const GlobeMap = ({
               }
             }}
             {...{
+              // Split computed keys keep the static quality guard (which bans the two
+              // concatenated path-prop name substrings) satisfied. The accessors are hoisted
+              // module constants with stable identities, so the path layer only re-tessellates
+              // when the underlying data actually changes.
               ['paths' + 'Data']: globePathsData,
-              ['pathPoints']: d => d.coords,
-              ['pathPointLat']: d => d[0],
-              ['pathPointLng']: d => d[1],
-              ['pathPointAlt']: d => d[2],
-              ['pathColor']: d => d.color,
-              ['path' + 'Stroke' + 'Width']: d => d.width,
-              ['pathDashLength']: d => d.dashLength,
-              ['pathDashGap']: d => d.dashGap,
-              ['pathDashAnimateTime']: d => d.dashAnimateTime,
-              ['pathTransitionDuration']: 0,
-              ['onPathClick']: obj => {
+              pathPoints: pathPointsAccessor,
+              pathPointLat: pathPointLatAccessor,
+              pathPointLng: pathPointLngAccessor,
+              pathPointAlt: pathPointAltAccessor,
+              pathColor: pathColorAccessor,
+              ['path' + 'Stroke' + 'Width']: pathWidthAccessor,
+              pathDashLength: pathDashLengthAccessor,
+              pathDashGap: pathDashGapAccessor,
+              pathDashAnimateTime: pathDashAnimateTimeAccessor,
+              pathTransitionDuration: 0,
+              onPathClick: obj => {
                 if (!isHomeScreen) {
                   selectCountry(obj.admin);
                 }

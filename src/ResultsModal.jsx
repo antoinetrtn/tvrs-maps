@@ -2,22 +2,26 @@ import React, { useMemo } from 'react';
 import { Close } from 'pixelarticons/react';
 import './ResultsModal.css';
 import { getGameStats } from './utils';
-import { getThemeRegionColor, getThemeRegionColorLabel, getThemeRegionColorAttenuated } from './designSystem';
+import { getThemeRegionColor } from './designSystem';
 
-const getGlitchText = (str) => {
-  const chars = '█▒░▄▀█░▒';
-  let out = '';
-  for (let i = 0; i < str.length; i++) {
-    const code = str.charCodeAt(i);
-    out += chars[code % chars.length];
-  }
-  return out;
+const REGION_LABELS_FR = {
+  "Europe": "Europe",
+  "Americas": "Amériques",
+  "Asia": "Asie",
+  "Africa": "Afrique",
+  "Oceania": "Océanie",
+  "Antarctic": "Antarctique",
+  "France": "France",
+  "Unknown": "Inconnu"
 };
+
+// Fixed-width neutral placeholder for not-yet-found entries (no noisy glitch animation)
+const getMaskText = (str) => '·'.repeat(Math.max(3, Math.min(str.length, 7)));
 
 const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap, onRestart, onClose, isGameOver, onStop, isPlaying, mode, theme = 'dark', lang = 'fr', globeTheme = 'glass' }) => {
   const dataMap = activeDataMap || countryDataMap;
-  const { stats, CONTINENT_ORDER } = useMemo(() => 
-    getGameStats(foundList, dataMap, lang), 
+  const { stats, CONTINENT_ORDER } = useMemo(() =>
+    getGameStats(foundList, dataMap, lang),
     [foundList, dataMap, lang]
   );
 
@@ -30,30 +34,14 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
     return res;
   }, [globeTheme, theme]);
 
-  const labelColors = useMemo(() => {
-    const res = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
-    regions.forEach(r => {
-      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
-    });
-    return res;
-  }, [globeTheme, theme]);
-
-  const attenuatedColors = useMemo(() => {
-    const res = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
-    regions.forEach(r => {
-      res[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
-    });
-    return res;
-  }, [globeTheme, theme]);
-
   return (
     <div className="modal-overlay">
       <div className={`modal-content ${isGameOver ? 'is-game-over' : ''}`}>
         <header className="modal-header">
           <div className="header-left">
-            <h2>{isGameOver ? (lang === 'fr' ? "Partie Terminée" : "Game Over") : (lang === 'fr' ? "Progression" : "Progress")}</h2>
+            <span className="modal-eyebrow">
+              {isGameOver ? (lang === 'fr' ? "Partie terminée" : "Game over") : (lang === 'fr' ? "Progression" : "Progress")}
+            </span>
             <div className="overall-score">
               <span className="score-number">{foundList.length}</span>
               <span className="score-sep">/</span>
@@ -61,7 +49,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
             </div>
           </div>
           {onClose && (
-            <button className="close-popup" onClick={onClose} aria-label="Close">
+            <button className="close-popup" onClick={onClose} aria-label={lang === 'fr' ? 'Fermer' : 'Close'}>
               <Close width={18} height={18} />
             </button>
           )}
@@ -71,40 +59,37 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
           {CONTINENT_ORDER.map(region => {
             const data = stats[region];
             if (!data || data.total === 0) return null;
-            
+
             const pct = Math.round((data.found / data.total) * 100);
             const color = colors[region] || 'var(--accent)';
-            const labelColor = labelColors[region] || 'var(--accent)';
-            const bgColor = attenuatedColors[region] || 'var(--accent-soft)';
-
-            const regionLabel = lang === 'fr' ? {
-              "Europe": "Europe",
-              "Americas": "Amériques",
-              "Asia": "Asie",
-              "Africa": "Afrique",
-              "Oceania": "Océanie",
-              "Antarctic": "Antarctique",
-              "France": "France",
-              "Unknown": "Inconnu"
-            }[region] || region : region;
+            const regionLabel = lang === 'fr' ? (REGION_LABELS_FR[region] || region) : region;
 
             return (
-              <div key={region} className="continent-tile" style={{ '--continent-color': color, '--continent-bg': bgColor, '--continent-label': labelColor }}>
-                <div className="tile-header">
-                  <div className="continent-info">
+              <section key={region} className="continent-row" style={{ '--continent-color': color }}>
+                <div className="continent-head">
+                  <div className="continent-title">
+                    <span className="continent-dot" />
                     <h3>{regionLabel}</h3>
-                    <span className="continent-count">{data.found} / {data.total}</span>
                   </div>
+                  <span className="continent-count">
+                    <span className="cc-found">{data.found}</span>
+                    <span className="cc-sep">/</span>
+                    <span className="cc-total">{data.total}</span>
+                  </span>
                 </div>
-                
+
+                <div className="continent-progress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+                  <div className="continent-progress-fill" style={{ width: `${pct}%` }} />
+                </div>
+
                 <div className="countries-pill-grid">
                   {data.countries.map(c => {
                     const label = mode === 'capitals' ? c.capital : c.name;
                     const isRevealed = c.found || isGameOver;
-                    const displayLabel = isRevealed ? label : getGlitchText(label);
+                    const displayLabel = isRevealed ? label : getMaskText(label || '');
                     return (
-                      <div 
-                        key={c.key} 
+                      <div
+                        key={c.key}
                         className={`country-pill ${c.found ? 'found' : 'missed'}`}
                         title={isRevealed ? label : '???'}
                       >
@@ -113,7 +98,7 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
                     );
                   })}
                 </div>
-              </div>
+              </section>
             );
           })}
         </div>
@@ -121,8 +106,8 @@ const ResultsModal = ({ foundList, totalCountries, countryDataMap, activeDataMap
         <div className="modal-footer">
           <div className="modal-actions">
             {isPlaying && !isGameOver && (
-              <button className="stop-btn" onClick={() => { if(onStop) onStop(); if(onClose) onClose(); }}>
-                {lang === 'fr' ? "Arrêter la partie" : "Stop Game"}
+              <button className="stop-btn" onClick={() => { if (onStop) onStop(); if (onClose) onClose(); }}>
+                {lang === 'fr' ? "Arrêter la partie" : "Stop game"}
               </button>
             )}
             <button className="restart-btn" onClick={onRestart}>
