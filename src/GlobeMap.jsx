@@ -766,9 +766,9 @@ const GlobeMap = ({
         const occlusionRatio = isKeyboardOpen ? keyboardRatio : bottomHUDRatio;
 
         // Dynamic latitude offset: scale offset degrees proportional to the camera altitude (zoom level)
-        // Shifting camera target south (negative latitude offset) centers country in upper visible portion.
+        // Shifting camera target south (negative latitude offset) centers country higher in upper visible portion.
         const visibleHeightDegrees = 110 * preservedAltitude;
-        const latOffset = -visibleHeightDegrees * (occlusionRatio / 2);
+        const latOffset = -visibleHeightDegrees * (occlusionRatio * 0.82);
 
         const target = {
           lat: data.lat + latOffset,
