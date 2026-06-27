@@ -392,7 +392,7 @@ export const THEME_OVERRIDES = {
       glassBorderStrong: 'rgba(255, 255, 255, 0.3)',
       glassHover: 'rgba(255, 255, 255, 0.05)',
       mapBase: '#0d0d0d',
-      mapSea: '#000000',
+      mapSea: '#0b0b0e',
       mapBorder: '#666666',
       mapBorderMuted: '#2a2a2a',
       gridDot: 'rgba(255, 255, 255, 0.1)',

@@ -1617,7 +1617,11 @@ const GlobeMap = ({
     } else if (isHomeScreen) {
       color = UI_COLORS.textMuted;
     } else if (globeTheme === 'blackout') {
-      color = (d.isFound || d.isSelected) ? UI_COLORS.paper : UI_COLORS.textMuted;
+      if (d.isFound) {
+        color = isLight ? `color-mix(in srgb, ${UI_COLORS.black} 93%, transparent)` : `color-mix(in srgb, ${UI_COLORS.black} 80%, transparent)`;
+      } else {
+        color = d.isSelected ? `color-mix(in srgb, ${UI_COLORS.paper} 100%, transparent)` : `color-mix(in srgb, ${UI_COLORS.paper} 50%, transparent)`;
+      }
     } else if (globeTheme === 'blueprint') {
       color = (d.isFound || d.isSelected) ? UI_COLORS.accent : UI_COLORS.textMuted;
     } else if (globeTheme === 'satellite') {
@@ -1729,7 +1733,7 @@ const GlobeMap = ({
               font-family: var(--font-mono, monospace);
               white-space: nowrap;
               color: ${color};
-              text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent), 0 2px 6px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent);
+              text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
               <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
@@ -1773,7 +1777,7 @@ const GlobeMap = ({
           ? (gameDataMap[d.admin]?.type === 'mountain_range' ? '🏔️ ' : '💧 ')
           : '';
 
-        const hasCapitalLine = showCapital && d.capital;
+        const hasCapitalLine = showCapital && d.capital && d.mode === 'capitals';
         const line1Text = hasCapitalLine ? `${d.flag || ''} ${d.capital}` : `${iconSymbol || d.flag || ''} ${d.country}`;
 
         el.innerHTML = `
@@ -1812,7 +1816,7 @@ const GlobeMap = ({
               font-family: var(--font-mono, monospace);
               white-space: nowrap;
               color: ${color};
-              text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent), 0 2px 6px color-mix(in srgb, ${UI_COLORS.black} 95%, transparent);
+              text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
               opacity: ${isHomeScreen ? 0.6 : 1};
             ">
               <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
