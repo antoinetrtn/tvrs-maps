@@ -1507,7 +1507,7 @@ const GlobeMap = ({
     const admin = getFeatureAdmin(d);
     if (isDepartmentMode && d.isGhostCountry) return 0.001;
     if (admin === selectedCountry) return 0.008; // Raise selected country for visible side-border extrusion
-    return 0.0022; // Raised from 0.001 to prevent graticules clipping through polygons on mobile (due to chordal curvature error)
+    return 0.0025; // Raised to 0.0025 to prevent graticules clipping through polygons on mobile (due to chordal curvature error)
   }, [isDepartmentMode, selectedCountry]);
 
   const getSelectionEffectAltitude = useCallback(() => {
@@ -2845,12 +2845,16 @@ const GlobeMap = ({
     if (size === undefined) return baseRes;
 
     if (size < 4) {
-      // Coarser resolution (fewer segments) for small features is fine since curvature is imperceptible
-      return Math.max(0.5, baseRes * 0.6);
+      // Coarser resolution (larger degree angle = fewer segments) for small features to save mobile GPU/CPU
+      return baseRes * 2.2;
     }
     if (size > 15) {
-      // Finer resolution (more segments) for large features to follow the sphere curve smoothly and avoid clipping inside the globe
-      return baseRes * 3.0;
+      // Finer resolution (smaller degree angle = more segments) for large features to follow the sphere curve smoothly and avoid clipping inside the globe
+      return baseRes * 0.3;
+    }
+    if (size >= 8) {
+      // Finer resolution for medium-large features (like Greenland, Brazil, Australia) to prevent clipping
+      return baseRes * 0.45;
     }
     return baseRes;
   }, [countrySizes, perfProfile?.polygonCapCurvatureResolution]);
