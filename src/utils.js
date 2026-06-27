@@ -1,6 +1,8 @@
 
+import { GAME_REGIONS } from "./gameConfig";
+
 export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
-  const baseOrder = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
+  const baseOrder = GAME_REGIONS;
   const dynamicRegions = Object.values(countryDataMap)
     .map(item => item?.region)
     .filter(Boolean);

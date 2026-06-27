@@ -3,6 +3,7 @@ import "./EndScreen.css";
 import { getGameStats } from "./utils";
 import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
+import { GAME_REGIONS } from "./gameConfig";
 
 const EndScreen = ({
   foundList,
@@ -14,7 +15,7 @@ const EndScreen = ({
   onViewTable,
   theme = "dark",
   lang = "fr",
-  globeTheme = "glass",
+  globeTheme = "satellite",
 }) => {
   const dataMap = activeDataMap || countryDataMap;
   const t = useTranslation(lang);
@@ -25,17 +26,7 @@ const EndScreen = ({
 
   const colors = useMemo(() => {
     const res = {};
-    const regions = [
-      "Europe",
-      "Americas",
-      "Asia",
-      "Africa",
-      "Oceania",
-      "Antarctic",
-      "France",
-      "Unknown",
-    ];
-    regions.forEach((r) => {
+    GAME_REGIONS.forEach((r) => {
       res[r] = getThemeRegionColor(globeTheme, theme, r);
     });
     return res;

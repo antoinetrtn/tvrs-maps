@@ -4,6 +4,7 @@ import "./ResultsModal.css";
 import { getGameStats } from "./utils";
 import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
+import { GAME_REGIONS } from "./gameConfig";
 
 // Fixed-width neutral placeholder for not-yet-found entries (no noisy glitch animation)
 const getMaskText = (str) => "·".repeat(Math.max(3, Math.min(str.length, 7)));
@@ -21,7 +22,7 @@ const ResultsModal = ({
   mode,
   theme = "dark",
   lang = "fr",
-  globeTheme = "glass",
+  globeTheme = "satellite",
 }) => {
   const dataMap = activeDataMap || countryDataMap;
   const t = useTranslation(lang);
@@ -32,17 +33,7 @@ const ResultsModal = ({
 
   const colors = useMemo(() => {
     const res = {};
-    const regions = [
-      "Europe",
-      "Americas",
-      "Asia",
-      "Africa",
-      "Oceania",
-      "Antarctic",
-      "France",
-      "Unknown",
-    ];
-    regions.forEach((r) => {
+    GAME_REGIONS.forEach((r) => {
       res[r] = getThemeRegionColor(globeTheme, theme, r);
     });
     return res;

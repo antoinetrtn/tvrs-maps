@@ -22,6 +22,7 @@ import Logo from "./Logo";
 import "./GameHUD.css";
 import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
+import { GAME_REGIONS } from "./gameConfig";
 
 const GameHUD = ({
   mode,
@@ -242,28 +243,10 @@ const GameHUD = ({
     }
   };
 
-  const CONTINENT_ORDER = [
-    "Europe",
-    "Americas",
-    "Asia",
-    "Africa",
-    "Oceania",
-    "Antarctic",
-    "France",
-  ];
+  const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
   const REGION_COLORS = useMemo(() => {
     const colors = {};
-    const regions = [
-      "Europe",
-      "Americas",
-      "Asia",
-      "Africa",
-      "Oceania",
-      "Antarctic",
-      "France",
-      "Unknown",
-    ];
-    regions.forEach((r) => {
+    GAME_REGIONS.forEach((r) => {
       colors[r] = getThemeRegionColor(globeTheme, theme, r);
     });
     return colors;

@@ -69,3 +69,14 @@ export const DEPARTMENT_MODE_FRANCE_VIEW = {
     desktop: 0.42,
   },
 };
+
+export const GAME_REGIONS = [
+  "Europe",
+  "Americas",
+  "Asia",
+  "Africa",
+  "Oceania",
+  "Antarctic",
+  "France",
+  "Unknown",
+];
