@@ -184,7 +184,7 @@ const GameHUD = ({
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Tab' && suggestions.length > 0) { 
+    if ((e.key === 'Tab' || e.key === 'Enter') && suggestions.length > 0) { 
       e.preventDefault(); 
       submitSuggestion(suggestions[0].display); 
     }
@@ -460,23 +460,15 @@ const GameHUD = ({
           )}
 
           <div className="bottom-hud-islands">
-            {isFocusedCountry && mode !== 'learn' && !isKeyboardMode && (
-              <>
-                <button 
-                  className="hud-btn-circular glass-panel" 
-                  onClick={() => onNavigateFocus('prev')}
-                  onPointerDown={(e) => e.preventDefault()}
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button 
-                  className="hud-btn-circular glass-panel" 
-                  onClick={() => onNavigateFocus('next')}
-                  onPointerDown={(e) => e.preventDefault()}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </>
+            {isFocusedCountry && mode !== 'learn' && (
+              <button 
+                className="hud-btn-circular glass-panel prev-btn" 
+                onClick={() => onNavigateFocus('prev')}
+                onPointerDown={(e) => e.preventDefault()}
+                title={lang === 'fr' ? 'Précédent' : 'Previous'}
+              >
+                <ChevronLeft size={18} />
+              </button>
             )}
 
             <div 
@@ -484,9 +476,9 @@ const GameHUD = ({
             >
               <input
                 ref={extInputRef}
-                type="search"
-                name="q-resp"
-                id="q-resp-field"
+                type="text"
+                name="no-autocomplete-quiz-input"
+                id="no-autocomplete-quiz-input-field"
                 inputMode="text"
                 enterKeyHint="done"
                 placeholder={placeholderText}
@@ -495,9 +487,9 @@ const GameHUD = ({
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
                 readOnly={isListening}
-                autoComplete="one-time-code"
+                autoComplete="off"
                 autoCorrect="off"
-                autoCapitalize="none"
+                autoCapitalize="off"
                 spellCheck="false"
                 data-lpignore="true"
                 data-1p-ignore="true"
@@ -505,6 +497,17 @@ const GameHUD = ({
                 aria-label={lang === 'fr' ? 'Réponse du quiz' : 'Quiz answer'}
               />
             </div>
+
+            {isFocusedCountry && mode !== 'learn' && (
+              <button 
+                className="hud-btn-circular glass-panel next-btn" 
+                onClick={() => onNavigateFocus('next')}
+                onPointerDown={(e) => e.preventDefault()}
+                title={lang === 'fr' ? 'Suivant' : 'Next'}
+              >
+                <ChevronRight size={18} />
+              </button>
+            )}
 
             {SpeechRecognition && mode !== 'learn' && !isKeyboardMode && (
               <button 
@@ -515,8 +518,6 @@ const GameHUD = ({
                 {isListening ? <MicOff size={18} /> : <Mic size={18} />}
               </button>
             )}
-
-
           </div>
         </div>
     </>

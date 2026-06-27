@@ -1606,8 +1606,8 @@ const GlobeMap = ({
               align-items: center;
               gap: 4px;
             ">
-              <span>${d.flag || ''}</span>
-              <span>${d.country}</span>
+              <span>${(d.mode === 'capitals' && !revealAll) ? '' : (d.flag || '')}</span>
+              <span>${(d.mode === 'capitals' && !revealAll) ? '???' : d.country}</span>
             </div>
             ${showCapital && d.capital ? `
               <div style="
@@ -1706,11 +1706,75 @@ const GlobeMap = ({
     ];
   }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS]);
 
+  // Base mountain paths
+  const mountainsBasePathsData = useMemo(() => {
+    if (mode !== 'rivers_mountains') return [];
+    const paths = [];
+    Object.keys(gameDataMap).forEach(k => {
+      const data = gameDataMap[k];
+      if (!data || data.type !== 'mountain_range' || !data.path) return;
+      const isFound = foundSet.has(k) || isHomeScreen;
+      const color = isFound 
+        ? getThemeRegionColor(globeTheme, theme, data.region)
+        : (globeTheme === 'blackout' ? STROKE_THEME_COLORS.blackout.unfound : UI_COLORS.riverInactive);
+      
+      paths.push({
+        admin: k,
+        coords: data.path.map(([lat, lng]) => [lat, lng, 0.002]), // Lifted slightly above surface
+        color,
+        width: isFound ? 35 : 20, // Pixels width
+        dashLength: isFound ? 1.0 : 0.4,
+        dashGap: isFound ? 0.0 : 0.25,
+        dashAnimateTime: 0
+      });
+    });
+    return paths;
+  }, [gameDataMap, foundSet, mode, isHomeScreen, globeTheme, theme, UI_COLORS]);
+
+  // Selected mountain paths
+  const mountainsSelectedPathData = useMemo(() => {
+    if (mode !== 'rivers_mountains' || !selectedCountry) return [];
+    const data = gameDataMap[selectedCountry];
+    if (!data || data.type !== 'mountain_range' || !data.path) return [];
+    const isFound = foundSet.has(selectedCountry) || isHomeScreen;
+    const regionColor = getThemeRegionColor(globeTheme, theme, data.region);
+    const color = isFound
+      ? (isError ? UI_COLORS.error : regionColor)
+      : (isError ? UI_COLORS.errorGlowStrong : UI_COLORS.textMuted);
+      
+    const pathPoints = data.path.map(([lat, lng]) => [lat, lng, 0.0035]);
+
+    return [
+      // Outer thicker highlight
+      {
+        admin: selectedCountry,
+        coords: pathPoints,
+        color,
+        width: isFound ? 60 : 50,
+        dashLength: 1,
+        dashGap: 0,
+        dashAnimateTime: 0
+      },
+      // Inner glowing core
+      {
+        admin: `${selectedCountry}_core`,
+        coords: pathPoints,
+        color: UI_COLORS.paper,
+        width: isFound ? 16 : 12,
+        dashLength: 0.35,
+        dashGap: 0.15,
+        dashAnimateTime: 1200
+      }
+    ];
+  }, [gameDataMap, foundSet, mode, isHomeScreen, selectedCountry, isError, UI_COLORS, globeTheme, theme]);
+
   // Combined for globe: base first, selected on top
-  const riversPathsData = useMemo(() => [
+  const globePathsData = useMemo(() => [
     ...riversBasePathsData,
     ...riversSelectedPathData,
-  ], [riversBasePathsData, riversSelectedPathData]);
+    ...mountainsBasePathsData,
+    ...mountainsSelectedPathData
+  ], [riversBasePathsData, riversSelectedPathData, mountainsBasePathsData, mountainsSelectedPathData]);
 
   const getBiomeAssetsData = useMemo(() => {
     if (mode === 'rivers_mountains') {
@@ -1729,7 +1793,8 @@ const GlobeMap = ({
           spread: data.spread || 1.5,
           height: data.height || 4000,
           scale: data.type === 'mountain_range' ? 2.8 : 1.0,
-          rotation: 0
+          rotation: 0,
+          path: data.path || null
         });
       });
       return assets;
@@ -1757,10 +1822,10 @@ const GlobeMap = ({
     let asset;
     if (mode === 'rivers_mountains') {
       if (!d.isFound) {
-        asset = createUnfoundPlaceholder(d.type, theme, isSelected, d.bearing, d.spread);
+        asset = createUnfoundPlaceholder(d.type, theme, isSelected, d.bearing, d.spread, d.path, d.lat, d.lng);
       } else {
         if (d.type === 'mountain' || d.type === 'mountain_range') {
-          asset = createMountainFeature(theme, isSelected, d.bearing, d.spread, d.height);
+          asset = createMountainFeature(theme, isSelected, d.bearing, d.spread, d.height, d.path, d.lat, d.lng);
         } else {
           asset = new THREE.Group(); // Found rivers are drawn in 3D paths, so empty group here
         }
@@ -2603,7 +2668,7 @@ const GlobeMap = ({
               }
             }}
             {...{
-              ['paths' + 'Data']: riversPathsData,
+              ['paths' + 'Data']: globePathsData,
               ['pathPoints']: d => d.coords,
               ['pathPointLat']: d => d[0],
               ['pathPointLng']: d => d[1],
