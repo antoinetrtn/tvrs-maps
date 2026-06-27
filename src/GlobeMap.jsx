@@ -876,9 +876,9 @@ const GlobeMap = ({
         }
         if (!best || dist < best.dist) best = { admin, dist };
       });
-      // Rivers: click within ~2.5° of path. Mountains: 5° generous hit area.
+      // Rivers: click within ~5.5° of path. Mountains: 6.0° generous hit area.
       const bestData = best ? gameDataMap[best.admin] : null;
-      const threshold = bestData?.type === 'river' ? 2.5 : 5.0;
+      const threshold = bestData?.type === 'river' ? 5.5 : 6.0;
       selectCountry(best && best.dist < threshold ? best.admin : null);
       return;
     }
@@ -1380,12 +1380,12 @@ const GlobeMap = ({
   }, [isDepartmentMode, selectedCountry]);
 
   const getSelectionEffectAltitude = useCallback(() => {
-    if (selectedCountry) return 0.0025; // Just above the polygon surface
+    if (selectedCountry) return 0.0075; // Above selected country's 3.5D surface (0.006)
     return 0.0015;
   }, [selectedCountry]);
 
   const getHtmlAltitude = useCallback((d) => {
-    if (selectedCountry && d.admin === selectedCountry) return 0.007; // Just above selected country
+    if (selectedCountry && d.admin === selectedCountry) return 0.0085; // Above selected country & selection effect
     return 0.002;
   }, [selectedCountry]);
 

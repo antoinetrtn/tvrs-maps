@@ -32,6 +32,24 @@ export const disposeBiomeCache = () => {
 
 
 
+// Helper to interpolate a point at parameter t (0 to 1) along a polyline path
+const interpolatePath = (path, t) => {
+  if (!path || path.length === 0) return [0, 0];
+  if (path.length === 1) return path[0];
+  
+  const segments = path.length - 1;
+  const rawIndex = t * segments;
+  const index = Math.min(segments - 1, Math.floor(rawIndex));
+  const frac = rawIndex - index;
+  
+  const p1 = path[index];
+  const p2 = path[index + 1];
+  
+  const lat = p1[0] + (p2[0] - p1[0]) * frac;
+  const lng = p1[1] + (p2[1] - p1[1]) * frac;
+  return [lat, lng];
+};
+
 export const createMountainFeature = (themeName = 'dark', isSelected = false, bearing = 0, spread = 1.5, height = 4000, path = null, centerLat = 0, centerLng = 0) => {
   const group = new THREE.Group();
   
@@ -57,27 +75,30 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
   }));
 
   if (path && Array.isArray(path) && path.length > 0) {
-    const N = path.length;
+    // Generate a high density of peaks proportional to range's spread (length)
+    const N = Math.max(10, Math.round(spread * 4.5));
     for (let i = 0; i < N; i++) {
-      const pt = path[i];
-      const pLat = pt[0];
-      const pLng = pt[1];
+      const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
+      const [pLat, pLng] = interpolatePath(path, tNorm);
 
       // Convert coordinates to local X/Z offsets relative to the group center
       const localX = (pLng - centerLng) * 0.16;
       const localZ = -(pLat - centerLat) * 0.16;
 
       // Bell curve height distribution
-      const t = (N > 1) ? ((i / (N - 1)) - 0.5) : 0;
+      const t = tNorm - 0.5; // -0.5 to 0.5
       const bellFactor = Math.cos(t * Math.PI);
-      const randomVariation = 0.8 + ((Math.sin(i * 37.1) + 1) / 2) * 0.4;
-      const hFactor = bellFactor * randomVariation;
+      
+      // Dynamic peak size and height variation (organic & dense)
+      const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7; // 0.65 to 1.35
+      const randomRadiusVar = 0.8 + ((Math.cos(i * 22.7) + 1) / 2) * 0.5; // 0.8 to 1.3
+      const hFactor = bellFactor * randomHeightVar;
 
       const normalizedHeightScale = height / 5000;
       const peakHeight = 0.28 * hFactor * normalizedHeightScale;
-      const peakRadius = peakHeight * 0.44;
+      const peakRadius = peakHeight * 0.44 * randomRadiusVar;
 
-      const peakGeoKey = `peakGeo_${centerLat}_${centerLng}_${height}_${isSelected}_${i}`;
+      const peakGeoKey = `peakGeo_${centerLat}_${centerLng}_${height}_${isSelected}_${i}_v2`;
       const peakGeo = getGeometry(peakGeoKey, () => {
         const geo = new THREE.ConeGeometry(peakRadius, peakHeight, 8, 4);
         const pos = geo.attributes.position;
@@ -105,7 +126,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
         const snowHeight = peakHeight * 0.38;
         const snowRadius = peakRadius * 0.42;
         
-        const snowGeoKey = `snowGeo_${centerLat}_${centerLng}_${height}_${isSelected}_${i}`;
+        const snowGeoKey = `snowGeo_${centerLat}_${centerLng}_${height}_${isSelected}_${i}_v2`;
         const snowGeo = getGeometry(snowGeoKey, () => {
           const geo = new THREE.ConeGeometry(snowRadius, snowHeight, 8, 2);
           const spos = geo.attributes.position;
@@ -132,7 +153,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
     }
   } else {
     // Fallback to straight line logic
-    const N = Math.max(3, Math.min(8, Math.round(spread * 2)));
+    const N = Math.max(10, Math.round(spread * 4.5));
     const localSpread = spread * 0.16;
     const rad = (bearing || 0) * Math.PI / 180;
     const dx = Math.cos(rad);
@@ -141,10 +162,12 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
     const perpZ = dx;
 
     for (let i = 0; i < N; i++) {
-      const t = (N > 1) ? ((i / (N - 1)) - 0.5) : 0;
+      const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
+      const t = tNorm - 0.5;
       const bellFactor = Math.cos(t * Math.PI);
-      const randomVariation = 0.8 + ((Math.sin(i * 37.1) + 1) / 2) * 0.4;
-      const hFactor = bellFactor * randomVariation;
+      const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7;
+      const randomRadiusVar = 0.8 + ((Math.cos(i * 22.7) + 1) / 2) * 0.5;
+      const hFactor = bellFactor * randomHeightVar;
 
       let X = t * localSpread * dx;
       let Z = t * localSpread * dz;
@@ -155,9 +178,9 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
 
       const normalizedHeightScale = height / 5000;
       const peakHeight = 0.28 * hFactor * normalizedHeightScale;
-      const peakRadius = peakHeight * 0.44;
+      const peakRadius = peakHeight * 0.44 * randomRadiusVar;
 
-      const peakGeoKey = `peakGeo_${bearing}_${spread}_${height}_${isSelected}_${i}`;
+      const peakGeoKey = `peakGeo_${bearing}_${spread}_${height}_${isSelected}_${i}_v2`;
       const peakGeo = getGeometry(peakGeoKey, () => {
         const geo = new THREE.ConeGeometry(peakRadius, peakHeight, 8, 4);
         const pos = geo.attributes.position;
@@ -185,7 +208,7 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
         const snowHeight = peakHeight * 0.38;
         const snowRadius = peakRadius * 0.42;
         
-        const snowGeoKey = `snowGeo_${bearing}_${spread}_${height}_${isSelected}_${i}`;
+        const snowGeoKey = `snowGeo_${bearing}_${spread}_${height}_${isSelected}_${i}_v2`;
         const snowGeo = getGeometry(snowGeoKey, () => {
           const geo = new THREE.ConeGeometry(snowRadius, snowHeight, 8, 2);
           const spos = geo.attributes.position;
@@ -229,51 +252,53 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
   
   if (type === 'mountain' || type === 'mountain_range') {
     const colorKey = isSelected ? 'selPlaceholder' : 'unfoundPlaceholder';
-    const mat = getMaterial(colorKey + 'Mat', () => new THREE.MeshBasicMaterial({
+    const mat = getMaterial(colorKey + 'MatSolid', () => new THREE.MeshBasicMaterial({
       color: isSelected ? 0x34d399 : 0x64748b, // Slate gray or glowing green
       transparent: true,
-      opacity: isSelected ? 0.8 : 0.45,
-      wireframe: true
+      opacity: isSelected ? 0.35 : 0.18,      // Translucent solid cones
+      wireframe: false
     }));
 
     if (path && Array.isArray(path) && path.length > 0) {
-      const N = path.length;
+      const N = Math.max(10, Math.round(spread * 4.5));
       for (let i = 0; i < N; i++) {
-        const pt = path[i];
-        const pLat = pt[0];
-        const pLng = pt[1];
+        const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
+        const [pLat, pLng] = interpolatePath(path, tNorm);
 
         const localX = (pLng - centerLng) * 0.16;
         const localZ = -(pLat - centerLat) * 0.16;
 
-        const t = (N > 1) ? ((i / (N - 1)) - 0.5) : 0;
+        const t = tNorm - 0.5;
         const bell = Math.cos(t * Math.PI);
-        const peakHeight = 0.22 * bell;
+        const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7;
+        const peakHeight = 0.22 * bell * randomHeightVar;
         const peakRadius = peakHeight * 0.45;
 
-        const peakGeoKey = `unfoundPeakGeo_${centerLat}_${centerLng}_${i}`;
+        const peakGeoKey = `unfoundPeakGeo_${centerLat}_${centerLng}_${i}_v2`;
         const geo = getGeometry(peakGeoKey, () => new THREE.ConeGeometry(peakRadius, peakHeight, 5));
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(localX, peakHeight / 2, localZ);
         group.add(mesh);
       }
     } else {
-      const N = 3;
+      const N = Math.max(10, Math.round(spread * 4.5));
       const localSpread = spread * 0.16;
       const rad = (bearing || 0) * Math.PI / 180;
       const dx = Math.cos(rad);
       const dz = Math.sin(rad);
 
       for (let i = 0; i < N; i++) {
-        const t = (i / (N - 1)) - 0.5;
+        const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
+        const t = tNorm - 0.5;
         const bell = Math.cos(t * Math.PI);
+        const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7;
         const X = t * localSpread * dx;
         const Z = t * localSpread * dz;
 
-        const peakHeight = 0.22 * bell;
+        const peakHeight = 0.22 * bell * randomHeightVar;
         const peakRadius = peakHeight * 0.45;
 
-        const peakGeoKey = `unfoundPeakGeo_${bearing}_${spread}_${i}`;
+        const peakGeoKey = `unfoundPeakGeo_${bearing}_${spread}_${i}_v2`;
         const geo = getGeometry(peakGeoKey, () => new THREE.ConeGeometry(peakRadius, peakHeight, 5));
         const mesh = new THREE.Mesh(geo, mat);
         mesh.position.set(X, peakHeight / 2, Z);

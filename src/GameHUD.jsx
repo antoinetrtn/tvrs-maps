@@ -476,9 +476,9 @@ const GameHUD = ({
             >
               <input
                 ref={extInputRef}
-                type="text"
-                name="no-autocomplete-quiz-input"
-                id="no-autocomplete-quiz-input-field"
+                type="search"
+                name="q-resp"
+                id="q-resp-field"
                 inputMode="text"
                 enterKeyHint="done"
                 placeholder={placeholderText}
@@ -487,9 +487,9 @@ const GameHUD = ({
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
                 readOnly={isListening}
-                autoComplete="off"
+                autoComplete="one-time-code"
                 autoCorrect="off"
-                autoCapitalize="off"
+                autoCapitalize="none"
                 spellCheck="false"
                 data-lpignore="true"
                 data-1p-ignore="true"
