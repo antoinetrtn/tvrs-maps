@@ -2156,7 +2156,7 @@ const GlobeMap = ({
       });
     }
 
-    const material = new THREE.MeshPhongMaterial({
+    return new THREE.MeshPhongMaterial({
       color: UI_COLORS.mapSea,
       emissive: globeLightingEnabled
         ? new THREE.Color(UI_COLORS.globeEmissive)
@@ -2169,43 +2169,6 @@ const GlobeMap = ({
       opacity: 1,
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7
     });
-
-    material.onBeforeCompile = (shader) => {
-      shader.uniforms.uTime = { value: 0 };
-      material.userData.shader = shader;
-
-      shader.fragmentShader = `
-        uniform float uTime;
-        varying vec3 vNormal;
-      ` + shader.fragmentShader;
-
-      shader.fragmentShader = shader.fragmentShader.replace(
-        `#include <dithering_fragment>`,
-        `#include <dithering_fragment>
-         // Draw a very light wireframe grid using spherical coordinates from normal
-         vec3 norm = normalize(vNormal);
-         float lat = asin(norm.y);
-         float lng = atan(norm.x, norm.z);
-         float u = lng / 6.2831853 + 0.5;
-         float v = lat / 3.1415926 + 0.5;
-         
-         float gridX = smoothstep(0.475, 0.50, abs(fract(u * 72.0) - 0.5));
-         float gridY = smoothstep(0.475, 0.50, abs(fract(v * 36.0) - 0.5));
-         float grid = max(gridX, gridY);
-         
-         // Slow rolling wave animation to evoke the sea
-         float wave = sin(u * 24.0 + v * 16.0 + uTime * 1.2) * 0.5 + 0.5;
-         
-         // Subtle white/gray grid in blackout/dark, and faint dark grid in light mode
-         vec3 gridColor = vec3(1.0);
-         float gridOpacity = grid * (0.04 + 0.08 * wave);
-         
-         gl_FragColor.rgb = mix(gl_FragColor.rgb, gridColor, gridOpacity);
-        `
-      );
-    };
-
-    return material;
   }, [UI_COLORS, isLight, globeLightingEnabled, globeTheme, customGlobeTexture]);
 
   useEffect(() => {
@@ -2392,15 +2355,12 @@ const GlobeMap = ({
       ? GLOBE_STYLE.lighting.graticuleOpacity.light
       : GLOBE_STYLE.lighting.graticuleOpacity.dark;
 
-    if (globeTheme === 'blueprint') {
-      graticuleColor = new THREE.Color(0x00ffff);
-      graticuleOpacity = 0.45;
+    if (globeTheme === 'blackout') {
+      graticuleColor = new THREE.Color(UI_COLORS.textMuted);
+      graticuleOpacity = isLight ? 0.15 : 0.28;
     } else if (globeTheme === 'satellite') {
       graticuleColor = new THREE.Color(0x10b981);
       graticuleOpacity = 0.25;
-    } else if (globeTheme === 'blackout') {
-      graticuleColor = new THREE.Color(0x333333);
-      graticuleOpacity = 0.2;
     }
 
     scene.traverse((obj) => {
@@ -2900,7 +2860,7 @@ const GlobeMap = ({
             onGlobeReady={handleGlobeReady}
             backgroundColor={GLOBE_TRANSPARENT_BACKGROUND}
             lineHoverPrecision={0}
-            showGraticules={!perfProfile?.isMobile}
+            showGraticules={true}
             rendererConfig={{ antialias: perfProfile?.antialias !== false, logarithmicDepthBuffer: false, powerPreference: "high-performance" }}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
