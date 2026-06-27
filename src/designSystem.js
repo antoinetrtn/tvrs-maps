@@ -209,7 +209,6 @@ export const THEME = {
 };
 
 export const THEME_OVERRIDES = {
-  glass: {},
   satellite: {
     light: {
       bg: "#030712",
@@ -412,7 +411,7 @@ export const GLOBE_STYLE = {
 // ==========================================
 
 export const CONTINENT_PALETTES = {
-  glass: {
+  default: {
     surface: {
       light: {
         Europe: "#849bb3",
@@ -549,7 +548,7 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
   return fallback;
 };
 
-export const getThemeColors = (globeTheme = "glass", systemTheme = "dark") => {
+export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") => {
   const baseTheme = THEME[systemTheme] || THEME.dark;
   const overrides = THEME_OVERRIDES[globeTheme]?.[systemTheme] || {};
   return {
@@ -560,7 +559,7 @@ export const getThemeColors = (globeTheme = "glass", systemTheme = "dark") => {
 
 export const getThemeCssVariables = (
   systemTheme = "dark",
-  globeTheme = "glass",
+  globeTheme = "satellite",
   selectedCountry = null,
   activeDataMap = null,
 ) => {
@@ -616,7 +615,6 @@ export const getThemeCssVariables = (
     "--decor-glow-primary-end": theme.decorGlowPrimaryEnd,
     "--decor-glow-secondary": theme.decorGlowSecondary,
     "--decor-glow-secondary-end": theme.decorGlowSecondaryEnd,
-    "--theme-dot-glass": "#0ea5e9",
     "--theme-dot-satellite": "#10b981",
     "--theme-dot-blackout": "#ffffff",
     "--radius-sm": STYLE_TOKENS.radius.sm,
@@ -642,7 +640,7 @@ export const getThemeCssVariables = (
 
 export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
   const normRegion = region === "France" ? "Europe" : (region || "Unknown");
-  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.glass;
+  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.default;
   const sysTheme = systemTheme || "dark";
   const colors = palette.surface[sysTheme];
   return colors[normRegion] || colors.Unknown || "#888888";
@@ -654,7 +652,7 @@ export const getThemeRegionColorAttenuated = (
   region,
 ) => {
   const normRegion = region === "France" ? "Europe" : (region || "Unknown");
-  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.glass;
+  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.default;
   const sysTheme = systemTheme || "dark";
 
   if (palette.attenuated) {
@@ -671,7 +669,7 @@ export const getThemeRegionColorAttenuated = (
 
 export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
   const normRegion = region === "France" ? "Europe" : (region || "Unknown");
-  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.glass;
+  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.default;
   const sysTheme = systemTheme || "dark";
 
   if (palette.label) {
@@ -681,4 +679,22 @@ export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
 
   // Blackout fallback: use base surface color shade directly
   return getThemeRegionColor(globeTheme, systemTheme, normRegion);
+};
+
+/**
+ * Scramble text with glitched characters for text animations.
+ */
+export const scrambleText = (text, seed = 0) => {
+  if (!text) return "";
+  const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%&?*¢¤§░▒▓█▲▼◆◇";
+  return text
+    .split("")
+    .map((char, index) => {
+      if (char === " " || char === "-" || char === "'") return char;
+      const hash = Math.sin(index * 13.5 + seed * 7.1) * 10000;
+      const rand = Math.abs(hash) % 1.0;
+      const glyphIndex = Math.floor(rand * glyphs.length);
+      return glyphs[glyphIndex];
+    })
+    .join("");
 };

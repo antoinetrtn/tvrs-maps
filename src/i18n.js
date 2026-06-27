@@ -80,7 +80,6 @@ export const translations = {
     region_Unknown: "Inconnu",
 
     // Globe Themes
-    theme_glass: "Verre Moderne",
     theme_satellite: "Satellite",
     theme_blackout: "Noir & Blanc",
   },
@@ -163,7 +162,6 @@ export const translations = {
     region_Unknown: "Unknown",
 
     // Globe Themes
-    theme_glass: "Sleek Glass",
     theme_satellite: "Satellite",
     theme_blackout: "Blacked Out",
   }

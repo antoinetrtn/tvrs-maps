@@ -58,3 +58,14 @@ export const RELIEF = {
   mountainScale: 0.62,   // found: stable, geographically-representative size
   targetHintScale: 0.5   // unfound: neutral, still clearly visible/clickable
 };
+
+export const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(["France"]);
+
+export const DEPARTMENT_MODE_FRANCE_VIEW = {
+  lat: 46.5,
+  lng: 2.6,
+  altitude: {
+    mobile: 0.62,
+    desktop: 0.42,
+  },
+};

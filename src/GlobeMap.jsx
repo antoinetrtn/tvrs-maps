@@ -19,6 +19,7 @@ import {
   getThemeRegionColorAttenuated,
   getThemeRegionColorLabel,
   FRENCH_REGION_COLORS,
+  scrambleText,
 } from "./designSystem";
 import {
   disposeBiomeCache,
@@ -29,7 +30,26 @@ import {
   shouldScrambleLabel,
   getPolygonAltitudeFor,
   RELIEF,
+  DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS,
+  DEPARTMENT_MODE_FRANCE_VIEW,
 } from "./gameConfig";
+import {
+  getFeatureAdmin,
+  getFlagEmoji,
+  getFeaturePolygons,
+  areLngLatPointsEqual,
+  getCleanRingForRendering,
+  getExteriorPolygonForRendering,
+  getRenderGeometry,
+  getLngLatBounds,
+  pointInBounds,
+  pointInRing,
+  pointInPolygon,
+  featureContainsLngLat,
+  getLngLatDistance,
+  getMobileRenderRadius,
+  getLabelRenderRadius,
+} from "./utils";
 
 // Hoisted PURE accessors for the <Globe> paths layer. Keeping their identities
 // stable across renders prevents react-globe.gl from marking the path/object
@@ -63,191 +83,8 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
 
 // Realistic theme progressive texture loading has been retired
 
-const getFeatureAdmin = (feature) =>
-  feature?.properties?.code ||
-  feature?.properties?.ADMIN ||
-  feature?.properties?.name ||
-  feature?.properties?.NAME;
-
-const getFlagEmoji = (iso2) => {
-  if (!iso2 || iso2.length !== 2) return "";
-  return iso2
-    .toUpperCase()
-    .replace(/./g, (char) => String.fromCodePoint(char.charCodeAt(0) + 127397));
-};
-
-const getFeaturePolygons = (feature) => {
-  const geometry = feature?.geometry;
-  if (!geometry) return [];
-  if (geometry.type === "Polygon") return [geometry.coordinates];
-  if (geometry.type === "MultiPolygon") return geometry.coordinates;
-  return [];
-};
-
-const areLngLatPointsEqual = (a, b) =>
-  Array.isArray(a) &&
-  Array.isArray(b) &&
-  a.length >= 2 &&
-  b.length >= 2 &&
-  a[0] === b[0] &&
-  a[1] === b[1];
-
-const getCleanRingForRendering = (ring) => {
-  if (!Array.isArray(ring)) return null;
-
-  const cleanRing = ring.reduce((points, point) => {
-    if (!Array.isArray(point) || point.length < 2) return points;
-    const normalizedPoint = [Number(point[0]), Number(point[1])];
-    if (
-      !Number.isFinite(normalizedPoint[0]) ||
-      !Number.isFinite(normalizedPoint[1])
-    )
-      return points;
-    if (
-      points.length &&
-      areLngLatPointsEqual(points[points.length - 1], normalizedPoint)
-    )
-      return points;
-    points.push(normalizedPoint);
-    return points;
-  }, []);
-
-  if (cleanRing.length < 3) return null;
-
-  if (!areLngLatPointsEqual(cleanRing[0], cleanRing[cleanRing.length - 1])) {
-    cleanRing.push([...cleanRing[0]]);
-  }
-
-  return cleanRing.length >= 4 ? cleanRing : null;
-};
-
-const getExteriorPolygonForRendering = (polygon) => {
-  const exteriorRing = getCleanRingForRendering(polygon?.[0]);
-  return exteriorRing ? [exteriorRing] : null;
-};
-
-const getRenderGeometry = (feature) => {
-  const geometry = feature?.geometry;
-  if (!geometry) return null;
-
-  if (geometry.type === "Polygon") {
-    const coordinates = getExteriorPolygonForRendering(geometry.coordinates);
-    if (!coordinates) return null;
-    return {
-      ...geometry,
-      coordinates,
-    };
-  }
-
-  if (geometry.type === "MultiPolygon") {
-    const coordinates = geometry.coordinates
-      .map(getExteriorPolygonForRendering)
-      .filter(Boolean);
-    if (!coordinates.length) return null;
-    return {
-      ...geometry,
-      coordinates,
-    };
-  }
-
-  return geometry;
-};
-
-const getLngLatBounds = (polygons) => {
-  let minLng = Infinity;
-  let maxLng = -Infinity;
-  let minLat = Infinity;
-  let maxLat = -Infinity;
-
-  polygons.forEach((polygon) => {
-    polygon.forEach((ring) => {
-      ring.forEach(([lng, lat]) => {
-        minLng = Math.min(minLng, lng);
-        maxLng = Math.max(maxLng, lng);
-        minLat = Math.min(minLat, lat);
-        maxLat = Math.max(maxLat, lat);
-      });
-    });
-  });
-
-  return { minLng, maxLng, minLat, maxLat };
-};
-
-const pointInBounds = (lng, lat, bounds) => {
-  return (
-    lng >= bounds.minLng &&
-    lng <= bounds.maxLng &&
-    lat >= bounds.minLat &&
-    lat <= bounds.maxLat
-  );
-};
-
-const pointInRing = (lng, lat, ring) => {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [lngI, latI] = ring[i];
-    const [lngJ, latJ] = ring[j];
-    const intersects =
-      latI > lat !== latJ > lat &&
-      lng <
-        ((lngJ - lngI) * (lat - latI)) / (latJ - latI || Number.EPSILON) + lngI;
-    if (intersects) inside = !inside;
-  }
-  return inside;
-};
-
-const pointInPolygon = (lng, lat, polygon) => {
-  if (!polygon?.length || !pointInRing(lng, lat, polygon[0])) return false;
-  for (let i = 1; i < polygon.length; i++) {
-    if (pointInRing(lng, lat, polygon[i])) return false;
-  }
-  return true;
-};
-
-const featureContainsLngLat = (featureIndexEntry, lng, lat) => {
-  if (!pointInBounds(lng, lat, featureIndexEntry.bounds)) return false;
-  return featureIndexEntry.polygons.some((polygon) =>
-    pointInPolygon(lng, lat, polygon),
-  );
-};
-
-const getLngLatDistance = (lngA, latA, lngB, latB) => {
-  let dLng = Math.abs(lngA - lngB);
-  if (dLng > 180) dLng = 360 - dLng;
-  return Math.hypot(dLng, latA - latB);
-};
-
-const getMobileRenderRadius = (zoomLevel) => {
-  if (zoomLevel >= 1.6) return 118;
-  if (zoomLevel >= 1.05) return 96;
-  if (zoomLevel >= 0.7) return 78;
-  return 64;
-};
-
-const getLabelRenderRadius = (zoomLevel, isMobile) => {
-  if (isMobile) return getMobileRenderRadius(zoomLevel) * 0.82;
-  if (zoomLevel >= 2.4) return 38;
-  if (zoomLevel >= 1.6) return 58;
-  if (zoomLevel >= 1.05) return 78;
-  return 96;
-};
-
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
-const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(["France"]);
-const DEPARTMENT_MODE_FRANCE_VIEW = {
-  lat: 46.5,
-  lng: 2.6,
-  altitude: {
-    mobile: 0.62,
-    desktop: 0.42,
-  },
-};
-const BIOME_SCENE_SCALE = 9.2;
-const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;
-const BIOME_SAMPLE_CANDIDATES = 12;
-const BIOME_SAMPLE_ATTEMPTS = 35;
-// --- PROCEDURAL THEMED 3D MODELS BUILDERS ---
 
 const getDepartmentModeFrancePointOfView = (width) => ({
   lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
@@ -321,7 +158,7 @@ const GlobeMap = ({
   onPreserveInputFocus,
   globeLightingEnabled = true,
   activeDataMap,
-  globeTheme = "glass",
+  globeTheme = "satellite",
   learnShowCountryLabels = true,
   learnShowCapitals = false,
   learnShowRivers = false,
@@ -1867,77 +1704,43 @@ const GlobeMap = ({
         isLearn: mode === "learn",
       });
 
-      // Local helper to scramble text with glitched characters (100% scrambled to prevent reading letters)
-      const localScrambleText = (text, seed = 0) => {
-        if (!text) return "";
-        const glyphs =
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%&?*¢¤§░▒▓█▲▼◆◇";
-        return text
-          .split("")
-          .map((char, index) => {
-            if (char === " " || char === "-" || char === "'") return char;
-            const hash = Math.sin(index * 13.5 + seed * 7.1) * 10000;
-            const rand = Math.abs(hash) % 1.0;
-            const glyphIndex = Math.floor(rand * glyphs.length);
-            return glyphs[glyphIndex];
-          })
-          .join("");
-      };
 
       if (isGlitchMode) {
         const isCapitalsMode = d.mode === "capitals";
         const isDeptMode = d.mode === "departments";
         const isReliefMode = d.mode === "rivers_mountains";
-        const reliefIcon = isReliefMode
-          ? gameDataMap[d.admin]?.type === "mountain_range" ||
-            riversMountainsDataMap[d.admin]?.type === "mountain_range"
-            ? "🏔️"
-            : "💧"
-          : "";
-        const glitchLine1Raw = isCapitalsMode ? d.capital : d.country;
-        const glitchLine1Class = isCapitalsMode
-          ? "glitch-capital"
-          : "glitch-country";
-        // Keep the department code / relief icon legible (it is the question, not the answer);
-        // only the name itself scrambles. Other modes keep the animated glyph marker.
-        const prefixHtml =
-          isDeptMode && d.code
-            ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: 9px; line-height: 1.1;">${d.code}</span>`
-            : isReliefMode
-              ? `<span style="font-size: 10px;">${reliefIcon}</span>`
-              : `<span class="glitch-flag">▒</span>`;
 
-        // Glitched/scrambled animated callout box (Minimalist, centered on top of stalk)
+        let glitchLine1Class = "glitch-country";
+        let glitchLine1Raw = d.country;
+        if (isCapitalsMode) {
+          glitchLine1Class = "glitch-capital";
+          glitchLine1Raw = d.capital;
+        } else if (isDeptMode) {
+          glitchLine1Class = "glitch-dept";
+          glitchLine1Raw = d.country;
+        } else if (isReliefMode) {
+          glitchLine1Class = "glitch-relief";
+          glitchLine1Raw = d.country;
+        }
+
+        const prefixHtml = isDeptMode
+          ? `<span style="font-family: monospace; color: ${UI_COLORS.accent}; opacity: 0.85;">Dpt ${d.admin}:</span>`
+          : "";
+
         el.innerHTML = `
-        <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
-          <!-- Dot -->
+        <div class="scramble-callout" style="
+          transform: translate(-50%, -100%);
+          margin-top: -12px;
+          animation: labelReveal 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        ">
           <div style="
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: ${color};
-            border-radius: 50%;
-            left: -3px;
-            top: -3px;
-            box-shadow: 0 0 8px ${color};
-            opacity: ${isHomeScreen ? 0.5 : 1};
-          "></div>
-          <!-- Stalk Line (Shortened to 15px) -->
-          <div style="
-            position: absolute;
-            width: 1.2px;
-            height: 15px;
-            background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
-            left: -0.6px;
-            bottom: 3px;
-            opacity: ${isHomeScreen ? 0.4 : 0.85};
-          "></div>
-          <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
-          <div style="
-            position: absolute;
-            left: 50%;
-            bottom: 21px;
-            transform: translateX(-50%);
+            background: ${UI_COLORS.glassBg};
+            backdrop-filter: blur(var(--glass-blur, 8px));
+            -webkit-backdrop-filter: blur(var(--glass-blur, 8px));
+            border: 1px solid ${UI_COLORS.glassBorderStrong};
+            border-radius: var(--radius-sm, 4px);
+            padding: 5px 9px 5px 9px;
+            box-shadow: var(--shadow-sm);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1949,13 +1752,13 @@ const GlobeMap = ({
           ">
             <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
               ${prefixHtml}
-              <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}">${localScrambleText(glitchLine1Raw)}</span>
+              <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}">${scrambleText(glitchLine1Raw)}</span>
             </div>
             ${
               isCapitalsMode
                 ? `
               <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
-                <span class="glitch-country" data-text="${d.country}">${localScrambleText(d.country)}</span>
+                <span class="glitch-country" data-text="${d.country}">${scrambleText(d.country)}</span>
               </div>
             `
                 : ""
@@ -1972,20 +1775,24 @@ const GlobeMap = ({
           }
           const countryEl = el.querySelector(".glitch-country");
           const capitalEl = el.querySelector(".glitch-capital");
-          const flagEl = el.querySelector(".glitch-flag");
+          const deptEl = el.querySelector(".glitch-dept");
+          const reliefEl = el.querySelector(".glitch-relief");
 
-          const glyphs = "░▒▓█▲▼◆◇@#$%&?*¢";
           if (countryEl) {
             const raw = countryEl.getAttribute("data-text") || "";
-            countryEl.innerText = localScrambleText(raw, Math.random());
+            countryEl.innerText = scrambleText(raw, Math.random());
           }
           if (capitalEl) {
             const raw = capitalEl.getAttribute("data-text") || "";
-            capitalEl.innerText = localScrambleText(raw, Math.random());
+            capitalEl.innerText = scrambleText(raw, Math.random());
           }
-          if (flagEl) {
-            flagEl.innerText =
-              glyphs[Math.floor(Math.random() * glyphs.length)];
+          if (deptEl) {
+            const raw = deptEl.getAttribute("data-text") || "";
+            deptEl.innerText = scrambleText(raw, Math.random());
+          }
+          if (reliefEl) {
+            const raw = reliefEl.getAttribute("data-text") || "";
+            reliefEl.innerText = scrambleText(raw, Math.random());
           }
         }, 150);
       } else {
