@@ -1,67 +1,71 @@
-import React, { useMemo } from 'react';
-import './EndScreen.css';
-import { getGameStats } from './utils';
-import { getThemeRegionColor } from './designSystem';
+import React, { useMemo } from "react";
+import "./EndScreen.css";
+import { getGameStats } from "./utils";
+import { getThemeRegionColor } from "./designSystem";
+import { useTranslation } from "./i18n";
 
-const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, mode, onRestart, onViewTable, theme = 'dark', lang = 'fr', globeTheme = 'glass' }) => {
+const EndScreen = ({
+  foundList,
+  totalCountries,
+  countryDataMap,
+  activeDataMap,
+  mode,
+  onRestart,
+  onViewTable,
+  theme = "dark",
+  lang = "fr",
+  globeTheme = "glass",
+}) => {
   const dataMap = activeDataMap || countryDataMap;
-  const { stats, CONTINENT_ORDER } = useMemo(() => 
-    getGameStats(foundList, dataMap, lang), 
-    [foundList, dataMap, lang]
+  const t = useTranslation(lang);
+  const { stats, CONTINENT_ORDER } = useMemo(
+    () => getGameStats(foundList, dataMap, lang),
+    [foundList, dataMap, lang],
   );
 
   const colors = useMemo(() => {
     const res = {};
-    const regions = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "France", "Unknown"];
-    regions.forEach(r => {
+    const regions = [
+      "Europe",
+      "Americas",
+      "Asia",
+      "Africa",
+      "Oceania",
+      "Antarctic",
+      "France",
+      "Unknown",
+    ];
+    regions.forEach((r) => {
       res[r] = getThemeRegionColor(globeTheme, theme, r);
     });
     return res;
   }, [globeTheme, theme]);
   const isPerfectScore = foundList.length === totalCountries;
 
-  const continentLabels = {
-    fr: {
-      "Europe": "Europe",
-      "Americas": "Amériques",
-      "Asia": "Asie",
-      "Africa": "Afrique",
-      "Oceania": "Océanie",
-      "Antarctic": "Antarctique",
-      "France": "France",
-      "Unknown": "Inconnu"
-    },
-    en: {
-      "Europe": "Europe",
-      "Americas": "Americas",
-      "Asia": "Asia",
-      "Africa": "Africa",
-      "Oceania": "Oceania",
-      "Antarctic": "Antarctica",
-      "France": "France",
-      "Unknown": "Unknown"
-    }
-  };
-
   const getTitle = () => {
-    if (isPerfectScore) return lang === 'fr' ? "Incroyable !" : "Incredible !";
-    return lang === 'fr' ? "Bravo !" : "Well done!";
+    if (isPerfectScore) return t("incredible");
+    return t("well_done");
   };
 
   const getSubTitle = () => {
-    if (isPerfectScore && mode === 'departments') return lang === 'fr' ? "Vous maîtrisez la carte de France !" : "You mastered the map of France!";
-    if (isPerfectScore) return lang === 'fr' ? "Vous avez conquis le monde !" : "You conquered the world!";
-    return lang === 'fr' ? "Vous avez trouvé :" : "You found:";
+    if (isPerfectScore && mode === "departments") return t("mastered_france");
+    if (isPerfectScore) return t("conquered_world");
+    return t("you_found");
   };
 
   return (
-    <div className={`end-screen-overlay ${isPerfectScore ? 'perfect-game' : ''}`}>
+    <div
+      className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""}`}
+    >
       <div className="end-screen-content">
         <div className="end-screen-header">
           <h1>{getTitle()}</h1>
           <p>
             {getSubTitle()}
-            <span className="final-score"> {foundList.length} / {totalCountries}</span>
+            <span className="final-score">
+              {" "}
+              {foundList.length} / {totalCountries}
+            </span>
           </p>
         </div>
 
@@ -70,21 +74,25 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, m
         </div>
 
         <div className="continents-progress-bars">
-          {CONTINENT_ORDER.filter(reg => reg !== 'Unknown' && stats[reg].total > 0).map(region => {
+          {CONTINENT_ORDER.filter(
+            (reg) => reg !== "Unknown" && stats[reg].total > 0,
+          ).map((region) => {
             const data = stats[region];
             const pct = (data.found / data.total) * 100;
-            const color = colors[region] || 'var(--accent)';
-            const label = continentLabels[lang][region] || region;
+            const color = colors[region] || "var(--accent)";
+            const label = t(`region_${region}`) || region;
 
             return (
               <div key={region} className="progress-item">
                 <div className="progress-info">
                   <span className="progress-label">{label}</span>
-                  <span className="progress-count">{data.found}/{data.total}</span>
+                  <span className="progress-count">
+                    {data.found}/{data.total}
+                  </span>
                 </div>
                 <div className="progress-track">
-                  <div 
-                    className="progress-fill" 
+                  <div
+                    className="progress-fill"
                     style={{ width: `${pct}%`, backgroundColor: color }}
                   />
                 </div>
@@ -95,10 +103,10 @@ const EndScreen = ({ foundList, totalCountries, countryDataMap, activeDataMap, m
 
         <div className="end-screen-actions">
           <button className="btn-secondary" onClick={onViewTable}>
-            {lang === 'fr' ? "Voir le tableau" : "View Table"}
+            {t("view_table")}
           </button>
           <button className="btn-primary" onClick={onRestart}>
-            {lang === 'fr' ? "Rejouer" : "Play Again"}
+            {t("play_again")}
           </button>
         </div>
       </div>

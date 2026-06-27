@@ -1,305 +1,326 @@
 .modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--bg-color);
-  z-index: 10000;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-color);
+    z-index: 10000;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 0;
 }
 
 .modal-content {
-  width: 100%;
-  height: 100%;
-  max-width: 720px;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(28px, 6vh, 64px) clamp(20px, 4vw, 40px) clamp(20px, 4vh, 36px);
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-color);
-  animation: modalEnter var(--transition-emphasized);
-  z-index: 10001;
+    width: 100%;
+    height: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(28px, 6vh, 64px) clamp(20px, 4vw, 40px)
+        clamp(20px, 4vh, 36px);
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-color);
+    animation: modalEnter var(--transition-emphasized);
+    z-index: 10001;
 }
 
 /* ---- Header ---- */
 .modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-xl);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
 }
 
 .header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
 }
 
-.modal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-top: -5px;
 }
 
-.overall-score {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
+.score-title {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
-.score-number {
-  font-size: 3rem;
-  font-weight: 500;
-  color: var(--text-main);
+.header-font {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    font-size: 2.15rem;
+    color: var(--accent);
 }
 
-.score-sep {
-  font-size: 1.6rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  opacity: 0.5;
-}
-
-.score-total {
-  font-size: 1.6rem;
-  font-weight: 400;
-  color: var(--text-muted);
+.score-font {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 200;
+    font-size: 1.5rem;
+    color: var(--accent-hover);
 }
 
 .close-popup {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border);
-  background: transparent;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
 .close-popup:hover {
-  background: var(--glass-hover);
-  color: var(--text-main);
-  border-color: var(--glass-border-strong);
+    background: var(--glass-hover);
+    color: var(--text-main);
+    border-color: var(--glass-border-strong);
 }
 
 /* ---- Continents list ---- */
 .continents-grid {
-  flex: 1;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
-  /* Only fade the bottom edge so the first row ("Europe") is never clipped. */
-  mask-image: linear-gradient(to bottom, black 0, black calc(100% - 28px), transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 0, black calc(100% - 28px), transparent 100%);
-  /* Hidden scrollbar — the bottom fade already signals more content. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    /* Only fade the bottom edge so the first row ("Europe") is never clipped. */
+    mask-image: linear-gradient(
+        to bottom,
+        black 0,
+        black calc(100% - 28px),
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        black 0,
+        black calc(100% - 28px),
+        transparent 100%
+    );
+    /* Hidden scrollbar — the bottom fade already signals more content. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .continents-grid::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+    width: 0;
+    height: 0;
+    display: none;
 }
 
 .continent-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
 .continent-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
 }
 
 .continent-title {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 0;
 }
 
 .continent-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-full);
-  background: var(--continent-color);
-  flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-full);
+    background: var(--continent-color);
+    flex-shrink: 0;
 }
 
 .continent-title h3 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  color: var(--text-main);
-  margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: var(--text-main);
+    margin: 0;
 }
 
 .continent-count {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  font-size: 0.9rem;
-  flex-shrink: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
-.continent-count .cc-found { color: var(--text-main); }
-.continent-count .cc-sep { color: var(--text-muted); opacity: 0.5; }
-.continent-count .cc-total { color: var(--text-muted); }
+.continent-count .cc-found {
+    color: var(--text-main);
+}
+.continent-count .cc-sep {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+.continent-count .cc-total {
+    color: var(--text-muted);
+}
 
 .continent-progress {
-  position: relative;
-  height: 3px;
-  border-radius: var(--radius-full);
-  background: var(--subtle-tint-strong);
-  overflow: hidden;
+    position: relative;
+    height: 3px;
+    border-radius: var(--radius-full);
+    background: var(--subtle-tint-strong);
+    overflow: hidden;
 }
 
 .continent-progress-fill {
-  height: 100%;
-  border-radius: var(--radius-full);
-  background: var(--continent-color);
-  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: var(--continent-color);
+    transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ---- Country pills ---- */
 .countries-pill-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
 }
 
 .country-pill {
-  padding: 5px 11px;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: default;
-  border: 1px solid transparent;
-  transition: opacity var(--transition-fast);
-  white-space: nowrap;
+    padding: 5px 11px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: default;
+    border: 1px solid transparent;
+    transition: opacity var(--transition-fast);
+    white-space: nowrap;
 }
 
 .country-pill.found {
-  background: var(--subtle-tint);
-  color: var(--text-main);
-  border-color: var(--glass-border);
+    background: var(--subtle-tint);
+    color: var(--text-main);
+    border-color: var(--glass-border);
 }
 
 .country-pill.missed {
-  color: var(--text-muted);
-  opacity: 0.35;
-  user-select: none;
-  pointer-events: none;
-  letter-spacing: 0.12em;
+    color: var(--text-muted);
+    opacity: 0.35;
+    user-select: none;
+    pointer-events: none;
+    letter-spacing: 0.12em;
 }
 
 /* Reveal missed entries at game over, calm and legible */
 .modal-content.is-game-over .country-pill.missed {
-  opacity: 0.6;
-  user-select: text;
-  pointer-events: auto;
-  letter-spacing: 0;
-  border: 1px dashed var(--glass-border-strong);
-  color: var(--text-muted);
+    opacity: 0.6;
+    user-select: text;
+    pointer-events: auto;
+    letter-spacing: 0;
+    border: 1px dashed var(--glass-border-strong);
+    color: var(--text-muted);
 }
 
 /* ---- Footer ---- */
 .modal-footer {
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--glass-border);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--glass-border);
 }
 
 .modal-actions {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: center;
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
 }
 
 .restart-btn {
-  padding: 14px 28px;
-  min-width: 160px;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-lg);
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+    padding: 14px 28px;
+    min-width: 160px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
 .restart-btn:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  transform: translateY(-2px);
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    transform: translateY(-2px);
 }
 
 .stop-btn {
-  padding: 14px 24px;
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-lg);
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+    padding: 14px 24px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
 .stop-btn:hover {
-  color: var(--error);
-  border-color: var(--error);
-  background: var(--error-soft);
+    color: var(--error);
+    border-color: var(--error);
+    background: var(--error-soft);
 }
 
 /* ---- Mobile ---- */
 @media (max-width: 768px) {
-  .modal-content {
-    padding: max(28px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
-  }
+    .modal-content {
+        padding: max(28px, env(safe-area-inset-top)) 20px
+            max(20px, env(safe-area-inset-bottom));
+    }
 
-  .modal-header {
-    margin-bottom: var(--spacing-lg);
-  }
+    .modal-header {
+        margin-bottom: var(--spacing-lg);
+    }
 
-  .score-number { font-size: 2.4rem; }
-  .score-sep, .score-total { font-size: 1.3rem; }
+    .score-number {
+        font-size: 2.4rem;
+    }
+    .score-sep,
+    .score-total {
+        font-size: 1.3rem;
+    }
 
-  .continents-grid {
-    gap: var(--spacing-lg);
-  }
+    .continents-grid {
+        gap: var(--spacing-lg);
+    }
 
-  .modal-actions {
-    flex-direction: column-reverse;
-  }
+    .modal-actions {
+        flex-direction: column-reverse;
+    }
 
-  .restart-btn, .stop-btn {
-    width: 100%;
-    text-align: center;
-  }
+    .restart-btn,
+    .stop-btn {
+        width: 100%;
+        text-align: center;
+    }
 }
