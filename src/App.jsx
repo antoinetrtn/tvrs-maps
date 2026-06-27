@@ -809,9 +809,9 @@ function App() {
       maxLabels: isMobile ? 4 : isTablet ? 8 : 20,
       showAtmosphere: false,
       useImageTextures: false,
-      cullOffscreenCountries: isMobile,
+      cullOffscreenCountries: false,
       // High-performance curvature resolution for quality and speed
-      polygonCapCurvatureResolution: isMobile ? 1.5 : isTablet ? 1.2 : 1.0,
+      polygonCapCurvatureResolution: isMobile ? 3.0 : isTablet ? 2.5 : 2.0,
     };
   }, [viewport.width]);
 
