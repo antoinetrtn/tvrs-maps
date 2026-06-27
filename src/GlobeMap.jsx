@@ -2545,24 +2545,11 @@ const GlobeMap = ({
     studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
     studioRight.color.set(safeColor(UI_COLORS.lightingRight));
 
-    let glowColorHex = 0x3a76f0; // Deep royal blue (less neon)
-    let glowPower = 1.2;
-    let glowCoef = 0.08; // Default extremely soft opacity
-
-    if (selectedCountry && activeDataMap && activeDataMap[selectedCountry]) {
-      const region = activeDataMap[selectedCountry].region;
-      const rColor = getThemeRegionColor(globeTheme, theme, region);
-      if (rColor) {
-        glowColorHex = parseInt(rColor.replace("#", "0x"), 16);
-      }
-      glowCoef = 0.12; // Slightly boosted but still very faint for selected country
-    } else {
-      glowColorHex = isLight
-        ? (Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0)
-        : (Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0);
-      glowPower = Number(UI_COLORS.glowPower) || 1.2;
-      glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
-    }
+    let glowColorHex = isLight
+      ? (Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0)
+      : (Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0);
+    let glowPower = Number(UI_COLORS.glowPower) || 1.2;
+    let glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
 
     // Update target refs instead of direct uniform changes to enable smooth lerped transition in animateScene
     targetGlowColorRef.current.setHex(glowColorHex);
