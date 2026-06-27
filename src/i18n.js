@@ -78,6 +78,11 @@ export const translations = {
     region_Antarctic: "Antarctique",
     region_France: "France",
     region_Unknown: "Inconnu",
+
+    // Globe Themes
+    theme_glass: "Verre Moderne",
+    theme_satellite: "Satellite",
+    theme_blackout: "Noir & Blanc",
   },
   en: {
     // Confirmation Modals
@@ -156,6 +161,11 @@ export const translations = {
     region_Antarctic: "Antarctica",
     region_France: "France",
     region_Unknown: "Unknown",
+
+    // Globe Themes
+    theme_glass: "Sleek Glass",
+    theme_satellite: "Satellite",
+    theme_blackout: "Blacked Out",
   }
 };
 

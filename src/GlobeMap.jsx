@@ -12,15 +12,9 @@ import { riversMountainsDataMap } from "./riversMountainsData";
 import {
   THEME,
   THEME_OVERRIDES,
-  CONTINENT_COLORS,
-  CONTINENT_COLORS_ATTENUATED,
-  CONTINENT_COLORS_LABELS,
   GLOBE_STYLE,
   GLOBE_TRANSPARENT_BACKGROUND,
   getOpaqueThreeColor,
-  SURFACE_THEME_COLORS,
-  STROKE_THEME_COLORS,
-  ATMOSPHERE_THEME_COLORS,
   getThemeRegionColor,
   getThemeRegionColorAttenuated,
   getThemeRegionColorLabel,
@@ -253,265 +247,7 @@ const BIOME_SCENE_SCALE = 9.2;
 const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;
 const BIOME_SAMPLE_CANDIDATES = 12;
 const BIOME_SAMPLE_ATTEMPTS = 35;
-const BIOME_VARIANTS = {
-  Europe: ["pine", "deciduous", "rocks", "deer", "castle", "mountain"],
-  Africa: ["acacia", "cactus", "rocks", "deer", "pyramid"],
-  Americas: [
-    "redwood",
-    "canyon",
-    "pine",
-    "rocks",
-    "deer",
-    "pyramid",
-    "volcano",
-    "mountain",
-  ],
-  USA: ["redwood", "canyon", "rocks", "deer", "building", "mountain"],
-  Asia: ["sakura", "bamboo", "rocks", "deer", "volcano", "mountain"],
-  Oceania: ["palm", "rocks", "deer", "volcano"],
-  Antarctic: ["iceberg", "rocks", "iceMountain"],
-  France: ["deciduous", "pine", "rocks", "castle", "mountain"],
-  Unknown: ["rocks"],
-};
-
 // --- PROCEDURAL THEMED 3D MODELS BUILDERS ---
-
-const MOUNTAIN_RANGES = [
-  { name: "Alps", minLat: 44, maxLat: 48, minLng: 5, maxLng: 16 },
-  { name: "Pyrenees", minLat: 42, maxLat: 43.5, minLng: -2, maxLng: 3.5 },
-  { name: "Himalayas", minLat: 26, maxLat: 36, minLng: 70, maxLng: 100 },
-  { name: "Rockies", minLat: 35, maxLat: 65, minLng: -125, maxLng: -105 },
-  { name: "Andes", minLat: -55, maxLat: 10, minLng: -80, maxLng: -65 },
-  { name: "Caucasus", minLat: 40, maxLat: 45, minLng: 40, maxLng: 50 },
-  { name: "Urals", minLat: 50, maxLat: 68, minLng: 57, maxLng: 63 },
-  { name: "Atlas", minLat: 30, maxLat: 36, minLng: -10, maxLng: 5 },
-  { name: "Scandinavian", minLat: 58, maxLat: 71, minLng: 5, maxLng: 20 },
-  {
-    name: "Southern Alps NZ",
-    minLat: -47,
-    maxLat: -38,
-    minLng: 166,
-    maxLng: 175,
-  },
-  { name: "Japan Mountains", minLat: 33, maxLat: 44, minLng: 130, maxLng: 145 },
-  {
-    name: "Great Dividing Range",
-    minLat: -38,
-    maxLat: -15,
-    minLng: 140,
-    maxLng: 152,
-  },
-  { name: "Drakensberg", minLat: -31, maxLat: -28, minLng: 27, maxLng: 31 },
-  {
-    name: "Ethiopian Highlands",
-    minLat: 5,
-    maxLat: 15,
-    minLng: 34,
-    maxLng: 44,
-  },
-  { name: "Iceland", minLat: 63, maxLat: 67, minLng: -25, maxLng: -13 },
-];
-
-const MAJOR_METROS = [
-  { name: "New York", lat: 40.71, lng: -74.0 },
-  { name: "Los Angeles", lat: 34.05, lng: -118.24 },
-  { name: "Chicago", lat: 41.88, lng: -87.63 },
-  { name: "San Francisco", lat: 37.77, lng: -122.41 },
-  { name: "Shanghai", lat: 31.23, lng: 121.47 },
-  { name: "Shenzhen", lat: 22.54, lng: 114.05 },
-  { name: "Guangzhou", lat: 23.12, lng: 113.26 },
-  { name: "Mumbai", lat: 19.07, lng: 72.87 },
-  { name: "Sao Paulo", lat: -23.55, lng: -46.63 },
-  { name: "Rio de Janeiro", lat: -22.9, lng: -43.17 },
-  { name: "Sydney", lat: -33.86, lng: 151.2 },
-  { name: "Melbourne", lat: -37.81, lng: 144.96 },
-  { name: "Toronto", lat: 43.65, lng: -79.38 },
-  { name: "Vancouver", lat: 49.28, lng: -123.12 },
-  { name: "Montreal", lat: 45.5, lng: -73.56 },
-  { name: "Johannesburg", lat: -26.2, lng: 28.04 },
-  { name: "Frankfurt", lat: 50.11, lng: 8.68 },
-  { name: "Munich", lat: 48.13, lng: 11.58 },
-  { name: "Milan", lat: 45.46, lng: 9.18 },
-  { name: "Barcelona", lat: 41.38, lng: 2.17 },
-  { name: "Istanbul", lat: 41.0, lng: 28.97 },
-  { name: "Dubai", lat: 25.2, lng: 55.27 },
-  { name: "Geneva", lat: 46.2, lng: 6.14 },
-  { name: "Zurich", lat: 47.37, lng: 8.54 },
-  { name: "St. Petersburg", lat: 59.93, lng: 30.33 },
-];
-
-const isCoordinateMountainous = (lat, lng) => {
-  for (let i = 0; i < MOUNTAIN_RANGES.length; i++) {
-    const r = MOUNTAIN_RANGES[i];
-    if (
-      lat >= r.minLat &&
-      lat <= r.maxLat &&
-      lng >= r.minLng &&
-      lng <= r.maxLng
-    ) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const isCoordinateUrban = (lat, lng, capLat, capLng) => {
-  if (capLat !== undefined && capLng !== undefined) {
-    if (getLngLatDistance(lng, lat, capLng, capLat) < 2.0) {
-      return true;
-    }
-  }
-  for (let i = 0; i < MAJOR_METROS.length; i++) {
-    const m = MAJOR_METROS[i];
-    if (getLngLatDistance(lng, lat, m.lng, m.lat) < 2.0) {
-      return true;
-    }
-  }
-  return false;
-};
-
-const getBiomeModelCount = (size, isDepartmentMode) => {
-  if (isDepartmentMode) return 1;
-  if (size < 2.0) return 0; // Monaco, Singapore, Vatican, etc. get 0 models to avoid clutter
-  if (size < 4.0) return 1; // Small states (Switzerland, Belgium, Netherlands) get exactly 1 asset
-  if (size < 7.0) return 2; // Medium states get exactly 2 assets
-  if (size < 12.0) return 3; // Medium-large states get exactly 3 assets
-  return Math.min(16, Math.max(4, Math.round(Math.sqrt(size) * 1.5))); // Capped elegantly at 16 max
-};
-
-const selectLogicalBiomeVariant = (
-  lat,
-  lng,
-  biomeType,
-  dataLat,
-  dataLng,
-  globeTheme,
-) => {
-  if (isCoordinateMountainous(lat, lng)) {
-    if (biomeType === "Antarctic") {
-      return "iceMountain";
-    } else if (biomeType === "Americas" || biomeType === "USA") {
-      return Math.random() < 0.5 ? "mountain" : "canyon";
-    } else if (biomeType === "Africa") {
-      return Math.random() < 0.5 ? "canyon" : "rocks";
-    } else {
-      return "mountain";
-    }
-  }
-
-  if (isCoordinateUrban(lat, lng, dataLat, dataLng)) {
-    if (biomeType === "Europe" || biomeType === "France") {
-      return Math.random() < 0.5 ? "castle" : "building";
-    } else if (biomeType === "Africa") {
-      return Math.random() < 0.5 ? "pyramid" : "building";
-    } else if (biomeType === "Americas") {
-      return Math.random() < 0.5 ? "pyramid" : "building";
-    } else if (biomeType === "USA") {
-      return "building";
-    } else if (biomeType === "Asia") {
-      return Math.random() < 0.5 ? "castle" : "building";
-    } else {
-      return "building";
-    }
-  }
-
-  const regionNaturalVariants = {
-    Europe: ["pine", "deciduous", "rocks", "deer"],
-    Africa: ["acacia", "cactus", "rocks", "deer"],
-    Americas: ["redwood", "pine", "rocks", "deer"],
-    USA: ["redwood", "rocks", "deer"],
-    Asia: ["sakura", "bamboo", "rocks", "deer"],
-    Oceania: ["palm", "rocks", "deer"],
-    Antarctic: ["iceberg", "rocks"],
-    France: ["deciduous", "pine", "rocks"],
-    Unknown: ["rocks"],
-  };
-  const choices =
-    regionNaturalVariants[biomeType] || regionNaturalVariants.Unknown;
-  return choices[Math.floor(Math.random() * choices.length)];
-};
-
-const getBiomeFallbackPoint = (data, size) => ({
-  lat: data.lat + (Math.random() - 0.5) * Math.min(0.55, size * 0.22),
-  lng: data.lng + (Math.random() - 0.5) * Math.min(0.55, size * 0.22),
-});
-
-const getSampledBiomePoint = (featureEntry, data, size, generated) => {
-  if (!featureEntry?.polygons?.length) return getBiomeFallbackPoint(data, size);
-
-  const bounds = featureEntry.bounds;
-  let bestPoint = null;
-  let bestDistance = -1;
-
-  // Calculate safety buffer based on country size to avoid clipping into coasts/water
-  const buffer = Math.max(0.12, Math.min(0.4, size * 0.1));
-
-  for (let candidate = 0; candidate < BIOME_SAMPLE_CANDIDATES; candidate++) {
-    let point = null;
-    for (let attempt = 0; attempt < BIOME_SAMPLE_ATTEMPTS; attempt++) {
-      const testLng =
-        bounds.minLng + Math.random() * (bounds.maxLng - bounds.minLng);
-      const testLat =
-        bounds.minLat + Math.random() * (bounds.maxLat - bounds.minLat);
-
-      // Progressively relax safety buffer to ensure we find a valid coordinate
-      // 0-24: Strict buffer based on country dimensions
-      // 25-31: Relaxed 0.05 degree margin
-      // 32-35: Center point only (fallback for extremely narrow/fragmented states)
-      const currentBuffer = attempt < 25 ? buffer : attempt < 32 ? 0.05 : 0;
-
-      const insideCenter = featureContainsLngLat(
-        featureEntry,
-        testLng,
-        testLat,
-      );
-      if (insideCenter) {
-        if (
-          currentBuffer === 0 ||
-          (featureContainsLngLat(
-            featureEntry,
-            testLng - currentBuffer,
-            testLat,
-          ) &&
-            featureContainsLngLat(
-              featureEntry,
-              testLng + currentBuffer,
-              testLat,
-            ) &&
-            featureContainsLngLat(
-              featureEntry,
-              testLng,
-              testLat - currentBuffer,
-            ) &&
-            featureContainsLngLat(
-              featureEntry,
-              testLng,
-              testLat + currentBuffer,
-            ))
-        ) {
-          point = { lat: testLat, lng: testLng };
-          break;
-        }
-      }
-    }
-    if (!point) continue;
-
-    const nearestDistance = generated.length
-      ? Math.min(
-          ...generated.map((existing) =>
-            getLngLatDistance(point.lng, point.lat, existing.lng, existing.lat),
-          ),
-        )
-      : Infinity;
-
-    if (nearestDistance > bestDistance) {
-      bestDistance = nearestDistance;
-      bestPoint = point;
-    }
-  }
-
-  return bestPoint || getBiomeFallbackPoint(data, size);
-};
 
 const getDepartmentModeFrancePointOfView = (width) => ({
   lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
@@ -1247,12 +983,6 @@ const GlobeMap = ({
     return globeLightingEnabled ? 1.8 : 1;
   }, [globeLightingEnabled]);
 
-  const blackoutSurfaceBase = useMemo(() => {
-    return isLight
-      ? SURFACE_THEME_COLORS.blackout.light
-      : SURFACE_THEME_COLORS.blackout.dark;
-  }, [isLight]);
-
   const getRegionSurfaceColor = useCallback(
     (region) => {
       if (globeTheme === "blackout") {
@@ -1274,13 +1004,13 @@ const GlobeMap = ({
         let baseColor = FRENCH_REGION_COLORS[regionCode] || UI_COLORS.mapBase;
 
         if (globeTheme === "blackout") {
-          baseColor = blackoutSurfaceBase;
+          baseColor = UI_COLORS.mapSurfaceSelected;
         }
 
         if (foundSet.has(admin) || mode === "learn") {
           if (admin === selectedCountry) {
             if (isError) return UI_COLORS.error;
-            if (globeTheme === "blackout") return blackoutSurfaceBase;
+            if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
             return lerpColor(baseColor, UI_COLORS.paper, 0.15);
           }
           return baseColor;
@@ -1288,7 +1018,7 @@ const GlobeMap = ({
 
         if (admin === selectedCountry) {
           if (isError) return UI_COLORS.error;
-          if (globeTheme === "blackout") return blackoutSurfaceBase;
+          if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
           return lerpColor(baseColor, UI_COLORS.paper, 0.1);
         }
 
@@ -1310,7 +1040,7 @@ const GlobeMap = ({
         const baseColor = getRegionSurfaceColor(region);
         if (admin === selectedCountry) {
           if (isError) return UI_COLORS.error;
-          if (globeTheme === "blackout") return blackoutSurfaceBase;
+          if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
           // Resting selected found country color (slightly lighter than base)
           return lerpColor(
             baseColor,
@@ -1324,7 +1054,7 @@ const GlobeMap = ({
 
       if (admin === selectedCountry) {
         if (isError) return UI_COLORS.error;
-        if (globeTheme === "blackout") return blackoutSurfaceBase;
+        if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
         const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
         const targetColor = REGION_COLORS[region] || UI_COLORS.accent;
         // Resting selected unfound country color (slightly highlighted)
@@ -1349,10 +1079,8 @@ const GlobeMap = ({
       globeTheme,
       isLight,
       lerpColor,
-      blackoutSurfaceBase,
     ],
   );
-
   const getPolygonStroke = useCallback(
     (d) => {
       if (isHomeScreen) {
@@ -1381,39 +1109,13 @@ const GlobeMap = ({
         return UI_COLORS.accent;
       }
 
-      if (globeTheme === "satellite") {
-        if (foundSet.has(admin) || mode === "learn") {
-          return REGION_COLORS_LABELS[region] || UI_COLORS.accent;
-        }
-        return STROKE_THEME_COLORS.satellite.unfound;
+      const isFound = foundSet.has(admin) || mode === "learn";
+
+      if (globeTheme === "satellite" && isFound) {
+        return REGION_COLORS_LABELS[region] || UI_COLORS.accent;
       }
 
-      if (!foundSet.has(admin) && mode !== "learn") {
-        if (globeTheme === "blackout") {
-          return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
-        }
-        return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
-      }
-
-      // Found / Learned / Homepage countries
-      if (globeTheme === "blackout") {
-        return isLight
-          ? UI_COLORS.mapBorder
-          : STROKE_THEME_COLORS.blackout.found;
-      }
-
-      const baseColor =
-        foundSet.has(admin) || mode === "learn"
-          ? getRegionSurfaceColor(region)
-          : UI_COLORS.mapBase;
-
-      return isLight
-        ? lerpColor(
-            baseColor,
-            UI_COLORS.ink,
-            GLOBE_STYLE.lighting.strokeDarken.light,
-          )
-        : UI_COLORS.mapBorder;
+      return isFound ? UI_COLORS.borderFound : UI_COLORS.borderUnfound;
     },
     [
       selectedCountry,
@@ -1426,7 +1128,6 @@ const GlobeMap = ({
       isDepartmentMode,
       lerpColor,
       isPerfectScore,
-      getRegionSurfaceColor,
       globeTheme,
       REGION_COLORS_LABELS,
     ],
@@ -1459,12 +1160,11 @@ const GlobeMap = ({
             ? getRegionSurfaceColor(region)
             : UI_COLORS.mapBase;
       }
-
       if (globeLightingEnabled) {
         if (admin === selectedCountry) {
           if (isError)
             return isLight ? UI_COLORS.errorDeep : UI_COLORS.errorDeeper;
-          if (globeTheme === "blackout") return blackoutSurfaceBase;
+          if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
 
           // Base color for the side when selected under lighting
           const sideBaseColor =
@@ -1502,7 +1202,7 @@ const GlobeMap = ({
       if (admin === selectedCountry) {
         if (isError)
           return isLight ? UI_COLORS.errorMuted : UI_COLORS.errorDeep;
-        if (globeTheme === "blackout") return blackoutSurfaceBase;
+        if (globeTheme === "blackout") return UI_COLORS.mapSurfaceSelected;
 
         const capColor =
           foundSet.has(admin) || mode === "learn"
@@ -1540,7 +1240,6 @@ const GlobeMap = ({
       getPolygonColor,
       getRegionSurfaceColor,
       globeTheme,
-      blackoutSurfaceBase,
     ],
   );
 
@@ -2512,7 +2211,7 @@ const GlobeMap = ({
       const color = isFound
         ? getThemeRegionColor(globeTheme, theme, data.region)
         : globeTheme === "blackout"
-          ? STROKE_THEME_COLORS.blackout.unfound
+          ? UI_COLORS.borderUnfound
           : UI_COLORS.riverInactive;
 
       paths.push({
@@ -3686,11 +3385,7 @@ const GlobeMap = ({
             theme,
             activeDataMap[selectedCountry].region,
           )
-        : globeTheme === "satellite"
-          ? ATMOSPHERE_THEME_COLORS.satellite
-          : globeTheme === "blackout"
-            ? ATMOSPHERE_THEME_COLORS.blackout
-            : UI_COLORS.atmosphere,
+        : UI_COLORS.atmosphere,
     );
   }, [
     selectedCountry,

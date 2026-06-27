@@ -236,7 +236,7 @@ const HomeScreen = ({
                 >
                   <span className={`theme-dot ${t.id}`} />
                   <span className="theme-name">
-                    {lang === "fr" ? t.name_fr : t.name_en}
+                    {t(`theme_${t.id}`)}
                   </span>
                 </button>
               ))}

@@ -1,10 +1,56 @@
 /**
- * Design System - Colors, Themes & Style Tokens
+ * ==========================================
+ * DESIGN SYSTEM - Colors, Themes & Style Tokens
+ * ==========================================
  */
 
+// ==========================================
+// 1. DESIGN TOKENS (Base values)
+// ==========================================
+
+export const STYLE_TOKENS = {
+  radius: {
+    sm: "10px",
+    md: "calc(var(--radius-sm) + var(--spacing-xs))",
+    lg: "calc(var(--radius-md) + var(--spacing-xs) * 1.5)",
+    xl: "calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs))",
+    full: "9999px",
+  },
+  spacing: {
+    xs: "4px",
+    sm: "8px",
+    md: "16px",
+    lg: "24px",
+    xl: "32px",
+  },
+  transition: {
+    fast: "0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+    normal: "0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    emphasized: "0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+    layout: "220ms cubic-bezier(0.2, 0.9, 0.2, 1)",
+  },
+  blur: {
+    sm: "blur(4px)",
+    md: "blur(12px)",
+    lg: "blur(16px)",
+    glass: "blur(24px) saturate(200%)",
+    glassCompact: "blur(12px) saturate(140%)",
+  },
+  size: {
+    controlSm: "32px",
+    controlMd: "40px",
+    controlLg: "44px",
+    islandWidth: "500px",
+  },
+};
+
+// ==========================================
+// 2. CORE THEMES
+// ==========================================
+
 export const THEMES_LIST = [
-  { id: "satellite", name_fr: "Satellite", name_en: "Satellite" },
-  { id: "blackout", name_fr: "Noir & Blanc", name_en: "Blacked Out" },
+  { id: "satellite" },
+  { id: "blackout" },
 ];
 
 export const THEME = {
@@ -56,6 +102,8 @@ export const THEME = {
     mapSea: "#e2e8f0",
     mapBorder: "#cbd5e1",
     mapBorderMuted: "#94a3b8",
+    borderFound: "#cbd5e1",
+    borderUnfound: "#94a3b8",
     gridDot: "rgba(15, 23, 42, 0.2)",
     graticule: "#64748b",
     atmosphere: "#b0e2ff",
@@ -130,6 +178,8 @@ export const THEME = {
     mapSea: "#0a1425",
     mapBorder: "#475569",
     mapBorderMuted: "#334155",
+    borderFound: "#475569",
+    borderUnfound: "#334155",
     gridDot: "rgba(255, 255, 255, 0.15)",
     graticule: "#d3d3d3",
     atmosphere: "#3a76f0",
@@ -158,100 +208,8 @@ export const THEME = {
   },
 };
 
-export const GLOBE_TRANSPARENT_BACKGROUND = "rgba(0, 0, 0, 0)";
-
-export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
-  if (typeof color !== "string") return fallback;
-  const normalized = color.trim();
-  if (!normalized || normalized === "transparent") return fallback;
-
-  const rgbaMatch = normalized.match(/^rgba\((.+)\)$/i);
-  if (rgbaMatch) {
-    const channels = rgbaMatch[1].split(",").map((channel) => channel.trim());
-    if (channels.length >= 3) {
-      return `rgb(${channels.slice(0, 3).join(", ")})`;
-    }
-    return fallback;
-  }
-
-  if (
-    normalized.startsWith("#") ||
-    normalized.startsWith("rgb(") ||
-    normalized.startsWith("hsl(") ||
-    normalized.startsWith("hsla(")
-  ) {
-    return normalized;
-  }
-
-  return fallback;
-};
-
 export const THEME_OVERRIDES = {
   glass: {},
-  blueprint: {
-    light: {
-      bg: "#001122",
-      bgElevated: "#002244",
-      bgGradientStart: "#001122",
-      bgGradientEnd: "#002244",
-      textMain: "#00ffff",
-      textMuted: "#00aaff",
-      accent: "#00ffff",
-      accentHover: "#80ffff",
-      accentSoft: "rgba(0, 255, 255, 0.2)",
-      accentGlow: "#00ffff",
-      accentContrast: "#001122",
-      glassBg: "rgba(0, 34, 68, 0.85)",
-      glassBorder: "rgba(0, 255, 255, 0.3)",
-      mapBase: "#001e3d",
-      mapSea: "#000b14",
-      mapBorder: "#00ffff",
-      mapBorderMuted: "#003366",
-      gridDot: "rgba(0, 255, 255, 0.2)",
-      graticule: "#0088ff",
-      atmosphere: "#0088ff",
-      globeEmissive: "#000b14",
-      globeSpecular: "#0088ff",
-      globeInnerGlow: "#00ffff",
-      lightingRim: "#00ffff",
-      lightingFill: "#001e3d",
-      decorGlowPrimary: "rgba(0, 255, 255, 0.25)",
-      decorGlowPrimaryEnd: "rgba(0, 17, 34, 0)",
-      decorGlowSecondary: "rgba(0, 170, 255, 0.15)",
-      decorGlowSecondaryEnd: "rgba(0, 17, 34, 0)",
-    },
-    dark: {
-      bg: "#001122",
-      bgElevated: "#002244",
-      bgGradientStart: "#001122",
-      bgGradientEnd: "#002244",
-      textMain: "#00ffff",
-      textMuted: "#00aaff",
-      accent: "#00ffff",
-      accentHover: "#80ffff",
-      accentSoft: "rgba(0, 255, 255, 0.2)",
-      accentGlow: "#00ffff",
-      accentContrast: "#001122",
-      glassBg: "rgba(0, 34, 68, 0.85)",
-      glassBorder: "rgba(0, 255, 255, 0.3)",
-      mapBase: "#001e3d",
-      mapSea: "#000b14",
-      mapBorder: "#00ffff",
-      mapBorderMuted: "#003366",
-      gridDot: "rgba(0, 255, 255, 0.2)",
-      graticule: "#0088ff",
-      atmosphere: "#0088ff",
-      globeEmissive: "#000b14",
-      globeSpecular: "#0088ff",
-      globeInnerGlow: "#00ffff",
-      lightingRim: "#00ffff",
-      lightingFill: "#001e3d",
-      decorGlowPrimary: "rgba(0, 255, 255, 0.25)",
-      decorGlowPrimaryEnd: "rgba(0, 17, 34, 0)",
-      decorGlowSecondary: "rgba(0, 170, 255, 0.15)",
-      decorGlowSecondaryEnd: "rgba(0, 17, 34, 0)",
-    },
-  },
   satellite: {
     light: {
       bg: "#030712",
@@ -271,6 +229,8 @@ export const THEME_OVERRIDES = {
       mapSea: "#000814",
       mapBorder: "#10b981",
       mapBorderMuted: "rgba(16, 185, 129, 0.25)",
+      borderFound: "#10b981",
+      borderUnfound: "rgba(255, 255, 255, 0.25)",
       gridDot: "rgba(16, 185, 129, 0.15)",
       graticule: "rgba(16, 185, 129, 0.25)",
       atmosphere: "#10b981",
@@ -302,6 +262,8 @@ export const THEME_OVERRIDES = {
       mapSea: "#000814",
       mapBorder: "#10b981",
       mapBorderMuted: "rgba(16, 185, 129, 0.25)",
+      borderFound: "#10b981",
+      borderUnfound: "rgba(255, 255, 255, 0.25)",
       gridDot: "rgba(16, 185, 129, 0.15)",
       graticule: "rgba(16, 185, 129, 0.25)",
       atmosphere: "#10b981",
@@ -343,6 +305,9 @@ export const THEME_OVERRIDES = {
       mapSea: "#ffffff",
       mapBorder: "#cccccc",
       mapBorderMuted: "#e5e5e5",
+      borderFound: "#cccccc",
+      borderUnfound: "#e5e5e5",
+      mapSurfaceSelected: "#111111",
       gridDot: "rgba(0, 0, 0, 0.08)",
       graticule: "#dddddd",
       atmosphere: "#e0e0e0",
@@ -382,6 +347,9 @@ export const THEME_OVERRIDES = {
       mapSea: "#0b0b0e",
       mapBorder: "#888888",
       mapBorderMuted: "#444444",
+      borderFound: "#ffffff",
+      borderUnfound: "#888888",
+      mapSurfaceSelected: "#ffffff",
       gridDot: "rgba(255, 255, 255, 0.1)",
       graticule: "#333333",
       atmosphere: "#111111",
@@ -398,20 +366,17 @@ export const THEME_OVERRIDES = {
   },
 };
 
+// ==========================================
+// 3. GLOBE & MAP SPECIFIC CONFIGURATIONS
+// ==========================================
+
+export const GLOBE_TRANSPARENT_BACKGROUND = "rgba(0, 0, 0, 0)";
+
 export const GLOBE_STYLE = {
   lighting: {
-    sideOpacity: {
-      light: 0.8,
-      dark: 0.55,
-    },
-    capOpacity: {
-      light: 0.9,
-      dark: 0.6,
-    },
-    selectedSideOpacity: {
-      light: 0.9,
-      dark: 0.7,
-    },
+    sideOpacity: { light: 0.8, dark: 0.55 },
+    capOpacity: { light: 0.9, dark: 0.6 },
+    selectedSideOpacity: { light: 0.9, dark: 0.7 },
     sideDarken: {
       selectedLight: 0.08,
       selectedDark: 0.12,
@@ -420,26 +385,11 @@ export const GLOBE_STYLE = {
       baseLight: 0.04,
       baseDark: 0.06,
     },
-    capPulseToPaper: {
-      light: 0.16,
-      dark: 0.28,
-    },
-    selectedStrokeGlow: {
-      light: 0.42,
-      dark: 0.5,
-    },
-    selectedEmissiveBoost: {
-      light: 0.08,
-      dark: 0.1,
-    },
-    strokeDarken: {
-      light: 0.28,
-      dark: 0.2,
-    },
-    graticuleOpacity: {
-      light: 0.24,
-      dark: 0.08,
-    },
+    capPulseToPaper: { light: 0.16, dark: 0.28 },
+    selectedStrokeGlow: { light: 0.42, dark: 0.5 },
+    selectedEmissiveBoost: { light: 0.08, dark: 0.1 },
+    strokeDarken: { light: 0.28, dark: 0.2 },
+    graticuleOpacity: { light: 0.24, dark: 0.08 },
     material: {
       capEmissiveLight: 0.18,
       capEmissiveDark: 0.24,
@@ -457,24 +407,94 @@ export const GLOBE_STYLE = {
   },
 };
 
-export const CONTINENT_COLORS = {
-  light: {
-    Europe: "#849bb3",
-    Americas: "#cfa29b",
-    Asia: "#cfba9b",
-    Africa: "#9bcfaf",
-    Oceania: "#b89bcf",
-    Antarctic: "#cbd4db",
-    Unknown: "#cbd5e1",
+// ==========================================
+// 4. GEOGRAPHIC PALETTES (Continents & Regions)
+// ==========================================
+
+export const CONTINENT_PALETTES = {
+  glass: {
+    surface: {
+      light: {
+        Europe: "#849bb3",
+        Americas: "#cfa29b",
+        Asia: "#cfba9b",
+        Africa: "#9bcfaf",
+        Oceania: "#b89bcf",
+        Antarctic: "#cbd4db",
+        Unknown: "#cbd5e1",
+      },
+      dark: {
+        Europe: "#38526c",
+        Americas: "#854d45",
+        Asia: "#857045",
+        Africa: "#458557",
+        Oceania: "#704585",
+        Antarctic: "#394a59",
+        Unknown: "#64748b",
+      },
+    },
+    label: {
+      light: {
+        Europe: "#1f344a",
+        Americas: "#54251e",
+        Asia: "#54411e",
+        Africa: "#1e542d",
+        Oceania: "#411e54",
+        Antarctic: "#233240",
+        Unknown: "#1e293b",
+      },
+      dark: {
+        Europe: "#bcd0e8",
+        Americas: "#e8beb7",
+        Asia: "#e8d6be",
+        Africa: "#bee8cb",
+        Oceania: "#d6bee8",
+        Antarctic: "#cbd9e5",
+        Unknown: "#94a3b8",
+      },
+    },
+    attenuated: {
+      light: {
+        Europe: "#eaf0f6",
+        Americas: "#f6ecea",
+        Asia: "#f6f0ea",
+        Africa: "#eaf6ee",
+        Oceania: "#f0eaf6",
+        Antarctic: "#f1f4f6",
+        Unknown: "#e2e8f0",
+      },
+      dark: {
+        Europe: "#142332",
+        Americas: "#321411",
+        Asia: "#322711",
+        Africa: "#11321c",
+        Oceania: "#271132",
+        Antarctic: "#151e26",
+        Unknown: "#334155",
+      },
+    },
   },
-  dark: {
-    Europe: "#38526c",
-    Americas: "#854d45",
-    Asia: "#857045",
-    Africa: "#458557",
-    Oceania: "#704585",
-    Antarctic: "#394a59",
-    Unknown: "#64748b",
+  blackout: {
+    surface: {
+      light: {
+        Europe: "#4a4a4a",
+        Americas: "#636363",
+        Asia: "#7c7c7c",
+        Africa: "#969696",
+        Oceania: "#b0b0b0",
+        Antarctic: "#c9c9c9",
+        Unknown: "#888888",
+      },
+      dark: {
+        Europe: "#eeeeee",
+        Americas: "#d4d4d4",
+        Asia: "#bbbbbb",
+        Africa: "#a1a1a1",
+        Oceania: "#888888",
+        Antarctic: "#6e6e6e",
+        Unknown: "#cccccc",
+      },
+    },
   },
 };
 
@@ -499,112 +519,43 @@ export const FRENCH_REGION_COLORS = {
   "06": "#6366f1", // Mayotte
 };
 
-export const FRENCH_REGION_SYNTHWAVE_COLORS = [
-  "#ff007f",
-  "#00f0ff",
-  "#ffea00",
-  "#9d4edd",
-  "#00ff66",
-];
-export const FRENCH_REGION_VINTAGE_COLORS = [
-  "#e59866",
-  "#a9dfbf",
-  "#f9e79f",
-  "#f5cbf7",
-  "#a3e4d7",
-  "#d5dbdb",
-];
-export const FRENCH_REGION_AURORA_COLORS_LIGHT = [
-  "#a5f3fc",
-  "#99f6e4",
-  "#a7f3d0",
-  "#c7d2fe",
-  "#e9d5ff",
-];
-export const FRENCH_REGION_AURORA_COLORS_DARK = [
-  "#0891b2",
-  "#0d9488",
-  "#059669",
-  "#4f46e5",
-  "#7c3aed",
-];
+// ==========================================
+// 5. UTILITY FUNCTIONS
+// ==========================================
 
-export const CONTINENT_COLORS_LABELS = {
-  light: {
-    Europe: "#1f344a",
-    Americas: "#54251e",
-    Asia: "#54411e",
-    Africa: "#1e542d",
-    Oceania: "#411e54",
-    Antarctic: "#233240",
-    Unknown: "#1e293b",
-  },
-  dark: {
-    Europe: "#bcd0e8",
-    Americas: "#e8beb7",
-    Asia: "#e8d6be",
-    Africa: "#bee8cb",
-    Oceania: "#d6bee8",
-    Antarctic: "#cbd9e5",
-    Unknown: "#94a3b8",
-  },
+export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
+  if (typeof color !== "string") return fallback;
+  const normalized = color.trim();
+  if (!normalized || normalized === "transparent") return fallback;
+
+  const rgbaMatch = normalized.match(/^rgba\((.+)\)$/i);
+  if (rgbaMatch) {
+    const channels = rgbaMatch[1].split(",").map((channel) => channel.trim());
+    if (channels.length >= 3) {
+      return `rgb(${channels.slice(0, 3).join(", ")})`;
+    }
+    return fallback;
+  }
+
+  if (
+    normalized.startsWith("#") ||
+    normalized.startsWith("rgb(") ||
+    normalized.startsWith("hsl(") ||
+    normalized.startsWith("hsla(")
+  ) {
+    return normalized;
+  }
+
+  return fallback;
 };
 
-export const CONTINENT_COLORS_ATTENUATED = {
-  light: {
-    Europe: "#eaf0f6",
-    Americas: "#f6ecea",
-    Asia: "#f6f0ea",
-    Africa: "#eaf6ee",
-    Oceania: "#f0eaf6",
-    Antarctic: "#f1f4f6",
-    Unknown: "#e2e8f0",
-  },
-  dark: {
-    Europe: "#142332",
-    Americas: "#321411",
-    Asia: "#322711",
-    Africa: "#11321c",
-    Oceania: "#271132",
-    Antarctic: "#151e26",
-    Unknown: "#334155",
-  },
-};
-
-export const STYLE_TOKENS = {
-  radius: {
-    sm: "10px",
-    md: "calc(var(--radius-sm) + var(--spacing-xs))",
-    lg: "calc(var(--radius-md) + var(--spacing-xs) * 1.5)",
-    xl: "calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs))",
-    full: "9999px",
-  },
-  spacing: {
-    xs: "4px",
-    sm: "8px",
-    md: "16px",
-    lg: "24px",
-    xl: "32px",
-  },
-  transition: {
-    fast: "0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-    normal: "0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    emphasized: "0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-    layout: "220ms cubic-bezier(0.2, 0.9, 0.2, 1)",
-  },
-  blur: {
-    sm: "blur(4px)",
-    md: "blur(12px)",
-    lg: "blur(16px)",
-    glass: "blur(24px) saturate(200%)",
-    glassCompact: "blur(12px) saturate(140%)",
-  },
-  size: {
-    controlSm: "32px",
-    controlMd: "40px",
-    controlLg: "44px",
-    islandWidth: "500px",
-  },
+export const getThemeColors = (globeTheme = "glass", systemTheme = "dark") => {
+  const baseTheme = THEME[systemTheme] || THEME.dark;
+  const overrides = THEME_OVERRIDES[globeTheme]?.[systemTheme] || {};
+  return {
+    ...baseTheme,
+    ...overrides,
+  };
 };
 
 export const getThemeCssVariables = (
@@ -613,13 +564,7 @@ export const getThemeCssVariables = (
   selectedCountry = null,
   activeDataMap = null,
 ) => {
-  const baseTheme = THEME[systemTheme] || THEME.dark;
-  const overrides = THEME_OVERRIDES[globeTheme]?.[systemTheme] || {};
-  // Theme overrides merged
-  const theme = {
-    ...baseTheme,
-    ...overrides,
-  };
+  const theme = getThemeColors(globeTheme, systemTheme);
 
   return {
     "--bg-color": theme.bg,
@@ -695,99 +640,12 @@ export const getThemeCssVariables = (
   };
 };
 
-export const SURFACE_THEME_COLORS = {
-  blueprint: {
-    base: "#00bfff",
-  },
-  blackout: {
-    base: "#ffffff",
-    light: "#111111",
-    dark: "#ffffff",
-  },
-};
-
-export const STROKE_THEME_COLORS = {
-  blueprint: {
-    unfound: "rgba(0, 240, 255, 0.2)",
-    found: "#00ffff",
-  },
-  satellite: {
-    unfound: "rgba(255, 255, 255, 0.25)",
-    found: "#10b981",
-  },
-  blackout: {
-    unfound: "#666666",
-    found: "#ffffff",
-  },
-};
-
-export const ATMOSPHERE_THEME_COLORS = {
-  blueprint: "#00ffff",
-  satellite: "#10b981",
-  blackout: "#555555",
-};
-
-export const BLUEPRINT_REGION_COLORS_ATTENUATED = {
-  light: {
-    Europe: "#e6ffff",
-    Americas: "#e6ffff",
-    Africa: "#e6ffff",
-    Asia: "#e6ffff",
-    Oceania: "#e6ffff",
-    Antarctic: "#e6ffff",
-    Unknown: "#e6ffff",
-  },
-  dark: {
-    Europe: "#002b3d",
-    Americas: "#002b3d",
-    Africa: "#002b3d",
-    Asia: "#002b3d",
-    Oceania: "#002b3d",
-    Antarctic: "#002b3d",
-    Unknown: "#002b3d",
-  },
-};
-
-export const BLACKOUT_CONTINENT_COLORS = {
-  light: {
-    Europe: "#4a4a4a",
-    Americas: "#636363",
-    Asia: "#7c7c7c",
-    Africa: "#969696",
-    Oceania: "#b0b0b0",
-    Antarctic: "#c9c9c9",
-    Unknown: "#888888",
-  },
-  dark: {
-    Europe: "#eeeeee",
-    Americas: "#d4d4d4",
-    Asia: "#bbbbbb",
-    Africa: "#a1a1a1",
-    Oceania: "#888888",
-    Antarctic: "#6e6e6e",
-    Unknown: "#cccccc",
-  },
-};
-
 export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
-  if (region === "France") {
-    region = "Europe";
-  }
-
-  if (globeTheme === "blueprint") {
-    return SURFACE_THEME_COLORS.blueprint.base || "#00ffff";
-  }
-  if (globeTheme === "blackout") {
-    return (
-      BLACKOUT_CONTINENT_COLORS[systemTheme]?.[region] ||
-      BLACKOUT_CONTINENT_COLORS[systemTheme]?.Unknown ||
-      "#888888"
-    );
-  }
-  return (
-    CONTINENT_COLORS[systemTheme]?.[region] ||
-    CONTINENT_COLORS[systemTheme]?.Unknown
-  );
+  const normRegion = region === "France" ? "Europe" : (region || "Unknown");
+  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.glass;
+  const sysTheme = systemTheme || "dark";
+  const colors = palette.surface[sysTheme];
+  return colors[normRegion] || colors.Unknown || "#888888";
 };
 
 export const getThemeRegionColorAttenuated = (
@@ -795,49 +653,32 @@ export const getThemeRegionColorAttenuated = (
   systemTheme,
   region,
 ) => {
-  if (region === "France") {
-    region = "Europe";
+  const normRegion = region === "France" ? "Europe" : (region || "Unknown");
+  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.glass;
+  const sysTheme = systemTheme || "dark";
+
+  if (palette.attenuated) {
+    const colors = palette.attenuated[sysTheme];
+    return colors[normRegion] || colors.Unknown;
   }
 
-  if (globeTheme === "blueprint") {
-    return (
-      BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.[region] ||
-      BLUEPRINT_REGION_COLORS_ATTENUATED[systemTheme]?.Unknown ||
-      "#002b3d"
-    );
-  }
-  if (globeTheme === "blackout") {
-    const baseColor =
-      BLACKOUT_CONTINENT_COLORS[systemTheme]?.[region] ||
-      BLACKOUT_CONTINENT_COLORS[systemTheme]?.Unknown ||
-      "#888888";
-    return systemTheme === "light"
-      ? `color-mix(in srgb, ${baseColor} 50%, #ffffff)`
-      : `color-mix(in srgb, ${baseColor} 40%, #000000)`;
-  }
-  return (
-    CONTINENT_COLORS_ATTENUATED[systemTheme]?.[region] ||
-    CONTINENT_COLORS_ATTENUATED[systemTheme]?.Unknown
-  );
+  // Blackout fallbacks: mix surface shade with bg/paper
+  const baseColor = getThemeRegionColor(globeTheme, systemTheme, normRegion);
+  return sysTheme === "light"
+    ? `color-mix(in srgb, ${baseColor} 50%, #ffffff)`
+    : `color-mix(in srgb, ${baseColor} 40%, #000000)`;
 };
 
 export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
-  if (region === "France") {
-    region = "Europe";
+  const normRegion = region === "France" ? "Europe" : (region || "Unknown");
+  const palette = CONTINENT_PALETTES[globeTheme] || CONTINENT_PALETTES.glass;
+  const sysTheme = systemTheme || "dark";
+
+  if (palette.label) {
+    const colors = palette.label[sysTheme];
+    return colors[normRegion] || colors.Unknown;
   }
 
-  if (globeTheme === "blueprint") {
-    return "#00ffff";
-  }
-  if (globeTheme === "blackout") {
-    return (
-      BLACKOUT_CONTINENT_COLORS[systemTheme]?.[region] ||
-      BLACKOUT_CONTINENT_COLORS[systemTheme]?.Unknown ||
-      "#888888"
-    );
-  }
-  return (
-    CONTINENT_COLORS_LABELS[systemTheme]?.[region] ||
-    CONTINENT_COLORS_LABELS[systemTheme]?.Unknown
-  );
+  // Blackout fallback: use base surface color shade directly
+  return getThemeRegionColor(globeTheme, systemTheme, normRegion);
 };
