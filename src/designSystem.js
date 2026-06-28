@@ -10,7 +10,7 @@
 
 export const STYLE_TOKENS = {
   radius: {
-    sm: "10px",
+    sm: "0.4px",
     md: "calc(var(--radius-sm) + var(--spacing-xs))",
     lg: "calc(var(--radius-md) + var(--spacing-xs) * 1.5)",
     xl: "calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs))",
@@ -279,7 +279,7 @@ const DEFAULT_DEPARTMENT_COLORS = {
   76: "#ea580c", // Occitanie (Red-Orange)
   84: "#4f46e5", // Auvergne-Rhône-Alpes (Indigo)
   93: "#db2777", // Provence-Alpes-Côte d'Azur (Pink)
-94: "#4b5563", // Corse (Grey)
+  94: "#4b5563", // Corse (Grey)
   "01": "#06b6d4", // Guadeloupe
   "02": "#0891b2", // Martinique
   "03": "#0ea5e9", // Guyane
