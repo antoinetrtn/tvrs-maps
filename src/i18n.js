@@ -20,6 +20,7 @@ export const translations = {
     plus_one_minute: "+1 minute",
     dark_light_mode: "Mode sombre/clair",
     globe_theme: "Thème du globe",
+    error: "erreur !",
 
     // Game HUD Placeholders
     search_placeholder: "Rechercher...",
@@ -104,6 +105,7 @@ export const translations = {
     plus_one_minute: "+1 minute",
     dark_light_mode: "Dark/light mode",
     globe_theme: "Globe theme",
+    error: "error!",
 
     // Game HUD Placeholders
     search_placeholder: "Search...",

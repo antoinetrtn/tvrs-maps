@@ -807,7 +807,7 @@ function App() {
     ],
   );
 
-  const shouldAutoRotate = currentScreen === "home";
+  const shouldAutoRotate = false;
 
   const handleCustomConfirm = (msg, action) => {
     setConfirmState({

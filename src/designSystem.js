@@ -93,8 +93,11 @@ export const THEME = {
     success: "#000000",
     successSoft: "rgba(0, 0, 0, 0.08)",
     gold: "#666666",
-    error: "#888888",
-    errorSoft: "rgba(0, 0, 0, 0.04)",
+    error: "#ff4500",
+    errorSoft: "rgba(255, 69, 0, 0.08)",
+    errorDeep: "#e63e00",
+    errorDeeper: "#b33000",
+    errorMuted: "#ff8a65",
     warning: "#888888",
     warningSoft: "rgba(0, 0, 0, 0.04)",
     mapBase: "#f0f0f0",
@@ -157,8 +160,11 @@ export const THEME = {
     success: "#ffffff",
     successSoft: "rgba(255, 255, 255, 0.15)",
     gold: "#cccccc",
-    error: "#888888",
-    errorSoft: "rgba(255, 255, 255, 0.08)",
+    error: "#ff4500",
+    errorSoft: "rgba(255, 69, 0, 0.15)",
+    errorDeep: "#e63e00",
+    errorDeeper: "#b33000",
+    errorMuted: "#ff8a65",
     warning: "#888888",
     warningSoft: "rgba(255, 255, 255, 0.08)",
     mapBase: "#111111",
@@ -330,7 +336,7 @@ export const GLOBE_THEMES = {
       glowPower: 1.5,
       glowCoef: 0.06,
       graticuleOpacity: 0.12,
-      labelColorType: "monochrome",
+      labelColorType: "paper",
       strokeWidthMobile: 1.1,
       strokeWidthDesktop: 1.6,
       riverInactive: "#888888",
@@ -591,7 +597,7 @@ export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fal
  */
 export const scrambleText = (text, seed = 0) => {
   if (!text) return "";
-  const glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz@#$%&?*¢¤§░▒▓█▲▼◆◇";
+  const glyphs = "░▒▓█░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ";
   return text
     .split("")
     .map((char, index) => {

@@ -134,6 +134,8 @@ const GlobeMap = ({
   const sharedMaterialsRef = useRef(new Map());
   const tapRef = useRef(null);
   const previousSelectedCountryRef = useRef(null);
+  const transitioningPreviousCountryRef = useRef(null);
+  const selectionTransitionStartRef = useRef(0);
   const lastTargetRef = useRef(null);
   const maxWindowWidthRef = useRef(window.innerWidth);
   const maxWindowHeightRef = useRef(window.innerHeight);
@@ -158,6 +160,7 @@ const GlobeMap = ({
   const selectedCountryRef = useRef(null);
   const isErrorRef = useRef(false);
   const isSuccessRef = useRef(false);
+  const isEndScreenRef = useRef(false);
   // rAF bookkeeping + bounded graticule restyle window (replaces per-frame random restyle).
   const animFrameIdRef = useRef(null);
   const animateSceneRef = useRef(null);
@@ -169,6 +172,7 @@ const GlobeMap = ({
   selectedCountryRef.current = selectedCountry;
   isErrorRef.current = isError;
   isSuccessRef.current = isSuccess;
+  isEndScreenRef.current = isEndScreen;
 
   const labelsCacheRef = useRef({});
   const isDepartmentMode = mode === "departments" && !isHomeScreen;
@@ -350,21 +354,13 @@ const GlobeMap = ({
   ]);
 
   useEffect(() => {
-    if (isEndScreen && globeEl.current) {
-      // Center and zoom out for the end screen
-      globeEl.current.pointOfView(
-        isDepartmentMode
-          ? getDepartmentModeFrancePointOfView(viewport.width)
-          : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
-        1200,
-      );
-    } else if (selectedCountry && !isHomeScreen && globeEl.current) {
-      const data = gameDataMap[selectedCountry];
+    if (selectedCountry && globeEl.current) {
+      const data = gameDataMap[selectedCountry] || countryDataMap[selectedCountry] || riversMountainsDataMap[selectedCountry];
       if (data && data.lat !== undefined) {
         const isMobile = viewport.width < 768;
         const currentPOV = globeEl.current.pointOfView();
         const hasPreviousSelection = !!previousSelectedCountryRef.current;
-        const fallbackAltitude = isMobile ? 1.8 : 0.68;
+        const fallbackAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.25) : (isMobile ? 1.8 : 0.68);
         const preservedAltitude = Number.isFinite(currentPOV?.altitude)
           ? currentPOV.altitude
           : fallbackAltitude;
@@ -378,13 +374,13 @@ const GlobeMap = ({
         // Dynamic latitude offset: scale offset degrees proportional to the camera altitude (zoom level)
         // Shifting camera target south (negative latitude offset) centers country higher in upper visible portion.
         const visibleHeightDegrees = 36 * preservedAltitude;
-        const latOffset = -visibleHeightDegrees * (occlusionRatio * 0.7);
+        const latOffset = isHomeScreen ? 0 : -visibleHeightDegrees * (occlusionRatio * 0.7);
 
         const target = {
           lat: data.lat + latOffset,
           lng: data.lng,
           altitude: hasPreviousSelection
-            ? preservedAltitude
+            ? (isHomeScreen ? fallbackAltitude : preservedAltitude)
             : Math.min(preservedAltitude, fallbackAltitude),
         };
         const previousTarget = lastTargetRef.current;
@@ -394,12 +390,22 @@ const GlobeMap = ({
           Math.abs(previousTarget.lat - target.lat) < 0.001 &&
           Math.abs(previousTarget.lng - target.lng) < 0.001 &&
           Math.abs(previousTarget.altitude - target.altitude) < 0.001;
-        globeEl.current.pointOfView(
-          target,
-          onlyViewportNudge ? 180 : perfProfile?.isMobile ? 320 : 420,
-        );
+        const duration = isHomeScreen
+          ? 1800
+          : onlyViewportNudge
+            ? 180
+            : perfProfile?.isMobile ? 320 : 420;
+        globeEl.current.pointOfView(target, duration);
         lastTargetRef.current = target;
       }
+    } else if (isEndScreen && globeEl.current) {
+      // Center and zoom out for the end screen
+      globeEl.current.pointOfView(
+        isDepartmentMode
+          ? getDepartmentModeFrancePointOfView(viewport.width)
+          : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
+        1200,
+      );
     } else if (isHomeScreen && globeEl.current) {
       // On home the auto-target loop still highlights countries, but the camera stays in a
       // calm overview (auto-rotate keeps spinning). When arriving from a game, re-level the
@@ -424,6 +430,10 @@ const GlobeMap = ({
         { lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.35 },
         700,
       );
+    }
+    if (selectedCountry !== previousSelectedCountryRef.current) {
+      transitioningPreviousCountryRef.current = previousSelectedCountryRef.current;
+      selectionTransitionStartRef.current = performance.now();
     }
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
@@ -753,10 +763,10 @@ const GlobeMap = ({
 
   const foundSet = useMemo(() => {
     if (isHomeScreen) {
-      return new Set(Object.keys(gameDataMap));
+      return new Set();
     }
     return new Set(foundList);
-  }, [foundList, isHomeScreen, gameDataMap]);
+  }, [foundList, isHomeScreen]);
 
   useEffect(() => {
     if (isEndScreen) {
@@ -867,32 +877,30 @@ const GlobeMap = ({
 
   const getPolygonStroke = useCallback(
     (d) => {
+      const admin = getFeatureAdmin(d);
+      const isSelected = admin === selectedCountry;
+
+      if (isSelected) {
+        if (isError) return UI_COLORS.error;
+        return UI_COLORS.accent;
+      }
+
       if (isHomeScreen) {
         return isLight
           ? lerpColor(UI_COLORS.mapSea, UI_COLORS.mapBorderMuted, 0.45)
           : UI_COLORS.mapBorder;
       }
       if (isDepartmentMode) {
-        const admin = getFeatureAdmin(d);
         if (d.isGhostCountry)
           return isLight
             ? lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.12)
             : lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.08);
-        if (admin === selectedCountry)
-          return isError ? UI_COLORS.error : UI_COLORS.accent;
         if (foundSet.has(admin))
           return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
         return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
       }
 
-      const admin = getFeatureAdmin(d);
       const region = countryDataMap[admin]?.region || "Unknown";
-
-      if (admin === selectedCountry) {
-        if (isError) return UI_COLORS.error;
-        return UI_COLORS.accent;
-      }
-
       const isFound = foundSet.has(admin) || mode === "learn";
 
       if (UI_COLORS.useRegionalBorders && isFound) {
@@ -1027,6 +1035,35 @@ const GlobeMap = ({
     ],
   );
 
+  const getBaseColorForCountryAndKind = useCallback(
+    (admin, kind) => {
+      const data = gameDataMap[admin] || countryDataMap[admin];
+      const region = data?.region || "Unknown";
+      const isFound = foundSet.has(admin);
+      
+      let baseColor;
+      if (isEndScreen) {
+        if (isFound) {
+          baseColor = isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
+        } else {
+          baseColor = UI_COLORS.error;
+        }
+      } else {
+        baseColor =
+          isFound || mode === "learn"
+            ? getRegionSurfaceColor(region)
+            : UI_COLORS.mapBase;
+      }
+
+      const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
+      if (kind === "side") {
+        return lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08);
+      }
+      return capColor;
+    },
+    [gameDataMap, foundSet, mode, getRegionSurfaceColor, UI_COLORS, isLight, lerpColor, isEndScreen, isPerfectScore]
+  );
+
   const getPolygonMaterial = useCallback(
     (d, kind) => {
       const admin = getFeatureAdmin(d) || "unknown";
@@ -1101,8 +1138,10 @@ const GlobeMap = ({
       }
 
       const isIsolated = admin === selectedCountry;
+      const isPrevTransitioning = admin === transitioningPreviousCountryRef.current;
       const isShaderCap =
-        kind === "cap" && (isIsolated || (isEndScreen && !foundSet.has(admin)));
+        (kind === "cap" || kind === "side") &&
+        (isIsolated || isPrevTransitioning || (isEndScreen && !foundSet.has(admin)));
       const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
 
       // Construct cache/pool key
@@ -1129,49 +1168,19 @@ const GlobeMap = ({
           material.specular.set(safeColor(specularHex));
           material.shininess = shininess;
         }
-
-        if (isIsolated && kind === "side") {
-          material.transparent = true;
-          material.opacity = 0.55;
-          material.onBeforeCompile = (shader) => {
-            shader.uniforms.uTime = { value: 0 };
-            shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
-            material.userData.shader = shader;
-
-            shader.fragmentShader =
-              `
-            uniform float uTime;
-            uniform float uIsLight;
-          ` + shader.fragmentShader;
-
-            shader.fragmentShader = shader.fragmentShader.replace(
-              `#include <dithering_fragment>`,
-              `#include <dithering_fragment>
-             // Holographic scanlines moving vertically on the sides (light beam effect)
-             vec2 uv = gl_FragCoord.xy;
-             float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
-             float noise = fract(sin(dot(uv + uTime, vec2(12.9898,78.233))) * 43758.5453);
-
-             // Glowing light beam
-             vec3 beamColor = vec3(1.0);
-
-             // Make it pulse and flow like a laser barrier/energy wall
-             gl_FragColor.rgb = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * noise));
-             gl_FragColor.a = 0.35 + 0.45 * beamPattern;
-            `,
-            );
-          };
-        }
-
         if (isShaderCap) {
+          if (kind === "side") {
+            material.transparent = true;
+            material.opacity = 0.55;
+          }
           material.onBeforeCompile = (shader) => {
             shader.uniforms.uTime = { value: 0 };
+            shader.uniforms.uFadeProgress = { value: 0.0 };
+            shader.uniforms.uTargetColor = {
+              value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
+            };
             shader.uniforms.uIsError = {
-              value:
-                (isEndScreen && !foundSet.has(admin)) ||
-                (admin === selectedCountry && isError)
-                  ? 1.0
-                  : 0.0,
+              value: admin === selectedCountry && isError ? 1.0 : 0.0,
             };
             shader.uniforms.uIsSuccess = {
               value: admin === selectedCountry && isSuccess ? 1.0 : 0.0,
@@ -1180,15 +1189,34 @@ const GlobeMap = ({
             shader.uniforms.uTheme = {
               value: UI_COLORS.isBlackoutTheme ? 1.0 : 0.0,
             };
+            shader.uniforms.uIsSide = {
+              value: kind === "side" ? 1.0 : 0.0,
+            };
             material.userData.shader = shader;
+
+            shader.vertexShader =
+              `
+            varying vec3 vLocalPosition;
+          ` + shader.vertexShader;
+
+            shader.vertexShader = shader.vertexShader.replace(
+              `#include <begin_vertex>`,
+              `#include <begin_vertex>
+              vLocalPosition = position;
+            `
+            );
 
             shader.fragmentShader =
               `
+            varying vec3 vLocalPosition;
             uniform float uTime;
+            uniform float uFadeProgress;
+            uniform vec3 uTargetColor;
             uniform float uIsError;
             uniform float uIsSuccess;
             uniform float uIsLight;
             uniform float uTheme;
+            uniform float uIsSide;
             float hash(vec2 p) {
               return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
             }
@@ -1197,59 +1225,90 @@ const GlobeMap = ({
             shader.fragmentShader = shader.fragmentShader.replace(
               `#include <dithering_fragment>`,
               `#include <dithering_fragment>
-             vec2 uv = gl_FragCoord.xy;
-             float t = uTime * 28.0;
-             float noise = hash(uv + sin(t));
+              vec2 noiseUv = vLocalPosition.xy * 8.0 + vec2(vLocalPosition.z * 4.0);
+              float t = uTime * 28.0;
+              float noise = hash(noiseUv + sin(t));
 
-             // Dynamic static range: bright static in light theme, dark static in dark theme
-             float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
-             float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
-             float scanline = sin(uv.y * 1.5 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
+              // Dynamic static range: bright static in light theme, dark static in dark theme
+              float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
+              float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
+              float scanline = sin(vLocalPosition.y * 15.0 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
 
-             float staticColor = mix(baseMin, baseMax, noise) + scanline;
-             vec3 staticVec = vec3(staticColor);
+              float staticColor = mix(baseMin, baseMax, noise) + scanline;
+              vec3 staticVec = vec3(staticColor);
+              vec3 neonGreen = vec3(0.05, 0.92, 0.52);
 
-             vec3 finalColor = gl_FragColor.rgb;
-             if (uTheme > 0.9 && uTheme < 1.1) {
-               // Blackout theme: 100% monochrome static
-               finalColor = staticVec;
-             } else {
-               // Other themes (modern glass, satellite): subtle holographic noise overlay
-               finalColor = mix(gl_FragColor.rgb, staticVec, 0.40);
-             }
+              vec3 finalColor = gl_FragColor.rgb;
 
-             if (uIsError > 0.5) {
-               // Error / Loose: Analog TV sync roll & static tear
-               float syncRoll = step(0.68, sin(uv.y * 0.08 - uTime * 45.0));
-               float glitchNoise = hash(uv + sin(uTime * 80.0));
-               float glitchStatic = mix(0.05, 0.95, glitchNoise);
+              if (uIsSide > 0.5) {
+                // SIDES / WALLS GEOMETRY
+                if (uIsError > 0.5) {
+                  // Error on side walls: fast pulsing orange-red flash and scanline sweep with noise
+                  float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
+                  float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
+                  float errorNoise = hash(noiseUv + sin(uTime * 45.0));
+                  float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
+                  vec3 errorRed = vec3(1.0, 0.27, 0.0);
+                  if (uTheme > 0.9 && uTheme < 1.1) {
+                    finalColor = errorRed * noisyIntensity;
+                  } else {
+                    finalColor = mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
+                  }
+                } else if (uIsSuccess > 0.5) {
+                  // Success on side walls: neon green pulse and scanline sweep
+                  float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
+                  float sweep = step(fract(vLocalPosition.y * 0.2 - uTime * 2.0), 0.15) * 0.35;
+                  if (uTheme > 0.9 && uTheme < 1.1) {
+                    finalColor = vec3(pulse + sweep);
+                  } else {
+                    finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
+                  }
+                } else {
+                  // Normal selected side: holographic laser wall barrier!
+                  vec2 uv = gl_FragCoord.xy;
+                  float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
+                  float wallNoise = fract(sin(dot(uv + uTime, vec2(12.9898,78.233))) * 43758.5453);
+                  vec3 beamColor = vec3(1.0);
+                  finalColor = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * wallNoise));
+                }
+              } else {
+                // TOP CAP GEOMETRY
+                if (uTheme > 0.9 && uTheme < 1.1) {
+                  // Blackout theme: 100% monochrome static
+                  finalColor = staticVec;
+                } else {
+                  // Other themes: subtle holographic noise overlay
+                  finalColor = mix(gl_FragColor.rgb, staticVec, 0.40);
+                }
 
-               if (uTheme > 0.9 && uTheme < 1.1) {
-                 // Blackout: pure monochrome rolling bar static tear (Grayscale)
-                 finalColor = vec3(mix(glitchStatic, syncRoll, 0.65));
-               } else {
-                 // Other themes: mix with red color and rolling sync bar
-                 vec3 bloodRed = vec3(0.85, 0.12, 0.12);
-                 finalColor = mix(vec3(glitchStatic), bloodRed, 0.60 + syncRoll * 0.40);
-               }
-             }
+                if (uIsError > 0.5) {
+                  // Error on cap: fast pulsing orange-red flash and scanline sweep with noise
+                  float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
+                  float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
+                  float errorNoise = hash(noiseUv + sin(uTime * 45.0));
+                  float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
+                  vec3 errorRed = vec3(1.0, 0.27, 0.0);
+                  if (uTheme > 0.9 && uTheme < 1.1) {
+                    finalColor = errorRed * noisyIntensity;
+                  } else {
+                    finalColor = mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
+                  }
+                }
 
-             if (uIsSuccess > 0.5) {
-               // Success: s'illumine with an animated high-contrast flash/pulse
-               float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
-               float sweep = step(fract(uv.y * 0.02 - uTime * 2.0), 0.15) * 0.35;
-               if (uTheme > 0.9 && uTheme < 1.1) {
-                 // Blackout: bright glowing white flash and scanline sweep
-                 finalColor = vec3(pulse + sweep);
-               } else {
-                 // Other themes: neon green flash and sweep
-                 vec3 neonGreen = vec3(0.05, 0.92, 0.52);
-                 finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
-               }
-             }
+                if (uIsSuccess > 0.5) {
+                  // Success on cap: s'illumine with an animated high-contrast flash/pulse
+                  float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
+                  float sweep = step(fract(vLocalPosition.y * 0.2 - uTime * 2.0), 0.15) * 0.35;
+                  if (uTheme > 0.9 && uTheme < 1.1) {
+                    finalColor = vec3(pulse + sweep);
+                  } else {
+                    finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
+                  }
+                }
+              }
 
-             gl_FragColor.rgb = finalColor;
-            `,
+              gl_FragColor.rgb = mix(finalColor, uTargetColor, uFadeProgress);
+             `,
             );
           };
         }
@@ -1313,12 +1372,13 @@ const GlobeMap = ({
   const getPolygonAltitude = useCallback(
     (d) => {
       const admin = getFeatureAdmin(d);
+      const isSelected = admin === selectedCountry;
       // Uniform extrusion via gameConfig — department mode is viewed up close so its
       // selected altitude is scaled down to match a world-view country's apparent height.
       return getPolygonAltitudeFor({
         isDepartmentMode,
         isGhostCountry: !!(isDepartmentMode && d.isGhostCountry),
-        isSelected: admin === selectedCountry,
+        isSelected,
       });
     },
     [isDepartmentMode, selectedCountry],
@@ -1340,11 +1400,12 @@ const GlobeMap = ({
   const getPolygonStrokeWidth = useCallback(
     (d) => {
       const admin = getFeatureAdmin(d);
+      const isSelected = admin === selectedCountry;
       if (isDepartmentMode && d.isGhostCountry) {
         return perfProfile?.isMobile ? 0.1 : 0.15;
       }
       // Increased thickness for selection (contour plus visible)
-      if (admin === selectedCountry) return perfProfile?.isMobile ? 5.5 : 7.5;
+      if (isSelected) return perfProfile?.isMobile ? 5.5 : 7.5;
       if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
       const thickness = perfProfile?.isMobile
         ? (Number(UI_COLORS.strokeWidthMobile) || 0.55)
@@ -1419,7 +1480,15 @@ const GlobeMap = ({
 
     let labelsToProcess = [];
 
-    if (isDepartmentMode) {
+    if (isHomeScreen) {
+      if (selectedCountry) {
+        labelsToProcess.push({
+          key: selectedCountry,
+          data: countryDataMap[selectedCountry],
+          modeName: mode,
+        });
+      }
+    } else if (isDepartmentMode) {
       Object.keys(gameDataMap).forEach((k) => {
         labelsToProcess.push({
           key: k,
@@ -1473,7 +1542,7 @@ const GlobeMap = ({
       }
     } else {
       const keys =
-        isHomeScreen || isEndScreen
+        isEndScreen
           ? Object.keys(countryDataMap)
           : perfProfile?.isMobile
             ? selectedCountry
@@ -1539,7 +1608,8 @@ const GlobeMap = ({
           cached.isFound === isFound &&
           cached.mode === mode &&
           cached.learnShowCapitals === learnShowCapitals &&
-          cached.hideCountryLine === hideCountryLine
+          cached.hideCountryLine === hideCountryLine &&
+          cached.isError === (isSelected && isError)
         ) {
           cached.distToCenter = distToCenter;
           return cached;
@@ -1559,6 +1629,7 @@ const GlobeMap = ({
           distToCenter,
           isSelected,
           isFound,
+          isError: isSelected && isError,
           mode: modeName,
           learnShowCapitals,
           hideCountryLine,
@@ -1602,7 +1673,24 @@ const GlobeMap = ({
     learnShowCapitals,
     learnShowRivers,
     learnShowMountains,
+    isError,
   ]);
+
+  const scrambleTextWithRatio = useCallback((text, ratio) => {
+    if (!text) return "";
+    const glyphs = "░▒▓█░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ";
+    return text
+      .split("")
+      .map((char) => {
+        if (char === " " || char === "-" || char === "'") return char;
+        if (Math.random() < ratio) {
+          const glyphIndex = Math.floor(Math.random() * glyphs.length);
+          return glyphs[glyphIndex];
+        }
+        return char;
+      })
+      .join("");
+  }, []);
 
   const createLabelElement = useCallback(
     (d) => {
@@ -1616,17 +1704,13 @@ const GlobeMap = ({
             ? UI_COLORS.accent
             : UI_COLORS.textMuted;
       } else if (isHomeScreen) {
-        color = UI_COLORS.textMuted;
+        color = d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
       } else {
         const isHighlight = d.isFound || d.isSelected;
         const colorType = UI_COLORS.labelColorType || "regional";
 
-        if (colorType === "monochrome") {
-          color = d.isFound
-            ? UI_COLORS.textMuted
-            : d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
-        } else if (colorType === "paper") {
-          color = isHighlight ? UI_COLORS.paper : UI_COLORS.textMuted;
+        if (colorType === "paper") {
+          color = isHighlight ? UI_COLORS.accent : UI_COLORS.textMuted;
         } else {
           // regional
           color = isHighlight
@@ -1661,10 +1745,14 @@ const GlobeMap = ({
         const isCapitalsMode = d.mode === "capitals";
         const isDeptMode = d.mode === "departments";
         const isReliefMode = d.mode === "rivers_mountains";
+        const isErrorLabel = d.isError;
 
         let glitchLine1Class = "glitch-country";
         let glitchLine1Raw = d.country;
-        if (isCapitalsMode) {
+        if (isErrorLabel) {
+          glitchLine1Class = "glitch-error";
+          glitchLine1Raw = `⚠ ${t("error")}`;
+        } else if (isCapitalsMode) {
           glitchLine1Class = "glitch-capital";
           glitchLine1Raw = d.capital;
         } else if (isDeptMode) {
@@ -1675,42 +1763,64 @@ const GlobeMap = ({
           glitchLine1Raw = d.country;
         }
 
-        const prefixHtml = isDeptMode
+        const prefixHtml = isDeptMode && !isErrorLabel
           ? `<span style="font-family: monospace; color: ${UI_COLORS.accent}; opacity: 0.85;">${t("dept_abbr")} ${d.admin}:</span>`
           : "";
 
+        const dotColor = isErrorLabel ? UI_COLORS.error : color;
+        const stalkColor = isErrorLabel ? UI_COLORS.error : UI_COLORS.accent;
+        const textColor = isErrorLabel ? UI_COLORS.error : UI_COLORS.textMain;
+
         el.innerHTML = `
-        <div class="scramble-callout" style="
-          transform: translate(-50%, -100%);
-          margin-top: -12px;
-          animation: labelReveal 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        ">
+        <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
+          <!-- Dot -->
           <div style="
-            background: ${UI_COLORS.glassBg};
-            backdrop-filter: blur(var(--glass-blur, 8px));
-            -webkit-backdrop-filter: blur(var(--glass-blur, 8px));
-            border: 1px solid ${UI_COLORS.glassBorderStrong};
-            border-radius: var(--radius-sm, 4px);
-            padding: 5px 9px 5px 9px;
-            box-shadow: var(--shadow-sm);
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: ${dotColor};
+            border-radius: 50%;
+            left: -3px;
+            top: -3px;
+            box-shadow: 0 0 8px ${dotColor};
+            opacity: ${isHomeScreen ? 0.5 : 1};
+          "></div>
+          <!-- Stalk Line (Shortened to 15px) -->
+          <div style="
+            position: absolute;
+            width: 1.2px;
+            height: 15px;
+            background: ${stalkColor};
+            left: -0.6px;
+            bottom: 3px;
+            box-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 85%, transparent);
+            opacity: ${isHomeScreen ? 0.4 : 0.85};
+          "></div>
+          <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
+          <div class="scramble-callout" style="
+            position: absolute;
+            left: 50%;
+            bottom: 21px;
+            transform: translateX(-50%);
+            animation: labelReveal 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: var(--font-display, monospace);
+            font-family: var(--font-display, monospace) !important;
             white-space: nowrap;
-            color: ${UI_COLORS.textMain};
+            color: ${textColor};
             text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
             opacity: ${isHomeScreen ? 0.6 : 1};
           ">
-            <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+            <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px; font-family: var(--font-display, monospace) !important;">
               ${prefixHtml}
-              <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}">${scrambleText(glitchLine1Raw)}</span>
+              <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}" style="font-family: var(--font-display, monospace) !important;">${isErrorLabel ? glitchLine1Raw : scrambleText(glitchLine1Raw)}</span>
             </div>
             ${
-              isCapitalsMode
+              isCapitalsMode && !isErrorLabel
                 ? `
-              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
-                <span class="glitch-country" data-text="${d.country}">${scrambleText(d.country)}</span>
+              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: var(--font-display, monospace) !important;">
+                <span class="glitch-country" data-text="${d.country}" style="font-family: var(--font-display, monospace) !important;">${scrambleText(d.country)}</span>
               </div>
             `
                 : ""
@@ -1719,9 +1829,14 @@ const GlobeMap = ({
         </div>
       `;
 
+        let hasBeenAttached = false;
         // Start dynamic scrambling interval
         const interval = setInterval(() => {
-          if (!document.body.contains(el)) {
+          const isAttached = document.body.contains(el);
+          if (isAttached) {
+            hasBeenAttached = true;
+          }
+          if (hasBeenAttached && !isAttached) {
             clearInterval(interval);
             return;
           }
@@ -1765,26 +1880,59 @@ const GlobeMap = ({
             (mode === "learn" && d.learnShowCapitals)) &&
           d.capital;
 
-        let line1Content;
-        let line2Content = null;
+        const isDeptMode = d.mode === "departments";
 
-        if (d.mode === "departments") {
-          line1Content = `
-          ${d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: 9px; line-height: 1.1; margin-right: 3px;">${d.code}</span>` : ""}
-          <span>${displayName}</span>
-        `;
-          if (d.capital) {
-            line2Content = `(${displayCapital})`;
+        const prefixHtml = isDeptMode
+          ? `<span style="font-family: monospace; color: ${UI_COLORS.accent}; opacity: 0.85;">${t("dept_abbr")} ${d.admin}:</span>`
+          : "";
+
+        const getScrambledHtml = (ratio) => {
+          let scrambledLine1;
+          let scrambledLine2 = null;
+
+          const scramble = (txt) => {
+            if (ratio <= 0.0) return txt;
+            return scrambleTextWithRatio(txt, ratio);
+          };
+
+          if (isDeptMode) {
+            const rawCode = d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: 9px; line-height: 1.1; margin-right: 3px;">${d.code}</span>` : "";
+            scrambledLine1 = `
+              ${rawCode}
+              <span>${scramble(displayName)}</span>
+            `;
+            if (d.capital) {
+              scrambledLine2 = `(${scramble(displayCapital)})`;
+            }
+          } else {
+            const baseLine1Text = hasCapitalLine
+              ? `${d.capital}`
+              : `${d.country}`;
+            const prefix = hasCapitalLine
+              ? `${d.flag || ""}`
+              : `${iconSymbol || d.flag || ""}`;
+            
+            scrambledLine1 = `<span>${prefix} ${scramble(baseLine1Text)}</span>`;
+            if (hasCapitalLine && !d.hideCountryLine) {
+              scrambledLine2 = scramble(d.country);
+            }
           }
-        } else {
-          const line1Text = hasCapitalLine
-            ? `${d.flag || ""} ${d.capital}`
-            : `${iconSymbol || d.flag || ""} ${d.country}`;
-          line1Content = `<span>${line1Text}</span>`;
-          if (hasCapitalLine && !d.hideCountryLine) {
-            line2Content = d.country;
-          }
-        }
+
+          return `
+            <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
+              ${scrambledLine1}
+            </div>
+            ${
+              scrambledLine2
+                ? `
+              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
+                ${scrambledLine2}
+              </div>
+            `
+                : ""
+            }
+          `;
+        };
 
         el.innerHTML = `
         <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
@@ -1805,13 +1953,14 @@ const GlobeMap = ({
             position: absolute;
             width: 1.2px;
             height: 15px;
-            background: linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${UI_COLORS.paper} 30%, transparent) 100%);
+            background: ${UI_COLORS.accent};
             left: -0.6px;
             bottom: 3px;
+            box-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 85%, transparent);
             opacity: ${isHomeScreen ? 0.4 : 0.85};
           "></div>
           <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
-          <div style="
+          <div class="normal-text-container" style="
             position: absolute;
             left: 50%;
             bottom: 21px;
@@ -1825,21 +1974,36 @@ const GlobeMap = ({
             text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
             opacity: ${isHomeScreen ? 0.6 : 1};
           ">
-            <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-              ${line1Content}
-            </div>
-            ${
-              line2Content
-                ? `
-              <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px;">
-                ${line2Content}
-              </div>
-            `
-                : ""
-            }
+            ${getScrambledHtml(1.0)}
           </div>
         </div>
       `;
+
+        let scrambleProgress = 0.0;
+        let hasBeenAttached = false;
+        
+        const mountInterval = setInterval(() => {
+          const isAttached = document.body.contains(el);
+          if (isAttached) {
+            hasBeenAttached = true;
+          }
+          if (hasBeenAttached && !isAttached) {
+            clearInterval(mountInterval);
+            return;
+          }
+
+          scrambleProgress += 0.08; // ~360ms total duration
+          const textContainer = el.querySelector(".normal-text-container");
+          if (!textContainer) return;
+
+          if (scrambleProgress >= 1.0) {
+            clearInterval(mountInterval);
+            textContainer.innerHTML = getScrambledHtml(0.0);
+            return;
+          }
+
+          textContainer.innerHTML = getScrambledHtml(1.0 - scrambleProgress);
+        }, 30);
       }
       return el;
     },
@@ -1853,6 +2017,7 @@ const GlobeMap = ({
       globeTheme,
       mode,
       t,
+      scrambleTextWithRatio,
     ],
   );
 
@@ -2608,6 +2773,7 @@ const GlobeMap = ({
       const selectedCountry = selectedCountryRef.current;
       const isError = isErrorRef.current;
       const isSuccess = isSuccessRef.current;
+      const isEndScreen = isEndScreenRef.current;
 
       // Throttle animation loop on mobile to ~30fps for better fluidity
       if (perfProfile?.isMobile && lastAnimFrameTimeRef.current) {
@@ -2677,11 +2843,13 @@ const GlobeMap = ({
           const oldSideMat = polygonMaterialCacheRef.current.side.get(oldAdmin);
 
           // Reset shader uniforms for the unselected country
-          if (oldCapMat && oldCapMat.userData.shader) {
-            const shader = oldCapMat.userData.shader;
-            if (shader.uniforms.uIsError) shader.uniforms.uIsError.value = 0.0;
-            if (shader.uniforms.uIsSuccess) shader.uniforms.uIsSuccess.value = 0.0;
-          }
+          [oldCapMat, oldSideMat].forEach((mat) => {
+            if (mat && mat.userData.shader) {
+              const shader = mat.userData.shader;
+              if (shader.uniforms.uIsError) shader.uniforms.uIsError.value = 0.0;
+              if (shader.uniforms.uIsSuccess) shader.uniforms.uIsSuccess.value = 0.0;
+            }
+          });
           [oldCapMat, oldSideMat].forEach((mat, index) => {
             if (!mat) return;
             const isCap = index === 0;
@@ -2743,49 +2911,35 @@ const GlobeMap = ({
         const sideMat =
           polygonMaterialCacheRef.current.side.get(selectedCountry);
 
-        // Update uTime and uniforms ONLY for the selected country's cap material
-        if (capMat && capMat.userData.shader) {
-          const shader = capMat.userData.shader;
-          if (shader.uniforms.uTime) {
-            shader.uniforms.uTime.value = time / 1000;
+        // Update uTime and uniforms for both the selected country's cap and side materials
+        [capMat, sideMat].forEach((mat) => {
+          if (mat && mat.userData.shader) {
+            const shader = mat.userData.shader;
+            if (shader.uniforms.uTime) {
+              shader.uniforms.uTime.value = time / 1000;
+            }
+            if (shader.uniforms.uFadeProgress) {
+              shader.uniforms.uFadeProgress.value = 0.0;
+            }
+            if (shader.uniforms.uIsError) {
+              shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
+            }
+            if (shader.uniforms.uIsSuccess) {
+              shader.uniforms.uIsSuccess.value = isSuccess ? 1.0 : 0.0;
+            }
+            if (shader.uniforms.uIsLight) {
+              shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
+            }
+            if (shader.uniforms.uTheme) {
+              shader.uniforms.uTheme.value = UI_COLORS.isBlackoutTheme ? 1.0 : 0.0;
+            }
           }
-          if (shader.uniforms.uIsError) {
-            shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
-          }
-          if (shader.uniforms.uIsSuccess) {
-            shader.uniforms.uIsSuccess.value = isSuccess ? 1.0 : 0.0;
-          }
-        }
+        });
 
         // Specifically pulse emissive or color for selected cap & side materials
-
         [capMat, sideMat].forEach((mat, index) => {
           if (!mat) return;
           const isCap = index === 0;
-
-          if (mat.userData.shader) {
-            if (isCap) {
-              if (mat.userData.shader.uniforms.uIsLight) {
-                mat.userData.shader.uniforms.uIsLight.value = isLight
-                  ? 1.0
-                  : 0.0;
-              }
-              if (mat.userData.shader.uniforms.uTheme) {
-                mat.userData.shader.uniforms.uTheme.value =
-                  UI_COLORS.isBlackoutTheme ? 1.0 : 0.0;
-              }
-            } else {
-              // Side shader uTime
-              if (mat.userData.shader.uniforms.uTime) {
-                mat.userData.shader.uniforms.uTime.value = time / 1000;
-              }
-              if (mat.userData.shader.uniforms.uIsLight) {
-                mat.userData.shader.uniforms.uIsLight.value = isLight
-                  ? 1.0
-                  : 0.0;
-              }
-            }
-          }
 
           if (globeLightingEnabled) {
             const baseEmissiveIntensity = isCap
@@ -2833,11 +2987,69 @@ const GlobeMap = ({
         }
       }
 
+      // Update uFadeProgress and uTime for the transitioning previous country
+      const prevCountry = transitioningPreviousCountryRef.current;
+      if (prevCountry) {
+        const elapsed = time - selectionTransitionStartRef.current;
+        const TRANSITION_DURATION = 600; // ms (ultra snappy transition, 0.6s total)
+        const FADE_DELAY = 100;          // ms (quick 100ms delay)
+
+        const prevCapMat = polygonMaterialCacheRef.current.cap.get(prevCountry);
+        const prevSideMat = polygonMaterialCacheRef.current.side.get(prevCountry);
+        if (elapsed >= TRANSITION_DURATION) {
+          transitioningPreviousCountryRef.current = null;
+          [prevCapMat, prevSideMat].forEach((mat) => {
+            if (mat && mat.userData.shader) {
+              const shader = mat.userData.shader;
+              if (shader.uniforms.uFadeProgress) {
+                const isMissedOnEnd = isEndScreen && !foundSet.has(prevCountry);
+                shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : 1.0;
+              }
+            }
+          });
+        } else {
+          let fadeProgress = 0.0;
+          if (elapsed > FADE_DELAY) {
+            fadeProgress = (elapsed - FADE_DELAY) / (TRANSITION_DURATION - FADE_DELAY);
+          }
+          [prevCapMat, prevSideMat].forEach((mat, idx) => {
+            if (mat && mat.userData.shader) {
+              const shader = mat.userData.shader;
+              if (shader.uniforms.uTime) {
+                shader.uniforms.uTime.value = time / 1000;
+              }
+              if (shader.uniforms.uFadeProgress) {
+                const isMissedOnEnd = isEndScreen && !foundSet.has(prevCountry);
+                shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : fadeProgress;
+              }
+              if (shader.uniforms.uTargetColor) {
+                const targetKind = idx === 0 ? "cap" : "side";
+                shader.uniforms.uTargetColor.value.copy(
+                  new THREE.Color(getBaseColorForCountryAndKind(prevCountry, targetKind))
+                );
+              }
+            }
+          });
+        }
+      }
+
+      if (isEndScreen) {
+        polygonMaterialCacheRef.current.cap.forEach((mat) => {
+          if (mat && mat.userData.shader && mat.userData.shader.uniforms.uTime) {
+            mat.userData.shader.uniforms.uTime.value = time / 1000;
+          }
+        });
+      }
+
       // Park the loop when there is no actual work to do, so the home screen /
       // idle states don't peg the CPU. The separate selection effect below
       // re-requests a frame when selection/feedback changes while parked.
       const hasWork =
-        selectedCountry || !glowSettled || needsGraticuleStyleRef.current;
+        selectedCountry ||
+        transitioningPreviousCountryRef.current ||
+        !glowSettled ||
+        needsGraticuleStyleRef.current ||
+        isEndScreen;
 
       if (hasWork) {
         animFrameIdRef.current = requestAnimationFrame(animateScene);
