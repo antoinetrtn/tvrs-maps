@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { InfoBox } from "pixelarticons/react";
 import "./EndScreen.css";
 import { getGameStats } from "./utils";
 import { getThemeRegionColor } from "./designSystem";
@@ -38,12 +39,6 @@ const EndScreen = ({
     return t("well_done");
   };
 
-  const getSubTitle = () => {
-    if (isPerfectScore && mode === "departments") return t("mastered_france");
-    if (isPerfectScore) return t("conquered_world");
-    return t("you_found");
-  };
-
   return (
     <div
       className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""}`}
@@ -51,53 +46,67 @@ const EndScreen = ({
       <div className="end-screen-content">
         <div className="end-screen-header">
           <h1>{getTitle()}</h1>
-          <p>
-            {getSubTitle()}
-            <span className="final-score">
-              {" "}
-              {foundList.length} / {totalCountries}
-            </span>
-          </p>
         </div>
 
         <div className="end-screen-spacer">
           {/* This space is for the globe which is rendered behind */}
         </div>
 
-        <div className="continents-progress-bars">
-          {CONTINENT_ORDER.filter(
-            (reg) => reg !== "Unknown" && stats[reg].total > 0,
-          ).map((region) => {
-            const data = stats[region];
-            const pct = (data.found / data.total) * 100;
-            const color = colors[region] || "var(--accent)";
-            const label = t(`region_${region}`) || region;
+        <div
+          className="continents-progress-bars"
+          onClick={onViewTable}
+          title={t("view_table")}
+        >
+          <div className="progress-bars-header">
+            <span className="final-score-inline">
+              {foundList.length} / {totalCountries}
+            </span>
+            <span className="progress-info-icon">
+              <InfoBox width={18} height={18} />
+            </span>
+          </div>
 
-            return (
-              <div key={region} className="progress-item">
-                <div className="progress-info">
-                  <span className="progress-label">{label}</span>
-                  <span className="progress-count">
-                    {data.found}/{data.total}
-                  </span>
+          <div className="progress-bars-grid">
+            {CONTINENT_ORDER.filter(
+              (reg) => reg !== "Unknown" && stats[reg].total > 0,
+            ).map((region) => {
+              const data = stats[region];
+              const pct = Math.round((data.found / data.total) * 100);
+              const color = colors[region] || "var(--accent)";
+              const label = t(`region_${region}`) || region;
+
+              return (
+                <div
+                  key={region}
+                  className="progress-item"
+                  style={{ "--continent-color": color }}
+                >
+                  <div className="progress-info">
+                    <div className="progress-title">
+                      <span className="progress-dot" />
+                      <span className="progress-label">{label}</span>
+                    </div>
+                    <div className="progress-stats">
+                      <div className="progress-track">
+                        <div
+                          className="progress-fill"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="progress-count">
+                        {data.found}/{data.total}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="progress-track">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${pct}%`, backgroundColor: color }}
-                  />
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         <div className="end-screen-actions">
-          <button className="btn-secondary" onClick={onViewTable}>
-            {t("view_table")}
-          </button>
           <button className="btn-primary" onClick={onRestart}>
-            {t("play_again")}
+            {t("home")}
           </button>
         </div>
       </div>

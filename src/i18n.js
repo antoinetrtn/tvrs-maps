@@ -61,7 +61,6 @@ export const translations = {
     well_done: "Bravo !",
     mastered_france: "Vous maîtrisez la carte de France !",
     conquered_world: "Vous avez conquis le monde !",
-    you_found: "Vous avez trouvé :",
     view_table: "Voir le tableau",
     play_again: "Rejouer",
 
@@ -146,7 +145,6 @@ export const translations = {
     well_done: "Well done!",
     mastered_france: "You mastered the map of France!",
     conquered_world: "You conquered the world!",
-    you_found: "You found:",
     view_table: "View Table",
     play_again: "Play Again",
 
