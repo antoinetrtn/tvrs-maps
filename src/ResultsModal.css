@@ -17,7 +17,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: clamp(28px, 6vh, 64px) clamp(20px, 4vw, 40px) clamp(20px, 4vh, 36px);
+    padding: clamp(28px, 1vh, 64px) clamp(20px, 4vw, 40px) clamp(20px, 1vh, 36px);
     position: relative;
     overflow: hidden;
     background: var(--bg-color);
@@ -134,14 +134,15 @@
 .continent-dot {
     width: 7px;
     height: 7px;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
     background: var(--continent-color);
     flex-shrink: 0;
 }
 
 .continent-title h3 {
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-weight: 100;
+    font-size: 1rem;
     letter-spacing: 0;
     color: var(--text-main);
     margin: 0;
@@ -155,19 +156,6 @@
     font-variant-numeric: tabular-nums;
     font-size: 0.9rem;
     flex-shrink: 0;
-}
-
-.continent-count .cc-found {
-    color: var(--text-main);
-}
-
-.continent-count .cc-sep {
-    color: var(--text-muted);
-    opacity: 0.5;
-}
-
-.continent-count .cc-total {
-    color: var(--text-muted);
 }
 
 .continent-progress {

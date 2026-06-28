@@ -86,11 +86,7 @@ const ResultsModal = ({
                     <span className="continent-dot" />
                     <h3>{regionLabel}</h3>
                   </div>
-                  <span className="continent-count">
-                    <span className="cc-found">{data.found}</span>
-                    <span className="cc-sep">/</span>
-                    <span className="cc-total">{data.total}</span>
-                  </span>
+                  <span className="continent-count">{data.found}/{data.total}</span>
                 </div>
 
                 <div
