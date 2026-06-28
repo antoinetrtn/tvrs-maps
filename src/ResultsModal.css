@@ -15,11 +15,9 @@
 .modal-content {
     width: 100%;
     height: 100%;
-    max-width: 720px;
     display: flex;
     flex-direction: column;
-    padding: clamp(28px, 6vh, 64px) clamp(20px, 4vw, 40px)
-        clamp(20px, 4vh, 36px);
+    padding: clamp(28px, 6vh, 64px) clamp(20px, 4vw, 40px) clamp(20px, 4vh, 36px);
     position: relative;
     overflow: hidden;
     background: var(--bg-color);
@@ -76,7 +74,7 @@
     flex-shrink: 0;
     width: 40px;
     height: 40px;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
     border: 1px solid var(--glass-border);
     background: transparent;
     color: var(--text-muted);
@@ -96,26 +94,13 @@
 /* ---- Continents list ---- */
 .continents-grid {
     flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     width: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
-    /* Only fade the bottom edge so the first row ("Europe") is never clipped. */
-    mask-image: linear-gradient(
-        to bottom,
-        black 0,
-        black calc(100% - 28px),
-        transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        black 0,
-        black calc(100% - 28px),
-        transparent 100%
-    );
-    /* Hidden scrollbar — the bottom fade already signals more content. */
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -175,10 +160,12 @@
 .continent-count .cc-found {
     color: var(--text-main);
 }
+
 .continent-count .cc-sep {
     color: var(--text-muted);
     opacity: 0.5;
 }
+
 .continent-count .cc-total {
     color: var(--text-muted);
 }
@@ -241,61 +228,10 @@
     color: var(--text-muted);
 }
 
-/* ---- Footer ---- */
-.modal-footer {
-    margin-top: var(--spacing-lg);
-    padding-top: var(--spacing-lg);
-    border-top: 1px solid var(--glass-border);
-}
-
-.modal-actions {
-    display: flex;
-    gap: var(--spacing-md);
-    justify-content: center;
-}
-
-.restart-btn {
-    padding: 14px 28px;
-    min-width: 160px;
-    background: var(--accent);
-    color: var(--accent-contrast);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius-lg);
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.restart-btn:hover {
-    background: var(--accent-hover);
-    border-color: var(--accent-hover);
-    transform: translateY(-2px);
-}
-
-.stop-btn {
-    padding: 14px 24px;
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--glass-border-strong);
-    border-radius: var(--radius-lg);
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.stop-btn:hover {
-    color: var(--error);
-    border-color: var(--error);
-    background: var(--error-soft);
-}
-
 /* ---- Mobile ---- */
 @media (max-width: 768px) {
     .modal-content {
-        padding: max(28px, env(safe-area-inset-top)) 20px
-            max(20px, env(safe-area-inset-bottom));
+        padding: max(28px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
     }
 
     .modal-header {
@@ -305,6 +241,7 @@
     .score-number {
         font-size: 2.4rem;
     }
+
     .score-sep,
     .score-total {
         font-size: 1.3rem;

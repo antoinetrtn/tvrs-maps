@@ -128,25 +128,6 @@ const ResultsModal = ({
             );
           })}
         </div>
-
-        <div className="modal-footer">
-          <div className="modal-actions">
-            {isPlaying && !isGameOver && (
-              <button
-                className="stop-btn"
-                onClick={() => {
-                  if (onStop) onStop();
-                  if (onClose) onClose();
-                }}
-              >
-                {t("stop_game")}
-              </button>
-            )}
-            <button className="restart-btn" onClick={onRestart}>
-              {isGameOver ? t("home") : t("continue")}
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
