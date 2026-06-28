@@ -100,7 +100,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-md);
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -115,6 +115,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--glass-shadow);
 }
 
 .continent-head {
@@ -148,6 +153,13 @@
     margin: 0;
 }
 
+.continent-stats {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+}
+
 .continent-count {
     display: flex;
     align-items: baseline;
@@ -155,12 +167,13 @@
     font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
     font-size: 0.9rem;
-    flex-shrink: 0;
+    color: var(--text-muted);
 }
 
 .continent-progress {
     position: relative;
-    height: 3px;
+    width: 48px;
+    height: 4px;
     border-radius: var(--radius-full);
     background: var(--subtle-tint-strong);
     overflow: hidden;
@@ -184,7 +197,7 @@
 .country-pill {
     padding: 5px 11px;
     border-radius: var(--radius-full);
-    font-size: 0.8rem;
+    font-size: 0.70rem;
     font-weight: 500;
     cursor: default;
     border: 1px solid transparent;
@@ -236,6 +249,7 @@
     }
 
     .continents-grid {
+        grid-template-columns: 1fr;
         gap: var(--spacing-lg);
     }
 

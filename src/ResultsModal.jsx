@@ -2,12 +2,11 @@ import React, { useMemo } from "react";
 import { Close } from "pixelarticons/react";
 import "./ResultsModal.css";
 import { getGameStats } from "./utils";
-import { getThemeRegionColor } from "./designSystem";
+import { getThemeRegionColor, scrambleText } from "./designSystem";
 import { useTranslation } from "./i18n";
 import { GAME_REGIONS } from "./gameConfig";
 
-// Fixed-width neutral placeholder for not-yet-found entries (no noisy glitch animation)
-const getMaskText = (str) => "·".repeat(Math.max(3, Math.min(str.length, 7)));
+const getMaskText = (str) => scrambleText(str);
 
 const ResultsModal = ({
   foundList,
@@ -86,20 +85,21 @@ const ResultsModal = ({
                     <span className="continent-dot" />
                     <h3>{regionLabel}</h3>
                   </div>
-                  <span className="continent-count">{data.found}/{data.total}</span>
-                </div>
-
-                <div
-                  className="continent-progress"
-                  role="progressbar"
-                  aria-valuenow={pct}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
-                  <div
-                    className="continent-progress-fill"
-                    style={{ width: `${pct}%` }}
-                  />
+                  <div className="continent-stats">
+                    <div
+                      className="continent-progress"
+                      role="progressbar"
+                      aria-valuenow={pct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    >
+                      <div
+                        className="continent-progress-fill"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="continent-count">{data.found}/{data.total}</span>
+                  </div>
                 </div>
 
                 <div className="countries-pill-grid">
