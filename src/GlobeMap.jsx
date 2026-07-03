@@ -2549,7 +2549,7 @@ const GlobeMap = ({
       studioRight.position.set(4.5, -1.2, 2.8);
 
       const innerGlow = new THREE.Mesh(
-        new THREE.SphereGeometry(128.0, 64, 64),
+        new THREE.SphereGeometry(114.0, 64, 64),
         new THREE.ShaderMaterial({
           vertexShader: FRESNEL_VERTEX_SHADER,
           fragmentShader: FRESNEL_FRAGMENT_SHADER,
@@ -2608,17 +2608,17 @@ const GlobeMap = ({
 
     const isMobile = perfProfile?.isMobile;
 
-    if (isMobile || UI_COLORS.isBlackoutTheme) {
+    if (isMobile) {
       rimLight.visible = false;
       studioLight.visible = false;
       studioLeft.visible = false;
       studioRight.visible = false;
       innerGlow.visible = false;
     } else {
-      rimLight.visible = true;
+      rimLight.visible = !UI_COLORS.isBlackoutTheme;
       studioLight.visible = true;
-      studioLeft.visible = true;
-      studioRight.visible = true;
+      studioLeft.visible = !UI_COLORS.isBlackoutTheme;
+      studioRight.visible = !UI_COLORS.isBlackoutTheme;
       innerGlow.visible = true;
     }
 
