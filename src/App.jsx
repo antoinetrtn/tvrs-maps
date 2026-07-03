@@ -56,7 +56,7 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home' or 'game'
   const [mode, setMode] = useState(DEFAULT_MODE); // 'countries', 'capitals', 'learn', 'departments'
   const [foundList, setFoundList] = useState([]);
-  const [score, setScore] = useState(0);
+  const score = foundList.length;
   const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
   const [timeLeft, setTimeLeft] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr"); // 'fr' or 'en'
@@ -65,9 +65,15 @@ function App() {
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [popupError, setPopupError] = useState(false);
-  const [popupWarning, setPopupWarning] = useState(false);
-  const [popupSuccess, setPopupSuccess] = useState(false);
+  const [feedback, setFeedback] = useState(null); // 'success' | 'warning' | 'error' | null
+  const popupSuccess = feedback === "success";
+  const popupError = feedback === "error";
+  const popupWarning = feedback === "warning";
+
+  const setPopupSuccess = useCallback((val) => setFeedback(val ? "success" : null), []);
+  const setPopupError = useCallback((val) => setFeedback(val ? "error" : null), []);
+  const setPopupWarning = useCallback((val) => setFeedback(val ? "warning" : null), []);
+
   const [showInfoModal, setShowInfoModal] = useState(false);
   const globeLightingEnabled = true;
   const [theme, setTheme] = useState(() => {
@@ -417,7 +423,6 @@ function App() {
     (newMode) => {
       setMode(newMode);
       setFoundList([]);
-      setScore(0);
       setTimeLeft(gameDuration);
       setIsPlaying(false);
       setIsGameOver(false);
@@ -549,7 +554,6 @@ function App() {
       if (isDebug) {
         if (inputVal === "WIN100") {
           setFoundList(Object.keys(activeDataMap));
-          setScore(Object.keys(activeDataMap).length);
           return true;
         }
         if (inputVal === "LOSE100") {
@@ -612,7 +616,6 @@ function App() {
         }
         const newFound = [...foundList, matchFound];
         setFoundList(newFound);
-        setScore((prev) => prev + 1);
 
         setSelectedCountry(matchFound);
         setPopupSuccess(true);
@@ -698,7 +701,6 @@ function App() {
 
         const newFound = [...foundList, selectedCountry];
         setFoundList(newFound);
-        setScore(score + 1);
         setPopupError(false);
         setPopupWarning(false);
         setPopupSuccess(true);

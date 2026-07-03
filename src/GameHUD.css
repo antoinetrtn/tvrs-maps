@@ -180,7 +180,7 @@
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all var(--transition-spring);
     outline: none; /* Remove blue focus ring */
 }
 
@@ -201,7 +201,7 @@
     color: var(--accent-contrast);
     box-shadow: 0 2px 8px var(--accent-soft);
     text-shadow: none;
-    transition: transform 70ms ease;
+    transition: transform var(--transition-instant);
 }
 
 .island-sub-gauges {
@@ -398,7 +398,7 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all var(--transition-spring);
 }
 
 .suggestion-item:hover {
@@ -411,7 +411,7 @@
 
 .suggestion-item:active {
     transform: translateX(2px) scale(0.99);
-    transition: transform 70ms ease;
+    transition: transform var(--transition-instant);
 }
 
 .suggestion-item .sug-sub {
@@ -645,7 +645,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all var(--transition-spring);
 }
 
 .learn-toggle-btn:hover {
@@ -658,7 +658,7 @@
 
 .learn-toggle-btn:active {
     transform: scale(0.92);
-    transition: transform 70ms ease;
+    transition: transform var(--transition-instant);
 }
 
 .learn-toggle-btn.active {
@@ -767,7 +767,7 @@
   cursor: pointer;
   width: 24px;
   height: 24px;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all var(--transition-spring);
 }
 
 .focus-close-btn:hover {
@@ -781,5 +781,5 @@
 
 .focus-close-btn:active {
   transform: scale(0.88);
-  transition: transform 70ms ease;
+  transition: transform var(--transition-instant);
 }
