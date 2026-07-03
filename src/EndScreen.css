@@ -81,7 +81,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
+  padding: var(--spacing-lg);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -137,7 +137,7 @@
 .progress-bars-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 @keyframes slideUp {
@@ -310,8 +310,8 @@
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .continents-progress-bars {
-    padding: 16px;
-    gap: 16px;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
   }
 
   .progress-bars-grid {
@@ -330,7 +330,7 @@
     overflow-y: auto;
     pointer-events: auto;
     justify-content: flex-start;
-    gap: 16px;
+    gap: var(--spacing-md);
     padding-top: max(16px, var(--safe-top));
   }
 
@@ -344,6 +344,6 @@
   }
 
   .continents-progress-bars {
-    margin-bottom: 16px;
+    margin-bottom: var(--spacing-md);
   }
 }

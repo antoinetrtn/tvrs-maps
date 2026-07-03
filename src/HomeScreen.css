@@ -26,7 +26,7 @@
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  padding: 32px;
+  padding: var(--spacing-xl);
   background: 
     repeating-linear-gradient(
       0deg,
@@ -384,7 +384,7 @@
 
   .home-content {
     width: min(320px, calc(100vw - 32px));
-    padding: 24px;
+    padding: var(--spacing-lg);
     gap: 12px;
   }
 
@@ -414,7 +414,7 @@
     width: 100%;
     max-width: 320px;
     transform: none;
-    margin-top: 8px;
+    margin-top: var(--spacing-sm);
     gap: 6px;
     flex-wrap: nowrap;
     justify-content: center;
