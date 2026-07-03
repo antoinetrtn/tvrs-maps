@@ -124,11 +124,14 @@ const GlobeMap = ({
   globeLightingEnabled = true,
   activeDataMap,
   globeTheme = "satellite",
-  learnShowCountryLabels = true,
-  learnShowCapitals = false,
-  learnShowRivers = false,
-  learnShowMountains = false,
+  learnToggles,
 }) => {
+  const {
+    showCountryLabels: learnShowCountryLabels = true,
+    showCapitals: learnShowCapitals = false,
+    showRivers: learnShowRivers = false,
+    showMountains: learnShowMountains = false,
+  } = learnToggles || {};
   const t = useTranslation(lang);
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);

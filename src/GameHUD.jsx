@@ -50,15 +50,15 @@ const GameHUD = ({
   isKeyboardMode,
   selectedCountry,
   globeTheme,
-  learnShowCountryLabels,
-  setLearnShowCountryLabels,
-  learnShowCapitals,
-  setLearnShowCapitals,
-  learnShowRivers,
-  setLearnShowRivers,
-  learnShowMountains,
-  setLearnShowMountains,
+  learnToggles,
+  onToggleLearn,
 }) => {
+  const {
+    showCountryLabels: learnShowCountryLabels,
+    showCapitals: learnShowCapitals,
+    showRivers: learnShowRivers,
+    showMountains: learnShowMountains,
+  } = learnToggles || {};
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -363,9 +363,7 @@ const GameHUD = ({
                 >
                   <button
                     className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
-                    onClick={() =>
-                      setLearnShowCountryLabels(!learnShowCountryLabels)
-                    }
+                    onClick={() => onToggleLearn("showCountryLabels")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("show_country_labels")}
                   >
@@ -373,7 +371,7 @@ const GameHUD = ({
                   </button>
                   <button
                     className={`learn-toggle-btn ${learnShowCapitals ? "active" : ""}`}
-                    onClick={() => setLearnShowCapitals(!learnShowCapitals)}
+                    onClick={() => onToggleLearn("showCapitals")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("show_capitals")}
                   >
@@ -381,7 +379,7 @@ const GameHUD = ({
                   </button>
                   <button
                     className={`learn-toggle-btn ${learnShowRivers ? "active" : ""}`}
-                    onClick={() => setLearnShowRivers(!learnShowRivers)}
+                    onClick={() => onToggleLearn("showRivers")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("show_rivers")}
                   >
@@ -389,7 +387,7 @@ const GameHUD = ({
                   </button>
                   <button
                     className={`learn-toggle-btn ${learnShowMountains ? "active" : ""}`}
-                    onClick={() => setLearnShowMountains(!learnShowMountains)}
+                    onClick={() => onToggleLearn("showMountains")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("show_mountains")}
                   >
@@ -660,9 +658,7 @@ const GameHUD = ({
                 >
                   <button
                     className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
-                    onClick={() =>
-                      setLearnShowCountryLabels(!learnShowCountryLabels)
-                    }
+                    onClick={() => onToggleLearn("showCountryLabels")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("labels_pays")}
                   >
@@ -670,7 +666,7 @@ const GameHUD = ({
                   </button>
                   <button
                     className={`learn-toggle-btn ${learnShowCapitals ? "active" : ""}`}
-                    onClick={() => setLearnShowCapitals(!learnShowCapitals)}
+                    onClick={() => onToggleLearn("showCapitals")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("labels_capitales")}
                   >
@@ -678,7 +674,7 @@ const GameHUD = ({
                   </button>
                   <button
                     className={`learn-toggle-btn ${learnShowRivers ? "active" : ""}`}
-                    onClick={() => setLearnShowRivers(!learnShowRivers)}
+                    onClick={() => onToggleLearn("showRivers")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("labels_rivieres")}
                   >
@@ -686,7 +682,7 @@ const GameHUD = ({
                   </button>
                   <button
                     className={`learn-toggle-btn ${learnShowMountains ? "active" : ""}`}
-                    onClick={() => setLearnShowMountains(!learnShowMountains)}
+                    onClick={() => onToggleLearn("showMountains")}
                     onPointerDown={(e) => e.preventDefault()}
                     title={t("labels_montagnes")}
                   >

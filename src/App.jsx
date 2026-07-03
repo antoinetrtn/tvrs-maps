@@ -69,7 +69,7 @@ function App() {
   const [popupWarning, setPopupWarning] = useState(false);
   const [popupSuccess, setPopupSuccess] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [globeLightingEnabled, setGlobeLightingEnabled] = useState(true);
+  const globeLightingEnabled = true;
   const [theme, setTheme] = useState(() => {
     try {
       const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
@@ -111,10 +111,26 @@ function App() {
   const t = useTranslation(lang);
 
   // Learn Mode Toggles
-  const [learnShowCountryLabels, setLearnShowCountryLabels] = useState(true);
-  const [learnShowCapitals, setLearnShowCapitals] = useState(false);
-  const [learnShowRivers, setLearnShowRivers] = useState(false);
-  const [learnShowMountains, setLearnShowMountains] = useState(false);
+  const [learnToggles, setLearnToggles] = useState({
+    showCountryLabels: true,
+    showCapitals: false,
+    showRivers: false,
+    showMountains: false,
+  });
+
+  const onToggleLearn = useCallback((key) => {
+    setLearnToggles((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }, []);
+
+  const {
+    showCountryLabels: learnShowCountryLabels,
+    showCapitals: learnShowCapitals,
+    showRivers: learnShowRivers,
+    showMountains: learnShowMountains,
+  } = learnToggles;
 
   const extInputRef = useRef(null);
   const initialWidth = useRef(window.innerWidth);
@@ -529,14 +545,17 @@ function App() {
 
   const handleInput = useCallback(
     (inputVal) => {
-      if (inputVal === "WIN100") {
-        setFoundList(Object.keys(activeDataMap));
-        setScore(Object.keys(activeDataMap).length);
-        return true;
-      }
-      if (inputVal === "LOSE100") {
-        setIsGameOver(true);
-        return true;
+      const isDebug = import.meta.env.DEV;
+      if (isDebug) {
+        if (inputVal === "WIN100") {
+          setFoundList(Object.keys(activeDataMap));
+          setScore(Object.keys(activeDataMap).length);
+          return true;
+        }
+        if (inputVal === "LOSE100") {
+          setIsGameOver(true);
+          return true;
+        }
       }
 
       if (!isPlaying && mode !== "learn") setIsPlaying(true);
@@ -947,14 +966,8 @@ function App() {
             isKeyboardMode={effectiveKeyboardMode}
             selectedCountry={selectedCountry}
             globeTheme={globeTheme}
-            learnShowCountryLabels={learnShowCountryLabels}
-            setLearnShowCountryLabels={setLearnShowCountryLabels}
-            learnShowCapitals={learnShowCapitals}
-            setLearnShowCapitals={setLearnShowCapitals}
-            learnShowRivers={learnShowRivers}
-            setLearnShowRivers={setLearnShowRivers}
-            learnShowMountains={learnShowMountains}
-            setLearnShowMountains={setLearnShowMountains}
+            learnToggles={learnToggles}
+            onToggleLearn={onToggleLearn}
           />
         )
       )}
@@ -981,10 +994,7 @@ function App() {
         globeLightingEnabled={globeLightingEnabled}
         activeDataMap={activeDataMap}
         globeTheme={globeTheme}
-        learnShowCountryLabels={learnShowCountryLabels}
-        learnShowCapitals={learnShowCapitals}
-        learnShowRivers={learnShowRivers}
-        learnShowMountains={learnShowMountains}
+        learnToggles={learnToggles}
       />
       {showEndScreen && (
         <EndScreen

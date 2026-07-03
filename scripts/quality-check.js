@@ -26,7 +26,7 @@ const packageJson = JSON.parse(read('package.json'));
 const requiredScripts = {
   lint: 'node scripts/quality-check.js',
   quality: 'node scripts/quality-check.js',
-  check: 'npm run lint && npm run build',
+  check: 'npm run lint && npm run test:run && npm run build',
   'dev:5001': 'vite --host 0.0.0.0 --port 5001'
 };
 
