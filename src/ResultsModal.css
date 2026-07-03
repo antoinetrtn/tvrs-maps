@@ -82,13 +82,23 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .close-popup:hover {
     background: var(--glass-hover);
-    color: var(--text-main);
-    border-color: var(--glass-border-strong);
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.08);
+    text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+    animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.close-popup:active {
+    transform: scale(0.92);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    transition: transform 70ms ease;
 }
 
 /* ---- Continents list ---- */

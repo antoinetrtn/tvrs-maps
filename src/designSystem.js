@@ -612,3 +612,17 @@ export const scrambleText = (text, seed = 0) => {
     })
     .join("");
 };
+
+// Global RGB configurations for SpaceBackground to comply with linter rules
+export const SPACE_RGB_COMPONENTS = {
+  light: {
+    normal: [15, 23, 42],
+    cyan: [15, 23, 42],
+    magenta: [15, 23, 42]
+  },
+  dark: {
+    normal: [255, 255, 255],
+    cyan: [0, 240, 255],
+    magenta: [255, 0, 127]
+  }
+};

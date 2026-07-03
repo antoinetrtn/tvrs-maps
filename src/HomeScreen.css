@@ -12,6 +12,7 @@
   pointer-events: none;
   background: transparent;
   perspective: 1000px;
+  animation: home-overlay-fade 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .home-content {
@@ -26,7 +27,15 @@
   align-items: center;
   gap: 14px;
   padding: 32px;
-  background: var(--glass-bg);
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      var(--home-scanline) 0px,
+      var(--home-scanline) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    var(--home-card-bg);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
@@ -126,12 +135,24 @@
   color: var(--text-muted);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .timer-btn:hover {
-  color: var(--text-main);
-  background: var(--glass-hover);
+  transform: translateY(-2px) scale(1.08);
+  color: var(--accent) !important;
+  background: var(--glass-hover) !important;
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.timer-btn:active {
+  transform: translateY(0.5px) scale(0.92);
+  background: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform 70ms ease;
 }
 
 .timer-display {
@@ -165,7 +186,7 @@
   font-weight: 800;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .lang-btn.active {
@@ -175,8 +196,20 @@
 }
 
 .lang-btn:hover:not(.active) {
-  color: var(--text-main);
-  background: var(--glass-hover);
+  transform: translateY(-2.5px) scale(1.06);
+  color: var(--accent) !important;
+  background: var(--glass-hover) !important;
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.lang-btn:active:not(.active) {
+  transform: translateY(0.5px) scale(0.94);
+  background: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform 70ms ease;
 }
 
 .lang-divider {
@@ -196,11 +229,25 @@
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   backdrop-filter: var(--glass-blur);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .theme-toggle-btn:hover {
-  background: var(--glass-border);
-  transform: translateY(-2px);
+  transform: translateY(-2.5px) scale(1.08);
+  color: var(--accent) !important;
+  background: var(--glass-hover) !important;
+  border-color: var(--accent) !important;
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.theme-toggle-btn:active {
+  transform: translateY(0.5px) scale(0.92);
+  background: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform 70ms ease;
 }
 
 .theme-toggle-btn.active {
@@ -230,7 +277,7 @@
   background: var(--glass-border);
   color: var(--text-main);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   text-align: left;
 }
 
@@ -271,11 +318,24 @@
 }
 
 .home-btn:hover:not(.disabled) {
-  transform: translateY(-2px);
-  background: var(--glass-bg);
-  box-shadow: var(--glass-shadow-strong);
+  transform: translateY(-2.5px) scale(1.015);
+  background: var(--glass-hover);
+  box-shadow: 
+    0 0 0 1px var(--accent-soft),
+    0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
   border-color: var(--accent);
   color: var(--accent);
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.home-btn:active:not(.disabled) {
+  transform: translateY(0.5px) scale(0.975);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform 70ms linear, background-color 70ms ease, box-shadow 70ms ease;
 }
 
 .home-btn.disabled {
@@ -297,6 +357,17 @@
 }
 
 @keyframes home-card-enter {
+  from { 
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to { 
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes home-overlay-fade {
   from { opacity: 0; }
   to { opacity: 1; }
 }

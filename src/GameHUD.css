@@ -180,8 +180,28 @@
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    transition: all var(--transition-normal);
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     outline: none; /* Remove blue focus ring */
+}
+
+.hud-btn-circular:hover {
+    transform: scale(1.08) translateY(-1px);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 
+        0 0 0 1px var(--accent-soft),
+        0 4px 12px color-mix(in srgb, var(--accent) 15%, transparent);
+    text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+    animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.hud-btn-circular:active {
+    transform: scale(0.92) translateY(0);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    box-shadow: 0 2px 8px var(--accent-soft);
+    text-shadow: none;
+    transition: transform 70ms ease;
 }
 
 .island-sub-gauges {
@@ -378,12 +398,20 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .suggestion-item:hover {
     background: var(--accent-soft);
     color: var(--accent);
+    transform: translateX(4px);
+    text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+    animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.suggestion-item:active {
+    transform: translateX(2px) scale(0.99);
+    transition: transform 70ms ease;
 }
 
 .suggestion-item .sug-sub {
@@ -617,18 +645,34 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .learn-toggle-btn:hover {
-    color: var(--text-main);
-    background: var(--glass-hover);
+    color: var(--accent) !important;
+    background: var(--glass-hover) !important;
+    transform: scale(1.08);
+    text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+    animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.learn-toggle-btn:active {
+    transform: scale(0.92);
+    transition: transform 70ms ease;
 }
 
 .learn-toggle-btn.active {
     color: var(--accent-contrast);
     background: var(--accent);
     box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.learn-toggle-btn.active:hover {
+    background: var(--accent-hover) !important;
+    color: var(--accent-contrast) !important;
+    transform: scale(1.08);
+    text-shadow: none;
+    animation: none;
 }
 
 /* Mobile dropdown popover styling */
@@ -661,4 +705,81 @@
 .timer-pill.active {
     border-color: var(--accent) !important;
     box-shadow: 0 0 10px var(--accent-glow) !important;
+}
+
+/* Timer Low Warning alarm styling */
+.timer-low {
+  color: var(--error) !important;
+  text-shadow: 0 0 10px var(--error-soft), -1px 0 var(--glitch-magenta-soft), 1px 0 var(--glitch-cyan-soft);
+  animation: timer-alarm 0.5s infinite steps(2) alternate;
+}
+
+@keyframes timer-alarm {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1.0;
+    transform: scale(1.02);
+  }
+}
+
+/* Score increase glitch-flash effect */
+.score-increased-flash {
+  animation: score-glitch-active 0.4s steps(2) infinite;
+  color: var(--success) !important;
+  text-shadow: 0 0 12px var(--success-soft);
+}
+
+@keyframes score-glitch-active {
+  0% {
+    text-shadow: -2px 0 var(--error), 2px 0 var(--accent);
+    transform: skewX(-4deg) scale(1.1);
+  }
+  25% {
+    text-shadow: 2px 0 var(--error), -2px 0 var(--accent);
+    transform: skewX(4deg) scale(1.15);
+  }
+  50% {
+    text-shadow: -1px 2px var(--accent), 1px -2px var(--error);
+    transform: skewX(-2deg) scale(1.08);
+  }
+  75% {
+    text-shadow: 1px -1px var(--error), -1px 1px var(--accent);
+    transform: skewX(2deg) scale(1.12);
+  }
+  100% {
+    text-shadow: none;
+    transform: skewX(0) scale(1);
+  }
+}
+
+/* Focus Card close button styling */
+.focus-close-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.focus-close-btn:hover {
+  background: var(--glass-hover);
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.12);
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.focus-close-btn:active {
+  transform: scale(0.88);
+  transition: transform 70ms ease;
 }

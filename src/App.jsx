@@ -104,6 +104,7 @@ function App() {
   );
 
   // New States for Advanced UX
+  const [isScreenGlitching, setIsScreenGlitching] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [hudSide, setHudSide] = useState("right"); // 'left' or 'right'
   const [confirmState, setConfirmState] = useState(null); // { message, onConfirm }
@@ -121,6 +122,22 @@ function App() {
   const viewportFrameRef = useRef(null);
   const navigationTrailRef = useRef([]);
   const navigationTrailIndexRef = useRef(-1);
+
+  const prevScreenRef = useRef(currentScreen);
+
+  // Trigger screen transition glitch effect when screens/modals toggle
+  useEffect(() => {
+    const isGoingHome = currentScreen === "home" && prevScreenRef.current !== "home";
+    prevScreenRef.current = currentScreen;
+
+    if (isGoingHome) {
+      return;
+    }
+
+    setIsScreenGlitching(true);
+    const timer = setTimeout(() => setIsScreenGlitching(false), 220);
+    return () => clearTimeout(timer);
+  }, [currentScreen, showEndScreen, showResultsTable]);
 
   // --- MOBILE KEYBOARD / VIEWPORT LOGIC ---
   const getViewport = useCallback(() => {
@@ -853,7 +870,7 @@ function App() {
 
   return (
     <div
-      className={`app-container ${theme}`}
+      className={`app-container ${theme} ${isScreenGlitching ? "glitch-active" : ""}`}
       data-theme={theme}
       style={appStyle}
     >

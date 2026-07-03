@@ -62,6 +62,18 @@ const GameHUD = ({
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scoreGlow, setScoreGlow] = useState(false);
+  const prevScoreRef = useRef(score);
+
+  useEffect(() => {
+    if (score > prevScoreRef.current) {
+      setScoreGlow(true);
+      const timer = setTimeout(() => setScoreGlow(false), 500);
+      return () => clearTimeout(timer);
+    }
+    prevScoreRef.current = score;
+  }, [score]);
+
   const t = useTranslation(lang);
 
   const normalizeString = (str) => {
@@ -325,7 +337,7 @@ const GameHUD = ({
               </button>
               {mode !== "learn" && (
                 <div
-                  className="hud-mini-pill score-pill glass-panel"
+                  className={`hud-mini-pill score-pill glass-panel ${scoreGlow ? "score-increased-flash" : ""}`}
                   style={{ marginLeft: "8px" }}
                 >
                   <span className="mini-pill-val">{score}</span>
@@ -386,7 +398,7 @@ const GameHUD = ({
                 </div>
               ) : (
                 <button
-                  className={`hud-mini-pill timer-pill glass-panel ${mobileMenuOpen ? "active" : ""}`}
+                  className={`hud-mini-pill timer-pill glass-panel ${mobileMenuOpen ? "active" : ""} ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   onPointerDown={(e) => e.preventDefault()}
                   style={{ cursor: "pointer", pointerEvents: "auto" }}
@@ -615,7 +627,7 @@ const GameHUD = ({
                   onClick={onInfo}
                   onPointerDown={(e) => e.preventDefault()}
                 >
-                  <div className="island-font">{formatTime(timeLeft)}</div>
+                  <div className={`island-font ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}>{formatTime(timeLeft)}</div>
                   <div className="island-divider" />
                   <div className="island-progress-wrap">
                     <div className="progress-linear-container">
@@ -626,7 +638,7 @@ const GameHUD = ({
                     </div>
                   </div>
                   <div className="island-divider" />
-                  <div className="island-font">
+                  <div className={`island-font ${scoreGlow ? "score-increased-flash" : ""}`}>
                     <span className="island-font">
                       {score}/{totalPossible}
                     </span>
@@ -766,7 +778,7 @@ const GameHUD = ({
           >
             <div className="focus-info-card animation-fade-in">
               {isKeyboardMode && mode !== "learn" && (
-                <div className="focus-mini-pill">
+                <div className={`focus-mini-pill ${scoreGlow ? "score-increased-flash" : ""}`}>
                   <span className="focus-mini-val">{score}</span>
                   <span className="focus-mini-sub">/{totalPossible}</span>
                 </div>
@@ -803,7 +815,7 @@ const GameHUD = ({
                 </button>
               </div>
               {isKeyboardMode && mode !== "learn" && (
-                <div className="focus-mini-pill">
+                <div className={`focus-mini-pill ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}>
                   <span className="focus-mini-val">{formatTime(timeLeft)}</span>
                 </div>
               )}

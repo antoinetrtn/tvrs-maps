@@ -53,11 +53,11 @@
   flex: 1;
   padding: 14px 24px;
   border-radius: var(--radius-lg);
-  border: none;
+  border: 1px solid transparent;
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .modal-btn.confirm {
@@ -67,8 +67,21 @@
 }
 
 .modal-btn.confirm:hover {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2.5px) scale(1.02);
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.modal-btn.confirm:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform 70ms ease;
 }
 
 .modal-btn.cancel {
@@ -78,8 +91,22 @@
 }
 
 .modal-btn.cancel:hover {
-  background: var(--accent-soft);
-  transform: translateY(-2px);
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2.5px) scale(1.02);
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.modal-btn.cancel:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform 70ms ease;
 }
 
 @keyframes fadeIn {
@@ -163,4 +190,51 @@
   .globe-map-shell.game-layout .globe-content-wrapper {
     --globe-layout-x: 0px;
   }
+}
+
+/* Screen transition glitch style (applies only to UI elements to keep the globe slide 100% smooth) */
+.app-container.glitch-active .home-screen-overlay,
+.app-container.glitch-active .top-hud-bar,
+.app-container.glitch-active .hud-bottom-right,
+.app-container.glitch-active .bottom-hud-container,
+.app-container.glitch-active .end-screen-overlay,
+.app-container.glitch-active .modal-overlay,
+.app-container.glitch-active .custom-modal-overlay {
+  animation: screen-shake 0.22s steps(2) infinite;
+  filter: contrast(1.3) saturate(1.15) brightness(1.05);
+}
+
+.app-container::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--scanline-color),
+    var(--scanline-color) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0;
+}
+
+.app-container.glitch-active::after {
+  opacity: 1;
+  animation: scanline-flicker 0.1s infinite alternate;
+}
+
+@keyframes screen-shake {
+  0% { transform: translate(2px, 1px) rotate(0deg); }
+  20% { transform: translate(-1px, -2px) rotate(0.1deg); }
+  40% { transform: translate(-3px, 1px) rotate(-0.1deg); }
+  60% { transform: translate(1px, 2px) rotate(0deg); }
+  80% { transform: translate(-1px, -1px) rotate(0.1deg); }
+  100% { transform: translate(2px, -2px) rotate(-0.1deg); }
+}
+
+@keyframes scanline-flicker {
+  0% { opacity: 0.15; background-color: var(--glitch-magenta-flicker); }
+  100% { opacity: 0.3; background-color: var(--glitch-cyan-flicker); }
 }

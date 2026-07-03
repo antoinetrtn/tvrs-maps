@@ -36,6 +36,7 @@ import {
 } from "./gameConfig";
 import { useTranslation } from "./i18n";
 import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "./globeShaders";
+import SpaceBackground from "./SpaceBackground";
 import {
   getFeatureAdmin,
   getFlagEmoji,
@@ -3376,6 +3377,9 @@ const GlobeMap = ({
           zIndex: 0,
         }}
       >
+        {/* Animated Pixel Stars Space Background */}
+        <SpaceBackground theme={theme} isLight={isLight} />
+
         {/* Dotted Grid */}
         <div
           style={{
