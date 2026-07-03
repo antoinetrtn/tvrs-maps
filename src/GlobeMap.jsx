@@ -86,6 +86,8 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
 
 const SELECTION_TRANSITION_DURATION = 80; // Snappy transition
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
+const BIOME_SCENE_SCALE = 9.2;
+const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;
 
 const getDepartmentModeFrancePointOfView = (width) => ({
   lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
@@ -2330,7 +2332,7 @@ const GlobeMap = ({
   useEffect(() => {
     // Clear biome objects cache when theme changes to prevent memory leak and release old theme assets
     biomeObjectsCacheRef.current.clear();
-  }, [globeTheme]);
+  }, [globeTheme, theme]);
 
   const ringsData = useMemo(() => {
     if (selectedCountry) {

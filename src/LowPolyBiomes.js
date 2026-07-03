@@ -281,7 +281,7 @@ export const createUnfoundPlaceholder = (type, themeName = 'dark', isSelected = 
     const mat = getMaterial(colorKey + 'MatSolid', () => new THREE.MeshBasicMaterial({
       color: isBlackoutSelected ? 0xffffff : (isSelected ? 0x34d399 : 0x64748b),
       transparent: true,
-      opacity: isBlackoutSelected ? 0.42 : (isSelected ? 0.35 : 0.18),
+      opacity: isBlackoutSelected ? 0.42 : (isSelected ? 0.45 : 0.3),
       wireframe: isBlackoutSelected
     }));
 

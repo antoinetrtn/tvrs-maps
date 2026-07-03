@@ -123,10 +123,10 @@ export const THEME = {
     decorGlowPrimaryEnd: "rgba(255, 255, 255, 0)",
     decorGlowSecondary: "rgba(0, 0, 0, 0.02)",
     decorGlowSecondaryEnd: "rgba(255, 255, 255, 0)",
-    riverActive: "#000000",
-    riverInactive: "#888888",
-    riverSelectedFound: "#000000",
-    riverSelectedUnfound: "#888888",
+    riverActive: "#0284c7",
+    riverInactive: "#7dd3fc",
+    riverSelectedFound: "#0284c7",
+    riverSelectedUnfound: "#38bdf8",
   },
   dark: {
     bg: "#000000",
@@ -190,10 +190,10 @@ export const THEME = {
     decorGlowPrimaryEnd: "rgba(0, 0, 0, 0)",
     decorGlowSecondary: "rgba(255, 255, 255, 0.02)",
     decorGlowSecondaryEnd: "rgba(0, 0, 0, 0)",
-    riverActive: "#ffffff",
-    riverInactive: "#555555",
-    riverSelectedFound: "#ffffff",
-    riverSelectedUnfound: "#555555",
+    riverActive: "#38bdf8",
+    riverInactive: "#0369a1",
+    riverSelectedFound: "#38bdf8",
+    riverSelectedUnfound: "#bae6fd",
   },
 };
 
@@ -339,7 +339,6 @@ export const GLOBE_THEMES = {
       labelColorType: "paper",
       strokeWidthMobile: 1.1,
       strokeWidthDesktop: 1.6,
-      riverInactive: "#888888",
       selectionRingColor: "#ffffff",
     },
     continents: {
@@ -440,7 +439,11 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
 export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") => {
   const baseTheme = THEME[systemTheme] || THEME.dark;
   const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
-  const globeOverrides = themeCfg.globeSettings || {};
+  const globeOverrides = { ...themeCfg.globeSettings } || {};
+
+  if (globeTheme === "blackout" && systemTheme === "light") {
+    globeOverrides.globeMaterialColor = "#ffffff";
+  }
 
   return {
     ...baseTheme,
