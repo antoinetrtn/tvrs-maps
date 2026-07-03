@@ -35,6 +35,19 @@ const SpaceBackground = ({ theme = "dark", isLight = false }) => {
       return makeRgbaString(rgb[0], rgb[1], rgb[2], (opacity * scale).toFixed(3));
     };
 
+    // Mouse positions for interactive parallax
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetMouseX = 0;
+    let targetMouseY = 0;
+
+    const handleMouseMove = (e) => {
+      // Normalize between -1 and 1
+      targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      targetMouseY = (e.clientY / window.innerHeight) * 2 - 1;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
     // Initialize Twinkling Stars
     const numStars = Math.floor((width * height) / 18000); // Scale with screen resolution
     const stars = [];
@@ -63,6 +76,10 @@ const SpaceBackground = ({ theme = "dark", isLight = false }) => {
       // Clear canvas with transparent background so it layers nicely under the globe
       ctx.clearRect(0, 0, width, height);
 
+      // Smoothly interpolate mouse positions
+      mouseX += (targetMouseX - mouseX) * 0.05;
+      mouseY += (targetMouseY - mouseY) * 0.05;
+
       // 1. Draw Twinkling Stars
       stars.forEach((star) => {
         // Adjust star coordinates if width/height changed dynamically
@@ -72,9 +89,21 @@ const SpaceBackground = ({ theme = "dark", isLight = false }) => {
         star.phase += star.speed;
         const opacity = Math.sin(star.phase) * 0.4 + 0.6; // Opacity fluctuates between 0.2 and 1.0
         
+        // Calculate parallax offset based on star depth/type
+        const parallaxFactor = star.type === "normal" ? -8 : -18;
+        let drawX = star.x + mouseX * parallaxFactor;
+        let drawY = star.y + mouseY * parallaxFactor;
+
+        // Wrap around boundaries to keep stars on screen
+        if (drawX < 0) drawX += width;
+        else if (drawX > width) drawX -= width;
+
+        if (drawY < 0) drawY += height;
+        else if (drawY > height) drawY -= height;
+
         ctx.fillStyle = getStarColor(isLight, star.type, opacity);
         // Crisp pixel square
-        ctx.fillRect(Math.floor(star.x), Math.floor(star.y), star.size, star.size);
+        ctx.fillRect(Math.floor(drawX), Math.floor(drawY), star.size, star.size);
       });
 
       // 2. Spawn Shooting Stars
@@ -157,6 +186,7 @@ const SpaceBackground = ({ theme = "dark", isLight = false }) => {
     // Cleanups
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
   }, [isLight, theme]);
