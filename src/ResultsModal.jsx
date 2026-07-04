@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { Close } from "pixelarticons/react";
 import "./ResultsModal.css";
-import { getGameStats } from "./utils";
-import { getThemeRegionColor, scrambleText } from "./designSystem";
+import { getThemeRegionColor } from "./designSystem";
+import { getGameStats, scrambleText } from "./utils";
 import { useTranslation } from "./i18n";
 import { GAME_REGIONS } from "./gameConfig";
 
@@ -13,11 +13,8 @@ const ResultsModal = ({
   totalCountries,
   countryDataMap,
   activeDataMap,
-  onRestart,
   onClose,
   isGameOver,
-  onStop,
-  isPlaying,
   mode,
   theme = "dark",
   lang = "fr",

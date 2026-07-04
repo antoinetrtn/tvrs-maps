@@ -15,15 +15,17 @@
   --success: #ffffff;
   --success-soft: rgba(255, 255, 255, 0.12);
 
-  --gold: #fbbf24;
-  --gold-soft: rgba(251, 191, 36, 0.1);
-  --gold-light: #fde68a;
+  --gold: #cccccc;
+  --gold-soft: rgba(255, 255, 255, 0.08);
+  --gold-light: #eeeeee;
 
   --warning: #888888;
-  --warning-soft: rgba(255, 255, 255, 0.05);
+  --warning-soft: rgba(255, 255, 255, 0.08);
 
-  --error: #888888;
-  --error-soft: rgba(255, 255, 255, 0.05);
+  --error: #ff4500;
+  --error-soft: rgba(255, 69, 0, 0.08);
+  --highlight-soft: rgba(255, 255, 255, 0.06);
+  --subtle-tint-strong: rgba(255, 255, 255, 0.16);
 
   /* GLITCH & NEON EFFECTS */
   --glitch-magenta: rgba(255, 0, 127, 0.6);
@@ -40,12 +42,12 @@
   --glass-bg: rgba(15, 15, 15, 0.85);
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-hover: rgba(255, 255, 255, 0.05);
-  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
   --glass-blur: blur(24px) saturate(200%);
   --glass-blur-compact: blur(12px) saturate(140%);
   --overlay-bg: rgba(0, 0, 0, 0.8);
   --settings-backdrop-bg: rgba(0, 0, 0, 0.45);
-  --modal-header-bg: rgba(15, 15, 15, 0.4);
+  --modal-header-bg: rgba(15, 15, 15, 0.6);
 
   /* DESIGN SYSTEM TOKENS */
   --radius-sm: 10px;
@@ -68,6 +70,8 @@
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-emphasized: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-layout: 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  --transition-spring: 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-instant: 70ms ease;
   --control-sm: 32px;
   --control-md: 40px;
   --control-lg: 44px;
@@ -90,6 +94,8 @@
   --overlay-bg: rgba(241, 245, 249, 0.6);
   --settings-backdrop-bg: rgba(15, 23, 42, 0.3);
   --modal-header-bg: rgba(255, 255, 255, 0.4);
+  --subtle-tint-strong: rgba(0, 0, 0, 0.1);
+  --highlight-soft: rgba(0, 0, 0, 0.03);
   
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
@@ -215,3 +221,20 @@ body {
     border-color: var(--accent);
   }
 }
+
+/* Glitch hover effect - shared utility class */
+.glitch-hover:hover {
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+/* Active/pressed button state - shared utility class */
+.btn-active:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform var(--transition-instant);
+}
+

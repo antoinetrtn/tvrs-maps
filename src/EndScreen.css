@@ -152,7 +152,7 @@
   }
 }
 
-@keyframes fadeIn {
+@keyframes fadeInSimple {
   from {
     opacity: 0;
   }
@@ -163,7 +163,7 @@
 }
 
 .end-screen-header {
-  animation: fadeIn 0.8s ease both;
+  animation: fadeInSimple 0.8s ease both;
 }
 
 .end-screen-actions {
@@ -172,7 +172,7 @@
   margin: 0 auto 20px;
   display: flex;
   justify-content: center;
-  animation: fadeIn 0.8s ease both;
+  animation: fadeInSimple 0.8s ease both;
   animation-delay: 0.4s;
 }
 

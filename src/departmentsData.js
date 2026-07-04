@@ -101,10 +101,3 @@ export const departmentsDataMap = {
   "974": { code: "974", name_fr: "La Réunion", name_en: "Reunion", capital_fr: "Saint-Denis", capital: "Saint-Denis", aliases: ["reunion", "réunion"], lat: -21.1151, lng: 55.5364, region: "France" },
   "976": { code: "976", name_fr: "Mayotte", name_en: "Mayotte", capital_fr: "Mamoudzou", capital: "Mamoudzou", lat: -12.8275, lng: 45.1662, region: "France" }
 };
-
-export const departmentModeConfig = {
-  mode: "departments",
-  label: "Départements français",
-  shortLabel: "Départements",
-  total: Object.keys(departmentsDataMap).length
-};

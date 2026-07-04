@@ -76,6 +76,27 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
+  vec3 computeErrorEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 localPos) {
+    float pulse = sin(time * 18.0) * 0.35 + 0.65;
+    float sweep = step(fract(localPos.y * 1.5 - time * 4.0), 0.35) * 0.40;
+    float errorNoise = hash(noiseUv + sin(time * 45.0));
+    float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
+    vec3 errorRed = vec3(1.0, 0.27, 0.0);
+    if (theme > 0.9 && theme < 1.1) {
+      return errorRed * noisyIntensity;
+    } else {
+      return mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
+    }
+  }
+  vec3 computeSuccessEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 localPos) {
+    float pulse = sin(time * 15.0) * 0.4 + 0.6;
+    float sweep = step(fract(localPos.y * 0.2 - time * 2.0), 0.15) * 0.35;
+    if (theme > 0.9 && theme < 1.1) {
+      return vec3(pulse + sweep);
+    } else {
+      return mix(finalColor, greenColor * (pulse + sweep + 0.5), 0.85);
+    }
+  }
 `;
 
 // GLSL fragment logic for selected/transitioning country polygon glitching
@@ -98,26 +119,9 @@ export const GLITCH_FRAGMENT_BODY = `
   if (uIsSide > 0.5) {
     // SIDES / WALLS GEOMETRY
     if (uIsError > 0.5) {
-      // Error on side walls: fast pulsing orange-red flash and scanline sweep with noise
-      float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
-      float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
-      float errorNoise = hash(noiseUv + sin(uTime * 45.0));
-      float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
-      vec3 errorRed = vec3(1.0, 0.27, 0.0);
-      if (uTheme > 0.9 && uTheme < 1.1) {
-        finalColor = errorRed * noisyIntensity;
-      } else {
-        finalColor = mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
-      }
+      finalColor = computeErrorEffect(finalColor, uTime, uTheme, noiseUv, vLocalPosition);
     } else if (uIsSuccess > 0.5) {
-      // Success on side walls: neon green pulse and scanline sweep
-      float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
-      float sweep = step(fract(vLocalPosition.y * 0.2 - uTime * 2.0), 0.15) * 0.35;
-      if (uTheme > 0.9 && uTheme < 1.1) {
-        finalColor = vec3(pulse + sweep);
-      } else {
-        finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
-      }
+      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vLocalPosition);
     } else {
       // Normal selected side: holographic laser wall barrier!
       vec2 uv = gl_FragCoord.xy;
@@ -132,28 +136,11 @@ export const GLITCH_FRAGMENT_BODY = `
     finalColor = staticVec;
 
     if (uIsError > 0.5) {
-      // Error on cap: fast pulsing orange-red flash and scanline sweep with noise
-      float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
-      float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
-      float errorNoise = hash(noiseUv + sin(uTime * 45.0));
-      float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
-      vec3 errorRed = vec3(1.0, 0.27, 0.0);
-      if (uTheme > 0.9 && uTheme < 1.1) {
-        finalColor = errorRed * noisyIntensity;
-      } else {
-        finalColor = mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
-      }
+      finalColor = computeErrorEffect(finalColor, uTime, uTheme, noiseUv, vLocalPosition);
     }
 
     if (uIsSuccess > 0.5) {
-      // Success on cap: s'illumine with an animated high-contrast flash/pulse
-      float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
-      float sweep = step(fract(vLocalPosition.y * 0.2 - uTime * 2.0), 0.15) * 0.35;
-      if (uTheme > 0.9 && uTheme < 1.1) {
-        finalColor = vec3(pulse + sweep);
-      } else {
-        finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
-      }
+      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vLocalPosition);
     }
   }
 

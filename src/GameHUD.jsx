@@ -23,6 +23,30 @@ import "./GameHUD.css";
 import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
 import { GAME_REGIONS, getRegionAbbr } from "./gameConfig";
+import { normalizeString } from "./utils";
+const getFocusLabelText = (mode, lang, selectedCountry, countryDataMap, t) => {
+  if (mode === "learn") {
+    return (
+      (lang === "fr"
+        ? countryDataMap[selectedCountry]?.name_fr
+        : countryDataMap[selectedCountry]?.name_en) || selectedCountry
+    );
+  }
+  if (mode === "departments") {
+    return t("department_prefix", {
+      code: countryDataMap[selectedCountry]?.code || selectedCountry,
+    });
+  }
+  if (mode === "rivers_mountains") {
+    return countryDataMap[selectedCountry]?.type === "mountain_range"
+      ? t("guess_mountain_range")
+      : t("guess_river");
+  }
+  if (mode === "countries") {
+    return t("guess_country");
+  }
+  return t("find_capital");
+};
 
 const GameHUD = ({
   mode,
@@ -75,16 +99,6 @@ const GameHUD = ({
   }, [score]);
 
   const t = useTranslation(lang);
-
-  const normalizeString = (str) => {
-    return str
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[-']/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
-  };
 
   const preNormalizedData = useMemo(() => {
     if (!countryDataMap) return {};
@@ -782,25 +796,7 @@ const GameHUD = ({
               <div className="focus-label">
                 <MapPin width={14} height={14} className="focus-icon" />
                 <span className="focus-label-text">
-                  {mode === "learn"
-                    ? (lang === "fr"
-                        ? countryDataMap[selectedCountry]?.name_fr
-                        : countryDataMap[selectedCountry]?.name_en) ||
-                      selectedCountry
-                    : mode === "departments"
-                      ? t("department_prefix", {
-                          code:
-                            countryDataMap[selectedCountry]?.code ||
-                            selectedCountry,
-                        })
-                      : mode === "rivers_mountains"
-                        ? countryDataMap[selectedCountry]?.type ===
-                          "mountain_range"
-                          ? t("guess_mountain_range")
-                          : t("guess_river")
-                        : mode === "countries"
-                          ? t("guess_country")
-                          : t("find_capital")}
+                  {getFocusLabelText(mode, lang, selectedCountry, countryDataMap, t)}
                 </span>
                 <button
                   className="focus-close-btn"

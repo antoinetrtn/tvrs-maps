@@ -1,6 +1,33 @@
 
 import { GAME_REGIONS } from "./gameConfig";
 
+/**
+ * Normalizes input string for accents, lowercase, hyphens, and whitespace.
+ */
+export const normalizeString = (str) => {
+  if (!str) return "";
+  const normalized = str.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return normalized.replace(/[-'']/g, " ").replace(/\s+/g, " ").trim();
+};
+
+/**
+ * Scramble text with glitched characters for text animations.
+ */
+export const scrambleText = (text, seed = 0) => {
+  if (!text) return "";
+  const glyphs = "░▒▓█░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ";
+  return text
+    .split("")
+    .map((char, index) => {
+      if (char === " " || char === "-" || char === "'") return char;
+      const hash = Math.sin(index * 13.5 + seed * 7.1) * 10000;
+      const rand = Math.abs(hash) % 1.0;
+      const glyphIndex = Math.floor(rand * glyphs.length);
+      return glyphs[glyphIndex];
+    })
+    .join("");
+};
+
 export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
   const baseOrder = GAME_REGIONS;
   const dynamicRegions = Object.values(countryDataMap)
@@ -34,16 +61,6 @@ export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
   });
 
   return { stats: s, CONTINENT_ORDER };
-};
-
-export const getFeatureAdmin = (feature) => {
-  const admin =
-    feature?.properties?.code ||
-    feature?.properties?.ADMIN ||
-    feature?.properties?.name ||
-    feature?.properties?.NAME;
-  if (admin === "Somaliland") return "Somalia";
-  return admin;
 };
 
 export const getFlagEmoji = (iso2) => {
@@ -207,4 +224,17 @@ export const getLabelRenderRadius = (zoomLevel, isMobile) => {
   if (zoomLevel >= 1.6) return 58;
   if (zoomLevel >= 1.05) return 78;
   return 96;
+};
+
+/**
+ * Extract administrative code or name from a GeoJSON feature's properties.
+ */
+export const getFeatureAdmin = (feature) => {
+  if (!feature || !feature.properties) return undefined;
+  const props = feature.properties;
+  
+  // Custom mapping for Somaliland to Somalia
+  if (props.ADMIN === "Somaliland") return "Somalia";
+  
+  return props.code || props.ADMIN || props.name || props.NAME;
 };

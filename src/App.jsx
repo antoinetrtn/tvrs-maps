@@ -2,11 +2,15 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import GlobeMap from "./GlobeMap.jsx";
 import GameHUD from "./GameHUD.jsx";
 import HomeScreen from "./HomeScreen.jsx";
+import ResultsModal from "./ResultsModal.jsx";
+import EndScreen from "./EndScreen.jsx";
+import ConfirmationModal from "./ConfirmationModal.jsx";
 import "./App.css";
-import { normalizeString as rawNormalize, countryDataMap } from "./gameData";
+import { countryDataMap } from "./gameData";
 import { departmentsDataMap } from "./departmentsData";
 import { riversMountainsDataMap } from "./riversMountainsData";
 import { useTranslation } from "./i18n";
+import { normalizeString } from "./utils";
 
 import {
   getThemeCssVariables,
@@ -24,33 +28,6 @@ import {
   DATA_URLS,
   PERFORMANCE,
 } from "./gameConstants";
-
-// Enhanced normalizer: strip accents, hyphens, extra spaces, lowercase
-const normalizeString = (str) => {
-  return rawNormalize(str).replace(/[-'']/g, " ").replace(/\s+/g, " ").trim();
-};
-import ResultsModal from "./ResultsModal.jsx";
-import EndScreen from "./EndScreen.jsx";
-
-// Custom Confirmation Modal Component
-const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
-  const t = useTranslation(lang);
-  return (
-    <div className="custom-modal-overlay">
-      <div className={`custom-modal-content glass-panel ${theme}`}>
-        <p>{message}</p>
-        <div className="modal-actions">
-          <button className="modal-btn cancel" onClick={onCancel}>
-            {t("cancel")}
-          </button>
-          <button className="modal-btn confirm" onClick={onConfirm}>
-            {t("confirm")}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home' or 'game'
@@ -548,6 +525,41 @@ function App() {
     setShowEndScreen(true);
   }, []);
 
+  const handleSuccessfulGuess = useCallback(
+    (guessedKey, timing) => {
+      const newFound = [...foundList, guessedKey];
+      setFoundList(newFound);
+      setPopupError(false);
+      setPopupWarning(false);
+      setPopupSuccess(true);
+      setSelectedCountry(guessedKey);
+
+      setTimeout(() => {
+        setPopupSuccess(false);
+        setSelectedCountry((prev) => {
+          if (prev === guessedKey) {
+            const nextCountry = getClosestUnfound(guessedKey, newFound);
+            navigationTrailRef.current = nextCountry
+              ? [guessedKey, nextCountry]
+              : [guessedKey];
+            navigationTrailIndexRef.current = nextCountry ? 1 : 0;
+            // Strong focus re-assertion ONLY if in keyboard mode and focus was actually lost
+            if (
+              extInputRef.current &&
+              effectiveKeyboardMode &&
+              document.activeElement !== extInputRef.current
+            ) {
+              extInputRef.current.focus();
+            }
+            return nextCountry || null;
+          }
+          return prev;
+        });
+      }, timing);
+    },
+    [foundList, effectiveKeyboardMode, getClosestUnfound],
+  );
+
   const handleInput = useCallback(
     (inputVal) => {
       const isDebug = import.meta.env.DEV;
@@ -614,34 +626,7 @@ function App() {
         if (foundList.includes(matchFound)) {
           return "ALREADY_FOUND";
         }
-        const newFound = [...foundList, matchFound];
-        setFoundList(newFound);
-
-        setSelectedCountry(matchFound);
-        setPopupSuccess(true);
-        setTimeout(() => {
-          setPopupSuccess(false);
-          setSelectedCountry((prev) => {
-            if (prev === matchFound) {
-              const nextCountry = getClosestUnfound(matchFound, newFound);
-              navigationTrailRef.current = nextCountry
-                ? [matchFound, nextCountry]
-                : [matchFound];
-              navigationTrailIndexRef.current = nextCountry ? 1 : 0;
-              // Strong focus re-assertion ONLY if in keyboard mode and focus was actually lost
-              if (
-                extInputRef.current &&
-                effectiveKeyboardMode &&
-                document.activeElement !== extInputRef.current
-              ) {
-                extInputRef.current.focus();
-              }
-              return nextCountry || null;
-            }
-            return prev;
-          });
-        }, FEEDBACK_TIMING.successHoldMs);
-
+        handleSuccessfulGuess(matchFound, FEEDBACK_TIMING.successHoldMs);
         return "SUCCESS";
       }
       return "ERROR";
@@ -653,8 +638,7 @@ function App() {
       lang,
       mode,
       selectedCountry,
-      getClosestUnfound,
-      effectiveKeyboardMode,
+      handleSuccessfulGuess,
     ],
   );
 
@@ -699,37 +683,9 @@ function App() {
           return "ALREADY_FOUND";
         }
 
-        const newFound = [...foundList, selectedCountry];
-        setFoundList(newFound);
+        handleSuccessfulGuess(selectedCountry, FEEDBACK_TIMING.successHoldFocusedMs);
         setPopupError(false);
         setPopupWarning(false);
-        setPopupSuccess(true);
-
-        const guessedCountry = selectedCountry;
-
-        setTimeout(() => {
-          setPopupSuccess(false);
-          setSelectedCountry((prev) => {
-            if (prev === guessedCountry) {
-              const nextCountry = getClosestUnfound(guessedCountry, newFound);
-              navigationTrailRef.current = nextCountry
-                ? [guessedCountry, nextCountry]
-                : [guessedCountry];
-              navigationTrailIndexRef.current = nextCountry ? 1 : 0;
-              // Strong focus re-assertion ONLY if in keyboard mode and focus was actually lost
-              if (
-                extInputRef.current &&
-                effectiveKeyboardMode &&
-                document.activeElement !== extInputRef.current
-              ) {
-                extInputRef.current.focus();
-              }
-              return nextCountry || null;
-            }
-            return prev;
-          });
-        }, FEEDBACK_TIMING.successHoldFocusedMs);
-
         return "SUCCESS";
       } else {
         setPopupError(true);
@@ -743,10 +699,8 @@ function App() {
       isPlaying,
       lang,
       mode,
-      score,
       selectedCountry,
-      getClosestUnfound,
-      effectiveKeyboardMode,
+      handleSuccessfulGuess,
     ],
   );
 
@@ -884,9 +838,8 @@ function App() {
   }, [viewport.width]);
 
   const appStyle = useMemo(
-    () =>
-      getThemeCssVariables(theme, globeTheme, selectedCountry, activeDataMap),
-    [theme, globeTheme, selectedCountry, activeDataMap],
+    () => getThemeCssVariables(theme, globeTheme),
+    [theme, globeTheme],
   );
 
   return (

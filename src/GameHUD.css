@@ -64,7 +64,7 @@
     align-items: center;
     padding: 0 12px;
     height: var(--control-lg);
-    border-radius: 22px;
+    border-radius: var(--radius-full);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -179,6 +179,7 @@
     color: var(--text-main);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     transition: all var(--transition-spring);
     outline: none; /* Remove blue focus ring */
@@ -309,9 +310,10 @@
     align-items: center;
     padding: 0 16px;
     flex: 1;
-    border-radius: 22px;
+    border-radius: var(--radius-full);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     transition: all var(--transition-normal);
     min-width: 0;
@@ -578,9 +580,6 @@
 .hud-mini-pill .mini-pill-sub {
     font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
-}
-
-.hud-mini-pill .mini-pill-sub {
     opacity: 0.5;
     font-size: 0.75rem;
 }

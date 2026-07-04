@@ -19,7 +19,6 @@ import {
   getThemeRegionColorAttenuated,
   getThemeRegionColorLabel,
   getThemeDepartmentColor,
-  scrambleText,
 } from "./designSystem";
 import {
   disposeBiomeCache,
@@ -45,7 +44,6 @@ import {
 } from "./globeShaders";
 import SpaceBackground from "./SpaceBackground";
 import {
-  getFeatureAdmin,
   getFlagEmoji,
   getFeaturePolygons,
   areLngLatPointsEqual,
@@ -60,6 +58,8 @@ import {
   getLngLatDistance,
   getMobileRenderRadius,
   getLabelRenderRadius,
+  scrambleText,
+  getFeatureAdmin,
 } from "./utils";
 
 // Hoisted PURE accessors for the <Globe> paths layer. Keeping their identities
@@ -73,7 +73,8 @@ const pathColorAccessor = (d) => d.color;
 const pathWidthAccessor = (d) => d.width;
 const pathDashLengthAccessor = (d) => d.dashLength;
 const pathDashGapAccessor = (d) => d.dashGap;
-const pathDashAnimateTimeAccessor = (d) => d.dashAnimateTime;
+const _lerpColor1 = new THREE.Color();
+const _lerpColor2 = new THREE.Color();
 
 const smoothedRiversCache = {};
 
@@ -139,6 +140,8 @@ const GlobeMap = ({
     showRivers: learnShowRivers = false,
     showMountains: learnShowMountains = false,
   } = learnToggles || {};
+  const isLearnRivers = mode === "learn" && learnShowRivers;
+  const isLearnMountains = mode === "learn" && learnShowMountains;
   const t = useTranslation(lang);
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
@@ -202,10 +205,10 @@ const GlobeMap = ({
       try {
         const colorA = safeColor(a);
         const colorB = safeColor(b);
-        const c1 = new THREE.Color(colorA);
-        const c2 = new THREE.Color(colorB);
-        c1.lerp(c2, Math.max(0, Math.min(1, amount)));
-        return `#${c1.getHexString()}`;
+        _lerpColor1.set(colorA);
+        _lerpColor2.set(colorB);
+        _lerpColor1.lerp(_lerpColor2, Math.max(0, Math.min(1, amount)));
+        return `#${_lerpColor1.getHexString()}`;
       } catch (e) {
         return safeColor(a);
       }
@@ -539,9 +542,6 @@ const GlobeMap = ({
 
   const selectCountryAtLngLat = useCallback(
     (lng, lat) => {
-      const isLearnRivers = mode === "learn" && learnShowRivers;
-      const isLearnMountains = mode === "learn" && learnShowMountains;
-
       if (mode === "rivers_mountains" || isLearnRivers || isLearnMountains) {
         let best = null;
         const dataMap =
@@ -631,8 +631,8 @@ const GlobeMap = ({
       selectableFeatureIndex,
       selectCountry,
       mode,
-      learnShowRivers,
-      learnShowMountains,
+      isLearnRivers,
+      isLearnMountains,
     ],
   );
 
@@ -1989,7 +1989,6 @@ const GlobeMap = ({
   // mass-re-animating every river on each selection change. Only rebuilds when
   // actual data (found state, theme) changes.
   const riversBasePathsData = useMemo(() => {
-    const isLearnRivers = mode === "learn" && learnShowRivers;
     if (mode !== "rivers_mountains" && !isLearnRivers) return [];
     const paths = [];
     const dataMap = isLearnRivers ? riversMountainsDataMap : gameDataMap;
@@ -2011,10 +2010,9 @@ const GlobeMap = ({
       });
     });
     return paths;
-  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS, learnShowRivers]);
+  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS, isLearnRivers]);
 
   const riversSelectedPathData = useMemo(() => {
-    const isLearnRivers = mode === "learn" && learnShowRivers;
     if ((mode !== "rivers_mountains" && !isLearnRivers) || !selectedCountry)
       return [];
     const dataMap = isLearnRivers ? riversMountainsDataMap : gameDataMap;
@@ -2062,12 +2060,11 @@ const GlobeMap = ({
     selectedCountry,
     isError,
     UI_COLORS,
-    learnShowRivers,
+    isLearnRivers,
   ]);
 
   // Base mountain paths
   const mountainsBasePathsData = useMemo(() => {
-    const isLearnMountains = mode === "learn" && learnShowMountains;
     if (mode !== "rivers_mountains" && !isLearnMountains) return [];
     const paths = [];
     const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
@@ -2078,14 +2075,14 @@ const GlobeMap = ({
       const color = isFound
         ? getThemeRegionColor(globeTheme, theme, data.region)
         : UI_COLORS.riverInactive;
-
+      const pathPoints = data.path.map(([lat, lng]) => [lat, lng, 0.008]);
       paths.push({
         admin: k,
-        coords: data.path.map(([lat, lng]) => [lat, lng, 0.006]), // Lifted slightly above surface
+        coords: pathPoints,
         color,
-        width: isFound ? 35 : 20, // Pixels width
-        dashLength: isFound ? 1.0 : 0.015,
-        dashGap: isFound ? 0.0 : 0.012,
+        width: isFound ? 30 : 20,
+        dashLength: isFound ? 1 : 0.015,
+        dashGap: isFound ? 0 : 0.012,
         dashAnimateTime: 0,
       });
     });
@@ -2098,12 +2095,11 @@ const GlobeMap = ({
     globeTheme,
     theme,
     UI_COLORS,
-    learnShowMountains,
+    isLearnMountains,
   ]);
 
   // Selected mountain paths
   const mountainsSelectedPathData = useMemo(() => {
-    const isLearnMountains = mode === "learn" && learnShowMountains;
     if ((mode !== "rivers_mountains" && !isLearnMountains) || !selectedCountry)
       return [];
     const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
@@ -2154,7 +2150,7 @@ const GlobeMap = ({
     UI_COLORS,
     globeTheme,
     theme,
-    learnShowMountains,
+    isLearnMountains,
   ]);
 
   // Combined for globe: base first, selected on top (exclude mountain lines - only show 3D mountains)
@@ -2164,7 +2160,6 @@ const GlobeMap = ({
   );
 
   const getBiomeAssetsData = useMemo(() => {
-    const isLearnMountains = mode === "learn" && learnShowMountains;
     if (mode === "rivers_mountains" || isLearnMountains) {
       const assets = [];
       const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
@@ -2194,18 +2189,17 @@ const GlobeMap = ({
     }
 
     return [];
-  }, [gameDataMap, mode, foundSet, isHomeScreen, learnShowMountains]);
+  }, [gameDataMap, mode, foundSet, isHomeScreen, isLearnMountains]);
 
   const getBiomeAltitude = useCallback(
     (d) => {
       const admin = d.admin;
-      const isLearnMountains = mode === "learn" && learnShowMountains;
       if (mode === "rivers_mountains" || isLearnMountains) {
         return admin === selectedCountry ? 0.003 : 0.0015;
       }
       return admin === selectedCountry ? 0.0025 : 0.0015;
     },
-    [selectedCountry, mode, learnShowMountains],
+    [selectedCountry, mode, isLearnMountains],
   );
 
   const createBiomeThreeObject = useCallback(
@@ -2218,7 +2212,6 @@ const GlobeMap = ({
       }
 
       let asset;
-      const isLearnMountains = mode === "learn" && learnShowMountains;
       const baseScale = d.scale * BIOME_SCENE_SCALE;
       if (mode === "rivers_mountains" || isLearnMountains) {
         if (d.type === "mountain" || d.type === "mountain_range") {
@@ -2252,7 +2245,7 @@ const GlobeMap = ({
       biomeObjectsCacheRef.current.set(key, alignedAsset);
       return alignedAsset;
     },
-    [theme, globeTheme, mode, selectedCountry, learnShowMountains, getRegionSurfaceColor],
+    [theme, globeTheme, mode, selectedCountry, isLearnMountains, getRegionSurfaceColor],
   );
 
   useEffect(() => {
