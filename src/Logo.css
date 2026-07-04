@@ -4,6 +4,7 @@
   justify-content: center;
   transform-style: preserve-3d;
   will-change: transform;
+  container-type: inline-size;
 }
 
 .logo-wrapper {
@@ -26,7 +27,25 @@
 /* Sizes */
 .logo-container.small { width: 64px; height: 48px; }
 .logo-container.medium { width: 140px; height: 105px; }
-.logo-container.large { width: 300px; height: 225px; }
+
+/* Large homepage logo: extends exactly to the boundaries of the card padding */
+.logo-container.large {
+  width: calc(100% + var(--spacing-xl) * 2);
+  margin-left: calc(-1 * var(--spacing-xl));
+  margin-right: calc(-1 * var(--spacing-xl));
+  max-width: 360px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+@media (max-width: 768px) {
+  .logo-container.large {
+    width: calc(100% + var(--spacing-lg) * 2);
+    margin-left: calc(-1 * var(--spacing-lg));
+    margin-right: calc(-1 * var(--spacing-lg));
+  }
+}
+
 .logo-container.huge { width: 440px; height: 330px; }
 
 /* Effects */
@@ -79,5 +98,102 @@
   50% {
     opacity: 0.8;
     transform: scale(1.1);
+  }
+}
+
+/* ASCII Logo Styling & Glitch Animations */
+.ascii-logo-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ascii-logo-pre {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 864px; /* Fixed width at 12px font-size (120 chars * 7.2px) */
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.05;
+  white-space: pre;
+  color: var(--text-main);
+  text-shadow: 
+    -1px 0 var(--glitch-magenta-soft), 
+    1px 0 var(--glitch-cyan-soft);
+  margin: 0;
+  padding: 0;
+  display: block;
+  user-select: none;
+  text-align: left;
+  transform: translate(-50%, -50%) translateZ(30px) scale(var(--ascii-scale, 0.35));
+  transform-origin: center center;
+  will-change: transform, text-shadow;
+  animation: ascii-glitch-idle 4s steps(1) infinite;
+}
+
+/* Active/hover glitch animation for home screen interactions */
+.logo-container:hover .ascii-logo-pre {
+  animation: ascii-glitch-active 0.4s steps(1) infinite;
+}
+
+@keyframes ascii-glitch-idle {
+  0%, 92%, 100% {
+    text-shadow: -1px 0 var(--glitch-magenta-soft), 1px 0 var(--glitch-cyan-soft);
+    transform: translate(-50%, -50%) skew(0deg) translateZ(30px) scale(var(--ascii-scale, 0.35));
+    opacity: 0.95;
+  }
+  93% {
+    text-shadow: -2.5px 0.8px var(--glitch-magenta), 2.5px -0.8px var(--glitch-cyan);
+    transform: translate(-50%, -50%) skew(0.5deg) translateZ(30px) translateX(1px) scale(var(--ascii-scale, 0.35));
+    opacity: 0.9;
+  }
+  94% {
+    text-shadow: 2.5px -0.8px var(--glitch-magenta), -2.5px 0.8px var(--glitch-cyan);
+    transform: translate(-50%, -50%) skew(-0.5deg) translateZ(30px) translateX(-1px) scale(var(--ascii-scale, 0.35));
+    opacity: 1;
+  }
+  95% {
+    text-shadow: -1px 0 var(--glitch-magenta-soft), 1px 0 var(--glitch-cyan-soft);
+    transform: translate(-50%, -50%) skew(0deg) translateZ(30px) scale(var(--ascii-scale, 0.35));
+    opacity: 0.95;
+  }
+}
+
+@keyframes ascii-glitch-active {
+  0% {
+    text-shadow: -2px 0 var(--glitch-magenta), 2px 0 var(--glitch-cyan);
+    transform: translate(-50%, -50%) translateZ(30px) translateX(1.5px) skew(1deg) scale(var(--ascii-scale, 0.35));
+    opacity: 0.9;
+  }
+  20% {
+    text-shadow: 2.5px -1.2px var(--glitch-magenta), -2.5px 1.2px var(--glitch-cyan);
+    transform: translate(-50%, -50%) translateZ(30px) translateX(-1.5px) skew(-1.5deg) scale(var(--ascii-scale, 0.35));
+    opacity: 0.8;
+  }
+  40% {
+    text-shadow: -2.5px 1.2px var(--glitch-magenta), 2.5px -1.2px var(--glitch-cyan);
+    transform: translate(-50%, -50%) translateZ(30px) translateX(2.5px) skew(0.5deg) scale(var(--ascii-scale, 0.35));
+    opacity: 1;
+  }
+  60% {
+    text-shadow: 1.5px 2px var(--glitch-magenta), -1.5px -2px var(--glitch-cyan);
+    transform: translate(-50%, -50%) translateZ(30px) translateX(-2.5px) skew(-0.5deg) scale(var(--ascii-scale, 0.35));
+    opacity: 0.75;
+  }
+  80% {
+    text-shadow: -1.2px -1.2px var(--glitch-magenta), 1.2px 1.2px var(--glitch-cyan);
+    transform: translate(-50%, -50%) translateZ(30px) translateX(2px) skew(1.5deg) scale(var(--ascii-scale, 0.35));
+    opacity: 0.95;
+  }
+  100% {
+    text-shadow: -2px 0 var(--glitch-magenta), 2px 0 var(--glitch-cyan);
+    transform: translate(-50%, -50%) translateZ(30px) translateX(0px) skew(0deg) scale(var(--ascii-scale, 0.35));
+    opacity: 0.9;
   }
 }

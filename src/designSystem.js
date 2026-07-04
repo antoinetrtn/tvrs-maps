@@ -627,6 +627,12 @@ export const GLITCH_EFFECT_SETTINGS = {
   sideWallOpacity: 0.55,
   noiseRangeDark: { min: 0.12, max: 0.68 },
   noiseRangeLight: { min: 0.65, max: 0.98 },
+  asciiScramble: {
+    glyphs: "░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ",
+    idleProbability: 0.015,
+    hoverProbability: 0.08,
+    updateIntervalMs: 80,
+  },
   rules: {
     unfoundCap: "Transparent (opacity: 0.0) during transitions, hidden side walls",
     selectedCap: "Solid opaque cap rendering high-speed television static noise glitch",
