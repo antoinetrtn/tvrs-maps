@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+export const mountainGlitchUniforms = {
+  uTime: { value: 0 },
+  uIsError: { value: 0 },
+  uIsSuccess: { value: 0 },
+};
+
 // Cache for shared geometries and materials to avoid recreation and boost performance
 const cache = {
   geometries: {},
@@ -49,74 +55,148 @@ const interpolatePath = (path, t) => {
   const lng = p1[1] + (p2[1] - p1[1]) * frac;
   return [lat, lng];
 };
-
-export const createMountainFeature = (themeName = 'dark', isSelected = false, bearing = 0, spread = 1.5, height = 4000, path = null, centerLat = 0, centerLng = 0, groupScale = 9.2) => {
+export const createMountainFeature = (
+  themeName = 'dark',
+  isSelected = false,
+  isFound = false,
+  bearing = 0,
+  spread = 1.5,
+  height = 4000,
+  path = null,
+  centerLat = 0,
+  centerLng = 0,
+  groupScale = 9.2,
+  foundColor = null
+) => {
   const group = new THREE.Group();
-  const isBlackoutSelected = themeName === 'blackout' && isSelected;
-  
-  // Dynamic material based on selection state
-  const rockKey = `realisticMountainRock_${themeName}${isSelected ? '_sel' : ''}`;
-  const rockMat = getMaterial(rockKey, () => new THREE.MeshStandardMaterial({
-    color: isBlackoutSelected ? 0xffffff : (isSelected ? 0x059669 : 0x5a5a5a),
-    emissive: isBlackoutSelected ? 0xffffff : (isSelected ? 0x34d399 : 0x000000),
-    emissiveIntensity: isBlackoutSelected ? 0.65 : (isSelected ? 1.4 : 0.0),
+  const isLight = themeName === 'light';
+
+  // State A: Found -> beautiful solid regional color (shades of white/grey in blackout)
+  const foundMatKey = `mountainFound_${themeName}_${foundColor || 'default'}`;
+  const foundMat = getMaterial(foundMatKey, () => {
+    const col = new THREE.Color(foundColor || 0x05f298);
+    return new THREE.MeshPhongMaterial({
+      color: col,
+      emissive: 0x000000, // No emissive glow to preserve beautiful 3D shading on the facets
+      shininess: 10,
+      flatShading: true,
+    });
+  });
+
+  // State B: Unfound and Selected -> TV static glitch shader material
+  const glitchMatKey = `mountainGlitch_${themeName}_${isLight ? 'light' : 'dark'}`;
+  const glitchMat = getMaterial(glitchMatKey, () => {
+    const mat = new THREE.MeshPhongMaterial({
+      flatShading: true,
+      shininess: 0,
+      specular: 0x000000,
+    });
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = mountainGlitchUniforms.uTime;
+      shader.uniforms.uIsError = mountainGlitchUniforms.uIsError;
+      shader.uniforms.uIsSuccess = mountainGlitchUniforms.uIsSuccess;
+      shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
+
+      shader.vertexShader = `
+        varying vec3 vLocalPosition;
+      ` + shader.vertexShader.replace(
+        `#include <begin_vertex>`,
+        `#include <begin_vertex>
+        vLocalPosition = position;
+        `
+      );
+
+      shader.fragmentShader = `
+        varying vec3 vLocalPosition;
+        uniform float uTime;
+        uniform float uIsLight;
+        uniform float uIsError;
+        uniform float uIsSuccess;
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+      ` + shader.fragmentShader.replace(
+        `#include <dithering_fragment>`,
+        `
+        #include <dithering_fragment>
+        vec2 noiseUv = vLocalPosition.xy * 8.0 + vec2(vLocalPosition.z * 4.0);
+        float t = uTime * 28.0;
+        float noise = hash(noiseUv + sin(t));
+
+        // Dynamic static range: bright static in light theme, dark static in dark theme
+        float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
+        float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
+        float scanline = sin(vLocalPosition.y * 15.0 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
+
+        float staticColor = mix(baseMin, baseMax, noise) + scanline;
+        vec3 finalColor = vec3(staticColor);
+
+        if (uIsError > 0.5) {
+          // Error on peak: fast pulsing orange-red flash and scanline sweep with noise
+          float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
+          float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
+          float errorNoise = hash(noiseUv + sin(uTime * 45.0));
+          float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
+          vec3 errorRed = vec3(1.0, 0.27, 0.0);
+          finalColor = errorRed * (noisyIntensity + 0.4);
+        }
+
+        if (uIsSuccess > 0.5) {
+          // Success on peak: fast pulsing neon green flash
+          float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
+          vec3 neonGreen = vec3(0.05, 0.92, 0.52);
+          finalColor = neonGreen * (pulse + 0.5);
+        }
+
+        gl_FragColor.rgb = finalColor;
+        `
+      );
+    };
+    return mat;
+  });
+
+  // State C: Unfound and Unselected -> solid opaque slate grey (no transparency!)
+  const baseMatKey = `mountainBase_${themeName}`;
+  const baseMat = getMaterial(baseMatKey, () => new THREE.MeshPhongMaterial({
+    color: isLight ? 0x94a3b8 : 0x475569, // Slate grey
     roughness: 0.9,
     metalness: 0.1,
     flatShading: true,
-    wireframe: isBlackoutSelected,
-    transparent: isBlackoutSelected,
-    opacity: isBlackoutSelected ? 0.72 : 1
   }));
 
-  const snowKey = `realisticMountainSnow_${themeName}${isSelected ? '_sel' : ''}`;
-  const snowMat = getMaterial(snowKey, () => new THREE.MeshStandardMaterial({
-    color: isBlackoutSelected ? 0xffffff : (isSelected ? 0xd1fae5 : 0xfcfcfc),
-    emissive: isBlackoutSelected ? 0xffffff : (isSelected ? 0x10b981 : 0x000000),
-    emissiveIntensity: isBlackoutSelected ? 0.25 : (isSelected ? 0.3 : 0.0),
-    roughness: 0.5,
-    metalness: 0.1,
-    flatShading: true,
-    wireframe: isBlackoutSelected,
-    transparent: isBlackoutSelected,
-    opacity: isBlackoutSelected ? 0.82 : 1
-  }));
+  const activeMat = isFound ? foundMat : (isSelected ? glitchMat : baseMat);
 
   if (path && Array.isArray(path) && path.length > 0) {
-    // Generate a high density of peaks proportional to range's spread (length)
     const N = Math.max(10, Math.round(spread * 4.5));
     for (let i = 0; i < N; i++) {
       const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
       const [pLat, pLng] = interpolatePath(path, tNorm);
 
-      // Convert coordinates to exact Three.js units on a sphere of radius 100
       const R = 100;
       const latRad = pLat * Math.PI / 180;
       const dx = R * Math.cos(latRad) * (pLng - centerLng) * (Math.PI / 180);
       const dz = R * (pLat - centerLat) * (Math.PI / 180);
 
-      // Divide by groupScale to get local coordinates inside the scaled group
       const localX = dx / groupScale;
       const localZ = -dz / groupScale;
 
-      // Curvature correction: calculate height drop in local coordinates
       const dWorld = Math.sqrt(localX * localX + localZ * localZ) * groupScale;
       const deltaYWorld = R - Math.sqrt(Math.max(0.1, R * R - dWorld * dWorld));
       const deltaY = deltaYWorld / groupScale;
 
-      // Bell curve height distribution
-      const t = tNorm - 0.5; // -0.5 to 0.5
+      const t = tNorm - 0.5;
       const bellFactor = Math.cos(t * Math.PI);
       
-      // Dynamic peak size and height variation (organic & dense)
-      const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7; // 0.65 to 1.35
-      const randomRadiusVar = 0.8 + ((Math.cos(i * 22.7) + 1) / 2) * 0.5; // 0.8 to 1.3
+      const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7;
+      const randomRadiusVar = 0.8 + ((Math.cos(i * 22.7) + 1) / 2) * 0.5;
       const hFactor = bellFactor * randomHeightVar;
 
       const normalizedHeightScale = height / 5000;
       const peakHeight = 0.28 * hFactor * normalizedHeightScale;
       const peakRadius = peakHeight * 0.44 * randomRadiusVar;
 
-      const peakGeoKey = `peakGeo_${centerLat}_${centerLng}_${height}_${isSelected}_${i}_v2`;
+      // Cache geometry based strictly on dimension parameters (drastically saves draw calls and allocations!)
+      const peakGeoKey = `peakGeo_${peakRadius.toFixed(4)}_${peakHeight.toFixed(4)}`;
       const peakGeo = getGeometry(peakGeoKey, () => {
         const geo = new THREE.ConeGeometry(peakRadius, peakHeight, 8, 4);
         const pos = geo.attributes.position;
@@ -135,39 +215,10 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
         return geo;
       });
 
-      const peak = new THREE.Mesh(peakGeo, rockMat);
+      const peak = new THREE.Mesh(peakGeo, activeMat);
       peak.position.set(localX, peakHeight / 2 - deltaY, localZ);
       peak.rotation.y = ((i * 19.3) % (Math.PI * 2));
       group.add(peak);
-
-      if (height > 2000) {
-        const snowHeight = peakHeight * 0.38;
-        const snowRadius = peakRadius * 0.42;
-        
-        const snowGeoKey = `snowGeo_${centerLat}_${centerLng}_${height}_${isSelected}_${i}_v2`;
-        const snowGeo = getGeometry(snowGeoKey, () => {
-          const geo = new THREE.ConeGeometry(snowRadius, snowHeight, 8, 2);
-          const spos = geo.attributes.position;
-          for (let j = 0; j < spos.count; j++) {
-            const x = spos.getX(j);
-            const y = spos.getY(j);
-            const z = spos.getZ(j);
-            if (y > -snowHeight / 2) {
-              const angle = Math.atan2(z, x);
-              const noise = Math.sin(angle * 4) * 0.025;
-              spos.setX(j, x + x * noise);
-              spos.setZ(j, z + z * noise);
-            }
-          }
-          geo.computeVertexNormals();
-          return geo;
-        });
-
-        const snow = new THREE.Mesh(snowGeo, snowMat);
-        snow.position.set(localX, peakHeight - snowHeight * 0.58 - deltaY, localZ);
-        snow.rotation.y = peak.rotation.y;
-        group.add(snow);
-      }
     }
   } else {
     // Fallback to straight line logic
@@ -196,7 +247,6 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       X += randOffsetVal * 0.045 * localSpread * perpX;
       Z += randOffsetVal * 0.045 * localSpread * perpZ;
 
-      // Adjust height to follow the sphere's curvature (globe radius R = 100)
       const dWorld = Math.sqrt(X * X + Z * Z) * groupScale;
       const deltaYWorld = R - Math.sqrt(Math.max(0.1, R * R - dWorld * dWorld));
       const deltaY = deltaYWorld / groupScale;
@@ -205,7 +255,8 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
       const peakHeight = 0.28 * hFactor * normalizedHeightScale;
       const peakRadius = peakHeight * 0.44 * randomRadiusVar;
 
-      const peakGeoKey = `peakGeo_${bearing}_${spread}_${height}_${isSelected}_${i}_v2`;
+      // Shared geometry
+      const peakGeoKey = `peakGeo_${peakRadius.toFixed(4)}_${peakHeight.toFixed(4)}`;
       const peakGeo = getGeometry(peakGeoKey, () => {
         const geo = new THREE.ConeGeometry(peakRadius, peakHeight, 8, 4);
         const pos = geo.attributes.position;
@@ -224,39 +275,10 @@ export const createMountainFeature = (themeName = 'dark', isSelected = false, be
         return geo;
       });
 
-      const peak = new THREE.Mesh(peakGeo, rockMat);
+      const peak = new THREE.Mesh(peakGeo, activeMat);
       peak.position.set(X, peakHeight / 2 - deltaY, Z);
       peak.rotation.y = ((i * 19.3) % (Math.PI * 2));
       group.add(peak);
-
-      if (height > 2000) {
-        const snowHeight = peakHeight * 0.38;
-        const snowRadius = peakRadius * 0.42;
-        
-        const snowGeoKey = `snowGeo_${bearing}_${spread}_${height}_${isSelected}_${i}_v2`;
-        const snowGeo = getGeometry(snowGeoKey, () => {
-          const geo = new THREE.ConeGeometry(snowRadius, snowHeight, 8, 2);
-          const spos = geo.attributes.position;
-          for (let j = 0; j < spos.count; j++) {
-            const x = spos.getX(j);
-            const y = spos.getY(j);
-            const z = spos.getZ(j);
-            if (y > -snowHeight / 2) {
-              const angle = Math.atan2(z, x);
-              const noise = Math.sin(angle * 4) * 0.025;
-              spos.setX(j, x + x * noise);
-              spos.setZ(j, z + z * noise);
-            }
-          }
-          geo.computeVertexNormals();
-          return geo;
-        });
-
-        const snow = new THREE.Mesh(snowGeo, snowMat);
-        snow.position.set(X, peakHeight - snowHeight * 0.58 - deltaY, Z);
-        snow.rotation.y = peak.rotation.y;
-        group.add(snow);
-      }
     }
   }
 

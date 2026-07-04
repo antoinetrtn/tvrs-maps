@@ -44,6 +44,7 @@
   --glass-blur: blur(24px) saturate(200%);
   --glass-blur-compact: blur(12px) saturate(140%);
   --overlay-bg: rgba(0, 0, 0, 0.8);
+  --settings-backdrop-bg: rgba(0, 0, 0, 0.45);
   --modal-header-bg: rgba(15, 15, 15, 0.4);
 
   /* DESIGN SYSTEM TOKENS */
@@ -87,6 +88,7 @@
   --glass-hover: rgba(15, 23, 42, 0.05);
   --glass-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
   --overlay-bg: rgba(241, 245, 249, 0.6);
+  --settings-backdrop-bg: rgba(15, 23, 42, 0.3);
   --modal-header-bg: rgba(255, 255, 255, 0.4);
   
   --accent: #2563eb;

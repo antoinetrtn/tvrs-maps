@@ -11,6 +11,8 @@ import {
   Hash,
   Settings2,
   TreePine,
+  Close,
+  Earth,
 } from "pixelarticons/react";
 import Logo from "./Logo";
 import { THEMES_LIST } from "./designSystem";
@@ -30,7 +32,7 @@ const HomeScreen = ({
 }) => {
   const cardRef = useRef(null);
   const isDraggingRef = useRef(false);
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const t = useTranslation(lang);
 
   const resetCardTilt = () => {
@@ -165,83 +167,150 @@ const HomeScreen = ({
       </div>
 
       <div className="home-bottom-right">
-        <div className="timer-toggle-wrap glass-panel">
-          <button
-            className="timer-btn"
-            onClick={() => adjustDuration(-60)}
-            title={t("minus_one_minute")}
-          >
-            <Minus width={16} height={16} />
-          </button>
-          <div className="timer-display">
-            <Clock width={16} height={16} className="timer-icon" />
-            <span>{Math.floor(gameDuration / 60)}'</span>
-          </div>
-          <button
-            className="timer-btn"
-            onClick={() => adjustDuration(60)}
-            title={t("plus_one_minute")}
-          >
-            <Plus width={16} height={16} />
-          </button>
-        </div>
-
-        <div className="lang-toggle-wrap glass-panel">
-          <button
-            className={`lang-btn ${lang === "fr" ? "active" : ""}`}
-            onClick={() => setLang("fr")}
-          >
-            FR
-          </button>
-          <div className="lang-divider" />
-          <button
-            className={`lang-btn ${lang === "en" ? "active" : ""}`}
-            onClick={() => setLang("en")}
-          >
-            EN
-          </button>
-        </div>
         <button
-          className="theme-toggle-btn glass-panel"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          title={t("dark_light_mode")}
+          className="settings-trigger-btn glass-panel"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSettingsOpen((prev) => !prev);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          title={t("settings")}
         >
-          {theme === "dark" ? (
-            <CloudSun width={20} height={20} />
-          ) : (
-            <Moon width={20} height={20} />
-          )}
+          <Settings2 width={20} height={20} />
         </button>
+      </div>
 
-        <div className="globe-theme-container">
+      <div
+        className={`settings-backdrop ${settingsOpen ? "open" : ""}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSettingsOpen(false);
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+      />
+
+      <div
+        className={`settings-panel glass-panel ${settingsOpen ? "open" : ""} ${theme}`}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <div className="settings-header">
+          <h2 className="settings-title">{t("settings")}</h2>
           <button
-            className={`theme-toggle-btn glass-panel ${themeMenuOpen ? "active" : ""}`}
-            onClick={() => setThemeMenuOpen((prev) => !prev)}
-            onPointerDown={(e) => e.preventDefault()}
-            title={t("globe_theme")}
+            className="settings-close-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSettingsOpen(false);
+            }}
+            title={t("close")}
           >
-            <Settings2 width={20} height={20} />
+            <Close width={20} height={20} />
           </button>
-          {themeMenuOpen && (
-            <div className="globe-theme-menu glass-panel animation-fade-in">
+        </div>
+
+        <div className="settings-body">
+          <div className="settings-section">
+            <span className="section-label">{t("game_duration")}</span>
+            <div className="timer-toggle-wrap glass-panel">
+              <button
+                className="timer-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  adjustDuration(-60);
+                }}
+                title={t("minus_one_minute")}
+              >
+                <Minus width={16} height={16} />
+              </button>
+              <div className="timer-display">
+                <Clock width={16} height={16} className="timer-icon" />
+                <span>{Math.floor(gameDuration / 60)}'</span>
+              </div>
+              <button
+                className="timer-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  adjustDuration(60);
+                }}
+                title={t("plus_one_minute")}
+              >
+                <Plus width={16} height={16} />
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <span className="section-label">Language / Langue</span>
+            <div className="lang-toggle-wrap glass-panel">
+              <button
+                className={`lang-btn ${lang === "fr" ? "active" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLang("fr");
+                }}
+              >
+                FR
+              </button>
+              <button
+                className={`lang-btn ${lang === "en" ? "active" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLang("en");
+                }}
+              >
+                EN
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <span className="section-label">{t("interface_theme")}</span>
+            <div className="theme-toggle-wrap-horizontal glass-panel">
+              <button
+                className={`theme-opt-btn ${theme === "light" ? "active" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTheme("light");
+                }}
+              >
+                <CloudSun width={16} height={16} />
+                <span>{t("theme_light")}</span>
+              </button>
+              <button
+                className={`theme-opt-btn ${theme === "dark" ? "active" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTheme("dark");
+                }}
+              >
+                <Moon width={16} height={16} />
+                <span>{t("theme_dark")}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <span className="section-label">{t("globe_theme")}</span>
+            <div className="theme-toggle-wrap-horizontal glass-panel">
               {THEMES_LIST.map((themeObj) => (
                 <button
                   key={themeObj.id}
-                  className={`globe-theme-menu-item ${globeTheme === themeObj.id ? "active" : ""}`}
-                  onClick={() => {
+                  className={`theme-opt-btn ${globeTheme === themeObj.id ? "active" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setGlobeTheme(themeObj.id);
-                    setThemeMenuOpen(false);
                   }}
-                  onPointerDown={(e) => e.preventDefault()}
                 >
-                  <span className={`theme-dot ${themeObj.id}`} />
-                  <span className="theme-name">
-                    {t(`theme_${themeObj.id}`)}
-                  </span>
+                  {themeObj.id === "satellite" ? (
+                    <Earth width={16} height={16} />
+                  ) : (
+                    <Globe width={16} height={16} />
+                  )}
+                  <span>{t(`theme_${themeObj.id}`)}</span>
                 </button>
               ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

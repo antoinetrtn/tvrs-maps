@@ -36,11 +36,15 @@ export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
   return { stats: s, CONTINENT_ORDER };
 };
 
-export const getFeatureAdmin = (feature) =>
-  feature?.properties?.code ||
-  feature?.properties?.ADMIN ||
-  feature?.properties?.name ||
-  feature?.properties?.NAME;
+export const getFeatureAdmin = (feature) => {
+  const admin =
+    feature?.properties?.code ||
+    feature?.properties?.ADMIN ||
+    feature?.properties?.name ||
+    feature?.properties?.NAME;
+  if (admin === "Somaliland") return "Somalia";
+  return admin;
+};
 
 export const getFlagEmoji = (iso2) => {
   if (!iso2 || iso2.length !== 2) return "";

@@ -21,6 +21,11 @@ export const translations = {
     dark_light_mode: "Mode sombre/clair",
     globe_theme: "Thème du globe",
     error: "erreur !",
+    settings: "Réglages",
+    game_duration: "Durée de la partie",
+    interface_theme: "Thème interface",
+    theme_light: "Clair",
+    theme_dark: "Sombre",
 
     // Game HUD Placeholders
     search_placeholder: "Rechercher...",
@@ -105,6 +110,11 @@ export const translations = {
     dark_light_mode: "Dark/light mode",
     globe_theme: "Globe theme",
     error: "error!",
+    settings: "Settings",
+    game_duration: "Game Duration",
+    interface_theme: "Interface Theme",
+    theme_light: "Light",
+    theme_dark: "Dark",
 
     // Game HUD Placeholders
     search_placeholder: "Search...",

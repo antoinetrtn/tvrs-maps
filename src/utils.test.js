@@ -25,6 +25,7 @@ describe("Geographical and Math Utilities", () => {
       expect(getFeatureAdmin({ properties: { ADMIN: "France" } })).toBe("France");
       expect(getFeatureAdmin({ properties: { name: "Paris" } })).toBe("Paris");
       expect(getFeatureAdmin({ properties: { NAME: "Nice" } })).toBe("Nice");
+      expect(getFeatureAdmin({ properties: { ADMIN: "Somaliland" } })).toBe("Somalia");
       expect(getFeatureAdmin({})).toBeUndefined();
     });
   });

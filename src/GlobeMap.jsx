@@ -24,7 +24,7 @@ import {
 import {
   disposeBiomeCache,
   createMountainFeature,
-  createUnfoundPlaceholder,
+  mountainGlitchUniforms,
 } from "./LowPolyBiomes";
 import {
   shouldScrambleLabel,
@@ -35,7 +35,14 @@ import {
   GAME_REGIONS,
 } from "./gameConfig";
 import { useTranslation } from "./i18n";
-import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "./globeShaders";
+import {
+  FRESNEL_VERTEX_SHADER,
+  FRESNEL_FRAGMENT_SHADER,
+  GLITCH_VERTEX_DECLARATIONS,
+  GLITCH_VERTEX_BODY,
+  GLITCH_FRAGMENT_DECLARATIONS,
+  GLITCH_FRAGMENT_BODY,
+} from "./globeShaders";
 import SpaceBackground from "./SpaceBackground";
 import {
   getFeatureAdmin,
@@ -75,7 +82,7 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
   if (!pathCoords || pathCoords.length < 2) return pathCoords;
 
   const points = pathCoords.map(
-    ([lat, lng]) => new THREE.Vector3(lat, lng, 0.005),
+    ([lat, lng]) => new THREE.Vector3(lat, lng, 0.006),
   );
   const curve = new THREE.CatmullRomCurve3(points);
   const smoothPoints = curve.getPoints(60);
@@ -840,7 +847,10 @@ const GlobeMap = ({
       }
 
       if (foundSet.has(admin) || mode === "learn") {
-        const baseColor = getRegionSurfaceColor(region);
+        const isSatellite = globeTheme === "satellite";
+        const baseColor = isSatellite
+          ? (REGION_COLORS_LABELS[region] || UI_COLORS.accent)
+          : getRegionSurfaceColor(region);
         if (admin === selectedCountry) {
           if (isError) return UI_COLORS.error;
           return UI_COLORS.mapSurfaceSelected || lerpColor(
@@ -868,6 +878,7 @@ const GlobeMap = ({
       foundSet,
       REGION_COLORS,
       REGION_COLORS_ATTENUATED,
+      REGION_COLORS_LABELS,
       UI_COLORS,
       isError,
       isHomeScreen,
@@ -1152,8 +1163,8 @@ const GlobeMap = ({
 
       // Construct cache/pool key
       const cacheKey = isShaderCap
-        ? `shader-${admin}-${kind}-${isMobileStr}`
-        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}`;
+        ? `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}`
+        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`;
 
       let material = sharedMaterialsRef.current.get(cacheKey);
 
@@ -1173,6 +1184,25 @@ const GlobeMap = ({
         if (material.isMeshPhongMaterial) {
           material.specular.set(safeColor(specularHex));
           material.shininess = shininess;
+        }
+
+        const isSatellite = globeTheme === "satellite";
+        if (isSatellite) {
+          material.transparent = true;
+          if (admin === selectedCountry) {
+            // Selected country: solid cap with glitch shader, no wireframe!
+            material.wireframe = false;
+          } else if (isFound) {
+            // Found country: wireframe!
+            material.wireframe = true;
+          } else {
+            // Unfound country: transparent cap, invisible side
+            if (kind === "cap") {
+              material.opacity = 0.0;
+            } else {
+              material.visible = false;
+            }
+          }
         }
         if (isShaderCap) {
           if (kind === "side") {
@@ -1198,123 +1228,25 @@ const GlobeMap = ({
             shader.uniforms.uIsSide = {
               value: kind === "side" ? 1.0 : 0.0,
             };
+            shader.uniforms.uIsFound = {
+              value: isFound ? 1.0 : 0.0,
+            };
             material.userData.shader = shader;
 
-            shader.vertexShader =
-              `
-            varying vec3 vLocalPosition;
-          ` + shader.vertexShader;
+            shader.vertexShader = GLITCH_VERTEX_DECLARATIONS + shader.vertexShader;
 
             shader.vertexShader = shader.vertexShader.replace(
               `#include <begin_vertex>`,
               `#include <begin_vertex>
-              vLocalPosition = position;
+              ${GLITCH_VERTEX_BODY}
             `
             );
 
-            shader.fragmentShader =
-              `
-            varying vec3 vLocalPosition;
-            uniform float uTime;
-            uniform float uFadeProgress;
-            uniform vec3 uTargetColor;
-            uniform float uIsError;
-            uniform float uIsSuccess;
-            uniform float uIsLight;
-            uniform float uTheme;
-            uniform float uIsSide;
-            float hash(vec2 p) {
-              return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-            }
-          ` + shader.fragmentShader;
+            shader.fragmentShader = GLITCH_FRAGMENT_DECLARATIONS + shader.fragmentShader;
 
             shader.fragmentShader = shader.fragmentShader.replace(
               `#include <dithering_fragment>`,
-              `#include <dithering_fragment>
-              vec2 noiseUv = vLocalPosition.xy * 8.0 + vec2(vLocalPosition.z * 4.0);
-              float t = uTime * 28.0;
-              float noise = hash(noiseUv + sin(t));
-
-              // Dynamic static range: bright static in light theme, dark static in dark theme
-              float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
-              float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
-              float scanline = sin(vLocalPosition.y * 15.0 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
-
-              float staticColor = mix(baseMin, baseMax, noise) + scanline;
-              vec3 staticVec = vec3(staticColor);
-              vec3 neonGreen = vec3(0.05, 0.92, 0.52);
-
-              vec3 finalColor = gl_FragColor.rgb;
-
-              if (uIsSide > 0.5) {
-                // SIDES / WALLS GEOMETRY
-                if (uIsError > 0.5) {
-                  // Error on side walls: fast pulsing orange-red flash and scanline sweep with noise
-                  float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
-                  float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
-                  float errorNoise = hash(noiseUv + sin(uTime * 45.0));
-                  float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
-                  vec3 errorRed = vec3(1.0, 0.27, 0.0);
-                  if (uTheme > 0.9 && uTheme < 1.1) {
-                    finalColor = errorRed * noisyIntensity;
-                  } else {
-                    finalColor = mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
-                  }
-                } else if (uIsSuccess > 0.5) {
-                  // Success on side walls: neon green pulse and scanline sweep
-                  float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
-                  float sweep = step(fract(vLocalPosition.y * 0.2 - uTime * 2.0), 0.15) * 0.35;
-                  if (uTheme > 0.9 && uTheme < 1.1) {
-                    finalColor = vec3(pulse + sweep);
-                  } else {
-                    finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
-                  }
-                } else {
-                  // Normal selected side: holographic laser wall barrier!
-                  vec2 uv = gl_FragCoord.xy;
-                  float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
-                  float wallNoise = fract(sin(dot(uv + uTime, vec2(12.9898,78.233))) * 43758.5453);
-                  vec3 beamColor = vec3(1.0);
-                  finalColor = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * wallNoise));
-                }
-              } else {
-                // TOP CAP GEOMETRY
-                if (uTheme > 0.9 && uTheme < 1.1) {
-                  // Blackout theme: 100% monochrome static
-                  finalColor = staticVec;
-                } else {
-                  // Other themes: subtle holographic noise overlay
-                  finalColor = mix(gl_FragColor.rgb, staticVec, 0.40);
-                }
-
-                if (uIsError > 0.5) {
-                  // Error on cap: fast pulsing orange-red flash and scanline sweep with noise
-                  float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
-                  float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
-                  float errorNoise = hash(noiseUv + sin(uTime * 45.0));
-                  float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
-                  vec3 errorRed = vec3(1.0, 0.27, 0.0);
-                  if (uTheme > 0.9 && uTheme < 1.1) {
-                    finalColor = errorRed * noisyIntensity;
-                  } else {
-                    finalColor = mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
-                  }
-                }
-
-                if (uIsSuccess > 0.5) {
-                  // Success on cap: s'illumine with an animated high-contrast flash/pulse
-                  float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
-                  float sweep = step(fract(vLocalPosition.y * 0.2 - uTime * 2.0), 0.15) * 0.35;
-                  if (uTheme > 0.9 && uTheme < 1.1) {
-                    finalColor = vec3(pulse + sweep);
-                  } else {
-                    finalColor = mix(finalColor, neonGreen * (pulse + sweep + 0.5), 0.85);
-                  }
-                }
-              }
-
-              gl_FragColor.rgb = mix(finalColor, uTargetColor, uFadeProgress);
-             `,
+              GLITCH_FRAGMENT_BODY
             );
           };
         }
@@ -1725,6 +1657,10 @@ const GlobeMap = ({
         }
       }
 
+      const labelText = UI_COLORS.globeLabelText || UI_COLORS.textMain;
+      const labelDot = UI_COLORS.globeLabelDot || color;
+      const labelStalk = UI_COLORS.globeLabelStalk || UI_COLORS.accent;
+
       // Set root to 0 size so its center is the exact lat/lng
       el.style.width = "0";
       el.style.height = "0";
@@ -1773,9 +1709,9 @@ const GlobeMap = ({
           ? `<span style="font-family: monospace; color: ${UI_COLORS.accent}; opacity: 0.85;">${t("dept_abbr")} ${d.admin}:</span>`
           : "";
 
-        const dotColor = isErrorLabel ? UI_COLORS.error : color;
-        const stalkColor = isErrorLabel ? UI_COLORS.error : UI_COLORS.accent;
-        const textColor = isErrorLabel ? UI_COLORS.error : UI_COLORS.textMain;
+        const dotColor = isErrorLabel ? UI_COLORS.error : labelDot;
+        const stalkColor = isErrorLabel ? UI_COLORS.error : labelStalk;
+        const textColor = isErrorLabel ? UI_COLORS.error : labelText;
 
         el.innerHTML = `
         <div class="globe-label-element" style="position: relative; width: 0; height: 0; pointer-events: none;">
@@ -1947,11 +1883,11 @@ const GlobeMap = ({
             position: absolute;
             width: 6px;
             height: 6px;
-            background: ${color};
+            background: ${labelDot};
             border-radius: 50%;
             left: -3px;
             top: -3px;
-            box-shadow: 0 0 8px ${color};
+            box-shadow: 0 0 8px ${labelDot};
             opacity: ${isHomeScreen ? 0.5 : 1};
           "></div>
           <!-- Stalk Line (Shortened to 15px) -->
@@ -1959,7 +1895,7 @@ const GlobeMap = ({
             position: absolute;
             width: 1.2px;
             height: 15px;
-            background: ${UI_COLORS.accent};
+            background: ${labelStalk};
             left: -0.6px;
             bottom: 3px;
             box-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 85%, transparent);
@@ -1976,7 +1912,7 @@ const GlobeMap = ({
             align-items: center;
             font-family: var(--font-main);
             white-space: nowrap;
-            color: ${UI_COLORS.textMain};
+            color: ${labelText};
             text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
             opacity: ${isHomeScreen ? 0.6 : 1};
           ">
@@ -2069,8 +2005,8 @@ const GlobeMap = ({
         coords: getSmoothedRiverPath(k, data.path),
         color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
         width: isFound ? 45 : 24,
-        dashLength: isFound ? 1 : 0.5,
-        dashGap: isFound ? 0 : 0.3,
+        dashLength: isFound ? 1 : 0.015,
+        dashGap: isFound ? 0 : 0.012,
         dashAnimateTime: isFound ? 3000 : 0, // Subtle shimmer on found rivers
       });
     });
@@ -2100,7 +2036,7 @@ const GlobeMap = ({
       // Layer 1: Extra thick base highlight path
       {
         admin: selectedCountry,
-        coords: smoothedPath,
+        coords: smoothedPath.map((p) => [p[0], p[1], p[2] + 0.001]),
         color,
         width: isFound ? 75 : 65,
         dashLength: 1,
@@ -2110,7 +2046,7 @@ const GlobeMap = ({
       // Layer 2: Thinner, animated glowing white core representing current flow
       {
         admin: `${selectedCountry}_core`,
-        coords: smoothedPath,
+        coords: smoothedPath.map((p) => [p[0], p[1], p[2] + 0.002]),
         color: UI_COLORS.paper,
         width: isFound ? 24 : 18,
         dashLength: 0.25,
@@ -2145,11 +2081,11 @@ const GlobeMap = ({
 
       paths.push({
         admin: k,
-        coords: data.path.map(([lat, lng]) => [lat, lng, 0.002]), // Lifted slightly above surface
+        coords: data.path.map(([lat, lng]) => [lat, lng, 0.006]), // Lifted slightly above surface
         color,
         width: isFound ? 35 : 20, // Pixels width
-        dashLength: isFound ? 1.0 : 0.4,
-        dashGap: isFound ? 0.0 : 0.25,
+        dashLength: isFound ? 1.0 : 0.015,
+        dashGap: isFound ? 0.0 : 0.012,
         dashAnimateTime: 0,
       });
     });
@@ -2184,7 +2120,7 @@ const GlobeMap = ({
         ? UI_COLORS.errorGlowStrong
         : UI_COLORS.textMuted;
 
-    const pathPoints = data.path.map(([lat, lng]) => [lat, lng, 0.0035]);
+    const pathPoints = data.path.map(([lat, lng]) => [lat, lng, 0.008]);
 
     return [
       // Outer thicker highlight
@@ -2200,7 +2136,7 @@ const GlobeMap = ({
       // Inner glowing core
       {
         admin: `${selectedCountry}_core`,
-        coords: pathPoints,
+        coords: pathPoints.map((p) => [p[0], p[1], p[2] + 0.001]),
         color: UI_COLORS.paper,
         width: isFound ? 16 : 12,
         dashLength: 0.35,
@@ -2251,6 +2187,7 @@ const GlobeMap = ({
           scale: data.type === "mountain_range" ? 1.55 : 1.0,
           rotation: 0,
           path: data.path || null,
+          region: data.region || "Unknown",
         });
       });
       return assets;
@@ -2284,34 +2221,23 @@ const GlobeMap = ({
       const isLearnMountains = mode === "learn" && learnShowMountains;
       const baseScale = d.scale * BIOME_SCENE_SCALE;
       if (mode === "rivers_mountains" || isLearnMountains) {
-        if (!d.isFound) {
-          asset = createUnfoundPlaceholder(
-            d.type,
+        if (d.type === "mountain" || d.type === "mountain_range") {
+          const regionColor = getRegionSurfaceColor(d.region || "Unknown");
+          asset = createMountainFeature(
             globeTheme,
             isSelected,
+            d.isFound,
             d.bearing,
             d.spread,
+            d.height,
             d.path,
             d.lat,
             d.lng,
-            baseScale,
+            baseScale * RELIEF.mountainScale,
+            regionColor,
           );
         } else {
-          if (d.type === "mountain" || d.type === "mountain_range") {
-            asset = createMountainFeature(
-              globeTheme,
-              isSelected,
-              d.bearing,
-              d.spread,
-              d.height,
-              d.path,
-              d.lat,
-              d.lng,
-              baseScale,
-            );
-          } else {
-            asset = new THREE.Group(); // Found rivers are drawn in 3D paths, so empty group here
-          }
+          asset = new THREE.Group(); // Found rivers are drawn in 3D paths, so empty group here
         }
       } else {
         asset = new THREE.Group();
@@ -2320,17 +2246,13 @@ const GlobeMap = ({
       const alignedAsset = new THREE.Group();
       asset.rotation.x = BIOME_SURFACE_ALIGNMENT_RADIANS;
       alignedAsset.add(asset);
-      // Consistent, geographically-representative size: found mountains at full scale,
-      // unfound ones at a slightly smaller neutral scale — close enough that finding one
-      // no longer makes it pop from a tiny placeholder to full size.
-      alignedAsset.scale.setScalar(
-        baseScale * (d.isFound ? RELIEF.mountainScale : RELIEF.targetHintScale),
-      );
+      // Consistent, geographically-representative size: prevents mountain ranges from "growing" or shifting on discovery
+      alignedAsset.scale.setScalar(baseScale * RELIEF.mountainScale);
 
       biomeObjectsCacheRef.current.set(key, alignedAsset);
       return alignedAsset;
     },
-    [theme, globeTheme, mode, selectedCountry, learnShowMountains],
+    [theme, globeTheme, mode, selectedCountry, learnShowMountains, getRegionSurfaceColor],
   );
 
   useEffect(() => {
@@ -2442,6 +2364,15 @@ const GlobeMap = ({
     }
 
     if (UI_COLORS.globeTextureUrl) {
+      const isNight = UI_COLORS.globeTextureUrl.includes("earth-night");
+      if (isNight) {
+        // Night mode uses MeshBasicMaterial so city lights render at 100% native texture contrast
+        // without getting washed out or colored by scene lighting.
+        return new THREE.MeshBasicMaterial({
+          map: customGlobeTexture,
+          color: 0xffffff,
+        });
+      }
       return new THREE.MeshPhongMaterial({
         map: customGlobeTexture,
         color: 0xffffff,
@@ -2798,6 +2729,11 @@ const GlobeMap = ({
           globeMaterial.userData.shader.uniforms.uTime.value = time / 1000;
         }
       }
+
+      // Update mountain glitch uniforms
+      mountainGlitchUniforms.uTime.value = time / 1000;
+      mountainGlitchUniforms.uIsError.value = selectedCountry && isError ? 1.0 : 0.0;
+      mountainGlitchUniforms.uIsSuccess.value = selectedCountry && isSuccess ? 1.0 : 0.0;
 
       // Style graticules only during the bounded window after ready/theme change,
       // so async Three-Globe elements are caught without traversing the scene forever.
@@ -3450,12 +3386,6 @@ const GlobeMap = ({
           left: -homeGlobeOffset,
         }}
       >
-        {globeLightingEnabled && !UI_COLORS.isBlackoutTheme && (
-          <div
-            className={`globe-studio-overlay ${isLight ? "light" : "dark"}`}
-            aria-hidden="true"
-          />
-        )}
         <Globe
           ref={globeEl}
           width={globeRenderWidth}

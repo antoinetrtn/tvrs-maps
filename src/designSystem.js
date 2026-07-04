@@ -288,14 +288,21 @@ export const GLOBE_THEMES = {
       globeSpecular: "#333333",
       globeShininess: 15,
       glowColorHex: 0x3a76f0,
-      glowPower: 0.75,
-      glowCoef: 0.35,
+      glowColorHexLight: 0x3a76f0,
+      glowColorHexDark: 0x2563eb,
+      glowPower: 3.2,
+      glowCoef: 0.22,
       graticuleOpacity: 0.25,
       useRegionalBorders: true,
       labelColorType: "paper",
       strokeWidthMobile: 0.55,
       strokeWidthDesktop: 0.75,
       isBlackoutTheme: false,
+      borderFound: "#ffffff",
+      borderUnfound: "#555555",
+      globeLabelText: "#ffffff",
+      globeLabelDot: "#ffffff",
+      globeLabelStalk: "#ffffff",
     },
     continents: DEFAULT_CONTINENT_COLORS,
     departments: {
@@ -420,6 +427,30 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
   const baseTheme = THEME[systemTheme] || THEME.dark;
   const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
   const globeOverrides = { ...themeCfg.globeSettings } || {};
+
+  if (globeTheme === "satellite") {
+    if (systemTheme === "dark") {
+      globeOverrides.globeTextureUrl = "//unpkg.com/three-globe/example/img/earth-night.jpg";
+      // Night mode: very dim ambient and fill lighting, so the land/ocean stay dark and city lights stand out naturally
+      globeOverrides.lightingRim = "#222233";
+      globeOverrides.lightingFill = "#050508";
+      globeOverrides.lightingGround = "#000000";
+      globeOverrides.lightingStudio = "#030305";
+      globeOverrides.lightingLeft = "#020203";
+      globeOverrides.lightingRight = "#020203";
+      globeOverrides.glowColorHexDark = 0x1d4ed8; // Deep royal blue rim
+    } else {
+      globeOverrides.globeTextureUrl = "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
+      // Day mode: bright, crisp daylight illumination
+      globeOverrides.lightingRim = "#ffffff";
+      globeOverrides.lightingFill = "#ffffff";
+      globeOverrides.lightingGround = "#ffffff";
+      globeOverrides.lightingStudio = "#ffffff";
+      globeOverrides.lightingLeft = "#aaaaaa";
+      globeOverrides.lightingRight = "#aaaaaa";
+      globeOverrides.glowColorHexLight = 0x3a76f0; // Bright sky blue rim
+    }
+  }
 
   if (globeTheme === "blackout" && systemTheme === "light") {
     globeOverrides.globeMaterialColor = "#ffffff";
@@ -595,5 +626,22 @@ export const SPACE_RGB_COMPONENTS = {
     normal: [255, 255, 255],
     cyan: [0, 240, 255],
     magenta: [255, 0, 127]
+  }
+};
+
+// Standardized retro TV glitch shader effect parameters and state rules
+export const GLITCH_EFFECT_SETTINGS = {
+  speedTimeFactor: 28.0,
+  scanlineFrequency: 15.0,
+  scanlineAmplitude: 5.0,
+  colorSuccess: [0.05, 0.92, 0.52], // Neon green
+  colorError: [1.0, 0.27, 0.0],    // Orange-red
+  sideWallOpacity: 0.55,
+  noiseRangeDark: { min: 0.12, max: 0.68 },
+  noiseRangeLight: { min: 0.65, max: 0.98 },
+  rules: {
+    unfoundCap: "Transparent (opacity: 0.0) during transitions, hidden side walls",
+    selectedCap: "Solid opaque cap rendering high-speed television static noise glitch",
+    foundCap: "Wireframe mesh displaying high-contrast neon label color of its region"
   }
 };
