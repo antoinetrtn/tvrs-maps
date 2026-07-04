@@ -444,9 +444,9 @@ function App() {
   );
 
   const goHome = useCallback(() => {
-    resetGame(mode);
+    resetGame(DEFAULT_MODE);
     setCurrentScreen("home");
-  }, [resetGame, mode]);
+  }, [resetGame]);
 
   useEffect(() => {
     if (currentScreen === "home") {
