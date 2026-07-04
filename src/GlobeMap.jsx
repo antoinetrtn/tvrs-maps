@@ -73,6 +73,7 @@ const pathColorAccessor = (d) => d.color;
 const pathWidthAccessor = (d) => d.width;
 const pathDashLengthAccessor = (d) => d.dashLength;
 const pathDashGapAccessor = (d) => d.dashGap;
+const pathDashAnimateTimeAccessor = (d) => d.dashAnimateTime;
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();
 
