@@ -573,21 +573,17 @@
   background: var(--text-muted);
 }
 
-/* Leaderboard Double Column Layout */
-.leaderboard-double-layout {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-md);
+/* Leaderboard Full Width Layout & Tabs */
+.leaderboard-full-layout {
+  display: flex;
   flex: 1;
   overflow: hidden;
   box-sizing: border-box;
 }
 
-@media (max-width: 1200px) {
-  .leaderboard-double-layout {
-    grid-template-columns: repeat(2, 1fr);
-    overflow-y: auto;
-  }
+.leaderboard-full-layout .leaderboard-column {
+  flex: 1;
+  width: 100%;
 }
 
 .leaderboard-column {
@@ -598,31 +594,40 @@
   background: var(--subtle-tint);
 }
 
-.leaderboard-column-header {
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--glass-border);
-  margin-bottom: var(--spacing-sm);
+.leaderboard-tabs-header {
   display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: var(--spacing-sm);
   justify-content: center;
+  flex-wrap: wrap;
 }
 
-.mode-select-dropdown {
+.leaderboard-tab-btn {
   background: var(--glass-bg);
-  color: var(--text-main);
+  color: var(--text-muted);
   border: 1px solid var(--glass-border);
   font-family: monospace;
-  font-size: 0.82rem;
-  padding: 6px 12px;
+  font-size: 0.8rem;
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
-  outline: none;
   cursor: pointer;
-  -webkit-appearance: none;
-  text-align-last: center;
+  transition: all var(--transition-fast);
 }
 
-.mode-select-dropdown option {
-  background: var(--bg-color);
+.leaderboard-tab-btn:hover {
+  background: var(--glass-hover);
   color: var(--text-main);
+  border-color: var(--accent);
+}
+
+.leaderboard-tab-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent-soft);
+  text-shadow: 0 0 2px var(--accent-soft);
 }
 
 /* Responsive grid for mobile viewports */
@@ -645,11 +650,5 @@
 
   .records-grid {
     grid-template-columns: 1fr;
-  }
-
-  .leaderboard-double-layout {
-    grid-template-columns: 1fr;
-    overflow-y: auto;
-    gap: var(--spacing-md);
   }
 }

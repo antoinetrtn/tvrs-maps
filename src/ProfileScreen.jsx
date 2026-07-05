@@ -151,17 +151,17 @@ const ProfileScreen = ({
 
     return (
       <div className="leaderboard-column glass-panel">
-        <div className="leaderboard-column-header">
-          <select
-            value={colMode}
-            onChange={(e) => setColMode(e.target.value)}
-            className="mode-select-dropdown glass-panel"
-          >
-            <option value="countries">{t("mode_countries")}</option>
-            <option value="capitals">{t("mode_capitals")}</option>
-            <option value="departments">{t("mode_departments")}</option>
-            <option value="rivers_mountains">{t("mode_rivers_mountains")}</option>
-          </select>
+        <div className="leaderboard-tabs-header">
+          {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => (
+            <button
+              key={mKey}
+              type="button"
+              className={`leaderboard-tab-btn ${colMode === mKey ? "active" : ""}`}
+              onClick={() => setColMode(mKey)}
+            >
+              {t(`mode_${mKey}`)}
+            </button>
+          ))}
         </div>
 
         <div className="leaderboard-table-container scrollbar-styled">
@@ -251,12 +251,9 @@ const ProfileScreen = ({
         </div>
 
         {initialTab === "leaderboard" ? (
-          /* FOUR COLUMNS LEADERBOARD VIEW */
-          <div className="leaderboard-double-layout">
+          /* LEADERBOARD FULL-WIDTH VIEW */
+          <div className="leaderboard-full-layout">
             <LeaderboardColumn defaultMode="countries" />
-            <LeaderboardColumn defaultMode="capitals" />
-            <LeaderboardColumn defaultMode="departments" />
-            <LeaderboardColumn defaultMode="rivers_mountains" />
           </div>
         ) : (
           /* PROFILE & RECORDS VIEW */
