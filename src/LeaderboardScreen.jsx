@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft } from "pixelarticons/react";
+import { Globe, MapPin, Hash, TreePine, ChevronLeft } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
 import { useTranslation } from "./i18n";
 import {
@@ -8,6 +8,13 @@ import {
   getUserScores
 } from "./supabaseClient";
 import "./LeaderboardScreen.css";
+
+const MODE_ICONS = {
+  countries: <Globe width={16} height={16} />,
+  capitals: <MapPin width={16} height={16} />,
+  departments: <Hash width={14} height={14} />,
+  rivers_mountains: <TreePine width={16} height={16} />,
+};
 
 const LeaderboardScreen = ({
   userProfile,
@@ -119,8 +126,10 @@ const LeaderboardScreen = ({
                   type="button"
                   className={`leaderboard-tab-btn ${colMode === mKey ? "active" : ""}`}
                   onClick={() => setColMode(mKey)}
+                  title={t(`mode_${mKey}`)}
                 >
-                  {t(`mode_${mKey}`)}
+                  <span className="tab-icon-wrap">{MODE_ICONS[mKey]}</span>
+                  <span className="tab-label-text">{t(`mode_${mKey}`)}</span>
                 </button>
               ))}
             </div>

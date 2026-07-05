@@ -7,6 +7,32 @@
 // ==========================================
 // 1. DESIGN TOKENS (Base values)
 // ==========================================
+//
+// --- Radius scale & concentric rule ---
+//
+// The radius scale follows a *concentric* model:
+//   outerRadius = innerRadius + padding
+//
+// This keeps nested borders visually parallel. Each tier is built
+// from the previous one plus a spacing increment.
+//
+//   sm  =  4px  — Atomic elements: buttons, inputs, tags, badges.
+//                  This is the default "boxy" radius used across
+//                  the GameHUD and all interactive controls.
+//   md  =  8px  — Containers & cards that wrap `sm` children with
+//                  ~4px (spacing-xs) padding. Settings toggles,
+//                  modals, panels, game-mode buttons.
+//   lg  = 14px  — Reserved / exceptional: only for containers that
+//                  wrap `md` children with extra spacing. Rarely
+//                  needed in practice.
+//   xl  = 26px  — Deprecated — too round for the current boxy
+//                  style. Avoid in new code.
+//   full= 9999px — Circles (gauges, spinners) and thin progress
+//                  bars only.
+//
+// When choosing a radius, always check the element's parent
+// padding so the rule  inner + padding ≈ outer  holds.
+// ==========================================
 
 export const STYLE_TOKENS = {
   radius: {

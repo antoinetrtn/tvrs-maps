@@ -29,7 +29,7 @@
   padding: var(--spacing-xl);
   box-sizing: border-box;
   background: var(--bg-color);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   animation: container-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
   overflow: hidden;
 }
@@ -67,7 +67,7 @@
 .back-btn {
   width: var(--control-md);
   height: var(--control-md);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,9 +154,18 @@
   font-weight: 700;
   font-size: 0.8rem;
   padding: 8px 16px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.tab-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .leaderboard-tab-btn:hover {
@@ -339,5 +348,43 @@
     max-height: 100%;
     overflow-y: auto;
     padding: var(--spacing-md);
+  }
+
+  .leaderboard-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .leaderboard-header-left {
+    justify-content: flex-start;
+  }
+
+  .scope-toggle-wrap.glass-panel {
+    width: 100%;
+    display: flex;
+  }
+
+  .scope-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .leaderboard-tabs-header {
+    gap: var(--spacing-xs);
+    justify-content: space-between;
+    width: 100%;
+    flex-wrap: nowrap; /* Keep on a single line */
+  }
+
+  .leaderboard-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px;
+    min-width: 0;
+  }
+
+  .tab-label-text {
+    display: none; /* Hide labels on mobile to keep icons on a single line */
   }
 }

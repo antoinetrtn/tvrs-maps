@@ -28,7 +28,7 @@
   max-width: 400px;
   padding: var(--spacing-xl);
   text-align: center;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   background: var(--bg-color);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
@@ -52,7 +52,7 @@
 .modal-btn {
   flex: 1;
   padding: 14px 24px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   font-weight: 700;
   font-size: 1rem;
