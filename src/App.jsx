@@ -83,6 +83,7 @@ function App() {
   });
 
   const [topExplorers, setTopExplorers] = useState([]);
+  const [profileInitialTab, setProfileInitialTab] = useState("records");
   const [mode, setMode] = useState(DEFAULT_MODE); // 'countries', 'capitals', 'learn', 'departments'
   const [foundList, setFoundList] = useState([]);
   const score = foundList.length;
@@ -1075,7 +1076,10 @@ function App() {
           setGameDuration={setGameDuration}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
-          onOpenProfile={() => setCurrentScreen("profile")}
+          onOpenProfile={(tab = "records") => {
+            setProfileInitialTab(tab);
+            setCurrentScreen("profile");
+          }}
           topExplorers={topExplorers}
         />
       ) : currentScreen === "profile" ? (
@@ -1086,6 +1090,7 @@ function App() {
           onBack={() => setCurrentScreen("home")}
           lang={lang}
           theme={theme}
+          initialTab={profileInitialTab}
         />
       ) : (
         !showEndScreen && (

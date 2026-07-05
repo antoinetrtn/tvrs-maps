@@ -17,10 +17,15 @@ const ProfileScreen = ({
   localRecords,
   onBack,
   lang = "fr",
-  theme = "dark"
+  theme = "dark",
+  initialTab = "records"
 }) => {
   const t = useTranslation(lang);
-  const [activeTab, setActiveTab] = useState("records"); // "records" or "leaderboard"
+  const [activeTab, setActiveTab] = useState(initialTab); // "records" or "leaderboard"
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
   const [leaderboardMode, setLeaderboardMode] = useState("countries");
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
