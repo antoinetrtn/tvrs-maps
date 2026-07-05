@@ -166,7 +166,7 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   backdrop-filter: var(--glass-blur);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   transition: all var(--transition-normal);
 }
 
@@ -180,7 +180,7 @@ body {
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
 }
 

@@ -206,7 +206,7 @@
 
 .country-pill {
     padding: 5px 11px;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
     font-size: 0.70rem;
     font-weight: 500;
     cursor: default;

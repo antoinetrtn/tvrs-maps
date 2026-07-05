@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft } from "pixelarticons/react";
+import { Globe, MapPin, Hash, TreePine, ChevronLeft } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
 import { useTranslation } from "./i18n";
 import {
@@ -8,6 +8,13 @@ import {
   getUserScores
 } from "./supabaseClient";
 import "./LeaderboardScreen.css";
+
+const MODE_ICONS = {
+  countries: <Globe width={16} height={16} />,
+  capitals: <MapPin width={16} height={16} />,
+  departments: <Hash width={14} height={14} />,
+  rivers_mountains: <TreePine width={16} height={16} />,
+};
 
 const LeaderboardScreen = ({
   userProfile,
@@ -22,34 +29,46 @@ const LeaderboardScreen = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchScores = async () => {
-    if (!isSupabaseConfigured) {
-      setError(t("not_connected"));
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error: fetchErr } =
-        scope === "global"
-          ? await getLeaderboard(colMode)
-          : await getUserScores(userProfile.id, colMode);
-
-      if (fetchErr) {
-        setError(fetchErr);
-      } else {
-        setScoresData(data || []);
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchScores = async () => {
+      if (!isSupabaseConfigured) {
+        setError(t("not_connected"));
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: fetchErr } =
+          scope === "global"
+            ? await getLeaderboard(colMode)
+            : await getUserScores(userProfile.id, colMode);
+
+        if (!isMounted) return;
+
+        if (fetchErr) {
+          setError(fetchErr);
+        } else {
+          setScoresData(data || []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     fetchScores();
-  }, [colMode, scope]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [colMode, scope, userProfile.id]);
 
   const formatTime = (secs) => {
     if (!secs) return "--:--";
@@ -107,8 +126,10 @@ const LeaderboardScreen = ({
                   type="button"
                   className={`leaderboard-tab-btn ${colMode === mKey ? "active" : ""}`}
                   onClick={() => setColMode(mKey)}
+                  title={t(`mode_${mKey}`)}
                 >
-                  {t(`mode_${mKey}`)}
+                  <span className="tab-icon-wrap">{MODE_ICONS[mKey]}</span>
+                  <span className="tab-label-text">{t(`mode_${mKey}`)}</span>
                 </button>
               ))}
             </div>
