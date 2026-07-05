@@ -144,13 +144,39 @@ export const GLITCH_FRAGMENT_BODY = `
     }
   }
 
-  gl_FragColor.rgb = mix(finalColor, uTargetColor, uFadeProgress);
+  // Glitchy transition progress:
+  // Instead of a linear mix, we use noise to create a digital/analog "dissolve" or "dither" glitch.
+  float transitionNoise = hash(noiseUv * 1.5 + vec2(sin(uTime * 40.0), cos(uTime * 30.0)));
+  
+  // We also add scanline-based band tearing:
+  float horizontalTear = step(0.92, sin(vLocalPosition.y * 22.0 + uTime * 45.0));
+  
+  // Mix linear fade with noisy threshold.
+  // At the start of transition (uFadeProgress ~ 0), it's highly glitchy.
+  // At the end (uFadeProgress ~ 1), it settles to uTargetColor.
+  // We use step() on the noise to snap pixels to either the glitch or target color.
+  float glitchThreshold = uFadeProgress;
+  
+  // Add some horizontal tear glitching to the threshold to create horizontal bands that lag/snap
+  if (uFadeProgress > 0.02 && uFadeProgress < 0.98) {
+    glitchThreshold += (transitionNoise - 0.5) * 0.4;
+    if (horizontalTear > 0.5) {
+      glitchThreshold = clamp(glitchThreshold - 0.3, 0.0, 1.0);
+    }
+  }
+  
+  float glitchFade = step(transitionNoise, glitchThreshold);
+  
+  // We combine 75% of the sharp glitchFade with 25% of the smooth linear uFadeProgress
+  float finalProgress = mix(glitchFade, uFadeProgress, 0.25);
+  
+  gl_FragColor.rgb = mix(finalColor, uTargetColor, finalProgress);
 
   // Smooth alpha fadeout in satellite mode for unfound countries
   float finalAlpha = 1.0;
   if (uTheme < 0.5) { // satellite theme
     if (uIsFound < 0.5) {
-      finalAlpha = mix(1.0, 0.0, uFadeProgress);
+      finalAlpha = mix(1.0, 0.0, finalProgress);
     }
   }
   gl_FragColor.a = finalAlpha;

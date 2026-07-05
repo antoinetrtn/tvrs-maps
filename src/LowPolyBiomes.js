@@ -91,6 +91,7 @@ export const createMountainFeature = (
       shininess: 0,
       specular: 0x000000,
     });
+    mat.customProgramCacheKey = () => `mountain-glitch-${themeName}-${isLight ? 'light' : 'dark'}`;
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = mountainGlitchUniforms.uTime;
       shader.uniforms.uIsError = mountainGlitchUniforms.uIsError;

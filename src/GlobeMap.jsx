@@ -152,6 +152,7 @@ const GlobeMap = ({
   const tapRef = useRef(null);
   const previousSelectedCountryRef = useRef(null);
   const transitioningPreviousCountryRef = useRef(null);
+  const [transitioningPreviousCountryState, setTransitioningPreviousCountryState] = useState(null);
   const selectionTransitionStartRef = useRef(0);
   const lastTargetRef = useRef(null);
   const maxWindowWidthRef = useRef(window.innerWidth);
@@ -450,6 +451,7 @@ const GlobeMap = ({
     }
     if (selectedCountry !== previousSelectedCountryRef.current) {
       transitioningPreviousCountryRef.current = previousSelectedCountryRef.current;
+      setTransitioningPreviousCountryState(previousSelectedCountryRef.current);
       selectionTransitionStartRef.current = performance.now();
     }
     wasHomeScreenRef.current = isHomeScreen;
@@ -1156,7 +1158,7 @@ const GlobeMap = ({
       }
 
       const isIsolated = admin === selectedCountry;
-      const isPrevTransitioning = admin === transitioningPreviousCountryRef.current;
+      const isPrevTransitioning = admin === transitioningPreviousCountryState;
       const isShaderCap =
         (kind === "cap" || kind === "side") &&
         (isIsolated || isPrevTransitioning || (isEndScreen && !foundSet.has(admin)));
@@ -1210,6 +1212,7 @@ const GlobeMap = ({
             material.transparent = true;
             material.opacity = 0.55;
           }
+          material.customProgramCacheKey = () => `shader-cap-glitch-${kind}`;
           material.onBeforeCompile = (shader) => {
             shader.uniforms.uTime = { value: 0 };
             shader.uniforms.uFadeProgress = { value: 0.0 };
@@ -1277,6 +1280,7 @@ const GlobeMap = ({
       mode,
       perfProfile,
       isHomeScreen,
+      transitioningPreviousCountryState,
     ],
   );
 
@@ -2934,6 +2938,7 @@ const GlobeMap = ({
         const prevSideMat = polygonMaterialCacheRef.current.side.get(prevCountry);
         if (elapsed >= TRANSITION_DURATION) {
           transitioningPreviousCountryRef.current = null;
+          setTransitioningPreviousCountryState(null);
           [prevCapMat, prevSideMat].forEach((mat) => {
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;
@@ -3022,7 +3027,7 @@ const GlobeMap = ({
     if (animFrameIdRef.current == null && animateSceneRef.current) {
       animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
     }
-  }, [selectedCountry, isError, isSuccess]);
+  }, [selectedCountry, isError, isSuccess, transitioningPreviousCountryState]);
 
   const handleGlobeReady = useCallback(() => {
     // Re-arm the bounded graticule restyle window and make sure the loop is
