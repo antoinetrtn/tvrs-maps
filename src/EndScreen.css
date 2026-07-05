@@ -45,7 +45,7 @@
 
 .end-screen-header p {
   font-size: 1.25rem;
-  margin-top: 8px;
+  margin-top: var(--spacing-sm);
   opacity: 0.9;
 }
 
@@ -77,10 +77,10 @@
 .continents-progress-bars {
   max-width: 600px;
   width: 90%;
-  margin: 0 auto 30px;
+  margin: 0 auto var(--spacing-xl);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-md);
   padding: var(--spacing-lg);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -169,7 +169,7 @@
 .end-screen-actions {
   max-width: 600px;
   width: 90%;
-  margin: 0 auto 20px;
+  margin: 0 auto var(--spacing-md);
   display: flex;
   justify-content: center;
   animation: fadeInSimple 0.8s ease both;
@@ -216,7 +216,7 @@
 .progress-count {
   display: flex;
   align-items: baseline;
-  gap: 3px;
+  gap: var(--spacing-xxs);
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-size: 0.9rem;
@@ -245,8 +245,8 @@
 
 .btn-primary,
 .btn-secondary {
-  padding: 14px 28px;
-  border-radius: var(--radius-md);
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
@@ -316,7 +316,7 @@
 
   .progress-bars-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: var(--spacing-ms);
   }
 
   .end-screen-header h1 {
@@ -331,7 +331,7 @@
     pointer-events: auto;
     justify-content: flex-start;
     gap: var(--spacing-md);
-    padding-top: max(16px, var(--safe-top));
+    padding-top: max(var(--spacing-md), var(--safe-top));
   }
 
   .end-screen-spacer {

@@ -1,95 +1,8 @@
-/* Leaderboard screen styling */
-.profile-screen-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--overlay-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: var(--spacing-xl);
-  box-sizing: border-box;
-  animation: overlay-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes overlay-enter {
-  from { opacity: 0; backdrop-filter: blur(0px); }
-  to { opacity: 1; backdrop-filter: blur(10px); }
-}
-
-.profile-container {
-  width: 100%;
-  max-width: 900px;
-  height: 90%;
-  max-height: 600px;
-  display: flex;
-  flex-direction: column;
-  padding: var(--spacing-xl);
-  box-sizing: border-box;
-  background: var(--bg-color);
-  border-radius: var(--radius-md);
-  animation: container-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
-  overflow: hidden;
-}
-
-@keyframes container-enter {
-  from { transform: translateY(12px) scale(0.98); opacity: 0; }
-  to { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-.leaderboard-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--glass-border);
-  margin-bottom: var(--spacing-lg);
-  flex-shrink: 0;
-}
-
-.leaderboard-header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.profile-title {
-  font-family: var(--font-display);
-  font-size: 1.65rem;
-  font-weight: 900;
-  margin: 0;
-  color: var(--text-main);
-  letter-spacing: 0.5px;
-}
-
-.back-btn {
-  width: var(--control-md);
-  height: var(--control-md);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background: var(--glass-bg);
-  color: var(--text-main);
-  border: 1px solid var(--glass-border);
-  transition: all var(--transition-fast);
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-}
-
-.back-btn:hover {
-  background: var(--glass-hover);
-  color: var(--accent);
-  border-color: var(--accent);
-}
+/* Leaderboard specific styles (layout inherits from index.css) */
 
 .scope-toggle-wrap.glass-panel {
   display: flex;
-  padding: 2px;
+  padding: var(--spacing-xxs);
   border-radius: var(--radius-md);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -102,7 +15,7 @@
   font-family: var(--font-main);
   font-weight: 700;
   font-size: 0.8rem;
-  padding: 6px 14px;
+  padding: var(--spacing-xs) var(--spacing-ms);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -153,7 +66,7 @@
   font-family: var(--font-main);
   font-weight: 700;
   font-size: 0.8rem;
-  padding: 8px 16px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -239,7 +152,7 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.75rem;
-  padding: 2px 6px;
+  padding: var(--spacing-xxs) var(--spacing-sm);
   border-radius: var(--radius-sm);
   background: var(--subtle-tint);
   border: 1px solid var(--glass-border);
@@ -341,25 +254,8 @@
   background: var(--text-muted);
 }
 
-/* Responsive grid for mobile viewports */
+/* Responsive layout for mobile viewports */
 @media (max-width: 768px) {
-  .profile-container {
-    height: 100%;
-    max-height: 100%;
-    overflow-y: auto;
-    padding: var(--spacing-md);
-  }
-
-  .leaderboard-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-sm);
-  }
-
-  .leaderboard-header-left {
-    justify-content: flex-start;
-  }
-
   .scope-toggle-wrap.glass-panel {
     width: 100%;
     display: flex;
@@ -386,5 +282,39 @@
 
   .tab-label-text {
     display: none; /* Hide labels on mobile to keep icons on a single line */
+  }
+
+  /* Table responsiveness to prevent horizontal scrolling */
+  .col-date {
+    display: none !important;
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: var(--spacing-xs) var(--spacing-xs) !important;
+    font-size: 0.78rem;
+  }
+
+  .col-rank {
+    width: 45px !important;
+  }
+  
+  .col-score {
+    width: 70px !important;
+  }
+  
+  .col-time {
+    width: 70px !important;
+  }
+
+  .player-cell {
+    gap: var(--spacing-xs) !important;
+  }
+
+  .player-username {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

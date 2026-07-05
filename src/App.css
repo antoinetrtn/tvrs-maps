@@ -51,7 +51,7 @@
 
 .modal-btn {
   flex: 1;
-  padding: 14px 24px;
+  padding: 12px 24px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   font-weight: 700;
