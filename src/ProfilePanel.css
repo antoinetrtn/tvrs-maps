@@ -129,7 +129,7 @@
   margin-top: auto;
   font-family: var(--font-main);
   font-weight: 700;
-  padding: var(--spacing-sm);
+  padding: 12px 24px;
   border-radius: var(--radius-sm);
 }
 

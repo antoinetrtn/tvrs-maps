@@ -85,7 +85,6 @@ const GameHUD = ({
   } = learnToggles || {};
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scoreGlow, setScoreGlow] = useState(false);
   const prevScoreRef = useRef(score);
 
@@ -350,12 +349,15 @@ const GameHUD = ({
                 <Home width={18} height={18} />
               </button>
               {mode !== "learn" && (
-                <div
+                <button
                   className={`hud-mini-pill score-pill ${scoreGlow ? "score-increased-flash" : ""}`}
+                  onClick={onInfo}
+                  onPointerDown={(e) => e.preventDefault()}
+                  title={t("progress_title")}
                 >
                   <span className="mini-pill-val">{score}</span>
                   <span className="mini-pill-sub">/{totalPossible}</span>
-                </div>
+                </button>
               )}
             </div>
 
@@ -400,146 +402,39 @@ const GameHUD = ({
                   </button>
                 </div>
               ) : (
-                <button
-                  className={`hud-mini-pill timer-pill ${mobileMenuOpen ? "active" : ""} ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  onPointerDown={(e) => e.preventDefault()}
-                >
-                  <span className="mini-pill-val">{formatTime(timeLeft)}</span>
-                </button>
-              )}
-            </div>
-
-            {/* Collapsible Mobile Menu Popover */}
-            {mobileMenuOpen && mode !== "learn" && (
-              <div
-                className="mobile-dropdown-menu glass-panel animation-fade-in"
-                style={{
-                  position: "absolute",
-                  top: "52px",
-                  right: "0",
-                  width: "280px",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  zIndex: 1005,
-                  pointerEvents: "auto",
-                }}
-              >
-                <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                <div style={{ display: "flex", gap: "var(--spacing-sm)", alignItems: "center", pointerEvents: "auto" }}>
                   {isPlaying && !isGameOver ? (
                     <button
-                      className="dropdown-action-btn stop"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        onStop();
-                      }}
+                      className="hud-btn-circular"
+                      style={{ color: "var(--error)", width: "40px", height: "40px" }}
+                      onClick={onStop}
                       onPointerDown={(e) => e.preventDefault()}
+                      title={t("stop")}
                     >
-                      <Square width={14} height={14} />
-                      <span>{t("stop")}</span>
+                      <Square width={16} height={16} />
                     </button>
                   ) : (
                     <button
-                      className="dropdown-action-btn play"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        onNavigateFocus("next");
-                      }}
+                      className="hud-btn-circular"
+                      style={{ color: "var(--success)", width: "40px", height: "40px" }}
+                      onClick={() => onNavigateFocus("next")}
                       onPointerDown={(e) => e.preventDefault()}
+                      title={t("play")}
                     >
-                      <Play width={14} height={14} />
-                      <span>{t("play")}</span>
+                      <Play width={16} height={16} />
                     </button>
                   )}
                   <button
-                    className="dropdown-action-btn info"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      onInfo();
-                    }}
+                    className={`hud-mini-pill timer-pill ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
+                    onClick={onInfo}
                     onPointerDown={(e) => e.preventDefault()}
+                    title={t("progress_title")}
                   >
-                    <InfoBox width={16} height={16} />
+                    <span className="mini-pill-val">{formatTime(timeLeft)}</span>
                   </button>
                 </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "4px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.8rem",
-                      fontWeight: 700,
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    <span>{t("progress")}</span>
-                    <span>{Math.round(progressPercent)}%</span>
-                  </div>
-                  <div
-                    className="progress-linear-container"
-                    style={{ height: "6px" }}
-                  >
-                    <div
-                      className="progress-linear-fill"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: "10px",
-                    marginTop: "4px",
-                  }}
-                >
-                  {gaugeRegions.map((reg) => {
-                    const isActive = activeContinent === reg;
-                    const isFaded = activeContinent && activeContinent !== reg;
-                    const color = getRegionColor(reg);
-                    const pct =
-                      (regionStats[reg]?.found / regionStats[reg]?.total) *
-                        100 || 0;
-                    const displayVal = getRegionAbbr(reg);
-                    return (
-                      <div
-                        key={reg}
-                        className={`gauge-item ${isActive ? "highlight" : ""} ${isFaded ? "faded" : ""}`}
-                      >
-                        <div
-                          className="circular-gauge"
-                          style={{
-                            "--pct": `${pct}%`,
-                            "--color": color,
-                          }}
-                        >
-                          <span className="gauge-val">{displayVal}</span>
-                        </div>
-                        <span
-                          style={{
-                            fontSize: "0.65rem",
-                            fontWeight: 700,
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          {regionStats[reg]?.found}/{regionStats[reg]?.total}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </>
         ) : (
           // === DESKTOP TOP HUD BAR ===

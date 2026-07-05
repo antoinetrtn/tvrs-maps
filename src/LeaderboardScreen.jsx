@@ -87,34 +87,38 @@ const LeaderboardScreen = ({
   };
 
   return (
-    <div className={`profile-screen-overlay ${theme}`}>
-      <div className="profile-container glass-panel">
-        <div className="leaderboard-header">
-          <div className="leaderboard-header-left">
-            <button className="back-btn glass-panel" onClick={onBack} title={t("home")}>
-              <ChevronLeft width={20} height={20} />
-            </button>
-            <h1 className="profile-title text-natural-case">
-              {t("global_leaderboard")}
-            </h1>
+    <div className={`modal-overlay ${theme}`}>
+      <div className="modal-content">
+        <header className="modal-header">
+          <div className="header-left">
+            <div className="score-title" style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)", flexDirection: "row" }}>
+              <button className="close-popup" onClick={onBack} title={t("home")}>
+                <ChevronLeft width={20} height={20} />
+              </button>
+              <span className="header-font">
+                {t("global_leaderboard")}
+              </span>
+            </div>
           </div>
 
           {/* Toggle scope button */}
-          <div className="scope-toggle-wrap glass-panel">
-            <button
-              className={`scope-btn ${scope === "global" ? "active" : ""}`}
-              onClick={() => setScope("global")}
-            >
-              {lang === "fr" ? "Mondial" : "Global"}
-            </button>
-            <button
-              className={`scope-btn ${scope === "me" ? "active" : ""}`}
-              onClick={() => setScope("me")}
-            >
-              {lang === "fr" ? "Moi" : "Me"}
-            </button>
+          <div className="header-right">
+            <div className="scope-toggle-wrap glass-panel">
+              <button
+                className={`scope-btn ${scope === "global" ? "active" : ""}`}
+                onClick={() => setScope("global")}
+              >
+                {lang === "fr" ? "Mondial" : "Global"}
+              </button>
+              <button
+                className={`scope-btn ${scope === "me" ? "active" : ""}`}
+                onClick={() => setScope("me")}
+              >
+                {lang === "fr" ? "Moi" : "Me"}
+              </button>
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* Tabbed view */}
         <div className="leaderboard-full-layout">

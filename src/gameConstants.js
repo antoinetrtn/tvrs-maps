@@ -57,7 +57,7 @@ export const DATA_URLS = {
 // --- Performance profile -----------------------------------------------------
 // Caps and per-device tuning consumed by App's perfProfile memo.
 export const PERFORMANCE = {
-  maxPixelRatio: 2.0,
+  maxPixelRatio: { mobile: 1.25, tablet: 1.5, desktop: 2.0 },
   maxLabels: { mobile: 4, tablet: 8, desktop: 20 },
   polygonCapCurvatureResolution: { mobile: 3.0, tablet: 2.5, desktop: 2.0 },
 };

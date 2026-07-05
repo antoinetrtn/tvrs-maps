@@ -844,7 +844,7 @@ function App() {
       viewport.width < BREAKPOINTS.desktop;
     const tier = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = Math.min(devicePixelRatio, PERFORMANCE.maxPixelRatio);
+    const pixelRatio = Math.min(devicePixelRatio, PERFORMANCE.maxPixelRatio[tier]);
     return {
       isMobile,
       isTablet,
