@@ -47,6 +47,20 @@ const HomeScreen = ({
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  const displayExplorers = [...topExplorers];
+  while (displayExplorers.length < 3) {
+    displayExplorers.push({
+      id: `placeholder-${displayExplorers.length}`,
+      score: 0,
+      time_spent_seconds: 0,
+      profiles: {
+        username: "???",
+        avatar_id: "invader_1",
+        avatar_color: "gray"
+      }
+    });
+  }
+
   const resetCardTilt = () => {
     const card = cardRef.current;
     if (!card) return;
@@ -135,69 +149,61 @@ const HomeScreen = ({
       >
         <Logo size="large" className="home-logo" />
 
-        {topExplorers && topExplorers.length > 0 && (
-          <div className="home-podium-container glass-panel">
-            <h3 className="podium-section-title">{t("top_explorers")}</h3>
-            <div className="home-podium-grid">
-              {/* 2nd place */}
-              {topExplorers[1] && (
-                <div className="podium-spot spot-2">
-                  <div className="podium-avatar">
-                    <InvaderAvatar
-                      invaderId={topExplorers[1].profiles?.avatar_id || "invader_1"}
-                      color={topExplorers[1].profiles?.avatar_color || "cyan"}
-                      size={20}
-                    />
-                  </div>
-                  <div className="podium-user truncate">{topExplorers[1].profiles?.username}</div>
-                  <div className="podium-details">
-                    <span className="p-score">{topExplorers[1].score}</span>
-                    <span className="p-time">{formatTime(topExplorers[1].time_spent_seconds)}</span>
-                  </div>
-                  <div className="podium-pedestal p-step-2">2</div>
-                </div>
-              )}
+        <div className="home-podium-container glass-panel">
+          <h3 className="podium-section-title">{t("top_explorers")}</h3>
+          <div className="home-podium-grid">
+            {/* 2nd place */}
+            <div className="podium-spot spot-2">
+              <div className="podium-avatar">
+                <InvaderAvatar
+                  invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
+                  color={displayExplorers[1].profiles?.avatar_color || "cyan"}
+                  size={20}
+                />
+              </div>
+              <div className="podium-user truncate">{displayExplorers[1].profiles?.username}</div>
+              <div className="podium-details">
+                <span className="p-score">{displayExplorers[1].score}</span>
+                <span className="p-time">{formatTime(displayExplorers[1].time_spent_seconds)}</span>
+              </div>
+              <div className="podium-pedestal p-step-2">2</div>
+            </div>
 
-              {/* 1st place */}
-              {topExplorers[0] && (
-                <div className="podium-spot spot-1">
-                  <div className="podium-avatar">
-                    <InvaderAvatar
-                      invaderId={topExplorers[0].profiles?.avatar_id || "invader_1"}
-                      color={topExplorers[0].profiles?.avatar_color || "cyan"}
-                      size={24}
-                    />
-                  </div>
-                  <div className="podium-user truncate">{topExplorers[0].profiles?.username}</div>
-                  <div className="podium-details">
-                    <span className="p-score">{topExplorers[0].score}</span>
-                    <span className="p-time">{formatTime(topExplorers[0].time_spent_seconds)}</span>
-                  </div>
-                  <div className="podium-pedestal p-step-1">1</div>
-                </div>
-              )}
+            {/* 1st place */}
+            <div className="podium-spot spot-1">
+              <div className="podium-avatar">
+                <InvaderAvatar
+                  invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
+                  color={displayExplorers[0].profiles?.avatar_color || "cyan"}
+                  size={24}
+                />
+              </div>
+              <div className="podium-user truncate">{displayExplorers[0].profiles?.username}</div>
+              <div className="podium-details">
+                <span className="p-score">{displayExplorers[0].score}</span>
+                <span className="p-time">{formatTime(displayExplorers[0].time_spent_seconds)}</span>
+              </div>
+              <div className="podium-pedestal p-step-1">1</div>
+            </div>
 
-              {/* 3rd place */}
-              {topExplorers[2] && (
-                <div className="podium-spot spot-3">
-                  <div className="podium-avatar">
-                    <InvaderAvatar
-                      invaderId={topExplorers[2].profiles?.avatar_id || "invader_1"}
-                      color={topExplorers[2].profiles?.avatar_color || "cyan"}
-                      size={18}
-                    />
-                  </div>
-                  <div className="podium-user truncate">{topExplorers[2].profiles?.username}</div>
-                  <div className="podium-details">
-                    <span className="p-score">{topExplorers[2].score}</span>
-                    <span className="p-time">{formatTime(topExplorers[2].time_spent_seconds)}</span>
-                  </div>
-                  <div className="podium-pedestal p-step-3">3</div>
-                </div>
-              )}
+            {/* 3rd place */}
+            <div className="podium-spot spot-3">
+              <div className="podium-avatar">
+                <InvaderAvatar
+                  invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
+                  color={displayExplorers[2].profiles?.avatar_color || "cyan"}
+                  size={18}
+                />
+              </div>
+              <div className="podium-user truncate">{displayExplorers[2].profiles?.username}</div>
+              <div className="podium-details">
+                <span className="p-score">{displayExplorers[2].score}</span>
+                <span className="p-time">{formatTime(displayExplorers[2].time_spent_seconds)}</span>
+              </div>
+              <div className="podium-pedestal p-step-3">3</div>
             </div>
           </div>
-        )}
+        </div>
 
         <div className="home-buttons">
           <button

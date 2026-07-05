@@ -161,12 +161,6 @@ const ProfileScreen = ({
             <ChevronLeft width={20} height={20} />
           </button>
           <h1 className="profile-title">{t("profile_screen_title")}</h1>
-          <div className="connection-status-badge">
-            <span className={`status-dot ${isSupabaseConfigured ? "online" : "offline"}`} />
-            <span className="status-text">
-              {isSupabaseConfigured ? t("connected") : t("not_connected")}
-            </span>
-          </div>
         </div>
 
         {/* Layout: Left Sidebar (Edit Profile) / Right Content (Records or Leaderboard) */}
