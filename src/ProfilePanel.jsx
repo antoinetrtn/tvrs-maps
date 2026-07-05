@@ -130,7 +130,7 @@ const ProfilePanel = ({
         <form onSubmit={handleSaveProfile} className="profile-form" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <div className="avatar-preview-container">
             <div className="avatar-glow" style={{ "--glow-color": AVATAR_COLORS[selectedColor] }}>
-              <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={64} />
+              <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={48} />
             </div>
           </div>
 
@@ -150,7 +150,7 @@ const ProfilePanel = ({
           <div className="form-group">
             <label>{t("select_avatar")}</label>
             <div className="avatar-grid scrollbar-styled">
-              {Object.keys(INVADER_DESIGNS).slice(0, 6).map((id) => (
+              {Object.keys(INVADER_DESIGNS).map((id) => (
                 <button
                   key={id}
                   type="button"
