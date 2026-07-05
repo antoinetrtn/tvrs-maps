@@ -577,11 +577,18 @@
 /* Leaderboard Double Column Layout */
 .leaderboard-double-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
   flex: 1;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .leaderboard-double-layout {
+    grid-template-columns: repeat(2, 1fr);
+    overflow-y: auto;
+  }
 }
 
 .leaderboard-column {

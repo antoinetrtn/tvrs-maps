@@ -251,10 +251,12 @@ const ProfileScreen = ({
         </div>
 
         {initialTab === "leaderboard" ? (
-          /* DOUBLE LEADERBOARD VIEW */
+          /* FOUR COLUMNS LEADERBOARD VIEW */
           <div className="leaderboard-double-layout">
             <LeaderboardColumn defaultMode="countries" />
             <LeaderboardColumn defaultMode="capitals" />
+            <LeaderboardColumn defaultMode="departments" />
+            <LeaderboardColumn defaultMode="rivers_mountains" />
           </div>
         ) : (
           /* PROFILE & RECORDS VIEW */
