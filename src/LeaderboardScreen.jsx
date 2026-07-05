@@ -22,34 +22,46 @@ const LeaderboardScreen = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchScores = async () => {
-    if (!isSupabaseConfigured) {
-      setError(t("not_connected"));
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error: fetchErr } =
-        scope === "global"
-          ? await getLeaderboard(colMode)
-          : await getUserScores(userProfile.id, colMode);
-
-      if (fetchErr) {
-        setError(fetchErr);
-      } else {
-        setScoresData(data || []);
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchScores = async () => {
+      if (!isSupabaseConfigured) {
+        setError(t("not_connected"));
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: fetchErr } =
+          scope === "global"
+            ? await getLeaderboard(colMode)
+            : await getUserScores(userProfile.id, colMode);
+
+        if (!isMounted) return;
+
+        if (fetchErr) {
+          setError(fetchErr);
+        } else {
+          setScoresData(data || []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     fetchScores();
-  }, [colMode, scope]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [colMode, scope, userProfile.id]);
 
   const formatTime = (secs) => {
     if (!secs) return "--:--";

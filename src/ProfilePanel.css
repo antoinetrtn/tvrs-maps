@@ -11,7 +11,7 @@
 
 .avatar-glow {
   padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--subtle-tint);
   border: 1px solid var(--glass-border);
   display: flex;
@@ -40,18 +40,19 @@
 
 .form-group label {
   font-size: 0.75rem;
-  font-family: monospace;
+  font-family: var(--font-main);
+  font-weight: 700;
   color: var(--text-muted);
 }
 
 .form-group input {
   padding: var(--spacing-sm) var(--spacing-md);
-  font-family: monospace;
+  font-family: var(--font-main);
   font-size: 0.9rem;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   color: var(--text-main);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   outline: none;
   transition: all var(--transition-fast);
 }
@@ -79,7 +80,7 @@
   cursor: pointer;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
 }
 
@@ -96,8 +97,8 @@
 
 .color-selector-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--spacing-sm);
   margin-top: var(--spacing-xs);
   width: 100%;
 }
@@ -115,27 +116,29 @@
 }
 
 .color-option:hover {
-  transform: scale(1.15);
+  transform: scale(1.08);
 }
 
 .color-option.active {
   border-color: var(--text-main);
   box-shadow: 0 0 8px var(--option-color);
-  transform: scale(1.1);
 }
 
 /* Form Actions */
 .form-submit-btn {
   margin-top: auto;
-  font-family: monospace;
+  font-family: var(--font-main);
+  font-weight: 700;
   padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
 }
 
 .form-feedback {
-  font-family: monospace;
-  font-size: 0.72rem;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 700;
   padding: 8px var(--spacing-md);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   margin-top: var(--spacing-xs);
   text-align: center;
   border: 1px solid transparent;

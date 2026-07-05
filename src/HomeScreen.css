@@ -647,7 +647,7 @@
   position: absolute;
   bottom: -4px;
   right: -4px;
-  font-family: monospace;
+  font-family: var(--font-display);
   font-size: 0.55rem;
   font-weight: 700;
   width: 12px;
