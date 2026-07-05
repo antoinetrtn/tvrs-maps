@@ -150,6 +150,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  flex: 1;
 }
 
 .avatar-preview-container {
@@ -214,9 +215,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-sm);
-  max-height: 96px;
-  overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 0;
 }
 
 .avatar-option {
@@ -273,7 +272,7 @@
 
 /* Form Actions */
 .form-submit-btn {
-  margin-top: var(--spacing-sm);
+  margin-top: auto;
   font-family: monospace;
   padding: var(--spacing-sm);
 }
