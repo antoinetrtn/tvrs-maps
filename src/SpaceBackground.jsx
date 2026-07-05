@@ -15,10 +15,40 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
+    // Initialize Twinkling Stars
+    const getTargetStarCount = (w, h) => {
+      const baseDensity = w < 768 ? 4000 : 8000;
+      return Math.max(120, Math.min(Math.floor((w * h) / baseDensity), 450));
+    };
+
+    const stars = [];
+    const spawnStars = (w, h) => {
+      const count = getTargetStarCount(w, h);
+      stars.length = 0;
+      for (let i = 0; i < count; i++) {
+        let starType = "normal";
+        const randType = Math.random();
+        if (randType < 0.08) starType = "cyan";
+        else if (randType < 0.16) starType = "magenta";
+
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          size: Math.random() < 0.7 ? 2 : Math.random() < 0.9 ? 3 : 4,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.01 + Math.random() * 0.03,
+          type: starType,
+        });
+      }
+    };
+
+    spawnStars(width, height);
+
     // Dynamic resize handler
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      spawnStars(width, height);
     };
     window.addEventListener("resize", handleResize);
 
@@ -47,26 +77,6 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
       targetMouseY = (e.clientY / window.innerHeight) * 2 - 1;
     };
     window.addEventListener("mousemove", handleMouseMove);
-
-    // Initialize Twinkling Stars
-    const numStars = Math.min(Math.floor((width * height) / 18000), 400); // Scale with screen resolution, capped at 400
-    const stars = [];
-    for (let i = 0; i < numStars; i++) {
-      // Small percentage of colored stars in dark mode
-      let starType = "normal";
-      const randType = Math.random();
-      if (randType < 0.08) starType = "cyan";
-      else if (randType < 0.16) starType = "magenta";
-
-      stars.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        size: Math.random() < 0.7 ? 2 : Math.random() < 0.9 ? 3 : 4, // Crisp 2px, 3px, 4px square sizes
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.01 + Math.random() * 0.03,
-        type: starType,
-      });
-    }
 
     // Shooting Stars Array
     let shootingStars = [];

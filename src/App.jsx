@@ -848,6 +848,9 @@ function App() {
       data-theme={theme}
       style={appStyle}
     >
+      {isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30 && (
+        <div className="panic-vignette-overlay" />
+      )}
       {currentScreen === "home" ? (
         <HomeScreen
           onStartGame={startGame}
