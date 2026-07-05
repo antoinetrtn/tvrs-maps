@@ -519,6 +519,23 @@ export const getThemeCssVariables = (
     "--control-md": STYLE_TOKENS.size.controlMd,
     "--control-lg": STYLE_TOKENS.size.controlLg,
     "--island-width": STYLE_TOKENS.size.islandWidth,
+    "--color-cyan": "#00f0ff",
+    "--color-magenta": "#ff007f",
+    "--color-cyan-glow": "rgba(0, 240, 255, 0.12)",
+    "--color-magenta-glow": "rgba(255, 0, 127, 0.12)",
+    "--color-cyan-bg": "rgba(0, 240, 255, 0.1)",
+    "--color-cyan-border": "rgba(0, 240, 255, 0.2)",
+    "--color-error-bg": "rgba(255, 69, 0, 0.1)",
+    "--color-error-border": "rgba(255, 69, 0, 0.2)",
+    "--color-gold": "#ffd700",
+    "--color-gold-glow": "rgba(255, 215, 0, 0.25)",
+    "--color-silver": "#c0c0c0",
+    "--color-silver-glow": "rgba(192, 192, 192, 0.25)",
+    "--color-bronze": "#cd7f32",
+    "--color-bronze-glow": "rgba(205, 127, 50, 0.25)",
+    "--shadow-subtle": "rgba(0, 0, 0, 0.15)",
+    "--color-cyan-glow-strong": "rgba(0, 240, 255, 0.4)",
+    "--color-magenta-glow-strong": "rgba(255, 0, 127, 0.4)",
   };
 };
 
@@ -638,4 +655,14 @@ export const GLITCH_EFFECT_SETTINGS = {
     selectedCap: "Solid opaque cap rendering high-speed television static noise glitch",
     foundCap: "Wireframe mesh displaying high-contrast neon label color of its region"
   }
+};
+
+export const AVATAR_COLORS = {
+  cyan: "#00f0ff",
+  magenta: "#ff007f",
+  green: "#00ff88",
+  yellow: "#ffeb3b",
+  purple: "#bd00ff",
+  orange: "#ff5722",
+  blue: "#2196f3"
 };

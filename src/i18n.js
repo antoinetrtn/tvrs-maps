@@ -89,6 +89,33 @@ export const translations = {
     // Globe Themes
     theme_satellite: "Satellite",
     theme_blackout: "Noir & Blanc",
+
+    // Profil & Leaderboard
+    profile: "Profil",
+    profile_screen_title: "Mon Profil & Classements",
+    personal_records: "Records Personnels",
+    global_leaderboard: "Classement Général",
+    username: "Pseudo",
+    save_profile: "Enregistrer",
+    select_avatar: "Choisir un avatar",
+    select_color: "Choisir une couleur",
+    games_played: "Parties jouées",
+    best_score: "Meilleur score",
+    best_time: "Meilleur temps",
+    top_explorers: "Classement Mondial",
+    rank: "Rang",
+    score: "Score",
+    time: "Temps",
+    date: "Date",
+    connecting: "Connexion à Supabase...",
+    not_connected: "Hors-ligne (Local)",
+    connected: "Connecté à Supabase",
+    no_records_yet: "Aucun record pour le moment. Joue une partie !",
+    empty_leaderboard: "Aucun score enregistré pour ce mode.",
+    username_taken: "Ce pseudo est déjà pris",
+    username_invalid: "Pseudo invalide (3-20 caractères alphanumériques)",
+    saving: "Enregistrement...",
+    profile_saved: "Profil enregistré !",
   },
   en: {
     // Confirmation Modals
@@ -178,6 +205,33 @@ export const translations = {
     // Globe Themes
     theme_satellite: "Satellite",
     theme_blackout: "Blacked Out",
+
+    // Profile & Leaderboard
+    profile: "Profile",
+    profile_screen_title: "My Profile & Leaderboards",
+    personal_records: "Personal Records",
+    global_leaderboard: "Global Leaderboard",
+    username: "Username",
+    save_profile: "Save Profile",
+    select_avatar: "Select Avatar",
+    select_color: "Select Color",
+    games_played: "Games played",
+    best_score: "Best score",
+    best_time: "Best time",
+    top_explorers: "Top Explorers",
+    rank: "Rank",
+    score: "Score",
+    time: "Time",
+    date: "Date",
+    connecting: "Connecting to Supabase...",
+    not_connected: "Offline (Local)",
+    connected: "Connected to Supabase",
+    no_records_yet: "No records yet. Play a game!",
+    empty_leaderboard: "No scores recorded for this mode.",
+    username_taken: "Username is already taken",
+    username_invalid: "Invalid username (3-20 alphanumeric chars)",
+    saving: "Saving...",
+    profile_saved: "Profile saved!",
   }
 };
 
