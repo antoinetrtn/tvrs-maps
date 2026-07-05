@@ -2949,6 +2949,17 @@ const GlobeMap = ({
               }
             }
           });
+
+          // Dispose and clean up shader materials for the completed transition to prevent memory growth
+          const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
+          ["cap", "side"].forEach((kind) => {
+            const key = `shader-${prevCountry}-${kind}-${isMobileStr}-${globeTheme}`;
+            const mat = sharedMaterialsRef.current.get(key);
+            if (mat) {
+              mat.dispose();
+              sharedMaterialsRef.current.delete(key);
+            }
+          });
         } else {
           let fadeProgress = 0.0;
           if (elapsed > FADE_DELAY) {
@@ -3020,6 +3031,7 @@ const GlobeMap = ({
     styleGlobeGraticules,
     updateGlobeLighting,
     globeLightingEnabled,
+    perfProfile?.isMobile,
   ]);
 
   // Restart the (possibly parked) animation loop when selection or feedback
@@ -3056,16 +3068,14 @@ const GlobeMap = ({
   }, [styleGlobeGraticules, updateGlobeLighting]);
 
   const isMobileSize = viewport.width < 1024;
-  if (!isKeyboardMode) {
-    const isKeyboardLikelyOpening =
-      isMobileSize &&
-      window.innerHeight < maxWindowHeightRef.current * 0.85 &&
-      window.innerWidth === maxWindowWidthRef.current;
+  const isKeyboardLikelyOpening =
+    isMobileSize &&
+    window.innerHeight < maxWindowHeightRef.current * 0.85 &&
+    window.innerWidth === maxWindowWidthRef.current;
 
-    if (!isKeyboardLikelyOpening) {
-      maxWindowWidthRef.current = window.innerWidth;
-      maxWindowHeightRef.current = window.innerHeight;
-    }
+  if (!isKeyboardLikelyOpening) {
+    maxWindowWidthRef.current = window.innerWidth;
+    maxWindowHeightRef.current = window.innerHeight;
   }
 
   const globeWidth = maxWindowWidthRef.current;
