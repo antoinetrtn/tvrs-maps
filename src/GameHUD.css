@@ -64,7 +64,7 @@
     align-items: center;
     padding: 0 12px;
     height: var(--control-lg);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-lg);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -73,7 +73,39 @@
     width: 100%;
     max-width: var(--island-width);
     min-width: 300px;
+    cursor: pointer;
+    transition: all var(--transition-spring);
 }
+
+.central-island-panel:hover {
+    transform: scale(1.015) translateY(-1.5px);
+    border-color: var(--accent);
+    box-shadow: 
+        0 0 0 1px var(--accent-soft),
+        0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+    text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+    animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.central-island-panel:active {
+    transform: scale(0.985) translateY(0.5px);
+    background: var(--accent);
+    box-shadow: 0 2px 8px var(--accent-soft);
+    text-shadow: none;
+    transition: transform var(--transition-instant);
+}
+
+.central-island-panel:hover .island-font {
+    color: inherit;
+    text-shadow: inherit;
+}
+
+.central-island-panel:active .island-font {
+    color: var(--accent-contrast);
+    text-shadow: none;
+}
+
 
 /* Fixed, identical widths for timer and score to keep the center... central */
 .island-timer,
@@ -170,7 +202,7 @@
 .hud-btn-circular {
     width: var(--control-lg);
     height: var(--control-lg);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -310,7 +342,7 @@
     align-items: center;
     padding: 0 16px;
     flex: 1;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-lg);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -558,7 +590,7 @@
     justify-content: center;
     padding: 0 14px;
     height: 40px;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-md);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -631,6 +663,9 @@
     box-shadow: var(--glass-shadow);
     display: flex;
     pointer-events: auto;
+    border-radius: var(--radius-md);
+    gap: 4px;
+    padding: 3px;
 }
 
 .learn-toggle-btn {
@@ -639,7 +674,7 @@
     color: var(--text-muted);
     width: 38px;
     height: 38px;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -683,23 +718,80 @@
     -webkit-backdrop-filter: var(--glass-blur) !important;
     border-radius: var(--radius-lg);
     transform-origin: top right;
+    position: absolute;
+    top: 52px;
+    right: 0;
+    width: 280px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1005;
+    pointer-events: auto;
 }
 
 .dropdown-action-btn {
-    transition: all var(--transition-fast);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-spring);
 }
 
-.dropdown-action-btn:hover {
-    filter: brightness(1.08);
+.dropdown-action-btn.stop {
+    border: 1px solid var(--error);
+    background: transparent;
+    color: var(--error);
 }
 
 .dropdown-action-btn.stop:hover {
     background: var(--error-soft) !important;
+    filter: brightness(1.08);
+}
+
+.dropdown-action-btn.play {
+    background: var(--success);
+    color: var(--accent-contrast);
+}
+
+.dropdown-action-btn.play:hover {
+    filter: brightness(1.08);
+}
+
+.dropdown-action-btn.info {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .dropdown-action-btn.info:hover {
     background: var(--glass-hover) !important;
+    color: var(--accent);
+    border-color: var(--accent);
 }
+
+.timer-pill {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.hud-top-left .score-pill {
+    margin-left: 8px;
+}
+
 
 .timer-pill.active {
     border-color: var(--accent) !important;

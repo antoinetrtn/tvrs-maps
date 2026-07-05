@@ -2739,6 +2739,7 @@ const GlobeMap = ({
       if (needsGraticuleStyleRef.current) {
         if (time - lastGraticuleStyleTimeRef.current > 120) {
           styleGlobeGraticules();
+          updateGlobeLighting();
           lastGraticuleStyleTimeRef.current = time;
         }
         if (time > graticuleStyleUntilRef.current) {
@@ -3028,6 +3029,19 @@ const GlobeMap = ({
       animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
     }
   }, [selectedCountry, isError, isSuccess, transitioningPreviousCountryState]);
+
+  // Re-arm the start-up graticule/lighting window when asynchronously fetched map data loads
+  useEffect(() => {
+    if ((countriesData && countriesData.length > 0) || (departmentsData && departmentsData.length > 0)) {
+      needsGraticuleStyleRef.current = true;
+      graticuleStyleUntilRef.current = performance.now() + 500;
+      updateGlobeLighting();
+      styleGlobeGraticules();
+      if (animFrameIdRef.current == null && animateSceneRef.current) {
+        animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+      }
+    }
+  }, [countriesData, departmentsData, updateGlobeLighting, styleGlobeGraticules]);
 
   const handleGlobeReady = useCallback(() => {
     // Re-arm the bounded graticule restyle window and make sure the loop is

@@ -255,9 +255,9 @@
 }
 
 .btn-primary {
-  background: var(--text-main);
-  color: var(--text-inverse);
-  border: 1px solid transparent;
+  background: var(--glass-border);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
 }
 
 .btn-primary:hover {

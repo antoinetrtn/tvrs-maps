@@ -500,7 +500,7 @@
   .home-btn {
     min-height: 44px;
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
 
   .btn-title {

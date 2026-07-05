@@ -352,7 +352,6 @@ const GameHUD = ({
               {mode !== "learn" && (
                 <div
                   className={`hud-mini-pill score-pill glass-panel ${scoreGlow ? "score-increased-flash" : ""}`}
-                  style={{ marginLeft: "8px" }}
                 >
                   <span className="mini-pill-val">{score}</span>
                   <span className="mini-pill-sub">/{totalPossible}</span>
@@ -366,15 +365,7 @@ const GameHUD = ({
 
             <div className="hud-top-right">
               {mode === "learn" ? (
-                <div
-                  className="learn-toggles-group glass-panel"
-                  style={{
-                    display: "flex",
-                    gap: "4px",
-                    padding: "2px",
-                    borderRadius: "var(--radius-full)",
-                  }}
-                >
+                <div className="learn-toggles-group glass-panel">
                   <button
                     className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
                     onClick={() => onToggleLearn("showCountryLabels")}
@@ -413,7 +404,6 @@ const GameHUD = ({
                   className={`hud-mini-pill timer-pill glass-panel ${mobileMenuOpen ? "active" : ""} ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   onPointerDown={(e) => e.preventDefault()}
-                  style={{ cursor: "pointer", pointerEvents: "auto" }}
                 >
                   <span className="mini-pill-val">{formatTime(timeLeft)}</span>
                 </button>
@@ -446,21 +436,6 @@ const GameHUD = ({
                         onStop();
                       }}
                       onPointerDown={(e) => e.preventDefault()}
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                        height: "44px",
-                        borderRadius: "var(--radius-full)",
-                        border: "1px solid var(--error)",
-                        background: "transparent",
-                        color: "var(--error)",
-                        fontWeight: 700,
-                        fontSize: "0.85rem",
-                        cursor: "pointer",
-                      }}
                     >
                       <Square width={14} height={14} />
                       <span>{t("stop")}</span>
@@ -473,21 +448,6 @@ const GameHUD = ({
                         onNavigateFocus("next");
                       }}
                       onPointerDown={(e) => e.preventDefault()}
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                        height: "44px",
-                        borderRadius: "var(--radius-full)",
-                        border: "none",
-                        background: "var(--success)",
-                        color: "var(--accent-contrast)",
-                        fontWeight: 700,
-                        fontSize: "0.85rem",
-                        cursor: "pointer",
-                      }}
                     >
                       <Play width={14} height={14} />
                       <span>{t("play")}</span>
@@ -500,18 +460,6 @@ const GameHUD = ({
                       onInfo();
                     }}
                     onPointerDown={(e) => e.preventDefault()}
-                    style={{
-                      width: "44px",
-                      height: "44px",
-                      borderRadius: "50%",
-                      border: "1px solid var(--glass-border)",
-                      background: "var(--glass-bg)",
-                      color: "var(--text-main)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                    }}
                   >
                     <InfoBox width={16} height={16} />
                   </button>
@@ -567,39 +515,15 @@ const GameHUD = ({
                       <div
                         key={reg}
                         className={`gauge-item ${isActive ? "highlight" : ""} ${isFaded ? "faded" : ""}`}
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
                       >
                         <div
                           className="circular-gauge"
                           style={{
                             "--pct": `${pct}%`,
                             "--color": color,
-                            width: "32px",
-                            height: "32px",
-                            background: `conic-gradient(${color} ${pct}%, var(--glass-border) 0)`,
                           }}
                         >
-                          <div
-                            style={{
-                              position: "absolute",
-                              width: "24px",
-                              height: "24px",
-                              background: "var(--bg-color)",
-                              borderRadius: "50%",
-                              zIndex: 0,
-                            }}
-                          />
-                          <span
-                            className="gauge-val"
-                            style={{ zIndex: 1, fontSize: "0.6rem" }}
-                          >
-                            {displayVal}
-                          </span>
+                          <span className="gauge-val">{displayVal}</span>
                         </div>
                         <span
                           style={{
@@ -661,15 +585,7 @@ const GameHUD = ({
 
             <div className="hud-top-right">
               {mode === "learn" ? (
-                <div
-                  className="learn-toggles-group glass-panel"
-                  style={{
-                    display: "flex",
-                    gap: "4px",
-                    padding: "3px",
-                    borderRadius: "var(--radius-full)",
-                  }}
-                >
+                <div className="learn-toggles-group glass-panel">
                   <button
                     className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
                     onClick={() => onToggleLearn("showCountryLabels")}
