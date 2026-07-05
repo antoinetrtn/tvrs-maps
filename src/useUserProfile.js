@@ -68,6 +68,22 @@ export function useUserProfile() {
     return defaultRecords;
   });
 
+  const [lastScores, setLastScores] = useState(() => {
+    const defaultScores = {
+      countries: [],
+      capitals: [],
+      departments: [],
+      rivers_mountains: []
+    };
+    try {
+      const cached = localStorage.getItem("tvrs-last-scores");
+      if (cached) {
+        return { ...defaultScores, ...JSON.parse(cached) };
+      }
+    } catch (_) {}
+    return defaultScores;
+  });
+
   const [topExplorers, setTopExplorers] = useState([]);
 
   const fetchTopExplorers = useCallback(async () => {
@@ -210,6 +226,16 @@ export function useUserProfile() {
 
         localStorage.setItem("tvrs-local-records", JSON.stringify(updatedRecords));
 
+        setLastScores((prevHistory) => {
+          const modeHistory = prevHistory[gameMode] || [];
+          const nextHistory = [...modeHistory, finalScore].slice(-3);
+          const nextScores = { ...prevHistory, [gameMode]: nextHistory };
+          try {
+            localStorage.setItem("tvrs-last-scores", JSON.stringify(nextScores));
+          } catch (_) {}
+          return nextScores;
+        });
+
         if (isSupabaseConfigured) {
           upsertUserRecord(
             userProfile.id,
@@ -240,6 +266,7 @@ export function useUserProfile() {
     localRecords,
     topExplorers,
     updateGameRecord,
-    fetchTopExplorers
+    fetchTopExplorers,
+    lastScores
   };
 }

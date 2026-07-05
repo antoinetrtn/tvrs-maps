@@ -18,7 +18,10 @@ import {
   getThemeCssVariables,
   GLOBE_THEME_IDS,
   DEFAULT_GLOBE_THEME,
+  getThemeRegionColorLabel,
 } from "./designSystem";
+import PixelFireworks from "./PixelFireworks.jsx";
+import AchievementToast from "./AchievementToast.jsx";
 import {
   DEFAULT_MODE,
   DEFAULT_GAME_DURATION_SEC,
@@ -40,7 +43,8 @@ function App() {
     localRecords,
     topExplorers,
     updateGameRecord,
-    fetchTopExplorers
+    fetchTopExplorers,
+    lastScores
   } = useUserProfile();
   const [profileInitialTab, setProfileInitialTab] = useState("records");
   const [mode, setMode] = useState(DEFAULT_MODE); // 'countries', 'capitals', 'learn', 'departments'
@@ -64,6 +68,8 @@ function App() {
   const setPopupWarning = useCallback((val) => setFeedback(val ? "warning" : null), []);
 
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [isNewPB, setIsNewPB] = useState(false);
+  const [activeAchievement, setActiveAchievement] = useState(null);
   const globeLightingEnabled = true;
   const [theme, setTheme] = useState(() => {
     try {
@@ -422,6 +428,7 @@ function App() {
       setSelectedCountry(null);
       resetNavigationTrail(null);
       setMenuOpen(false);
+      setIsNewPB(false);
     },
     [resetNavigationTrail, gameDuration],
   );
@@ -477,9 +484,17 @@ function App() {
     (finalScore) => {
       if (mode === "learn") return;
       const timeSpent = gameDuration - timeLeft;
+
+      const prevRecord = localRecords[mode] || { maxScore: 0, bestTime: null, gamesPlayed: 0 };
+      const isPB = finalScore > prevRecord.maxScore || (prevRecord.maxScore === 0 && finalScore > 0);
+
+      if (isPB) {
+        setIsNewPB(true);
+      }
+
       updateGameRecord(mode, finalScore, timeSpent);
     },
-    [mode, gameDuration, timeLeft, updateGameRecord]
+    [mode, gameDuration, timeLeft, updateGameRecord, localRecords]
   );
 
   useEffect(() => {
@@ -560,6 +575,37 @@ function App() {
       setPopupSuccess(true);
       setSelectedCountry(guessedKey);
 
+      // Check for region conquest achievement
+      const guessItem = activeDataMap[guessedKey];
+      const region = guessItem?.region;
+      if (region && region !== "Unknown") {
+        const allInRegion = Object.keys(activeDataMap).filter(
+          (k) => activeDataMap[k]?.region === region
+        );
+        if (allInRegion.length > 0) {
+          const wasCompletedBefore = foundList.filter(
+            (k) => activeDataMap[k]?.region === region
+          ).length === allInRegion.length;
+          const isCompletedNow = newFound.filter(
+            (k) => activeDataMap[k]?.region === region
+          ).length === allInRegion.length;
+
+          if (!wasCompletedBefore && isCompletedNow) {
+            const labelColor = getThemeRegionColorLabel(globeTheme, theme, region);
+            const invaders = ["invader_1", "invader_2", "invader_3", "invader_4", "invader_5", "invader_6", "invader_7", "invader_8"];
+            const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const invaderId = invaders[regionHash % invaders.length];
+
+            setActiveAchievement({
+              title: t("achievement_continent_conquered"),
+              message: t("achievement_continent_desc", { region: t(`region_${region}`) || region }),
+              color: labelColor,
+              invaderId: invaderId
+            });
+          }
+        }
+      }
+
       setTimeout(() => {
         setPopupSuccess(false);
         setSelectedCountry((prev) => {
@@ -583,7 +629,7 @@ function App() {
         });
       }, timing);
     },
-    [foundList, effectiveKeyboardMode, getClosestUnfound],
+    [foundList, effectiveKeyboardMode, getClosestUnfound, activeDataMap, globeTheme, theme, t],
   );
 
   const handleInput = useCallback(
@@ -1008,6 +1054,9 @@ function App() {
           theme={theme}
           lang={lang}
           globeTheme={globeTheme}
+          lastScores={lastScores[mode] || []}
+          maxScore={localRecords[mode]?.maxScore || 0}
+          isNewPB={isNewPB}
         />
       )}
       {(showResultsTable || showInfoModal) && (
@@ -1046,6 +1095,16 @@ function App() {
           onCancel={() => setConfirmState(null)}
           theme={theme}
           lang={lang}
+        />
+      )}
+      {isNewPB && showEndScreen && <PixelFireworks duration={8000} />}
+      {activeAchievement && (
+        <AchievementToast
+          title={activeAchievement.title}
+          message={activeAchievement.message}
+          invaderId={activeAchievement.invaderId}
+          color={activeAchievement.color}
+          onClose={() => setActiveAchievement(null)}
         />
       )}
     </div>

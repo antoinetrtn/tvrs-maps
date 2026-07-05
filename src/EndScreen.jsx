@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { InfoBox } from "pixelarticons/react";
+import { InfoBox, Trophy } from "pixelarticons/react";
 import "./EndScreen.css";
 import { getGameStats } from "./utils";
 import { getThemeRegionColor } from "./designSystem";
@@ -17,6 +17,9 @@ const EndScreen = ({
   theme = "dark",
   lang = "fr",
   globeTheme = "satellite",
+  lastScores = [],
+  maxScore = 0,
+  isNewPB = false,
 }) => {
   const dataMap = activeDataMap || countryDataMap;
   const t = useTranslation(lang);
@@ -103,6 +106,51 @@ const EndScreen = ({
             })}
           </div>
         </div>
+
+        {isNewPB && (
+          <div className="new-pb-banner">
+            <span>{t("new_pb")}</span>
+          </div>
+        )}
+
+        {lastScores && lastScores.length > 0 && (
+          <div className="end-screen-history glass-panel">
+            <h3 className="history-title text-natural-case">{t("last_scores")}</h3>
+            <div className="history-scores-row">
+              {lastScores.map((hScore, idx) => {
+                let trophyColor = "var(--text-muted)";
+                let trophyClass = "trophy-grey";
+                if (maxScore > 0) {
+                  if (hScore >= maxScore) {
+                    trophyColor = "var(--color-gold)";
+                    trophyClass = "trophy-gold";
+                  } else if (hScore >= maxScore * 0.7) {
+                    trophyColor = "var(--color-silver)";
+                    trophyClass = "trophy-silver";
+                  } else if (hScore >= maxScore * 0.4) {
+                    trophyColor = "var(--color-bronze)";
+                    trophyClass = "trophy-bronze";
+                  }
+                } else if (hScore > 0) {
+                  trophyColor = "var(--color-gold)";
+                  trophyClass = "trophy-gold";
+                }
+
+                return (
+                  <div key={idx} className="history-score-item">
+                    <Trophy
+                      width={18}
+                      height={18}
+                      className={`trophy-icon ${trophyClass}`}
+                      style={{ color: trophyColor }}
+                    />
+                    <span className="history-score-value">{hScore}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="end-screen-actions">
           <button className="btn-primary" onClick={onRestart}>

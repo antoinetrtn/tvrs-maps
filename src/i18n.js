@@ -64,8 +64,10 @@ export const translations = {
     // End Screen
     incredible: "Incroyable !",
     well_done: "Bravo !",
-    mastered_france: "Vous maîtrisez la carte de France !",
-    conquered_world: "Vous avez conquis le monde !",
+    achievement_continent_conquered: "Continent Conquis !",
+    achievement_continent_desc: "Félicitations ! Tu as trouvé tous les pays de la région {region} !",
+    last_scores: "Derniers scores",
+    new_pb: "Nouveau Record !",
     view_table: "Voir le tableau",
     play_again: "Rejouer",
 
@@ -180,8 +182,10 @@ export const translations = {
     // End Screen
     incredible: "Incredible !",
     well_done: "Well done!",
-    mastered_france: "You mastered the map of France!",
-    conquered_world: "You conquered the world!",
+    achievement_continent_conquered: "Continent Conquered!",
+    achievement_continent_desc: "Congratulations! You found all countries in {region}!",
+    last_scores: "Last Scores",
+    new_pb: "New Personal Best!",
     view_table: "View Table",
     play_again: "Play Again",
 

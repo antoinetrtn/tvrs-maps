@@ -347,3 +347,106 @@
     margin-bottom: var(--spacing-md);
   }
 }
+
+/* History scores section styling */
+.end-screen-history {
+  max-width: 400px;
+  width: 80%;
+  margin: 0 auto var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-compact);
+  -webkit-backdrop-filter: var(--glass-blur-compact);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  animation: slideUp var(--transition-emphasized) both;
+  animation-delay: 0.3s;
+  pointer-events: auto;
+}
+
+.history-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0 0 var(--spacing-sm) 0;
+  letter-spacing: 0.05em;
+}
+
+.history-scores-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+}
+
+.history-score-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  background: var(--subtle-tint);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+}
+
+.history-score-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+/* Trophy animation & glow styles */
+.trophy-icon {
+  filter: drop-shadow(0 2px 4px var(--shadow-subtle));
+  transition: transform var(--transition-spring);
+}
+
+.history-score-item:hover .trophy-icon {
+  transform: scale(1.2) rotate(8deg);
+}
+
+.trophy-gold {
+  animation: trophy-glow-gold 2s infinite alternate;
+}
+.trophy-silver {
+  animation: trophy-glow-silver 2s infinite alternate;
+}
+.trophy-bronze {
+  animation: trophy-glow-bronze 2s infinite alternate;
+}
+
+@keyframes trophy-glow-gold {
+  0% { filter: drop-shadow(0 0 2px var(--color-gold-glow)); }
+  100% { filter: drop-shadow(0 0 10px var(--color-gold-glow)); }
+}
+@keyframes trophy-glow-silver {
+  0% { filter: drop-shadow(0 0 2px var(--color-silver-glow)); }
+  100% { filter: drop-shadow(0 0 10px var(--color-silver-glow)); }
+}
+@keyframes trophy-glow-bronze {
+  0% { filter: drop-shadow(0 0 2px var(--color-bronze-glow)); }
+  100% { filter: drop-shadow(0 0 10px var(--color-bronze-glow)); }
+}
+
+/* Personal Best Banner */
+.new-pb-banner {
+  display: inline-block;
+  margin: 0 auto var(--spacing-md);
+  padding: 6px 16px;
+  background: var(--accent);
+  color: var(--bg-color);
+  border: 2px solid var(--color-gold);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 0 16px var(--color-gold-glow);
+  animation: pb-bounce 1s ease infinite alternate, slideUp var(--transition-emphasized) both;
+  animation-delay: 0.15s;
+  pointer-events: auto;
+}
+
+@keyframes pb-bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
