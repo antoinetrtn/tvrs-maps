@@ -586,7 +586,83 @@
   }
 }
 
+/* Bottom Right Podium Widget */
+.home-podium-widget {
+  pointer-events: auto;
+  height: var(--control-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-md);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition: all var(--transition-spring);
+}
 
+.home-podium-widget:hover {
+  transform: translateY(-2.5px) scale(1.04);
+  border-color: var(--accent) !important;
+  background: var(--glass-hover) !important;
+  box-shadow: var(--glass-shadow-strong), 0 0 8px var(--accent-soft);
+}
+
+.home-podium-widget:active {
+  transform: translateY(0.5px) scale(0.96);
+  background: var(--accent) !important;
+  box-shadow: 0 2px 8px var(--accent-soft);
+}
+
+.widget-spot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--subtle-tint);
+  border: 1px solid var(--glass-border);
+}
+
+.widget-spot.rank-1 {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 4px var(--color-gold-glow);
+}
+.widget-spot.rank-2 {
+  border-color: var(--color-silver);
+  box-shadow: 0 0 4px var(--color-silver-glow);
+}
+.widget-spot.rank-3 {
+  border-color: var(--color-bronze);
+  box-shadow: 0 0 4px var(--color-bronze-glow);
+}
+
+.widget-rank-num {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-family: monospace;
+  font-size: 0.55rem;
+  font-weight: 700;
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-color);
+  background: var(--text-main);
+  border: 1px solid var(--glass-border);
+}
+
+.widget-spot.rank-1 .widget-rank-num { background: var(--color-gold); }
+.widget-spot.rank-2 .widget-rank-num { background: var(--color-silver); }
+.widget-spot.rank-3 .widget-rank-num { background: var(--color-bronze); }
 
 .truncate {
   white-space: nowrap;

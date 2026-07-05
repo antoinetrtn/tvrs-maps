@@ -47,7 +47,19 @@ const HomeScreen = ({
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  // displayExplorers removed because podium is now triggered from bottom-right buttons
+  const displayExplorers = [...topExplorers];
+  while (displayExplorers.length < 3) {
+    displayExplorers.push({
+      id: `placeholder-${displayExplorers.length}`,
+      score: 0,
+      time_spent_seconds: 0,
+      profiles: {
+        username: "???",
+        avatar_id: "invader_1",
+        avatar_color: "gray"
+      }
+    });
+  }
 
   const resetCardTilt = () => {
     const card = cardRef.current;
@@ -183,8 +195,8 @@ const HomeScreen = ({
     </div>
 
       <div className="home-bottom-right">
-        <button
-          className="leaderboard-trigger-btn glass-panel"
+        <div
+          className="home-podium-widget glass-panel"
           onClick={(e) => {
             e.stopPropagation();
             onOpenProfile("leaderboard");
@@ -192,8 +204,31 @@ const HomeScreen = ({
           onPointerDown={(e) => e.stopPropagation()}
           title={t("leaderboard")}
         >
-          <Trophy width={20} height={20} />
-        </button>
+          <div className="widget-spot rank-2">
+            <InvaderAvatar
+              invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
+              color={displayExplorers[1].profiles?.avatar_color || "cyan"}
+              size={18}
+            />
+            <span className="widget-rank-num">2</span>
+          </div>
+          <div className="widget-spot rank-1">
+            <InvaderAvatar
+              invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
+              color={displayExplorers[0].profiles?.avatar_color || "cyan"}
+              size={18}
+            />
+            <span className="widget-rank-num">1</span>
+          </div>
+          <div className="widget-spot rank-3">
+            <InvaderAvatar
+              invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
+              color={displayExplorers[2].profiles?.avatar_color || "cyan"}
+              size={18}
+            />
+            <span className="widget-rank-num">3</span>
+          </div>
+        </div>
 
         <button
           className="profile-trigger-btn glass-panel"
