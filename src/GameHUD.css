@@ -64,7 +64,7 @@
     align-items: center;
     padding: 0 12px;
     height: var(--control-lg);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -202,7 +202,7 @@
 .hud-btn-circular {
     width: var(--control-lg);
     height: var(--control-lg);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -342,7 +342,7 @@
     align-items: center;
     padding: 0 16px;
     flex: 1;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -409,7 +409,7 @@
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     padding: 8px;
     display: flex;
     flex-direction: column;
@@ -423,7 +423,7 @@
 .suggestion-item {
     background: transparent;
     border: 1px solid transparent;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     padding: 10px 16px;
     color: var(--text-main);
     font-size: 0.9rem;
@@ -590,7 +590,7 @@
     justify-content: center;
     padding: 0 14px;
     height: 40px;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -663,7 +663,7 @@
     box-shadow: var(--glass-shadow);
     display: flex;
     pointer-events: auto;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     gap: 4px;
     padding: 3px;
 }
@@ -716,7 +716,7 @@
     box-shadow: var(--glass-shadow-strong) !important;
     backdrop-filter: var(--glass-blur) !important;
     -webkit-backdrop-filter: var(--glass-blur) !important;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-sm);
     transform-origin: top right;
     position: absolute;
     top: 52px;
@@ -737,7 +737,7 @@
     justify-content: center;
     gap: 6px;
     height: 44px;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;

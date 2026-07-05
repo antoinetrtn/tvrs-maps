@@ -50,7 +50,7 @@
   --modal-header-bg: rgba(15, 15, 15, 0.6);
 
   /* DESIGN SYSTEM TOKENS */
-  --radius-sm: 10px;
+  --radius-sm: 4px;
   --radius-md: calc(var(--radius-sm) + var(--spacing-xs));
   --radius-lg: calc(var(--radius-md) + var(--spacing-xs) * 1.5);
   --radius-xl: calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs));

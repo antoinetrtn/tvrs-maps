@@ -342,7 +342,7 @@ const GameHUD = ({
           <>
             <div className="hud-top-left">
               <button
-                className="hud-btn-circular glass-panel"
+                className="hud-btn-circular"
                 onClick={onGoHome}
                 onPointerDown={(e) => e.preventDefault()}
                 title={t("home")}
@@ -351,7 +351,7 @@ const GameHUD = ({
               </button>
               {mode !== "learn" && (
                 <div
-                  className={`hud-mini-pill score-pill glass-panel ${scoreGlow ? "score-increased-flash" : ""}`}
+                  className={`hud-mini-pill score-pill ${scoreGlow ? "score-increased-flash" : ""}`}
                 >
                   <span className="mini-pill-val">{score}</span>
                   <span className="mini-pill-sub">/{totalPossible}</span>
@@ -401,7 +401,7 @@ const GameHUD = ({
                 </div>
               ) : (
                 <button
-                  className={`hud-mini-pill timer-pill glass-panel ${mobileMenuOpen ? "active" : ""} ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
+                  className={`hud-mini-pill timer-pill ${mobileMenuOpen ? "active" : ""} ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   onPointerDown={(e) => e.preventDefault()}
                 >
@@ -559,7 +559,7 @@ const GameHUD = ({
             <div className="hud-top-center">
               {mode !== "learn" && (
                 <div
-                  className="central-island-panel glass-panel"
+                  className="central-island-panel"
                   onClick={onInfo}
                   onPointerDown={(e) => e.preventDefault()}
                 >
@@ -621,7 +621,7 @@ const GameHUD = ({
                 </div>
               ) : isPlaying && !isGameOver ? (
                 <button
-                  className="hud-btn-circular glass-panel"
+                  className="hud-btn-circular"
                   style={{ color: "var(--error)" }}
                   onClick={onStop}
                   onPointerDown={(e) => e.preventDefault()}
@@ -631,7 +631,7 @@ const GameHUD = ({
                 </button>
               ) : (
                 <button
-                  className="hud-btn-circular glass-panel"
+                  className="hud-btn-circular"
                   style={{ color: "var(--success)" }}
                   onClick={() => onNavigateFocus("next")}
                   onPointerDown={(e) => e.preventDefault()}
@@ -673,7 +673,7 @@ const GameHUD = ({
             })}
           </div>
           <button
-            className="hud-btn-circular glass-panel"
+            className="hud-btn-circular"
             onClick={onInfo}
             title={t("information")}
           >
@@ -768,7 +768,7 @@ const GameHUD = ({
         <div className="bottom-hud-islands">
           {isFocusedCountry && mode !== "learn" && (
             <button
-              className="hud-btn-circular glass-panel prev-btn"
+              className="hud-btn-circular prev-btn"
               onClick={() => onNavigateFocus("prev")}
               onPointerDown={(e) => e.preventDefault()}
               title={t("previous")}
@@ -778,7 +778,7 @@ const GameHUD = ({
           )}
 
           <div
-            className={`input-island glass-panel ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""}`}
+            className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""}`}
           >
             <input
               ref={extInputRef}
@@ -805,7 +805,7 @@ const GameHUD = ({
 
           {isFocusedCountry && mode !== "learn" && (
             <button
-              className="hud-btn-circular glass-panel next-btn"
+              className="hud-btn-circular next-btn"
               onClick={() => onNavigateFocus("next")}
               onPointerDown={(e) => e.preventDefault()}
               title={t("next")}

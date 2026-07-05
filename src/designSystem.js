@@ -10,7 +10,7 @@
 
 export const STYLE_TOKENS = {
   radius: {
-    sm: "10px",
+    sm: "4px",
     md: "calc(var(--radius-sm) + var(--spacing-xs))",
     lg: "calc(var(--radius-md) + var(--spacing-xs) * 1.5)",
     xl: "calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs))",
