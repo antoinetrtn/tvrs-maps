@@ -96,8 +96,8 @@
 
 .color-selector-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: var(--spacing-xs);
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
   margin-top: var(--spacing-xs);
   width: 100%;
 }

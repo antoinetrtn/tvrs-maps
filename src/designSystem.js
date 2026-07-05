@@ -538,8 +538,6 @@ export const getThemeCssVariables = (
     "--color-lime": "#a3e635",
     "--color-pink": "#f472b6",
     "--color-amber": "#fbbf24",
-    "--color-violet": "#8b5cf6",
-    "--color-rose": "#fda4af",
   };
 };
 
@@ -671,7 +669,5 @@ export const AVATAR_COLORS = {
   blue: "#2196f3",
   lime: "#a3e635",
   pink: "#f472b6",
-  amber: "#fbbf24",
-  violet: "#8b5cf6",
-  rose: "#fda4af"
+  amber: "#fbbf24"
 };

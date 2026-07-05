@@ -85,7 +85,7 @@
   border-color: var(--accent);
 }
 
-.scope-toggle-wrap {
+.scope-toggle-wrap.glass-panel {
   display: flex;
   padding: 2px;
   border-radius: var(--radius-md);
