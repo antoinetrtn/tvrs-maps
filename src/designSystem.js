@@ -536,12 +536,6 @@ export const getThemeCssVariables = (
     "--shadow-subtle": "rgba(0, 0, 0, 0.15)",
     "--color-cyan-glow-strong": "rgba(0, 240, 255, 0.4)",
     "--color-magenta-glow-strong": "rgba(255, 0, 127, 0.4)",
-    "--color-lime": "#a3e635",
-    "--color-pink": "#f472b6",
-    "--color-amber": "#fbbf24",
-    "--color-violet": "#8b5cf6",
-    "--color-rose": "#fda4af",
-    "--color-red": "#ef4444",
   };
 };
 
@@ -669,12 +663,5 @@ export const AVATAR_COLORS = {
   green: "#00ff88",
   yellow: "#ffeb3b",
   purple: "#bd00ff",
-  orange: "#ff5722",
-  blue: "#2196f3",
-  lime: "#a3e635",
-  pink: "#f472b6",
-  amber: "#fbbf24",
-  violet: "#8b5cf6",
-  rose: "#fda4af",
-  red: "#ef4444"
+  orange: "#ff5722"
 };

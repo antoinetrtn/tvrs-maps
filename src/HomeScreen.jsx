@@ -18,6 +18,7 @@ import {
 } from "pixelarticons/react";
 import Logo from "./Logo";
 import InvaderAvatar from "./InvaderAvatar";
+import ProfilePanel from "./ProfilePanel";
 import { THEMES_LIST } from "./designSystem";
 import { useTranslation } from "./i18n";
 import "./HomeScreen.css";
@@ -34,10 +35,13 @@ const HomeScreen = ({
   setGlobeTheme,
   onOpenProfile,
   topExplorers = [],
+  userProfile,
+  setUserProfile,
 }) => {
   const cardRef = useRef(null);
   const isDraggingRef = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const t = useTranslation(lang);
 
   const formatTime = (secs) => {
@@ -234,7 +238,8 @@ const HomeScreen = ({
           className="profile-trigger-btn glass-panel"
           onClick={(e) => {
             e.stopPropagation();
-            onOpenProfile("records");
+            setProfileOpen((prev) => !prev);
+            setSettingsOpen(false);
           }}
           onPointerDown={(e) => e.stopPropagation()}
           title={t("profile")}
@@ -247,6 +252,7 @@ const HomeScreen = ({
           onClick={(e) => {
             e.stopPropagation();
             setSettingsOpen((prev) => !prev);
+            setProfileOpen(false);
           }}
           onPointerDown={(e) => e.stopPropagation()}
           title={t("settings")}
@@ -256,10 +262,11 @@ const HomeScreen = ({
       </div>
 
       <div
-        className={`settings-backdrop ${settingsOpen ? "open" : ""}`}
+        className={`settings-backdrop ${(settingsOpen || profileOpen) ? "open" : ""}`}
         onClick={(e) => {
           e.stopPropagation();
           setSettingsOpen(false);
+          setProfileOpen(false);
         }}
         onPointerDown={(e) => e.stopPropagation()}
       />
@@ -388,6 +395,15 @@ const HomeScreen = ({
           </div>
         </div>
       </div>
+
+      <ProfilePanel
+        userProfile={userProfile}
+        setUserProfile={setUserProfile}
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        lang={lang}
+        theme={theme}
+      />
     </div>
   );
 };

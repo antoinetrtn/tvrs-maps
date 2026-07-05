@@ -5,7 +5,7 @@ import HomeScreen from "./HomeScreen.jsx";
 import ResultsModal from "./ResultsModal.jsx";
 import EndScreen from "./EndScreen.jsx";
 import ConfirmationModal from "./ConfirmationModal.jsx";
-import ProfileScreen from "./ProfileScreen.jsx";
+import LeaderboardScreen from "./LeaderboardScreen.jsx";
 import "./App.css";
 import { countryDataMap } from "./gameData";
 import { departmentsDataMap } from "./departmentsData";
@@ -1094,21 +1094,19 @@ function App() {
           setGameDuration={setGameDuration}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
-          onOpenProfile={(tab = "records") => {
-            setProfileInitialTab(tab);
-            setCurrentScreen("profile");
+          onOpenProfile={() => {
+            setCurrentScreen("leaderboard");
           }}
           topExplorers={topExplorers}
-        />
-      ) : currentScreen === "profile" ? (
-        <ProfileScreen
           userProfile={userProfile}
           setUserProfile={setUserProfile}
-          localRecords={localRecords}
+        />
+      ) : currentScreen === "leaderboard" ? (
+        <LeaderboardScreen
+          userProfile={userProfile}
           onBack={() => setCurrentScreen("home")}
           lang={lang}
           theme={theme}
-          initialTab={profileInitialTab}
         />
       ) : (
         !showEndScreen && (
@@ -1191,7 +1189,7 @@ function App() {
         isSuccess={popupSuccess}
         hasActiveFeedback={popupError || popupSuccess}
         perfProfile={perfProfile}
-        isHomeScreen={currentScreen === "home" || currentScreen === "profile"}
+        isHomeScreen={currentScreen === "home" || currentScreen === "leaderboard"}
         isKeyboardMode={effectiveKeyboardMode}
         isEndScreen={showEndScreen}
         isPerfectScore={foundList.length === totalPossible}

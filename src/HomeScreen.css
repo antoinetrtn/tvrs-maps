@@ -625,7 +625,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--subtle-tint);
   border: 1px solid var(--glass-border);
 }
@@ -652,7 +652,7 @@
   font-weight: 700;
   width: 12px;
   height: 12px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
