@@ -21,15 +21,6 @@ const ProfileScreen = ({
   initialTab = "records"
 }) => {
   const t = useTranslation(lang);
-  const [activeTab, setActiveTab] = useState(initialTab); // "records" or "leaderboard"
-
-  useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
-  const [leaderboardMode, setLeaderboardMode] = useState("countries");
-  const [leaderboardData, setLeaderboardData] = useState([]);
-  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
-  const [leaderboardError, setLeaderboardError] = useState(null);
 
   // Profile Form State
   const [usernameInput, setUsernameInput] = useState(userProfile.username || "");
@@ -45,34 +36,6 @@ const ProfileScreen = ({
     setSelectedAvatar(userProfile.avatarId || "invader_1");
     setSelectedColor(userProfile.avatarColor || "cyan");
   }, [userProfile]);
-
-  // Load leaderboard when tab or mode changes
-  useEffect(() => {
-    if (activeTab === "leaderboard") {
-      fetchLeaderboardData();
-    }
-  }, [activeTab, leaderboardMode]);
-
-  const fetchLeaderboardData = async () => {
-    if (!isSupabaseConfigured) {
-      setLeaderboardError(t("not_connected"));
-      return;
-    }
-    setIsLoadingLeaderboard(true);
-    setLeaderboardError(null);
-    try {
-      const { data, error } = await getLeaderboard(leaderboardMode);
-      if (error) {
-        setLeaderboardError(error);
-      } else {
-        setLeaderboardData(data || []);
-      }
-    } catch (err) {
-      setLeaderboardError(err.message);
-    } finally {
-      setIsLoadingLeaderboard(false);
-    }
-  };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -157,6 +120,123 @@ const ProfileScreen = ({
     });
   };
 
+  // State-contained Leaderboard Column Component
+  const LeaderboardColumn = ({ defaultMode }) => {
+    const [colMode, setColMode] = useState(defaultMode);
+    const [colData, setColData] = useState([]);
+    const [colLoading, setColLoading] = useState(false);
+    const [colError, setColError] = useState(null);
+
+    const fetchColData = async () => {
+      if (!isSupabaseConfigured) return;
+      setColLoading(true);
+      setColError(null);
+      try {
+        const { data, error } = await getLeaderboard(colMode);
+        if (error) {
+          setColError(error);
+        } else {
+          setColData(data || []);
+        }
+      } catch (err) {
+        setColError(err.message);
+      } finally {
+        setColLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      fetchColData();
+    }, [colMode]);
+
+    return (
+      <div className="leaderboard-column glass-panel">
+        <div className="leaderboard-column-header">
+          <select
+            value={colMode}
+            onChange={(e) => setColMode(e.target.value)}
+            className="mode-select-dropdown glass-panel"
+          >
+            <option value="countries">{t("mode_countries")}</option>
+            <option value="capitals">{t("mode_capitals")}</option>
+            <option value="departments">{t("mode_departments")}</option>
+            <option value="rivers_mountains">{t("mode_rivers_mountains")}</option>
+          </select>
+        </div>
+
+        <div className="leaderboard-table-container scrollbar-styled">
+          {!isSupabaseConfigured ? (
+            <div className="leaderboard-empty-state">
+              <p>{t("not_connected")}</p>
+            </div>
+          ) : colLoading ? (
+            <div className="leaderboard-loading-state">
+              <div className="pixel-spinner" />
+              <p>{t("connecting")}</p>
+            </div>
+          ) : colError ? (
+            <div className="leaderboard-error-state">
+              <p>Erreur: {colError}</p>
+            </div>
+          ) : colData.length === 0 ? (
+            <div className="leaderboard-empty-state">
+              <p>{t("empty_leaderboard")}</p>
+            </div>
+          ) : (
+            <table className="leaderboard-table">
+              <thead>
+                <tr>
+                  <th className="col-rank">{t("rank")}</th>
+                  <th className="col-player">Joueur</th>
+                  <th className="col-score">{t("score")}</th>
+                  <th className="col-time">{t("time")}</th>
+                  <th className="col-date">{t("date")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {colData.map((row, index) => {
+                  const prof = row.profiles || {
+                    username: "Anonyme",
+                    avatar_id: "invader_1",
+                    avatar_color: "cyan"
+                  };
+                  const isTop3 = index < 3;
+                  const rankLabels = ["1st", "2nd", "3rd"];
+                  const rankColorClass = isTop3 ? `rank-${index + 1}` : "";
+
+                  return (
+                    <tr key={row.id}>
+                      <td className="col-rank">
+                        <span className={`rank-badge ${rankColorClass}`}>
+                          {isTop3 ? rankLabels[index] : index + 1}
+                        </span>
+                      </td>
+                      <td className="col-player">
+                        <div className="player-cell">
+                          <InvaderAvatar
+                            invaderId={prof.avatar_id}
+                            color={prof.avatar_color}
+                            size={20}
+                          />
+                          <span className="player-username">{prof.username}</span>
+                        </div>
+                      </td>
+                      <td className="col-score highlight-cyan">{row.score}</td>
+                      <td className="col-time highlight-magenta">
+                        {formatTime(row.time_spent_seconds)}
+                      </td>
+                      <td className="col-date">{formatDate(row.created_at)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`profile-screen-overlay ${theme}`}>
       <div className="profile-container glass-panel">
@@ -165,98 +245,93 @@ const ProfileScreen = ({
           <button className="back-btn glass-panel" onClick={onBack} title={t("home")}>
             <ChevronLeft width={20} height={20} />
           </button>
-          <h1 className="profile-title">{t("profile_screen_title")}</h1>
+          <h1 className="profile-title text-natural-case">
+            {initialTab === "leaderboard" ? t("global_leaderboard") : t("profile_screen_title")}
+          </h1>
         </div>
 
-        {/* Layout: Left Sidebar (Edit Profile) / Right Content (Records or Leaderboard) */}
-        <div className="profile-content-grid">
-          
-          {/* Edit Profile Form */}
-          <div className="profile-sidebar glass-panel">
-            <h2 className="section-title">
-              <User className="icon" /> {t("profile")}
-            </h2>
-
-            <form onSubmit={handleSaveProfile} className="profile-form">
-              <div className="avatar-preview-container">
-                <div className="avatar-glow" style={{ "--glow-color": AVATAR_COLORS[selectedColor] }}>
-                  <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={64} />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="username-input">{t("username")}</label>
-                <input
-                  id="username-input"
-                  type="text"
-                  value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="Pseudo..."
-                  maxLength={20}
-                  className="glass-panel"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{t("select_avatar")}</label>
-                <div className="avatar-grid scrollbar-styled">
-                  {Object.keys(INVADER_DESIGNS).map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`avatar-option glass-panel ${selectedAvatar === id ? "active" : ""}`}
-                      onClick={() => setSelectedAvatar(id)}
-                    >
-                      <InvaderAvatar invaderId={id} color={selectedColor} size={28} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>{t("select_color")}</label>
-                <div className="color-selector-grid">
-                  {Object.keys(AVATAR_COLORS).map((cKey) => (
-                    <button
-                      key={cKey}
-                      type="button"
-                      className={`color-option ${selectedColor === cKey ? "active" : ""}`}
-                      style={{ "--option-color": AVATAR_COLORS[cKey] }}
-                      onClick={() => setSelectedColor(cKey)}
-                      title={cKey}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {formError && <div className="form-feedback error">{formError}</div>}
-              {saveSuccess && <div className="form-feedback success">{t("profile_saved")}</div>}
-
-              <button type="submit" disabled={isSaving} className="btn-primary form-submit-btn">
-                {isSaving ? t("saving") : t("save_profile")}
-              </button>
-            </form>
+        {initialTab === "leaderboard" ? (
+          /* DOUBLE LEADERBOARD VIEW */
+          <div className="leaderboard-double-layout">
+            <LeaderboardColumn defaultMode="countries" />
+            <LeaderboardColumn defaultMode="capitals" />
           </div>
+        ) : (
+          /* PROFILE & RECORDS VIEW */
+          <div className="profile-content-grid">
+            {/* Sidebar Profile Form */}
+            <div className="profile-sidebar glass-panel">
+              <h2 className="section-title text-natural-case">
+                <User className="icon" /> {t("profile")}
+              </h2>
 
-          {/* Records & Leaderboards Area */}
-          <div className="profile-main-content">
-            <div className="tab-buttons">
-              <button
-                className={`tab-btn glass-panel ${activeTab === "records" ? "active" : ""}`}
-                onClick={() => setActiveTab("records")}
-              >
-                <BookOpen className="icon" /> {t("personal_records")}
-              </button>
-              <button
-                className={`tab-btn glass-panel ${activeTab === "leaderboard" ? "active" : ""}`}
-                onClick={() => setActiveTab("leaderboard")}
-              >
-                <Trophy className="icon" /> {t("global_leaderboard")}
-              </button>
+              <form onSubmit={handleSaveProfile} className="profile-form">
+                <div className="avatar-preview-container">
+                  <div className="avatar-glow" style={{ "--glow-color": AVATAR_COLORS[selectedColor] }}>
+                    <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={64} />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="username-input">{t("username")}</label>
+                  <input
+                    id="username-input"
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    placeholder="Pseudo..."
+                    maxLength={20}
+                    className="glass-panel"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>{t("select_avatar")}</label>
+                  <div className="avatar-grid scrollbar-styled">
+                    {Object.keys(INVADER_DESIGNS).map((id) => (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`avatar-option glass-panel ${selectedAvatar === id ? "active" : ""}`}
+                        onClick={() => setSelectedAvatar(id)}
+                      >
+                        <InvaderAvatar invaderId={id} color={selectedColor} size={28} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>{t("select_color")}</label>
+                  <div className="color-selector-grid">
+                    {Object.keys(AVATAR_COLORS).map((cKey) => (
+                      <button
+                        key={cKey}
+                        type="button"
+                        className={`color-option ${selectedColor === cKey ? "active" : ""}`}
+                        style={{ "--option-color": AVATAR_COLORS[cKey] }}
+                        onClick={() => setSelectedColor(cKey)}
+                        title={cKey}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {formError && <div className="form-feedback error">{formError}</div>}
+                {saveSuccess && <div className="form-feedback success">{t("profile_saved")}</div>}
+
+                <button type="submit" disabled={isSaving} className="btn-primary form-submit-btn">
+                  {isSaving ? t("saving") : t("save_profile")}
+                </button>
+              </form>
             </div>
 
-            {/* Tab: Personal Records */}
-            {activeTab === "records" && (
+            {/* Profile Main Content: Records only */}
+            <div className="profile-main-content">
+              <h2 className="section-title text-natural-case">
+                <BookOpen className="icon" /> {t("personal_records")}
+              </h2>
+
               <div className="records-tab">
                 <div className="records-grid">
                   {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => {
@@ -283,98 +358,9 @@ const ProfileScreen = ({
                   })}
                 </div>
               </div>
-            )}
-
-            {/* Tab: Leaderboard */}
-            {activeTab === "leaderboard" && (
-              <div className="leaderboard-tab glass-panel">
-                <div className="leaderboard-filter-header">
-                  <div className="mode-select-wrap">
-                    {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => (
-                      <button
-                        key={mKey}
-                        className={`filter-mode-btn ${leaderboardMode === mKey ? "active" : ""}`}
-                        onClick={() => setLeaderboardMode(mKey)}
-                      >
-                        {t(`mode_${mKey}`)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="leaderboard-table-container scrollbar-styled">
-                  {!isSupabaseConfigured ? (
-                    <div className="leaderboard-empty-state">
-                      <p>{t("not_connected")}</p>
-                    </div>
-                  ) : isLoadingLeaderboard ? (
-                    <div className="leaderboard-loading-state">
-                      <div className="pixel-spinner" />
-                      <p>{t("connecting")}</p>
-                    </div>
-                  ) : leaderboardError ? (
-                    <div className="leaderboard-error-state">
-                      <p>Erreur: {leaderboardError}</p>
-                    </div>
-                  ) : leaderboardData.length === 0 ? (
-                    <div className="leaderboard-empty-state">
-                      <p>{t("empty_leaderboard")}</p>
-                    </div>
-                  ) : (
-                    <table className="leaderboard-table">
-                      <thead>
-                        <tr>
-                          <th className="col-rank">{t("rank")}</th>
-                          <th className="col-player">Joueur</th>
-                          <th className="col-score">{t("score")}</th>
-                          <th className="col-time">{t("time")}</th>
-                          <th className="col-date">{t("date")}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {leaderboardData.map((row, index) => {
-                          const prof = row.profiles || {
-                            username: "Anonyme",
-                            avatar_id: "invader_1",
-                            avatar_color: "cyan"
-                          };
-                          const isTop3 = index < 3;
-                          const rankLabels = ["1st", "2nd", "3rd"];
-                          const rankColorClass = isTop3 ? `rank-${index + 1}` : "";
-
-                          return (
-                            <tr key={row.id}>
-                              <td className="col-rank">
-                                <span className={`rank-badge ${rankColorClass}`}>
-                                  {isTop3 ? rankLabels[index] : index + 1}
-                                </span>
-                              </td>
-                              <td className="col-player">
-                                <div className="player-cell">
-                                  <InvaderAvatar
-                                    invaderId={prof.avatar_id}
-                                    color={prof.avatar_color}
-                                    size={20}
-                                  />
-                                  <span className="player-username">{prof.username}</span>
-                                </div>
-                              </td>
-                              <td className="col-score highlight-cyan">{row.score}</td>
-                              <td className="col-time highlight-magenta">
-                                {formatTime(row.time_spent_seconds)}
-                              </td>
-                              <td className="col-date">{formatDate(row.created_at)}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

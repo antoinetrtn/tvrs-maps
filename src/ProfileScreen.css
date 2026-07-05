@@ -574,6 +574,51 @@
   background: var(--text-muted);
 }
 
+/* Leaderboard Double Column Layout */
+.leaderboard-double-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  flex: 1;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.leaderboard-column {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--spacing-md);
+  background: var(--subtle-tint);
+}
+
+.leaderboard-column-header {
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  justify-content: center;
+}
+
+.mode-select-dropdown {
+  background: var(--glass-bg);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+  font-family: monospace;
+  font-size: 0.82rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  text-align-last: center;
+}
+
+.mode-select-dropdown option {
+  background: var(--bg-color);
+  color: var(--text-main);
+}
+
 /* Responsive grid for mobile viewports */
 @media (max-width: 768px) {
   .profile-container {
@@ -596,7 +641,9 @@
     grid-template-columns: 1fr;
   }
 
-  .tab-buttons {
-    margin-top: var(--spacing-sm);
+  .leaderboard-double-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    gap: var(--spacing-md);
   }
 }

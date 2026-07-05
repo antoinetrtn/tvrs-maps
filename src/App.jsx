@@ -43,16 +43,34 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home' or 'game' or 'profile'
 
   const [userProfile, setUserProfile] = useState(() => {
+    const generateUUID = () => {
+      if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    };
+
+    const isUUID = (str) => {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+    };
+
     try {
       const cached = localStorage.getItem("tvrs-user-profile");
       if (cached) {
-        return JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.id && isUUID(parsed.id)) {
+          return parsed;
+        }
       }
     } catch (_) {}
-    const randomId = "u-" + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+
     const randomNum = Math.floor(100 + Math.random() * 900);
     const newProfile = {
-      id: randomId,
+      id: generateUUID(),
       username: `Explorer_${randomNum}`,
       avatarId: "invader_1",
       avatarColor: "cyan"
