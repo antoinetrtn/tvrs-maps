@@ -168,7 +168,7 @@ export function useUserProfile() {
           }
         }
       } catch (err) {
-        console.error("Erreur lors de la synchronisation Supabase :", err);
+        console.error("Erreur lors de la synchronisation en ligne :", err);
       }
     };
 

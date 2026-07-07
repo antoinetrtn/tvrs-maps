@@ -6,6 +6,7 @@
   border-radius: var(--radius-md);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
+  flex-shrink: 0;
 }
 
 .scope-btn {
@@ -20,12 +21,23 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.scope-btn:hover {
+  color: var(--text-main);
 }
 
 .scope-btn.active {
   background: var(--accent);
   color: var(--accent-contrast);
   box-shadow: 0 0 6px var(--accent-soft);
+}
+
+.scope-btn.active:hover {
+  color: var(--accent-contrast);
 }
 
 /* Leaderboard Full Width Layout & Tabs */
@@ -49,14 +61,28 @@
   background: var(--subtle-tint);
 }
 
-.leaderboard-tabs-header {
+.leaderboard-controls {
   display: flex;
-  gap: var(--spacing-sm);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
   margin-bottom: var(--spacing-md);
   border-bottom: 1px solid var(--glass-border);
   padding-bottom: var(--spacing-sm);
-  justify-content: center;
-  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.leaderboard-mode-selector {
+  flex: 1;
+}
+
+.leaderboard-select-mobile {
+  display: none;
+}
+
+.leaderboard-tabs-desktop {
+  display: flex;
+  gap: var(--spacing-sm);
 }
 
 .leaderboard-tab-btn {
@@ -256,32 +282,59 @@
 
 /* Responsive layout for mobile viewports */
 @media (max-width: 768px) {
-  .scope-toggle-wrap.glass-panel {
+  .leaderboard-controls {
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .leaderboard-select-mobile {
+    display: block;
     width: 100%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    font-family: var(--font-main);
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    outline: none;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba%28255%2C255%2C255%2C0.6%29' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-sm) center;
+    padding-right: 32px;
+  }
+
+  .leaderboard-select-mobile option {
+    background: var(--bg-color);
+    color: var(--text-main);
+  }
+
+  .leaderboard-tabs-desktop {
+    display: none;
+  }
+
+  .scope-toggle-wrap.glass-panel {
+    width: auto;
     display: flex;
+    flex-shrink: 0;
   }
 
   .scope-btn {
-    flex: 1;
-    text-align: center;
-  }
-
-  .leaderboard-tabs-header {
-    gap: var(--spacing-xs);
-    justify-content: space-between;
-    width: 100%;
-    flex-wrap: nowrap; /* Keep on a single line */
-  }
-
-  .leaderboard-tab-btn {
-    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-sm);
     justify-content: center;
-    padding: 10px;
-    min-width: 0;
+    flex: none;
   }
 
-  .tab-label-text {
-    display: none; /* Hide labels on mobile to keep icons on a single line */
+  .scope-btn-text {
+    display: none;
   }
 
   /* Table responsiveness to prevent horizontal scrolling */
