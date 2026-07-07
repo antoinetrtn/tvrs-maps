@@ -18,7 +18,7 @@ export const supabase = isSupabaseConfigured
  * Fetches user profile by ID.
  */
 export async function getProfile(profileId) {
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
   try {
     const { data, error } = await supabase
       .from("profiles")
@@ -59,7 +59,7 @@ export async function isUsernameTaken(username, excludeProfileId = null) {
  * Creates or updates the user profile.
  */
 export async function upsertProfile(profileId, username, avatarId, avatarColor) {
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
   try {
     const payload = {
       id: profileId,
@@ -85,7 +85,7 @@ export async function upsertProfile(profileId, username, avatarId, avatarColor) 
  * Submits a score entry to the global leaderboard.
  */
 export async function submitLeaderboardScore(profileId, gameMode, score, timeSpentSeconds) {
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
   try {
     const { data, error } = await supabase
       .from("leaderboards")
@@ -108,7 +108,7 @@ export async function submitLeaderboardScore(profileId, gameMode, score, timeSpe
  * Returns the top scores, including player profile info.
  */
 export async function getLeaderboard(gameMode, limit = 50) {
-  if (!isSupabaseConfigured) return { data: [], error: "Supabase non configuré" };
+  if (!isSupabaseConfigured) return { data: [], error: "Service non configuré" };
   try {
     const { data, error } = await supabase
       .from("leaderboards")
@@ -140,7 +140,7 @@ export async function getLeaderboard(gameMode, limit = 50) {
  * Fetches the user records for a profile from database.
  */
 export async function getUserRecords(profileId) {
-  if (!isSupabaseConfigured) return { data: [], error: "Supabase non configuré" };
+  if (!isSupabaseConfigured) return { data: [], error: "Service non configuré" };
   try {
     const { data, error } = await supabase
       .from("user_records")
@@ -156,7 +156,7 @@ export async function getUserRecords(profileId) {
  * Synchronizes local stats to Supabase by upserting records.
  */
 export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSeconds, gamesPlayed) {
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
   try {
     const payload = {
       profile_id: profileId,
@@ -183,7 +183,7 @@ export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSe
  * Fetches the score entries submitted by a specific user for a game mode.
  */
 export async function getUserScores(profileId, gameMode, limit = 50) {
-  if (!isSupabaseConfigured) return { data: [], error: "Supabase non configuré" };
+  if (!isSupabaseConfigured) return { data: [], error: "Service non configuré" };
   try {
     const { data, error } = await supabase
       .from("leaderboards")

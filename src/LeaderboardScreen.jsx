@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Globe, MapPin, Hash, TreePine, ChevronLeft } from "pixelarticons/react";
+import { Globe, MapPin, Hash, TreePine, ChevronLeft, User } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
 import { useTranslation } from "./i18n";
 import {
@@ -100,42 +100,64 @@ const LeaderboardScreen = ({
               </span>
             </div>
           </div>
-
-          {/* Toggle scope button */}
-          <div className="header-right">
-            <div className="scope-toggle-wrap glass-panel">
-              <button
-                className={`scope-btn ${scope === "global" ? "active" : ""}`}
-                onClick={() => setScope("global")}
-              >
-                {lang === "fr" ? "Mondial" : "Global"}
-              </button>
-              <button
-                className={`scope-btn ${scope === "me" ? "active" : ""}`}
-                onClick={() => setScope("me")}
-              >
-                {lang === "fr" ? "Moi" : "Me"}
-              </button>
-            </div>
-          </div>
         </header>
 
-        {/* Tabbed view */}
+        {/* Layout content */}
         <div className="leaderboard-full-layout">
           <div className="leaderboard-column glass-panel">
-            <div className="leaderboard-tabs-header">
-              {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => (
-                <button
-                  key={mKey}
-                  type="button"
-                  className={`leaderboard-tab-btn ${colMode === mKey ? "active" : ""}`}
-                  onClick={() => setColMode(mKey)}
-                  title={t(`mode_${mKey}`)}
+            <div className="leaderboard-controls">
+              {/* Game mode selector: Dropdown on mobile, Tabs on desktop */}
+              <div className="leaderboard-mode-selector">
+                <select
+                  value={colMode}
+                  onChange={(e) => setColMode(e.target.value)}
+                  className="leaderboard-select-mobile glass-panel"
                 >
-                  <span className="tab-icon-wrap">{MODE_ICONS[mKey]}</span>
-                  <span className="tab-label-text">{t(`mode_${mKey}`)}</span>
+                  <option value="countries">{t("mode_countries")}</option>
+                  <option value="capitals">{t("mode_capitals")}</option>
+                  <option value="departments">{t("mode_departments")}</option>
+                  <option value="rivers_mountains">{t("mode_rivers_mountains")}</option>
+                </select>
+
+                <div className="leaderboard-tabs-desktop">
+                  {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => (
+                    <button
+                      key={mKey}
+                      type="button"
+                      className={`leaderboard-tab-btn ${colMode === mKey ? "active" : ""}`}
+                      onClick={() => setColMode(mKey)}
+                      title={t(`mode_${mKey}`)}
+                    >
+                      <span className="tab-icon-wrap">{MODE_ICONS[mKey]}</span>
+                      <span className="tab-label-text">{t(`mode_${mKey}`)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Scope toggle with icons */}
+              <div className="scope-toggle-wrap glass-panel">
+                <button
+                  className={`scope-btn ${scope === "global" ? "active" : ""}`}
+                  onClick={() => setScope("global")}
+                  title={lang === "fr" ? "Mondial" : "Global"}
+                >
+                  <Globe width={16} height={16} />
+                  <span className="scope-btn-text">
+                    {lang === "fr" ? "Mondial" : "Global"}
+                  </span>
                 </button>
-              ))}
+                <button
+                  className={`scope-btn ${scope === "me" ? "active" : ""}`}
+                  onClick={() => setScope("me")}
+                  title={lang === "fr" ? "Moi" : "Me"}
+                >
+                  <User width={16} height={16} />
+                  <span className="scope-btn-text">
+                    {lang === "fr" ? "Moi" : "Me"}
+                  </span>
+                </button>
+              </div>
             </div>
 
             <div className="leaderboard-table-container scrollbar-styled">
