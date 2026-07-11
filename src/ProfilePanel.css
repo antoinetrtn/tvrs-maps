@@ -272,7 +272,7 @@
   left: 0;
   top: 0;
   bottom: 0;
-  background: linear-gradient(180deg, var(--xp-green-light) 0%, var(--xp-green-inner) 50%, var(--xp-green-dark) 100%);
+  background: linear-gradient(180deg, var(--xp-green-fill-top) 0%, var(--xp-green-inner) 50%, var(--xp-green-fill-bottom) 100%);
   transition: width 0.4s ease-out;
 }
 
