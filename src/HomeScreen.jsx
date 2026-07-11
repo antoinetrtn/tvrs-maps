@@ -61,6 +61,24 @@ const HomeScreen = ({
   };
 
   const displayExplorers = [...topExplorers];
+
+  // Si pas de classement global Supabase mais que l'utilisateur a un record local (ex: en mode pays), on l'affiche en première place
+  if (displayExplorers.length === 0) {
+    const countriesRecord = localRecords?.countries;
+    if (countriesRecord && countriesRecord.maxScore > 0) {
+      displayExplorers.push({
+        id: "local-user",
+        score: countriesRecord.maxScore,
+        time_spent_seconds: countriesRecord.bestTime || 0,
+        profiles: {
+          username: userProfile?.username || "Guest",
+          avatar_id: userProfile?.avatarId || "invader_1",
+          avatar_color: userProfile?.avatarColor || "cyan"
+        }
+      });
+    }
+  }
+
   while (displayExplorers.length < 3) {
     displayExplorers.push({
       id: `placeholder-${displayExplorers.length}`,
@@ -223,7 +241,7 @@ const HomeScreen = ({
             <InvaderAvatar
               invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
               color={displayExplorers[1].profiles?.avatar_color || "cyan"}
-              size={18}
+              size={20}
             />
             <span className="widget-rank-num">2</span>
           </div>
@@ -231,7 +249,7 @@ const HomeScreen = ({
             <InvaderAvatar
               invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
               color={displayExplorers[0].profiles?.avatar_color || "cyan"}
-              size={18}
+              size={20}
             />
             <span className="widget-rank-num">1</span>
           </div>
@@ -239,7 +257,7 @@ const HomeScreen = ({
             <InvaderAvatar
               invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
               color={displayExplorers[2].profiles?.avatar_color || "cyan"}
-              size={18}
+              size={20}
             />
             <span className="widget-rank-num">3</span>
           </div>

@@ -486,10 +486,10 @@
 /* Bottom Right Podium Widget */
 .home-podium-widget {
   pointer-events: auto;
-  height: var(--control-lg);
+  height: 48px;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
   padding: 0 var(--spacing-md);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -519,9 +519,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
   background: var(--subtle-tint);
   border: 1px solid var(--glass-border);
 }
