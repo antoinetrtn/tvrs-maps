@@ -411,11 +411,11 @@ const ProfilePanel = ({
             <div className="badges-gallery-section">
               <span className="section-label">Challenges & Émotes</span>
               
-              <div className="challenges-filter-bar scrollbar-styled">
+              <div className="nav-chips">
                 {["all", "general", "continents", "scores", "speed", "relief"].map((cat) => (
                   <button
                     key={cat}
-                    className={`filter-tab-btn ${challengesFilter === cat ? "active" : ""}`}
+                    className={`nav-chip ${challengesFilter === cat ? "active" : ""}`}
                     onClick={() => setChallengesFilter(cat)}
                   >
                     {filterLabels[cat] || cat}
