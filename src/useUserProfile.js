@@ -519,19 +519,21 @@ export function useUserProfile() {
       const oldXp = userProfile.xp || 0;
       const oldLevel = userProfile.level || 1;
 
+      // Base gameplay XP
       const foundXp = finalScore * 10;
       const completionXp = 50;
-      const conquestXp = (continentsConquered?.length || 0) * 100;
+      const conquestXp = (Array.isArray(continentsConquered) ? continentsConquered.length : 0) * 100;
       const perfectXp = finalScore > 0 && finalScore === totalPossible ? 250 : 0;
-      const gainedXp = foundXp + completionXp + conquestXp + perfectXp;
+      let gainedXp = foundXp + completionXp + conquestXp + perfectXp;
 
-      const newXp = oldXp + gainedXp;
-      const { level: newLevel } = getLevelAndProgress(newXp);
+      // Intermediate level detection
+      const intermediateXp = oldXp + gainedXp;
+      const { level: intermediateLevel } = getLevelAndProgress(intermediateXp);
 
       // Check level achievements
       const currentBadges = userProfile.unlockedBadges || [];
       const levelBadges = [];
-      for (let lvl = 2; lvl <= newLevel; lvl++) {
+      for (let lvl = 2; lvl <= intermediateLevel; lvl++) {
         if ([2, 5, 10, 15, 20].includes(lvl)) {
           const chId = `ch_gen_lvl_${lvl}`;
           if (!currentBadges.includes(chId)) {
@@ -569,7 +571,7 @@ export function useUserProfile() {
 
       // Add incremental continents markers
       const continentMarkers = [];
-      if (continentsConquered && continentsConquered.length > 0) {
+      if (Array.isArray(continentsConquered) && continentsConquered.length > 0) {
         continentsConquered.forEach((region) => {
           const prevCompletions = currentBadges.filter((b) => b.startsWith(`conquered_${region}_`)).length;
           if (prevCompletions < 5) {
@@ -602,14 +604,38 @@ export function useUserProfile() {
 
       const baseBadgesPlusMarkers = [...currentBadges, ...levelBadges, ...continentMarkers];
       const newlyUnlocked = checkChallengesRealTime(baseBadgesPlusMarkers, localRecords, sessionData);
+      
+      // Award +100 XP per unlocked achievement
+      const totalNewlyUnlocked = [...levelBadges, ...newlyUnlocked];
+      const achievementXp = totalNewlyUnlocked.length * 100;
+      gainedXp += achievementXp;
+
+      const newXp = oldXp + gainedXp;
+      const { level: newLevel } = getLevelAndProgress(newXp);
       const updatedBadges = [...baseBadgesPlusMarkers, ...newlyUnlocked];
+
+      // Secondary check: did the achievement XP trigger further level-ups?
+      for (let lvl = intermediateLevel + 1; lvl <= newLevel; lvl++) {
+        if ([2, 5, 10, 15, 20].includes(lvl)) {
+          const chId = `ch_gen_lvl_${lvl}`;
+          if (!updatedBadges.includes(chId)) {
+            updatedBadges.push(chId);
+            // Award an extra 100 XP for this level badge
+            gainedXp += 100;
+            totalNewlyUnlocked.push(chId);
+          }
+        }
+      }
+
+      const finalXp = oldXp + gainedXp;
+      const { level: finalLevel } = getLevelAndProgress(finalXp);
 
       const activeUserId = session?.user?.id || userProfile.id;
       const updatedProfile = {
         ...userProfile,
         id: activeUserId,
-        xp: newXp,
-        level: newLevel,
+        xp: finalXp,
+        level: finalLevel,
         unlockedBadges: updatedBadges
       };
 
@@ -634,7 +660,9 @@ export function useUserProfile() {
           updatedProfile.xp,
           updatedProfile.level,
           updatedProfile.unlockedBadges
-        ).catch((err) => console.error("Error syncing profile update:", err));
+        ).then(({ error }) => {
+          if (error) console.error("Error syncing profile update to Supabase:", error);
+        });
 
         await upsertUserRecord(
           activeUserId,
@@ -642,18 +670,21 @@ export function useUserProfile() {
           nextMaxScore,
           nextBestTime,
           nextGamesPlayed
-        ).catch((err) => console.error("Error syncing record:", err));
+        ).then(({ error }) => {
+          if (error) console.error("Error syncing user record to Supabase:", error);
+        });
 
         if (finalScore > 0) {
           submitLeaderboardScore(activeUserId, gameMode, finalScore, timeSpent)
-            .then(() => {
-              fetchTopExplorers();
-            })
-            .catch((err) => console.error("Error submitting score:", err));
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error submitting score to Supabase:", error);
+              } else {
+                fetchTopExplorers();
+              }
+            });
         }
       }
-
-      const allRealUnlocked = [...levelBadges, ...newlyUnlocked];
 
       return {
         oldXp,
@@ -663,9 +694,10 @@ export function useUserProfile() {
           found: foundXp,
           completion: completionXp,
           conquest: conquestXp,
-          perfect: perfectXp
+          perfect: perfectXp,
+          achievements: achievementXp
         },
-        newlyUnlockedBadges: allRealUnlocked
+        newlyUnlockedBadges: totalNewlyUnlocked
       };
     },
     [session, userProfile, localRecords, lastScores, fetchTopExplorers]

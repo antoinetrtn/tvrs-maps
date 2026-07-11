@@ -41,6 +41,8 @@ const HomeScreen = ({
   localRecords = {},
   session = null,
   onOpenAuth,
+  uiScaleMode = "auto",
+  onSetUiScaleMode,
 }) => {
   const cardRef = useRef(null);
   const isDraggingRef = useRef(false);
@@ -401,6 +403,32 @@ const HomeScreen = ({
                     <Globe width={16} height={16} />
                   )}
                   <span>{t(`theme_${themeObj.id}`)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="settings-section">
+            <span className="section-label">{t("interface_scale")}</span>
+            <div className="theme-toggle-wrap-horizontal glass-panel" style={{ flexWrap: "wrap", height: "auto", padding: "4px" }}>
+              {[
+                { id: "auto", label: t("scale_auto") },
+                { id: "0.8", label: "0.8x" },
+                { id: "0.9", label: "0.9x" },
+                { id: "1.0", label: "1.0x" },
+                { id: "1.1", label: "1.1x" },
+                { id: "1.2", label: "1.2x" }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  className={`theme-opt-btn ${uiScaleMode === opt.id ? "active" : ""}`}
+                  style={{ minWidth: "50px", flex: "1" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSetUiScaleMode) onSetUiScaleMode(opt.id);
+                  }}
+                >
+                  <span>{opt.label}</span>
                 </button>
               ))}
             </div>

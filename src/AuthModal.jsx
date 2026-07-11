@@ -139,7 +139,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
 
         {step === "initial" && (
           <div className="auth-modal-logo-wrapper">
-            <Logo size="small" className="auth-ascii-logo" />
+            <Logo size="medium" variant="vector" className="auth-vector-logo" />
           </div>
         )}
 

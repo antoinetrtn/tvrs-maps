@@ -75,7 +75,55 @@ function App() {
 
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isNewPB, setIsNewPB] = useState(false);
-  const [activeAchievement, setActiveAchievement] = useState(null);
+  const [achievementQueue, setAchievementQueue] = useState([]);
+  const activeAchievement = achievementQueue[0] || null;
+  const addAchievementToQueue = useCallback((achievement) => {
+    setAchievementQueue((prev) => [...prev, achievement]);
+  }, []);
+  const handleCloseAchievement = useCallback(() => {
+    setAchievementQueue((prev) => prev.slice(1));
+  }, []);
+
+  const [uiScaleMode, setUiScaleMode] = useState(() => {
+    try {
+      return localStorage.getItem("tvrs-ui-scale-mode") || "auto";
+    } catch (_) {
+      return "auto";
+    }
+  });
+  const [uiScale, setUiScale] = useState(1.0);
+
+  const handleSetUiScaleMode = useCallback((mode) => {
+    setUiScaleMode(mode);
+    try {
+      localStorage.setItem("tvrs-ui-scale-mode", mode);
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (uiScaleMode === "auto") {
+        const h = window.innerHeight;
+        if (h < 950) {
+          const autoScale = Math.max(0.72, Math.min(1.0, h / 950));
+          setUiScale(autoScale);
+        } else {
+          setUiScale(1.0);
+        }
+      } else {
+        setUiScale(parseFloat(uiScaleMode));
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [uiScaleMode]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--ui-scale", uiScale.toString());
+  }, [uiScale]);
+
   const [xpResult, setXpResult] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const conqueredRegionsThisGameRef = useRef([]);
@@ -536,11 +584,25 @@ function App() {
         timeSpent,
         totalPossible,
         gameDuration,
-        conqueredRegionsThisGameRef.current.length
+        conqueredRegionsThisGameRef.current
       );
       setXpResult(res);
+
+      if (res && res.newlyUnlockedBadges && res.newlyUnlockedBadges.length > 0) {
+        res.newlyUnlockedBadges.forEach((chId) => {
+          const chObj = CHALLENGES.find((c) => c.id === chId);
+          if (chObj) {
+            addAchievementToQueue({
+              title: lang === "fr" ? chObj.titleFr : chObj.titleEn,
+              message: `${lang === "fr" ? chObj.descFr : chObj.descEn} (Emote débloquée !)`,
+              color: AVATAR_COLORS[chObj.color] || chObj.color,
+              invaderId: chObj.id
+            });
+          }
+        });
+      }
     },
-    [mode, gameDuration, timeLeft, updateGameRecord, localRecords, totalPossible]
+    [mode, gameDuration, timeLeft, updateGameRecord, localRecords, totalPossible, lang, addAchievementToQueue]
   );
 
   useEffect(() => {
@@ -669,7 +731,7 @@ function App() {
             const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
             const invaderId = invaders[regionHash % invaders.length];
 
-            setActiveAchievement({
+            addAchievementToQueue({
               title: t("achievement_continent_conquered"),
               message: t("achievement_continent_desc", { region: t(`region_${region}`) || region }),
               color: labelColor,
@@ -704,38 +766,57 @@ function App() {
 
       const unlocked = checkChallengesRealTime(currentBadges, localRecords, sessionData);
       if (unlocked.length > 0) {
-        const updatedBadges = [...currentBadges, ...unlocked];
+        const gainedAchievementXp = unlocked.length * 100;
+        const newXp = (userProfile.xp || 0) + gainedAchievementXp;
+        const { level: newLevel } = getLevelAndProgress(newXp);
+
+        // Also check if this new level unlocks level achievements!
+        const levelBadges = [];
+        for (let lvl = 2; lvl <= newLevel; lvl++) {
+          if ([2, 5, 10, 15, 20].includes(lvl)) {
+            const chId = `ch_gen_lvl_${lvl}`;
+            if (!currentBadges.includes(chId) && !unlocked.includes(chId)) {
+              levelBadges.push(chId);
+            }
+          }
+        }
+
+        const updatedBadges = [...currentBadges, ...unlocked, ...levelBadges];
+        const finalXp = newXp + levelBadges.length * 100;
+        const { level: finalLevel } = getLevelAndProgress(finalXp);
+
         const updatedProfile = {
           ...userProfile,
+          xp: finalXp,
+          level: finalLevel,
           unlockedBadges: updatedBadges
         };
         setUserProfile(updatedProfile);
         localStorage.setItem("tvrs-user-profile", JSON.stringify(updatedProfile));
 
-        // Toast first newly unlocked challenge
-        const firstChId = unlocked[0];
-        const chObj = CHALLENGES.find((c) => c.id === firstChId);
-        if (chObj) {
-          setTimeout(() => {
-            setActiveAchievement({
+        const allUnlocked = [...unlocked, ...levelBadges];
+        allUnlocked.forEach((chId) => {
+          const chObj = CHALLENGES.find((c) => c.id === chId);
+          if (chObj) {
+            addAchievementToQueue({
               title: lang === "fr" ? chObj.titleFr : chObj.titleEn,
               message: `${lang === "fr" ? chObj.descFr : chObj.descEn} (Emote débloquée !)`,
               color: AVATAR_COLORS[chObj.color] || chObj.color,
               invaderId: chObj.id
             });
-          }, 1500); // delay toast slightly if there was already a continent conquered toast
-        }
+          }
+        });
 
         if (isSupabaseConfigured) {
           const activeUserId = session?.user?.id || userProfile.id;
           upsertProfile(
             activeUserId,
-            userProfile.username,
-            userProfile.avatarId,
-            userProfile.avatarColor,
-            userProfile.xp || 0,
-            userProfile.level || 1,
-            updatedBadges
+            updatedProfile.username,
+            updatedProfile.avatarId,
+            updatedProfile.avatarColor,
+            updatedProfile.xp,
+            updatedProfile.level,
+            updatedProfile.unlockedBadges
           ).catch((err) => console.error("Error syncing real-time challenge:", err));
         }
       }
@@ -930,22 +1011,31 @@ function App() {
     (c) => {
       if (c === selectedCountry && c !== null) {
         setPopupError(false);
+        // Force focus even if it's the same country
+        if (extInputRef.current) {
+          extInputRef.current.focus();
+          setTimeout(() => {
+            if (extInputRef.current) extInputRef.current.focus();
+          }, 50);
+          setTimeout(() => {
+            if (extInputRef.current) extInputRef.current.focus();
+          }, 150);
+        }
         return;
       }
 
       setSelectedCountry(c);
       resetNavigationTrail(c);
       setPopupError(false);
-      // Assert focus when clicking a country on the globe.
-      // If we're already focused (e.g. via preventDefault on pointerdown), skip the redundant call.
-      if (
-        c &&
-        extInputRef.current &&
-        document.activeElement !== extInputRef.current
-      ) {
+
+      if (c && extInputRef.current) {
+        extInputRef.current.focus();
         setTimeout(() => {
           if (extInputRef.current) extInputRef.current.focus();
-        }, FEEDBACK_TIMING.focusGlobeClickMs); // small delay for stability on globe clicks
+        }, 50);
+        setTimeout(() => {
+          if (extInputRef.current) extInputRef.current.focus();
+        }, 150);
       }
     },
     [selectedCountry, resetNavigationTrail],
@@ -1093,6 +1183,8 @@ function App() {
           localRecords={localRecords}
           session={session}
           onOpenAuth={() => setShowAuthModal(true)}
+          uiScaleMode={uiScaleMode}
+          onSetUiScaleMode={handleSetUiScaleMode}
         />
       ) : currentScreen === "leaderboard" ? (
         <LeaderboardScreen
@@ -1258,7 +1350,7 @@ function App() {
           message={activeAchievement.message}
           invaderId={activeAchievement.invaderId}
           color={activeAchievement.color}
-          onClose={() => setActiveAchievement(null)}
+          onClose={handleCloseAchievement}
         />
       )}
       <AuthModal

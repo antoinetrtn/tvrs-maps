@@ -104,6 +104,11 @@ const EndScreen = ({
       <div className="end-screen-content scrollbar-styled">
         <div className="end-screen-header">
           <h1>{getTitle()}</h1>
+          {isNewPB && (
+            <div className="new-pb-badge">
+              <span>★ {t("new_pb")} ★</span>
+            </div>
+          )}
         </div>
 
         <div className="end-screen-spacer">
@@ -187,11 +192,7 @@ const EndScreen = ({
           </div>
         )}
 
-        {isNewPB && (
-          <div className="new-pb-banner">
-            <span>{t("new_pb")}</span>
-          </div>
-        )}
+
 
         {lastScores && lastScores.length > 0 && (
           <div className="end-screen-history glass-panel">

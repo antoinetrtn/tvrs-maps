@@ -10,6 +10,7 @@
   flex-direction: column;
   overflow: hidden !important;
   padding-bottom: 0 !important;
+  min-height: 0;
 }
 
 /* Avatar Preview Level Tag */
@@ -199,6 +200,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  min-height: 0;
 }
 
 .stats-sticky-header {
@@ -318,6 +320,7 @@
   gap: var(--spacing-sm);
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 .badges-grid {

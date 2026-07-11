@@ -26,6 +26,8 @@ export const translations = {
     interface_theme: "Thème interface",
     theme_light: "Clair",
     theme_dark: "Sombre",
+    interface_scale: "Taille de l'interface",
+    scale_auto: "Auto",
 
     // Game HUD Placeholders
     search_placeholder: "Rechercher...",
@@ -191,6 +193,8 @@ export const translations = {
     interface_theme: "Interface Theme",
     theme_light: "Light",
     theme_dark: "Dark",
+    interface_scale: "Interface Scale",
+    scale_auto: "Auto",
 
     // Game HUD Placeholders
     search_placeholder: "Search...",

@@ -178,6 +178,33 @@ const ProfilePanel = ({
   const getChallengeTitle = (ch) => (lang === "fr" ? ch.titleFr : ch.titleEn);
   const getChallengeDesc = (ch) => (lang === "fr" ? ch.descFr : ch.descEn);
 
+  const standardAvatars = Object.keys(INVADER_DESIGNS).map((id) => {
+    const reqLvl = getAvatarUnlockLevel(id);
+    const isLocked = level < reqLvl;
+    return {
+      id,
+      isLocked,
+      type: "standard",
+      label: id,
+      unlockDesc: t("avatar_locked", { level: reqLvl }),
+      reqLvl
+    };
+  });
+
+  const challengeAvatars = CHALLENGES.map((ch) => {
+    const isLocked = !unlockedBadges.includes(ch.id);
+    return {
+      id: ch.id,
+      isLocked,
+      type: "challenge",
+      label: lang === "fr" ? ch.titleFr : ch.titleEn,
+      unlockDesc: `${lang === "fr" ? ch.titleFr : ch.titleEn}: ${lang === "fr" ? ch.descFr : ch.descEn}`,
+      color: ch.color
+    };
+  });
+
+  const allAvatars = [...standardAvatars, ...challengeAvatars];
+
   return (
     <div
       className={`sheet-panel profile-panel glass-panel ${isOpen ? "open" : ""} ${theme}`}
@@ -263,28 +290,32 @@ const ProfilePanel = ({
 
                 {/* Scrollable Middle Area */}
                 <div className="profile-form-middle scrollbar-styled">
-                  {/* Standard Avatars */}
+                  {/* Avatar Selector */}
                   <div className="form-group avatar-form-group">
-                    <label>{t("select_avatar")} (Standard)</label>
+                    <label>{t("select_avatar")}</label>
                     <div className="avatar-grid scrollbar-styled">
-                      {Object.keys(INVADER_DESIGNS).map((id) => {
-                        const reqLvl = getAvatarUnlockLevel(id);
-                        const isLocked = level < reqLvl;
+                      {allAvatars.map((item) => {
                         return (
                           <button
-                            key={id}
+                            key={item.id}
                             type="button"
-                            className={`avatar-option glass-panel ${selectedAvatar === id ? "active" : ""} ${isLocked ? "locked" : ""}`}
-                            onClick={() => !isLocked && setSelectedAvatar(id)}
-                            disabled={isLocked || (isSupabaseConfigured && !session)}
-                            title={isLocked ? t("avatar_locked", { level: reqLvl }) : id}
+                            className={`avatar-option glass-panel ${selectedAvatar === item.id ? "active" : ""} ${item.isLocked ? "locked" : ""}`}
+                            onClick={() => !item.isLocked && setSelectedAvatar(item.id)}
+                            disabled={item.isLocked || (isSupabaseConfigured && !session)}
+                            title={item.isLocked ? item.unlockDesc : item.label}
                           >
                             <div className="avatar-option-inner">
-                              <InvaderAvatar invaderId={id} color={isLocked ? "gray" : selectedColor} size={28} />
-                              {isLocked && (
+                              <InvaderAvatar
+                                invaderId={item.id}
+                                color={item.isLocked ? "gray" : selectedColor}
+                                size={28}
+                              />
+                              {item.isLocked && (
                                 <div className="avatar-lock-overlay">
                                   <Lock width={12} height={12} className="lock-icon" />
-                                  <span className="lock-lvl">{reqLvl}</span>
+                                  <span className="lock-lvl">
+                                    {item.type === "standard" ? item.reqLvl : "🏆"}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -293,29 +324,6 @@ const ProfilePanel = ({
                       })}
                     </div>
                   </div>
-
-                  {/* Special Unlocked Emote Challenges */}
-                  {unlockedEmoteChallenges.length > 0 && (
-                    <div className="form-group avatar-form-group">
-                      <label>{t("select_avatar")} (Émotes Challenges)</label>
-                      <div className="avatar-grid scrollbar-styled">
-                        {unlockedEmoteChallenges.map((ch) => (
-                          <button
-                            key={ch.id}
-                            type="button"
-                            className={`avatar-option glass-panel ${selectedAvatar === ch.id ? "active" : ""}`}
-                            onClick={() => setSelectedAvatar(ch.id)}
-                            title={getChallengeTitle(ch)}
-                            disabled={isSupabaseConfigured && !session}
-                          >
-                            <div className="avatar-option-inner">
-                              <InvaderAvatar invaderId={ch.id} color={selectedColor} size={28} />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   <div className="form-group color-form-group">
                     <label>{t("select_color")}</label>
