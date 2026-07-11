@@ -168,16 +168,16 @@
 }
 
 .color-selector-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-xs);
   width: 100%;
 }
 
 .color-option {
-  width: 100%;
-  aspect-ratio: 1;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
   border: 2px solid transparent;
   background-color: var(--option-color);
@@ -185,6 +185,7 @@
   transition: all var(--transition-fast);
   padding: 0;
   box-shadow: 0 0 4px var(--shadow-subtle);
+  flex-shrink: 0;
 }
 
 .color-option:hover {
