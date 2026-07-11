@@ -357,6 +357,11 @@ export function useUserProfile() {
     }
   }, []);
 
+  // Fetch top explorers on mount
+  useEffect(() => {
+    fetchTopExplorers();
+  }, [fetchTopExplorers]);
+
   // Listen to Supabase Auth State changes
   useEffect(() => {
     if (!isSupabaseConfigured) return;

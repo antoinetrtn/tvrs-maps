@@ -22,7 +22,7 @@
   flex-direction: column;
   overflow: hidden;
   height: 100%;
-  padding: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-md);
   background: transparent;
 }
 
@@ -52,9 +52,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--glass-border);
-  padding-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
   flex-shrink: 0;
 }
 
@@ -89,13 +89,13 @@
 }
 
 .leaderboard-table td {
-  padding: var(--spacing-sm);
+  padding: 10px var(--spacing-sm);
   border-bottom: 1px solid var(--glass-border);
   vertical-align: middle;
 }
 
 .col-rank {
-  width: 80px;
+  width: 70px;
   text-align: center;
 }
 .col-player {
@@ -103,17 +103,14 @@
   text-align: left;
 }
 .col-score {
-  width: 120px;
-  text-align: center;
-}
-.col-time {
   width: 100px;
   text-align: center;
 }
-.col-date {
-  width: 120px;
-  text-align: right;
+.col-time {
+  width: 90px;
+  text-align: center;
 }
+
 
 .rank-badge {
   display: inline-flex;

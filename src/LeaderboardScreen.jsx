@@ -80,14 +80,7 @@ const LeaderboardScreen = ({
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", {
-      month: "short",
-      day: "numeric"
-    });
-  };
+
 
   return (
     <div
@@ -160,7 +153,6 @@ const LeaderboardScreen = ({
                     <th className="col-player">Joueur</th>
                     <th className="col-score">{t("score")}</th>
                     <th className="col-time">{t("time")}</th>
-                    <th className="col-date">{t("date")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -195,7 +187,6 @@ const LeaderboardScreen = ({
                         <td className="col-time highlight-magenta">
                           {formatTime(row.time_spent_seconds)}
                         </td>
-                        <td className="col-date">{formatDate(row.created_at)}</td>
                       </tr>
                     );
                   })}
