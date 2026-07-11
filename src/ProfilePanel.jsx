@@ -333,8 +333,12 @@ const ProfilePanel = ({
 
                 {/* Sticky Footer on Mobile */}
                 <div className="profile-sticky-footer">
-                  <button type="submit" disabled={isSaving || (isSupabaseConfigured && !session)} className="btn-primary form-submit-btn">
-                    {isSaving ? t("saving") : t("save_profile")}
+                  <button
+                    type="submit"
+                    disabled={isSaving || (isSupabaseConfigured && !session)}
+                    className={`btn-primary form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
+                  >
+                    {saveSuccess ? `✓ ${t("profile_saved")}` : (isSaving ? t("saving") : t("save_profile"))}
                   </button>
                 </div>
               </form>
@@ -405,7 +409,7 @@ const ProfilePanel = ({
                 ))}
               </div>
 
-              <div className="badges-grid scrollbar-styled" style={{ maxHeight: "240px", overflowY: "auto" }}>
+              <div className="badges-grid scrollbar-styled">
                 {filteredChallenges.map((ch) => {
                   const isUnlocked = unlockedBadges.includes(ch.id);
                   const isSelected = selectedChallengeId === ch.id;

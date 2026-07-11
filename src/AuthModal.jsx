@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Close, ArrowLeft } from "pixelarticons/react";
+import { Close, ArrowLeft, User, Earth, Gamepad } from "pixelarticons/react";
+import Logo from "./Logo";
 import { useTranslation } from "./i18n";
 import {
   signInWithEmail,
@@ -136,6 +137,12 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           </button>
         </div>
 
+        {step === "initial" && (
+          <div className="auth-modal-logo-wrapper">
+            <Logo size="small" className="auth-ascii-logo" />
+          </div>
+        )}
+
         {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
         {successMsg && <div className="form-feedback success">{successMsg}</div>}
 
@@ -144,25 +151,28 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
             <button
               type="button"
               onClick={() => setStep("email")}
-              className="btn-primary auth-row-btn"
+              className="auth-row-btn tvrs-btn"
             >
-              Compte TVRS
+              <User width={16} height={16} className="auth-btn-icon" />
+              <span>Compte TVRS</span>
             </button>
 
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="auth-row-btn google-btn glass-panel"
+              className="auth-row-btn google-btn"
             >
-              Continuer avec Google
+              <Earth width={16} height={16} className="auth-btn-icon" />
+              <span>Continuer avec Google</span>
             </button>
 
             <button
               type="button"
               onClick={onGuest}
-              className="auth-row-btn guest-btn glass-panel"
+              className="auth-row-btn guest-btn"
             >
-              Continuer en invité (Guest)
+              <Gamepad width={16} height={16} className="auth-btn-icon" />
+              <span>Continuer en invité (Guest)</span>
             </button>
           </div>
         )}

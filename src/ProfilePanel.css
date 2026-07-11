@@ -12,12 +12,13 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  padding: 6px var(--spacing-sm);
+  padding: 10px var(--spacing-md);
+  min-height: 40px;
   background: transparent;
   border: none;
   color: var(--text-muted);
   font-family: var(--font-main);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   border-radius: var(--radius-sm);
@@ -113,8 +114,8 @@
 /* Avatar selection grid */
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--spacing-xs);
   width: 100%;
   max-height: 120px;
   overflow-y: auto;
@@ -189,8 +190,8 @@
 
 .color-selector-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(10, 1fr);
+  gap: var(--spacing-xs);
   margin-top: var(--spacing-xs);
   width: 100%;
 }
@@ -344,13 +345,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  flex: 1;
 }
 
 .badges-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
+  flex: 1;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  margin-bottom: var(--spacing-xs);
 }
 
 .badge-item-btn {
@@ -414,15 +419,19 @@
 
 /* Selected Badge Details card */
 .badge-detail-card {
-  padding: var(--spacing-md);
+  position: sticky;
+  bottom: 0;
+  padding: var(--spacing-sm);
   background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-compact);
+  -webkit-backdrop-filter: var(--glass-blur-compact);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-  min-height: 96px;
+  gap: var(--spacing-xs);
+  margin-top: auto;
+  z-index: 10;
 }
 
 .badge-detail-header {
@@ -644,19 +653,6 @@
   .profile-panel .settings-body {
     padding-bottom: 80px !important; /* space for sticky footer */
   }
-
-  .profile-sticky-footer {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: var(--spacing-sm) 0;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur-compact);
-    -webkit-backdrop-filter: var(--glass-blur-compact);
-    z-index: 100;
-    border-top: 1px solid var(--glass-border);
-  }
 }
 
 /* Challenges Filter Bar */
@@ -667,6 +663,12 @@
   padding-bottom: var(--spacing-xs);
   width: 100%;
   -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.challenges-filter-bar::-webkit-scrollbar {
+  display: none; /* Hide scrollbar track */
 }
 
 .filter-tab-btn {
@@ -694,7 +696,35 @@
   border-color: var(--text-main);
 }
 
+/* Sticky footer on both PC and mobile */
 .profile-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--spacing-sm) 0;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-compact);
+  -webkit-backdrop-filter: var(--glass-blur-compact);
+  z-index: 100;
+  border-top: 1px solid var(--glass-border);
   margin-top: var(--spacing-md);
   width: 100%;
+}
+
+/* Success Glow Effect on Save */
+.form-submit-btn.save-success-glow {
+  background: var(--xp-green-inner) !important;
+  color: var(--xp-black) !important;
+  border-color: var(--xp-green-inner) !important;
+  animation: success-pulse-glow 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes success-pulse-glow {
+  from {
+    box-shadow: 0 0 4px var(--xp-green-glow);
+  }
+  to {
+    box-shadow: 0 0 15px var(--xp-green-inner);
+  }
 }

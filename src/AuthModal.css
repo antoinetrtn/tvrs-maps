@@ -62,6 +62,20 @@
   color: var(--text-main);
 }
 
+.auth-modal-logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  height: 60px;
+  width: 100%;
+}
+
+.auth-ascii-logo {
+  transform: scale(0.6);
+  transform-origin: center center;
+}
+
 .auth-modal-initial-flow {
   display: flex;
   flex-direction: column;
@@ -75,6 +89,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-sm);
   font-family: var(--font-main);
   font-weight: 700;
   font-size: 0.85rem;
@@ -82,8 +97,29 @@
   cursor: pointer;
   box-sizing: border-box;
   transition: all var(--transition-fast);
+  border: 1px solid transparent;
 }
 
+.auth-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+/* TVRS Cyan Button */
+.auth-row-btn.tvrs-btn {
+  background: var(--glitch-cyan);
+  color: var(--xp-black);
+}
+
+.auth-row-btn.tvrs-btn:hover {
+  box-shadow: 0 0 12px var(--glitch-cyan);
+  transform: translateY(-1px);
+}
+
+/* Google Light/Gray Button */
 .auth-row-btn.google-btn {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -92,18 +128,19 @@
 
 .auth-row-btn.google-btn:hover {
   background: var(--glass-hover);
-  border-color: var(--accent);
+  border-color: var(--text-main);
+  transform: translateY(-1px);
 }
 
+/* Guest Pink Button */
 .auth-row-btn.guest-btn {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--accent);
+  background: var(--accent);
+  color: var(--text-main);
 }
 
 .auth-row-btn.guest-btn:hover {
-  background: var(--glass-hover);
-  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  transform: translateY(-1px);
 }
 
 .auth-modal-form {
