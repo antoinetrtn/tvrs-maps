@@ -62,23 +62,6 @@ const HomeScreen = ({
 
   const displayExplorers = [...topExplorers];
 
-  // Si pas de classement global Supabase mais que l'utilisateur a un record local (ex: en mode pays), on l'affiche en première place
-  if (displayExplorers.length === 0) {
-    const countriesRecord = localRecords?.countries;
-    if (countriesRecord && countriesRecord.maxScore > 0) {
-      displayExplorers.push({
-        id: "local-user",
-        score: countriesRecord.maxScore,
-        time_spent_seconds: countriesRecord.bestTime || 0,
-        profiles: {
-          username: userProfile?.username || "Guest",
-          avatar_id: userProfile?.avatarId || "invader_1",
-          avatar_color: userProfile?.avatarColor || "cyan"
-        }
-      });
-    }
-  }
-
   while (displayExplorers.length < 3) {
     displayExplorers.push({
       id: `placeholder-${displayExplorers.length}`,
