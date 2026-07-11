@@ -144,11 +144,11 @@
 
 /* ---- Mobile ---- */
 @media (max-width: 768px) {
-    .modal-content {
+    .fullpage-panel {
         padding: max(28px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
     }
 
-    .modal-header {
+    .panel-header {
         margin-bottom: var(--spacing-lg);
     }
 

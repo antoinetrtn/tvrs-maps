@@ -113,26 +113,26 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   };
 
   return (
-    <div className={`auth-modal-overlay ${theme}`} onClick={onGuest}>
-      <div className="auth-modal-card glass-panel" onClick={(e) => e.stopPropagation()}>
-        <div className="auth-modal-header">
+    <div className={`dialog-panel ${theme}`} onClick={onGuest}>
+      <div className="dialog-card" onClick={(e) => e.stopPropagation()}>
+        <div className="panel-header">
           {step !== "initial" && (
             <button
               type="button"
-              className="auth-modal-back-btn"
+              className="panel-back-btn"
               onClick={step === "email" ? resetFlow : goBackToEmail}
               title={t("back")}
             >
               <ArrowLeft width={18} height={18} />
             </button>
           )}
-          <h2 className="auth-modal-title text-natural-case">
+          <h2 className="panel-title">
             {step === "initial" && "Authentification"}
             {step === "email" && "Compte TVRS"}
             {step === "login" && t("auth_sign_in")}
             {step === "signup" && t("auth_sign_up")}
           </h2>
-          <button className="auth-modal-close-btn" onClick={onGuest} title={t("close")}>
+          <button className="panel-close-btn" onClick={onGuest} title={t("close")}>
             <Close width={18} height={18} />
           </button>
         </div>

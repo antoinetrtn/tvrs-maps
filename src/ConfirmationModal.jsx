@@ -5,8 +5,8 @@ import "./App.css";
 const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
   const t = useTranslation(lang);
   return (
-    <div className="custom-modal-overlay">
-      <div className={`custom-modal-content ${theme}`}>
+    <div className={`dialog-panel ${theme}`}>
+      <div className="dialog-card">
         <p>{message}</p>
         <div className="modal-actions">
           <button className="modal-btn cancel" onClick={onCancel}>

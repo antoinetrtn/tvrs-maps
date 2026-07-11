@@ -180,29 +180,29 @@ const ProfilePanel = ({
 
   return (
     <div
-      className={`settings-panel profile-panel glass-panel ${isOpen ? "open" : ""} ${theme}`}
+      className={`sheet-panel profile-panel glass-panel ${isOpen ? "open" : ""} ${theme}`}
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="settings-header">
-        <div className="tab-triggers">
+      <div className="panel-header">
+        <div className="panel-tabs">
           <button
-            className={`tab-trigger-btn ${activeTab === "profile" ? "active" : ""}`}
+            className={`panel-tab ${activeTab === "profile" ? "active" : ""}`}
             onClick={() => setActiveTab("profile")}
           >
-            <User className="icon" />
+            <User className="tab-icon" />
             <span>{t("tab_profile")}</span>
           </button>
           <button
-            className={`tab-trigger-btn ${activeTab === "stats" ? "active" : ""}`}
+            className={`panel-tab ${activeTab === "stats" ? "active" : ""}`}
             onClick={() => setActiveTab("stats")}
           >
-            <Trophy className="icon" />
+            <Trophy className="tab-icon" />
             <span>{t("tab_stats")}</span>
           </button>
         </div>
         <button
-          className="settings-close-btn"
+          className="panel-close-btn"
           onClick={onClose}
           title={t("close")}
         >
@@ -210,7 +210,7 @@ const ProfilePanel = ({
         </button>
       </div>
 
-      <div className="settings-body scrollbar-styled">
+      <div className="panel-body scrollbar-styled">
         {activeTab === "profile" ? (
           <div className="profile-tab-content">
             {/* Blurring Overlay for guest mode */}

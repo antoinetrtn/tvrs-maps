@@ -36,31 +36,28 @@ const ResultsModal = ({
   }, [globeTheme, theme]);
 
   return (
-    <div className="modal-overlay">
-      <div className={`modal-content ${isGameOver ? "is-game-over" : ""}`}>
-        <header className="modal-header">
-          <div className="header-left">
-            <div className="score-title">
-              <span className="header-font">
-                {isGameOver ? t("game_over") : t("progress_title")}
-              </span>
-              <span className="score-font">
-                {foundList.length}/{totalCountries}
-              </span>
-            </div>
+    <div className={`fullpage-panel ${theme} ${isGameOver ? "is-game-over" : ""}`}>
+      <header className="panel-header">
+        <div className="header-left" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <div className="score-title" style={{ display: "flex", alignItems: "baseline", gap: "var(--spacing-sm)" }}>
+            <span className="panel-title" style={{ fontVariantNumeric: "tabular-nums" }}>
+              {isGameOver ? t("game_over") : t("progress_title")}
+            </span>
+            <span className="score-font" style={{ fontSize: "1.2rem", color: "var(--text-muted)", fontWeight: 300 }}>
+              ({foundList.length}/{totalCountries})
+            </span>
           </div>
-          <div className="header-right">
-            {onClose && (
-              <button
-                className="close-popup"
-                onClick={onClose}
-                aria-label={t("close")}
-              >
-                <Close width={18} height={18} />
-              </button>
-            )}
-          </div>
-        </header>
+        </div>
+        {onClose && (
+          <button
+            className="panel-close-btn"
+            onClick={onClose}
+            aria-label={t("close")}
+          >
+            <Close width={20} height={20} />
+          </button>
+        )}
+      </header>
 
         <div className="continents-grid">
           {CONTINENT_ORDER.map((region) => {
@@ -122,7 +119,6 @@ const ResultsModal = ({
           })}
         </div>
       </div>
-    </div>
   );
 };
 

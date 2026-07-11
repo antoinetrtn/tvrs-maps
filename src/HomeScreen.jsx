@@ -274,7 +274,7 @@ const HomeScreen = ({
       </div>
 
       <div
-        className={`settings-backdrop ${(settingsOpen || profileOpen) ? "open" : ""}`}
+        className={`panel-overlay ${(settingsOpen || profileOpen) ? "open" : ""}`}
         onClick={(e) => {
           e.stopPropagation();
           setSettingsOpen(false);
@@ -284,14 +284,14 @@ const HomeScreen = ({
       />
 
       <div
-        className={`settings-panel glass-panel ${settingsOpen ? "open" : ""} ${theme}`}
+        className={`sheet-panel glass-panel ${settingsOpen ? "open" : ""} ${theme}`}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <div className="settings-header">
-          <h2 className="settings-title">{t("settings")}</h2>
+        <div className="panel-header">
+          <h2 className="panel-title">{t("settings")}</h2>
           <button
-            className="settings-close-btn"
+            className="panel-close-btn"
             onClick={(e) => {
               e.stopPropagation();
               setSettingsOpen(false);
@@ -302,7 +302,7 @@ const HomeScreen = ({
           </button>
         </div>
 
-        <div className="settings-body">
+        <div className="panel-body">
           <div className="settings-section">
             <span className="section-label">{t("game_duration")}</span>
             <div className="timer-toggle-wrap glass-panel">

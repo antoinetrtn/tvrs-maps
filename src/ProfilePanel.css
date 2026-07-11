@@ -4,50 +4,12 @@
   overflow: hidden !important;
 }
 
-.profile-panel .settings-body {
+.profile-panel .panel-body {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden !important;
   padding-bottom: 0 !important;
-}
-
-/* Profile Panel Tab triggers */
-.tab-triggers {
-  display: flex;
-  gap: var(--spacing-sm);
-  background: var(--accent-soft);
-  padding: 3px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
-}
-
-.tab-trigger-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: 10px var(--spacing-md);
-  min-height: 40px;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-family: var(--font-main);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-}
-
-.tab-trigger-btn .icon {
-  width: 14px;
-  height: 14px;
-}
-
-.tab-trigger-btn.active {
-  background: var(--bg-color);
-  color: var(--text-main);
-  box-shadow: 0 2px 4px var(--shadow-subtle);
 }
 
 /* Avatar Preview Level Tag */
@@ -632,7 +594,7 @@
     z-index: 20000 !important;
   }
 
-  .profile-panel .settings-body {
+  .profile-panel .panel-body {
     padding-bottom: var(--spacing-sm) !important;
   }
 }
