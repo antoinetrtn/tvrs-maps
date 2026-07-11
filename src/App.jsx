@@ -80,45 +80,7 @@ function App() {
     setAchievementQueue((prev) => prev.slice(1));
   }, []);
 
-  const [uiScaleMode, setUiScaleMode] = useState(() => {
-    try {
-      return localStorage.getItem("tvrs-ui-scale-mode") || "auto";
-    } catch (_) {
-      return "auto";
-    }
-  });
-  const [uiScale, setUiScale] = useState(1.0);
 
-  const handleSetUiScaleMode = useCallback((mode) => {
-    setUiScaleMode(mode);
-    try {
-      localStorage.setItem("tvrs-ui-scale-mode", mode);
-    } catch (_) {}
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (uiScaleMode === "auto") {
-        const h = window.innerHeight;
-        if (h < 950) {
-          const autoScale = Math.max(0.72, Math.min(1.0, h / 950));
-          setUiScale(autoScale);
-        } else {
-          setUiScale(1.0);
-        }
-      } else {
-        setUiScale(parseFloat(uiScaleMode));
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [uiScaleMode]);
-
-  useEffect(() => {
-    document.documentElement.style.setProperty("--ui-scale", uiScale.toString());
-  }, [uiScale]);
 
   const [xpResult, setXpResult] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -1176,8 +1138,6 @@ function App() {
           localRecords={localRecords}
           session={session}
           onOpenAuth={() => setShowAuthModal(true)}
-          uiScaleMode={uiScaleMode}
-          onSetUiScaleMode={handleSetUiScaleMode}
         />
       ) : (
         !showEndScreen && (

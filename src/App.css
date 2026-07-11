@@ -1,8 +1,7 @@
 .app-container {
-  width: calc(100vw / var(--ui-scale, 1)) !important;
-  height: calc(100vh / var(--ui-scale, 1)) !important;
-  transform: scale(var(--ui-scale, 1));
-  transform-origin: top left;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background-color: var(--bg-color);
   color: var(--text-main);

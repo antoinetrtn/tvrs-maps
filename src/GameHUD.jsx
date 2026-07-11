@@ -343,7 +343,7 @@ const GameHUD = ({
               <button
                 className="hud-btn-circular"
                 onClick={onGoHome}
-                onPointerDown={(e) => e.preventDefault()}
+                onMouseDown={(e) => e.preventDefault()}
                 title={t("home")}
               >
                 <Home width={18} height={18} />
@@ -352,7 +352,7 @@ const GameHUD = ({
                 <button
                   className={`hud-mini-pill score-pill ${scoreGlow ? "score-increased-flash" : ""}`}
                   onClick={onInfo}
-                  onPointerDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
                   title={t("progress_title")}
                 >
                   <span className="mini-pill-val">{score}</span>
@@ -371,7 +371,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
                     onClick={() => onToggleLearn("showCountryLabels")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("show_country_labels")}
                   >
                     <Globe width={16} height={16} />
@@ -379,7 +379,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowCapitals ? "active" : ""}`}
                     onClick={() => onToggleLearn("showCapitals")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("show_capitals")}
                   >
                     <MapPin width={16} height={16} />
@@ -387,7 +387,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowRivers ? "active" : ""}`}
                     onClick={() => onToggleLearn("showRivers")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("show_rivers")}
                   >
                     <Waves width={16} height={16} />
@@ -395,7 +395,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowMountains ? "active" : ""}`}
                     onClick={() => onToggleLearn("showMountains")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("show_mountains")}
                   >
                     <TreePine width={16} height={16} />
@@ -408,7 +408,7 @@ const GameHUD = ({
                       className="hud-btn-circular"
                       style={{ color: "var(--error)", width: "40px", height: "40px" }}
                       onClick={onStop}
-                      onPointerDown={(e) => e.preventDefault()}
+                      onMouseDown={(e) => e.preventDefault()}
                       title={t("stop")}
                     >
                       <Square width={16} height={16} />
@@ -418,7 +418,7 @@ const GameHUD = ({
                       className="hud-btn-circular"
                       style={{ color: "var(--success)", width: "40px", height: "40px" }}
                       onClick={() => onNavigateFocus("next")}
-                      onPointerDown={(e) => e.preventDefault()}
+                      onMouseDown={(e) => e.preventDefault()}
                       title={t("play")}
                     >
                       <Play width={16} height={16} />
@@ -427,7 +427,7 @@ const GameHUD = ({
                   <button
                     className={`hud-mini-pill timer-pill ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
                     onClick={onInfo}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("progress_title")}
                   >
                     <span className="mini-pill-val">{formatTime(timeLeft)}</span>
@@ -443,7 +443,7 @@ const GameHUD = ({
               <div
                 className="hud-logo-clickable"
                 onClick={onGoHome}
-                onPointerDown={(e) => e.preventDefault()}
+                onMouseDown={(e) => e.preventDefault()}
                 title={t("return_home")}
                 style={{ pointerEvents: "auto", cursor: "pointer" }}
               >
@@ -456,7 +456,7 @@ const GameHUD = ({
                 <div
                   className="central-island-panel"
                   onClick={onInfo}
-                  onPointerDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
                 >
                   <div className={`island-font ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}>{formatTime(timeLeft)}</div>
                   <div className="island-divider" />
@@ -484,7 +484,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
                     onClick={() => onToggleLearn("showCountryLabels")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("labels_pays")}
                   >
                     <Globe width={16} height={16} />
@@ -492,7 +492,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowCapitals ? "active" : ""}`}
                     onClick={() => onToggleLearn("showCapitals")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("labels_capitales")}
                   >
                     <MapPin width={16} height={16} />
@@ -500,7 +500,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowRivers ? "active" : ""}`}
                     onClick={() => onToggleLearn("showRivers")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("labels_rivieres")}
                   >
                     <Waves width={16} height={16} />
@@ -508,7 +508,7 @@ const GameHUD = ({
                   <button
                     className={`learn-toggle-btn ${learnShowMountains ? "active" : ""}`}
                     onClick={() => onToggleLearn("showMountains")}
-                    onPointerDown={(e) => e.preventDefault()}
+                    onMouseDown={(e) => e.preventDefault()}
                     title={t("labels_montagnes")}
                   >
                     <TreePine width={16} height={16} />
@@ -519,7 +519,7 @@ const GameHUD = ({
                   className="hud-btn-circular"
                   style={{ color: "var(--error)" }}
                   onClick={onStop}
-                  onPointerDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
                   title={t("stop")}
                 >
                   <Square width={18} height={18} />
@@ -529,7 +529,7 @@ const GameHUD = ({
                   className="hud-btn-circular"
                   style={{ color: "var(--success)" }}
                   onClick={() => onNavigateFocus("next")}
-                  onPointerDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
                   title={t("play")}
                 >
                   <Play width={18} height={18} />
@@ -612,7 +612,7 @@ const GameHUD = ({
                 <button
                   className="focus-close-btn"
                   onClick={onClearFocus}
-                  onPointerDown={(e) => e.preventDefault()}
+                  onMouseDown={(e) => e.preventDefault()}
                 >
                   <Close width={14} height={14} />
                 </button>
@@ -647,10 +647,10 @@ const GameHUD = ({
               <button
                 key={idx}
                 className="suggestion-item"
-                onPointerDown={(e) => {
+                onMouseDown={(e) => {
                   e.preventDefault(); // STOPS BLUR
-                  submitSuggestion(s.display);
                 }}
+                onClick={() => submitSuggestion(s.display)}
                 type="button"
               >
                 <span className="sug-text">{s.display}</span>
@@ -665,7 +665,7 @@ const GameHUD = ({
             <button
               className="hud-btn-circular prev-btn"
               onClick={() => onNavigateFocus("prev")}
-              onPointerDown={(e) => e.preventDefault()}
+              onMouseDown={(e) => e.preventDefault()}
               title={t("previous")}
             >
               <ChevronLeft width={18} height={18} />
@@ -702,7 +702,7 @@ const GameHUD = ({
             <button
               className="hud-btn-circular next-btn"
               onClick={() => onNavigateFocus("next")}
-              onPointerDown={(e) => e.preventDefault()}
+              onMouseDown={(e) => e.preventDefault()}
               title={t("next")}
             >
               <ChevronRight width={18} height={18} />

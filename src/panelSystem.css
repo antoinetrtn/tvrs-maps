@@ -16,8 +16,8 @@
   position: fixed;
   inset: 0;
   background: var(--settings-backdrop-bg);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: var(--z-overlay);
   opacity: 0;
   pointer-events: none;
@@ -204,6 +204,7 @@
   width: 320px;
   height: auto;
   max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
   z-index: var(--z-sheet);
   display: flex;
   flex-direction: column;
@@ -233,8 +234,10 @@
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
+    height: 100dvh !important;
     max-width: 100vw !important;
     max-height: 100vh !important;
+    max-height: 100dvh !important;
     border-radius: 0 !important;
     margin: 0 !important;
   }
@@ -249,6 +252,9 @@
   position: fixed;
   inset: 0;
   background: var(--bg-color);
+  background: color-mix(in srgb, var(--bg-color) 82%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   z-index: var(--z-fullpage);
   display: flex;
   flex-direction: column;
@@ -270,8 +276,8 @@
   justify-content: center;
   z-index: var(--z-dialog);
   background: var(--settings-backdrop-bg);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   animation: panel-fade-in 0.25s ease-out;
 }
 

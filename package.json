@@ -11,7 +11,8 @@
     "quality": "node scripts/quality-check.js",
     "check": "npm run lint && npm run test:run && npm run build",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "node scripts/setup-hooks.js"
   },
   "keywords": [],
   "author": "",

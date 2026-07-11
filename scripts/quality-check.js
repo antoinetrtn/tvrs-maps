@@ -93,6 +93,14 @@ cssFiles.forEach(file => {
   });
 });
 
+// Check for banned onPointerDown preventing defaults (which breaks mobile clicks)
+sourceFiles.filter(file => file.endsWith('.jsx')).forEach(file => {
+  const content = read(file);
+  if (/onPointerDown\s*=\s*\{\s*(?:\([^)]*\)|[a-zA-Z0-9_$]+)\s*=>\s*[^}]*preventDefault/i.test(content)) {
+    fail(file, null, 'banned onPointerDown preventing defaults on buttons (breaks mobile clicks; use onMouseDown instead)');
+  }
+});
+
 if (failures.length) {
   console.error('Quality check failed:\n');
   failures.forEach(item => console.error(`- ${item}`));

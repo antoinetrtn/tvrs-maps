@@ -309,6 +309,19 @@
 
 /* Mobile adjustments */
 @media (max-width: 640px) {
+  .end-screen-content {
+    overflow-y: auto;
+    pointer-events: auto;
+    justify-content: flex-start;
+    gap: var(--spacing-md);
+    padding-top: max(var(--spacing-md), var(--safe-top));
+    padding-bottom: max(var(--spacing-lg), var(--safe-bottom));
+  }
+
+  .end-screen-spacer {
+    display: none;
+  }
+
   .continents-progress-bars {
     padding: var(--spacing-md);
     gap: var(--spacing-md);
