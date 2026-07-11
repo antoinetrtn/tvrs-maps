@@ -137,11 +137,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           </button>
         </div>
 
-        {step === "initial" && (
-          <div className="auth-modal-logo-wrapper">
-            <Logo size="medium" variant="vector" className="auth-vector-logo" />
-          </div>
-        )}
+
 
         {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
         {successMsg && <div className="form-feedback success">{successMsg}</div>}

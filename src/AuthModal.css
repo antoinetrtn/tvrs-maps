@@ -48,24 +48,22 @@
   height: 16px;
 }
 
-/* TVRS Cyan Button */
+/* TVRS Cyan Button -> changed to glass style */
 .auth-row-btn.tvrs-btn {
-  background: #00f0ff;
-  color: #000000;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
 }
 
 [data-theme="light"] .auth-row-btn.tvrs-btn {
-  background: #0891b2;
-  color: #ffffff;
+  background: var(--glass-bg);
+  color: var(--text-main);
 }
 
 .auth-row-btn.tvrs-btn:hover {
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+  background: var(--glass-hover);
+  border-color: var(--text-main);
   transform: translateY(-1px);
-}
-
-[data-theme="light"] .auth-row-btn.tvrs-btn:hover {
-  box-shadow: 0 0 12px rgba(8, 145, 178, 0.4);
 }
 
 /* Google Light/Gray Button */
@@ -81,24 +79,22 @@
   transform: translateY(-1px);
 }
 
-/* Guest Pink Button */
+/* Guest Pink Button -> changed to glass style */
 .auth-row-btn.guest-btn {
-  background: #ff007f;
-  color: #ffffff;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
 }
 
 [data-theme="light"] .auth-row-btn.guest-btn {
-  background: #db2777;
-  color: #ffffff;
+  background: var(--glass-bg);
+  color: var(--text-main);
 }
 
 .auth-row-btn.guest-btn:hover {
-  box-shadow: 0 0 12px rgba(255, 0, 127, 0.6);
+  background: var(--glass-hover);
+  border-color: var(--text-main);
   transform: translateY(-1px);
-}
-
-[data-theme="light"] .auth-row-btn.guest-btn:hover {
-  box-shadow: 0 0 12px rgba(219, 39, 119, 0.4);
 }
 
 .auth-modal-form {
