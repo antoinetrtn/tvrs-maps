@@ -1,7 +1,7 @@
 /* Profile Panel layout - Scroll lock & Flex */
 .profile-panel {
   width: 460px !important;
-  height: 680px !important;
+  height: 800px !important;
   max-height: calc(100vh - 140px) !important;
   overflow: hidden !important;
 }
