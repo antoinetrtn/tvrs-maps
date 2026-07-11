@@ -124,6 +124,63 @@ export const INVADER_DESIGNS = {
   ]
 };
 
+export const getProceduralDesign = (id) => {
+  if (!id) return INVADER_DESIGNS.invader_1;
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const design = [];
+  for (let r = 0; r < 8; r++) {
+    const halfRow = [];
+    for (let c = 0; c < 6; c++) {
+      // Deterministic pseudo-randomness based on ID
+      const x = Math.sin(hash + r * 17 + c * 31) * 10000;
+      const rand = x - Math.floor(x);
+      
+      let threshold = 0.52;
+      if (r === 0) threshold = 0.72; // antennae
+      if (r === 7) threshold = 0.65; // feet
+      if (c === 0) threshold = 0.68; // edges
+      
+      halfRow.push(rand > threshold ? "1" : "0");
+    }
+    
+    // Mirror design: columns 0-4, column 5 (center), columns 4-0
+    const fullRow = [
+      halfRow[0], halfRow[1], halfRow[2], halfRow[3], halfRow[4],
+      halfRow[5],
+      halfRow[4], halfRow[3], halfRow[2], halfRow[1], halfRow[0]
+    ].join("");
+    
+    design.push(fullRow);
+  }
+
+  // Count total pixels to make sure it looks reasonable
+  let totalPixels = 0;
+  design.forEach((row) => {
+    for (let i = 0; i < row.length; i++) {
+      if (row[i] === "1") totalPixels++;
+    }
+  });
+
+  if (totalPixels < 12 || totalPixels > 60) {
+    // Fallback invader
+    return [
+      "00100000100",
+      "00010001000",
+      "00111111100",
+      "01101110110",
+      "11111111111",
+      "10111111101",
+      "10100000101",
+      "00011011000"
+    ];
+  }
+  return design;
+};
+
 // AVATAR_COLORS is imported from designSystem to satisfy the lint rules
 
 const InvaderAvatar = ({
@@ -133,7 +190,7 @@ const InvaderAvatar = ({
   className = ""
 }) => {
   // Safe design retrieval with fallback
-  const design = INVADER_DESIGNS[invaderId] || INVADER_DESIGNS.invader_1;
+  const design = INVADER_DESIGNS[invaderId] || getProceduralDesign(invaderId);
   const hexColor = AVATAR_COLORS[color] || color;
 
   // Build rectangles for pixels set to '1'

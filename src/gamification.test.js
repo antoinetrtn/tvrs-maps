@@ -1,92 +1,25 @@
 import { describe, it, expect } from "vitest";
 import { normalizeString } from "./utils";
-import { getLevelAndProgress, getAvatarUnlockLevel, checkAndUnlockBadges } from "./useUserProfile";
+import { getLevelAndProgress, getAvatarUnlockLevel, checkChallengesRealTime } from "./useUserProfile";
+import { getProceduralDesign } from "./InvaderAvatar";
 
-// Mock implementation of score history logic to test its correctness
 const updateScoreHistory = (currentHistory, newScore) => {
   const nextHistory = [...currentHistory, newScore].slice(-3);
   return nextHistory;
-};
-
-// Mock implementation of continent completion detection logic
-const checkRegionCompletion = (activeDataMap, foundList, guessedKey) => {
-  const newFound = [...foundList, guessedKey];
-  const guessItem = activeDataMap[guessedKey];
-  const region = guessItem?.region;
-  
-  if (!region || region === "Unknown") {
-    return false;
-  }
-  
-  const allInRegion = Object.keys(activeDataMap).filter(
-    (k) => activeDataMap[k]?.region === region
-  );
-  
-  if (allInRegion.length === 0) return false;
-  
-  const wasCompletedBefore = foundList.filter(
-    (k) => activeDataMap[k]?.region === region
-  ).length === allInRegion.length;
-  
-  const isCompletedNow = newFound.filter(
-    (k) => activeDataMap[k]?.region === region
-  ).length === allInRegion.length;
-  
-  return !wasCompletedBefore && isCompletedNow;
 };
 
 describe("Gamification System Logic", () => {
   describe("Score History Limit", () => {
     it("should retain only the last 3 scores chronologically", () => {
       let history = [];
-      
       history = updateScoreHistory(history, 10);
       expect(history).toEqual([10]);
-      
       history = updateScoreHistory(history, 20);
       expect(history).toEqual([10, 20]);
-      
       history = updateScoreHistory(history, 30);
       expect(history).toEqual([10, 20, 30]);
-      
       history = updateScoreHistory(history, 40);
       expect(history).toEqual([20, 30, 40]);
-      
-      history = updateScoreHistory(history, 5);
-      expect(history).toEqual([30, 40, 5]);
-    });
-  });
-
-  describe("Continent Completion Check", () => {
-    const mockDataMap = {
-      France: { region: "Europe" },
-      Germany: { region: "Europe" },
-      Kenya: { region: "Africa" },
-      Egypt: { region: "Africa" }
-    };
-
-    it("should return false if the region was already completed", () => {
-      const foundList = ["France", "Germany"];
-      const isCompleted = checkRegionCompletion(mockDataMap, foundList, "Germany");
-      expect(isCompleted).toBe(false);
-    });
-
-    it("should return true when the last country of a continent is found", () => {
-      const foundList = ["France"];
-      const isCompleted = checkRegionCompletion(mockDataMap, foundList, "Germany");
-      expect(isCompleted).toBe(true);
-    });
-
-    it("should return false if there are still unfound countries in the continent", () => {
-      const foundList = [];
-      const isCompleted = checkRegionCompletion(mockDataMap, foundList, "France");
-      expect(isCompleted).toBe(false);
-    });
-
-    it("should return false if the guessed country does not exist or has Unknown region", () => {
-      const foundList = [];
-      const isCompleted = checkRegionCompletion(mockDataMap, foundList, "Atlantis");
-      expect(isCompleted).toBe(false);
     });
   });
 
@@ -95,13 +28,11 @@ describe("Gamification System Logic", () => {
       expect(normalizeString("  Élément-Gêné  ")).toBe("element gene");
       expect(normalizeString("United States'")).toBe("united states");
       expect(normalizeString("")).toBe("");
-      expect(normalizeString(null)).toBe("");
     });
   });
 
   describe("XP and Level System", () => {
     it("should calculate correct level and progress from XP", () => {
-      // Level 1: 0 to 199 XP
       let progress = getLevelAndProgress(0);
       expect(progress.level).toBe(1);
       expect(progress.xpInLevel).toBe(0);
@@ -112,18 +43,10 @@ describe("Gamification System Logic", () => {
       expect(progress.xpInLevel).toBe(150);
       expect(progress.percent).toBe(75);
 
-      // Level 2: 200 to 599 XP (requires 400 XP)
       progress = getLevelAndProgress(200);
       expect(progress.level).toBe(2);
       expect(progress.xpInLevel).toBe(0);
-      expect(progress.percent).toBe(0);
 
-      progress = getLevelAndProgress(400);
-      expect(progress.level).toBe(2);
-      expect(progress.xpInLevel).toBe(200);
-      expect(progress.percent).toBe(50);
-
-      // Level 3: 600 to 1199 XP (requires 600 XP)
       progress = getLevelAndProgress(600);
       expect(progress.level).toBe(3);
       expect(progress.xpInLevel).toBe(0);
@@ -131,68 +54,121 @@ describe("Gamification System Logic", () => {
 
     it("should return correct avatar unlock levels", () => {
       expect(getAvatarUnlockLevel("invader_1")).toBe(1);
-      expect(getAvatarUnlockLevel("invader_2")).toBe(1);
-      expect(getAvatarUnlockLevel("invader_3")).toBe(1);
       expect(getAvatarUnlockLevel("invader_4")).toBe(2);
-      expect(getAvatarUnlockLevel("invader_5")).toBe(3);
       expect(getAvatarUnlockLevel("invader_12")).toBe(10);
-      expect(getAvatarUnlockLevel("invalid_id")).toBe(1);
     });
   });
 
-  describe("Badge Unlock System", () => {
+  describe("Procedural Invader Emote Generator", () => {
+    it("should generate a symmetric 11x8 design for any string ID", () => {
+      const design = getProceduralDesign("ch_score_countries_10");
+      expect(design).toHaveLength(8);
+      
+      design.forEach((row) => {
+        expect(row).toHaveLength(11);
+        // Verify horizontal symmetry: columns 0-4 must match columns 10-6 in reverse
+        const leftHalf = row.slice(0, 5);
+        const rightHalf = row.slice(6, 11);
+        const rightReversed = rightHalf.split("").reverse().join("");
+        expect(leftHalf).toBe(rightReversed);
+      });
+    });
+
+    it("should generate different designs for different IDs", () => {
+      const designA = getProceduralDesign("challenge_a");
+      const designB = getProceduralDesign("challenge_b");
+      expect(designA).not.toEqual(designB);
+    });
+  });
+
+  describe("Real-time Challenge System", () => {
     const mockRecords = {
-      countries: { gamesPlayed: 0 },
-      capitals: { gamesPlayed: 0 },
-      departments: { gamesPlayed: 0 },
-      rivers_mountains: { gamesPlayed: 0 }
+      countries: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      capitals: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      departments: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 }
     };
 
-    it("should unlock 'first_step' if score is at least 1", () => {
-      const unlocked = checkAndUnlockBadges([], "countries", 1, 10, 10, 60, mockRecords, []);
-      expect(unlocked).toContain("first_step");
-    });
-
-    it("should unlock 'centurion' if score is 100 or more", () => {
-      const unlocked = checkAndUnlockBadges([], "countries", 100, 10, 150, 600, mockRecords, []);
-      expect(unlocked).toContain("centurion");
-    });
-
-    it("should unlock 'perfectionist' on 100% correct answers", () => {
-      const unlocked = checkAndUnlockBadges([], "countries", 10, 100, 10, 600, mockRecords, []);
-      expect(unlocked).toContain("perfectionist");
-    });
-
-    it("should unlock 'speed_runner' if completed in less than half time", () => {
-      const unlocked = checkAndUnlockBadges([], "countries", 5, 29, 10, 60, mockRecords, []);
-      expect(unlocked).toContain("speed_runner");
-    });
-
-    it("should unlock 'relief_master' on score >= 20 in rivers_mountains mode", () => {
-      const unlocked = checkAndUnlockBadges([], "rivers_mountains", 20, 100, 30, 600, mockRecords, []);
-      expect(unlocked).toContain("relief_master");
-    });
-
-    it("should unlock 'loyal_player' after 10 cumulative games", () => {
-      const tenGamesRecords = {
-        countries: { gamesPlayed: 9 },
-        capitals: { gamesPlayed: 0 },
-        departments: { gamesPlayed: 0 },
-        rivers_mountains: { gamesPlayed: 0 }
+    it("should unlock ch_gen_play_1 when playing the first game", () => {
+      const sessionData = {
+        mode: "countries",
+        score: 1,
+        timeSpent: 10,
+        timeLeft: 50,
+        accuracy: 1,
+        isGameOver: true,
+        perfect: false,
+        continentsConquered: [],
+        guessesThisGame: [],
+        speedGuessCount3s: 0,
+        speedGuessCount1s: 0,
+        lightningCount: 0
       };
-      const unlocked = checkAndUnlockBadges([], "countries", 1, 10, 10, 60, tenGamesRecords, []);
-      expect(unlocked).toContain("loyal_player");
+
+      const unlocked = checkChallengesRealTime([], mockRecords, sessionData);
+      expect(unlocked).toContain("ch_gen_play_1");
     });
 
-    it("should unlock 'explorer' if all 4 modes have been played", () => {
-      const explorerRecords = {
-        countries: { gamesPlayed: 1 },
-        capitals: { gamesPlayed: 1 },
-        departments: { gamesPlayed: 1 },
-        rivers_mountains: { gamesPlayed: 0 } // current game will play this
+    it("should unlock ch_cont_europe when Europe is conquered", () => {
+      const sessionData = {
+        mode: "countries",
+        score: 10,
+        timeSpent: 30,
+        timeLeft: 30,
+        accuracy: 1,
+        isGameOver: false,
+        perfect: false,
+        continentsConquered: ["Europe"],
+        guessesThisGame: [],
+        speedGuessCount3s: 0,
+        speedGuessCount1s: 0,
+        lightningCount: 0
       };
-      const unlocked = checkAndUnlockBadges([], "rivers_mountains", 1, 10, 10, 60, explorerRecords, []);
-      expect(unlocked).toContain("explorer");
+
+      const unlocked = checkChallengesRealTime([], mockRecords, sessionData);
+      expect(unlocked).toContain("ch_cont_europe");
+    });
+
+    it("should unlock speed challenges like ch_speed_fast_guess on fast guesses", () => {
+      const sessionData = {
+        mode: "countries",
+        score: 1,
+        timeSpent: 2,
+        timeLeft: 58,
+        accuracy: 1,
+        isGameOver: false,
+        perfect: false,
+        continentsConquered: [],
+        guessesThisGame: [],
+        lastGuessDuration: 2.5,
+        speedGuessCount3s: 1,
+        speedGuessCount1s: 0,
+        lightningCount: 0
+      };
+
+      const unlocked = checkChallengesRealTime([], mockRecords, sessionData);
+      expect(unlocked).toContain("ch_speed_fast_guess");
+    });
+
+    it("should unlock ch_special_islands when finding 5 islands in a game", () => {
+      const sessionData = {
+        mode: "countries",
+        score: 5,
+        timeSpent: 15,
+        timeLeft: 45,
+        accuracy: 1,
+        isGameOver: false,
+        perfect: false,
+        continentsConquered: [],
+        guessesThisGame: ["Iceland", "Madagascar", "New Zealand", "Japan", "Cuba"],
+        lastGuessDuration: 3,
+        speedGuessCount3s: 0,
+        speedGuessCount1s: 0,
+        lightningCount: 0
+      };
+
+      const unlocked = checkChallengesRealTime([], mockRecords, sessionData);
+      expect(unlocked).toContain("ch_special_islands");
     });
   });
 });

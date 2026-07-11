@@ -4,6 +4,7 @@ import InvaderAvatar, { INVADER_DESIGNS } from "./InvaderAvatar";
 import { AVATAR_COLORS } from "./designSystem";
 import { useTranslation } from "./i18n";
 import { getLevelAndProgress, getAvatarUnlockLevel } from "./useUserProfile";
+import { CHALLENGES } from "./challenges";
 import {
   isSupabaseConfigured,
   upsertProfile,
@@ -36,8 +37,9 @@ const ProfilePanel = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Stats / Badges state
-  const [selectedBadgeId, setSelectedBadgeId] = useState("first_step");
+  // Stats / Challenges state
+  const [challengesFilter, setChallengesFilter] = useState("all");
+  const [selectedChallengeId, setSelectedChallengeId] = useState("ch_gen_play_1");
 
   // Auth Panel States
   const [authType, setAuthType] = useState("login"); // "login" | "signup"
@@ -67,7 +69,6 @@ const ProfilePanel = ({
 
     const cleanUsername = usernameInput.trim();
 
-    // Validation
     if (!cleanUsername) {
       setFormError(t("username_invalid"));
       return;
@@ -130,7 +131,6 @@ const ProfilePanel = ({
     }
   };
 
-  // Auth Handlers
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthErrorMsg(null);
@@ -140,7 +140,7 @@ const ProfilePanel = ({
     const password = authPassword.trim();
 
     if (!email || !password) {
-      setAuthErrorMsg(t("username_invalid")); // generic error label
+      setAuthErrorMsg("Veuillez remplir tous les champs");
       return;
     }
 
@@ -185,7 +185,6 @@ const ProfilePanel = ({
       const { error } = await signOut();
       if (error) throw error;
       
-      // Reset profile to a new local UUID copy
       const randomNum = Math.floor(100 + Math.random() * 900);
       const guestProfile = {
         id: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -207,24 +206,25 @@ const ProfilePanel = ({
     }
   };
 
-  // Gamification variables
   const { level, xpInLevel, xpNeededForNext, percent } = getLevelAndProgress(userProfile.xp || 0);
   const unlockedBadges = userProfile.unlockedBadges || [];
   const totalGamesPlayed = Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0);
 
-  const badgesList = [
-    { id: "first_step", invaderId: "invader_1", color: "cyan" },
-    { id: "explorer", invaderId: "invader_2", color: "lime" },
-    { id: "speed_runner", invaderId: "invader_3", color: "yellow" },
-    { id: "centurion", invaderId: "invader_4", color: "orange" },
-    { id: "perfectionist", invaderId: "invader_5", color: "pink" },
-    { id: "relief_master", invaderId: "invader_6", color: "green" },
-    { id: "loyal_player", invaderId: "invader_7", color: "purple" },
-    { id: "night_owl", invaderId: "invader_8", color: "blue" }
-  ];
+  // Filter challenges based on tab selection
+  const filteredChallenges = CHALLENGES.filter((ch) => {
+    if (challengesFilter === "all") return true;
+    return ch.category === challengesFilter;
+  });
 
-  const selectedBadgeObj = badgesList.find((b) => b.id === selectedBadgeId) || badgesList[0];
-  const isSelectedBadgeUnlocked = unlockedBadges.includes(selectedBadgeId);
+  const selectedChallengeObj = CHALLENGES.find((ch) => ch.id === selectedChallengeId) || CHALLENGES[0];
+  const isSelectedChallengeUnlocked = unlockedBadges.includes(selectedChallengeId);
+
+  // Challenges that are unlocked and can be used as profile emotes
+  const unlockedEmoteChallenges = CHALLENGES.filter((ch) => unlockedBadges.includes(ch.id));
+
+  // Localization utilities for challenge text
+  const getChallengeTitle = (ch) => (lang === "fr" ? ch.titleFr : ch.titleEn);
+  const getChallengeDesc = (ch) => (lang === "fr" ? ch.descFr : ch.descEn);
 
   return (
     <div
@@ -286,7 +286,7 @@ const ProfilePanel = ({
                       <input
                         type="email"
                         value={authEmail}
-                        onChange={(e) => setSession && setAuthEmail(e.target.value)}
+                        onChange={(e) => setAuthEmail(e.target.value)}
                         placeholder={t("auth_email")}
                         className="glass-panel auth-input"
                         required
@@ -294,7 +294,7 @@ const ProfilePanel = ({
                       <input
                         type="password"
                         value={authPassword}
-                        onChange={(e) => setSession && setAuthPassword(e.target.value)}
+                        onChange={(e) => setAuthPassword(e.target.value)}
                         placeholder={t("auth_password")}
                         className="glass-panel auth-input"
                         required
@@ -335,7 +335,7 @@ const ProfilePanel = ({
             )}
 
             {/* 2. Character Customization Section */}
-            <form onSubmit={handleSaveProfile} className="profile-form" style={{ display: "flex", flexDirection: "column" }}>
+            <form onSubmit={handleSaveProfile} className="profile-form">
               <div className="avatar-preview-container">
                 <div className="avatar-glow" style={{ "--glow-color": AVATAR_COLORS[selectedColor] }}>
                   <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={48} />
@@ -358,8 +358,9 @@ const ProfilePanel = ({
                 />
               </div>
 
+              {/* 2a. Standard Avatars */}
               <div className="form-group">
-                <label>{t("select_avatar")}</label>
+                <label>{t("select_avatar")} (Standard)</label>
                 <div className="avatar-grid scrollbar-styled">
                   {Object.keys(INVADER_DESIGNS).map((id) => {
                     const reqLvl = getAvatarUnlockLevel(id);
@@ -388,6 +389,28 @@ const ProfilePanel = ({
                 </div>
               </div>
 
+              {/* 2b. Special Unlocked Emote Challenges */}
+              {unlockedEmoteChallenges.length > 0 && (
+                <div className="form-group">
+                  <label>{t("select_avatar")} (Émotes Challenges)</label>
+                  <div className="avatar-grid scrollbar-styled">
+                    {unlockedEmoteChallenges.map((ch) => (
+                      <button
+                        key={ch.id}
+                        type="button"
+                        className={`avatar-option glass-panel ${selectedAvatar === ch.id ? "active" : ""}`}
+                        onClick={() => setSelectedAvatar(ch.id)}
+                        title={getChallengeTitle(ch)}
+                      >
+                        <div className="avatar-option-inner">
+                          <InvaderAvatar invaderId={ch.id} color={selectedColor} size={28} />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <label>{t("select_color")}</label>
                 <div className="color-selector-grid">
@@ -407,9 +430,12 @@ const ProfilePanel = ({
               {formError && <div className="form-feedback error">{formError}</div>}
               {saveSuccess && <div className="form-feedback success">{t("profile_saved")}</div>}
 
-              <button type="submit" disabled={isSaving} className="btn-primary form-submit-btn">
-                {isSaving ? t("saving") : t("save_profile")}
-              </button>
+              {/* Sticky Footer on Mobile */}
+              <div className="profile-sticky-footer">
+                <button type="submit" disabled={isSaving} className="btn-primary form-submit-btn">
+                  {isSaving ? t("saving") : t("save_profile")}
+                </button>
+              </div>
             </form>
           </div>
         ) : (
@@ -443,31 +469,47 @@ const ProfilePanel = ({
               </div>
               <div className="quick-stat-card glass-panel">
                 <span className="stat-label">{t("stats_badges_unlocked")}</span>
-                <span className="stat-value">{unlockedBadges.length} / {badgesList.length}</span>
+                <span className="stat-value">
+                  {unlockedBadges.filter((b) => b.startsWith("ch_")).length} / {CHALLENGES.length}
+                </span>
               </div>
             </div>
 
-            {/* Badges Gallery */}
+            {/* Challenges Filters & Grid */}
             <div className="badges-gallery-section">
-              <span className="section-label">{t("profile_screen_title")}</span>
-              <div className="badges-grid">
-                {badgesList.map((badge) => {
-                  const isUnlocked = unlockedBadges.includes(badge.id);
-                  const isSelected = selectedBadgeId === badge.id;
+              <span className="section-label">Challenges & Émotes</span>
+              
+              {/* Category selector */}
+              <div className="challenges-filter-bar scrollbar-styled">
+                {["all", "general", "continents", "scores", "speed", "relief"].map((cat) => (
+                  <button
+                    key={cat}
+                    className={`filter-tab-btn ${challengesFilter === cat ? "active" : ""}`}
+                    onClick={() => setChallengesFilter(cat)}
+                  >
+                    {cat.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+
+              <div className="badges-grid scrollbar-styled" style={{ maxHeight: "240px", overflowY: "auto" }}>
+                {filteredChallenges.map((ch) => {
+                  const isUnlocked = unlockedBadges.includes(ch.id);
+                  const isSelected = selectedChallengeId === ch.id;
                   return (
                     <button
-                      key={badge.id}
+                      key={ch.id}
                       className={`badge-item-btn glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
-                      onClick={() => setSelectedBadgeId(badge.id)}
+                      onClick={() => setSelectedChallengeId(ch.id)}
                       style={{
-                        "--badge-color-glow": isUnlocked ? `${AVATAR_COLORS[badge.color]}33` : "transparent",
-                        "--badge-color-border": isUnlocked ? AVATAR_COLORS[badge.color] : "var(--glass-border)"
+                        "--badge-color-glow": isUnlocked ? `${AVATAR_COLORS[ch.color]}33` : "transparent",
+                        "--badge-color-border": isUnlocked ? AVATAR_COLORS[ch.color] : "var(--glass-border)"
                       }}
                     >
                       <div className="badge-item-inner">
                         <InvaderAvatar
-                          invaderId={badge.invaderId}
-                          color={isUnlocked ? badge.color : "gray"}
+                          invaderId={ch.id}
+                          color={isUnlocked ? ch.color : "gray"}
                           size={24}
                         />
                         {!isUnlocked && (
@@ -481,30 +523,30 @@ const ProfilePanel = ({
                 })}
               </div>
 
-              {/* Selected Badge Details (Mobile Friendly) */}
+              {/* Selected Badge Details */}
               <div className="badge-detail-card glass-panel">
                 <div className="badge-detail-header">
                   <div
                     className="badge-detail-icon-glow"
-                    style={{ "--badge-detail-color": isSelectedBadgeUnlocked ? AVATAR_COLORS[selectedBadgeObj.color] : "gray" }}
+                    style={{ "--badge-detail-color": isSelectedChallengeUnlocked ? AVATAR_COLORS[selectedChallengeObj.color] : "gray" }}
                   >
                     <InvaderAvatar
-                      invaderId={selectedBadgeObj.invaderId}
-                      color={isSelectedBadgeUnlocked ? selectedBadgeObj.color : "gray"}
+                      invaderId={selectedChallengeObj.id}
+                      color={isSelectedChallengeUnlocked ? selectedChallengeObj.color : "gray"}
                       size={32}
                     />
                   </div>
                   <div className="badge-detail-title-block">
                     <h3 className="badge-detail-name text-natural-case">
-                      {t(`badge_${selectedBadgeObj.id}_title`)}
+                      {getChallengeTitle(selectedChallengeObj)}
                     </h3>
-                    <span className={`badge-detail-status ${isSelectedBadgeUnlocked ? "unlocked" : "locked"}`}>
-                      {isSelectedBadgeUnlocked ? "Unrevealed" : "????"}
+                    <span className={`badge-detail-status ${isSelectedChallengeUnlocked ? "unlocked" : "locked"}`}>
+                      {isSelectedChallengeUnlocked ? "Débloqué (Émote OK)" : "Verrouillé"}
                     </span>
                   </div>
                 </div>
                 <p className="badge-detail-description">
-                  {t(`badge_${selectedBadgeObj.id}_desc`)}
+                  {getChallengeDesc(selectedChallengeObj)}
                 </p>
               </div>
             </div>

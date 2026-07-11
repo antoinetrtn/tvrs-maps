@@ -1,0 +1,468 @@
+export const CHALLENGES = [
+  // GENERAL
+  {
+    id: "ch_gen_play_1",
+    category: "general",
+    titleFr: "Premier Pas",
+    titleEn: "First Step",
+    descFr: "Joue ta première partie sur TVRS Maps.",
+    descEn: "Play your first game on TVRS Maps.",
+    color: "cyan"
+  },
+  {
+    id: "ch_gen_play_5",
+    category: "general",
+    titleFr: "Apprenti Explorateur",
+    titleEn: "Apprentice Explorer",
+    descFr: "Joue 5 parties au total.",
+    descEn: "Play 5 total games.",
+    color: "lime"
+  },
+  {
+    id: "ch_gen_play_10",
+    category: "general",
+    titleFr: "Pilier Cartographe",
+    titleEn: "Map Pillar",
+    descFr: "Joue 10 parties au total.",
+    descEn: "Play 10 total games.",
+    color: "purple"
+  },
+  {
+    id: "ch_gen_play_25",
+    category: "general",
+    titleFr: "Vétéran des Globes",
+    titleEn: "Globe Veteran",
+    descFr: "Joue 25 parties au total.",
+    descEn: "Play 25 total games.",
+    color: "orange"
+  },
+  {
+    id: "ch_gen_play_50",
+    category: "general",
+    titleFr: "Géographe Suprême",
+    titleEn: "Supreme Geographer",
+    descFr: "Joue 50 parties au total.",
+    descEn: "Play 50 total games.",
+    color: "magenta"
+  },
+  {
+    id: "ch_gen_lvl_2",
+    category: "general",
+    titleFr: "Niveau 2 Atteint",
+    titleEn: "Level 2 Reached",
+    descFr: "Atteins le niveau 2 de progression.",
+    descEn: "Reach progression level 2.",
+    color: "cyan"
+  },
+  {
+    id: "ch_gen_lvl_5",
+    category: "general",
+    titleFr: "Niveau 5 Atteint",
+    titleEn: "Level 5 Reached",
+    descFr: "Atteins le niveau 5 de progression.",
+    descEn: "Reach progression level 5.",
+    color: "yellow"
+  },
+  {
+    id: "ch_gen_lvl_10",
+    category: "general",
+    titleFr: "Niveau 10 Atteint",
+    titleEn: "Level 10 Reached",
+    descFr: "Atteins le niveau 10 de progression.",
+    descEn: "Reach progression level 10.",
+    color: "blue"
+  },
+  {
+    id: "ch_gen_lvl_15",
+    category: "general",
+    titleFr: "Niveau 15 Atteint",
+    titleEn: "Level 15 Reached",
+    descFr: "Atteins le niveau 15 de progression.",
+    descEn: "Reach progression level 15.",
+    color: "pink"
+  },
+  {
+    id: "ch_gen_lvl_20",
+    category: "general",
+    titleFr: "Niveau 20 Atteint",
+    titleEn: "Level 20 Reached",
+    descFr: "Atteins le niveau 20 de progression.",
+    descEn: "Reach progression level 20.",
+    color: "magenta"
+  },
+
+  // CONTINENTS
+  {
+    id: "ch_cont_europe",
+    category: "continents",
+    titleFr: "Conquête de l'Europe",
+    titleEn: "European Conquest",
+    descFr: "Trouve tous les pays d'Europe dans une partie.",
+    descEn: "Find all European countries in a single game.",
+    color: "cyan"
+  },
+  {
+    id: "ch_cont_europe_5",
+    category: "continents",
+    titleFr: "Souverain d'Europe",
+    titleEn: "European Sovereign",
+    descFr: "Complète l'Europe 5 fois au total.",
+    descEn: "Complete Europe 5 times in total.",
+    color: "blue"
+  },
+  {
+    id: "ch_cont_africa",
+    category: "continents",
+    titleFr: "Terres Africaines",
+    titleEn: "African Sands",
+    descFr: "Trouve tous les pays d'Afrique dans une partie.",
+    descEn: "Find all African countries in a single game.",
+    color: "yellow"
+  },
+  {
+    id: "ch_cont_africa_5",
+    category: "continents",
+    titleFr: "Pharaon d'Afrique",
+    titleEn: "African Pharaoh",
+    descFr: "Complète l'Afrique 5 fois au total.",
+    descEn: "Complete Africa 5 times in total.",
+    color: "orange"
+  },
+  {
+    id: "ch_cont_asia",
+    category: "continents",
+    titleFr: "Soleil Levant",
+    titleEn: "Rising Sun",
+    descFr: "Trouve tous les pays d'Asie dans une partie.",
+    descEn: "Find all Asian countries in a single game.",
+    color: "magenta"
+  },
+  {
+    id: "ch_cont_asia_5",
+    category: "continents",
+    titleFr: "Empereur d'Asie",
+    titleEn: "Asian Emperor",
+    descFr: "Complète l'Asie 5 fois au total.",
+    descEn: "Complete Asia 5 times in total.",
+    color: "purple"
+  },
+  {
+    id: "ch_cont_americas",
+    category: "continents",
+    titleFr: "Nouveau Monde",
+    titleEn: "New World",
+    descFr: "Trouve tous les pays des Amériques dans une partie.",
+    descEn: "Find all American countries in a single game.",
+    color: "lime"
+  },
+  {
+    id: "ch_cont_americas_5",
+    category: "continents",
+    titleFr: "Pionnier des Amériques",
+    titleEn: "American Pioneer",
+    descFr: "Complète les Amériques 5 fois au total.",
+    descEn: "Complete the Americas 5 times in total.",
+    color: "green"
+  },
+  {
+    id: "ch_cont_oceania",
+    category: "continents",
+    titleFr: "Archipels Lointains",
+    titleEn: "Distant Archipelagos",
+    descFr: "Trouve tous les pays d'Océanie dans une partie.",
+    descEn: "Find all Oceanian countries in a single game.",
+    color: "pink"
+  },
+  {
+    id: "ch_cont_oceania_5",
+    category: "continents",
+    titleFr: "Navigateur du Pacifique",
+    titleEn: "Pacific Navigator",
+    descFr: "Complète l'Océanie 5 fois au total.",
+    descEn: "Complete Oceania 5 times in total.",
+    color: "amber"
+  },
+
+  // SCORES
+  {
+    id: "ch_score_countries_10",
+    category: "scores",
+    titleFr: "Débutant Pays",
+    titleEn: "Country Beginner",
+    descFr: "Marque 10 points en mode pays.",
+    descEn: "Score 10 points in Country mode.",
+    color: "cyan"
+  },
+  {
+    id: "ch_score_countries_20",
+    category: "scores",
+    titleFr: "Cartographe Pays",
+    titleEn: "Country Mapper",
+    descFr: "Marque 20 points en mode pays.",
+    descEn: "Score 20 points in Country mode.",
+    color: "lime"
+  },
+  {
+    id: "ch_score_countries_50",
+    category: "scores",
+    titleFr: "Expert Pays",
+    titleEn: "Country Expert",
+    descFr: "Marque 50 points en mode pays.",
+    descEn: "Score 50 points in Country mode.",
+    color: "yellow"
+  },
+  {
+    id: "ch_score_countries_100",
+    category: "scores",
+    titleFr: "Génie des Pays",
+    titleEn: "Country Genius",
+    descFr: "Marque 100 points en mode pays.",
+    descEn: "Score 100 points in Country mode.",
+    color: "magenta"
+  },
+  {
+    id: "ch_score_capitals_10",
+    category: "scores",
+    titleFr: "Visiteur de Villes",
+    titleEn: "City Visitor",
+    descFr: "Marque 10 points en mode capitales.",
+    descEn: "Score 10 points in Capital mode.",
+    color: "blue"
+  },
+  {
+    id: "ch_score_capitals_20",
+    category: "scores",
+    titleFr: "Urbaniste Rétro",
+    titleEn: "Retro Urbanist",
+    descFr: "Marque 20 points en mode capitales.",
+    descEn: "Score 20 points in Capital mode.",
+    color: "purple"
+  },
+  {
+    id: "ch_score_capitals_50",
+    category: "scores",
+    titleFr: "Maire du Monde",
+    titleEn: "World Mayor",
+    descFr: "Marque 50 points en mode capitales.",
+    descEn: "Score 50 points in Capital mode.",
+    color: "orange"
+  },
+  {
+    id: "ch_score_capitals_100",
+    category: "scores",
+    titleFr: "Empereur des Capitales",
+    titleEn: "Capital Emperor",
+    descFr: "Marque 100 points en mode capitales.",
+    descEn: "Score 100 points in Capital mode.",
+    color: "magenta"
+  },
+  {
+    id: "ch_score_departments_10",
+    category: "scores",
+    titleFr: "Promenade Départements",
+    titleEn: "Department Walk",
+    descFr: "Marque 10 points en mode départements.",
+    descEn: "Score 10 points in Department mode.",
+    color: "pink"
+  },
+  {
+    id: "ch_score_departments_20",
+    category: "scores",
+    titleFr: "Citoyen Local",
+    titleEn: "Local Citizen",
+    descFr: "Marque 20 points en mode départements.",
+    descEn: "Score 20 points in Department mode.",
+    color: "yellow"
+  },
+  {
+    id: "ch_score_departments_50",
+    category: "scores",
+    titleFr: "Préfet de France",
+    titleEn: "France Prefect",
+    descFr: "Marque 50 points en mode départements.",
+    descEn: "Score 50 points in Department mode.",
+    color: "lime"
+  },
+  {
+    id: "ch_score_departments_100",
+    category: "scores",
+    titleFr: "Maître de l'Hexagone",
+    titleEn: "Hexagon Master",
+    descFr: "Marque 100 points en mode départements.",
+    descEn: "Score 100 points in Department mode.",
+    color: "cyan"
+  },
+
+  // SPEED
+  {
+    id: "ch_speed_fast_guess",
+    category: "speed",
+    titleFr: "Réflexe Éclair",
+    titleEn: "Flash Reflex",
+    descFr: "Trouve un élément en moins de 3 secondes.",
+    descEn: "Find an element in less than 3 seconds.",
+    color: "yellow"
+  },
+  {
+    id: "ch_speed_10_guesses_30s",
+    category: "speed",
+    titleFr: "Série Rapide",
+    titleEn: "Sprint Series",
+    descFr: "Trouve 10 éléments en moins de 30 secondes.",
+    descEn: "Find 10 elements in less than 30 seconds.",
+    color: "orange"
+  },
+  {
+    id: "ch_speed_20_guesses_60s",
+    category: "speed",
+    titleFr: "Rafale Pixels",
+    titleEn: "Pixel Blast",
+    descFr: "Trouve 20 éléments en moins de 60 secondes.",
+    descEn: "Find 20 elements in less than 60 seconds.",
+    color: "magenta"
+  },
+  {
+    id: "ch_speed_under_2m",
+    category: "speed",
+    titleFr: "Marathon Express",
+    titleEn: "Express Marathon",
+    descFr: "Termine une partie en moins de 2 minutes.",
+    descEn: "Complete a game in less than 2 minutes.",
+    color: "purple"
+  },
+  {
+    id: "ch_speed_under_1m",
+    category: "speed",
+    titleFr: "Vitesse Sonique",
+    titleEn: "Sonic Speed",
+    descFr: "Termine une partie en moins de 1 minute.",
+    descEn: "Complete a game in less than 1 minute.",
+    color: "pink"
+  },
+  {
+    id: "ch_speed_under_30s",
+    category: "speed",
+    titleFr: "Vitesse Hyperespace",
+    titleEn: "Hyperspace Velocity",
+    descFr: "Termine une partie en moins de 30 secondes.",
+    descEn: "Complete a game in less than 30 seconds.",
+    color: "cyan"
+  },
+  {
+    id: "ch_speed_half_time",
+    category: "speed",
+    titleFr: "Bolide Rétro",
+    titleEn: "Retro Racer",
+    descFr: "Finis une partie en moins de la moitié du temps alloué.",
+    descEn: "Complete a game in less than half the allocated time.",
+    color: "lime"
+  },
+  {
+    id: "ch_speed_blitz",
+    category: "speed",
+    titleFr: "Vitesse Lumière",
+    titleEn: "Light Speed",
+    descFr: "Trouve un élément en moins de 1 seconde.",
+    descEn: "Find an element in less than 1 second.",
+    color: "amber"
+  },
+  {
+    id: "ch_speed_perfect_100",
+    category: "speed",
+    titleFr: "Précision Absolue",
+    titleEn: "Perfect Precision",
+    descFr: "Termine une partie à 100% correct en moins de 2 minutes.",
+    descEn: "Complete a 100% correct game in less than 2 minutes.",
+    color: "green"
+  },
+  {
+    id: "ch_speed_lightning",
+    category: "speed",
+    titleFr: "Foudre Divine",
+    titleEn: "Divine Lightning",
+    descFr: "Trouve 3 éléments corrects en moins de 5 secondes.",
+    descEn: "Find 3 correct elements in less than 5 seconds.",
+    color: "yellow"
+  },
+
+  // RELIEF & SPECIALTY
+  {
+    id: "ch_relief_score_10",
+    category: "relief",
+    titleFr: "Grimpeur de Colline",
+    titleEn: "Hill Climber",
+    descFr: "Marque 10 points en mode fleuves & montagnes.",
+    descEn: "Score 10 points in Rivers & Mountains mode.",
+    color: "lime"
+  },
+  {
+    id: "ch_relief_score_20",
+    category: "relief",
+    titleFr: "Alpiniste Amateur",
+    titleEn: "Amateur Mountaineer",
+    descFr: "Marque 20 points en mode fleuves & montagnes.",
+    descEn: "Score 20 points in Rivers & Mountains mode.",
+    color: "green"
+  },
+  {
+    id: "ch_relief_score_30",
+    category: "relief",
+    titleFr: "Maître des Sommets",
+    titleEn: "Peak Master",
+    descFr: "Marque 30 points en mode fleuves & montagnes.",
+    descEn: "Score 30 points in Rivers & Mountains mode.",
+    color: "emerald"
+  },
+  {
+    id: "ch_relief_score_40",
+    category: "relief",
+    titleFr: "Dieu de l'Everest",
+    titleEn: "Everest God",
+    descFr: "Marque 40 points en mode fleuves & montagnes.",
+    descEn: "Score 40 points in Rivers & Mountains mode.",
+    color: "magenta"
+  },
+  {
+    id: "ch_special_night",
+    category: "relief",
+    titleFr: "Oiseau de Nuit",
+    titleEn: "Night Owl",
+    descFr: "Joue une partie de nuit entre 22h et 4h du matin.",
+    descEn: "Play a game at night between 10 PM and 4 AM.",
+    color: "blue"
+  },
+  {
+    id: "ch_special_lunch",
+    category: "relief",
+    titleFr: "Pause Déjeuner",
+    titleEn: "Lunch Break",
+    descFr: "Joue une partie à midi entre 12h et 14h.",
+    descEn: "Play a game at lunchtime between 12 PM and 2 PM.",
+    color: "yellow"
+  },
+  {
+    id: "ch_special_perfect",
+    category: "relief",
+    titleFr: "Perfectionniste",
+    titleEn: "Perfectionist",
+    descFr: "Finis une partie complète à 100% correct.",
+    descEn: "Finish a full game with 100% accuracy.",
+    color: "pink"
+  },
+  {
+    id: "ch_special_islands",
+    category: "relief",
+    titleFr: "Gardien des Îles",
+    titleEn: "Island Keeper",
+    descFr: "Trouve au moins 5 îles géographiques dans une partie.",
+    descEn: "Find at least 5 geographic islands in a single game.",
+    color: "cyan"
+  }
+];
+
+// Helper of geographic islands
+export const ISLANDS_LIST = [
+  "Iceland", "Madagascar", "New Zealand", "Japan", "United Kingdom", "Ireland",
+  "Sri Lanka", "Cuba", "Taiwan", "Philippines", "Indonesia", "Australia",
+  "Cyprus", "Jamaica", "Haiti", "Dominican Republic", "Papua New Guinea", "Fiji"
+];

@@ -12,7 +12,11 @@ import { departmentsDataMap } from "./departmentsData";
 import { riversMountainsDataMap } from "./riversMountainsData";
 import { useTranslation } from "./i18n";
 import { normalizeString } from "./utils";
-import { useUserProfile } from "./useUserProfile";
+import { useUserProfile, checkChallengesRealTime } from "./useUserProfile";
+import { CHALLENGES } from "./challenges";
+import { isSupabaseConfigured, upsertProfile } from "./supabaseClient";
+import { AVATAR_COLORS } from "./designSystem";
+
 
 import {
   getThemeCssVariables,
@@ -73,6 +77,12 @@ function App() {
   const [activeAchievement, setActiveAchievement] = useState(null);
   const [xpResult, setXpResult] = useState(null);
   const conqueredRegionsThisGameRef = useRef([]);
+  const speedGuessCount3sRef = useRef(0);
+  const speedGuessCount1sRef = useRef(0);
+  const guessTimestampsRef = useRef([]);
+  const guessesThisGameRef = useRef([]);
+  const lastGuessTimeRef = useRef(0);
+  const lightningCountRef = useRef(0);
   const globeLightingEnabled = true;
   const [theme, setTheme] = useState(() => {
     try {
@@ -434,6 +444,12 @@ function App() {
       setIsNewPB(false);
       setXpResult(null);
       conqueredRegionsThisGameRef.current = [];
+      speedGuessCount3sRef.current = 0;
+      speedGuessCount1sRef.current = 0;
+      guessTimestampsRef.current = [];
+      guessesThisGameRef.current = [];
+      lastGuessTimeRef.current = Date.now();
+      lightningCountRef.current = 0;
     },
     [resetNavigationTrail, gameDuration],
   );
@@ -588,9 +604,32 @@ function App() {
       setPopupSuccess(true);
       setSelectedCountry(guessedKey);
 
+      // Track timings & stats for achievements
+      const now = Date.now();
+      const lastGuessDuration = (now - lastGuessTimeRef.current) / 1000;
+      lastGuessTimeRef.current = now;
+      
+      guessesThisGameRef.current.push(guessedKey);
+      
+      if (lastGuessDuration <= 3) {
+        speedGuessCount3sRef.current += 1;
+      }
+      if (lastGuessDuration <= 1) {
+        speedGuessCount1sRef.current += 1;
+      }
+      
+      guessTimestampsRef.current.push(now);
+      if (guessTimestampsRef.current.length >= 3) {
+        const thirdLast = guessTimestampsRef.current[guessTimestampsRef.current.length - 3];
+        if (now - thirdLast <= 5000) {
+          lightningCountRef.current += 1;
+        }
+      }
+
       // Check for region conquest achievement
       const guessItem = activeDataMap[guessedKey];
       const region = guessItem?.region;
+      const newlyConqueredRegions = [];
       if (region && region !== "Unknown") {
         const allInRegion = Object.keys(activeDataMap).filter(
           (k) => activeDataMap[k]?.region === region
@@ -605,6 +644,9 @@ function App() {
 
           if (!wasCompletedBefore && isCompletedNow) {
             conqueredRegionsThisGameRef.current.push(region);
+            newlyConqueredRegions.push(region);
+            
+            // Standard notification for region conquest
             const labelColor = getThemeRegionColorLabel(globeTheme, theme, region);
             const invaders = ["invader_1", "invader_2", "invader_3", "invader_4", "invader_5", "invader_6", "invader_7", "invader_8"];
             const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -617,6 +659,67 @@ function App() {
               invaderId: invaderId
             });
           }
+        }
+      }
+
+      // Call Real-time Challenge verification
+      const hour = new Date().getHours();
+      const currentBadges = userProfile.unlockedBadges || [];
+      const sessionData = {
+        mode,
+        score: newFound.length,
+        timeSpent: gameDuration - timeLeft,
+        timeLeft,
+        accuracy: 1, // mid-game assumes 100% since we only call on successful guesses
+        isGameOver: false,
+        perfect: false,
+        continentsConquered: newlyConqueredRegions,
+        consecutiveCorrect: newFound.length,
+        lastGuessDuration,
+        guessesThisGame: guessesThisGameRef.current,
+        speedGuessCount3s: speedGuessCount3sRef.current,
+        speedGuessCount1s: speedGuessCount1sRef.current,
+        lightningCount: lightningCountRef.current,
+        gameDuration,
+        isNight: hour >= 22 || hour < 4,
+        isLunch: hour >= 12 && hour < 14
+      };
+
+      const unlocked = checkChallengesRealTime(currentBadges, localRecords, sessionData);
+      if (unlocked.length > 0) {
+        const updatedBadges = [...currentBadges, ...unlocked];
+        const updatedProfile = {
+          ...userProfile,
+          unlockedBadges: updatedBadges
+        };
+        setUserProfile(updatedProfile);
+        localStorage.setItem("tvrs-user-profile", JSON.stringify(updatedProfile));
+
+        // Toast first newly unlocked challenge
+        const firstChId = unlocked[0];
+        const chObj = CHALLENGES.find((c) => c.id === firstChId);
+        if (chObj) {
+          setTimeout(() => {
+            setActiveAchievement({
+              title: lang === "fr" ? chObj.titleFr : chObj.titleEn,
+              message: `${lang === "fr" ? chObj.descFr : chObj.descEn} (Emote débloquée !)`,
+              color: AVATAR_COLORS[chObj.color] || chObj.color,
+              invaderId: chObj.id
+            });
+          }, 1500); // delay toast slightly if there was already a continent conquered toast
+        }
+
+        if (isSupabaseConfigured) {
+          const activeUserId = session?.user?.id || userProfile.id;
+          upsertProfile(
+            activeUserId,
+            userProfile.username,
+            userProfile.avatarId,
+            userProfile.avatarColor,
+            userProfile.xp || 0,
+            userProfile.level || 1,
+            updatedBadges
+          ).catch((err) => console.error("Error syncing real-time challenge:", err));
         }
       }
 
@@ -643,7 +746,23 @@ function App() {
         });
       }, timing);
     },
-    [foundList, effectiveKeyboardMode, getClosestUnfound, activeDataMap, globeTheme, theme, t],
+    [
+      foundList,
+      effectiveKeyboardMode,
+      getClosestUnfound,
+      activeDataMap,
+      globeTheme,
+      theme,
+      t,
+      userProfile,
+      setUserProfile,
+      localRecords,
+      mode,
+      gameDuration,
+      timeLeft,
+      session,
+      lang
+    ]
   );
 
   const handleInput = useCallback(

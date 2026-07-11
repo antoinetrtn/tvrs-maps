@@ -27,6 +27,9 @@ These rules standardize the retro TV static glitch animation and country polygon
 ## 5. UI Titles and Section Labels
 * **No Uppercase Transform**: Never force section labels or titles to be completely uppercase (e.g., do not use `text-transform: uppercase` in CSS styles). Use natural casing or standard capitalisation.
 
+## 6. Achievements & Game Additions
+* **Enriching Challenges**: The achievement panel must be enriched with new challenges whenever a new game mode is added to TVRS Maps. Every new mode should add at least 5-10 specific challenges to maintain player engagement.
+
 ---
 
 *These rules are backed up by the `GLITCH_EFFECT_SETTINGS` exported configuration in [designSystem.js](file:///Users/atrtn/.gemini/antigravity/scratch/tvrs-maps/src/designSystem.js).*
