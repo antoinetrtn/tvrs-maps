@@ -7,6 +7,11 @@
   overflow: hidden !important;
 }
 
+.leaderboard-panel .panel-header {
+  margin-bottom: var(--spacing-xs) !important;
+  padding-bottom: var(--spacing-xs) !important;
+}
+
 .leaderboard-panel .leaderboard-full-layout {
   flex: 1;
   display: flex;
