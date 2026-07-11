@@ -58,7 +58,7 @@ export async function isUsernameTaken(username, excludeProfileId = null) {
 /**
  * Creates or updates the user profile.
  */
-export async function upsertProfile(profileId, username, avatarId, avatarColor) {
+export async function upsertProfile(profileId, username, avatarId, avatarColor, xp = 0, level = 1, unlockedBadges = []) {
   if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
   try {
     const payload = {
@@ -66,6 +66,9 @@ export async function upsertProfile(profileId, username, avatarId, avatarColor) 
       username,
       avatar_id: avatarId,
       avatar_color: avatarColor,
+      xp,
+      level,
+      unlocked_badges: unlockedBadges,
       updated_at: new Date().toISOString()
     };
     
@@ -208,5 +211,54 @@ export async function getUserScores(profileId, gameMode, limit = 50) {
     return { data, error };
   } catch (err) {
     return { data: [], error: err.message };
+  }
+}
+
+/**
+ * Supabase Auth Functions
+ */
+
+export async function signUpWithEmail(email, password) {
+  if (!isSupabaseConfigured) return { data: null, error: new Error("Supabase non configuré") };
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    return { data, error };
+  } catch (err) {
+    return { data: null, error: err };
+  }
+}
+
+export async function signInWithEmail(email, password) {
+  if (!isSupabaseConfigured) return { data: null, error: new Error("Supabase non configuré") };
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return { data, error };
+  } catch (err) {
+    return { data: null, error: err };
+  }
+}
+
+export async function signInWithGoogle() {
+  if (!isSupabaseConfigured) return { data: null, error: new Error("Supabase non configuré") };
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    return { data, error };
+  } catch (err) {
+    return { data: null, error: err };
+  }
+}
+
+export async function signOut() {
+  if (!isSupabaseConfigured) return { error: new Error("Supabase non configuré") };
+  try {
+    const { error } = await supabase.auth.signOut();
+    return { error };
+  } catch (err) {
+    return { error: err };
   }
 }

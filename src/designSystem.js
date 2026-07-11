@@ -701,3 +701,10 @@ export const AVATAR_COLORS = {
   pink: "#f472b6",
   amber: "#fbbf24"
 };
+
+export const GAME_XP_COLORS = {
+  greenInner: "#55ff55",
+  greenOuter: "#00aa00",
+  yellowInner: "#ffff55",
+  yellowOuter: "#7f7f00"
+};

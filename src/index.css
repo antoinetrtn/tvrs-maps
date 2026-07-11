@@ -82,6 +82,31 @@
   /* Safe areas (notch / Dynamic Island / home indicator) — 0 on non-notch devices */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* GAMIFICATION & XP COLORS */
+  --xp-green-inner: #55ff55;
+  --xp-green-outer: #00aa00;
+  --xp-yellow-inner: #ffff55;
+  --xp-yellow-outer: #7f7f00;
+  
+  --xp-black: #000000;
+  --xp-bar-bg: #111111;
+  --xp-bar-border-light: #555555;
+  --xp-bar-border-dark: #333333;
+  
+  --xp-shadow-heavy: rgba(0, 0, 0, 0.8);
+  --xp-shadow-medium: rgba(0, 0, 0, 0.5);
+  --xp-shadow-light: rgba(0, 0, 0, 0.4);
+  
+  --xp-green-glow: rgba(85, 255, 85, 0.25);
+  --xp-green-fill-top: #7fff7f;
+  --xp-green-fill-bottom: #00aa00;
+  --xp-green-fill-overlay: rgba(0, 0, 0, 0.15);
+  
+  --xp-error-bg: rgba(255, 69, 0, 0.1);
+  --xp-error-border: rgba(255, 69, 0, 0.3);
+  --xp-success-bg: rgba(0, 240, 255, 0.1);
+  --xp-success-border: rgba(0, 240, 255, 0.3);
 }
 
 [data-theme="light"] {

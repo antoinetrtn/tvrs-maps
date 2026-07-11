@@ -450,3 +450,80 @@
   0% { transform: translateY(0); }
   100% { transform: translateY(-4px); }
 }
+
+/* Gamification End Screen XP Card */
+.end-screen-xp-card {
+  max-width: 600px;
+  width: 90%;
+  margin: 0 auto var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  animation: slideUp var(--transition-emphasized) both;
+  animation-delay: 0.25s;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  box-shadow: var(--glass-shadow);
+}
+
+.xp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.xp-level-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text-main);
+}
+
+.xp-gain-badge {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--xp-green-inner);
+}
+
+/* Level Up shake & glitched text animations */
+.level-up-shake {
+  animation: level-up-shake-anim 0.4s ease-out both !important;
+  border-color: var(--xp-green-inner) !important;
+  box-shadow: 0 0 20px var(--xp-green-glow) !important;
+}
+
+.end-screen-level-up-banner {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--xp-yellow-inner);
+  animation: level-up-flicker 0.2s steps(2) infinite alternate;
+  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+}
+
+@keyframes level-up-shake-anim {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.04) rotate(1deg); }
+  40% { transform: scale(1.02) rotate(-1deg); }
+  60% { transform: scale(1.03) rotate(1deg); }
+  80% { transform: scale(1.01) rotate(0); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes level-up-flicker {
+  0% { opacity: 0.9; }
+  100% { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .end-screen-xp-card {
+    width: calc(100% - 40px);
+    padding: var(--spacing-sm);
+  }
+}

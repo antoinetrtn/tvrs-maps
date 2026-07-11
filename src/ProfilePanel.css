@@ -1,8 +1,41 @@
-/* Profile Panel Slide-in layout (mimicking settings panel) */
-.profile-panel {
-  /* Inherits styles from settings-panel in HomeScreen.css */
+/* Profile Panel Tab triggers */
+.tab-triggers {
+  display: flex;
+  gap: var(--spacing-sm);
+  background: var(--accent-soft);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
 }
 
+.tab-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 6px var(--spacing-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.tab-trigger-btn .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.tab-trigger-btn.active {
+  background: var(--bg-color);
+  color: var(--text-main);
+  box-shadow: 0 2px 4px var(--shadow-subtle);
+}
+
+/* Avatar Preview Level Tag */
 .avatar-preview-container {
   display: flex;
   justify-content: center;
@@ -31,6 +64,21 @@
   pointer-events: none;
 }
 
+.avatar-preview-level {
+  position: absolute;
+  bottom: -8px;
+  background: var(--text-main);
+  color: var(--bg-color);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--bg-color);
+  box-shadow: 0 2px 4px var(--shadow-subtle);
+}
+
+/* Form layouts */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -62,12 +110,15 @@
   box-shadow: 0 0 10px var(--accent-soft);
 }
 
-/* Avatar grid selection */
+/* Avatar selection grid */
 .avatar-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: var(--spacing-sm);
   width: 100%;
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: var(--spacing-xxs);
 }
 
 .avatar-option {
@@ -82,9 +133,10 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
+  position: relative;
 }
 
-.avatar-option:hover {
+.avatar-option:not(:disabled):hover {
   background: var(--glass-hover);
   transform: translateY(-1px);
 }
@@ -93,6 +145,45 @@
   border-color: var(--accent);
   background: var(--accent-soft);
   box-shadow: 0 0 6px var(--accent-soft);
+}
+
+.avatar-option.locked {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: var(--xp-shadow-trans);
+  border-color: var(--glass-border);
+}
+
+.avatar-option-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.avatar-lock-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--xp-shadow-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  gap: 1px;
+}
+
+.avatar-lock-overlay .lock-icon {
+  color: var(--text-muted);
+}
+
+.avatar-lock-overlay .lock-lvl {
+  font-size: 0.55rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  font-family: var(--font-display);
 }
 
 .color-selector-grid {
@@ -124,6 +215,263 @@
   box-shadow: 0 0 8px var(--option-color);
 }
 
+/* Gamification Stats Tab */
+.stats-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  flex: 1;
+}
+
+/* Minecraft XP Progress Card */
+.xp-progression-card {
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.xp-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.xp-level-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.xp-level-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--text-main);
+}
+
+.xp-total-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Thicker Minecraft-style green XP bar */
+.minecraft-xp-bar-container {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  background: var(--xp-bar-bg);
+  border: 2px solid var(--xp-bar-border-light);
+  border-top-color: var(--xp-bar-border-dark);
+  border-left-color: var(--xp-bar-border-dark);
+  box-shadow: inset 0 2px 4px var(--xp-shadow-heavy);
+  border-radius: 0; /* Minecraft is blocky! */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minecraft-xp-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: var(--xp-green-inner);
+  /* Pixel grid overlay texture using linear gradients */
+  background-image: 
+    linear-gradient(90deg, var(--xp-green-fill-overlay) 50%, transparent 50%),
+    linear-gradient(180deg, var(--xp-green-fill-top) 0%, var(--xp-green-fill-bottom) 100%);
+  background-size: 8px 100%, 100% 100%;
+  box-shadow: inset 0 -2px 0 var(--xp-green-fill-overlay);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.minecraft-xp-bar-text {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--xp-green-inner);
+  /* Hard blocky text shadow mimicking Minecraft HUD text */
+  text-shadow: 
+    -1px -1px 0 var(--xp-black),  
+     1px -1px 0 var(--xp-black),
+    -1px  1px 0 var(--xp-black),
+     1px  1px 0 var(--xp-black),
+     1px  2px 0 var(--xp-shadow-medium);
+  pointer-events: none;
+}
+
+/* Quick Statistics Grid */
+.quick-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.quick-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.quick-stat-card .stat-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.quick-stat-card .stat-value {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--text-main);
+  margin-top: 2px;
+}
+
+/* Badges section */
+.badges-gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.badge-item-btn {
+  aspect-ratio: 1;
+  padding: 0;
+  background: var(--glass-bg);
+  border: 1px solid var(--badge-color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all var(--transition-fast);
+  box-shadow: 0 0 0 var(--badge-color-glow);
+}
+
+.badge-item-btn:hover {
+  transform: translateY(-2px);
+  background: var(--glass-hover);
+}
+
+.badge-item-btn.unlocked:hover {
+  box-shadow: 0 0 10px var(--badge-color-glow);
+}
+
+.badge-item-btn.selected {
+  outline: 2px solid var(--text-main);
+  outline-offset: 1px;
+}
+
+.badge-item-btn.locked {
+  opacity: 0.6;
+  background: var(--xp-shadow-trans);
+  border-color: var(--glass-border);
+}
+
+.badge-item-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.badge-lock-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: var(--bg-color);
+  border: 1px solid var(--text-muted);
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+/* Selected Badge Details card */
+.badge-detail-card {
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+  min-height: 96px;
+}
+
+.badge-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.badge-detail-icon-glow {
+  padding: var(--spacing-xs);
+  background: var(--subtle-tint);
+  border: 1px dashed var(--badge-detail-color);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.badge-detail-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.badge-detail-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.badge-detail-status {
+  font-size: 0.65rem;
+  font-weight: 900;
+  font-family: var(--font-display);
+}
+
+.badge-detail-status.unlocked {
+  color: var(--xp-green-inner);
+}
+
+.badge-detail-status.locked {
+  color: var(--text-muted);
+}
+
+.badge-detail-description {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* Form Actions */
 .form-submit-btn {
   margin-top: auto;
@@ -131,6 +479,16 @@
   font-weight: 700;
   padding: 12px 24px;
   border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  background: var(--text-main);
+  color: var(--bg-color);
+  transition: all var(--transition-fast);
+}
+
+.form-submit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .form-feedback {
@@ -145,13 +503,163 @@
 }
 
 .form-feedback.error {
-  background: var(--color-error-bg);
-  border-color: var(--color-error-border);
+  background: var(--xp-error-bg);
+  border-color: var(--xp-error-border);
   color: var(--error);
 }
 
 .form-feedback.success {
-  background: var(--color-cyan-bg);
-  border-color: var(--color-cyan-border);
-  color: var(--color-cyan);
+  background: var(--xp-success-bg);
+  border-color: var(--xp-success-border);
+  color: var(--glitch-cyan);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .avatar-grid {
+    grid-template-columns: repeat(4, 1fr);
+    max-height: 100px;
+  }
+
+  .badges-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-xs);
+  }
+
+  .quick-stats-grid {
+    gap: var(--spacing-xs);
+  }
+}
+
+/* Authentication styles */
+.auth-account-section {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+}
+
+.auth-connected-state {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.auth-email-display {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.auth-signout-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 4px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.auth-signout-btn:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.auth-form-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.form-group-horizontal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+.auth-input {
+  padding: var(--spacing-xs) var(--spacing-sm) !important;
+  font-size: 0.8rem !important;
+  font-family: var(--font-main);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  outline: none;
+}
+
+.auth-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.auth-submit-btn {
+  flex: 1;
+  font-family: var(--font-main);
+  font-weight: 700;
+  padding: 8px var(--spacing-sm) !important;
+  font-size: 0.8rem !important;
+}
+
+.auth-google-btn {
+  flex: 1;
+  font-family: var(--font-main);
+  font-weight: 700;
+  padding: 8px var(--spacing-sm) !important;
+  font-size: 0.8rem !important;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.auth-google-btn:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent);
+}
+
+.auth-switch-type-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  text-decoration: underline;
+  align-self: flex-start;
+  padding: 0;
+  font-family: var(--font-main);
+}
+
+.auth-switch-type-btn:hover {
+  color: var(--text-main);
+}
+
+@media (max-width: 640px) {
+  .form-group-horizontal {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
+  }
+  
+  .auth-actions {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
 }

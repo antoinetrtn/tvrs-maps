@@ -664,11 +664,51 @@
 .widget-spot.rank-1 .widget-rank-num { background: var(--color-gold); }
 .widget-spot.rank-2 .widget-rank-num { background: var(--color-silver); }
 .widget-spot.rank-3 .widget-rank-num { background: var(--color-bronze); }
-
 .truncate {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Gamification Home Widget */
+.home-profile-widget-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  gap: var(--spacing-xs);
+}
 
+.profile-btn-level-tag {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--xp-green-inner);
+  color: var(--xp-black);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--xp-black);
+  box-shadow: 0 2px 4px var(--xp-shadow-medium);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.home-profile-xp-bar {
+  width: var(--control-lg);
+  height: 5px;
+  background: var(--xp-bar-bg);
+  border: 1px solid var(--xp-bar-border-light);
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px var(--xp-shadow-light);
+  pointer-events: none;
+}
+
+.home-profile-xp-fill {
+  height: 100%;
+  background: var(--xp-green-inner);
+  transition: width 0.3s ease;
+}

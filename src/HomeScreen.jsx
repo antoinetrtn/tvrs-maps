@@ -21,6 +21,7 @@ import InvaderAvatar from "./InvaderAvatar";
 import ProfilePanel from "./ProfilePanel";
 import { THEMES_LIST } from "./designSystem";
 import { useTranslation } from "./i18n";
+import { getLevelAndProgress } from "./useUserProfile";
 import "./HomeScreen.css";
 
 const HomeScreen = ({
@@ -37,12 +38,15 @@ const HomeScreen = ({
   topExplorers = [],
   userProfile,
   setUserProfile,
+  localRecords = {},
+  session = null,
 }) => {
   const cardRef = useRef(null);
   const isDraggingRef = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const t = useTranslation(lang);
+  const { level, xpInLevel, xpNeededForNext, percent } = getLevelAndProgress(userProfile?.xp || 0);
 
   const formatTime = (secs) => {
     if (!secs) return "--:--";
@@ -234,18 +238,24 @@ const HomeScreen = ({
           </div>
         </div>
 
-        <button
-          className="profile-trigger-btn glass-panel"
-          onClick={(e) => {
-            e.stopPropagation();
-            setProfileOpen((prev) => !prev);
-            setSettingsOpen(false);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          title={t("profile")}
-        >
-          <User width={20} height={20} />
-        </button>
+        <div className="home-profile-widget-container">
+          <button
+            className="profile-trigger-btn glass-panel"
+            onClick={(e) => {
+              e.stopPropagation();
+              setProfileOpen((prev) => !prev);
+              setSettingsOpen(false);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={t("profile")}
+          >
+            <User width={20} height={20} />
+            <span className="profile-btn-level-tag">{level}</span>
+          </button>
+          <div className="home-profile-xp-bar" title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}>
+            <div className="home-profile-xp-fill" style={{ width: `${percent}%` }} />
+          </div>
+        </div>
 
         <button
           className="settings-trigger-btn glass-panel"
@@ -403,6 +413,8 @@ const HomeScreen = ({
         onClose={() => setProfileOpen(false)}
         lang={lang}
         theme={theme}
+        localRecords={localRecords}
+        session={session}
       />
     </div>
   );

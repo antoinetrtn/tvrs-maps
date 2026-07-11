@@ -1,10 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { InfoBox, Trophy } from "pixelarticons/react";
-import "./EndScreen.css";
-import { getGameStats } from "./utils";
+import XpOrbsAnimation from "./XpOrbsAnimation";
+import { getLevelAndProgress } from "./useUserProfile";
 import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
 import { GAME_REGIONS } from "./gameConfig";
+import PixelFireworks from "./PixelFireworks";
+import "./EndScreen.css";
 
 const EndScreen = ({
   foundList,
@@ -20,12 +22,17 @@ const EndScreen = ({
   lastScores = [],
   maxScore = 0,
   isNewPB = false,
+  xpResult = null
 }) => {
   const dataMap = activeDataMap || countryDataMap;
   const t = useTranslation(lang);
+  
+  const orbsSourceRef = useRef(null);
+  const orbsTargetRef = useRef(null);
+
   const { stats, CONTINENT_ORDER } = useMemo(
     () => getGameStats(foundList, dataMap, lang),
-    [foundList, dataMap, lang],
+    [foundList, dataMap, lang]
   );
 
   const colors = useMemo(() => {
@@ -35,6 +42,7 @@ const EndScreen = ({
     });
     return res;
   }, [globeTheme, theme]);
+
   const isPerfectScore = foundList.length === totalCountries;
 
   const getTitle = () => {
@@ -42,11 +50,58 @@ const EndScreen = ({
     return t("well_done");
   };
 
+  // Gamification states
+  const oldXp = xpResult?.oldXp || 0;
+  const oldLevel = xpResult?.oldLevel || 1;
+  const gainedXp = xpResult?.gainedXp || 0;
+
+  const [animatedTotalGained, setAnimatedTotalGained] = useState(0);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [animatingOrbs, setAnimatingOrbs] = useState(true);
+
+  // Compute animated progression
+  const currentAnimatedXp = oldXp + animatedTotalGained;
+  const { level: animatedLevel, xpInLevel, xpNeededForNext, percent } = getLevelAndProgress(currentAnimatedXp);
+
+  // Detect Level Up during orbs collection
+  useEffect(() => {
+    if (animatedLevel > oldLevel) {
+      setShowLevelUp(true);
+    }
+  }, [animatedLevel, oldLevel]);
+
+  const handleOrbCollect = () => {
+    setAnimatedTotalGained((prev) => {
+      const step = Math.ceil(gainedXp / 15);
+      return Math.min(gainedXp, prev + step);
+    });
+  };
+
+  const handleAnimationComplete = () => {
+    setAnimatedTotalGained(gainedXp);
+    setAnimatingOrbs(false);
+  };
+
   return (
     <div
-      className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""}`}
+      className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""} ${theme}`}
     >
-      <div className="end-screen-content">
+      {/* XP Orbs Particle Component */}
+      {xpResult && gainedXp > 0 && (
+        <XpOrbsAnimation
+          sourceRef={orbsSourceRef}
+          targetRef={orbsTargetRef}
+          onOrbCollect={handleOrbCollect}
+          onComplete={handleAnimationComplete}
+          count={15}
+          active={true}
+        />
+      )}
+
+      {/* Retro fireworks on Level Up or Personal Best */}
+      {(isNewPB || showLevelUp) && <PixelFireworks duration={8000} />}
+
+      <div className="end-screen-content scrollbar-styled">
         <div className="end-screen-header">
           <h1>{getTitle()}</h1>
         </div>
@@ -59,6 +114,7 @@ const EndScreen = ({
           className="continents-progress-bars"
           onClick={onViewTable}
           title={t("view_table")}
+          ref={orbsSourceRef}
         >
           <div className="progress-bars-header">
             <span className="final-score-inline">
@@ -71,7 +127,7 @@ const EndScreen = ({
 
           <div className="progress-bars-grid">
             {CONTINENT_ORDER.filter(
-              (reg) => reg !== "Unknown" && stats[reg].total > 0,
+              (reg) => reg !== "Unknown" && stats[reg].total > 0
             ).map((region) => {
               const data = stats[region];
               const pct = Math.round((data.found / data.total) * 100);
@@ -106,6 +162,30 @@ const EndScreen = ({
             })}
           </div>
         </div>
+
+        {/* Gamification Progress Display */}
+        {xpResult && (
+          <div
+            className={`end-screen-xp-card glass-panel ${showLevelUp ? "level-up-shake" : ""}`}
+            ref={orbsTargetRef}
+          >
+            <div className="xp-card-header">
+              <span className="xp-level-title">{t("level", { level: animatedLevel })}</span>
+              <span className="xp-gain-badge">+{gainedXp} XP</span>
+            </div>
+            <div className="minecraft-xp-bar-container">
+              <div className="minecraft-xp-bar-fill" style={{ width: `${percent}%` }} />
+              <span className="minecraft-xp-bar-text">
+                {percent}% ({xpInLevel} / {xpNeededForNext})
+              </span>
+            </div>
+            {showLevelUp && (
+              <div className="end-screen-level-up-banner text-natural-case">
+                {t("level_up")}
+              </div>
+            )}
+          </div>
+        )}
 
         {isNewPB && (
           <div className="new-pb-banner">
@@ -161,5 +241,28 @@ const EndScreen = ({
     </div>
   );
 };
+
+// Helper for local stats calculation in the component
+function getGameStats(foundList, dataMap, lang) {
+  const stats = {};
+  const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "Unknown"];
+
+  CONTINENT_ORDER.forEach((c) => {
+    stats[c] = { found: 0, total: 0 };
+  });
+
+  Object.entries(dataMap).forEach(([key, val]) => {
+    const region = val.region || "Unknown";
+    if (!stats[region]) {
+      stats[region] = { found: 0, total: 0 };
+    }
+    stats[region].total++;
+    if (foundList.includes(key)) {
+      stats[region].found++;
+    }
+  });
+
+  return { stats, CONTINENT_ORDER };
+}
 
 export default React.memo(EndScreen);

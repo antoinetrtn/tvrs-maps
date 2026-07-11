@@ -38,6 +38,7 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState("home"); // 'home' or 'game' or 'profile'
 
   const {
+    session,
     userProfile,
     setUserProfile,
     localRecords,
@@ -70,6 +71,8 @@ function App() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isNewPB, setIsNewPB] = useState(false);
   const [activeAchievement, setActiveAchievement] = useState(null);
+  const [xpResult, setXpResult] = useState(null);
+  const conqueredRegionsThisGameRef = useRef([]);
   const globeLightingEnabled = true;
   const [theme, setTheme] = useState(() => {
     try {
@@ -429,6 +432,8 @@ function App() {
       resetNavigationTrail(null);
       setMenuOpen(false);
       setIsNewPB(false);
+      setXpResult(null);
+      conqueredRegionsThisGameRef.current = [];
     },
     [resetNavigationTrail, gameDuration],
   );
@@ -481,7 +486,7 @@ function App() {
   }, [currentScreen, countryDataMap]);
 
   const handleGameFinished = useCallback(
-    (finalScore) => {
+    async (finalScore) => {
       if (mode === "learn") return;
       const timeSpent = gameDuration - timeLeft;
 
@@ -492,9 +497,17 @@ function App() {
         setIsNewPB(true);
       }
 
-      updateGameRecord(mode, finalScore, timeSpent);
+      const res = await updateGameRecord(
+        mode,
+        finalScore,
+        timeSpent,
+        totalPossible,
+        gameDuration,
+        conqueredRegionsThisGameRef.current.length
+      );
+      setXpResult(res);
     },
-    [mode, gameDuration, timeLeft, updateGameRecord, localRecords]
+    [mode, gameDuration, timeLeft, updateGameRecord, localRecords, totalPossible]
   );
 
   useEffect(() => {
@@ -591,6 +604,7 @@ function App() {
           ).length === allInRegion.length;
 
           if (!wasCompletedBefore && isCompletedNow) {
+            conqueredRegionsThisGameRef.current.push(region);
             const labelColor = getThemeRegionColorLabel(globeTheme, theme, region);
             const invaders = ["invader_1", "invader_2", "invader_3", "invader_4", "invader_5", "invader_6", "invader_7", "invader_8"];
             const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -940,6 +954,8 @@ function App() {
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}
+          localRecords={localRecords}
+          session={session}
         />
       ) : currentScreen === "leaderboard" ? (
         <LeaderboardScreen
@@ -1057,6 +1073,7 @@ function App() {
           lastScores={lastScores[mode] || []}
           maxScore={localRecords[mode]?.maxScore || 0}
           isNewPB={isNewPB}
+          xpResult={xpResult}
         />
       )}
       {(showResultsTable || showInfoModal) && (
