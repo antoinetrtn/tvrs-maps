@@ -157,6 +157,15 @@ const ProfilePanel = ({
   const unlockedBadges = userProfile.unlockedBadges || [];
   const totalGamesPlayed = Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0);
 
+  const filterLabels = {
+    all: lang === "fr" ? "Tout" : "All",
+    general: lang === "fr" ? "Général" : "General",
+    continents: lang === "fr" ? "Continents" : "Continents",
+    scores: lang === "fr" ? "Scores" : "Scores",
+    speed: lang === "fr" ? "Vitesse" : "Speed",
+    relief: lang === "fr" ? "Relief" : "Relief"
+  };
+
   const filteredChallenges = CHALLENGES.filter((ch) => {
     if (challengesFilter === "all") return true;
     return ch.category === challengesFilter;
@@ -391,7 +400,7 @@ const ProfilePanel = ({
                     className={`filter-tab-btn ${challengesFilter === cat ? "active" : ""}`}
                     onClick={() => setChallengesFilter(cat)}
                   >
-                    {cat.toUpperCase()}
+                    {filterLabels[cat] || cat}
                   </button>
                 ))}
               </div>

@@ -119,6 +119,7 @@
   max-height: 120px;
   overflow-y: auto;
   padding-right: var(--spacing-xxs);
+  -webkit-overflow-scrolling: touch;
 }
 
 .avatar-option {
@@ -349,6 +350,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-sm);
+  -webkit-overflow-scrolling: touch;
 }
 
 .badge-item-btn {
@@ -664,6 +666,7 @@
   overflow-x: auto;
   padding-bottom: var(--spacing-xs);
   width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .filter-tab-btn {
