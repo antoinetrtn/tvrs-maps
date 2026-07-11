@@ -190,7 +190,7 @@
 
 .color-selector-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--spacing-sm);
   margin-top: var(--spacing-xs);
   width: 100%;
@@ -575,37 +575,29 @@
 
 /* Logout link at the end of the page */
 .profile-signout-wrapper {
-  margin-top: var(--spacing-sm);
-  padding-top: var(--spacing-xs);
-  border-top: 1px dashed var(--glass-border);
+  margin-top: var(--spacing-xs);
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 2px;
   width: 100%;
-}
-
-.profile-email-badge {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  word-break: break-all;
 }
 
 .profile-signout-link {
   background: transparent;
   border: none;
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 2px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
   font-family: var(--font-main);
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: 0.75;
   transition: all var(--transition-fast);
+  padding: var(--spacing-xs);
 }
 
 .profile-signout-link:hover {
-  color: var(--text-main);
+  color: var(--error);
+  opacity: 1;
 }
 
 @media (max-width: 640px) {

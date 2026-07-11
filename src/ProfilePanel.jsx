@@ -350,9 +350,6 @@ const ProfilePanel = ({
                   {/* Clean Logout inside the sticky footer */}
                   {isSupabaseConfigured && session && (
                     <div className="profile-signout-wrapper">
-                      <span className="profile-email-badge">
-                        {t("auth_connected_as", { email: session.user.email })}
-                      </span>
                       <button onClick={handleSignOutClick} className="profile-signout-link">
                         {t("auth_sign_out")}
                       </button>
