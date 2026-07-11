@@ -145,6 +145,7 @@
   overflow-y: auto;
   padding-right: var(--spacing-xxs);
   -webkit-overflow-scrolling: touch;
+  align-content: start;
 }
 
 .color-form-group {
@@ -365,6 +366,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: var(--spacing-xs);
+  align-content: start;
 }
 
 .badge-item-btn {
