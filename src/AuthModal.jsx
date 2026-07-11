@@ -1,16 +1,17 @@
 import React, { useState } from "react";
-import { Close } from "pixelarticons/react";
+import { Close, ArrowLeft } from "pixelarticons/react";
 import { useTranslation } from "./i18n";
 import {
   signInWithEmail,
   signUpWithEmail,
-  signInWithGoogle
+  signInWithGoogle,
+  checkIfEmailRegistered
 } from "./supabaseClient";
 import "./AuthModal.css";
 
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {
   const t = useTranslation(lang);
-  const [authType, setAuthType] = useState("login"); // "login" | "signup"
+  const [step, setStep] = useState("initial"); // "initial" | "email" | "login" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
@@ -18,6 +19,32 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleEmailNext = async (e) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setErrorMsg("Veuillez saisir une adresse e-mail valide");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const isRegistered = await checkIfEmailRegistered(cleanEmail);
+      if (isRegistered) {
+        setStep("login");
+      } else {
+        setStep("signup");
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Erreur lors de la vérification de l'e-mail");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,14 +60,16 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
     }
 
     setLoading(true);
-
     try {
-      if (authType === "signup") {
+      if (step === "signup") {
         const { error } = await signUpWithEmail(cleanEmail, cleanPassword);
         if (error) throw error;
         setSuccessMsg(t("account_created"));
-        setEmail("");
-        setPassword("");
+        setTimeout(() => {
+          setStep("login");
+          setPassword("");
+          setSuccessMsg(null);
+        }, 1500);
       } else {
         const { error } = await signInWithEmail(cleanEmail, cleanPassword);
         if (error) throw error;
@@ -67,70 +96,129 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
     }
   };
 
+  const resetFlow = () => {
+    setStep("initial");
+    setEmail("");
+    setPassword("");
+    setErrorMsg(null);
+    setSuccessMsg(null);
+  };
+
+  const goBackToEmail = () => {
+    setStep("email");
+    setPassword("");
+    setErrorMsg(null);
+    setSuccessMsg(null);
+  };
+
   return (
     <div className={`auth-modal-overlay ${theme}`} onClick={onGuest}>
       <div className="auth-modal-card glass-panel" onClick={(e) => e.stopPropagation()}>
         <div className="auth-modal-header">
+          {step !== "initial" && (
+            <button
+              type="button"
+              className="auth-modal-back-btn"
+              onClick={step === "email" ? resetFlow : goBackToEmail}
+              title={t("back")}
+            >
+              <ArrowLeft width={18} height={18} />
+            </button>
+          )}
           <h2 className="auth-modal-title text-natural-case">
-            {authType === "login" ? t("auth_sign_in") : t("auth_sign_up")}
+            {step === "initial" && "Authentification"}
+            {step === "email" && "Compte TVRS"}
+            {step === "login" && t("auth_sign_in")}
+            {step === "signup" && t("auth_sign_up")}
           </h2>
           <button className="auth-modal-close-btn" onClick={onGuest} title={t("close")}>
             <Close width={18} height={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-modal-form">
-          <div className="form-group">
-            <label>{t("auth_email")}</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ex: jean.dupont@gmail.com"
-              className="glass-panel"
-              required
-            />
-          </div>
+        {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
+        {successMsg && <div className="form-feedback success">{successMsg}</div>}
 
-          <div className="form-group">
-            <label>{t("auth_password")}</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="glass-panel"
-              required
-            />
-          </div>
-
-          {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
-          {successMsg && <div className="form-feedback success">{successMsg}</div>}
-
-          <button type="submit" disabled={loading} className="btn-primary auth-modal-submit-btn">
-            {loading ? t("saving") : (authType === "login" ? t("auth_sign_in") : t("auth_sign_up"))}
-          </button>
-
-          <button type="button" onClick={handleGoogleSignIn} className="auth-modal-google-btn glass-panel">
-            <span>{t("auth_google")}</span>
-          </button>
-
-          <div className="auth-modal-switch-wrapper">
+        {step === "initial" && (
+          <div className="auth-modal-initial-flow">
             <button
               type="button"
-              className="auth-modal-switch-btn"
-              onClick={() => setAuthType(authType === "login" ? "signup" : "login")}
+              onClick={() => setStep("email")}
+              className="btn-primary auth-row-btn"
             >
-              {authType === "login" ? t("auth_no_account") : t("auth_has_account")}
+              Compte TVRS
             </button>
-          </div>
 
-          <div className="auth-modal-guest-wrapper">
-            <button type="button" onClick={onGuest} className="auth-modal-guest-btn">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              className="auth-row-btn google-btn glass-panel"
+            >
+              Continuer avec Google
+            </button>
+
+            <button
+              type="button"
+              onClick={onGuest}
+              className="auth-row-btn guest-btn glass-panel"
+            >
               Continuer en invité (Guest)
             </button>
           </div>
-        </form>
+        )}
+
+        {step === "email" && (
+          <form onSubmit={handleEmailNext} className="auth-modal-form">
+            <div className="form-group">
+              <label>{t("auth_email")}</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Ex: jean.dupont@gmail.com"
+                className="glass-panel"
+                disabled={loading}
+                required
+                autoFocus
+              />
+            </div>
+            <button type="submit" disabled={loading} className="btn-primary auth-modal-submit-btn">
+              {loading ? "Vérification..." : "Continuer"}
+            </button>
+          </form>
+        )}
+
+        {(step === "login" || step === "signup") && (
+          <form onSubmit={handleSubmit} className="auth-modal-form">
+            <div className="form-group">
+              <label>{t("auth_email")}</label>
+              <input
+                type="email"
+                value={email}
+                className="glass-panel disabled-input"
+                disabled
+              />
+            </div>
+
+            <div className="form-group">
+              <label>{t("auth_password")}</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="glass-panel"
+                disabled={loading}
+                required
+                autoFocus
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn-primary auth-modal-submit-btn">
+              {loading ? t("saving") : (step === "login" ? t("auth_sign_in") : t("auth_sign_up"))}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

@@ -262,3 +262,22 @@ export async function signOut() {
     return { error: err };
   }
 }
+
+export async function checkIfEmailRegistered(email) {
+  if (!isSupabaseConfigured) return false;
+  try {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: "a"
+    });
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("already registered") || msg.includes("already exists")) {
+        return true;
+      }
+    }
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
