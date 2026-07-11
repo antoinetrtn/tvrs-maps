@@ -132,29 +132,6 @@ const LeaderboardScreen = ({
               ))}
             </div>
 
-            {/* Scope toggle with icons as nav chips */}
-            <div className="scope-toggle-wrap glass-panel" style={{ display: "flex", gap: "4px", border: "none", padding: "2px", background: "transparent" }}>
-              <button
-                className={`nav-chip ${scope === "global" ? "active" : ""}`}
-                onClick={() => setScope("global")}
-                title={lang === "fr" ? "Mondial" : "Global"}
-              >
-                <Globe width={16} height={16} />
-                <span>
-                  {lang === "fr" ? "Mondial" : "Global"}
-                </span>
-              </button>
-              <button
-                className={`nav-chip ${scope === "me" ? "active" : ""}`}
-                onClick={() => setScope("me")}
-                title={lang === "fr" ? "Moi" : "Me"}
-              >
-                <User width={16} height={16} />
-                <span>
-                  {lang === "fr" ? "Moi" : "Me"}
-                </span>
-              </button>
-            </div>
           </div>
 
           <div className="leaderboard-table-container scrollbar-styled">

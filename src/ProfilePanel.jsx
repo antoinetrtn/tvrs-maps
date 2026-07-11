@@ -242,16 +242,7 @@ const ProfilePanel = ({
                 
                 {/* Sticky Top Header Area */}
                 <div className="profile-form-header">
-                  <div className="avatar-preview-container">
-                    <div className="avatar-glow" style={{ "--glow-color": AVATAR_COLORS[selectedColor] }}>
-                      <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={48} />
-                      <div className="avatar-preview-level">
-                        <span>{t("level_short", { level })}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
+                  <div className="form-group" style={{ width: "100%" }}>
                     <label htmlFor="profile-username-input">{t("username")}</label>
                     <input
                       id="profile-username-input"
