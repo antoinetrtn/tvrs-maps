@@ -41,7 +41,6 @@
 .sheet-panel .panel-header,
 .dialog-card .panel-header {
   margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--glass-border);
   padding-bottom: var(--spacing-sm);
 }
 
@@ -81,6 +80,10 @@
 .panel-close-btn:active,
 .panel-back-btn:active {
   transform: scale(0.92);
+}
+
+.panel-close-btn {
+  margin-left: auto;
 }
 
 /* ──── UNIFIED BODY ──── */
@@ -162,7 +165,7 @@
   padding: 3px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
-  flex: 1;
+  width: fit-content;
 }
 
 .panel-tab {
