@@ -19,6 +19,7 @@ import {
 import Logo from "./Logo";
 import InvaderAvatar from "./InvaderAvatar";
 import ProfilePanel from "./ProfilePanel";
+import LeaderboardScreen from "./LeaderboardScreen";
 import { THEMES_LIST } from "./designSystem";
 import { useTranslation } from "./i18n";
 import { getLevelAndProgress } from "./useUserProfile";
@@ -48,6 +49,7 @@ const HomeScreen = ({
   const isDraggingRef = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const t = useTranslation(lang);
   const { level, xpInLevel, xpNeededForNext, percent } = getLevelAndProgress(userProfile?.xp || 0);
 
@@ -210,7 +212,9 @@ const HomeScreen = ({
           className="home-podium-widget glass-panel"
           onClick={(e) => {
             e.stopPropagation();
-            onOpenProfile("leaderboard");
+            setLeaderboardOpen((prev) => !prev);
+            setProfileOpen(false);
+            setSettingsOpen(false);
           }}
           onPointerDown={(e) => e.stopPropagation()}
           title={t("leaderboard")}
@@ -248,6 +252,7 @@ const HomeScreen = ({
               e.stopPropagation();
               setProfileOpen((prev) => !prev);
               setSettingsOpen(false);
+              setLeaderboardOpen(false);
             }}
             onPointerDown={(e) => e.stopPropagation()}
             title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
@@ -267,6 +272,7 @@ const HomeScreen = ({
             e.stopPropagation();
             setSettingsOpen((prev) => !prev);
             setProfileOpen(false);
+            setLeaderboardOpen(false);
           }}
           onPointerDown={(e) => e.stopPropagation()}
           title={t("settings")}
@@ -276,11 +282,12 @@ const HomeScreen = ({
       </div>
 
       <div
-        className={`panel-overlay ${(settingsOpen || profileOpen) ? "open" : ""}`}
+        className={`panel-overlay ${(settingsOpen || profileOpen || leaderboardOpen) ? "open" : ""}`}
         onClick={(e) => {
           e.stopPropagation();
           setSettingsOpen(false);
           setProfileOpen(false);
+          setLeaderboardOpen(false);
         }}
         onPointerDown={(e) => e.stopPropagation()}
       />
@@ -446,6 +453,14 @@ const HomeScreen = ({
         localRecords={localRecords}
         session={session}
         onOpenAuth={onOpenAuth}
+      />
+
+      <LeaderboardScreen
+        userProfile={userProfile}
+        onBack={() => setLeaderboardOpen(false)}
+        lang={lang}
+        theme={theme}
+        isOpen={leaderboardOpen}
       />
     </div>
   );

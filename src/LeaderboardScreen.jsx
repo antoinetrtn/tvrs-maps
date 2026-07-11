@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Globe, MapPin, Hash, TreePine, ChevronLeft, User, Close } from "pixelarticons/react";
+import { Globe, MapPin, Hash, TreePine, User, Close } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
 import { useTranslation } from "./i18n";
 import {
@@ -20,7 +20,8 @@ const LeaderboardScreen = ({
   userProfile,
   onBack,
   lang = "fr",
-  theme = "dark"
+  theme = "dark",
+  isOpen = false
 }) => {
   const t = useTranslation(lang);
   const [colMode, setColMode] = useState("countries");
@@ -43,7 +44,7 @@ const LeaderboardScreen = ({
         const { data, error: fetchErr } =
           scope === "global"
             ? await getLeaderboard(colMode)
-            : await getUserScores(userProfile.id, colMode);
+            : await getUserScores(userProfile?.id, colMode);
 
         if (!isMounted) return;
 
@@ -54,7 +55,7 @@ const LeaderboardScreen = ({
         }
       } catch (err) {
         if (isMounted) {
-          setError(err.message);
+          setError(err.message || "Erreur de chargement");
         }
       } finally {
         if (isMounted) {
@@ -63,12 +64,14 @@ const LeaderboardScreen = ({
       }
     };
 
-    fetchScores();
+    if (isOpen) {
+      fetchScores();
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [colMode, scope, userProfile.id]);
+  }, [colMode, scope, userProfile, isOpen, t]);
 
   const formatTime = (secs) => {
     if (!secs) return "--:--";
@@ -87,22 +90,31 @@ const LeaderboardScreen = ({
   };
 
   return (
-    <div className={`fullpage-panel ${theme}`}>
-      <header className="panel-header">
-        <button className="panel-back-btn" onClick={onBack} title={t("home")}>
-          <ChevronLeft width={20} height={20} />
-        </button>
-        <h1 className="panel-title">
+    <div
+      className={`sheet-panel leaderboard-panel glass-panel ${isOpen ? "open" : ""} ${theme}`}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="panel-header">
+        <span
+          className="panel-title text-natural-case"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: "900",
+            fontSize: "1.1rem",
+            color: "var(--text-main)"
+          }}
+        >
           {t("global_leaderboard")}
-        </h1>
+        </span>
         <button className="panel-close-btn" onClick={onBack} title={t("close")}>
           <Close width={20} height={20} />
         </button>
-      </header>
+      </div>
 
       {/* Layout content */}
       <div className="leaderboard-full-layout">
-        <div className="leaderboard-column glass-panel">
+        <div className="leaderboard-column">
           <div className="leaderboard-controls">
             {/* Game mode selector: Horizontal scrollable nav chips (unified for PC & mobile) */}
             <div className="nav-chips">

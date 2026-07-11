@@ -1174,9 +1174,6 @@ function App() {
           setGameDuration={setGameDuration}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
-          onOpenProfile={() => {
-            setCurrentScreen("leaderboard");
-          }}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}
@@ -1185,13 +1182,6 @@ function App() {
           onOpenAuth={() => setShowAuthModal(true)}
           uiScaleMode={uiScaleMode}
           onSetUiScaleMode={handleSetUiScaleMode}
-        />
-      ) : currentScreen === "leaderboard" ? (
-        <LeaderboardScreen
-          userProfile={userProfile}
-          onBack={() => setCurrentScreen("home")}
-          lang={lang}
-          theme={theme}
         />
       ) : (
         !showEndScreen && (
@@ -1274,7 +1264,7 @@ function App() {
         isSuccess={popupSuccess}
         hasActiveFeedback={popupError || popupSuccess}
         perfProfile={perfProfile}
-        isHomeScreen={currentScreen === "home" || currentScreen === "leaderboard"}
+        isHomeScreen={currentScreen === "home"}
         isKeyboardMode={effectiveKeyboardMode}
         isEndScreen={showEndScreen}
         isPerfectScore={foundList.length === totalPossible}

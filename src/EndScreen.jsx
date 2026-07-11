@@ -180,9 +180,6 @@ const EndScreen = ({
             </div>
             <div className="minecraft-xp-bar-container">
               <div className="minecraft-xp-bar-fill" style={{ width: `${percent}%` }} />
-              <span className="minecraft-xp-bar-text">
-                {percent}% ({xpInLevel} / {xpNeededForNext})
-              </span>
             </div>
             {showLevelUp && (
               <div className="end-screen-level-up-banner text-natural-case">
