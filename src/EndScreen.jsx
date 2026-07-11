@@ -5,6 +5,7 @@ import { getLevelAndProgress } from "./useUserProfile";
 import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
 import { GAME_REGIONS } from "./gameConfig";
+import { getGameStats } from "./utils";
 import PixelFireworks from "./PixelFireworks";
 import "./EndScreen.css";
 
@@ -13,7 +14,6 @@ const EndScreen = ({
   totalCountries,
   countryDataMap,
   activeDataMap,
-  mode,
   onRestart,
   onViewTable,
   theme = "dark",
@@ -240,27 +240,6 @@ const EndScreen = ({
   );
 };
 
-// Helper for local stats calculation in the component
-function getGameStats(foundList, dataMap, lang) {
-  const stats = {};
-  const CONTINENT_ORDER = ["Europe", "Americas", "Asia", "Africa", "Oceania", "Antarctic", "Unknown"];
 
-  CONTINENT_ORDER.forEach((c) => {
-    stats[c] = { found: 0, total: 0 };
-  });
-
-  Object.entries(dataMap).forEach(([key, val]) => {
-    const region = val.region || "Unknown";
-    if (!stats[region]) {
-      stats[region] = { found: 0, total: 0 };
-    }
-    stats[region].total++;
-    if (foundList.includes(key)) {
-      stats[region].found++;
-    }
-  });
-
-  return { stats, CONTINENT_ORDER };
-}
 
 export default React.memo(EndScreen);

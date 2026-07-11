@@ -433,7 +433,7 @@
   display: inline-block;
   margin: var(--spacing-xs) auto 0;
   padding: 4px 12px;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(218, 165, 32, 0.15) 100%);
+  background: linear-gradient(135deg, var(--gold-soft) 0%, transparent 100%);
   color: var(--gold);
   border: 1px solid var(--gold);
   border-radius: var(--radius-sm);

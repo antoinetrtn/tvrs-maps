@@ -2355,7 +2355,3 @@ export const countryDataMap = {
   }
 };
 
-export const normalizeString = (str) => {
-  if (!str) return "";
-  return str.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-};

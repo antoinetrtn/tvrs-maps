@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Globe, MapPin, Hash, TreePine, User, Close } from "pixelarticons/react";
+import { Globe, MapPin, Hash, TreePine, Close } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
 import { useTranslation } from "./i18n";
+import { formatTime } from "./utils";
 import {
   isSupabaseConfigured,
   getLeaderboard,
-  getUserScores
 } from "./supabaseClient";
 import "./LeaderboardScreen.css";
 
@@ -25,7 +25,7 @@ const LeaderboardScreen = ({
 }) => {
   const t = useTranslation(lang);
   const [colMode, setColMode] = useState("countries");
-  const [scope, setScope] = useState("global"); // "global" or "me"
+
   const [scoresData, setScoresData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -41,10 +41,7 @@ const LeaderboardScreen = ({
       setLoading(true);
       setError(null);
       try {
-        const { data, error: fetchErr } =
-          scope === "global"
-            ? await getLeaderboard(colMode)
-            : await getUserScores(userProfile?.id, colMode);
+        const { data, error: fetchErr } = await getLeaderboard(colMode);
 
         if (!isMounted) return;
 
@@ -71,14 +68,9 @@ const LeaderboardScreen = ({
     return () => {
       isMounted = false;
     };
-  }, [colMode, scope, userProfile, isOpen, t]);
+  }, [colMode, userProfile, isOpen, t]);
 
-  const formatTime = (secs) => {
-    if (!secs) return "--:--";
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+
 
 
 
@@ -143,7 +135,7 @@ const LeaderboardScreen = ({
               </div>
             ) : scoresData.length === 0 ? (
               <div className="leaderboard-empty-state">
-                <p>{scope === "me" ? (lang === "fr" ? "Vous n'avez pas encore de scores enregistrés." : "No scores recorded yet.") : t("empty_leaderboard")}</p>
+                <p>{t("empty_leaderboard")}</p>
               </div>
             ) : (
               <table className="leaderboard-table">
@@ -162,7 +154,7 @@ const LeaderboardScreen = ({
                       avatar_id: "invader_1",
                       avatar_color: "cyan"
                     };
-                    const isTop3 = index < 3 && scope === "global";
+                    const isTop3 = index < 3;
                     const rankLabels = ["1st", "2nd", "3rd"];
                     const rankColorClass = isTop3 ? `rank-${index + 1}` : "";
 

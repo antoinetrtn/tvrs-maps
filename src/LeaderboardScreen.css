@@ -31,26 +31,7 @@
   background: transparent;
 }
 
-/* Leaderboard Full Width Layout */
-.leaderboard-full-layout {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  box-sizing: border-box;
-}
 
-.leaderboard-full-layout .leaderboard-column {
-  flex: 1;
-  width: 100%;
-}
-
-.leaderboard-column {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: var(--spacing-md);
-  background: var(--subtle-tint);
-}
 
 .leaderboard-controls {
   display: flex;
@@ -63,14 +44,7 @@
   flex-shrink: 0;
 }
 
-.scope-toggle-wrap.glass-panel {
-  display: flex;
-  padding: var(--spacing-xxs);
-  border-radius: var(--radius-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  flex-shrink: 0;
-}
+
 
 /* Table styles */
 .leaderboard-table-container {
@@ -220,21 +194,7 @@
     margin-bottom: var(--spacing-md);
   }
 
-  .scope-toggle-wrap.glass-panel {
-    display: flex;
-    justify-content: stretch;
-    width: 100%;
-  }
 
-  .scope-toggle-wrap.glass-panel .nav-chip {
-    flex: 1;
-    justify-content: center;
-  }
-
-  /* Table responsiveness to prevent horizontal scrolling */
-  .col-date {
-    display: none !important;
-  }
 
   .leaderboard-table th,
   .leaderboard-table td {

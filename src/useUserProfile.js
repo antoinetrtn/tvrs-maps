@@ -657,7 +657,7 @@ export function useUserProfile() {
       localStorage.setItem("tvrs-last-scores", JSON.stringify(nextScores));
 
       if (isSupabaseConfigured) {
-        await upsertProfile(
+        const { error: profileErr } = await upsertProfile(
           activeUserId,
           updatedProfile.username,
           updatedProfile.avatarId,
@@ -665,29 +665,25 @@ export function useUserProfile() {
           updatedProfile.xp,
           updatedProfile.level,
           updatedProfile.unlockedBadges
-        ).then(({ error }) => {
-          if (error) console.error("Error syncing profile update to Supabase:", error);
-        });
+        );
+        if (profileErr) console.error("Error syncing profile update to Supabase:", profileErr);
 
-        await upsertUserRecord(
+        const { error: recordErr } = await upsertUserRecord(
           activeUserId,
           gameMode,
           nextMaxScore,
           nextBestTime,
           nextGamesPlayed
-        ).then(({ error }) => {
-          if (error) console.error("Error syncing user record to Supabase:", error);
-        });
+        );
+        if (recordErr) console.error("Error syncing user record to Supabase:", recordErr);
 
         if (finalScore > 0) {
-          submitLeaderboardScore(activeUserId, gameMode, finalScore, timeSpent)
-            .then(({ error }) => {
-              if (error) {
-                console.error("Error submitting score to Supabase:", error);
-              } else {
-                fetchTopExplorers();
-              }
-            });
+          const { error: scoreErr } = await submitLeaderboardScore(activeUserId, gameMode, finalScore, timeSpent);
+          if (scoreErr) {
+            console.error("Error submitting score to Supabase:", scoreErr);
+          } else {
+            fetchTopExplorers();
+          }
         }
       }
 

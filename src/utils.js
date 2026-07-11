@@ -1,5 +1,6 @@
 
 import { GAME_REGIONS } from "./gameConfig";
+import { GLITCH_EFFECT_SETTINGS } from "./designSystem";
 
 /**
  * Normalizes input string for accents, lowercase, hyphens, and whitespace.
@@ -11,11 +12,21 @@ export const normalizeString = (str) => {
 };
 
 /**
+ * Formats seconds into a "m:ss" display string (e.g. 65 → "1:05").
+ */
+export function formatTime(totalSeconds) {
+  if (!totalSeconds && totalSeconds !== 0) return "--:--";
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+/**
  * Scramble text with glitched characters for text animations.
  */
 export const scrambleText = (text, seed = 0) => {
   if (!text) return "";
-  const glyphs = "░▒▓█░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ";
+  const glyphs = GLITCH_EFFECT_SETTINGS.asciiScramble.glyphs;
   return text
     .split("")
     .map((char, index) => {

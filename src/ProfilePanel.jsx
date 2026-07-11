@@ -14,7 +14,7 @@ import {
 import "./ProfilePanel.css";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes
-export const CHALLENGE_AVATARS = {
+const CHALLENGE_AVATARS = {
   ch_gen_play_1: { invaderId: "invader_1", color: "cyan" },         // Premier Pas
   ch_gen_play_10: { invaderId: "invader_2", color: "purple" },      // Pilier Cartographe
   ch_gen_play_50: { invaderId: "invader_3", color: "magenta" },     // Géographe Suprême

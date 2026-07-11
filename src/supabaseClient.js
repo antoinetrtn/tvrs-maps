@@ -18,7 +18,7 @@ export const supabase = isSupabaseConfigured
  * Fetches user profile by ID.
  */
 export async function getProfile(profileId) {
-  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const { data, error } = await supabase
       .from("profiles")
@@ -59,7 +59,7 @@ export async function isUsernameTaken(username, excludeProfileId = null) {
  * Creates or updates the user profile.
  */
 export async function upsertProfile(profileId, username, avatarId, avatarColor, xp = 0, level = 1, unlockedBadges = []) {
-  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const payload = {
       id: profileId,
@@ -88,7 +88,7 @@ export async function upsertProfile(profileId, username, avatarId, avatarColor, 
  * Submits a score entry to the global leaderboard.
  */
 export async function submitLeaderboardScore(profileId, gameMode, score, timeSpentSeconds) {
-  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const { data, error } = await supabase
       .from("leaderboards")
@@ -111,7 +111,7 @@ export async function submitLeaderboardScore(profileId, gameMode, score, timeSpe
  * Returns the top scores, including player profile info.
  */
 export async function getLeaderboard(gameMode, limit = 50) {
-  if (!isSupabaseConfigured) return { data: [], error: "Service non configuré" };
+  if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
     const { data, error } = await supabase
       .from("leaderboards")
@@ -143,7 +143,7 @@ export async function getLeaderboard(gameMode, limit = 50) {
  * Fetches the user records for a profile from database.
  */
 export async function getUserRecords(profileId) {
-  if (!isSupabaseConfigured) return { data: [], error: "Service non configuré" };
+  if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
     const { data, error } = await supabase
       .from("user_records")
@@ -159,7 +159,7 @@ export async function getUserRecords(profileId) {
  * Synchronizes local stats to Supabase by upserting records.
  */
 export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSeconds, gamesPlayed) {
-  if (!isSupabaseConfigured) return { data: null, error: "Service non configuré" };
+  if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const payload = {
       profile_id: profileId,
@@ -186,7 +186,7 @@ export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSe
  * Fetches the score entries submitted by a specific user for a game mode.
  */
 export async function getUserScores(profileId, gameMode, limit = 50) {
-  if (!isSupabaseConfigured) return { data: [], error: "Service non configuré" };
+  if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
     const { data, error } = await supabase
       .from("leaderboards")
@@ -266,17 +266,19 @@ export async function signOut() {
 export async function checkIfEmailRegistered(email) {
   if (!isSupabaseConfigured) return false;
   try {
-    const { error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      password: "a"
+      password: "__check_only__"
     });
     if (error) {
       const msg = error.message.toLowerCase();
-      if (msg.includes("already registered") || msg.includes("already exists")) {
+      // "invalid login credentials" means the email exists but password is wrong
+      if (msg.includes("invalid login credentials") || msg.includes("email not confirmed")) {
         return true;
       }
     }
-    return false;
+    // If no error, somehow logged in (shouldn't happen with dummy password)
+    return true;
   } catch (err) {
     return false;
   }

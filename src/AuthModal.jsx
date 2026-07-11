@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Close, ArrowLeft, User, Earth, Gamepad } from "pixelarticons/react";
-import Logo from "./Logo";
 import { useTranslation } from "./i18n";
 import {
   signInWithEmail,

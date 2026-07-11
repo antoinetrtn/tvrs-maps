@@ -5,7 +5,7 @@ import HomeScreen from "./HomeScreen.jsx";
 import ResultsModal from "./ResultsModal.jsx";
 import EndScreen from "./EndScreen.jsx";
 import ConfirmationModal from "./ConfirmationModal.jsx";
-import LeaderboardScreen from "./LeaderboardScreen.jsx";
+
 import "./App.css";
 import { countryDataMap } from "./gameData";
 import { departmentsDataMap } from "./departmentsData";
@@ -15,16 +15,13 @@ import { normalizeString } from "./utils";
 import { useUserProfile, checkChallengesRealTime } from "./useUserProfile";
 import { CHALLENGES } from "./challenges";
 import { isSupabaseConfigured, upsertProfile } from "./supabaseClient";
-import { AVATAR_COLORS } from "./designSystem";
-
-
 import {
+  AVATAR_COLORS,
   getThemeCssVariables,
   GLOBE_THEME_IDS,
   DEFAULT_GLOBE_THEME,
   getThemeRegionColorLabel,
 } from "./designSystem";
-import PixelFireworks from "./PixelFireworks.jsx";
 import AchievementToast from "./AchievementToast.jsx";
 import AuthModal from "./AuthModal.jsx";
 import {
@@ -49,7 +46,6 @@ function App() {
     localRecords,
     topExplorers,
     updateGameRecord,
-    fetchTopExplorers,
     lastScores
   } = useUserProfile();
   const [profileInitialTab, setProfileInitialTab] = useState("records");
@@ -1280,7 +1276,7 @@ function App() {
           totalCountries={totalPossible}
           countryDataMap={countryDataMap}
           activeDataMap={activeDataMap}
-          mode={mode}
+
           onRestart={goHome}
           onViewTable={() => {
             setShowEndScreen(false);
@@ -1333,7 +1329,7 @@ function App() {
           lang={lang}
         />
       )}
-      {isNewPB && showEndScreen && <PixelFireworks duration={8000} />}
+
       {activeAchievement && (
         <AchievementToast
           title={activeAchievement.title}
