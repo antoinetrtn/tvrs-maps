@@ -292,14 +292,17 @@ const HomeScreen = ({
       />
 
       <div
-        className={`sheet-panel glass-panel ${settingsOpen ? "open" : ""} ${theme}`}
+        className={`sheet-panel crt-terminal-panel ${settingsOpen ? "open" : ""} ${theme}`}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <div className="panel-header">
-          <h2 className="panel-title">{t("settings")}</h2>
+        <div className="panel-header crt-header">
+          <div className="crt-header-title-wrap">
+            <h2 className="panel-title crt-title">{t("settings")}</h2>
+            <span className="crt-sys-status">Sys status: online</span>
+          </div>
           <button
-            className="panel-close-btn"
+            className="panel-close-btn crt-close-btn"
             onClick={(e) => {
               e.stopPropagation();
               setSettingsOpen(false);
@@ -310,12 +313,39 @@ const HomeScreen = ({
           </button>
         </div>
 
-        <div className="panel-body">
-          <div className="settings-section">
-            <span className="section-label">{t("game_duration")}</span>
-            <div className="timer-toggle-wrap glass-panel">
-              <button
-                className="timer-btn"
+        <div className="panel-body crt-terminal-body scrollbar-styled">
+          {/* Game Duration Selector */}
+          <div className="crt-settings-card">
+            <div className="crt-card-header">
+              <span className="section-label">{t("game_duration")}</span>
+              <span className="crt-tag">Sys clk: active</span>
+            </div>
+            
+            <div className="crt-tuner-container">
+              <div className="crt-digital-display">
+                <Clock width={16} height={16} className="crt-neon-icon" />
+                <span className="crt-digital-value">{Math.floor(gameDuration / 60)}'</span>
+              </div>
+              
+              {/* Visual LED dial blocks representing 10 divisions up to 60' */}
+              <div className="crt-led-gauge">
+                {Array.from({ length: 10 }).map((_, i) => {
+                  const minutes = Math.floor(gameDuration / 60);
+                  const activeBlocks = Math.ceil((minutes / 60) * 10);
+                  return (
+                    <div 
+                      key={i} 
+                      className={`crt-led-bar ${i < activeBlocks ? "active" : ""}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="crt-stepper-actions">
+              <button 
+                type="button"
+                className="crt-btn-stepper" 
                 onClick={(e) => {
                   e.stopPropagation();
                   adjustDuration(-60);
@@ -323,13 +353,11 @@ const HomeScreen = ({
                 title={t("minus_one_minute")}
               >
                 <Minus width={16} height={16} />
+                <span>-1 Min</span>
               </button>
-              <div className="timer-display">
-                <Clock width={16} height={16} className="timer-icon" />
-                <span>{Math.floor(gameDuration / 60)}'</span>
-              </div>
-              <button
-                className="timer-btn"
+              <button 
+                type="button"
+                className="crt-btn-stepper" 
                 onClick={(e) => {
                   e.stopPropagation();
                   adjustDuration(60);
@@ -337,15 +365,21 @@ const HomeScreen = ({
                 title={t("plus_one_minute")}
               >
                 <Plus width={16} height={16} />
+                <span>+1 Min</span>
               </button>
             </div>
           </div>
 
-          <div className="settings-section">
-            <span className="section-label">Language / Langue</span>
-            <div className="lang-toggle-wrap glass-panel">
+          {/* Language Selector */}
+          <div className="crt-settings-card">
+            <div className="crt-card-header">
+              <span className="section-label">Language / Langue</span>
+              <span className="crt-tag">Loc override</span>
+            </div>
+            <div className="crt-segmented-switch">
               <button
-                className={`lang-btn ${lang === "fr" ? "active" : ""}`}
+                type="button"
+                className={`crt-switch-opt ${lang === "fr" ? "active" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setLang("fr");
@@ -354,7 +388,8 @@ const HomeScreen = ({
                 FR
               </button>
               <button
-                className={`lang-btn ${lang === "en" ? "active" : ""}`}
+                type="button"
+                className={`crt-switch-opt ${lang === "en" ? "active" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setLang("en");
@@ -365,21 +400,16 @@ const HomeScreen = ({
             </div>
           </div>
 
-          <div className="settings-section">
-            <span className="section-label">{t("interface_theme")}</span>
-            <div className="theme-toggle-wrap-horizontal glass-panel">
+          {/* Interface Theme Selector */}
+          <div className="crt-settings-card">
+            <div className="crt-card-header">
+              <span className="section-label">{t("interface_theme")}</span>
+              <span className="crt-tag">Ui config</span>
+            </div>
+            <div className="crt-segmented-switch">
               <button
-                className={`theme-opt-btn ${theme === "light" ? "active" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTheme("light");
-                }}
-              >
-                <CloudSun width={16} height={16} />
-                <span>{t("theme_light")}</span>
-              </button>
-              <button
-                className={`theme-opt-btn ${theme === "dark" ? "active" : ""}`}
+                type="button"
+                className={`crt-switch-opt ${theme === "dark" ? "active" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   setTheme("dark");
@@ -388,16 +418,32 @@ const HomeScreen = ({
                 <Moon width={16} height={16} />
                 <span>{t("theme_dark")}</span>
               </button>
+              <button
+                type="button"
+                className={`crt-switch-opt ${theme === "light" ? "active" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTheme("light");
+                }}
+              >
+                <CloudSun width={16} height={16} />
+                <span>{t("theme_light")}</span>
+              </button>
             </div>
           </div>
 
-          <div className="settings-section">
-            <span className="section-label">{t("globe_theme")}</span>
-            <div className="theme-toggle-wrap-horizontal glass-panel">
+          {/* Globe Theme Selector */}
+          <div className="crt-settings-card">
+            <div className="crt-card-header">
+              <span className="section-label">{t("globe_theme")}</span>
+              <span className="crt-tag">Geod mode</span>
+            </div>
+            <div className="crt-segmented-switch">
               {THEMES_LIST.map((themeObj) => (
                 <button
+                  type="button"
                   key={themeObj.id}
-                  className={`theme-opt-btn ${globeTheme === themeObj.id ? "active" : ""}`}
+                  className={`crt-switch-opt ${globeTheme === themeObj.id ? "active" : ""}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     setGlobeTheme(themeObj.id);
@@ -413,8 +459,6 @@ const HomeScreen = ({
               ))}
             </div>
           </div>
-
-
         </div>
       </div>
 

@@ -592,3 +592,273 @@
   pointer-events: none;
   z-index: 10;
 }
+
+/* ==========================================
+   CRT DIAGNOSTIC TERMINAL SETTINGS PANEL
+   ========================================== */
+
+/* CRT panel vignette, grid lines and scanlines */
+.crt-terminal-panel {
+  background: var(--crt-panel-bg) !important;
+  border: 1px solid var(--glitch-cyan) !important;
+  box-shadow: 0 0 20px var(--crt-glow-color), var(--glass-shadow) !important;
+  overflow: hidden !important;
+}
+
+.crt-terminal-body {
+  position: relative;
+  overflow-y: auto;
+  padding-right: var(--spacing-xxs);
+}
+
+/* CRT monitor glass phosphor scanline simulation */
+.crt-terminal-panel::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    var(--crt-scanline-color) 50%, 
+    var(--crt-scanline-stripes) 50%
+  );
+  z-index: 9999;
+  background-size: 100% 3px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.crt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--crt-border-subtle);
+  margin-bottom: var(--spacing-md) !important;
+  padding-bottom: var(--spacing-sm);
+}
+
+.crt-header-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crt-title {
+  font-family: var(--font-display) !important;
+  font-size: 1.2rem !important;
+  color: var(--text-main) !important;
+  text-shadow: 0 0 8px var(--crt-glow-color);
+}
+
+.crt-sys-status {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--glitch-cyan);
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
+
+.crt-close-btn {
+  border: 1px solid var(--crt-border-subtle) !important;
+  color: var(--glitch-cyan) !important;
+  background: var(--crt-close-btn-bg) !important;
+}
+
+.crt-close-btn:hover {
+  background: var(--crt-close-btn-hover) !important;
+  border-color: var(--glitch-cyan) !important;
+  box-shadow: 0 0 10px var(--crt-close-btn-glow);
+}
+
+/* Subsystem card grids */
+.crt-settings-card {
+  position: relative;
+  background: var(--crt-card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: 0 4px 12px var(--xp-shadow-medium);
+  transition: border-color var(--transition-fast);
+}
+
+.crt-settings-card:hover {
+  border-color: var(--crt-card-hover-border);
+}
+
+.crt-settings-card::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: var(--spacing-md);
+  right: var(--spacing-md);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glitch-magenta-soft), transparent);
+}
+
+.crt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.crt-tag {
+  font-family: monospace;
+  font-size: 0.6rem;
+  color: var(--glitch-magenta);
+  background: var(--crt-tag-bg);
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid var(--glitch-magenta-soft);
+  letter-spacing: 0.5px;
+}
+
+/* Stepper dial & neon LED tuner details */
+.crt-tuner-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: var(--crt-tuner-bg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--crt-tuner-border);
+  margin-bottom: var(--spacing-sm);
+  box-shadow: var(--crt-tuner-shadow);
+}
+
+.crt-digital-display {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 65px;
+}
+
+.crt-neon-icon {
+  color: var(--crt-neon-green);
+  filter: drop-shadow(0 0 3px var(--crt-neon-green-glow));
+}
+
+.crt-digital-value {
+  font-family: monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--crt-neon-green);
+  text-shadow: 0 0 6px var(--crt-neon-green-glow);
+}
+
+.crt-led-gauge {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+  align-items: center;
+}
+
+.crt-led-bar {
+  height: 10px;
+  flex: 1;
+  background: var(--crt-led-bar-bg);
+  border-radius: 1px;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.crt-led-bar.active {
+  background: var(--crt-led-bar-active-bg);
+  box-shadow: var(--crt-led-bar-active-shadow);
+}
+
+/* Diagnostics stepper buttons */
+.crt-stepper-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.crt-btn-stepper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  height: 40px;
+  background: var(--crt-btn-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.crt-btn-stepper:hover {
+  background: var(--crt-btn-hover);
+  border-color: var(--glitch-cyan-soft);
+  color: var(--glitch-cyan);
+  text-shadow: 0 0 4px var(--glitch-cyan);
+  box-shadow: 0 0 8px var(--crt-glow-color);
+}
+
+.crt-btn-stepper:active {
+  background: var(--glitch-cyan-soft);
+  color: var(--bg-color);
+  box-shadow: 0 0 12px var(--glitch-cyan);
+  transform: scale(0.97);
+}
+
+/* Custom segmented tactical switch */
+.crt-segmented-switch {
+  display: flex;
+  background: var(--crt-switch-bg);
+  border: 1px solid var(--crt-tuner-border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.crt-switch-opt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  height: 42px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: calc(var(--radius-sm) - 1px);
+  transition: all var(--transition-fast);
+}
+
+.crt-switch-opt:hover:not(.active) {
+  background: var(--crt-btn-bg);
+  color: var(--text-main);
+}
+
+.crt-switch-opt.active {
+  background: var(--crt-switch-active-bg);
+  color: var(--glitch-magenta);
+  border-color: var(--glitch-magenta-soft);
+  text-shadow: 0 0 6px var(--glitch-magenta);
+  box-shadow: var(--crt-switch-active-shadow);
+}
+
+.crt-switch-opt .switch-icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.95;
+}
+
+/* Stepper adjust button sizes on mobile */
+@media (max-width: 640px) {
+  .crt-btn-stepper {
+    height: 44px; /* Increase to WCAG target on mobile */
+  }
+
+  .crt-switch-opt {
+    height: 44px; /* Expand to 44px touch target height on mobile */
+  }
+}

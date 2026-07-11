@@ -601,10 +601,30 @@
     border-radius: 0 !important;
     margin: 0 !important;
     z-index: 20000 !important;
+    padding-top: calc(var(--spacing-md) + var(--safe-top)) !important;
+    padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
   }
 
   .profile-panel .panel-body {
     padding-bottom: var(--spacing-sm) !important;
+  }
+
+  /* Remove nested scrolling inside the avatar selector on mobile */
+  .avatar-grid {
+    overflow-y: visible !important;
+    height: auto !important;
+    flex: none !important;
+    padding-right: 0 !important;
+  }
+
+  /* Increase color options touch targets on mobile */
+  .color-option {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .color-selector-grid {
+    gap: var(--spacing-md) !important;
   }
 }
 

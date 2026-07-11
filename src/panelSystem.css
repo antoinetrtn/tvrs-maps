@@ -240,10 +240,28 @@
     max-height: 100dvh !important;
     border-radius: 0 !important;
     margin: 0 !important;
+    /* Slide up transition on mobile */
+    transform: translateY(100%) !important;
+    transform-origin: bottom center !important;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;
+    padding-top: calc(var(--spacing-md) + var(--safe-top)) !important;
+    padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
+  }
+
+  .sheet-panel.open {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
   }
 
   .sheet-panel .panel-body {
     padding-bottom: var(--spacing-sm);
+  }
+
+  /* Expand close and back touch targets to 44px HIG minimum on mobile */
+  .panel-close-btn,
+  .panel-back-btn {
+    width: 44px !important;
+    height: 44px !important;
   }
 }
 

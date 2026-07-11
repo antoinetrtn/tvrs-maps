@@ -107,6 +107,31 @@
   --xp-error-border: rgba(255, 69, 0, 0.3);
   --xp-success-bg: rgba(0, 240, 255, 0.1);
   --xp-success-border: rgba(0, 240, 255, 0.3);
+
+  /* CRT DIAGNOSTIC TERMINAL SETTINGS PANEL VARIABLES */
+  --crt-panel-bg: radial-gradient(circle at 50% 50%, rgba(16, 26, 44, 0.98) 0%, rgba(6, 9, 18, 0.99) 100%);
+  --crt-scanline-color: rgba(18, 16, 16, 0);
+  --crt-scanline-stripes: rgba(0, 0, 0, 0.28);
+  --crt-glow-color: rgba(0, 240, 255, 0.15);
+  --crt-border-subtle: rgba(0, 240, 255, 0.2);
+  --crt-btn-bg: rgba(255, 255, 255, 0.04);
+  --crt-btn-hover: rgba(0, 240, 255, 0.08);
+  --crt-switch-bg: rgba(0, 0, 0, 0.5);
+  --crt-switch-active-bg: rgba(255, 0, 127, 0.12);
+  --crt-switch-active-shadow: rgba(255, 0, 127, 0.25);
+  --crt-card-bg: rgba(5, 8, 15, 0.85);
+  --crt-tuner-bg: rgba(0, 0, 0, 0.6);
+  --crt-tuner-border: rgba(0, 240, 255, 0.15);
+  --crt-tuner-shadow: rgba(0, 0, 0, 0.8);
+  --crt-led-bar-bg: rgba(255, 255, 255, 0.08);
+  --crt-led-bar-active-bg: #55ff55;
+  --crt-led-bar-active-shadow: rgba(85, 255, 85, 0.7);
+  --crt-neon-green: #55ff55;
+  --crt-neon-green-glow: rgba(85, 255, 85, 0.6);
+  --crt-tag-bg: rgba(255, 0, 127, 0.08);
+  --crt-close-btn-bg: rgba(0, 240, 255, 0.05);
+  --crt-close-btn-hover: rgba(0, 240, 255, 0.15);
+  --crt-close-btn-glow: rgba(0, 240, 255, 0.3);
 }
 
 [data-theme="light"] {
@@ -139,6 +164,31 @@
   --scanline-color: rgba(15, 23, 42, 0.03);
   --home-card-bg: var(--glass-bg);
   --home-scanline: rgba(15, 23, 42, 0.04);
+
+  /* CRT DIAGNOSTIC TERMINAL SETTINGS PANEL LIGHT OVERRIDES */
+  --crt-panel-bg: radial-gradient(circle at 50% 50%, rgba(240, 244, 250, 0.98) 0%, rgba(220, 225, 235, 0.99) 100%);
+  --crt-scanline-color: rgba(255, 255, 255, 0.5);
+  --crt-scanline-stripes: rgba(15, 23, 42, 0.04);
+  --crt-glow-color: rgba(8, 145, 178, 0.05);
+  --crt-border-subtle: rgba(8, 145, 178, 0.15);
+  --crt-btn-bg: rgba(15, 23, 42, 0.03);
+  --crt-btn-hover: rgba(8, 145, 178, 0.06);
+  --crt-switch-bg: rgba(15, 23, 42, 0.04);
+  --crt-switch-active-bg: rgba(219, 39, 119, 0.1);
+  --crt-switch-active-shadow: rgba(219, 39, 119, 0.15);
+  --crt-card-bg: rgba(255, 255, 255, 0.85);
+  --crt-tuner-bg: rgba(15, 23, 42, 0.03);
+  --crt-tuner-border: rgba(8, 145, 178, 0.15);
+  --crt-tuner-shadow: rgba(15, 23, 42, 0.05);
+  --crt-led-bar-bg: rgba(15, 23, 42, 0.06);
+  --crt-led-bar-active-bg: #16a34a;
+  --crt-led-bar-active-shadow: rgba(22, 163, 74, 0.4);
+  --crt-neon-green: #16a34a;
+  --crt-neon-green-glow: rgba(22, 163, 74, 0.4);
+  --crt-tag-bg: rgba(219, 39, 119, 0.06);
+  --crt-close-btn-bg: rgba(8, 145, 178, 0.04);
+  --crt-close-btn-hover: rgba(8, 145, 178, 0.12);
+  --crt-close-btn-glow: rgba(8, 145, 178, 0.25);
 }
 
 * {
