@@ -26,6 +26,7 @@ import {
 } from "./designSystem";
 import PixelFireworks from "./PixelFireworks.jsx";
 import AchievementToast from "./AchievementToast.jsx";
+import AuthModal from "./AuthModal.jsx";
 import {
   DEFAULT_MODE,
   DEFAULT_GAME_DURATION_SEC,
@@ -76,6 +77,7 @@ function App() {
   const [isNewPB, setIsNewPB] = useState(false);
   const [activeAchievement, setActiveAchievement] = useState(null);
   const [xpResult, setXpResult] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const conqueredRegionsThisGameRef = useRef([]);
   const speedGuessCount3sRef = useRef(0);
   const speedGuessCount1sRef = useRef(0);
@@ -147,6 +149,21 @@ function App() {
   } = learnToggles;
 
   // Profile, records and top explorers states are synced automatically in the useUserProfile hook.
+  useEffect(() => {
+    if (isSupabaseConfigured && session === null) {
+      const isGuest = localStorage.getItem("tvrs-guest-mode") === "true";
+      if (!isGuest) {
+        setShowAuthModal(true);
+      }
+    } else if (session) {
+      setShowAuthModal(false);
+    }
+  }, [session]);
+
+  const handleGuest = useCallback(() => {
+    localStorage.setItem("tvrs-guest-mode", "true");
+    setShowAuthModal(false);
+  }, []);
 
   const extInputRef = useRef(null);
   const initialWidth = useRef(window.innerWidth);
@@ -1075,6 +1092,7 @@ function App() {
           setUserProfile={setUserProfile}
           localRecords={localRecords}
           session={session}
+          onOpenAuth={() => setShowAuthModal(true)}
         />
       ) : currentScreen === "leaderboard" ? (
         <LeaderboardScreen
@@ -1243,6 +1261,13 @@ function App() {
           onClose={() => setActiveAchievement(null)}
         />
       )}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onGuest={handleGuest}
+        lang={lang}
+        theme={theme}
+      />
     </div>
   );
 }

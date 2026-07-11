@@ -40,6 +40,7 @@ const HomeScreen = ({
   setUserProfile,
   localRecords = {},
   session = null,
+  onOpenAuth,
 }) => {
   const cardRef = useRef(null);
   const isDraggingRef = useRef(false);
@@ -247,14 +248,15 @@ const HomeScreen = ({
               setSettingsOpen(false);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            title={t("profile")}
+            title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+            style={{
+              background: `linear-gradient(90deg, var(--xp-green-glow) ${percent}%, transparent ${percent}%)`,
+              border: `1px solid var(--glass-border)`
+            }}
           >
             <User width={20} height={20} />
             <span className="profile-btn-level-tag">{level}</span>
           </button>
-          <div className="home-profile-xp-bar" title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}>
-            <div className="home-profile-xp-fill" style={{ width: `${percent}%` }} />
-          </div>
         </div>
 
         <button
@@ -415,6 +417,7 @@ const HomeScreen = ({
         theme={theme}
         localRecords={localRecords}
         session={session}
+        onOpenAuth={onOpenAuth}
       />
     </div>
   );

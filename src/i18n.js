@@ -132,6 +132,8 @@ export const translations = {
     auth_no_account: "Pas encore de compte ? Créer un compte",
     auth_has_account: "Déjà un compte ? Se connecter",
     auth_switch_to_login: "Retourner à la connexion",
+    auth_required: "Connecte-toi pour personnaliser ton profil et enregistrer ta progression !",
+    account_created: "Compte créé ! Tu peux maintenant te connecter.",
 
     // Gamification
     tab_profile: "Profil",
@@ -295,6 +297,8 @@ export const translations = {
     auth_no_account: "No account yet? Sign up",
     auth_has_account: "Already have an account? Sign in",
     auth_switch_to_login: "Back to login",
+    auth_required: "Sign in to customize your profile and save your progress!",
+    account_created: "Account created! You can now sign in.",
 
     // Gamification
     tab_profile: "Profile",

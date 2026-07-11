@@ -9,9 +9,6 @@ import {
   isSupabaseConfigured,
   upsertProfile,
   isUsernameTaken,
-  signInWithEmail,
-  signUpWithEmail,
-  signInWithGoogle,
   signOut
 } from "./supabaseClient";
 import "./ProfilePanel.css";
@@ -24,7 +21,8 @@ const ProfilePanel = ({
   lang = "fr",
   theme = "dark",
   localRecords = {},
-  session = null
+  session = null,
+  onOpenAuth
 }) => {
   const t = useTranslation(lang);
   const [activeTab, setActiveTab] = useState("profile"); // "profile" | "stats"
@@ -41,14 +39,6 @@ const ProfilePanel = ({
   const [challengesFilter, setChallengesFilter] = useState("all");
   const [selectedChallengeId, setSelectedChallengeId] = useState("ch_gen_play_1");
 
-  // Auth Panel States
-  const [authType, setAuthType] = useState("login"); // "login" | "signup"
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authErrorMsg, setAuthErrorMsg] = useState(null);
-  const [authSuccessMsg, setAuthSuccessMsg] = useState(null);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-
   // Sync state with parent profile changes
   useEffect(() => {
     if (isOpen) {
@@ -57,8 +47,6 @@ const ProfilePanel = ({
       setSelectedColor(userProfile.avatarColor || "cyan");
       setFormError(null);
       setSaveSuccess(false);
-      setAuthErrorMsg(null);
-      setAuthSuccessMsg(null);
     }
   }, [userProfile, isOpen]);
 
@@ -66,6 +54,12 @@ const ProfilePanel = ({
     e.preventDefault();
     setFormError(null);
     setSaveSuccess(false);
+
+    // If not authenticated, saving is prohibited
+    if (isSupabaseConfigured && !session) {
+      setFormError(t("auth_required"));
+      return;
+    }
 
     const cleanUsername = usernameInput.trim();
 
@@ -131,56 +125,9 @@ const ProfilePanel = ({
     }
   };
 
-  const handleAuthSubmit = async (e) => {
-    e.preventDefault();
-    setAuthErrorMsg(null);
-    setAuthSuccessMsg(null);
-
-    const email = authEmail.trim();
-    const password = authPassword.trim();
-
-    if (!email || !password) {
-      setAuthErrorMsg("Veuillez remplir tous les champs");
-      return;
-    }
-
-    setIsAuthenticating(true);
-
-    try {
-      if (authType === "signup") {
-        const { data, error } = await signUpWithEmail(email, password);
-        if (error) throw error;
-        setAuthSuccessMsg(t("account_created"));
-        setAuthEmail("");
-        setAuthPassword("");
-      } else {
-        const { data, error } = await signInWithEmail(email, password);
-        if (error) throw error;
-        setAuthSuccessMsg(t("auth_success"));
-        setAuthEmail("");
-        setAuthPassword("");
-      }
-    } catch (err) {
-      setAuthErrorMsg(err.message || t("auth_error"));
-    } finally {
-      setIsAuthenticating(false);
-    }
-  };
-
-  const handleGoogleSignIn = async (e) => {
-    e.preventDefault();
-    setAuthErrorMsg(null);
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
-    } catch (err) {
-      setAuthErrorMsg(err.message || t("auth_error"));
-    }
-  };
-
   const handleSignOutClick = async (e) => {
     e.preventDefault();
-    setAuthErrorMsg(null);
+    setFormError(null);
     try {
       const { error } = await signOut();
       if (error) throw error;
@@ -202,7 +149,7 @@ const ProfilePanel = ({
       setUserProfile(guestProfile);
       localStorage.setItem("tvrs-user-profile", JSON.stringify(guestProfile));
     } catch (err) {
-      setAuthErrorMsg(err.message || "Erreur de déconnexion");
+      setFormError(err.message || "Erreur de déconnexion");
     }
   };
 
@@ -210,7 +157,6 @@ const ProfilePanel = ({
   const unlockedBadges = userProfile.unlockedBadges || [];
   const totalGamesPlayed = Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0);
 
-  // Filter challenges based on tab selection
   const filteredChallenges = CHALLENGES.filter((ch) => {
     if (challengesFilter === "all") return true;
     return ch.category === challengesFilter;
@@ -218,11 +164,8 @@ const ProfilePanel = ({
 
   const selectedChallengeObj = CHALLENGES.find((ch) => ch.id === selectedChallengeId) || CHALLENGES[0];
   const isSelectedChallengeUnlocked = unlockedBadges.includes(selectedChallengeId);
-
-  // Challenges that are unlocked and can be used as profile emotes
   const unlockedEmoteChallenges = CHALLENGES.filter((ch) => unlockedBadges.includes(ch.id));
 
-  // Localization utilities for challenge text
   const getChallengeTitle = (ch) => (lang === "fr" ? ch.titleFr : ch.titleEn);
   const getChallengeDesc = (ch) => (lang === "fr" ? ch.descFr : ch.descEn);
 
@@ -260,183 +203,145 @@ const ProfilePanel = ({
 
       <div className="settings-body scrollbar-styled" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {activeTab === "profile" ? (
-          <div className="profile-tab-content">
-            {/* 1. Account / Auth Section */}
-            {isSupabaseConfigured && (
-              <div className="auth-account-section glass-panel">
-                {session ? (
-                  <div className="auth-connected-state">
-                    <span className="auth-email-display">
-                      {t("auth_connected_as", { email: session.user.email })}
-                    </span>
-                    <button
-                      onClick={handleSignOutClick}
-                      className="auth-signout-btn"
-                    >
-                      {t("auth_sign_out")}
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleAuthSubmit} className="auth-form">
-                    <h3 className="auth-form-title text-natural-case">
-                      {authType === "login" ? t("auth_sign_in") : t("auth_sign_up")}
-                    </h3>
-                    
-                    <div className="form-group-horizontal">
-                      <input
-                        type="email"
-                        value={authEmail}
-                        onChange={(e) => setAuthEmail(e.target.value)}
-                        placeholder={t("auth_email")}
-                        className="glass-panel auth-input"
-                        required
-                      />
-                      <input
-                        type="password"
-                        value={authPassword}
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder={t("auth_password")}
-                        className="glass-panel auth-input"
-                        required
-                      />
-                    </div>
-
-                    {authErrorMsg && <div className="form-feedback error">{authErrorMsg}</div>}
-                    {authSuccessMsg && <div className="form-feedback success">{authSuccessMsg}</div>}
-
-                    <div className="auth-actions">
-                      <button
-                        type="submit"
-                        disabled={isAuthenticating}
-                        className="btn-primary auth-submit-btn"
-                      >
-                        {isAuthenticating ? t("saving") : (authType === "login" ? t("auth_sign_in") : t("auth_sign_up"))}
-                      </button>
-
-                      <button
-                        onClick={handleGoogleSignIn}
-                        type="button"
-                        className="auth-google-btn glass-panel"
-                      >
-                        <span>{t("auth_google")}</span>
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="auth-switch-type-btn"
-                      onClick={() => setAuthType(authType === "login" ? "signup" : "login")}
-                    >
-                      {authType === "login" ? t("auth_no_account") : t("auth_has_account")}
-                    </button>
-                  </form>
-                )}
+          <div className="profile-tab-content" style={{ position: "relative" }}>
+            {/* Blurring Overlay for guest mode */}
+            {isSupabaseConfigured && !session && (
+              <div className="profile-blur-overlay">
+                <div className="profile-blur-card glass-panel">
+                  <p className="profile-blur-text text-natural-case">{t("auth_required")}</p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (onOpenAuth) onOpenAuth();
+                    }}
+                    className="btn-primary profile-blur-btn"
+                  >
+                    {t("auth_sign_in")}
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* 2. Character Customization Section */}
-            <form onSubmit={handleSaveProfile} className="profile-form">
-              <div className="avatar-preview-container">
-                <div className="avatar-glow" style={{ "--glow-color": AVATAR_COLORS[selectedColor] }}>
-                  <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={48} />
-                  <div className="avatar-preview-level">
-                    <span>{t("level_short", { level })}</span>
+            <div className={`profile-customization-container ${isSupabaseConfigured && !session ? "blurred" : ""}`}>
+              <form onSubmit={handleSaveProfile} className="profile-form">
+                <div className="avatar-preview-container">
+                  <div className="avatar-glow" style={{ "--glow-color": AVATAR_COLORS[selectedColor] }}>
+                    <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={48} />
+                    <div className="avatar-preview-level">
+                      <span>{t("level_short", { level })}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label htmlFor="profile-username-input">{t("username")}</label>
-                <input
-                  id="profile-username-input"
-                  type="text"
-                  value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="Pseudo..."
-                  maxLength={20}
-                  className="glass-panel"
-                />
-              </div>
-
-              {/* 2a. Standard Avatars */}
-              <div className="form-group">
-                <label>{t("select_avatar")} (Standard)</label>
-                <div className="avatar-grid scrollbar-styled">
-                  {Object.keys(INVADER_DESIGNS).map((id) => {
-                    const reqLvl = getAvatarUnlockLevel(id);
-                    const isLocked = level < reqLvl;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        className={`avatar-option glass-panel ${selectedAvatar === id ? "active" : ""} ${isLocked ? "locked" : ""}`}
-                        onClick={() => !isLocked && setSelectedAvatar(id)}
-                        disabled={isLocked}
-                        title={isLocked ? t("avatar_locked", { level: reqLvl }) : id}
-                      >
-                        <div className="avatar-option-inner">
-                          <InvaderAvatar invaderId={id} color={isLocked ? "gray" : selectedColor} size={28} />
-                          {isLocked && (
-                            <div className="avatar-lock-overlay">
-                              <Lock width={12} height={12} className="lock-icon" />
-                              <span className="lock-lvl">{reqLvl}</span>
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 2b. Special Unlocked Emote Challenges */}
-              {unlockedEmoteChallenges.length > 0 && (
                 <div className="form-group">
-                  <label>{t("select_avatar")} (Émotes Challenges)</label>
+                  <label htmlFor="profile-username-input">{t("username")}</label>
+                  <input
+                    id="profile-username-input"
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    placeholder="Pseudo..."
+                    maxLength={20}
+                    className="glass-panel"
+                    disabled={isSupabaseConfigured && !session}
+                  />
+                </div>
+
+                {/* Standard Avatars */}
+                <div className="form-group">
+                  <label>{t("select_avatar")} (Standard)</label>
                   <div className="avatar-grid scrollbar-styled">
-                    {unlockedEmoteChallenges.map((ch) => (
+                    {Object.keys(INVADER_DESIGNS).map((id) => {
+                      const reqLvl = getAvatarUnlockLevel(id);
+                      const isLocked = level < reqLvl;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`avatar-option glass-panel ${selectedAvatar === id ? "active" : ""} ${isLocked ? "locked" : ""}`}
+                          onClick={() => !isLocked && setSelectedAvatar(id)}
+                          disabled={isLocked || (isSupabaseConfigured && !session)}
+                          title={isLocked ? t("avatar_locked", { level: reqLvl }) : id}
+                        >
+                          <div className="avatar-option-inner">
+                            <InvaderAvatar invaderId={id} color={isLocked ? "gray" : selectedColor} size={28} />
+                            {isLocked && (
+                              <div className="avatar-lock-overlay">
+                                <Lock width={12} height={12} className="lock-icon" />
+                                <span className="lock-lvl">{reqLvl}</span>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Special Unlocked Emote Challenges */}
+                {unlockedEmoteChallenges.length > 0 && (
+                  <div className="form-group">
+                    <label>{t("select_avatar")} (Émotes Challenges)</label>
+                    <div className="avatar-grid scrollbar-styled">
+                      {unlockedEmoteChallenges.map((ch) => (
+                        <button
+                          key={ch.id}
+                          type="button"
+                          className={`avatar-option glass-panel ${selectedAvatar === ch.id ? "active" : ""}`}
+                          onClick={() => setSelectedAvatar(ch.id)}
+                          title={getChallengeTitle(ch)}
+                          disabled={isSupabaseConfigured && !session}
+                        >
+                          <div className="avatar-option-inner">
+                            <InvaderAvatar invaderId={ch.id} color={selectedColor} size={28} />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label>{t("select_color")}</label>
+                  <div className="color-selector-grid">
+                    {Object.keys(AVATAR_COLORS).map((cKey) => (
                       <button
-                        key={ch.id}
+                        key={cKey}
                         type="button"
-                        className={`avatar-option glass-panel ${selectedAvatar === ch.id ? "active" : ""}`}
-                        onClick={() => setSelectedAvatar(ch.id)}
-                        title={getChallengeTitle(ch)}
-                      >
-                        <div className="avatar-option-inner">
-                          <InvaderAvatar invaderId={ch.id} color={selectedColor} size={28} />
-                        </div>
-                      </button>
+                        className={`color-option ${selectedColor === cKey ? "active" : ""}`}
+                        style={{ "--option-color": AVATAR_COLORS[cKey] }}
+                        onClick={() => setSelectedColor(cKey)}
+                        title={cKey}
+                        disabled={isSupabaseConfigured && !session}
+                      />
                     ))}
                   </div>
                 </div>
-              )}
 
-              <div className="form-group">
-                <label>{t("select_color")}</label>
-                <div className="color-selector-grid">
-                  {Object.keys(AVATAR_COLORS).map((cKey) => (
-                    <button
-                      key={cKey}
-                      type="button"
-                      className={`color-option ${selectedColor === cKey ? "active" : ""}`}
-                      style={{ "--option-color": AVATAR_COLORS[cKey] }}
-                      onClick={() => setSelectedColor(cKey)}
-                      title={cKey}
-                    />
-                  ))}
+                {formError && <div className="form-feedback error">{formError}</div>}
+                {saveSuccess && <div className="form-feedback success">{t("profile_saved")}</div>}
+
+                {/* Sticky Footer on Mobile */}
+                <div className="profile-sticky-footer">
+                  <button type="submit" disabled={isSaving || (isSupabaseConfigured && !session)} className="btn-primary form-submit-btn">
+                    {isSaving ? t("saving") : t("save_profile")}
+                  </button>
                 </div>
-              </div>
+              </form>
 
-              {formError && <div className="form-feedback error">{formError}</div>}
-              {saveSuccess && <div className="form-feedback success">{t("profile_saved")}</div>}
-
-              {/* Sticky Footer on Mobile */}
-              <div className="profile-sticky-footer">
-                <button type="submit" disabled={isSaving} className="btn-primary form-submit-btn">
-                  {isSaving ? t("saving") : t("save_profile")}
-                </button>
-              </div>
-            </form>
+              {/* Clean Logout at the end of the profile */}
+              {isSupabaseConfigured && session && (
+                <div className="profile-signout-wrapper">
+                  <span className="profile-email-badge">
+                    {t("auth_connected_as", { email: session.user.email })}
+                  </span>
+                  <button onClick={handleSignOutClick} className="profile-signout-link">
+                    {t("auth_sign_out")}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="stats-tab-content">
@@ -479,7 +384,6 @@ const ProfilePanel = ({
             <div className="badges-gallery-section">
               <span className="section-label">Challenges & Émotes</span>
               
-              {/* Category selector */}
               <div className="challenges-filter-bar scrollbar-styled">
                 {["all", "general", "continents", "scores", "speed", "relief"].map((cat) => (
                   <button
