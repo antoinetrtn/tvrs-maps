@@ -67,11 +67,71 @@
   box-shadow: 0 0 10px var(--accent-soft);
 }
 
-/* Avatar selection grid */
+.avatar-glow::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 1px solid var(--glow-color);
+  opacity: 0.35;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.avatar-preview-level {
+  position: absolute;
+  bottom: -8px;
+  background: var(--text-main);
+  color: var(--bg-color);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--bg-color);
+  box-shadow: 0 2px 4px var(--shadow-subtle);
+}
+
+/* Form layouts */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  width: 100%;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-family: var(--font-main);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.form-group input {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: all var(--transition-fast);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-soft);
+}
+
+/* Unified Grid: 4 columns for Avatars, Colors and Badges */
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: var(--spacing-xs);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
   width: 100%;
   max-height: 150px;
   overflow-y: auto;
@@ -130,8 +190,8 @@
 
 .color-selector-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: var(--spacing-xs);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
   margin-top: var(--spacing-xs);
   width: 100%;
 }
@@ -286,8 +346,8 @@
 
 .badges-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--spacing-xs);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -448,7 +508,7 @@
 @media (max-width: 640px) {
   .badges-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--spacing-xs);
+    gap: var(--spacing-sm);
   }
 
   .quick-stats-grid {
