@@ -264,7 +264,7 @@ const ProfilePanel = ({
                 {/* Scrollable Middle Area */}
                 <div className="profile-form-middle scrollbar-styled">
                   {/* Standard Avatars */}
-                  <div className="form-group">
+                  <div className="form-group avatar-form-group">
                     <label>{t("select_avatar")} (Standard)</label>
                     <div className="avatar-grid scrollbar-styled">
                       {Object.keys(INVADER_DESIGNS).map((id) => {
@@ -296,7 +296,7 @@ const ProfilePanel = ({
 
                   {/* Special Unlocked Emote Challenges */}
                   {unlockedEmoteChallenges.length > 0 && (
-                    <div className="form-group">
+                    <div className="form-group avatar-form-group">
                       <label>{t("select_avatar")} (Émotes Challenges)</label>
                       <div className="avatar-grid scrollbar-styled">
                         {unlockedEmoteChallenges.map((ch) => (
@@ -317,7 +317,7 @@ const ProfilePanel = ({
                     </div>
                   )}
 
-                  <div className="form-group">
+                  <div className="form-group color-form-group">
                     <label>{t("select_color")}</label>
                     <div className="color-selector-grid">
                       {Object.keys(AVATAR_COLORS).map((cKey) => (

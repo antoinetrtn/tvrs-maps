@@ -128,15 +128,28 @@
 }
 
 /* Unified Grid: 4 columns for Avatars, Colors and Badges */
+.avatar-form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 140px;
+}
+
 .avatar-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-sm);
   width: 100%;
-  max-height: 150px;
+  flex: 1;
   overflow-y: auto;
   padding-right: var(--spacing-xxs);
   -webkit-overflow-scrolling: touch;
+}
+
+.color-form-group {
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .avatar-option {
