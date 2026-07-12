@@ -14,7 +14,6 @@ import {
   Close,
   Earth,
   User,
-  Trophy,
 } from "pixelarticons/react";
 import Logo from "./Logo";
 import InvaderAvatar from "./InvaderAvatar";
