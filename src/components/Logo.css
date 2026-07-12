@@ -39,6 +39,9 @@
 }
 
 @media (max-width: 768px) {
+  .logo-container {
+    transform-style: flat !important;
+  }
   .logo-container.large {
     width: calc(100% + var(--spacing-lg) * 2);
     margin-left: calc(-1 * var(--spacing-lg));
