@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { normalizeString } from "../utils/utils";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
-import { countryDataMap } from "../data/gameData";
 import { CHALLENGES } from "../data/challenges";
 import { isSupabaseConfigured, upsertProfile } from "../services/supabaseClient";
 import { AVATAR_COLORS, getThemeRegionColorLabel } from "../config/designSystem";
