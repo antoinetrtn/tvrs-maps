@@ -128,7 +128,7 @@ function App() {
   // New States for Advanced UX
   const [isScreenGlitching, setIsScreenGlitching] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hudSide, setHudSide] = useState("right"); // 'left' or 'right'
+  const [, setHudSide] = useState("right"); // 'left' or 'right'
   const [confirmState, setConfirmState] = useState(null); // { message, onConfirm }
   const t = useTranslation(lang);
 
