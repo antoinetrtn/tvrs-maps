@@ -414,14 +414,27 @@
     width: min(320px, calc(100vw - 32px));
     padding: var(--spacing-lg);
     gap: var(--spacing-ms);
+    transform: none !important;
+    transform-style: flat !important;
+    background: 
+      repeating-linear-gradient(
+        0deg,
+        var(--home-scanline) 0px,
+        var(--home-scanline) 1px,
+        transparent 1px,
+        transparent 3px
+      ),
+      color-mix(in srgb, var(--home-card-bg) 85%, transparent) !important;
   }
 
   .home-logo {
     margin-bottom: 2px;
+    transform: none !important;
   }
 
   .home-buttons {
     gap: var(--spacing-sm);
+    transform: none !important;
   }
 
   .home-btn {
