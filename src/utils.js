@@ -8,7 +8,7 @@ import { GLITCH_EFFECT_SETTINGS } from "./designSystem";
 export const normalizeString = (str) => {
   if (!str) return "";
   const normalized = str.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return normalized.replace(/[-'']/g, " ").replace(/\s+/g, " ").trim();
+  return normalized.replace(/[-']/g, " ").replace(/\s+/g, " ").trim();
 };
 
 /**
