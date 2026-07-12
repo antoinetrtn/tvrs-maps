@@ -86,3 +86,23 @@ Surfaced during the 2026-06 maintainability pass — safe-but-larger refactors l
 ## Verifying the globe renders
 
 Headless Chrome needs software WebGL: `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`. Plain `--headless --disable-gpu` fails with "Error creating WebGL context" (environment limitation, not an app bug).
+
+## CI/CD & Supabase Workflow
+
+### Branching Model
+- **`main`** : Stable production branch. Direct pushes are banned (enforced via GitHub settings). All changes must merge from `dev` via a release PR.
+- **`dev`** : Staging/Development branch. Direct pushes are banned. Developers work on feature/fix branches and merge them into `dev` via PRs.
+- **`feat/*` or `fix/*`** : Feature or bugfix branches branched off `dev`.
+
+### CI Quality Pipeline
+A GitHub Action (`.github/workflows/quality.yml`) runs on push/PR to `main` and `dev`. It performs:
+1. `npm run lint` (checks formatting, design tokens, bans, and runs Knip dead code audit).
+2. `npm run test:run` (runs all unit tests in Vitest).
+3. `npm run build` (ensures Vite builds successfully).
+
+### Database Migrations (Supabase)
+Any database schema changes must be version-controlled in the repository:
+1. Create a migration locally: `npm run supabase:migration <name>`
+2. Edit the generated SQL file under `supabase/migrations/`
+3. Apply migration to the database: `npm run supabase:push` (automatically deployed on push to `dev`/`main` via GitHub Actions once GitHub secrets are configured).
+
