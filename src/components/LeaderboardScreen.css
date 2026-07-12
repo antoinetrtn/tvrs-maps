@@ -1,0 +1,519 @@
+/* Leaderboard specific styles */
+
+.leaderboard-panel {
+  width: 460px !important;
+  height: 800px !important;
+  max-height: calc(100vh - 140px) !important;
+  max-height: calc(100dvh - 140px) !important;
+  overflow: hidden !important;
+}
+
+.leaderboard-panel .panel-header {
+  margin-bottom: var(--spacing-xs) !important;
+  padding-bottom: var(--spacing-xs) !important;
+}
+
+.leaderboard-panel .leaderboard-full-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: calc(100% - 60px);
+  min-height: 0;
+}
+
+.leaderboard-panel .leaderboard-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-md);
+  background: transparent;
+}
+
+
+
+.leaderboard-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+
+
+/* Table styles */
+.leaderboard-table-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.leaderboard-table th {
+  padding: var(--spacing-sm);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border);
+  font-weight: 700;
+}
+
+.leaderboard-table td {
+  padding: 10px var(--spacing-sm);
+  border-bottom: 1px solid var(--glass-border);
+  vertical-align: middle;
+}
+
+.col-rank {
+  width: 70px;
+  text-align: center;
+}
+.col-player {
+  width: auto;
+  text-align: left;
+}
+.col-score {
+  width: 100px;
+  text-align: center;
+}
+.col-time {
+  width: 90px;
+  text-align: center;
+}
+
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 22px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-tint);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  box-sizing: border-box;
+}
+
+.rank-badge.rank-1 {
+  background: var(--color-gold-glow);
+  color: var(--color-gold);
+  border-color: var(--color-gold);
+}
+.rank-badge.rank-2 {
+  background: var(--color-silver-glow);
+  color: var(--color-silver);
+  border-color: var(--color-silver);
+}
+.rank-badge.rank-3 {
+  background: var(--color-bronze-glow);
+  color: var(--color-bronze);
+  border-color: var(--color-bronze);
+}
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.player-username {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.highlight-cyan {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-cyan);
+  text-shadow: 0 0 8px var(--color-cyan-glow-strong);
+}
+
+.highlight-magenta {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--color-magenta);
+  text-shadow: 0 0 8px var(--color-magenta-glow);
+}
+
+/* Loading & Empty States */
+.leaderboard-empty-state,
+.leaderboard-loading-state,
+.leaderboard-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl) 0;
+  color: var(--text-muted);
+  font-family: var(--font-main);
+  font-weight: 600;
+}
+
+.leaderboard-error-state {
+  color: var(--error);
+}
+
+.pixel-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--glass-border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--spacing-sm);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive layout for mobile viewports */
+@media (max-width: 768px) {
+  .leaderboard-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: var(--spacing-md);
+  }
+
+
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: var(--spacing-xs) var(--spacing-xs) !important;
+    font-size: 0.78rem;
+  }
+
+  .col-rank {
+    width: 45px !important;
+  }
+  
+  .col-score {
+    width: 70px !important;
+  }
+  
+  .col-time {
+    width: 70px !important;
+  }
+
+  .player-cell {
+    gap: var(--spacing-xs) !important;
+  }
+
+  .player-username {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* --- TABS --- */
+.panel-tabs-header {
+  display: flex;
+  background: var(--subtle-tint);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  flex: 1;
+  max-width: 280px;
+  margin-right: var(--spacing-md);
+}
+
+.panel-tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  text-transform: none; /* natural casing */
+}
+
+.panel-tab-btn.active {
+  background: var(--glass-bg-strong);
+  color: var(--text-main);
+  box-shadow: 0 2px 6px var(--shadow-subtle);
+  border: 1px solid var(--glass-border);
+}
+
+.panel-tab-btn:hover:not(.active) {
+  color: var(--text-main);
+  background: var(--glass-hover);
+}
+
+/* --- STATS GRID --- */
+.personal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.personal-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  text-align: center;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.personal-stat-card .stat-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: none; /* natural casing */
+}
+
+.personal-stat-card .stat-value {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.highlight-green {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-lime);
+  text-shadow: 0 0 8px var(--color-lime-glow-strong);
+}
+
+/* --- PERSONAL HISTORY LAYOUT --- */
+.personal-history-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  gap: var(--spacing-md);
+}
+
+/* --- EVOLUTION CHART --- */
+.evolution-chart-container {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.evolution-chart-container .chart-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+  text-transform: none; /* natural casing */
+}
+
+.evolution-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 80px;
+  padding-top: var(--spacing-md);
+  border-bottom: 1px solid var(--glass-border);
+  position: relative;
+  gap: 4px;
+}
+
+.chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.chart-bar-track {
+  width: 70%;
+  max-width: 14px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--subtle-tint);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  background: var(--color-cyan);
+  box-shadow: 0 0 8px var(--color-cyan-glow-strong);
+  border-radius: 1px;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chart-bar-wrapper:hover .chart-bar-fill {
+  background: var(--text-main);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.chart-bar-label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Tooltip on hover */
+.chart-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-borderStrong);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px) scale(0.95);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+  min-width: 70px;
+  box-shadow: var(--glass-shadow-strong);
+}
+
+.chart-bar-wrapper:hover .chart-bar-tooltip {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tooltip-score {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+}
+
+.tooltip-time {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.tooltip-date {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* --- HISTORY TABLE & EVOLUTION --- */
+.personal-history-table {
+  font-size: 0.8rem !important;
+}
+
+.col-date {
+  width: 110px;
+  text-align: left;
+}
+
+.col-evo {
+  width: 60px;
+  text-align: center;
+}
+
+.evo-bullet {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  opacity: 0.5;
+}
+
+.evo-arrow {
+  font-size: 0.7rem;
+}
+
+.evo-up {
+  color: var(--color-lime);
+  text-shadow: 0 0 6px var(--color-lime-glow-strong);
+}
+
+.evo-down {
+  color: var(--error);
+  text-shadow: 0 0 6px var(--color-error-glow-strong);
+}
+
+.evo-equal {
+  color: var(--text-muted);
+}
+
+/* Make sure header styling fits tabs nicely */
+.leaderboard-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  .panel-tabs-header {
+    max-width: 220px;
+    margin-right: var(--spacing-xs);
+  }
+  
+  .panel-tab-btn {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
+  
+  .personal-stats-grid {
+    gap: 6px;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .personal-stat-card {
+    padding: var(--spacing-xs) 2px;
+  }
+  
+  .personal-stat-card .stat-value {
+    font-size: 1rem;
+  }
+  
+  .col-date {
+    width: 85px !important;
+  }
+  
+  .col-evo {
+    width: 45px !important;
+  }
+
+  .evolution-chart {
+    height: 60px;
+  }
+}
+
