@@ -114,12 +114,11 @@ export async function getLeaderboard(gameMode, limit = 50) {
   if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
     const { data, error } = await supabase
-      .from("leaderboards")
+      .from("user_records")
       .select(`
         id,
-        score,
-        time_spent_seconds,
-        created_at,
+        max_score,
+        best_time_seconds,
         profiles (
           id,
           username,
@@ -128,9 +127,50 @@ export async function getLeaderboard(gameMode, limit = 50) {
         )
       `)
       .eq("game_mode", gameMode)
-      // Sort by score descending first, and then by time_spent_seconds ascending (lower time is better)
-      .order("score", { ascending: false })
-      .order("time_spent_seconds", { ascending: true })
+      .gt("max_score", 0)
+      // Sort by max_score descending first, and then by best_time_seconds ascending (lower time is better)
+      .order("max_score", { ascending: false })
+      .order("best_time_seconds", { ascending: true, nullsFirst: false })
+      .limit(limit);
+
+    const mappedData = data
+      ? data.map((row) => ({
+          id: row.id,
+          score: row.max_score,
+          time_spent_seconds: row.best_time_seconds,
+          profiles: row.profiles,
+        }))
+      : [];
+      
+    return { data: mappedData, error };
+  } catch (err) {
+    return { data: [], error: err.message };
+  }
+}
+
+/**
+ * Fetches the game history (all games played) for a specific profile.
+ */
+export async function getUserHistory(profileId, gameMode = null, limit = 50) {
+  if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
+  try {
+    let query = supabase
+      .from("leaderboards")
+      .select(`
+        id,
+        score,
+        time_spent_seconds,
+        created_at,
+        game_mode
+      `)
+      .eq("profile_id", profileId);
+      
+    if (gameMode) {
+      query = query.eq("game_mode", gameMode);
+    }
+    
+    const { data, error } = await query
+      .order("created_at", { ascending: false })
       .limit(limit);
       
     return { data, error };

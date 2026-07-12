@@ -566,6 +566,8 @@ export const getThemeCssVariables = (
     "--shadow-subtle": "rgba(0, 0, 0, 0.15)",
     "--color-cyan-glow-strong": "rgba(0, 240, 255, 0.4)",
     "--color-lime": "#a3e635",
+    "--color-lime-glow-strong": "rgba(163, 230, 53, 0.4)",
+    "--color-error-glow-strong": "rgba(255, 69, 0, 0.4)",
     "--color-pink": "#f472b6",
     "--color-amber": "#fbbf24",
   };
