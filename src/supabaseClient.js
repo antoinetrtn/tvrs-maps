@@ -182,37 +182,6 @@ export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSe
   }
 }
 
-/**
- * Fetches the score entries submitted by a specific user for a game mode.
- */
-export async function getUserScores(profileId, gameMode, limit = 50) {
-  if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
-  try {
-    const { data, error } = await supabase
-      .from("leaderboards")
-      .select(`
-        id,
-        score,
-        time_spent_seconds,
-        created_at,
-        profiles (
-          id,
-          username,
-          avatar_id,
-          avatar_color
-        )
-      `)
-      .eq("profile_id", profileId)
-      .eq("game_mode", gameMode)
-      .order("score", { ascending: false })
-      .order("time_spent_seconds", { ascending: true })
-      .limit(limit);
-      
-    return { data, error };
-  } catch (err) {
-    return { data: [], error: err.message };
-  }
-}
 
 /**
  * Supabase Auth Functions

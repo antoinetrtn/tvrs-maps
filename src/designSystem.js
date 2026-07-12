@@ -34,7 +34,7 @@
 // padding so the rule  inner + padding ≈ outer  holds.
 // ==========================================
 
-export const STYLE_TOKENS = {
+const STYLE_TOKENS = {
   radius: {
     sm: "4px",
     md: "calc(var(--radius-sm) + var(--spacing-xs))",
@@ -307,7 +307,7 @@ const DEFAULT_DEPARTMENT_COLORS = {
  * below merges `globeSettings` on top of the base theme, so anything NOT listed
  * here automatically stays identical across globe themes.
  */
-export const GLOBE_THEMES = {
+const GLOBE_THEMES = {
   satellite: {
     globeSettings: {
       globeTextureUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",

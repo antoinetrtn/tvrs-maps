@@ -1,7 +1,7 @@
 import React from "react";
 import { AVATAR_COLORS } from "./designSystem";
 
-export const INVADER_DESIGNS = {
+const INVADER_DESIGNS = {
   invader_1: [
     "00100000100",
     "00010001000",

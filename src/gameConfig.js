@@ -6,7 +6,7 @@
  * lives here so a single mode can't drift visually from the others.
  */
 
-export const PLAY_MODES = ['countries', 'capitals', 'departments', 'rivers_mountains'];
+const PLAY_MODES = ['countries', 'capitals', 'departments', 'rivers_mountains'];
 
 // A real quiz round (not learn / home / end screen): answers are hidden until found.
 export const isPlayMode = (mode, { isHomeScreen = false, isEndScreen = false } = {}) =>
@@ -87,7 +87,7 @@ export const GAME_REGIONS = [
  * copy — they stay identical across languages. Anything not listed falls back to
  * the first two letters of the region name (see getRegionAbbr).
  */
-export const REGION_ABBR = {
+const REGION_ABBR = {
   Americas: "AM",
   Antarctic: "AN",
 };

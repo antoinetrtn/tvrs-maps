@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { execSync } from 'node:child_process';
 
 const root = process.cwd();
 const failures = [];
@@ -100,6 +101,14 @@ sourceFiles.filter(file => file.endsWith('.jsx')).forEach(file => {
     fail(file, null, 'banned onPointerDown preventing defaults on buttons (breaks mobile clicks; use onMouseDown instead)');
   }
 });
+
+// Run knip dead code audit
+try {
+  console.log('Running dead code audit (knip)...');
+  execSync('npx knip', { stdio: 'inherit' });
+} catch (e) {
+  fail('knip', null, 'Dead code or unused imports/exports detected in the project.');
+}
 
 if (failures.length) {
   console.error('Quality check failed:\n');
