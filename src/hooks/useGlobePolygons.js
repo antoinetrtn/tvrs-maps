@@ -632,15 +632,6 @@ export function useGlobePolygons({
     ],
   );
 
-  const countrySizes = useMemo(() => {
-    const sizes = {};
-    GAME_REGIONS.forEach((region) => {
-      // Stub or construct dynamically depending on selectable feature bounds.
-      // We will compute sizes in the components or pass it as calculated.
-    });
-    return sizes;
-  }, []);
-
   const getPolygonCurvatureResolution = useCallback(
     (d, customSizes) => {
       const admin = getFeatureAdmin(d) || "unknown";
