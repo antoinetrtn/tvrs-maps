@@ -48,7 +48,7 @@ function App() {
     updateGameRecord,
     lastScores
   } = useUserProfile();
-  const [, setProfileInitialTab] = useState("records");
+  useState("records");
   const [mode, setMode] = useState(DEFAULT_MODE); // 'countries', 'capitals', 'learn', 'departments'
   const [foundList, setFoundList] = useState([]);
   const score = foundList.length;
