@@ -300,7 +300,15 @@ export function useUserProfile() {
 
     let randomNum = 100;
     if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-      randomNum = 100 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900);
+      const range = 900;
+      const maxUnbiased = Math.floor(0x100000000 / range) * range;
+      const rand = new Uint32Array(1);
+      let value;
+      do {
+        crypto.getRandomValues(rand);
+        value = rand[0];
+      } while (value >= maxUnbiased);
+      randomNum = 100 + (value % range);
     }
     const newProfile = {
       id: generateUUID(),
