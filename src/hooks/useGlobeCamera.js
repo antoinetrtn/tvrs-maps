@@ -244,11 +244,33 @@ export function useGlobeCamera({
     transitioningPreviousCountryRef,
   ]);
 
+  const isMobileSize = viewport.width < 1024;
+  const isKeyboardLikelyOpening =
+    isMobileSize &&
+    window.innerHeight < maxWindowHeightRef.current * 0.85 &&
+    window.innerWidth === maxWindowWidthRef.current;
+
+  if (!isKeyboardLikelyOpening) {
+    maxWindowWidthRef.current = window.innerWidth;
+    maxWindowHeightRef.current = window.innerHeight;
+  }
+
+  const globeWidth = maxWindowWidthRef.current;
+  const globeHeight = maxWindowHeightRef.current;
+  const homeGlobeOffset =
+    isHomeScreen && !isKeyboardMode && globeWidth >= 769
+      ? Math.round(globeWidth * 0.18)
+      : 0;
+  const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
+
   return {
     zoomLevel,
     cameraPOV,
     maxWindowWidthRef,
     maxWindowHeightRef,
     getDepartmentModeFrancePointOfView,
+    globeRenderWidth,
+    globeHeight,
+    homeGlobeOffset,
   };
 }

@@ -6,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import Globe from "react-globe.gl";
-import * as THREE from "three";
 import { countryDataMap } from "./data/gameData";
 import {
   GLOBE_TRANSPARENT_BACKGROUND,
@@ -38,6 +37,7 @@ import { useGlobeMarkers } from "./hooks/useGlobeMarkers";
 import { useGlobeLabels } from "./hooks/useGlobeLabels";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
+import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { disposeBiomeCache, mountainGlitchUniforms } from "./utils/LowPolyBiomes";
 
 const SELECTION_TRANSITION_DURATION = 80;
@@ -154,8 +154,9 @@ const GlobeMap = ({
   const {
     zoomLevel,
     cameraPOV,
-    maxWindowWidthRef,
-    maxWindowHeightRef,
+    globeRenderWidth,
+    globeHeight,
+    homeGlobeOffset,
   } = useGlobeCamera({
     globeEl,
     selectedCountry,
@@ -322,81 +323,14 @@ const GlobeMap = ({
     isLight,
     globeTheme,
     theme,
+    learnToggles,
   });
 
-  const customGlobeTexture = useMemo(() => {
-    if (UI_COLORS.globeTextureUrl) {
-      const loader = new THREE.TextureLoader();
-      const texture = loader.load(UI_COLORS.globeTextureUrl);
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.ClampToEdgeWrapping;
-      return texture;
-    }
-    return null;
-  }, [UI_COLORS.globeTextureUrl]);
-
-  useEffect(() => {
-    return () => {
-      if (customGlobeTexture) {
-        customGlobeTexture.dispose();
-      }
-    };
-  }, [customGlobeTexture]);
-
-  const globeMaterial = useMemo(() => {
-    const matType = UI_COLORS.globeMaterialType || "phong";
-
-    if (matType === "basic") {
-      const baseColor = UI_COLORS.globeMaterialColor
-        ? (UI_COLORS.globeMaterialColor.startsWith("#") ? UI_COLORS.globeMaterialColor : UI_COLORS[UI_COLORS.globeMaterialColor] || UI_COLORS.mapSea)
-        : UI_COLORS.mapSea;
-      return new THREE.MeshBasicMaterial({
-        color: baseColor,
-      });
-    }
-
-    if (UI_COLORS.globeTextureUrl) {
-      const isNight = UI_COLORS.globeTextureUrl.includes("earth-night");
-      if (isNight) {
-        return new THREE.MeshBasicMaterial({
-          map: customGlobeTexture,
-          color: 0xffffff,
-        });
-      }
-      return new THREE.MeshPhongMaterial({
-        map: customGlobeTexture,
-        color: 0xffffff,
-        specular: 0x333333,
-        shininess: 15,
-        flatShading: false,
-      });
-    }
-
-    return new THREE.MeshPhongMaterial({
-      color: UI_COLORS.mapSea,
-      emissive: globeLightingEnabled
-        ? new THREE.Color(UI_COLORS.globeEmissive)
-        : new THREE.Color(UI_COLORS.black),
-      emissiveIntensity: globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0,
-      specular: globeLightingEnabled
-        ? new THREE.Color(UI_COLORS.globeSpecular)
-        : new THREE.Color(UI_COLORS.ink),
-      transparent: false,
-      opacity: 1,
-      shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7,
-    });
-  }, [
+  const globeMaterial = useGlobeMaterial({
     UI_COLORS,
-    isLight,
     globeLightingEnabled,
-    customGlobeTexture,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      globeMaterial.dispose();
-    };
-  }, [globeMaterial]);
+    isLight,
+  });
 
   useGlobeAnimationLoop({
     globeEl,
@@ -459,25 +393,6 @@ const GlobeMap = ({
   const activeAtmosphereColor = useMemo(() => {
     return getOpaqueThreeColor(UI_COLORS.atmosphere);
   }, [UI_COLORS.atmosphere]);
-
-  const isMobileSize = viewport.width < 1024;
-  const isKeyboardLikelyOpening =
-    isMobileSize &&
-    window.innerHeight < maxWindowHeightRef.current * 0.85 &&
-    window.innerWidth === maxWindowWidthRef.current;
-
-  if (!isKeyboardLikelyOpening) {
-    maxWindowWidthRef.current = window.innerWidth;
-    maxWindowHeightRef.current = window.innerHeight;
-  }
-
-  const globeWidth = maxWindowWidthRef.current;
-  const globeHeight = maxWindowHeightRef.current;
-  const homeGlobeOffset =
-    isHomeScreen && !isKeyboardMode && globeWidth >= 769
-      ? Math.round(globeWidth * 0.18)
-      : 0;
-  const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
 
   return (
     <div
