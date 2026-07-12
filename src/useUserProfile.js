@@ -299,8 +299,8 @@ export function useUserProfile() {
     } catch (_) {}
 
     const randomNum =
-      typeof crypto !== "undefined" && crypto.getRandomValues
-        ? 100 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900)
+      typeof crypto !== "undefined" && typeof crypto.randomInt === "function"
+        ? crypto.randomInt(100, 1000)
         : 100 + (Date.now() % 900);
     const newProfile = {
       id: generateUUID(),
