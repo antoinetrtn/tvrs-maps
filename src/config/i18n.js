@@ -32,6 +32,9 @@ export const translations = {
     // Game HUD Placeholders
     search_placeholder: "Rechercher...",
     answer_placeholder: "Votre réponse...",
+    to_guess: "À deviner !",
+    preview_capital: "Capitale :",
+    preview_region: "Région :",
 
     // Game HUD Controls & Tooltips
     home: "Accueil",
@@ -200,6 +203,9 @@ export const translations = {
     // Game HUD Placeholders
     search_placeholder: "Search...",
     answer_placeholder: "Your answer...",
+    to_guess: "To guess!",
+    preview_capital: "Capital:",
+    preview_region: "Region:",
 
     // Game HUD Controls & Tooltips
     home: "Home",

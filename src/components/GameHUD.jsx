@@ -246,11 +246,7 @@ const GameHUD = ({
 
   const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
   const REGION_COLORS = useMemo(() => {
-    const colors = {};
-    GAME_REGIONS.forEach((r) => {
-      colors[r] = getThemeRegionColor(globeTheme, theme, r);
-    });
-    return colors;
+    return GAME_REGIONS.reduce((acc, r) => ({ ...acc, [r]: getThemeRegionColor(globeTheme, theme, r) }), {});
   }, [globeTheme, theme]);
   const regionStats = useMemo(() => {
     if (!countryDataMap) return {};
@@ -282,20 +278,16 @@ const GameHUD = ({
   }, [mode, t]);
 
   // Determine which continent to highlight
-  const activeContinent = useMemo(() => {
-    if (!selectedCountry || !countryDataMap) return null;
-    return countryDataMap[selectedCountry]?.region;
-  }, [selectedCountry, countryDataMap]);
+  const activeContinent = useMemo(() => 
+    (selectedCountry && countryDataMap) ? countryDataMap[selectedCountry]?.region : null
+  , [selectedCountry, countryDataMap]);
 
   const gaugeRegions = isDepartmentsMode
     ? ["France"]
     : CONTINENT_ORDER.filter((region) => region !== "France");
-  const getRegionColor = useCallback(
-    (region) =>
-      REGION_COLORS[region] ||
-      (isDepartmentsMode ? "var(--accent)" : "var(--warning)"),
-    [REGION_COLORS, isDepartmentsMode],
-  );
+  const getRegionColor = useCallback((region) =>
+    REGION_COLORS[region] || (isDepartmentsMode ? "var(--accent)" : "var(--warning)")
+  , [REGION_COLORS, isDepartmentsMode]);
 
   const isMobile = viewport.width < 1024;
 
@@ -591,12 +583,7 @@ const GameHUD = ({
 
         <div className="bottom-hud-islands">
           {isFocusedCountry && mode !== "learn" && (
-            <button
-              className="hud-btn-circular prev-btn"
-              onClick={() => onNavigateFocus("prev")}
-              onMouseDown={(e) => e.preventDefault()}
-              title={t("previous")}
-            >
+            <button className="hud-btn-circular prev-btn" onClick={() => onNavigateFocus("prev")} onMouseDown={(e) => e.preventDefault()} title={t("previous")}>
               <ChevronLeft width={18} height={18} />
             </button>
           )}
@@ -628,12 +615,7 @@ const GameHUD = ({
           </div>
 
           {isFocusedCountry && mode !== "learn" && (
-            <button
-              className="hud-btn-circular next-btn"
-              onClick={() => onNavigateFocus("next")}
-              onMouseDown={(e) => e.preventDefault()}
-              title={t("next")}
-            >
+            <button className="hud-btn-circular next-btn" onClick={() => onNavigateFocus("next")} onMouseDown={(e) => e.preventDefault()} title={t("next")}>
               <ChevronRight width={18} height={18} />
             </button>
           )}
