@@ -61,7 +61,7 @@ const EndScreen = ({
 
   // Compute animated progression
   const currentAnimatedXp = oldXp + animatedTotalGained;
-  const { level: animatedLevel, xpNeededForNext, percent } = getLevelAndProgress(currentAnimatedXp);
+  const { level: animatedLevel, percent } = getLevelAndProgress(currentAnimatedXp);
 
   // Detect Level Up during orbs collection
   useEffect(() => {
