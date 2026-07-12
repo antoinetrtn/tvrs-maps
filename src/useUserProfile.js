@@ -298,7 +298,28 @@ export function useUserProfile() {
       }
     } catch (_) {}
 
-    const randomNum = Math.floor(100 + Math.random() * 900);
+    const getSecureRandomIntInRange = (min, maxExclusive) => {
+      const range = maxExclusive - min;
+      if (typeof crypto !== "undefined") {
+        if (typeof crypto.randomInt === "function") {
+          return crypto.randomInt(min, maxExclusive);
+        }
+        if (crypto.getRandomValues) {
+          const maxUint32 = 0x100000000;
+          const maxUnbiased = Math.floor(maxUint32 / range) * range;
+          const arr = new Uint32Array(1);
+          let x;
+          do {
+            crypto.getRandomValues(arr);
+            x = arr[0];
+          } while (x >= maxUnbiased);
+          return min + (x % range);
+        }
+      }
+      return Math.floor(min + Math.random() * range);
+    };
+
+    const randomNum = getSecureRandomIntInRange(100, 1000);
     const newProfile = {
       id: generateUUID(),
       username: `Explorer_${randomNum}`,
