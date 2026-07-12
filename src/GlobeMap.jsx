@@ -10,7 +10,6 @@ import * as THREE from "three";
 import { countryDataMap } from "./gameData";
 import { riversMountainsDataMap } from "./riversMountainsData";
 import {
-  THEME,
   GLOBE_STYLE,
   GLOBE_TRANSPARENT_BACKGROUND,
   getOpaqueThreeColor,
