@@ -294,7 +294,10 @@ export function useUserProfile() {
       }
     } catch (_) {}
 
-    const randomNum = Math.floor(100 + Math.random() * 900);
+    const randomNum =
+      typeof crypto !== "undefined" && crypto.getRandomValues
+        ? (crypto.getRandomValues(new Uint32Array(1))[0] % 900) + 100
+        : Math.floor(100 + Math.random() * 900);
     const newProfile = {
       id: generateUUID(),
       username: `Explorer_${randomNum}`,
