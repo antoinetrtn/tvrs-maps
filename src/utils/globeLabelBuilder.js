@@ -159,14 +159,19 @@ export function createGlobeLabelElement(d, {
           text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
           opacity: ${isHomeScreen ? 0.6 : 1};
         ">
-          <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); display: flex; align-items: center; gap: 4px; font-family: var(--font-display, monospace) !important;">
+          ${
+            d.iso2
+              ? `<img src="/flags/${d.iso2.toLowerCase()}.svg" class="globe-label-flag" style="width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 5px;" alt="" />`
+              : ""
+          }
+          <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); height: calc(12px * var(--ui-scale, 1)); line-height: calc(12px * var(--ui-scale, 1)); display: flex; align-items: center; gap: 4px; font-family: var(--font-display, monospace) !important;">
             ${prefixHtml}
             <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}" style="font-family: var(--font-display, monospace) !important;">${isErrorLabel ? glitchLine1Raw : scrambleText(glitchLine1Raw)}</span>
           </div>
           ${
             isCapitalsMode && !isErrorLabel
               ? `
-            <div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: var(--font-display, monospace) !important;">
+            <div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); height: calc(10px * var(--ui-scale, 1)); line-height: calc(10px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: var(--font-display, monospace) !important;">
               <span class="glitch-country" data-text="${d.country}" style="font-family: var(--font-display, monospace) !important;">${scrambleText(d.country)}</span>
             </div>
           `
@@ -210,70 +215,40 @@ export function createGlobeLabelElement(d, {
       }
     }, 150);
   } else {
-    // Normal clean callout box (Minimalist, centered on top of stalk)
-    const iconSymbol =
-      d.mode === "rivers_mountains"
-        ? countryDataMap[d.admin]?.type === "mountain_range" ||
-          riversMountainsDataMap[d.admin]?.type === "mountain_range"
-          ? "🏔️ "
-          : "💧 "
-        : "";
+    // Normal clean callout box (Mi    const isMtn = countryDataMap[d.admin]?.type === "mountain_range" || riversMountainsDataMap[d.admin]?.type === "mountain_range";
+    const iconSymbol = d.mode === "rivers_mountains" ? (isMtn ? "🏔️ " : "💧 ") : "";
 
     const displayName = revealAll ? d.country : "???";
     const displayCapital = revealAll ? d.capital : "???";
 
-    const hasCapitalLine =
-      (d.mode === "capitals" ||
-        (mode === "learn" && d.learnShowCapitals)) &&
-      d.capital;
-
+    const hasCapitalLine = (d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals)) && d.capital;
     const isDeptMode = d.mode === "departments";
 
     const getScrambledHtml = (ratio) => {
       let scrambledLine1;
       let scrambledLine2 = null;
-
-      const scramble = (txt) => {
-        if (ratio <= 0.0) return txt;
-        return scrambleTextWithRatio(txt, ratio);
-      };
+      const scramble = (txt) => ratio <= 0.0 ? txt : scrambleTextWithRatio(txt, ratio);
 
       if (isDeptMode) {
         const rawCode = d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: calc(8.5px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 3px;">${d.code}</span>` : "";
-        scrambledLine1 = `
-          ${rawCode}
-          <span>${scramble(displayName)}</span>
-        `;
-        if (d.capital) {
-          scrambledLine2 = `(${scramble(displayCapital)})`;
-        }
+        scrambledLine1 = `${rawCode}<span>${scramble(displayName)}</span>`;
+        if (d.capital) scrambledLine2 = `(${scramble(displayCapital)})`;
       } else {
-        const baseLine1Text = hasCapitalLine
-          ? `${d.capital}`
-          : `${d.country}`;
-        const prefix = hasCapitalLine
-          ? `${d.flag || ""}`
-          : `${iconSymbol || d.flag || ""}`;
-        
+        const baseLine1Text = hasCapitalLine ? `${d.capital}` : `${d.country}`;
+        const inlineFlag = d.iso2 ? "" : (d.flag || "");
+        const prefix = hasCapitalLine ? `${inlineFlag}` : `${iconSymbol || inlineFlag}`;
         scrambledLine1 = `<span>${prefix} ${scramble(baseLine1Text)}</span>`;
-        if (hasCapitalLine && !d.hideCountryLine) {
-          scrambledLine2 = scramble(d.country);
-        }
+        if (hasCapitalLine && !d.hideCountryLine) scrambledLine2 = scramble(d.country);
       }
 
+      const flagAbove = d.iso2
+        ? `<img src="/flags/${d.iso2.toLowerCase()}.svg" class="globe-label-flag" style="width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 5px;" alt="" />`
+        : "";
+
       return `
-        <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); display: flex; align-items: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
-          ${scrambledLine1}
-        </div>
-        ${
-          scrambledLine2
-            ? `
-          <div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
-            ${scrambledLine2}
-          </div>
-        `
-            : ""
-        }
+        ${flagAbove}
+        <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); height: calc(12px * var(--ui-scale, 1)); line-height: calc(12px * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">${scrambledLine1}</div>
+        ${scrambledLine2 ? `<div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); height: calc(10px * var(--ui-scale, 1)); line-height: calc(10px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">${scrambledLine2}</div>` : ""}
       `;
     };
 
