@@ -10,7 +10,6 @@ import {
   MapPin,
   InfoBox,
   Square,
-  Close,
   ChevronLeft,
   ChevronRight,
   Home,
@@ -24,29 +23,7 @@ import { getThemeRegionColor } from "./designSystem";
 import { useTranslation } from "./i18n";
 import { GAME_REGIONS, getRegionAbbr } from "./gameConfig";
 import { normalizeString } from "./utils";
-const getFocusLabelText = (mode, lang, selectedCountry, countryDataMap, t) => {
-  if (mode === "learn") {
-    return (
-      (lang === "fr"
-        ? countryDataMap[selectedCountry]?.name_fr
-        : countryDataMap[selectedCountry]?.name_en) || selectedCountry
-    );
-  }
-  if (mode === "departments") {
-    return t("department_prefix", {
-      code: countryDataMap[selectedCountry]?.code || selectedCountry,
-    });
-  }
-  if (mode === "rivers_mountains") {
-    return countryDataMap[selectedCountry]?.type === "mountain_range"
-      ? t("guess_mountain_range")
-      : t("guess_river");
-  }
-  if (mode === "countries") {
-    return t("guess_country");
-  }
-  return t("find_capital");
-};
+
 
 const GameHUD = ({
   mode,
@@ -577,55 +554,7 @@ const GameHUD = ({
         </div>
       )}
 
-      {/* Focus Badge: Always visible if focused, even with keyboard */}
-      {isFocusedCountry && !isPlaying && (
-        <div
-          className="top-hud-container"
-          style={{
-            top: 0,
-            left: 0,
-            transform: `translate3d(${viewport.left}px, ${viewport.top + 24}px, 0)`,
-          }}
-        >
-          <div
-            className="top-hud-stack"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "12px",
-              width: "100%",
-            }}
-          >
-            <div className="focus-info-card animation-fade-in">
-              {isKeyboardMode && mode !== "learn" && (
-                <div className={`focus-mini-pill ${scoreGlow ? "score-increased-flash" : ""}`}>
-                  <span className="focus-mini-val">{score}</span>
-                  <span className="focus-mini-sub">/{totalPossible}</span>
-                </div>
-              )}
-              <div className="focus-label">
-                <MapPin width={14} height={14} className="focus-icon" />
-                <span className="focus-label-text">
-                  {getFocusLabelText(mode, lang, selectedCountry, countryDataMap, t)}
-                </span>
-                <button
-                  className="focus-close-btn"
-                  onClick={onClearFocus}
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  <Close width={14} height={14} />
-                </button>
-              </div>
-              {isKeyboardMode && mode !== "learn" && (
-                <div className={`focus-mini-pill ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}>
-                  <span className="focus-mini-val">{formatTime(timeLeft)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
 
       <div
         className={`bottom-hud-container ${isKeyboardMode ? "keyboard-mode" : ""}`}
