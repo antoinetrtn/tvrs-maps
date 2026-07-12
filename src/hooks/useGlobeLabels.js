@@ -191,6 +191,7 @@ export function useGlobeLabels({
             lang === "fr" ? data.capital_fr || data.capital : data.capital,
           region: data.region,
           flag: getFlagEmoji(data.iso2),
+          iso2: data.iso2,
           code: data.code,
           size,
           distToCenter,
