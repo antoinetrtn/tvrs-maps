@@ -639,6 +639,12 @@
     padding-right: 0 !important;
   }
 
+  .avatar-form-group {
+    overflow: visible !important;
+    flex: none !important;
+    min-height: 0 !important;
+  }
+
   /* Increase color options touch targets on mobile */
   .color-option {
     width: 38px !important;
