@@ -149,9 +149,10 @@ const HomeScreen = ({
   };
 
   return (
-    <div className={`home-screen-overlay ${theme}`}>
-      <div
-        className="home-content glass-panel"
+    <>
+      <div className={`home-screen-overlay ${theme}`}>
+        <div
+          className="home-content glass-panel"
         ref={cardRef}
         onPointerMove={handleCardPointerMove}
         onPointerDown={handleCardPointerDown}
@@ -278,6 +279,8 @@ const HomeScreen = ({
         >
           <Settings2 width={20} height={20} />
         </button>
+      </div>
+
       </div>
 
       <div
@@ -458,7 +461,7 @@ const HomeScreen = ({
         theme={theme}
         isOpen={leaderboardOpen}
       />
-    </div>
+    </>
   );
 };
 
