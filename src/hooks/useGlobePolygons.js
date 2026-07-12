@@ -340,7 +340,8 @@ export function useGlobePolygons({
       const data = countryDataMap[admin];
       const region = data?.region || "Unknown";
       const isFound = foundSet.has(admin);
-      
+      const isSatellite = globeTheme === "satellite";
+
       let baseColor;
       if (isEndScreen) {
         if (isFound) {
@@ -348,11 +349,14 @@ export function useGlobePolygons({
         } else {
           baseColor = UI_COLORS.error;
         }
+      } else if (isFound || mode === "learn") {
+        // CRITICAL: must match getPolygonColor's satellite rule (label colors for found)
+        // This was the root cause of "bizarre colors on deselection in satellite per continent"
+        baseColor = isSatellite
+          ? (REGION_COLORS_LABELS[region] || UI_COLORS.accent)
+          : getRegionSurfaceColor(region);
       } else {
-        baseColor =
-          isFound || mode === "learn"
-            ? getRegionSurfaceColor(region)
-            : UI_COLORS.mapBase;
+        baseColor = UI_COLORS.mapBase;
       }
 
       const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
@@ -361,7 +365,10 @@ export function useGlobePolygons({
       }
       return capColor;
     },
-    [foundSet, mode, getRegionSurfaceColor, UI_COLORS, isLight, lerpColor, isEndScreen, isPerfectScore]
+    [
+      foundSet, mode, getRegionSurfaceColor, REGION_COLORS_LABELS,
+      UI_COLORS, isLight, lerpColor, isEndScreen, isPerfectScore, globeTheme
+    ]
   );
 
   const getPolygonMaterial = useCallback(

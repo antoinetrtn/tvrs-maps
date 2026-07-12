@@ -10,36 +10,7 @@ import {
   getLeaderboard
 } from "../services/supabaseClient";
 import { CHALLENGES, ISLANDS_LIST } from "../data/challenges";
-
-export function getLevelAndProgress(totalXp) {
-  let level = 1;
-  let tempXp = totalXp;
-  while (true) {
-    const needed = level * 200;
-    if (tempXp >= needed) {
-      tempXp -= needed;
-      level++;
-    } else {
-      break;
-    }
-  }
-  return {
-    level,
-    xpInLevel: tempXp,
-    xpNeededForNext: level * 200,
-    percent: Math.min(100, Math.floor((tempXp / (level * 200)) * 100))
-  };
-}
-
-export function getAvatarUnlockLevel(avatarId) {
-  const match = avatarId.match(/^invader_(\d+)$/);
-  if (match) {
-    const num = parseInt(match[1], 10);
-    if (num <= 3) return 1;
-    return num - 2; // invader_4 -> lvl 2, invader_5 -> lvl 3, etc.
-  }
-  return 1;
-}
+import { getLevelAndProgress } from "../utils/gamification";
 
 export function checkChallengesRealTime(currentBadges, localRecords, sessionData) {
   const newlyUnlocked = [];

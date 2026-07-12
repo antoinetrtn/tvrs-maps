@@ -273,8 +273,10 @@ export function useGlobeAnimationLoop({
       const prevCountry = transitioningPreviousCountryRef?.current;
       if (prevCountry) {
         const elapsed = time - selectionTransitionStartRef.current;
-        const TRANSITION_DURATION = 600;
-        const FADE_DELAY = 100;
+        // Shorter, subtler glitch dissolve aligned with game "léger glitch" theme.
+        // 420ms total feels more professional than long 600ms dissolve.
+        const TRANSITION_DURATION = 420;
+        const FADE_DELAY = 60;
 
         const prevCapMat = polygonMaterialCacheRef.current.cap.get(prevCountry);
         const prevSideMat = polygonMaterialCacheRef.current.side.get(prevCountry);

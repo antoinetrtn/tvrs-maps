@@ -493,8 +493,12 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
 export const getThemeCssVariables = (
   systemTheme = "dark",
   globeTheme = "satellite",
+  { uiScale = 1 } = {},
 ) => {
   const theme = getThemeColors(globeTheme, systemTheme);
+
+  const scale = Math.max(0.72, Math.min(1.05, uiScale || 1));
+  const s = (px) => `${Math.round(px * scale)}px`;
 
   return {
     "--bg-color": theme.bg,
@@ -545,10 +549,11 @@ export const getThemeCssVariables = (
     "--transition-layout": STYLE_TOKENS.transition.layout,
     "--transition-spring": STYLE_TOKENS.transition.spring,
     "--transition-instant": STYLE_TOKENS.transition.instant,
-    "--control-sm": STYLE_TOKENS.size.controlSm,
-    "--control-md": STYLE_TOKENS.size.controlMd,
-    "--control-lg": STYLE_TOKENS.size.controlLg,
-    "--island-width": STYLE_TOKENS.size.islandWidth,
+    // Scaled control / layout sizes (root cause of "UI ENORME on 1080p")
+    "--control-sm": s(parseInt(STYLE_TOKENS.size.controlSm)),
+    "--control-md": s(parseInt(STYLE_TOKENS.size.controlMd)),
+    "--control-lg": s(parseInt(STYLE_TOKENS.size.controlLg)),
+    "--island-width": s(parseInt(STYLE_TOKENS.size.islandWidth)),
     "--color-cyan": "#00f0ff",
     "--color-magenta": "#ff007f",
     "--color-cyan-glow": "rgba(0, 240, 255, 0.12)",
@@ -570,6 +575,8 @@ export const getThemeCssVariables = (
     "--color-error-glow-strong": "rgba(255, 69, 0, 0.4)",
     "--color-pink": "#f472b6",
     "--color-amber": "#fbbf24",
+    // Expose raw scale for any component that wants fluid calc(var(--base-foo) * var(--ui-scale))
+    "--ui-scale": scale,
   };
 };
 

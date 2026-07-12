@@ -58,7 +58,15 @@ export async function isUsernameTaken(username, excludeProfileId = null) {
 /**
  * Creates or updates the user profile.
  */
-export async function upsertProfile(profileId, username, avatarId, avatarColor, xp = 0, level = 1, unlockedBadges = []) {
+export async function upsertProfile(
+  profileId,
+  username,
+  avatarId,
+  avatarColor,
+  xp = 0,
+  level = 1,
+  unlockedBadges = []
+) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const payload = {
@@ -269,26 +277,5 @@ export async function signOut() {
     return { error };
   } catch (err) {
     return { error: err };
-  }
-}
-
-export async function checkIfEmailRegistered(email) {
-  if (!isSupabaseConfigured) return false;
-  try {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: "__check_only__"
-    });
-    if (error) {
-      const msg = error.message.toLowerCase();
-      // "invalid login credentials" means the email exists but password is wrong
-      if (msg.includes("invalid login credentials") || msg.includes("email not confirmed")) {
-        return true;
-      }
-    }
-    // If no error, somehow logged in (shouldn't happen with dummy password)
-    return true;
-  } catch (err) {
-    return false;
   }
 }

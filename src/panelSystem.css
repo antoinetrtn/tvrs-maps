@@ -36,12 +36,13 @@
   gap: var(--spacing-sm);
   flex-shrink: 0;
   min-height: 40px;
+  /* tabs grow via .segmented-control rule; close button is pushed right */
 }
 
 .sheet-panel .panel-header,
 .dialog-card .panel-header {
-  margin-bottom: var(--spacing-lg);
-  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
 }
 
 .panel-header .panel-title {
@@ -51,6 +52,29 @@
   font-weight: 900;
   color: var(--text-main);
   margin: 0;
+}
+
+/* Panel header tabs (SegmentedControl used for Profil / Succès & Stats, Classement etc.)
+   Give them room so long French labels stay on one elegant line and respect DS widths.
+   The close button stays compact. */
+.panel-header .segmented-control {
+  flex: 1;
+}
+
+/* Primary view tabs in panel header (Classement vs Historique, Profil vs Succès)
+   Get a bit more visual weight than secondary filters for proper hierarchy. */
+.panel-header .segmented-control .segmented-opt {
+  min-height: 36px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  /* ensure the improved tab transition applies here too for header selection components */
+  transition: background-color var(--transition-normal), 
+              color var(--transition-normal), 
+              box-shadow var(--transition-fast),
+              border-color var(--transition-fast);
+}
+.panel-header .segmented-control .segmented-opt.active {
+  box-shadow: var(--glass-shadow);
 }
 
 /* ──── UNIFIED CLOSE & BACK BUTTONS ──── */
@@ -67,8 +91,9 @@
   color: var(--text-muted);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
   padding: 0;
+  margin-left: auto; /* ensure it stays at end even when tabs grow */
 }
 
 .panel-close-btn:hover,
@@ -120,6 +145,23 @@
   flex-shrink: 0;
 }
 
+/* Leaderboard controls row: no extra side padding so the category chips slider
+   (Pays / Capitales etc) starts aligned to the left of the content area
+   (same left edge as the table rows and stats cards below). 
+   The outer .sheet-panel padding provides the breathing room for the whole panel.
+   On mobile this was causing the filter "slider" to look indented instead of left-aligned. */
+.leaderboard-panel .leaderboard-controls {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* The .nav-chips themselves get no additional horizontal padding in leaderboard
+   (base .nav-chips has none). This keeps the first chip flush-left within the content flow. */
+.leaderboard-panel .nav-chips {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .nav-chips::-webkit-scrollbar {
   display: none;
 }
@@ -134,7 +176,7 @@
   padding: 6px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -148,9 +190,12 @@
 }
 
 .nav-chip.active {
-  background: var(--text-main);
-  color: var(--bg-color);
-  border-color: var(--text-main);
+  /* Secondary filter level — more subtle than primary tabs (Classement / Historique)
+     to establish clear visual hierarchy */
+  background: var(--accent-soft);
+  color: var(--text-main);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft) inset;
 }
 
 .nav-chip .chip-icon {
@@ -159,9 +204,14 @@
 }
 
 /* ──── TAB TRIGGERS (structural tabs like Profile / Stats) ──── */
-.panel-tabs {
+/* Unified SegmentedControl styles — used by SegmentedControl.jsx + legacy fallbacks.
+   Single definition prevents the previous drift between settings / leaderboard / profile tabs. */
+.segmented-control,
+.panel-tabs,
+.settings-segmented-switch,
+.panel-tabs-header {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: 2px;
   background: var(--accent-soft);
   padding: 3px;
   border-radius: var(--radius-sm);
@@ -169,32 +219,76 @@
   width: fit-content;
 }
 
-.panel-tab {
+.segmented-opt,
+.panel-tab,
+.settings-switch-opt,
+.panel-tab-btn {
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-xs);
-  padding: 10px var(--spacing-md);
-  min-height: 40px;
+  min-height: 38px;
   background: transparent;
   border: none;
   color: var(--text-muted);
   font-family: var(--font-main);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  /* Improved transition to avoid flicker/clignotement when switching active tab:
+     target only the properties that change, use slightly longer duration and
+     the layout easing for smoothness. */
+  transition: background-color var(--transition-normal), 
+              color var(--transition-normal), 
+              box-shadow var(--transition-fast),
+              border-color var(--transition-fast);
+  padding: 0 var(--spacing-sm);
+  white-space: nowrap; /* prevent "Succès & Stats" etc from wrapping to 2 lines */
 }
 
-.panel-tab .tab-icon {
+.segmented-opt .tab-icon,
+.panel-tab .tab-icon,
+.settings-switch-opt svg {
   width: 14px;
   height: 14px;
 }
 
-.panel-tab.active {
+.segmented-opt.active,
+.panel-tab.active,
+.settings-switch-opt.active,
+.panel-tab-btn.active {
   background: var(--bg-color);
   color: var(--text-main);
-  box-shadow: 0 2px 4px var(--shadow-subtle);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+}
+
+.segmented-opt:hover:not(.active),
+.panel-tab:hover:not(.active),
+.settings-switch-opt:hover:not(.active),
+.panel-tab-btn:hover:not(.active) {
+  background: var(--glass-hover);
+  color: var(--text-main);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.segmented-label {
+  white-space: nowrap;
+}
+
+/* Size variant for compact header toggles */
+.segmented-control.segmented-sm .segmented-opt,
+.segmented-control.segmented-sm .panel-tab-btn {
+  min-height: 32px;
+  font-size: 0.76rem;
+  padding: 0 6px;
+}
+
+/* Segmented inside settings cards should fill the card width (like the old switches) */
+.settings-card .segmented-control {
+  width: 100%;
 }
 
 /* ──── SHEET PANEL (popup on desktop, fullscreen on mobile) ──── */
@@ -202,7 +296,7 @@
   position: fixed;
   bottom: calc(var(--spacing-lg) + var(--control-lg) + var(--spacing-md));
   right: var(--spacing-lg);
-  width: 320px;
+  width: clamp(280px, 36vw, 380px);
   height: auto;
   max-height: calc(100vh - 120px);
   max-height: calc(100dvh - 120px);
