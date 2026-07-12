@@ -51,10 +51,10 @@ export function useGlobePaths({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
         color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
-        width: isFound ? 45 : 24,
-        dashLength: isFound ? 1 : 0.015,
-        dashGap: isFound ? 0 : 0.012,
-        dashAnimateTime: isFound ? 3000 : 0,
+        width: isFound ? 55 : 32,
+        dashLength: isFound ? 1 : 0.06,
+        dashGap: isFound ? 0 : 0.04,
+        dashAnimateTime: isFound ? 2000 : 6000,
       });
     });
     return paths;
@@ -83,7 +83,7 @@ export function useGlobePaths({
         admin: selectedCountry,
         coords: smoothedPath.map((p) => [p[0], p[1], p[2] + 0.001]),
         color,
-        width: isFound ? 75 : 65,
+        width: isFound ? 85 : 75,
         dashLength: 1,
         dashGap: 0,
         dashAnimateTime: 0,
@@ -92,7 +92,7 @@ export function useGlobePaths({
         admin: `${selectedCountry}_core`,
         coords: smoothedPath.map((p) => [p[0], p[1], p[2] + 0.002]),
         color: UI_COLORS.paper,
-        width: isFound ? 24 : 18,
+        width: isFound ? 28 : 22,
         dashLength: 0.25,
         dashGap: 0.15,
         dashAnimateTime: 800,

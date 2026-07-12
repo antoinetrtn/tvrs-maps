@@ -143,9 +143,9 @@ const THEME = {
     lightingLeft: "#ffffff",
     lightingRight: "#ffffff",
     riverActive: "#0284c7",
-    riverInactive: "#7dd3fc",
+    riverInactive: "rgba(2, 132, 199, 0.35)",
     riverSelectedFound: "#0284c7",
-    riverSelectedUnfound: "#38bdf8",
+    riverSelectedUnfound: "#0ea5e9",
   },
   dark: {
     bg: "#000000",
@@ -198,10 +198,10 @@ const THEME = {
     lightingStudio: "#000000",
     lightingLeft: "#000000",
     lightingRight: "#000000",
-    riverActive: "#38bdf8",
-    riverInactive: "#0369a1",
-    riverSelectedFound: "#38bdf8",
-    riverSelectedUnfound: "#bae6fd",
+    riverActive: "#00f0ff",
+    riverInactive: "rgba(0, 240, 255, 0.35)",
+    riverSelectedFound: "#00f0ff",
+    riverSelectedUnfound: "#38bdf8",
   },
 };
 
