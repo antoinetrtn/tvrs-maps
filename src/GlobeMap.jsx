@@ -562,7 +562,7 @@ const GlobeMap = ({
             pathPointLng: pathPointLngAccessor,
             pathPointAlt: pathPointAltAccessor,
             pathColor: pathColorAccessor,
-            ["path" + "Stroke" + "Width"]: pathWidthAccessor,
+            ["path" + "Stroke"]: pathWidthAccessor,
             pathDashLength: pathDashLengthAccessor,
             pathDashGap: pathDashGapAccessor,
             pathDashAnimateTime: pathDashAnimateTimeAccessor,
