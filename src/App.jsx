@@ -148,7 +148,6 @@ function App() {
   }, []);
 
   const {
-    showCountryLabels: learnShowCountryLabels,
     showCapitals: learnShowCapitals,
     showRivers: learnShowRivers,
     showMountains: learnShowMountains,
