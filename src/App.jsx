@@ -297,9 +297,11 @@ function App() {
     };
   }, [viewport.width]);
 
+  const uiScale = (w = 1024) =>
+    w >= 1800 ? 0.78 : w >= 1400 ? 0.84 : w >= 1100 ? 0.90 : w >= 900 ? 0.95 : w < 520 ? 0.88 : 1;
   const appStyle = useMemo(
-    () => getThemeCssVariables(theme, globeTheme),
-    [theme, globeTheme],
+    () => getThemeCssVariables(theme, globeTheme, { uiScale: uiScale(viewport?.width) }),
+    [theme, globeTheme, viewport?.width],
   );
 
   return (

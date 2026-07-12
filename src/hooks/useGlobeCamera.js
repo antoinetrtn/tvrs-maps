@@ -263,6 +263,19 @@ export function useGlobeCamera({
       : 0;
   const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
 
+  // Ensure reliable home overview camera + right-side positioning (for left UI card) when returning to accueil on desktop.
+  // This recovers the movement animation and visual composition if the main selected effect didn't trigger it.
+  useEffect(() => {
+    if (isHomeScreen && globeEl.current) {
+      const overviewAltitude = viewport.width < 768 ? 2.5 : 1.1;
+      // Slight positive lng to bias the view nicely with left-padded UI (globe "on the right").
+      globeEl.current.pointOfView(
+        { lat: 16, lng: 28, altitude: overviewAltitude },
+        950
+      );
+    }
+  }, [isHomeScreen, globeEl, viewport.width]);
+
   return {
     zoomLevel,
     cameraPOV,

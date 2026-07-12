@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Globe, MapPin, Hash, TreePine, Close } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
 import { useTranslation } from "../config/i18n";
@@ -8,6 +8,7 @@ import {
   getLeaderboard,
   getUserHistory,
 } from "../services/supabaseClient";
+import SegmentedControl from "./SegmentedControl";
 import "./LeaderboardScreen.css";
 
 const MODE_ICONS = {
@@ -53,6 +54,22 @@ const LeaderboardScreen = ({
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState(null);
 
+  // Lightweight client cache (perf + reduce Supabase calls on tab switches)
+  const fetchCacheRef = useRef({});
+  const CACHE_TTL_MS = 30000;
+
+  const getCacheKey = (type, mode) => `${type}:${mode}`;
+
+  const getCached = (key) => {
+    const entry = fetchCacheRef.current[key];
+    if (entry && Date.now() - entry.ts < CACHE_TTL_MS) return entry.data;
+    return null;
+  };
+
+  const setCached = (key, data) => {
+    fetchCacheRef.current[key] = { data, ts: Date.now() };
+  };
+
   // Fetch Global Leaderboard
   useEffect(() => {
     let isMounted = true;
@@ -60,6 +77,12 @@ const LeaderboardScreen = ({
     const fetchScores = async () => {
       if (!isSupabaseConfigured) {
         setError(t("not_connected"));
+        return;
+      }
+      const key = getCacheKey("global", colMode);
+      const cached = getCached(key);
+      if (cached) {
+        setScoresData(cached);
         return;
       }
       setLoading(true);
@@ -72,7 +95,9 @@ const LeaderboardScreen = ({
         if (fetchErr) {
           setError(fetchErr);
         } else {
-          setScoresData(data || []);
+          const result = data || [];
+          setScoresData(result);
+          setCached(key, result);
         }
       } catch (err) {
         if (isMounted) {
@@ -102,6 +127,12 @@ const LeaderboardScreen = ({
       if (!isSupabaseConfigured || !userProfile?.id) {
         return;
       }
+      const key = getCacheKey("personal", colMode);
+      const cached = getCached(key);
+      if (cached) {
+        setHistoryData(cached);
+        return;
+      }
       setHistoryLoading(true);
       setHistoryError(null);
       try {
@@ -112,7 +143,9 @@ const LeaderboardScreen = ({
         if (fetchErr) {
           setHistoryError(fetchErr);
         } else {
-          setHistoryData(data || []);
+          const result = data || [];
+          setHistoryData(result);
+          setCached(key, result);
         }
       } catch (err) {
         if (isMounted) {
@@ -267,21 +300,16 @@ const LeaderboardScreen = ({
       onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="panel-header">
-        {/* Mobile compatible tab bar inside panel header with natural casing */}
-        <div className="panel-tabs-header">
-          <button
-            className={`panel-tab-btn text-natural-case ${activeTab === "global" ? "active" : ""}`}
-            onClick={() => setActiveTab("global")}
-          >
-            {t("global_leaderboard")}
-          </button>
-          <button
-            className={`panel-tab-btn text-natural-case ${activeTab === "personal" ? "active" : ""}`}
-            onClick={() => setActiveTab("personal")}
-          >
-            {t("personal_history")}
-          </button>
-        </div>
+        {/* Use common SegmentedControl for uniform header toggle */}
+        <SegmentedControl
+          className="panel-tabs-header"
+          options={[
+            { value: "global", label: t("global_leaderboard") },
+            { value: "personal", label: t("personal_history") },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
         
         <button className="panel-close-btn" onClick={onBack} title={t("close")}>
           <Close width={20} height={20} />

@@ -82,30 +82,38 @@ export function useGlobeRings({
       ];
     }
 
+    const isCapitals = mode === "capitals";
+
+    if (isCapitals) {
+      // Radar for capitals: pixelart-inspired, dense + discreet.
+      // Smaller radii, more rings, faster digital scan repeats.
+      // Uses subtle glitchy cyan/magenta bias via softColor + base.
+      // Much less huge than before. Theme-friendly "léger" scan.
+      return [
+        { lat: mapped.lat, lng: mapped.lng, color: baseColor, maxRadius: 0.12, speed: 0.9, repeat: 420 },
+        { lat: mapped.lat, lng: mapped.lng, color: softColor, maxRadius: 0.28, speed: 1.4, repeat: 620 },
+        { lat: mapped.lat, lng: mapped.lng, color: softColor, maxRadius: 0.48, speed: 1.9, repeat: 780 },
+        { lat: mapped.lat, lng: mapped.lng, color: baseColor, maxRadius: 0.68, speed: 2.6, repeat: 1100 },
+      ];
+    }
+
+    // Default countries etc: keep original but slightly tighter
     return [
       {
         lat: mapped.lat,
         lng: mapped.lng,
         color: baseColor,
-        maxRadius: 0.3,
-        speed: 0.6,
-        repeat: 800,
+        maxRadius: 0.22,
+        speed: 0.7,
+        repeat: 720,
       },
       {
         lat: mapped.lat,
         lng: mapped.lng,
         color: softColor,
-        maxRadius: 1.8,
-        speed: 2.2,
-        repeat: 1800,
-      },
-      {
-        lat: mapped.lat,
-        lng: mapped.lng,
-        color: softColor,
-        maxRadius: 3.5,
-        speed: 3.8,
-        repeat: 1800,
+        maxRadius: 0.9,
+        speed: 1.8,
+        repeat: 1400,
       },
     ];
   }, [

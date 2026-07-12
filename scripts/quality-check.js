@@ -102,6 +102,216 @@ sourceFiles.filter(file => file.endsWith('.jsx')).forEach(file => {
   }
 });
 
+// ==========================================
+// New Readability and File Size Checks
+// ==========================================
+
+const RATCHET_LIMITS = {
+  'src/App.jsx': 530,
+  'src/GlobeMap.jsx': 590,
+  'src/components/GameHUD.jsx': 650,
+  'src/hooks/useGameSession.js': 750,
+  'src/hooks/useUserProfile.js': 750,
+  'src/hooks/useGlobePolygons.js': 710,
+  'src/config/designSystem.js': 720,
+  'src/components/GameHUD.css': 970,
+  'src/components/HomeScreen.css': 810, // expanded by unified panelSystem + responsive segmented + glass primitives
+  'src/components/ProfilePanel.css': 770, // expanded by scroll refactor, sticky footer, avatar grid, blur overlay, charts
+  'src/components/LeaderboardScreen.css': 530,
+  'src/components/EndScreen.css': 550
+};
+
+const LEGACY_BASES = {
+  'src/App.jsx': { maxDepth: 6, maxBlock2: 85, maxBlock3: 35 },
+  'src/GlobeMap.jsx': { maxDepth: 5, maxBlock2: 35, maxBlock3: 20 },
+  'src/components/EndScreen.jsx': { maxDepth: 6, maxBlock2: 40, maxBlock3: 35 },
+  'src/components/GameHUD.jsx': { maxDepth: 8, maxBlock2: 210, maxBlock3: 110 },
+  'src/components/LeaderboardScreen.jsx': { maxDepth: 6, maxBlock2: 90, maxBlock3: 70 },
+  'src/components/Logo.jsx': { maxDepth: 7, maxBlock2: 45, maxBlock3: 25 },
+  'src/components/PixelFireworks.jsx': { maxDepth: 6, maxBlock2: 150, maxBlock3: 40 },
+  'src/components/ProfilePanel.jsx': { maxDepth: 7, maxBlock2: 220, maxBlock3: 50 },
+  'src/components/ResultsModal.jsx': { maxDepth: 6, maxBlock2: 60, maxBlock3: 60 },
+  'src/components/AuthModal.jsx': { maxDepth: 7, maxBlock2: 90, maxBlock3: 70 },
+  'src/components/SpaceBackground.jsx': { maxDepth: 5, maxBlock2: 190, maxBlock3: 105 },
+  'src/components/XpOrbsAnimation.jsx': { maxDepth: 5, maxBlock2: 155, maxBlock3: 90 },
+  'src/hooks/useGameSession.js': { maxDepth: 7, maxBlock2: 170, maxBlock3: 60 },
+  'src/hooks/useGlobeAnimationLoop.js': { maxDepth: 8, maxBlock2: 320, maxBlock3: 300 },
+  'src/hooks/useGlobeCamera.js': { maxDepth: 10, maxBlock2: 95, maxBlock3: 75 },
+  'src/hooks/useGlobeInteractions.js': { maxDepth: 6, maxBlock2: 85, maxBlock3: 50 },
+  'src/hooks/useGlobeLabels.js': { maxDepth: 7, maxBlock2: 190, maxBlock3: 80 },
+  'src/hooks/useGlobeLighting.js': { maxDepth: 6, maxBlock2: 200, maxBlock3: 80 },
+  'src/hooks/useGlobePolygons.js': { maxDepth: 6, maxBlock2: 180, maxBlock3: 90 },
+  'src/hooks/useUserProfile.js': { maxDepth: 9, maxBlock2: 205, maxBlock3: 200 },
+  'src/utils/LowPolyBiomes.js': { maxDepth: 6, maxBlock2: 75, maxBlock3: 65 },
+  'src/utils/globeLabelBuilder.js': { maxDepth: 5, maxBlock2: 145, maxBlock3: 50 }
+};
+
+sourceFiles.forEach(file => {
+  const content = read(file);
+  const lines = content.split('\n');
+  const lineCount = lines.length;
+
+  // 1. File Size & Ratchet Validation
+  const isDataFile = file.startsWith('src/data/');
+  if (!isDataFile) {
+    const isJs = file.endsWith('.js') || file.endsWith('.jsx');
+    const isCss = file.endsWith('.css');
+    const defaultLimit = isJs ? 500 : (isCss ? 500 : Infinity);
+
+    const limit = RATCHET_LIMITS[file] || defaultLimit;
+    if (lineCount > limit) {
+      fail(
+        file,
+        null,
+        `File is too large (${lineCount} lines). The limit is ${limit} lines. Please split it into smaller modules or hooks.`
+      );
+    }
+  }
+
+  // 2. Readability & Complexity Validation (JS/JSX files only, excluding config/data/tests)
+  const isJs = file.endsWith('.js') || file.endsWith('.jsx');
+  const isExcludedFromReadability =
+    file.startsWith('src/config/') ||
+    file.startsWith('src/data/') ||
+    file.startsWith('src/tests/');
+
+  if (isJs && !isExcludedFromReadability) {
+    let braceDepth = 0;
+    const braceStack = [];
+    let maxDepth = 0;
+    let maxBlock2 = 0;
+    let maxBlock3 = 0;
+    let insideComment = false;
+    let insideString = false;
+    let stringChar = '';
+
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const line = lines[lineIdx];
+      const lineNum = lineIdx + 1;
+
+      // Line Length Check (Max 120 chars)
+      const cleanLine = line.trim();
+      if (cleanLine.length > 120) {
+        const isBannedPattern =
+          line.includes('import ') ||
+          line.includes('require(') ||
+          line.includes('http://') ||
+          line.includes('https://') ||
+          line.includes('data:image/') ||
+          line.includes('path d=') ||
+          cleanLine.startsWith('//') ||
+          cleanLine.startsWith('*') ||
+          cleanLine.includes('`') ||
+          cleanLine.includes('"') ||
+          cleanLine.includes("'");
+
+        if (!isBannedPattern) {
+          fail(
+            file,
+            lineNum,
+            `Line exceeds 120 characters (${cleanLine.length} chars). Keep lines short for readability.`
+          );
+        }
+      }
+
+      // Scanner for comment and string blocks to check brace nesting depth & block sizes
+      for (let colIdx = 0; colIdx < line.length; colIdx++) {
+        const char = line[colIdx];
+        const nextChar = line[colIdx + 1];
+
+        if (insideComment) {
+          if (char === '*' && nextChar === '/') {
+            insideComment = false;
+            colIdx++;
+          }
+          continue;
+        }
+
+        if (char === '/' && nextChar === '*') {
+          insideComment = true;
+          colIdx++;
+          continue;
+        }
+
+        if (char === '/' && nextChar === '/') {
+          break; // Rest of line is comment
+        }
+
+        if (insideString) {
+          if (char === '\\') {
+            colIdx++; // Skip escaped character
+            continue;
+          }
+          if (char === stringChar) {
+            insideString = false;
+            stringChar = '';
+          }
+          continue;
+        }
+
+        if (char === "'" || char === '"' || char === '`') {
+          insideString = true;
+          stringChar = char;
+          continue;
+        }
+
+        // Trace opening and closing braces
+        if (char === '{') {
+          braceDepth++;
+          braceStack.push({ lineNum, depth: braceDepth });
+          if (braceDepth > maxDepth) {
+            maxDepth = braceDepth;
+          }
+        } else if (char === '}') {
+          if (braceDepth > 0) {
+            const open = braceStack.pop();
+            const blockLength = lineNum - open.lineNum + 1;
+
+            if (open.depth >= 3) {
+              if (blockLength > maxBlock3) {
+                maxBlock3 = blockLength;
+              }
+            } else if (open.depth === 2) {
+              if (blockLength > maxBlock2) {
+                maxBlock2 = blockLength;
+              }
+            }
+            braceDepth--;
+          }
+        }
+      }
+    }
+
+    // Apply complexity check against legacy baseline or defaults
+    const legacy = LEGACY_BASES[file];
+    const allowedDepth = legacy ? legacy.maxDepth : 5;
+    const allowedBlock2 = legacy ? legacy.maxBlock2 : 120;
+    const allowedBlock3 = legacy ? legacy.maxBlock3 : 70;
+
+    if (maxDepth > allowedDepth) {
+      fail(
+        file,
+        null,
+        `Maximum control flow nesting depth is too high (depth: ${maxDepth}, limit: ${allowedDepth}). Break down nested structures.`
+      );
+    }
+    if (maxBlock2 > allowedBlock2) {
+      fail(
+        file,
+        null,
+        `Function/block (depth 2) is too long (length: ${maxBlock2} lines, limit: ${allowedBlock2} lines). Extract nested logic.`
+      );
+    }
+    if (maxBlock3 > allowedBlock3) {
+      fail(
+        file,
+        null,
+        `Deeply nested block (depth >= 3) is too long (length: ${maxBlock3} lines, limit: ${allowedBlock3} lines). Refactor into smaller functions.`
+      );
+    }
+  }
+});
+
 // Run knip dead code audit
 try {
   console.log('Running dead code audit (knip)...');

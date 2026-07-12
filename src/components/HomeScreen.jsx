@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import {
   Globe,
   MapPin,
@@ -19,9 +19,11 @@ import Logo from "./Logo";
 import InvaderAvatar from "./InvaderAvatar";
 import ProfilePanel from "./ProfilePanel";
 import LeaderboardScreen from "./LeaderboardScreen";
+import SegmentedControl from "./SegmentedControl";
+import GlassIconButton from "./GlassIconButton";
 import { THEMES_LIST } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
-import { getLevelAndProgress } from "../hooks/useUserProfile";
+import { getLevelAndProgress } from "../utils/gamification";
 import "./HomeScreen.css";
 
 const HomeScreen = ({
@@ -48,6 +50,9 @@ const HomeScreen = ({
   const [profileOpen, setProfileOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const t = useTranslation(lang);
+
+  // Stable close handler passed to ProfilePanel (helps with React.memo + click reliability)
+  const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
   const { level, xpInLevel, xpNeededForNext, percent } = getLevelAndProgress(userProfile?.xp || 0);
 
   const displayExplorers = [...topExplorers];
@@ -200,6 +205,7 @@ const HomeScreen = ({
     </div>
 
       <div className="home-bottom-right">
+        {/* Common component usage for uniform header actions + no more style drift */}
         <div
           className="home-podium-widget glass-panel"
           onClick={(e) => {
@@ -212,54 +218,63 @@ const HomeScreen = ({
           title={t("leaderboard")}
         >
           <div className="widget-spot rank-2">
-            <InvaderAvatar
-              invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
-              color={displayExplorers[1].profiles?.avatar_color || "cyan"}
-              size={20}
-            />
+            <div className="widget-avatar">
+              <InvaderAvatar
+                invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
+                color={displayExplorers[1].profiles?.avatar_color || "cyan"}
+                size={20}
+              />
+            </div>
             <span className="widget-rank-num">2</span>
           </div>
           <div className="widget-spot rank-1">
-            <InvaderAvatar
-              invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
-              color={displayExplorers[0].profiles?.avatar_color || "cyan"}
-              size={20}
-            />
+            <div className="widget-avatar">
+              <InvaderAvatar
+                invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
+                color={displayExplorers[0].profiles?.avatar_color || "cyan"}
+                size={20}
+              />
+            </div>
             <span className="widget-rank-num">1</span>
           </div>
           <div className="widget-spot rank-3">
-            <InvaderAvatar
-              invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
-              color={displayExplorers[2].profiles?.avatar_color || "cyan"}
-              size={20}
-            />
+            <div className="widget-avatar">
+              <InvaderAvatar
+                invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
+                color={displayExplorers[2].profiles?.avatar_color || "cyan"}
+                size={20}
+              />
+            </div>
             <span className="widget-rank-num">3</span>
           </div>
         </div>
 
-        <div className="home-profile-widget-container">
-          <button
-            className="profile-trigger-btn glass-panel"
-            onClick={(e) => {
-              e.stopPropagation();
-              setProfileOpen((prev) => !prev);
-              setSettingsOpen(false);
-              setLeaderboardOpen(false);
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-            title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
-            style={{
-              background: `linear-gradient(90deg, var(--xp-green-glow) ${percent}%, transparent ${percent}%)`,
-              border: `1px solid var(--glass-border)`
-            }}
-          >
+        <GlassIconButton
+          className="profile-trigger-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            setProfileOpen((prev) => !prev);
+            setSettingsOpen(false);
+            setLeaderboardOpen(false);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+        >
+          {/* Inner container clips the XP progress fill to the rounded button shape */}
+          <div className="profile-xp-progress-container">
+            <span
+              className="profile-xp-progress"
+              style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
+            />
+          </div>
+          <div className="profile-icon">
             <User width={20} height={20} />
-            <span className="profile-btn-level-tag">{level}</span>
-          </button>
-        </div>
+          </div>
+          <span className="profile-btn-level-tag">{level}</span>
+        </GlassIconButton>
 
-        <button
-          className="settings-trigger-btn glass-panel"
+        <GlassIconButton
+          className="settings-trigger-btn"
           onClick={(e) => {
             e.stopPropagation();
             setSettingsOpen((prev) => !prev);
@@ -270,7 +285,7 @@ const HomeScreen = ({
           title={t("settings")}
         >
           <Settings2 width={20} height={20} />
-        </button>
+        </GlassIconButton>
       </div>
 
       </div>
@@ -350,28 +365,14 @@ const HomeScreen = ({
             <div className="settings-card-header">
               <span className="section-label">Language / Langue</span>
             </div>
-            <div className="settings-segmented-switch">
-              <button
-                type="button"
-                className={`settings-switch-opt ${lang === "fr" ? "active" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLang("fr");
-                }}
-              >
-                FR
-              </button>
-              <button
-                type="button"
-                className={`settings-switch-opt ${lang === "en" ? "active" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLang("en");
-                }}
-              >
-                EN
-              </button>
-            </div>
+            <SegmentedControl
+              options={[
+                { value: "fr", label: "FR" },
+                { value: "en", label: "EN" },
+              ]}
+              value={lang}
+              onChange={(v) => setLang(v)}
+            />
           </div>
 
           {/* Interface Theme Selector */}
@@ -379,30 +380,14 @@ const HomeScreen = ({
             <div className="settings-card-header">
               <span className="section-label">{t("interface_theme")}</span>
             </div>
-            <div className="settings-segmented-switch">
-              <button
-                type="button"
-                className={`settings-switch-opt ${theme === "dark" ? "active" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTheme("dark");
-                }}
-              >
-                <Moon width={16} height={16} />
-                <span>{t("theme_dark")}</span>
-              </button>
-              <button
-                type="button"
-                className={`settings-switch-opt ${theme === "light" ? "active" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTheme("light");
-                }}
-              >
-                <CloudSun width={16} height={16} />
-                <span>{t("theme_light")}</span>
-              </button>
-            </div>
+            <SegmentedControl
+              options={[
+                { value: "dark", label: t("theme_dark"), icon: <Moon width={14} height={14} /> },
+                { value: "light", label: t("theme_light"), icon: <CloudSun width={14} height={14} /> },
+              ]}
+              value={theme}
+              onChange={(v) => setTheme(v)}
+            />
           </div>
 
           {/* Globe Theme Selector */}
@@ -410,26 +395,15 @@ const HomeScreen = ({
             <div className="settings-card-header">
               <span className="section-label">{t("globe_theme")}</span>
             </div>
-            <div className="settings-segmented-switch">
-              {THEMES_LIST.map((themeObj) => (
-                <button
-                  type="button"
-                  key={themeObj.id}
-                  className={`settings-switch-opt ${globeTheme === themeObj.id ? "active" : ""}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setGlobeTheme(themeObj.id);
-                  }}
-                >
-                  {themeObj.id === "satellite" ? (
-                    <Earth width={16} height={16} />
-                  ) : (
-                    <Globe width={16} height={16} />
-                  )}
-                  <span>{t(`theme_${themeObj.id}`)}</span>
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              options={THEMES_LIST.map((tObj) => ({
+                value: tObj.id,
+                label: t(`theme_${tObj.id}`),
+                icon: tObj.id === "satellite" ? <Earth width={14} height={14} /> : <Globe width={14} height={14} />,
+              }))}
+              value={globeTheme}
+              onChange={(v) => setGlobeTheme(v)}
+            />
           </div>
         </div>
       </div>
@@ -438,7 +412,7 @@ const HomeScreen = ({
         userProfile={userProfile}
         setUserProfile={setUserProfile}
         isOpen={profileOpen}
-        onClose={() => setProfileOpen(false)}
+        onClose={handleCloseProfile}
         lang={lang}
         theme={theme}
         localRecords={localRecords}

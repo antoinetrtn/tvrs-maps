@@ -159,14 +159,14 @@ export function createGlobeLabelElement(d, {
           text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
           opacity: ${isHomeScreen ? 0.6 : 1};
         ">
-          <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px; font-family: var(--font-display, monospace) !important;">
+          <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); display: flex; align-items: center; gap: 4px; font-family: var(--font-display, monospace) !important;">
             ${prefixHtml}
             <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}" style="font-family: var(--font-display, monospace) !important;">${isErrorLabel ? glitchLine1Raw : scrambleText(glitchLine1Raw)}</span>
           </div>
           ${
             isCapitalsMode && !isErrorLabel
               ? `
-            <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: var(--font-display, monospace) !important;">
+            <div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: var(--font-display, monospace) !important;">
               <span class="glitch-country" data-text="${d.country}" style="font-family: var(--font-display, monospace) !important;">${scrambleText(d.country)}</span>
             </div>
           `
@@ -239,7 +239,7 @@ export function createGlobeLabelElement(d, {
       };
 
       if (isDeptMode) {
-        const rawCode = d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: 9px; line-height: 1.1; margin-right: 3px;">${d.code}</span>` : "";
+        const rawCode = d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: calc(8.5px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 3px;">${d.code}</span>` : "";
         scrambledLine1 = `
           ${rawCode}
           <span>${scramble(displayName)}</span>
@@ -262,13 +262,13 @@ export function createGlobeLabelElement(d, {
       }
 
       return `
-        <div style="font-weight: 700; font-size: 11px; display: flex; align-items: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
+        <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); display: flex; align-items: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
           ${scrambledLine1}
         </div>
         ${
           scrambledLine2
             ? `
-          <div style="font-weight: 500; font-size: 9px; color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
+          <div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">
             ${scrambledLine2}
           </div>
         `

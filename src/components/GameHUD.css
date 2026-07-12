@@ -74,7 +74,7 @@
     max-width: var(--island-width);
     min-width: 300px;
     cursor: pointer;
-    transition: all var(--transition-spring);
+    transition: background var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
 }
 
 .central-island-panel:hover {
@@ -213,7 +213,7 @@
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    transition: all var(--transition-spring);
+    transition: background var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
     outline: none; /* Remove blue focus ring */
 }
 
@@ -277,7 +277,7 @@
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-xs);
-    transition: all var(--transition-normal);
+    transition: background var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
 }
 
 .gauge-item.faded {
@@ -347,7 +347,7 @@
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
-    transition: all var(--transition-normal);
+    transition: background var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
     min-width: 0;
 }
 
@@ -433,7 +433,7 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: all var(--transition-spring);
+    transition: background var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
 }
 
 .suggestion-item:hover {
@@ -767,7 +767,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--transition-spring);
+    transition: background var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
 }
 
 .learn-toggle-btn:hover {
@@ -830,7 +830,7 @@
     font-size: 0.85rem;
     cursor: pointer;
     border: none;
-    transition: all var(--transition-spring);
+    transition: background var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
 }
 
 .dropdown-action-btn.stop {
@@ -946,7 +946,7 @@
   cursor: pointer;
   width: 24px;
   height: 24px;
-  transition: all var(--transition-spring);
+  transition: transform var(--transition-spring), background var(--transition-spring);
 }
 
 .focus-close-btn:hover {
