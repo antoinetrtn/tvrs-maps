@@ -59,7 +59,19 @@ Trois workflows GitHub Actions automatisent le cycle de vie de l'application :
 
 ### 3. Déploiement de Production Vercel (`deploy.yml`)
 *   **Déclencheur** : Push ou fusion sur `main`.
+*   **Environnement ciblé** : `production` (exige une validation manuelle sur l'interface GitHub avant d'exécuter l'action).
 *   **Rôle** : Exécute d'abord la suite complète de validation (lint, tests, build) puis déploie le build compilé en production sur Vercel avec le tag `--prod`.
+
+#### Configuration de l'approbation manuelle (Portail GitHub)
+Pour activer la porte de validation manuelle sur les déploiements de production :
+1. Allez sur votre dépôt GitHub, puis cliquez sur l'onglet **Settings**.
+2. Dans le menu de gauche, sous la section **Security**, cliquez sur **Environments**.
+3. Si l'environnement `production` n'existe pas encore, cliquez sur **New environment** et nommez-le **`production`**.
+4. Dans les règles de protection de l'environnement, cochez **Required reviewers**.
+5. Saisissez et sélectionnez votre propre nom d'utilisateur GitHub.
+6. Cliquez sur **Save protection rules**.
+
+Une fois cette règle enregistrée, tout déploiement sur `main` s'arrêtera avant la phase finale de déploiement et attendra votre approbation explicite sur GitHub Actions.
 
 ---
 
