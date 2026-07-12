@@ -30,6 +30,9 @@ These rules standardize the retro TV static glitch animation and country polygon
 ## 6. Achievements & Game Additions
 * **Enriching Challenges**: The achievement panel must be enriched with new challenges whenever a new game mode is added to TVRS Maps. Every new mode should add at least 5-10 specific challenges to maintain player engagement.
 
+## 7. Git Workflow & Branching
+* **No Direct Push to Protected Branches**: Never push directly to `dev` or `main` branches. Even if access credentials bypass repository rules, you must create a dedicated feature or fix branch (e.g., `feature/...` or `fix/...`) and open a Pull Request.
+
 ---
 
 *These rules are backed up by the `GLITCH_EFFECT_SETTINGS` exported configuration in [designSystem.js](file:///Users/atrtn/.gemini/antigravity/scratch/tvrs-maps/src/designSystem.js).*
