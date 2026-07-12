@@ -2902,11 +2902,6 @@ const GlobeMap = ({
     [selectedCountry],
   );
 
-  const getLabelColor = useCallback(
-    (d) => REGION_COLORS_LABELS[d.region] || UI_COLORS.warning,
-    [REGION_COLORS_LABELS, UI_COLORS],
-  );
-
   const getRingColor = useCallback(
     (d) => d.color || UI_COLORS.accentSoft,
     [UI_COLORS],
