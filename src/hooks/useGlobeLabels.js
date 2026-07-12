@@ -29,6 +29,7 @@ export function useGlobeLabels({
   globeTheme,
   t,
   globeEl,
+  isLight,
 }) {
   const {
     showCountryLabels: learnShowCountryLabels = true,

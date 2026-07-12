@@ -282,6 +282,7 @@ const GlobeMap = ({
     globeTheme,
     t,
     globeEl,
+    isLight,
   });
 
   const {
