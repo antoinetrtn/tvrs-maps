@@ -172,7 +172,8 @@ export function useGlobeLabels({
           cached.isSelected === isSelected &&
           cached.lang === lang &&
           cached.isFound === isFound &&
-          cached.mode === mode &&
+          cached.globalMode === mode &&
+          cached.mode === modeName &&
           cached.learnShowCapitals === learnShowCapitals &&
           cached.hideCountryLine === hideCountryLine &&
           cached.isError === (isSelected && isError)
@@ -196,6 +197,7 @@ export function useGlobeLabels({
           isSelected,
           isFound,
           isError: isSelected && isError,
+          globalMode: mode,
           mode: modeName,
           learnShowCapitals,
           hideCountryLine,
