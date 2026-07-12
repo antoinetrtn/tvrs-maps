@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { countryDataMap } from "../gameData";
-import { riversMountainsDataMap } from "../riversMountainsData";
-import { DEPARTMENT_MODE_FRANCE_VIEW } from "../gameConfig";
+import { countryDataMap } from "../data/gameData";
+import { riversMountainsDataMap } from "../data/riversMountainsData";
+import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 

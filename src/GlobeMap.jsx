@@ -7,26 +7,26 @@ import React, {
 } from "react";
 import Globe from "react-globe.gl";
 import * as THREE from "three";
-import { countryDataMap } from "./gameData";
-import { riversMountainsDataMap } from "./riversMountainsData";
+import { countryDataMap } from "./data/gameData";
+import { riversMountainsDataMap } from "./data/riversMountainsData";
 import {
   GLOBE_STYLE,
   GLOBE_TRANSPARENT_BACKGROUND,
   getOpaqueThreeColor,
-} from "./designSystem";
+} from "./config/designSystem";
 import {
   disposeBiomeCache,
   createMountainFeature,
   mountainGlitchUniforms,
-} from "./LowPolyBiomes";
+} from "./utils/LowPolyBiomes";
 import {
   RELIEF,
   DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS,
   GAME_REGIONS,
-} from "./gameConfig";
-import { useTranslation } from "./i18n";
-import SpaceBackground from "./SpaceBackground";
-import { createGlobeLabelElement } from "./globeLabelBuilder";
+} from "./config/gameConfig";
+import { useTranslation } from "./config/i18n";
+import SpaceBackground from "./components/SpaceBackground";
+import { createGlobeLabelElement } from "./utils/globeLabelBuilder";
 import {
   getFlagEmoji,
   getFeaturePolygons,
@@ -36,7 +36,7 @@ import {
   getMobileRenderRadius,
   getLabelRenderRadius,
   getFeatureAdmin,
-} from "./utils";
+} from "./utils/utils";
 
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";

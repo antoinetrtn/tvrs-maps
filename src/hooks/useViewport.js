@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { BREAKPOINTS, KEYBOARD_CLOSE_DELAY_MS } from "../gameConstants";
+import { BREAKPOINTS, KEYBOARD_CLOSE_DELAY_MS } from "../config/gameConstants";
 
 export function useViewport() {
   const getViewport = useCallback(() => {

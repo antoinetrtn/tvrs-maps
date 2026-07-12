@@ -1,23 +1,23 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import GlobeMap from "./GlobeMap.jsx";
-import GameHUD from "./GameHUD.jsx";
-import HomeScreen from "./HomeScreen.jsx";
-import ResultsModal from "./ResultsModal.jsx";
-import EndScreen from "./EndScreen.jsx";
-import ConfirmationModal from "./ConfirmationModal.jsx";
+import GameHUD from "./components/GameHUD.jsx";
+import HomeScreen from "./components/HomeScreen.jsx";
+import ResultsModal from "./components/ResultsModal.jsx";
+import EndScreen from "./components/EndScreen.jsx";
+import ConfirmationModal from "./components/ConfirmationModal.jsx";
 
 import "./App.css";
-import { countryDataMap } from "./gameData";
-import { useTranslation } from "./i18n";
-import { useUserProfile } from "./useUserProfile";
+import { countryDataMap } from "./data/gameData";
+import { useTranslation } from "./config/i18n";
+import { useUserProfile } from "./hooks/useUserProfile";
 import {
   AVATAR_COLORS,
   getThemeCssVariables,
   GLOBE_THEME_IDS,
   DEFAULT_GLOBE_THEME,
-} from "./designSystem";
-import AchievementToast from "./AchievementToast.jsx";
-import AuthModal from "./AuthModal.jsx";
+} from "./config/designSystem";
+import AchievementToast from "./components/AchievementToast.jsx";
+import AuthModal from "./components/AuthModal.jsx";
 import {
   DEFAULT_MODE,
   DEFAULT_GAME_DURATION_SEC,
@@ -26,8 +26,8 @@ import {
   STORAGE_KEYS,
   FEEDBACK_TIMING,
   PERFORMANCE,
-} from "./gameConstants";
-import { isSupabaseConfigured } from "./supabaseClient";
+} from "./config/gameConstants";
+import { isSupabaseConfigured } from "./services/supabaseClient";
 
 import { useViewport } from "./hooks/useViewport";
 import { useGeoData } from "./hooks/useGeoData";

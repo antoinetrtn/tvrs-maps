@@ -12,7 +12,7 @@ import {
   getLngLatDistance,
   getMobileRenderRadius,
   getLabelRenderRadius,
-} from "./utils";
+} from "../utils/utils";
 
 describe("Geographical and Math Utilities", () => {
   describe("getFeatureAdmin", () => {

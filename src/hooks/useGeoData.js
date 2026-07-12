@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { countryDataMap } from "../gameData";
-import { departmentsDataMap } from "../departmentsData";
-import { riversMountainsDataMap } from "../riversMountainsData";
-import { DATA_URLS } from "../gameConstants";
+import { countryDataMap } from "../data/gameData";
+import { departmentsDataMap } from "../data/departmentsData";
+import { riversMountainsDataMap } from "../data/riversMountainsData";
+import { DATA_URLS } from "../config/gameConstants";
 
 export function useGeoData({ mode }) {
   const [countriesData, setCountriesData] = useState([]);

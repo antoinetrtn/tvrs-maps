@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { User, Close, Trophy, Lock } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
-import { AVATAR_COLORS } from "./designSystem";
-import { useTranslation } from "./i18n";
-import { getLevelAndProgress } from "./useUserProfile";
-import { CHALLENGES } from "./challenges";
+import { AVATAR_COLORS } from "../config/designSystem";
+import { useTranslation } from "../config/i18n";
+import { getLevelAndProgress } from "../hooks/useUserProfile";
+import { CHALLENGES } from "../data/challenges";
 import {
   isSupabaseConfigured,
   upsertProfile,
   isUsernameTaken,
   signOut
-} from "./supabaseClient";
+} from "../services/supabaseClient";
 import "./ProfilePanel.css";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes

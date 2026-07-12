@@ -1,10 +1,10 @@
 import React, { useMemo } from "react";
 import { Close } from "pixelarticons/react";
 import "./ResultsModal.css";
-import { getThemeRegionColor } from "./designSystem";
-import { getGameStats, scrambleText } from "./utils";
-import { useTranslation } from "./i18n";
-import { GAME_REGIONS } from "./gameConfig";
+import { getThemeRegionColor } from "../config/designSystem";
+import { getGameStats, scrambleText } from "../utils/utils";
+import { useTranslation } from "../config/i18n";
+import { GAME_REGIONS } from "../config/gameConfig";
 
 const getMaskText = (str) => scrambleText(str);
 

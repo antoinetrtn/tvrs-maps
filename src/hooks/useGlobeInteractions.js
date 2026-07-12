@@ -1,9 +1,9 @@
 import { useRef, useCallback } from "react";
-import { riversMountainsDataMap } from "../riversMountainsData";
+import { riversMountainsDataMap } from "../data/riversMountainsData";
 import {
   getLngLatDistance,
   featureContainsLngLat,
-} from "../utils";
+} from "../utils/utils";
 
 export function useGlobeInteractions({
   globeEl,

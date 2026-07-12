@@ -46,9 +46,9 @@ Object.entries(requiredScripts).forEach(([name, command]) => {
 
 const hardcodedColorPattern = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g;
 const colorAllowListFiles = new Set([
-  'src/designSystem.js',
+  'src/config/designSystem.js',
   'src/index.css',
-  'src/Logo.jsx'
+  'src/components/Logo.jsx'
 ]);
 const colorAllowLinePatterns = [
   /transparent/,

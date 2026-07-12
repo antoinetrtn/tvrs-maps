@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { SPACE_RGB_COMPONENTS } from "./designSystem";
+import { SPACE_RGB_COMPONENTS } from "../config/designSystem";
 
 const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
   const canvasRef = useRef(null);

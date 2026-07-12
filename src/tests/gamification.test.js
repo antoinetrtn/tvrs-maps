@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { normalizeString } from "./utils";
-import { getLevelAndProgress, getAvatarUnlockLevel, checkChallengesRealTime } from "./useUserProfile";
-import { getProceduralDesign } from "./InvaderAvatar";
+import { normalizeString } from "../utils/utils";
+import { getLevelAndProgress, getAvatarUnlockLevel, checkChallengesRealTime } from "../hooks/useUserProfile";
+import { getProceduralDesign } from "../components/InvaderAvatar";
 
 const updateScoreHistory = (currentHistory, newScore) => {
   const nextHistory = [...currentHistory, newScore].slice(-3);

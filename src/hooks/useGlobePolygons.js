@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback, useMemo } from "react";
 import * as THREE from "three";
-import { countryDataMap } from "../gameData";
+import { countryDataMap } from "../data/gameData";
 import {
   GLOBE_STYLE,
   getOpaqueThreeColor,
@@ -9,22 +9,22 @@ import {
   getThemeRegionColorAttenuated,
   getThemeRegionColorLabel,
   getThemeDepartmentColor,
-} from "../designSystem";
+} from "../config/designSystem";
 import {
   getPolygonAltitudeFor,
   GAME_REGIONS,
-} from "../gameConfig";
+} from "../config/gameConfig";
 import {
   GLITCH_VERTEX_DECLARATIONS,
   GLITCH_VERTEX_BODY,
   GLITCH_FRAGMENT_DECLARATIONS,
   GLITCH_FRAGMENT_BODY,
-} from "../globeShaders";
+} from "../config/globeShaders";
 import {
   getFeaturePolygons,
   getLngLatBounds,
   getFeatureAdmin,
-} from "../utils";
+} from "../utils/utils";
 
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
 const _lerpColor1 = new THREE.Color();

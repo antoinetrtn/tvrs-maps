@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { getFeatureAdmin } from "../utils";
+import { getFeatureAdmin } from "../utils/utils";
 
 export function useGlobeAnimationLoop({
   globeEl,

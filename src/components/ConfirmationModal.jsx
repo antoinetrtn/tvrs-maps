@@ -1,6 +1,6 @@
 import React from "react";
-import { useTranslation } from "./i18n";
-import "./App.css";
+import { useTranslation } from "../config/i18n";
+import "../App.css";
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
   const t = useTranslation(lang);

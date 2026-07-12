@@ -19,9 +19,9 @@ import Logo from "./Logo";
 import InvaderAvatar from "./InvaderAvatar";
 import ProfilePanel from "./ProfilePanel";
 import LeaderboardScreen from "./LeaderboardScreen";
-import { THEMES_LIST } from "./designSystem";
-import { useTranslation } from "./i18n";
-import { getLevelAndProgress } from "./useUserProfile";
+import { THEMES_LIST } from "../config/designSystem";
+import { useTranslation } from "../config/i18n";
+import { getLevelAndProgress } from "../hooks/useUserProfile";
 import "./HomeScreen.css";
 
 const HomeScreen = ({

@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
-import { GLOBE_STYLE, getOpaqueThreeColor } from "../designSystem";
-import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "../globeShaders";
+import { GLOBE_STYLE, getOpaqueThreeColor } from "../config/designSystem";
+import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "../config/globeShaders";
 
 export function useGlobeLighting({
   globeEl,

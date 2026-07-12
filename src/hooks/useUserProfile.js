@@ -8,8 +8,8 @@ import {
   upsertUserRecord,
   submitLeaderboardScore,
   getLeaderboard
-} from "./supabaseClient";
-import { CHALLENGES, ISLANDS_LIST } from "./challenges";
+} from "../services/supabaseClient";
+import { CHALLENGES, ISLANDS_LIST } from "../data/challenges";
 
 export function getLevelAndProgress(totalXp) {
   let level = 1;

@@ -1,6 +1,6 @@
 import React from 'react';
 import './Logo.css';
-import { GLITCH_EFFECT_SETTINGS } from './designSystem';
+import { GLITCH_EFFECT_SETTINGS } from '../config/designSystem';
 
 const ASCII_ART = `                                                           „±                 $     ®
                                                            dÀ»                #Y   cMÆ4Y

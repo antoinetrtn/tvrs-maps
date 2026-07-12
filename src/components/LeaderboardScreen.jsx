@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Globe, MapPin, Hash, TreePine, Close } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
-import { useTranslation } from "./i18n";
-import { formatTime } from "./utils";
+import { useTranslation } from "../config/i18n";
+import { formatTime } from "../utils/utils";
 import {
   isSupabaseConfigured,
   getLeaderboard,
-} from "./supabaseClient";
+} from "../services/supabaseClient";
 import "./LeaderboardScreen.css";
 
 const MODE_ICONS = {
