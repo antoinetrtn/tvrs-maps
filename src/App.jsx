@@ -11,7 +11,6 @@ import { countryDataMap } from "./data/gameData";
 import { useTranslation } from "./config/i18n";
 import { useUserProfile } from "./hooks/useUserProfile";
 import {
-  AVATAR_COLORS,
   getThemeCssVariables,
   GLOBE_THEME_IDS,
   DEFAULT_GLOBE_THEME,

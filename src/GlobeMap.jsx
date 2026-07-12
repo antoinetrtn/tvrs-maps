@@ -416,6 +416,7 @@ const GlobeMap = ({
           zIndex: 0,
         }}
       >
+        <SpaceBackground theme={theme} isLight={isLight} />
         <div
           style={{
             position: "absolute",
