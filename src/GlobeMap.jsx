@@ -2912,16 +2912,6 @@ const GlobeMap = ({
     [UI_COLORS],
   );
 
-  const handleGlobeClick = useCallback(
-    (coords) => {
-      // This event fires whenever the globe is clicked (anywhere on the surface)
-      // We can use it as a robust fallback for deselection if the pointer-up logic didn't hit a country.
-      // However, for space/background clicks, the canvas itself needs to catch the click.
-      selectCountryAtLngLat(coords.lng, coords.lat);
-    },
-    [selectCountryAtLngLat],
-  );
-
   const getPolygonCurvatureResolution = useCallback(
     (d) => {
       const admin = getFeatureAdmin(d) || "unknown";
