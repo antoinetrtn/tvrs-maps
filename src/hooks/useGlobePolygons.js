@@ -20,11 +20,7 @@ import {
   GLITCH_FRAGMENT_DECLARATIONS,
   GLITCH_FRAGMENT_BODY,
 } from "../config/globeShaders";
-import {
-  getFeaturePolygons,
-  getLngLatBounds,
-  getFeatureAdmin,
-} from "../utils/utils";
+import { getFeatureAdmin } from "../utils/utils";
 
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
 const _lerpColor1 = new THREE.Color();
