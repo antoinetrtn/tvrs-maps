@@ -276,7 +276,7 @@ export function useUserProfile() {
         const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
         return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
       }
-      return "00000000-0000-4000-8000-000000000000";
+      throw new Error("Secure random UUID generation is not supported in this environment.");
     };
 
     const isUUID = (str) => {
