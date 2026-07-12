@@ -127,7 +127,7 @@ function App() {
 
   // New States for Advanced UX
   const [isScreenGlitching, setIsScreenGlitching] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [, setMenuOpen] = useState(false);
   const [confirmState, setConfirmState] = useState(null); // { message, onConfirm }
   const t = useTranslation(lang);
 
