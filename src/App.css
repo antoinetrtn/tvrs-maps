@@ -31,7 +31,7 @@
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: all var(--transition-spring);
+  transition: transform var(--transition-spring), opacity var(--transition-spring);
 }
 
 .modal-btn.confirm {

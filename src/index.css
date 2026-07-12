@@ -245,7 +245,7 @@ body {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-radius: var(--radius-sm);
-  transition: all var(--transition-normal);
+  transition: background var(--transition-normal), color var(--transition-normal);
 }
 
 .btn-icon {
@@ -259,7 +259,7 @@ body {
   color: var(--text-muted);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .btn-icon:hover {

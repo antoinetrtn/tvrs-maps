@@ -28,7 +28,9 @@
   flex-direction: column;
   overflow: hidden;
   height: 100%;
-  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-md);
+  /* Remove side padding so the mode selector, stats and table align exactly
+     with the left/right of the top tabs header (the padding is provided by .sheet-panel). */
+  padding: var(--spacing-xs) 0 var(--spacing-md);
   background: transparent;
 }
 
@@ -39,7 +41,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
+  /* Clear but not excessive gap after the main tabs (Classement / Mon Historique).
+     The mode selector feels grouped with the data below. */
   border-bottom: 1px solid var(--glass-border);
   padding-bottom: var(--spacing-xs);
   flex-shrink: 0;
@@ -197,6 +202,7 @@
 
 
 
+
   .leaderboard-table th,
   .leaderboard-table td {
     padding: var(--spacing-xs) var(--spacing-xs) !important;
@@ -227,44 +233,8 @@
   }
 }
 
-/* --- TABS --- */
-.panel-tabs-header {
-  display: flex;
-  background: var(--subtle-tint);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  flex: 1;
-  max-width: 280px;
-  margin-right: var(--spacing-md);
-}
-
-.panel-tab-btn {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast) ease;
-  text-transform: none; /* natural casing */
-}
-
-.panel-tab-btn.active {
-  background: var(--glass-bg-strong);
-  color: var(--text-main);
-  box-shadow: 0 2px 6px var(--shadow-subtle);
-  border: 1px solid var(--glass-border);
-}
-
-.panel-tab-btn:hover:not(.active) {
-  color: var(--text-main);
-  background: var(--glass-hover);
-}
+/* Tabs now use unified .segmented-control from panelSystem.css.
+   Width is controlled via .panel-header .segmented-control { flex: 1 } */
 
 /* --- STATS GRID --- */
 .personal-stats-grid {

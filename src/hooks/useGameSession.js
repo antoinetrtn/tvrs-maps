@@ -5,7 +5,8 @@ import { CHALLENGES } from "../data/challenges";
 import { isSupabaseConfigured, upsertProfile } from "../services/supabaseClient";
 import { AVATAR_COLORS, getThemeRegionColorLabel } from "../config/designSystem";
 import { FEEDBACK_TIMING } from "../config/gameConstants";
-import { getLevelAndProgress, checkChallengesRealTime } from "./useUserProfile";
+import { getLevelAndProgress } from "../utils/gamification";
+import { checkChallengesRealTime } from "./useUserProfile";
 
 export function useGameSession({
   mode,

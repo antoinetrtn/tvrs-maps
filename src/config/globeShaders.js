@@ -167,8 +167,10 @@ export const GLITCH_FRAGMENT_BODY = `
   
   float glitchFade = step(transitionNoise, glitchThreshold);
   
-  // We combine 75% of the sharp glitchFade with 25% of the smooth linear uFadeProgress
-  float finalProgress = mix(glitchFade, uFadeProgress, 0.25);
+  // Subtle glitch dissolve (game theme = léger glitch).
+  // On deselect/fade we bias more toward smooth + lighter noise to feel professional.
+  float mixBias = (uFadeProgress > 0.05 && uFadeProgress < 0.95) ? 0.38 : 0.22;
+  float finalProgress = mix(glitchFade, uFadeProgress, mixBias);
   
   gl_FragColor.rgb = mix(finalColor, uTargetColor, finalProgress);
 

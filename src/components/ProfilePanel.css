@@ -1,7 +1,7 @@
-/* Profile Panel layout - Scroll lock & Flex */
+/* Profile panel: single scroll + sticky header/footer */
 .profile-panel {
-  width: 460px !important;
-  height: 800px !important;
+  width: clamp(320px, 42vw, 460px) !important;
+  height: min(82dvh, 780px) !important;
   max-height: calc(100vh - 140px) !important;
   max-height: calc(100dvh - 140px) !important;
   overflow: hidden !important;
@@ -83,7 +83,7 @@
   color: var(--text-main);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
   width: 100%;
   box-sizing: border-box;
 }
@@ -95,11 +95,14 @@
 
 /* Unified Grid: 4 columns for Avatars, Colors and Badges */
 .avatar-form-group {
-  flex: 1;
+  /* No longer flex:1 with own overflow: reuse mobile no-double-scroll logic.
+     Let it size to content (full invaders grid) so it scrolls as part of the single
+     .profile-form-middle block along with niv, stats etc. */
+  flex: none;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  min-height: 140px;
+  overflow: visible;
+  min-height: auto;
 }
 
 .avatar-grid {
@@ -107,11 +110,12 @@
   grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-sm);
   width: 100%;
-  flex: 1;
-  overflow-y: auto;
-  padding-right: var(--spacing-xxs);
+  flex: none;
+  overflow-y: visible; /* no nested scroll: part of parent scroll block */
+  padding-right: 0;
   -webkit-overflow-scrolling: touch;
   align-content: start;
+  height: auto;
 }
 
 .color-form-group {
@@ -130,7 +134,7 @@
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
   position: relative;
 }
 
@@ -183,7 +187,7 @@
   border: 2px solid transparent;
   background-color: var(--option-color);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
   padding: 0;
   box-shadow: 0 0 4px var(--shadow-subtle);
   flex-shrink: 0;
@@ -198,7 +202,7 @@
   box-shadow: 0 0 8px var(--option-color);
 }
 
-/* Gamification Stats Tab */
+/* Stats tab */
 .stats-tab-content {
   display: flex;
   flex-direction: column;
@@ -216,7 +220,7 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* Minecraft XP Progress Card */
+/* XP progress card */
 .xp-progression-card {
   padding: var(--spacing-md);
   background: var(--glass-bg);
@@ -350,7 +354,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .badge-item-btn:hover {
@@ -381,7 +385,7 @@
   color: var(--text-muted);
 }
 
-/* Selected Badge Details card */
+/* Selected badge detail */
 .badge-detail-card {
   flex-shrink: 0;
   padding: var(--spacing-sm);
@@ -460,7 +464,7 @@
   cursor: pointer;
   background: var(--text-main);
   color: var(--bg-color);
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .form-submit-btn:hover:not(:disabled) {
@@ -576,7 +580,7 @@
   cursor: pointer;
   text-decoration: underline;
   opacity: 0.75;
-  transition: all var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
   padding: var(--spacing-xs);
 }
 
@@ -669,6 +673,21 @@
   overflow: hidden;
 }
 
+/* Guest blur overlay is contained below header (so X remains clickable on mobile) */
+.profile-tab-content {
+  position: relative;
+}
+
+/* Header above internal overlays so close button is always reachable */
+.profile-panel .panel-header {
+  position: relative;
+  z-index: 300;
+}
+.profile-panel .panel-close-btn {
+  position: relative;
+  z-index: 301;
+}
+
 form.profile-form {
   display: flex;
   flex-direction: column;
@@ -679,11 +698,18 @@ form.profile-form {
 }
 
 .profile-form-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
   padding-bottom: var(--spacing-xs);
+  background: var(--glass-bg); /* ensure it covers content when sticky */
+  backdrop-filter: var(--glass-blur-compact);
+  -webkit-backdrop-filter: var(--glass-blur-compact);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .profile-form-middle {
@@ -693,11 +719,12 @@ form.profile-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  /* padding-right reserves space for scrollbar so content (including sticky header) doesn't get overlapped.
+     The sticky .profile-form-header + all following (niv, invader, stats...) now scroll as one block. */
   padding-right: var(--spacing-xxs);
-  margin-bottom: var(--spacing-sm);
 }
 
-/* Sticky footer on both PC and mobile */
+/* Sticky footer */
 .profile-sticky-footer {
   position: sticky;
   bottom: 0;

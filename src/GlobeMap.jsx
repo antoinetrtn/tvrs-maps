@@ -40,7 +40,7 @@ import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { disposeBiomeCache, mountainGlitchUniforms } from "./utils/LowPolyBiomes";
 
-const SELECTION_TRANSITION_DURATION = 80;
+const SELECTION_TRANSITION_DURATION = 120; // slightly longer to reduce jank with shader fade
 
 const GlobeMap = ({
   mode,

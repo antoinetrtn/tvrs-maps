@@ -3,7 +3,7 @@ import { User, Close, Trophy, Lock } from "pixelarticons/react";
 import InvaderAvatar from "./InvaderAvatar";
 import { AVATAR_COLORS } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
-import { getLevelAndProgress } from "../hooks/useUserProfile";
+import { getLevelAndProgress } from "../utils/gamification";
 import { CHALLENGES } from "../data/challenges";
 import {
   isSupabaseConfigured,
@@ -11,6 +11,7 @@ import {
   isUsernameTaken,
   signOut
 } from "../services/supabaseClient";
+import SegmentedControl from "./SegmentedControl";
 import "./ProfilePanel.css";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes
@@ -187,32 +188,33 @@ const ProfilePanel = ({
     };
   });
 
+  // Guard AFTER all hooks (useState/useEffect) and derived values.
+  // This ensures we fully unmount the panel subtree when closed (important on mobile/guest
+  // so that the blur overlay or other elements can't intercept the close button or block access).
+  // Visibility is also controlled via the "open" class for transitions when mounting.
+  if (!isOpen) return null;
+
   return (
     <div
-      className={`sheet-panel profile-panel glass-panel ${isOpen ? "open" : ""} ${theme}`}
+      className={`sheet-panel profile-panel glass-panel open ${theme}`}
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="panel-header">
-        <div className="panel-tabs">
-          <button
-            className={`panel-tab ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => setActiveTab("profile")}
-          >
-            <User className="tab-icon" />
-            <span>{t("tab_profile")}</span>
-          </button>
-          <button
-            className={`panel-tab ${activeTab === "stats" ? "active" : ""}`}
-            onClick={() => setActiveTab("stats")}
-          >
-            <Trophy className="tab-icon" />
-            <span>{t("tab_stats")}</span>
-          </button>
-        </div>
+        <SegmentedControl
+          options={[
+            { value: "profile", label: t("tab_profile"), icon: <User width={14} height={14} className="tab-icon" /> },
+            { value: "stats", label: t("tab_stats"), icon: <Trophy width={14} height={14} className="tab-icon" /> },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
         <button
           className="panel-close-btn"
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
           title={t("close")}
         >
           <Close width={20} height={20} />
@@ -244,25 +246,26 @@ const ProfilePanel = ({
             <div className={`profile-customization-container ${isSupabaseConfigured && !session ? "blurred" : ""}`}>
               <form onSubmit={handleSaveProfile} className="profile-form">
                 
-                {/* Sticky Top Header Area */}
-                <div className="profile-form-header">
-                  <div className="form-group" style={{ width: "100%" }}>
-                    <label htmlFor="profile-username-input">{t("username")}</label>
-                    <input
-                      id="profile-username-input"
-                      type="text"
-                      value={usernameInput}
-                      onChange={(e) => setUsernameInput(e.target.value)}
-                      placeholder="Pseudo..."
-                      maxLength={20}
-                      className="glass-panel"
-                      disabled={isSupabaseConfigured && !session}
-                    />
-                  </div>
-                </div>
-
-                {/* Scrollable Middle Area */}
+                {/* Scrollable Middle Area - contains sticky header + content in ONE scroll block (no double scroll) */}
                 <div className="profile-form-middle scrollbar-styled">
+                  {/* Sticky Top Header Area (nom/username sticky, like mobile no-double-scroll logic) */}
+                  <div className="profile-form-header">
+                    <div className="form-group" style={{ width: "100%" }}>
+                      <label htmlFor="profile-username-input">{t("username")}</label>
+                      <input
+                        id="profile-username-input"
+                        type="text"
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(e.target.value)}
+                        placeholder="Pseudo..."
+                        maxLength={20}
+                        className="glass-panel"
+                        disabled={isSupabaseConfigured && !session}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Content: niv (level), invader, stats etc. scroll together as one block */}
                   {/* Minecraft Style XP Block (Moved to Default Profile Tab) */}
                   <div className="xp-progression-card glass-panel" style={{ marginBottom: "var(--spacing-md)" }}>
                     <div className="xp-card-header">
