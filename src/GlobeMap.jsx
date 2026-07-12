@@ -800,10 +800,6 @@ const GlobeMap = ({
     }
   }, [isEndScreen, foundSet]);
 
-  const extrusionScale = useMemo(() => {
-    return globeLightingEnabled ? 1.8 : 1;
-  }, [globeLightingEnabled]);
-
   const getRegionSurfaceColor = useCallback(
     (region) => {
       return REGION_COLORS[region] || UI_COLORS.success;
