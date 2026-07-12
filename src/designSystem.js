@@ -90,7 +90,7 @@ export const GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
 // Blackout is the dark, high-contrast default.
 export const DEFAULT_GLOBE_THEME = "blackout";
 
-export const THEME = {
+const THEME = {
   light: {
     bg: "#ffffff",
     bgElevated: "#f1f5f9",

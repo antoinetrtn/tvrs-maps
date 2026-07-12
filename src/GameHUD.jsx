@@ -578,7 +578,7 @@ const GameHUD = ({
       )}
 
       {/* Focus Badge: Always visible if focused, even with keyboard */}
-      {isFocusedCountry && (
+      {isFocusedCountry && !isPlaying && (
         <div
           className="top-hud-container"
           style={{

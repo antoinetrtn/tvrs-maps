@@ -724,10 +724,14 @@ const GlobeMap = ({
         onPreserveInputFocus?.();
       }
 
-      const coords = globeEl.current.toGlobeCoords(
-        event.clientX,
-        event.clientY,
-      );
+      let clientX = event.clientX;
+      let clientY = event.clientY;
+      if (window.visualViewport) {
+        clientX += window.visualViewport.offsetLeft || 0;
+        clientY += window.visualViewport.offsetTop || 0;
+      }
+
+      const coords = globeEl.current.toGlobeCoords(clientX, clientY);
       if (coords) {
         selectCountryAtLngLat(coords.lng, coords.lat);
       } else {
@@ -1525,9 +1529,12 @@ const GlobeMap = ({
         if (dLng > 180) dLng = 360 - dLng;
         const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
 
-        const labelRadius = isDepartmentMode
-          ? 7
-          : getLabelRenderRadius(zoomLevel, !!perfProfile?.isMobile);
+        const isLearnMode = mode === "learn";
+        const labelRadius = isLearnMode
+          ? 85 // Viewport-wide visible hemisphere
+          : isDepartmentMode
+            ? 7
+            : getLabelRenderRadius(zoomLevel, !!perfProfile?.isMobile);
         if (!isSelected && distToCenter > labelRadius) return null;
 
         const cacheKey = `${key}_${modeName}`;
@@ -1573,13 +1580,18 @@ const GlobeMap = ({
       .sort((a, b) => {
         if (a.isSelected) return -1;
         if (b.isSelected) return 1;
+        if (mode === "learn") {
+          // Stable sort alphabetically by admin key to prevent re-ordering and flashing when the globe rotates
+          return a.admin.localeCompare(b.admin);
+        }
         return a.distToCenter - b.distToCenter;
       });
 
     if (isDepartmentMode)
       return filtered.slice(0, perfProfile?.isMobile ? 10 : 18);
     if (mode === "learn") {
-      const limit = perfProfile?.isMobile ? 20 : 40;
+      // Increase the limit in learn mode so all visible labels are shown and don't pop/cutoff
+      const limit = perfProfile?.isMobile ? 120 : 180;
       return filtered.slice(0, limit);
     }
     return perfProfile?.maxLabels
