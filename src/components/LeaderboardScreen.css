@@ -226,3 +226,294 @@
     text-overflow: ellipsis;
   }
 }
+
+/* --- TABS --- */
+.panel-tabs-header {
+  display: flex;
+  background: var(--subtle-tint);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  flex: 1;
+  max-width: 280px;
+  margin-right: var(--spacing-md);
+}
+
+.panel-tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  text-transform: none; /* natural casing */
+}
+
+.panel-tab-btn.active {
+  background: var(--glass-bg-strong);
+  color: var(--text-main);
+  box-shadow: 0 2px 6px var(--shadow-subtle);
+  border: 1px solid var(--glass-border);
+}
+
+.panel-tab-btn:hover:not(.active) {
+  color: var(--text-main);
+  background: var(--glass-hover);
+}
+
+/* --- STATS GRID --- */
+.personal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.personal-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  text-align: center;
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.personal-stat-card .stat-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: none; /* natural casing */
+}
+
+.personal-stat-card .stat-value {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.highlight-green {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-lime);
+  text-shadow: 0 0 8px var(--color-lime-glow-strong);
+}
+
+/* --- PERSONAL HISTORY LAYOUT --- */
+.personal-history-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  gap: var(--spacing-md);
+}
+
+/* --- EVOLUTION CHART --- */
+.evolution-chart-container {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.evolution-chart-container .chart-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+  text-transform: none; /* natural casing */
+}
+
+.evolution-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 80px;
+  padding-top: var(--spacing-md);
+  border-bottom: 1px solid var(--glass-border);
+  position: relative;
+  gap: 4px;
+}
+
+.chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.chart-bar-track {
+  width: 70%;
+  max-width: 14px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--subtle-tint);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  background: var(--color-cyan);
+  box-shadow: 0 0 8px var(--color-cyan-glow-strong);
+  border-radius: 1px;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chart-bar-wrapper:hover .chart-bar-fill {
+  background: var(--text-main);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.chart-bar-label {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Tooltip on hover */
+.chart-bar-tooltip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-borderStrong);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px) scale(0.95);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+  min-width: 70px;
+  box-shadow: var(--glass-shadow-strong);
+}
+
+.chart-bar-wrapper:hover .chart-bar-tooltip {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tooltip-score {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-cyan);
+}
+
+.tooltip-time {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.tooltip-date {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* --- HISTORY TABLE & EVOLUTION --- */
+.personal-history-table {
+  font-size: 0.8rem !important;
+}
+
+.col-date {
+  width: 110px;
+  text-align: left;
+}
+
+.col-evo {
+  width: 60px;
+  text-align: center;
+}
+
+.evo-bullet {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  opacity: 0.5;
+}
+
+.evo-arrow {
+  font-size: 0.7rem;
+}
+
+.evo-up {
+  color: var(--color-lime);
+  text-shadow: 0 0 6px var(--color-lime-glow-strong);
+}
+
+.evo-down {
+  color: var(--error);
+  text-shadow: 0 0 6px var(--color-error-glow-strong);
+}
+
+.evo-equal {
+  color: var(--text-muted);
+}
+
+/* Make sure header styling fits tabs nicely */
+.leaderboard-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (max-width: 768px) {
+  .panel-tabs-header {
+    max-width: 220px;
+    margin-right: var(--spacing-xs);
+  }
+  
+  .panel-tab-btn {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
+  
+  .personal-stats-grid {
+    gap: 6px;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .personal-stat-card {
+    padding: var(--spacing-xs) 2px;
+  }
+  
+  .personal-stat-card .stat-value {
+    font-size: 1rem;
+  }
+  
+  .col-date {
+    width: 85px !important;
+  }
+  
+  .col-evo {
+    width: 45px !important;
+  }
+
+  .evolution-chart {
+    height: 60px;
+  }
+}
+

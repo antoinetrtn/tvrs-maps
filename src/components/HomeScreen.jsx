@@ -448,6 +448,7 @@ const HomeScreen = ({
 
       <LeaderboardScreen
         userProfile={userProfile}
+        localRecords={localRecords}
         onBack={() => setLeaderboardOpen(false)}
         lang={lang}
         theme={theme}
