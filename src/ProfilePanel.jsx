@@ -92,11 +92,15 @@ const ProfilePanel = ({
           avatarColor: selectedColor
         };
 
-        const { error } = await upsertProfile(session.user.id, {
-          username: cleanUsername,
-          avatar_id: selectedAvatar,
-          avatar_color: selectedColor
-        });
+        const { error } = await upsertProfile(
+          session.user.id,
+          cleanUsername,
+          selectedAvatar,
+          selectedColor,
+          userProfile.xp,
+          userProfile.level,
+          userProfile.unlockedBadges
+        );
 
         if (error) throw error;
 
