@@ -45,19 +45,12 @@ import { createGlobeLabelElement } from "./globeLabelBuilder";
 import {
   getFlagEmoji,
   getFeaturePolygons,
-  areLngLatPointsEqual,
-  getCleanRingForRendering,
-  getExteriorPolygonForRendering,
   getRenderGeometry,
   getLngLatBounds,
-  pointInBounds,
-  pointInRing,
-  pointInPolygon,
   featureContainsLngLat,
   getLngLatDistance,
   getMobileRenderRadius,
   getLabelRenderRadius,
-  scrambleText,
   getFeatureAdmin,
 } from "./utils";
 
