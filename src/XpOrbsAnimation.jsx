@@ -51,7 +51,6 @@ const XpOrbsAnimation = ({
         this.speed = Math.random() * 0.025 + 0.02; // Staggered speed
 
         const midX = (startX + endX) / 2;
-        const midY = (startY + endY) / 2;
         
         // Push control point up for a nice arc
         this.cpX = midX + (Math.random() - 0.5) * 160;
