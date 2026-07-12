@@ -148,7 +148,6 @@ function App() {
   }, []);
 
   const {
-    showCapitals: learnShowCapitals,
     showRivers: learnShowRivers,
     showMountains: learnShowMountains,
   } = learnToggles;
