@@ -159,9 +159,10 @@ export const createMountainFeature = (
   // State C: Unfound and Unselected -> solid opaque slate grey (no transparency!)
   const baseMatKey = `mountainBase_${themeName}`;
   const baseMat = getMaterial(baseMatKey, () => new THREE.MeshPhongMaterial({
-    color: isLight ? 0x94a3b8 : 0x475569, // Slate grey
-    roughness: 0.9,
-    metalness: 0.1,
+    color: isLight ? 0x475569 : 0x8ba2b5, // Brighter slate-blue-grey on dark, darker slate-grey on light
+    emissive: isLight ? 0x000000 : 0x111620, // Subtle dark blue-grey emissive for low-poly shading on dark themes
+    specular: isLight ? 0x222222 : 0x444444, // Specular highlights for facet readability
+    shininess: 15,
     flatShading: true,
   }));
 

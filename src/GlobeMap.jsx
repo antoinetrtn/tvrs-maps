@@ -416,6 +416,7 @@ const GlobeMap = ({
           zIndex: 0,
         }}
       >
+        <SpaceBackground theme={theme} isLight={isLight} />
         <div
           style={{
             position: "absolute",
@@ -562,7 +563,7 @@ const GlobeMap = ({
             pathPointLng: pathPointLngAccessor,
             pathPointAlt: pathPointAltAccessor,
             pathColor: pathColorAccessor,
-            ["path" + "Stroke" + "Width"]: pathWidthAccessor,
+            ["path" + "Stroke"]: pathWidthAccessor,
             pathDashLength: pathDashLengthAccessor,
             pathDashGap: pathDashGapAccessor,
             pathDashAnimateTime: pathDashAnimateTimeAccessor,

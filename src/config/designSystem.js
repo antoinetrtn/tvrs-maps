@@ -198,10 +198,10 @@ const THEME = {
     lightingStudio: "#000000",
     lightingLeft: "#000000",
     lightingRight: "#000000",
-    riverActive: "#38bdf8",
-    riverInactive: "#0369a1",
-    riverSelectedFound: "#38bdf8",
-    riverSelectedUnfound: "#bae6fd",
+    riverActive: "#00f0ff",
+    riverInactive: "#0e7490",
+    riverSelectedFound: "#00f0ff",
+    riverSelectedUnfound: "#38bdf8",
   },
 };
 

@@ -16,7 +16,6 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [cooldownUntil, setCooldownUntil] = useState(0);
   const [isCooldown, setIsCooldown] = useState(false);
   const [knownAccountExists, setKnownAccountExists] = useState(null); // null | true | false
 
