@@ -28,3 +28,7 @@ dist-ssr
 
 # Generated map source snapshots
 public/data/*-raw.json
+
+# Playwright
+playwright-report/
+test-results/
