@@ -25,7 +25,6 @@ import {
   mountainGlitchUniforms,
 } from "./LowPolyBiomes";
 import {
-  shouldScrambleLabel,
   getPolygonAltitudeFor,
   RELIEF,
   DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS,
