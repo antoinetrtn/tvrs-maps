@@ -169,7 +169,6 @@ function App() {
     showEndScreen,
     setShowEndScreen,
     timeLeft,
-    feedback,
     popupSuccess,
     popupError,
     popupWarning,
