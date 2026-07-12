@@ -285,6 +285,7 @@
   background: var(--subtle-tint-strong);
   color: var(--text-main);
   backdrop-filter: var(--glass-blur-compact);
+  -webkit-backdrop-filter: var(--glass-blur-compact);
   border: 1px solid var(--glass-border-strong);
 }
 
