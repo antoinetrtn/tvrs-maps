@@ -5,6 +5,8 @@
   "scripts": {
     "test": "vitest",
     "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:show": "playwright test --ui",
     "dev": "vite",
     "dev:5001": "vite --host 0.0.0.0 --port 5001",
     "lint": "node scripts/quality-check.js",
@@ -31,6 +33,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^29.1.1",
