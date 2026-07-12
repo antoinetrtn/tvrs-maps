@@ -276,7 +276,7 @@ export function useUserProfile() {
         const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
         return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
       }
-      throw new Error("Secure random number generator is not available in this environment.");
+      return "00000000-0000-4000-8000-000000000000";
     };
 
     const isUUID = (str) => {
@@ -298,9 +298,18 @@ export function useUserProfile() {
       }
     } catch (_) {}
 
-    const randomValues = new Uint32Array(1);
-    crypto.getRandomValues(randomValues);
-    const randomNum = 100 + (randomValues[0] % 900);
+    let randomNum = 100;
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const range = 900;
+      const maxUnbiased = Math.floor(0x100000000 / range) * range;
+      const rand = new Uint32Array(1);
+      let value;
+      do {
+        crypto.getRandomValues(rand);
+        value = rand[0];
+      } while (value >= maxUnbiased);
+      randomNum = 100 + (value % range);
+    }
     const newProfile = {
       id: generateUUID(),
       username: `Explorer_${randomNum}`,
