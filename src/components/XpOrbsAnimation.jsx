@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { GAME_XP_COLORS } from "./designSystem";
+import { GAME_XP_COLORS } from "../config/designSystem";
 import "./XpOrbsAnimation.css";
 
 const XpOrbsAnimation = ({

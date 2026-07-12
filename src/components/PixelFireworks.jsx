@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import "./PixelFireworks.css";
 
-import { AVATAR_COLORS } from "./designSystem";
+import { AVATAR_COLORS } from "../config/designSystem";
 
 const RETRO_COLORS = Object.values(AVATAR_COLORS);
 

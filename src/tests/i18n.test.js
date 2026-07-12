@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { useTranslation, translations } from "./i18n";
+import { useTranslation, translations } from "../config/i18n";
 import { renderHook } from "@testing-library/react";
 
 describe("i18n translation system", () => {

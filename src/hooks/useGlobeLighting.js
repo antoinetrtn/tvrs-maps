@@ -1,0 +1,295 @@
+import { useRef, useEffect, useCallback } from "react";
+import * as THREE from "three";
+import { GLOBE_STYLE, getOpaqueThreeColor } from "../config/designSystem";
+import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "../config/globeShaders";
+
+export function useGlobeLighting({
+  globeEl,
+  isLight,
+  globeLightingEnabled,
+  UI_COLORS,
+  perfProfile,
+  globeTheme,
+  selectedCountry,
+  REGION_COLORS,
+  safeColor,
+}) {
+  const globeLightingRef = useRef(null);
+  const targetGlowColorRef = useRef(new THREE.Color(0x38bdf8));
+  const targetGlowPowerRef = useRef(1.2);
+  const targetGlowCoefRef = useRef(1.0);
+
+  const updateGlobeLighting = useCallback(() => {
+    const scene = globeEl.current?.scene?.();
+    if (!scene) return false;
+
+    if (!globeLightingEnabled) {
+      if (globeLightingRef.current) {
+        const {
+          keyLight,
+          rimLight,
+          fillLight,
+          studioLight,
+          studioLeft,
+          studioRight,
+          group,
+        } = globeLightingRef.current;
+        const camera = globeEl.current?.camera?.();
+        if (camera) {
+          camera.remove(
+            keyLight,
+            rimLight,
+            fillLight,
+            studioLight,
+            studioLeft,
+            studioRight,
+          );
+        }
+        if (group && group.parent) {
+          group.parent.remove(group);
+        }
+        globeLightingRef.current?.innerGlow?.geometry?.dispose();
+        globeLightingRef.current?.innerGlow?.material?.dispose();
+        globeLightingRef.current = null;
+      }
+      return true;
+    }
+
+    let justCreatedLighting = false;
+
+    if (!globeLightingRef.current) {
+      justCreatedLighting = true;
+      const camera = globeEl.current?.camera?.();
+      if (!camera) return false;
+      scene.add(camera);
+
+      const group = new THREE.Group();
+      group.name = "globe-accent-lighting";
+
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1);
+      keyLight.name = "globe-key-light";
+      keyLight.position.set(-3.5, 2.4, 4.2);
+
+      const rimLight = new THREE.DirectionalLight(0x78a8ff, 1);
+      rimLight.name = "globe-rim-light";
+      rimLight.position.set(3.8, 1.3, -3.6);
+
+      const fillLight = new THREE.HemisphereLight(0x9cc4ff, 0x020617, 1);
+      fillLight.name = "globe-fill-light";
+      fillLight.position.set(0, 2.2, 0);
+
+      const studioLight = new THREE.AmbientLight(0xbfdcff, 1);
+      studioLight.name = "globe-studio-ambient";
+
+      const studioLeft = new THREE.DirectionalLight(0xffffff, 1);
+      studioLeft.name = "globe-studio-left";
+      studioLeft.position.set(-4.5, 2.5, 3.5);
+
+      const studioRight = new THREE.DirectionalLight(0x9fd2ff, 1);
+      studioRight.name = "globe-studio-right";
+      studioRight.position.set(4.5, -1.2, 2.8);
+
+      const innerGlow = new THREE.Mesh(
+        new THREE.SphereGeometry(114.0, 64, 64),
+        new THREE.ShaderMaterial({
+          vertexShader: FRESNEL_VERTEX_SHADER,
+          fragmentShader: FRESNEL_FRAGMENT_SHADER,
+          uniforms: {
+            glowColor: { value: new THREE.Color(0x64b5f6) },
+            coef: { value: 1.0 },
+            power: { value: 1.2 },
+          },
+          transparent: true,
+          blending: THREE.NormalBlending,
+          side: THREE.BackSide,
+          depthWrite: false,
+        }),
+      );
+      innerGlow.name = "globe-inner-glow";
+      innerGlow.position.set(0, 0, 0);
+      innerGlow.renderOrder = -1;
+
+      group.add(innerGlow);
+      scene.add(group);
+
+      camera.add(
+        keyLight,
+        rimLight,
+        fillLight,
+        studioLight,
+        studioLeft,
+        studioRight,
+      );
+
+      globeLightingRef.current = {
+        group,
+        keyLight,
+        rimLight,
+        fillLight,
+        studioLight,
+        studioLeft,
+        studioRight,
+        innerGlow,
+      };
+    }
+
+    const {
+      keyLight,
+      rimLight,
+      fillLight,
+      studioLight,
+      studioLeft,
+      studioRight,
+      innerGlow,
+    } = globeLightingRef.current;
+
+    const isMobile = perfProfile?.isMobile;
+
+    if (isMobile) {
+      rimLight.visible = false;
+      studioLight.visible = false;
+      studioLeft.visible = false;
+      studioRight.visible = false;
+      innerGlow.visible = false;
+    } else {
+      rimLight.visible = !UI_COLORS.isBlackoutTheme;
+      studioLight.visible = true;
+      studioLeft.visible = !UI_COLORS.isBlackoutTheme;
+      studioRight.visible = !UI_COLORS.isBlackoutTheme;
+      innerGlow.visible = true;
+    }
+
+    scene.traverse((obj) => {
+      if (obj.isLight && !obj.name.startsWith("globe-")) {
+        obj.intensity = 0;
+      }
+    });
+
+    if (UI_COLORS.isBlackoutTheme) {
+      keyLight.intensity = isLight ? 0.28 : 0.44;
+      keyLight.position.set(-3.5, 2.4, 4.2);
+      rimLight.intensity = 0;
+      fillLight.intensity = isLight ? 0.44 : 0.32;
+      studioLight.intensity = isLight ? 0.3 : 0.18;
+      studioLeft.intensity = 0;
+      studioLeft.position.set(-4.5, 2.5, 3.5);
+      studioRight.intensity = 0;
+      studioRight.position.set(4.5, -1.2, 2.8);
+    } else {
+      keyLight.intensity = isLight ? 0.12 : 0.16;
+      keyLight.position.set(-3.5, 2.4, 4.2);
+      rimLight.intensity = isLight ? 0.14 : 0.24;
+      rimLight.position.set(3.8, 1.3, -3.6);
+      fillLight.intensity = isLight ? 0.72 : 0.68;
+      studioLight.intensity = isLight ? 0.54 : 0.48;
+      studioLeft.intensity = isLight ? 0.08 : 0.1;
+      studioLeft.position.set(-4.5, 2.5, 3.5);
+      studioRight.intensity = isLight ? 0.08 : 0.1;
+      studioRight.position.set(4.5, -1.2, 2.8);
+    }
+
+    rimLight.color.set(safeColor(UI_COLORS.lightingRim));
+    fillLight.color.set(safeColor(UI_COLORS.lightingFill));
+    fillLight.groundColor.set(safeColor(UI_COLORS.lightingGround));
+    studioLight.color.set(safeColor(UI_COLORS.lightingStudio));
+    studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
+    studioRight.color.set(safeColor(UI_COLORS.lightingRight));
+
+    let glowColorHex = isLight
+      ? (Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0)
+      : (Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0);
+    let glowPower = Number(UI_COLORS.glowPower) || 1.2;
+    let glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
+
+    targetGlowColorRef.current.setHex(glowColorHex);
+    targetGlowPowerRef.current = glowPower;
+    targetGlowCoefRef.current = glowCoef;
+
+    if (justCreatedLighting && innerGlow.material?.uniforms) {
+      const u = innerGlow.material.uniforms;
+      u.glowColor.value.copy(targetGlowColorRef.current);
+      u.power.value = glowPower;
+      u.coef.value = glowCoef;
+    }
+
+    return true;
+  }, [
+    isLight,
+    globeLightingEnabled,
+    UI_COLORS,
+    perfProfile?.isMobile,
+    globeTheme,
+    selectedCountry,
+    REGION_COLORS,
+    safeColor,
+    globeEl,
+  ]);
+
+  const styleGlobeGraticules = useCallback(() => {
+    const scene = globeEl.current?.scene?.();
+    if (!scene) return;
+
+    let graticuleColor = new THREE.Color(getOpaqueThreeColor(UI_COLORS.graticule));
+    let graticuleOpacity = Number(UI_COLORS.graticuleOpacity) || (isLight
+      ? GLOBE_STYLE.lighting.graticuleOpacity.light
+      : GLOBE_STYLE.lighting.graticuleOpacity.dark);
+
+    scene.traverse((obj) => {
+      const material = obj.material;
+      if (
+        obj.type === "LineSegments" &&
+        material?.type === "LineBasicMaterial" &&
+        material.transparent === true
+      ) {
+        material.color.copy(graticuleColor);
+        material.opacity = graticuleOpacity;
+        material.depthWrite = false;
+        material.needsUpdate = true;
+      }
+    });
+  }, [isLight, UI_COLORS, globeTheme, globeEl]);
+
+  useEffect(() => {
+    updateGlobeLighting();
+
+    return () => {
+      if (globeLightingRef.current) {
+        const {
+          keyLight,
+          rimLight,
+          fillLight,
+          studioLight,
+          studioLeft,
+          studioRight,
+          group,
+        } = globeLightingRef.current;
+        const camera = globeEl.current?.camera?.();
+        if (camera) {
+          camera.remove(
+            keyLight,
+            rimLight,
+            fillLight,
+            studioLight,
+            studioLeft,
+            studioRight,
+          );
+        }
+        if (group && group.parent) {
+          group.parent.remove(group);
+        }
+        globeLightingRef.current?.innerGlow?.geometry?.dispose();
+        globeLightingRef.current?.innerGlow?.material?.dispose();
+        globeLightingRef.current = null;
+      }
+    };
+  }, [updateGlobeLighting, globeEl]);
+
+  return {
+    updateGlobeLighting,
+    styleGlobeGraticules,
+    globeLightingRef,
+    targetGlowColorRef,
+    targetGlowPowerRef,
+    targetGlowCoefRef,
+  };
+}

@@ -5,7 +5,7 @@ import {
   getPolygonAltitudeFor,
   getRegionAbbr,
   POLYGON_ALTITUDE,
-} from "./gameConfig";
+} from "../config/gameConfig";
 
 describe("Game Configuration Utilities", () => {
   describe("isPlayMode", () => {

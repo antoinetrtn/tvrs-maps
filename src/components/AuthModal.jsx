@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Close, ArrowLeft, User, Earth, Gamepad } from "pixelarticons/react";
-import { useTranslation } from "./i18n";
+import { useTranslation } from "../config/i18n";
 import {
   signInWithEmail,
   signUpWithEmail,
   signInWithGoogle,
   checkIfEmailRegistered
-} from "./supabaseClient";
+} from "../services/supabaseClient";
 import "./AuthModal.css";
 
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {

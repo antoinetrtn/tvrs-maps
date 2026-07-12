@@ -1,6 +1,6 @@
 
-import { GAME_REGIONS } from "./gameConfig";
-import { GLITCH_EFFECT_SETTINGS } from "./designSystem";
+import { GAME_REGIONS } from "../config/gameConfig";
+import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
 
 /**
  * Normalizes input string for accents, lowercase, hyphens, and whitespace.

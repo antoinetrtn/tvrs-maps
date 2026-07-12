@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TaskService } from "./TaskService";
+import { TaskService } from "../services/TaskService";
 
 describe("TaskService", () => {
   let taskService;

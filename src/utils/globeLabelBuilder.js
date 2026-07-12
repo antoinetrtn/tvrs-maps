@@ -1,7 +1,7 @@
-import { shouldScrambleLabel } from "./gameConfig";
+import { shouldScrambleLabel } from "../config/gameConfig";
 import { scrambleText } from "./utils";
-import { countryDataMap } from "./gameData";
-import { riversMountainsDataMap } from "./riversMountainsData";
+import { countryDataMap } from "../data/gameData";
+import { riversMountainsDataMap } from "../data/riversMountainsData";
 
 /**
  * Scramble text dynamically with a ratio of random glyphs.

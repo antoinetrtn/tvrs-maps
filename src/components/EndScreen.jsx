@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { InfoBox, Trophy } from "pixelarticons/react";
 import XpOrbsAnimation from "./XpOrbsAnimation";
-import { getLevelAndProgress } from "./useUserProfile";
-import { getThemeRegionColor } from "./designSystem";
-import { useTranslation } from "./i18n";
-import { GAME_REGIONS } from "./gameConfig";
-import { getGameStats } from "./utils";
+import { getLevelAndProgress } from "../hooks/useUserProfile";
+import { getThemeRegionColor } from "../config/designSystem";
+import { useTranslation } from "../config/i18n";
+import { GAME_REGIONS } from "../config/gameConfig";
+import { getGameStats } from "../utils/utils";
 import PixelFireworks from "./PixelFireworks";
 import "./EndScreen.css";
 

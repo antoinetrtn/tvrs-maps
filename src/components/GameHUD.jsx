@@ -19,10 +19,10 @@ import {
 } from "pixelarticons/react";
 import Logo from "./Logo";
 import "./GameHUD.css";
-import { getThemeRegionColor } from "./designSystem";
-import { useTranslation } from "./i18n";
-import { GAME_REGIONS, getRegionAbbr } from "./gameConfig";
-import { normalizeString } from "./utils";
+import { getThemeRegionColor } from "../config/designSystem";
+import { useTranslation } from "../config/i18n";
+import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
+import { normalizeString } from "../utils/utils";
 
 
 const GameHUD = ({

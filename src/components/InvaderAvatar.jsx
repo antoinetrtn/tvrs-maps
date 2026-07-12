@@ -1,5 +1,5 @@
 import React from "react";
-import { AVATAR_COLORS } from "./designSystem";
+import { AVATAR_COLORS } from "../config/designSystem";
 
 const INVADER_DESIGNS = {
   invader_1: [
