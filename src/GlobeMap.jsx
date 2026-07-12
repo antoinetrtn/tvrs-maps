@@ -1747,40 +1747,7 @@ const GlobeMap = ({
     isLearnRivers,
   ]);
 
-  // Base mountain paths
-  const mountainsBasePathsData = useMemo(() => {
-    if (mode !== "rivers_mountains" && !isLearnMountains) return [];
-    const paths = [];
-    const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
-    Object.keys(dataMap).forEach((k) => {
-      const data = dataMap[k];
-      if (!data || data.type !== "mountain_range" || !data.path) return;
-      const isFound = foundSet.has(k) || mode === "learn" || isHomeScreen;
-      const color = isFound
-        ? getThemeRegionColor(globeTheme, theme, data.region)
-        : UI_COLORS.riverInactive;
-      const pathPoints = data.path.map(([lat, lng]) => [lat, lng, 0.008]);
-      paths.push({
-        admin: k,
-        coords: pathPoints,
-        color,
-        width: isFound ? 30 : 20,
-        dashLength: isFound ? 1 : 0.015,
-        dashGap: isFound ? 0 : 0.012,
-        dashAnimateTime: 0,
-      });
-    });
-    return paths;
-  }, [
-    gameDataMap,
-    foundSet,
-    mode,
-    isHomeScreen,
-    globeTheme,
-    theme,
-    UI_COLORS,
-    isLearnMountains,
-  ]);
+
 
   // Selected mountain paths
   const mountainsSelectedPathData = useMemo(() => {
