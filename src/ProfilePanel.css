@@ -202,9 +202,10 @@
 .stats-tab-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  flex: 1;
   min-height: 0;
+  height: auto;
+  overflow: hidden;
 }
 
 .stats-sticky-header {
@@ -622,7 +623,9 @@
   .profile-panel .profile-customization-container,
   .profile-panel form.profile-form,
   .profile-panel .stats-tab-content {
-    height: 100% !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    height: auto !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
@@ -654,14 +657,18 @@
 .profile-customization-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: auto;
   overflow: hidden;
 }
 
 form.profile-form {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: auto;
   overflow: hidden;
 }
 
