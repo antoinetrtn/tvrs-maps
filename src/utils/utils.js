@@ -298,6 +298,64 @@ export const getLngLatDistance = (lngA, latA, lngB, latB) => {
   return Math.hypot(dLng, latA - latB);
 };
 
+/**
+ * GLOBAL RULE for accurate placement on shapes:
+ * Compute a representative point directly from the actual geometry/shape.
+ * - For polygon features (countries, departments): centroid of the main exterior ring.
+ * - For path features (rivers, mountain ranges): midpoint of the path.
+ * This guarantees labels, points, and camera targets sit on the rendered shape,
+ * not on approximate manual coordinates.
+ */
+function averagePoints(points) {
+  if (!points || points.length === 0) return null;
+  let sumLat = 0;
+  let sumLng = 0;
+  for (const [lng, lat] of points) {
+    sumLng += lng;
+    sumLat += lat;
+  }
+  return { lat: sumLat / points.length, lng: sumLng / points.length };
+}
+
+function computePolygonCentroid(polygons) {
+  if (!polygons || polygons.length === 0) return null;
+  // Use the first (main) polygon's exterior ring. GeoJSON: [ [ [lng,lat], ... ] ]
+  const exterior = polygons[0]?.[0];
+  if (!exterior || exterior.length < 3) return null;
+  // Drop closing point if duplicate
+  const pts = exterior[exterior.length - 1] &&
+    exterior[0][0] === exterior[exterior.length - 1][0] &&
+    exterior[0][1] === exterior[exterior.length - 1][1]
+    ? exterior.slice(0, -1)
+    : exterior;
+  return averagePoints(pts);
+}
+
+/**
+ * Global resolver: returns {lat, lng} placed on the shape when possible.
+ * Pass polygons (from geo feature) when available for countries/depts.
+ * For rivers/mountains uses the path midpoint directly.
+ */
+export function getCanonicalPosition(data = {}, polygons = null) {
+  if (polygons && polygons.length > 0) {
+    const c = computePolygonCentroid(polygons);
+    if (c) return c;
+  }
+  if (data.path && Array.isArray(data.path) && data.path.length > 0) {
+    const path = data.path;
+    if (path.length === 1) {
+      const p = path[0];
+      return { lat: p[0], lng: p[1] };
+    }
+    const mid = path[Math.floor(path.length / 2)];
+    return { lat: mid[0], lng: mid[1] };
+  }
+  if (typeof data.lat === 'number' && typeof data.lng === 'number') {
+    return { lat: data.lat, lng: data.lng };
+  }
+  return null;
+}
+
 export const getMobileRenderRadius = (zoomLevel) => {
   if (zoomLevel >= 1.6) return 118;
   if (zoomLevel >= 1.05) return 96;

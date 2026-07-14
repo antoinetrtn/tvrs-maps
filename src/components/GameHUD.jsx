@@ -20,6 +20,7 @@ import { getThemeRegionColor } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
 import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { normalizeString } from "../utils/utils";
+import { BREAKPOINTS } from "../config/gameConstants";
 
 
 const GameHUD = ({
@@ -288,7 +289,7 @@ const GameHUD = ({
     REGION_COLORS[region] || (isDepartmentsMode ? "var(--accent)" : "var(--warning)")
   , [REGION_COLORS, isDepartmentsMode]);
 
-  const isMobile = viewport.width < 1024;
+  const isMobile = viewport.width < BREAKPOINTS.desktop;
 
   return (
     <>
@@ -490,7 +491,7 @@ const GameHUD = ({
       <div
         className={`bottom-hud-container ${isKeyboardMode ? "keyboard-mode" : ""} ${mode === "learn" ? "learn-search-bar" : ""}`}
         style={
-          window.innerWidth < 1024
+          window.innerWidth < BREAKPOINTS.desktop
             ? {
                 position: "absolute",
                 top: 0,

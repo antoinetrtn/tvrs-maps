@@ -8,6 +8,7 @@ import {
 import {
   getFlagEmoji,
   getLabelRenderRadius,
+  getCanonicalPosition,
 } from "../utils/utils";
 
 function getLabelVisibilityThreshold({
@@ -64,6 +65,7 @@ function resolveLabelEntry(
     isError,
     isPanelOpen,
     labelsCacheRef,
+    canonicalPositions: ctxCanonical = {},
   } = ctx;
 
   const isSelected = key === selectedCountry;
@@ -84,9 +86,15 @@ function resolveLabelEntry(
   });
   if (zoomLevel > visibilityThreshold) return null;
 
-  let dLng = Math.abs(data.lng - pov.lng);
+  // GLOBAL SHAPE RULE — resolve once for distance + label position
+  const fromMap = ctxCanonical[key];
+  const canonical = fromMap || getCanonicalPosition(data, null);
+  const useLat = canonical ? canonical.lat : data.lat;
+  const useLng = canonical ? canonical.lng : data.lng;
+
+  let dLng = Math.abs(useLng - pov.lng);
   if (dLng > 180) dLng = 360 - dLng;
-  const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
+  const distToCenter = Math.hypot(dLng, useLat - pov.lat);
 
   const labelRadius = getLabelRadius({
     isDepartmentMode,
@@ -117,8 +125,8 @@ function resolveLabelEntry(
 
   const newLabel = {
     admin: key,
-    lat: data.lat,
-    lng: data.lng,
+    lat: useLat,
+    lng: useLng,
     country: lang === "fr" ? data.name_fr || key : data.name_en || key,
     capital: lang === "fr" ? data.capital_fr || data.capital : data.capital,
     region: data.region,
@@ -165,6 +173,7 @@ export function useGlobeLabels({
   globeEl,
   isLight,
   isPanelOpen = false,
+  canonicalPositions = {},
 }) {
   const labelsCacheRef = useRef({});
   const labelSourceKeysRef = useRef({ map: null, keys: [] });
@@ -245,6 +254,7 @@ export function useGlobeLabels({
       isError,
       isPanelOpen,
       labelsCacheRef,
+      canonicalPositions,
     };
 
     const filtered = labelsToProcess
@@ -273,6 +283,8 @@ export function useGlobeLabels({
     countrySizes,
     zoomLevel,
     cameraPOV,
+    cameraPOV?.lat,
+    cameraPOV?.lng,
     lang,
     perfProfile?.maxLabels,
     perfProfile?.isMobile,

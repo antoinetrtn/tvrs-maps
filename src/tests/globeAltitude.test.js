@@ -12,6 +12,12 @@ describe("globeAltitude", () => {
     expect(clampGlobeAltitude(-0.5)).toBe(GLOBE_MIN_ALTITUDE);
   });
 
+  it("allows increased max zoom (lower min alt) for small features without traversing", () => {
+    // 0.22 is the new floor — must stay >= surface (1 + alt) * radius
+    expect(GLOBE_MIN_ALTITUDE).toBeLessThan(0.26);
+    expect(GLOBE_MIN_ALTITUDE).toBeGreaterThanOrEqual(0.18);
+  });
+
   it("clamps above the overview ceiling", () => {
     expect(clampGlobeAltitude(10)).toBe(GLOBE_MAX_ALTITUDE);
   });

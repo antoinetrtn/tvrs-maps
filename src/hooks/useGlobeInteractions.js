@@ -5,6 +5,7 @@ import {
   clientToGlobeCoords,
 } from "../utils/utils";
 import { clampGlobeAltitude } from "../utils/globeAltitude";
+import { BREAKPOINTS } from "../config/gameConstants";
 
 export function useGlobeInteractions({
   globeEl,
@@ -185,7 +186,7 @@ export function useGlobeInteractions({
       if (
         event.pointerType === "touch" &&
         isKeyboardMode &&
-        viewport.width < 1024
+        viewport.width < BREAKPOINTS.desktop
       ) {
         event.preventDefault();
         onPreserveInputFocus?.();
@@ -252,7 +253,7 @@ export function useGlobeInteractions({
       if (
         event.pointerType === "touch" &&
         isKeyboardMode &&
-        viewport.width < 1024
+        viewport.width < BREAKPOINTS.desktop
       ) {
         event.preventDefault();
         onPreserveInputFocus?.();

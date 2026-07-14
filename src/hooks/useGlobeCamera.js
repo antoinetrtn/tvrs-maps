@@ -2,11 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
-import { getDataPanelLayoutWidth } from "../config/gameConstants";
+import {
+  getDataPanelLayoutWidth,
+  BREAKPOINTS,
+} from "../config/gameConstants";
 import {
   readClampedGlobePov,
   syncGlobeCameraAndZoomLimits,
 } from "../utils/globeAltitude";
+import { getCanonicalPosition } from "../utils/utils";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
@@ -14,7 +18,7 @@ const getDepartmentModeFrancePointOfView = (width) => ({
   lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
   lng: DEPARTMENT_MODE_FRANCE_VIEW.lng,
   altitude:
-    width < 768
+    width < BREAKPOINTS.mobile
       ? DEPARTMENT_MODE_FRANCE_VIEW.altitude.mobile
       : DEPARTMENT_MODE_FRANCE_VIEW.altitude.desktop,
 });
@@ -28,8 +32,14 @@ const buildSelectedCountryCameraTarget = ({
   hasPreviousSelection,
   currentPOV,
   maxWindowHeight,
+  canonicalPositions = {},
 }) => {
-  const isMobile = viewport.width < 768;
+  // GLOBAL RULE: force camera target to exact shape position (centroid or path midpoint)
+  const canonical = (data && canonicalPositions[data.admin || '']) || getCanonicalPosition(data || {});
+  const useLat = canonical ? canonical.lat : data?.lat;
+  const useLng = canonical ? canonical.lng : data?.lng;
+
+  const isMobile = viewport.width < BREAKPOINTS.mobile;
   const departmentFranceAltitude = isDepartmentMode
     ? getDepartmentModeFrancePointOfView(viewport.width).altitude
     : null;
@@ -57,8 +67,8 @@ const buildSelectedCountryCameraTarget = ({
     : -visibleHeightDegrees * (occlusionRatio * 0.7);
 
   return {
-    lat: data.lat + latOffset,
-    lng: data.lng,
+    lat: (useLat ?? 0) + latOffset,
+    lng: useLng ?? 0,
     altitude: hasPreviousSelection
       ? isHomeScreen
         ? fallbackAltitude
@@ -79,7 +89,7 @@ const applyIdleCameraPointOfView = ({
     globeEl.current.pointOfView(
       isDepartmentMode
         ? getDepartmentModeFrancePointOfView(viewport.width)
-        : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
+        : { lat: 20, lng: 0, altitude: viewport.width < BREAKPOINTS.mobile ? 2.2 : 1.8 },
       1200,
     );
     return;
@@ -109,7 +119,7 @@ const applyIdleCameraPointOfView = ({
 
   if (wasHomeScreen) {
     globeEl.current.pointOfView(
-      { lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.35 },
+      { lat: 18, lng: 20, altitude: viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35 },
       700,
     );
   }
@@ -129,6 +139,7 @@ export function useGlobeCamera({
   isPanelOpen = false,
   mode = "countries",
   selectionTransition,
+  canonicalPositions = {},
 }) {
   const {
     transitioningPreviousCountryRef,
@@ -259,6 +270,7 @@ export function useGlobeCamera({
           hasPreviousSelection,
           currentPOV: globeEl.current.pointOfView(),
           maxWindowHeight: maxWindowHeightRef.current,
+          canonicalPositions,
         });
         const previousTarget = lastTargetRef.current;
         const targetChanged =
@@ -329,7 +341,7 @@ export function useGlobeCamera({
     setTransitioningIncomingCountryState,
   ]);
 
-  const isMobileSize = viewport.width < 1024;
+  const isMobileSize = viewport.width < BREAKPOINTS.desktop;
   const isKeyboardLikelyOpening =
     isMobileSize &&
     window.innerHeight < maxWindowHeightRef.current * 0.85 &&
@@ -341,7 +353,7 @@ export function useGlobeCamera({
   }
 
   const panelLayoutWidth =
-    isPanelOpen && !isHomeScreen && viewport.width >= 769
+    isPanelOpen && !isHomeScreen && viewport.width >= BREAKPOINTS.desktop
       ? getDataPanelLayoutWidth(viewport.width)
       : 0;
   const globePanelShift = panelLayoutWidth > 0 ? -panelLayoutWidth / 2 : 0;
@@ -357,7 +369,7 @@ export function useGlobeCamera({
   // This recovers the movement animation and visual composition if the main selected effect didn't trigger it.
   useEffect(() => {
     if (isHomeScreen && globeEl.current) {
-      const overviewAltitude = viewport.width < 768 ? 2.5 : 1.1;
+      const overviewAltitude = viewport.width < BREAKPOINTS.mobile ? 2.5 : 1.1;
       // Slight positive lng to bias the view nicely with left-padded UI (globe "on the right").
       globeEl.current.pointOfView(
         { lat: 16, lng: 28, altitude: overviewAltitude },

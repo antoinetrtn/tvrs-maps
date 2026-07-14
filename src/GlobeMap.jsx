@@ -72,6 +72,9 @@ const GlobeMap = ({
 
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
+  const lastCameraPOVRef = useRef({ lat: 0, lng: 0 });
+  const lastZoomRef = useRef(2.5);
+  const canonicalRef = useRef({});
 
   const selectionTransition = useGlobeSelectionTransition();
 
@@ -148,6 +151,31 @@ const GlobeMap = ({
     safeColor: (c) => getOpaqueThreeColor(c),
   });
 
+  // renderData first (using ref for last POV) so we can give camera fresh canonicals.
+  const renderDataResult = useGlobeRenderData({
+    isDepartmentMode,
+    isHomeScreen,
+    isEndScreen,
+    countriesData,
+    departmentsData,
+    gameDataMap,
+    selectedCountry,
+    cameraPOV: lastCameraPOVRef.current,
+    zoomLevel: lastZoomRef.current,
+    perfProfile,
+  });
+
+  const {
+    selectableFeatureIndex,
+    countrySizes,
+    renderCountriesData,
+    visibleRenderCountriesData,
+    countriesWithGeometry,
+    canonicalPositions = {},
+  } = renderDataResult;
+
+  canonicalRef.current = canonicalPositions;
+
   const {
     zoomLevel,
     cameraPOV,
@@ -169,28 +197,14 @@ const GlobeMap = ({
     isPanelOpen,
     mode,
     selectionTransition,
+    canonicalPositions: canonicalRef.current,
   });
 
   useGlobePanelShift(globePanelShift, globeContentWrapperRef);
 
-  const {
-    selectableFeatureIndex,
-    countrySizes,
-    renderCountriesData,
-    visibleRenderCountriesData,
-    countriesWithGeometry,
-  } = useGlobeRenderData({
-    isDepartmentMode,
-    isHomeScreen,
-    isEndScreen,
-    countriesData,
-    departmentsData,
-    gameDataMap,
-    selectedCountry,
-    cameraPOV,
-    zoomLevel,
-    perfProfile,
-  });
+  // Stash fresh POV/zoom for next render's renderData call.
+  lastCameraPOVRef.current = cameraPOV;
+  lastZoomRef.current = zoomLevel;
 
   const {
     handleTouchStart,
@@ -254,6 +268,7 @@ const GlobeMap = ({
     isLight,
     globeTheme,
     theme,
+    canonicalPositions,
   });
 
   const {
@@ -284,6 +299,7 @@ const GlobeMap = ({
     globeEl,
     isLight,
     isPanelOpen,
+    canonicalPositions,
   });
 
   const {
