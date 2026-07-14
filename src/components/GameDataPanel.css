@@ -236,6 +236,12 @@
   gap: var(--spacing-md);
 }
 
+/* Rivières/montagnes : pas de drapeau ni point → 2 colonnes nom + détail */
+.data-panel-row.learn-selected:not(.has-flag) {
+  grid-template-columns: 1fr auto;
+  gap: var(--spacing-md);
+}
+
 .data-panel-row.selected .data-panel-row-name {
   font-weight: 700;
   color: var(--selection-green);
