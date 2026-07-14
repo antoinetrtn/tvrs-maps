@@ -35,10 +35,17 @@ jobs:
 
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        # You can pass additional properties via with: if not using sonar-project.properties
-        # with:
-        #   args: >
-        #     -Dsonar.projectKey=...
+
+        # Note: sonar.organization is passed here via secret (recommended).
+        # You must create a repository secret named SONAR_ORG with your SonarCloud organization key.
+        # (Find it under your org in SonarCloud > Administration > Organization key, e.g. "antoinetrtn")
+        #
+        # Other properties come from sonar-project.properties.
+        # You can add more via args if needed:
+        #   -Dsonar.projectKey=... etc.

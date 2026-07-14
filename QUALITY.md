@@ -110,7 +110,9 @@ A GitHub Action (`.github/workflows/quality.yml`) runs on push/PR to `main` and 
 - **Commitlint**: enforces Conventional Commits (e.g. `feat:`, `fix:`, `chore:`) via commit-msg hook.
 - **Knip**: dead code / unused exports detection.
 - **SonarQube Cloud** (optional but recommended): deeper static analysis (bugs, vulnerabilities, code smells, duplication, maintainability, hotspots). See `.github/workflows/sonar.yml` and `sonar-project.properties`.
-  - Requires `SONAR_TOKEN` secret in GitHub (from sonarcloud.io project).
+  - Requires two GitHub secrets:
+    - `SONAR_TOKEN` (from sonarcloud.io → User > My Account > Security > Tokens)
+    - `SONAR_ORG` (your SonarCloud organization key, e.g. "antoinetrtn" — find it under your org > Administration > Organization key)
   - Once scans run, you can connect **SonarQube MCP Server** (https://github.com/SonarSource/sonarqube-mcp-server) in your AI coding agent (Cursor, Claude, VS Code, this Grok session, etc.). This lets the agent query live quality issues, hotspots and gates during development and reviews for even stronger feedback loops.
 - **Custom quality ratchets** in `scripts/quality-check.js` remain the project-specific guardrails (file sizes, no magic colors, nesting limits, globe rules, z-index, etc.).
 
