@@ -127,18 +127,18 @@ const GameHUD = ({
         const mapped = preNormalizedData[adminKey];
         if (!mapped) continue;
 
-        let normalizedNameToMatch =
+        const normalizedNameToMatch =
           lang === "fr" ? mapped.normalizedNameFr : mapped.normalizedNameEn;
-        let normalizedCapitalToMatch =
+        const normalizedCapitalToMatch =
           lang === "fr"
             ? mapped.normalizedCapitalFr
             : mapped.normalizedCapitalEn;
 
-        let nameDisplay =
+        const nameDisplay =
           lang === "fr"
             ? mapped.name_fr || mapped.name_en || adminKey
             : mapped.name_en || adminKey;
-        let capitalDisplay =
+        const capitalDisplay =
           lang === "fr" && mapped.capital_fr
             ? mapped.capital_fr
             : mapped.capital || null;
@@ -169,13 +169,13 @@ const GameHUD = ({
             }
           }
         } else {
-          let targetNormalized =
+          const targetNormalized =
             mode === "countries" ||
             mode === "departments" ||
             mode === "rivers_mountains"
               ? normalizedNameToMatch
               : normalizedCapitalToMatch;
-          let targetDisplay =
+          const targetDisplay =
             mode === "countries" ||
             mode === "departments" ||
             mode === "rivers_mountains"

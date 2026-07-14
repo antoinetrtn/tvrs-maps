@@ -1,10 +1,11 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "../config/i18n";
 import "../App.css";
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
   const t = useTranslation(lang);
-  return (
+  return createPortal(
     <div className={`dialog-panel ${theme}`}>
       <div className="dialog-card">
         <p>{message}</p>
@@ -17,7 +18,8 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

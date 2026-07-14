@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { getFeatureAdmin } from "../utils/utils";
 import {
   GLITCH_SELECTION_TRANSITION_MS,
   getDeselectGlitchFadeProgress,
 } from "../config/gameConfig";
+import { PERFORMANCE } from "../config/gameConstants";
 import { applyPolygonFeedbackUniforms } from "../utils/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../utils/foundGreenPalette";
 import {
@@ -121,7 +121,11 @@ export function useGlobeAnimationLoop({
         currentIsError ||
         currentIsSuccess ||
         !!transitioningPreviousCountryRef?.current;
-      const minFrameMs = isUrgentAnim ? 0 : perfProfile?.isMobile ? 30 : 33;
+      const minFrameMs = isUrgentAnim
+        ? 0
+        : perfProfile?.isMobile
+          ? PERFORMANCE.animationFrameMs.mobile
+          : PERFORMANCE.animationFrameMs.desktop;
       if (minFrameMs > 0 && lastAnimFrameTimeRef.current) {
         const elapsed = time - lastAnimFrameTimeRef.current;
         if (elapsed < minFrameMs) {

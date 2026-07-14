@@ -8,7 +8,9 @@
   --z-sheet: 5100;
   --z-fullpage: 5200;
   --z-dialog: 5300;
+  --z-fx: 5250;
   --z-toast: 5400;
+  --z-celebration: 5450;
 }
 
 /* ──── UNIFIED OVERLAY ──── */

@@ -20,10 +20,10 @@ function resolvePolygonEmissiveProps({
   isLight,
   UI_COLORS,
 }) {
-  let emissiveHex = UI_COLORS.black;
-  let emissiveIntensity = 0;
-  let specularHex = new THREE.Color(UI_COLORS.black);
-  let shininess = 0.7;
+  const emissiveHex = UI_COLORS.black;
+  const emissiveIntensity = 0;
+  const specularHex = new THREE.Color(UI_COLORS.black);
+  const shininess = 0.7;
 
   if (showFoundOnGlobe && kind === "cap") {
     return {
@@ -122,8 +122,8 @@ export function getPolygonMaterialForFeature({
   safeColor,
   sharedMaterialsRef,
   getBaseColorForCountryAndKind,
-  mapBase,
-  lerpColor,
+  mapBase: _mapBase,
+  lerpColor: _lerpColor,
 }) {
   const { emissiveHex, emissiveIntensity, specularHex, shininess } =
     resolvePolygonEmissiveProps({

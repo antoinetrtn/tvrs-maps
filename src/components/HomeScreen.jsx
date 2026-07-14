@@ -36,7 +36,6 @@ const HomeScreen = ({
   setGameDuration,
   globeTheme,
   setGlobeTheme,
-  onOpenProfile,
   topExplorers = [],
   userProfile,
   setUserProfile,
@@ -53,6 +52,13 @@ const HomeScreen = ({
 
   // Stable close handler passed to ProfilePanel (helps with React.memo + click reliability)
   const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
+
+  const handleOpenAuth = useCallback(() => {
+    setProfileOpen(false);
+    setSettingsOpen(false);
+    setLeaderboardOpen(false);
+    onOpenAuth?.();
+  }, [onOpenAuth]);
   const { level, xpInLevel, xpNeededForNext, percent } = getLevelAndProgress(userProfile?.xp || 0);
 
   const displayExplorers = [...topExplorers];
@@ -417,7 +423,7 @@ const HomeScreen = ({
         theme={theme}
         localRecords={localRecords}
         session={session}
-        onOpenAuth={onOpenAuth}
+        onOpenAuth={handleOpenAuth}
       />
 
       <LeaderboardScreen

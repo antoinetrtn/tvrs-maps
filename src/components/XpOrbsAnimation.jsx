@@ -22,7 +22,7 @@ const XpOrbsAnimation = ({
     if (!ctx) return;
 
     let animationFrameId;
-    let particles = [];
+    const particles = [];
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;

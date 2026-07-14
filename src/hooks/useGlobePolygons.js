@@ -534,29 +534,31 @@ export function useGlobePolygons({
 
   const getPolygonStrokeWidth = useCallback(
     (d) => {
+      const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
       const admin = getFeatureAdmin(d);
       const isSelected = admin === selectedCountry;
       if (isDepartmentMode && d.isGhostCountry) {
-        return perfProfile?.isMobile ? 0.1 : 0.15;
+        return 0.15 * strokeScale;
       }
       if (isSelected) {
         const isGreenFill = foundSet.has(admin) || mode === "learn";
-        if (isGreenFill) return perfProfile?.isMobile ? 10 : 14;
-        return perfProfile?.isMobile ? 5.5 : 7.5;
+        if (isGreenFill) return 14 * strokeScale;
+        return 7.5 * strokeScale;
       }
-      if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
+      if (isDepartmentMode) return 1.1 * strokeScale;
       if (foundSet.has(admin)) {
-        const base = perfProfile?.isMobile ? 0.7 : 0.95;
+        const base = 0.95 * strokeScale;
         return base + (isLight ? 0.15 : 0.25);
       }
-      const thickness = perfProfile?.isMobile
-        ? (Number(UI_COLORS.strokeWidthMobile) || 0.55)
-        : (Number(UI_COLORS.strokeWidthDesktop) || 0.75);
+      const thickness =
+        Number(UI_COLORS.strokeWidthDesktop) ||
+        Number(UI_COLORS.strokeWidthMobile) ||
+        0.75;
 
       if (!UI_COLORS.isBlackoutTheme && (isLight || globeLightingEnabled)) {
-        return thickness + 0.2;
+        return (thickness + 0.2) * strokeScale;
       }
-      return thickness;
+      return thickness * strokeScale;
     },
     [
       globeLightingEnabled,

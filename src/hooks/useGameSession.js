@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { normalizeString } from "../utils/utils";
 import { FEEDBACK_TIMING } from "../config/gameConstants";
+import { AVATAR_COLORS } from "../config/designSystem";
+import { CHALLENGES } from "../data/challenges";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 
 export function useGameSession({
@@ -82,8 +84,8 @@ export function useGameSession({
       const c1 = activeDataMap[fromAdmin];
       if (!c1 || c1.lat === undefined) return null;
 
-      let sameRegionList = [];
-      let otherRegionList = [];
+      const sameRegionList = [];
+      const otherRegionList = [];
 
       Object.keys(activeDataMap).forEach((key) => {
         if (
@@ -389,7 +391,7 @@ export function useGameSession({
       if (!normalizedInput) return false;
       let matchFound = null;
 
-      for (let adminKey of Object.keys(activeDataMap)) {
+      for (const adminKey of Object.keys(activeDataMap)) {
         const mapped = activeDataMap[adminKey];
         let matchName = null;
         let matchCapital = null;
@@ -462,11 +464,11 @@ export function useGameSession({
       if (!isPlaying && mode !== "learn") setIsPlaying(true);
 
       const normalizedInput = normalizeString(inputVal);
-      let matchName =
+      const matchName =
         lang === "fr"
           ? normalizeString(mapped.name_fr)
           : normalizeString(mapped.name_en);
-      let matchCapital =
+      const matchCapital =
         lang === "fr" && mapped.capital_fr
           ? normalizeString(mapped.capital_fr)
           : mapped.capital
@@ -528,7 +530,7 @@ export function useGameSession({
       const normalizedInput = normalizeString(inputVal);
       if (!normalizedInput) return false;
 
-      for (let adminKey of Object.keys(activeDataMap)) {
+      for (const adminKey of Object.keys(activeDataMap)) {
         const mapped = activeDataMap[adminKey];
         if (!mapped) continue;
 

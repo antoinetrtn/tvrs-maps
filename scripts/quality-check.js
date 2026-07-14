@@ -312,6 +312,33 @@ sourceFiles.forEach(file => {
   }
 });
 
+// Ban rogue z-index overrides that break the panel/dialog stacking order
+const zIndexAllowListFiles = new Set([
+  'src/panelSystem.css',
+  'src/index.css',
+  'src/App.css'
+]);
+cssFiles.forEach(file => {
+  if (zIndexAllowListFiles.has(file)) return;
+  read(file).split('\n').forEach((lineText, index) => {
+    if (/var\(--z-/.test(lineText)) return;
+    const match = lineText.match(/z-index:\s*(\d+)/);
+    if (!match) return;
+    const value = Number(match[1]);
+    if (value > 6000) {
+      fail(file, index + 1, `z-index ${value} exceeds panel system max; use --z-sheet/--z-dialog tokens`);
+    }
+  });
+});
+
+// Run ESLint (unused imports, hooks rules, basic correctness)
+try {
+  console.log('Running ESLint...');
+  execSync('npx eslint src', { stdio: 'inherit' });
+} catch (e) {
+  fail('eslint', null, 'ESLint reported errors or warnings.');
+}
+
 // Run knip dead code audit
 try {
   console.log('Running dead code audit (knip)...');

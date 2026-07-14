@@ -22,7 +22,7 @@ export function resolveFoundCountryStroke({
   return lerpColor(FOUND_SURFACE_GREEN, UI_COLORS.black, isLight ? 0.58 : 0.5);
 }
 
-export function mutedFoundGreen(_mapBase, lerpColor) {
+export function mutedFoundGreen(_mapBase, _lerpColor) {
   return resolveFoundCountryColor();
 }
 
@@ -55,18 +55,18 @@ export function shouldUseRegionalUnfoundLand({
 
 export function resolveCountryCapColor({
   admin,
-  region,
-  mode,
+  region: _region,
+  mode: _mode,
   foundSet,
   selectedCountry,
   isError,
-  isSuccess,
+  isSuccess: _isSuccess,
   isEndScreen,
   isPerfectScore,
   isLearn,
-  isLight = false,
+  isLight: _isLight = false,
   UI_COLORS,
-  lerpColor,
+  lerpColor: _lerpColor,
   mapBase,
 }) {
   const isFound = foundSet.has(admin);

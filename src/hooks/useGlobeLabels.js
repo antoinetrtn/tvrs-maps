@@ -181,7 +181,7 @@ export function useGlobeLabels({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
 
-    let labelsToProcess = [];
+    const labelsToProcess = [];
 
     if (isHomeScreen) {
       if (selectedCountry) {

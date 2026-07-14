@@ -287,13 +287,13 @@ function App() {
       isMobile,
       isTablet,
       pixelRatio,
-      antialias: true,
+      antialias: !isMobile,
       enableAutoRotate: true,
       enablePointerInteraction: true,
       maxLabels: PERFORMANCE.maxLabels[tier],
       showAtmosphere: true,
       useImageTextures: false,
-      cullOffscreenCountries: false,
+      cullOffscreenCountries: isMobile,
       polygonCapCurvatureResolution:
         PERFORMANCE.polygonCapCurvatureResolution[tier],
     };
