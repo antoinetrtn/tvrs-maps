@@ -45,7 +45,7 @@ export const BREAKPOINTS = {
 
 /** Width reserved on the right for the data panel (panel + gutters). */
 export function getDataPanelLayoutWidth(viewportWidth) {
-  if (viewportWidth < 769) return 0;
+  if (viewportWidth < BREAKPOINTS.desktop) return 0;
   const panel = Math.min(380, Math.round(viewportWidth * 0.34));
   return panel + 32;
 }
@@ -67,4 +67,10 @@ export const PERFORMANCE = {
   maxPixelRatio: { mobile: 1.25, tablet: 1.5, desktop: 2.0 },
   maxLabels: { mobile: 4, tablet: 8, desktop: 20 },
   polygonCapCurvatureResolution: { mobile: 3.0, tablet: 2.5, desktop: 2.0 },
+  /** Scales globe accent lights on mobile — keeps the look, saves GPU vs full desktop. */
+  mobileLightScale: 0.9,
+  /** Fresnel atmosphere sphere segments (width × height). */
+  innerGlowSegments: { mobile: 32, desktop: 48 },
+  /** Min ms between non-urgent globe animation frames. */
+  animationFrameMs: { mobile: 40, desktop: 33 },
 };

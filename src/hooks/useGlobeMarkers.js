@@ -10,6 +10,7 @@ import {
 import {
   getLngLatDistance,
   getMobileRenderRadius,
+  getCanonicalPosition,
 } from "../utils/utils";
 
 const _lerpColor1 = new THREE.Color();
@@ -33,6 +34,7 @@ export function useGlobeMarkers({
   isLight,
   globeTheme,
   theme,
+  canonicalPositions = {},
 }) {
   const lerpColor = useCallback(
     (a, b, amount) => {
@@ -65,13 +67,16 @@ export function useGlobeMarkers({
         if (data.lat === undefined || data.lng === undefined) return false;
         return !countriesWithGeometry.has(admin);
       })
-      .map(([admin, data]) => ({
-        admin,
-        lat: data.lat,
-        lng: data.lng,
-        region: data.region,
-      }));
-  }, [countriesWithGeometry, isDepartmentMode, isRiversMountainsMode]);
+      .map(([admin, data]) => {
+        const canonical = canonicalPositions[admin] || getCanonicalPosition(data);
+        return {
+          admin,
+          lat: canonical ? canonical.lat : data.lat,
+          lng: canonical ? canonical.lng : data.lng,
+          region: data.region,
+        };
+      });
+  }, [countriesWithGeometry, isDepartmentMode, isRiversMountainsMode, canonicalPositions]);
 
   const visibleMarkersData = useMemo(() => {
     if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {

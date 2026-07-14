@@ -2,7 +2,7 @@
   position: fixed;
   top: 76px; /* offset from the top HUD controls */
   right: 16px;
-  z-index: 10500;
+  z-index: var(--z-toast);
   pointer-events: none;
 }
 

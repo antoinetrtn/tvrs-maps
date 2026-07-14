@@ -21,7 +21,7 @@ const GameSessionView = ({
     {showEndScreen && <EndScreen {...endScreenProps} />}
     {gamePanelOpen && (
       <>
-        {isMobileViewport && (
+        {(isMobileViewport || panelProps?.variant === "overlay") && (
           <div
             className="panel-overlay open game-panel-overlay"
             onClick={closePanel}

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Close, ArrowLeft, User, Earth, Gamepad } from "pixelarticons/react";
 import { useTranslation } from "../config/i18n";
 import {
@@ -26,8 +27,6 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   // On error, start a short cooldown to prevent hammering the auth endpoints (avoids 429 rate limits)
   useEffect(() => {
     if (errorMsg) {
-      const until = Date.now() + 8000;
-      setCooldownUntil(until);
       setIsCooldown(true);
 
       const timer = setTimeout(() => {
@@ -312,7 +311,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
     step === "email" ? renderEmailStep() :
     (!successMsg ? renderPasswordStep() : null);
 
-  return (
+  return createPortal(
     <div className={`dialog-panel ${theme}`} onClick={onClose}>
       <div className="dialog-card" onClick={(e) => e.stopPropagation()}>
         {renderHeader()}
@@ -320,7 +319,8 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         {successMsg && <div className="form-feedback success">{successMsg}</div>}
         {stepContent}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

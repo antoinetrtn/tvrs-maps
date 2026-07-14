@@ -761,7 +761,7 @@
     max-height: 100dvh !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    z-index: 20000 !important;
+    z-index: var(--z-sheet) !important;
     padding-top: calc(var(--spacing-md) + var(--safe-top)) !important;
     padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
     overflow: hidden !important;

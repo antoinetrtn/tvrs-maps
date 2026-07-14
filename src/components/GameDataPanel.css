@@ -323,7 +323,7 @@
   background: color-mix(in srgb, var(--overlay-bg) 55%, transparent);
 }
 
-/* Mobile overlay sheet */
+/* Mobile/tablet sheet layout for .side panels (matches desktop breakpoint logic) */
 @media (max-width: 1023px) {
   .game-data-panel.side {
     top: auto;

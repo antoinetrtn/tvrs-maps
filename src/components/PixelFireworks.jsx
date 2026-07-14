@@ -90,8 +90,8 @@ const PixelFireworks = ({ duration = 6000 }) => {
       }
     }
 
-    let particles = [];
-    let rockets = [];
+    const particles = [];
+    const rockets = [];
 
     // Launch rocket function
     const spawnRocket = () => {

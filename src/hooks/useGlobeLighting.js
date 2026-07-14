@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import { GLOBE_STYLE, getOpaqueThreeColor } from "../config/designSystem";
+import { PERFORMANCE } from "../config/gameConstants";
 import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "../config/globeShaders";
 
 export function useGlobeLighting({
@@ -89,8 +90,11 @@ export function useGlobeLighting({
       studioRight.name = "globe-studio-right";
       studioRight.position.set(4.5, -1.2, 2.8);
 
+      const glowSegments = perfProfile?.isMobile
+        ? PERFORMANCE.innerGlowSegments.mobile
+        : PERFORMANCE.innerGlowSegments.desktop;
       const innerGlow = new THREE.Mesh(
-        new THREE.SphereGeometry(114.0, 64, 64),
+        new THREE.SphereGeometry(114.0, glowSegments, glowSegments),
         new THREE.ShaderMaterial({
           vertexShader: FRESNEL_VERTEX_SHADER,
           fragmentShader: FRESNEL_FRAGMENT_SHADER,
@@ -144,20 +148,13 @@ export function useGlobeLighting({
     } = globeLightingRef.current;
 
     const isMobile = perfProfile?.isMobile;
+    const lightScale = isMobile ? PERFORMANCE.mobileLightScale : 1;
 
-    if (isMobile) {
-      rimLight.visible = false;
-      studioLight.visible = false;
-      studioLeft.visible = false;
-      studioRight.visible = false;
-      innerGlow.visible = false;
-    } else {
-      rimLight.visible = !UI_COLORS.isBlackoutTheme;
-      studioLight.visible = true;
-      studioLeft.visible = !UI_COLORS.isBlackoutTheme;
-      studioRight.visible = !UI_COLORS.isBlackoutTheme;
-      innerGlow.visible = true;
-    }
+    rimLight.visible = !UI_COLORS.isBlackoutTheme;
+    studioLight.visible = true;
+    studioLeft.visible = !UI_COLORS.isBlackoutTheme;
+    studioRight.visible = !UI_COLORS.isBlackoutTheme;
+    innerGlow.visible = true;
 
     if (justCreatedLighting) {
       scene.traverse((obj) => {
@@ -168,25 +165,25 @@ export function useGlobeLighting({
     }
 
     if (UI_COLORS.isBlackoutTheme) {
-      keyLight.intensity = isLight ? 0.28 : 0.44;
+      keyLight.intensity = (isLight ? 0.28 : 0.44) * lightScale;
       keyLight.position.set(-3.5, 2.4, 4.2);
       rimLight.intensity = 0;
-      fillLight.intensity = isLight ? 0.44 : 0.32;
-      studioLight.intensity = isLight ? 0.3 : 0.18;
+      fillLight.intensity = (isLight ? 0.44 : 0.32) * lightScale;
+      studioLight.intensity = (isLight ? 0.3 : 0.18) * lightScale;
       studioLeft.intensity = 0;
       studioLeft.position.set(-4.5, 2.5, 3.5);
       studioRight.intensity = 0;
       studioRight.position.set(4.5, -1.2, 2.8);
     } else {
-      keyLight.intensity = isLight ? 0.12 : 0.16;
+      keyLight.intensity = (isLight ? 0.12 : 0.16) * lightScale;
       keyLight.position.set(-3.5, 2.4, 4.2);
-      rimLight.intensity = isLight ? 0.14 : 0.24;
+      rimLight.intensity = (isLight ? 0.14 : 0.24) * lightScale;
       rimLight.position.set(3.8, 1.3, -3.6);
-      fillLight.intensity = isLight ? 0.72 : 0.68;
-      studioLight.intensity = isLight ? 0.54 : 0.48;
-      studioLeft.intensity = isLight ? 0.08 : 0.1;
+      fillLight.intensity = (isLight ? 0.72 : 0.68) * lightScale;
+      studioLight.intensity = (isLight ? 0.54 : 0.48) * lightScale;
+      studioLeft.intensity = (isLight ? 0.08 : 0.1) * lightScale;
       studioLeft.position.set(-4.5, 2.5, 3.5);
-      studioRight.intensity = isLight ? 0.08 : 0.1;
+      studioRight.intensity = (isLight ? 0.08 : 0.1) * lightScale;
       studioRight.position.set(4.5, -1.2, 2.8);
     }
 
@@ -197,11 +194,11 @@ export function useGlobeLighting({
     studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
     studioRight.color.set(safeColor(UI_COLORS.lightingRight));
 
-    let glowColorHex = isLight
+    const glowColorHex = isLight
       ? (Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0)
       : (Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0);
-    let glowPower = Number(UI_COLORS.glowPower) || 1.2;
-    let glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
+    const glowPower = Number(UI_COLORS.glowPower) || 1.2;
+    const glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
 
     targetGlowColorRef.current.setHex(glowColorHex);
     targetGlowPowerRef.current = glowPower;
