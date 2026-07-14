@@ -40,7 +40,9 @@ import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { disposeBiomeCache, mountainGlitchUniforms } from "./utils/LowPolyBiomes";
 
-const SELECTION_TRANSITION_DURATION = 120; // slightly longer to reduce jank with shader fade
+import { GLITCH_SELECTION_TRANSITION_MS } from "./config/gameConfig";
+
+const SELECTION_TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
 
 const GlobeMap = ({
   mode,
@@ -314,15 +316,11 @@ const GlobeMap = ({
     createBiomeThreeObject,
   } = useGlobeBiomes({
     mode,
-    isLearnRivers,
     gameDataMap,
     selectedCountry,
     foundSet,
     isHomeScreen,
-    UI_COLORS,
-    isLight,
     globeTheme,
-    theme,
     learnToggles,
   });
 
@@ -395,6 +393,9 @@ const GlobeMap = ({
   }, [UI_COLORS.atmosphere]);
 
   return (
+    <div
+      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"}`}
+    >
     <div
       className={`globe-container ${theme}`}
       style={{ width: "100%", height: "100%", position: "relative" }}
@@ -577,6 +578,7 @@ const GlobeMap = ({
           onBackgroundClick={handleBackgroundClick}
         />
       </div>
+    </div>
     </div>
   );
 };

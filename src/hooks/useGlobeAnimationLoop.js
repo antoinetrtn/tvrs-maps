@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { getFeatureAdmin } from "../utils/utils";
+import {
+  GLITCH_SELECTION_TRANSITION_MS,
+  getDeselectGlitchFadeProgress,
+} from "../config/gameConfig";
 
 export function useGlobeAnimationLoop({
   globeEl,
@@ -273,10 +277,7 @@ export function useGlobeAnimationLoop({
       const prevCountry = transitioningPreviousCountryRef?.current;
       if (prevCountry) {
         const elapsed = time - selectionTransitionStartRef.current;
-        // Shorter, subtler glitch dissolve aligned with game "léger glitch" theme.
-        // 420ms total feels more professional than long 600ms dissolve.
-        const TRANSITION_DURATION = 420;
-        const FADE_DELAY = 60;
+        const TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
 
         const prevCapMat = polygonMaterialCacheRef.current.cap.get(prevCountry);
         const prevSideMat = polygonMaterialCacheRef.current.side.get(prevCountry);
@@ -307,10 +308,11 @@ export function useGlobeAnimationLoop({
             }
           });
         } else {
-          let fadeProgress = 0.0;
-          if (elapsed > FADE_DELAY) {
-            fadeProgress = (elapsed - FADE_DELAY) / (TRANSITION_DURATION - FADE_DELAY);
-          }
+          const fadeProgress = Math.min(
+            1,
+            Math.max(0, getDeselectGlitchFadeProgress(elapsed, TRANSITION_DURATION)),
+          );
+
           [prevCapMat, prevSideMat].forEach((mat, idx) => {
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;

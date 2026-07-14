@@ -59,14 +59,34 @@ export const RELIEF = {
   targetHintScale: 0.5   // unfound: neutral, still clearly visible/clickable
 };
 
+/** Shader dissolve when deselecting a country (ms). Kept in sync with polygon altitude tween. */
+export const GLITCH_SELECTION_TRANSITION_MS = 360;
+
+/** Stuttery 0→1 curve: linger in heavy glitch, burst, then snap to target. */
+export const getDeselectGlitchFadeProgress = (elapsedMs, durationMs = GLITCH_SELECTION_TRANSITION_MS) => {
+  const holdMs = Math.round(durationMs * 0.32);
+  const burstMs = Math.round(durationMs * 0.48);
+  if (elapsedMs <= holdMs) {
+    return (elapsedMs / holdMs) * 0.22;
+  }
+  if (elapsedMs <= holdMs + burstMs) {
+    const burstT = (elapsedMs - holdMs) / burstMs;
+    return 0.22 + burstT * 0.48 + Math.sin(burstT * 28.0) * 0.04;
+  }
+  const settleT =
+    (elapsedMs - holdMs - burstMs) /
+    Math.max(1, durationMs - holdMs - burstMs);
+  return 0.7 + settleT * 0.3;
+};
+
 export const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(["France"]);
 
 export const DEPARTMENT_MODE_FRANCE_VIEW = {
   lat: 46.5,
   lng: 2.6,
   altitude: {
-    mobile: 0.62,
-    desktop: 0.42,
+    mobile: 0.48,
+    desktop: 0.3,
   },
 };
 

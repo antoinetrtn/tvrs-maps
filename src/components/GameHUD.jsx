@@ -212,7 +212,7 @@ const GameHUD = ({
                         ? `${mapped.height}m`
                         : `${mapped.length}km`
                       : mode === "capitals"
-                        ? mapped.name_fr || mapped.name_en || adminKey
+                        ? null
                         : mapped?.capital_fr || mapped?.capital,
               });
             }

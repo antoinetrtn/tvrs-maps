@@ -14,6 +14,102 @@ const getDepartmentModeFrancePointOfView = (width) => ({
       : DEPARTMENT_MODE_FRANCE_VIEW.altitude.desktop,
 });
 
+const buildSelectedCountryCameraTarget = ({
+  data,
+  viewport,
+  isHomeScreen,
+  isKeyboardMode,
+  isDepartmentMode,
+  hasPreviousSelection,
+  currentPOV,
+  maxWindowHeight,
+}) => {
+  const isMobile = viewport.width < 768;
+  const departmentFranceAltitude = isDepartmentMode
+    ? getDepartmentModeFrancePointOfView(viewport.width).altitude
+    : null;
+  const fallbackAltitude = isHomeScreen
+    ? isMobile
+      ? 2.0
+      : 1.25
+    : isDepartmentMode
+      ? departmentFranceAltitude
+      : isMobile
+        ? 1.8
+        : 0.68;
+  const preservedAltitude =
+    currentPOV && Number.isFinite(currentPOV.altitude)
+      ? currentPOV.altitude
+      : fallbackAltitude;
+  const isKeyboardOpen = isMobile && isKeyboardMode;
+  const keyboardHeight = Math.max(0, maxWindowHeight - viewport.height);
+  const keyboardRatio = keyboardHeight / maxWindowHeight;
+  const bottomHUDRatio = isMobile ? 0.15 : 0;
+  const occlusionRatio = isKeyboardOpen ? keyboardRatio : bottomHUDRatio;
+  const visibleHeightDegrees = 36 * preservedAltitude;
+  const latOffset = isHomeScreen
+    ? 0
+    : -visibleHeightDegrees * (occlusionRatio * 0.7);
+
+  return {
+    lat: data.lat + latOffset,
+    lng: data.lng,
+    altitude: hasPreviousSelection
+      ? isHomeScreen
+        ? fallbackAltitude
+        : preservedAltitude
+      : Math.min(preservedAltitude, fallbackAltitude),
+  };
+};
+
+const applyIdleCameraPointOfView = ({
+  globeEl,
+  viewport,
+  isEndScreen,
+  isHomeScreen,
+  isDepartmentMode,
+  wasHomeScreen,
+}) => {
+  if (isEndScreen) {
+    globeEl.current.pointOfView(
+      isDepartmentMode
+        ? getDepartmentModeFrancePointOfView(viewport.width)
+        : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
+      1200,
+    );
+    return;
+  }
+
+  if (isHomeScreen) {
+    const overviewAltitude = viewport.width < 768 ? 2.5 : 1;
+    if (!wasHomeScreen) {
+      const currentPOV = globeEl.current.pointOfView();
+      globeEl.current.pointOfView(
+        { lat: 18, lng: currentPOV?.lng ?? 20, altitude: overviewAltitude },
+        1000,
+      );
+    } else {
+      globeEl.current.pointOfView({ altitude: overviewAltitude }, 1000);
+    }
+    return;
+  }
+
+  if (isDepartmentMode) {
+    globeEl.current.pointOfView(
+      getDepartmentModeFrancePointOfView(viewport.width),
+      wasHomeScreen ? 1100 : 700,
+    );
+    return;
+  }
+
+  if (wasHomeScreen) {
+    globeEl.current.pointOfView(
+      { lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.35 },
+      700,
+    );
+  }
+};
+
 export function useGlobeCamera({
   globeEl,
   selectedCountry,
@@ -144,31 +240,17 @@ export function useGlobeCamera({
         riversMountainsDataMap[selectedCountry];
 
       if (data && data.lat !== undefined) {
-        const isMobile = viewport.width < 768;
-        const currentPOV = globeEl.current.pointOfView();
         const hasPreviousSelection = !!previousSelectedCountryRef.current;
-        const fallbackAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.25) : (isMobile ? 1.8 : 0.68);
-        const preservedAltitude =
-          currentPOV && Number.isFinite(currentPOV.altitude)
-            ? currentPOV.altitude
-            : fallbackAltitude;
-        const isKeyboardOpen = isMobile && isKeyboardMode;
-        const layoutHeight = maxWindowHeightRef.current;
-        const keyboardHeight = Math.max(0, layoutHeight - viewport.height);
-        const keyboardRatio = keyboardHeight / layoutHeight;
-        const bottomHUDRatio = isMobile ? 0.15 : 0;
-        const occlusionRatio = isKeyboardOpen ? keyboardRatio : bottomHUDRatio;
-
-        const visibleHeightDegrees = 36 * preservedAltitude;
-        const latOffset = isHomeScreen ? 0 : -visibleHeightDegrees * (occlusionRatio * 0.7);
-
-        const target = {
-          lat: data.lat + latOffset,
-          lng: data.lng,
-          altitude: hasPreviousSelection
-            ? (isHomeScreen ? fallbackAltitude : preservedAltitude)
-            : Math.min(preservedAltitude, fallbackAltitude),
-        };
+        const target = buildSelectedCountryCameraTarget({
+          data,
+          viewport,
+          isHomeScreen,
+          isKeyboardMode,
+          isDepartmentMode,
+          hasPreviousSelection,
+          currentPOV: globeEl.current.pointOfView(),
+          maxWindowHeight: maxWindowHeightRef.current,
+        });
         const previousTarget = lastTargetRef.current;
         const onlyViewportNudge =
           previousTarget &&
@@ -184,34 +266,15 @@ export function useGlobeCamera({
         globeEl.current.pointOfView(target, duration);
         lastTargetRef.current = target;
       }
-    } else if (isEndScreen && globeEl.current) {
-      globeEl.current.pointOfView(
-        isDepartmentMode
-          ? getDepartmentModeFrancePointOfView(viewport.width)
-          : { lat: 20, lng: 0, altitude: viewport.width < 768 ? 2.2 : 1.8 },
-        1200,
-      );
-    } else if (isHomeScreen && globeEl.current) {
-      const overviewAltitude = viewport.width < 768 ? 2.5 : 1;
-      if (!wasHomeScreenRef.current) {
-        const currentPOV = globeEl.current.pointOfView();
-        globeEl.current.pointOfView(
-          { lat: 18, lng: currentPOV?.lng ?? 20, altitude: overviewAltitude },
-          1000,
-        );
-      } else {
-        globeEl.current.pointOfView({ altitude: overviewAltitude }, 1000);
-      }
-    } else if (isDepartmentMode && globeEl.current) {
-      globeEl.current.pointOfView(
-        getDepartmentModeFrancePointOfView(viewport.width),
-        700,
-      );
-    } else if (wasHomeScreenRef.current && globeEl.current) {
-      globeEl.current.pointOfView(
-        { lat: 18, lng: 20, altitude: viewport.width < 768 ? 1.8 : 1.35 },
-        700,
-      );
+    } else if (globeEl.current) {
+      applyIdleCameraPointOfView({
+        globeEl,
+        viewport,
+        isEndScreen,
+        isHomeScreen,
+        isDepartmentMode,
+        wasHomeScreen: wasHomeScreenRef.current,
+      });
     }
 
     if (selectedCountry !== previousSelectedCountryRef.current) {
@@ -259,7 +322,7 @@ export function useGlobeCamera({
   const globeHeight = maxWindowHeightRef.current;
   const homeGlobeOffset =
     isHomeScreen && !isKeyboardMode && globeWidth >= 769
-      ? Math.round(globeWidth * 0.18)
+      ? Math.round(globeWidth * 0.14)
       : 0;
   const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
 

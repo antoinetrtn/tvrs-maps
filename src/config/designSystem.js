@@ -681,6 +681,7 @@ export const GLITCH_EFFECT_SETTINGS = {
   scanlineFrequency: 15.0,
   scanlineAmplitude: 5.0,
   colorSuccess: [0.05, 0.92, 0.52], // Neon green
+  foundMountainColor: '#05f298', // constant found-mountain tint (all themes)
   colorError: [1.0, 0.27, 0.0],    // Orange-red
   sideWallOpacity: 0.55,
   noiseRangeDark: { min: 0.12, max: 0.68 },
