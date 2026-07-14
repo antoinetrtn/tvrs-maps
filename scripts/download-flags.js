@@ -69,10 +69,8 @@ const run = async () => {
         } catch (err) {
           failCount++;
           const safeName = sanitizeForLog(name);
-          const safeErrorMessage = sanitizeForLog(err?.message ?? err);
           console.error(
-            `Failed to download flag for ${safeName} (${iso2.toUpperCase()}):`,
-            safeErrorMessage
+            `Failed to download flag for ${safeName} (${iso2.toUpperCase()}).`
           );
         }
       })
