@@ -14,7 +14,6 @@ import {
 } from "./config/designSystem";
 import { useTranslation } from "./config/i18n";
 import SpaceBackground from "./components/SpaceBackground";
-
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLighting } from "./hooks/useGlobeLighting";
@@ -174,6 +173,7 @@ const GlobeMap = ({
     isDepartmentMode,
     gameDataMap,
     perfProfile,
+    isPanelOpen,
     setTransitioningPreviousCountryState,
     selectionTransitionStartRef,
     transitioningPreviousCountryRef,

@@ -14,7 +14,7 @@ import {
   Play,
 } from "pixelarticons/react";
 import Logo from "./Logo";
-import LearnModeToggles from "./LearnModeToggles";
+
 import "./GameHUD.css";
 import { getThemeRegionColor } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
@@ -55,6 +55,7 @@ const GameHUD = ({
   onToggleLearnPanel,
   showLearnPanel,
   hideLearnInput = false,
+  hideHudPlayStop = false,
 }) => {
 
   const [inputValue, setInputValue] = useState("");
@@ -336,14 +337,14 @@ const GameHUD = ({
 
             <div className="hud-top-right">
               {mode === "learn" ? (
-                <LearnModeToggles
-                  learnToggles={learnToggles}
-                  onToggleLearn={onToggleLearn}
-                  onToggleLearnPanel={onToggleLearnPanel}
-                  showLearnPanel={showLearnPanel}
-                  lang={lang}
-                  showTableButton
-                />
+                <button
+                  className={`hud-btn-circular ${showLearnPanel ? "active" : ""}`}
+                  onClick={onToggleLearnPanel}
+                  onMouseDown={(e) => e.preventDefault()}
+                  title={t("data_table")}
+                >
+                  <InfoBox width={18} height={18} />
+                </button>
               ) : (
                 <div style={{ display: "flex", gap: "var(--spacing-sm)", alignItems: "center", pointerEvents: "auto" }}>
                   {isPlaying && !isGameOver ? (
@@ -422,13 +423,7 @@ const GameHUD = ({
             </div>
 
             <div className="hud-top-right">
-              {mode === "learn" ? (
-                <LearnModeToggles
-                  learnToggles={learnToggles}
-                  onToggleLearn={onToggleLearn}
-                  lang={lang}
-                />
-              ) : isPlaying && !isGameOver ? (
+              {mode === "learn" ? null : hideHudPlayStop ? null : isPlaying && !isGameOver ? (
                 <button
                   className="hud-btn-circular"
                   style={{ color: "var(--error)" }}

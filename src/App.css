@@ -176,10 +176,6 @@
   .globe-map-shell.game-layout .globe-content-wrapper {
     --globe-layout-x: 0px;
   }
-
-  .app-container.data-panel-open .globe-map-shell.game-layout .globe-content-wrapper {
-    --globe-layout-x: clamp(-220px, -20vw, -140px);
-  }
 }
 
 /* Screen transition glitch style (applies only to UI elements to keep the globe slide 100% smooth) */

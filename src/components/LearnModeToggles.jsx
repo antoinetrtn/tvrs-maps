@@ -9,6 +9,7 @@ const LearnModeToggles = ({
   showLearnPanel,
   lang,
   showTableButton = false,
+  compact = false,
 }) => {
   const t = useTranslation(lang);
   const {
@@ -20,7 +21,7 @@ const LearnModeToggles = ({
   } = learnToggles;
 
   return (
-    <div className="learn-toggles-group glass-panel">
+    <div className={`learn-toggles-group glass-panel ${compact ? "compact" : ""}`}>
       <button
         className={`learn-toggle-btn ${showCountryLabels ? "active" : ""}`}
         onClick={() => onToggleLearn("showCountryLabels")}

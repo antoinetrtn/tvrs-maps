@@ -95,6 +95,8 @@ export function useGameSessionProps({
         onToggleLearnPanel: () => setShowLearnPanel((v) => !v),
         showLearnPanel,
         hideLearnInput: mode === "learn" && !isMobileViewport,
+        isPanelOpen: isPanelOpen && mode !== "learn",
+        hideHudPlayStop: isPanelOpen && mode !== "learn",
       },
       globeProps: {
         mode,
@@ -158,6 +160,9 @@ export function useGameSessionProps({
         searchQuery: mode === "learn" ? learnSearchQuery : undefined,
         onSearchChange: mode === "learn" ? setLearnSearchQuery : undefined,
         showSearch: mode === "learn" || !isMobileViewport,
+        isLearnMode: mode === "learn",
+        learnToggles: mode === "learn" ? learnToggles : undefined,
+        onToggleLearn: mode === "learn" ? onToggleLearn : undefined,
       },
       showHud: currentScreen === "game" && !showEndScreen,
       showEndScreen: currentScreen === "game" && showEndScreen,

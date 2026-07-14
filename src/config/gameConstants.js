@@ -43,6 +43,13 @@ export const BREAKPOINTS = {
   desktop: 1024,
 };
 
+/** Width reserved on the right for the data panel (panel + gutters). */
+export function getDataPanelLayoutWidth(viewportWidth) {
+  if (viewportWidth < 769) return 0;
+  const panel = Math.min(380, Math.round(viewportWidth * 0.34));
+  return panel + 32;
+}
+
 // --- Persistence -------------------------------------------------------------
 export const STORAGE_KEYS = {
   globeTheme: "tvrs-globe-theme",

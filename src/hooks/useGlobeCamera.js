@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
+import { getDataPanelLayoutWidth } from "../config/gameConstants";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
@@ -121,6 +122,7 @@ export function useGlobeCamera({
   isDepartmentMode,
   gameDataMap,
   perfProfile,
+  isPanelOpen = false,
   setTransitioningPreviousCountryState,
   selectionTransitionStartRef,
   transitioningPreviousCountryRef,
@@ -318,11 +320,14 @@ export function useGlobeCamera({
     maxWindowHeightRef.current = window.innerHeight;
   }
 
-  const globeWidth = maxWindowWidthRef.current;
+  const panelLayoutWidth = isPanelOpen
+    ? getDataPanelLayoutWidth(viewport.width)
+    : 0;
+  const globeWidth = Math.max(320, maxWindowWidthRef.current - panelLayoutWidth);
   const globeHeight = maxWindowHeightRef.current;
   const homeGlobeOffset =
-    isHomeScreen && !isKeyboardMode && globeWidth >= 769
-      ? Math.round(globeWidth * 0.14)
+    isHomeScreen && !isKeyboardMode && maxWindowWidthRef.current >= 769
+      ? Math.round(maxWindowWidthRef.current * 0.14)
       : 0;
   const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
 
