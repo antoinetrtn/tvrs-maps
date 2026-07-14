@@ -63,9 +63,10 @@ const run = async () => {
           console.log(`Downloaded flag for ${name} (${iso2.toUpperCase()})`);
         } catch (err) {
           failCount++;
+          const safeErrorMessage = String(err?.message ?? err).replace(/[\r\n]/g, " ");
           console.error(
             `Failed to download flag for ${name} (${iso2.toUpperCase()}):`,
-            err.message
+            safeErrorMessage
           );
         }
       })
