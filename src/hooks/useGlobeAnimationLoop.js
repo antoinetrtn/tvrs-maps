@@ -7,6 +7,11 @@ import {
 } from "../config/gameConfig";
 import { applyPolygonFeedbackUniforms } from "../utils/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../utils/foundGreenPalette";
+import {
+  getAnimatedPolygonMaterialCount,
+  polygonGlitchUniforms,
+  unregisterAnimatedPolygonMaterial,
+} from "../utils/polygonGlitchShader";
 import { syncSelectedCountryShaderUniforms } from "../utils/selectionTransitionShader";
 
 const _transitionTargetColor = new THREE.Color();
@@ -103,16 +108,43 @@ export function useGlobeAnimationLoop({
       }
       lastAnimFrameTimeRef.current = time;
 
+      const timeSec = time / 1000;
+
       if (globeMaterial && globeMaterial.userData.shader) {
         if (globeMaterial.userData.shader.uniforms.uTime) {
-          globeMaterial.userData.shader.uniforms.uTime.value = time / 1000;
+          globeMaterial.userData.shader.uniforms.uTime.value = timeSec;
         }
       }
 
-      mountainGlitchUniforms.uTime.value = time / 1000;
+      const capMat = currentSelectedCountry
+        ? polygonMaterialCacheRef.current.cap.get(currentSelectedCountry)
+        : null;
+      const sideMat = currentSelectedCountry
+        ? polygonMaterialCacheRef.current.side.get(currentSelectedCountry)
+        : null;
+      const selectedHasShader =
+        !!currentSelectedCountry &&
+        (!!capMat?.userData?.shader || !!sideMat?.userData?.shader);
+      const hasAnimatedShaders = getAnimatedPolygonMaterialCount() > 0;
+      const needsSharedTime =
+        hasAnimatedShaders &&
+        (currentIsEndScreen ||
+          currentIsError ||
+          currentIsSuccess ||
+          !!transitioningPreviousCountryRef?.current ||
+          selectedHasShader);
+
+      if (needsSharedTime) {
+        polygonGlitchUniforms.uTime.value = timeSec;
+      }
+      if (currentIsError || currentIsSuccess) {
+        polygonGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
+      }
+
+      mountainGlitchUniforms.uTime.value = timeSec;
       mountainGlitchUniforms.uIsError.value = currentSelectedCountry && currentIsError ? 1.0 : 0.0;
       mountainGlitchUniforms.uIsSuccess.value = currentSelectedCountry && currentIsSuccess ? 1.0 : 0.0;
-      if (mountainGlitchUniforms.uFoundGreen) {
+      if (currentIsError || currentIsSuccess) {
         mountainGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
       }
 
@@ -192,18 +224,8 @@ export function useGlobeAnimationLoop({
 
       }
 
-      const capMat = currentSelectedCountry
-        ? polygonMaterialCacheRef.current.cap.get(currentSelectedCountry)
-        : null;
-      const sideMat = currentSelectedCountry
-        ? polygonMaterialCacheRef.current.side.get(currentSelectedCountry)
-        : null;
       const needsSelectedShaderSync =
-        !!currentSelectedCountry &&
-        (currentIsError ||
-          currentIsSuccess ||
-          !!capMat?.userData?.shader ||
-          !!sideMat?.userData?.shader);
+        !!currentSelectedCountry && (currentIsError || currentIsSuccess);
 
       if (needsSelectedShaderSync) {
         [capMat, sideMat].forEach((mat, matIndex) => {
@@ -211,7 +233,6 @@ export function useGlobeAnimationLoop({
           mat.userData.kind = matIndex === 0 ? "cap" : "side";
           syncSelectedCountryShaderUniforms({
             shader: mat.userData.shader,
-            timeSec: time / 1000,
             isLight,
             isBlackoutTheme: UI_COLORS.isBlackoutTheme,
             isError: currentIsError,
@@ -251,6 +272,7 @@ export function useGlobeAnimationLoop({
             const key = `shader-${prevCountry}-${kind}-${isMobileStr}-${globeTheme}`;
             const mat = sharedMaterialsRef.current.get(key);
             if (mat) {
+              unregisterAnimatedPolygonMaterial(mat);
               mat.dispose();
               sharedMaterialsRef.current.delete(key);
             }
@@ -265,9 +287,6 @@ export function useGlobeAnimationLoop({
           [prevCapMat, prevSideMat].forEach((mat, idx) => {
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;
-              if (shader.uniforms.uTime) {
-                shader.uniforms.uTime.value = time / 1000;
-              }
               if (shader.uniforms.uFadeProgress) {
                 const isMissedOnEnd = currentIsEndScreen && !foundSet.has(prevCountry);
                 shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : fadeProgress;
@@ -280,9 +299,6 @@ export function useGlobeAnimationLoop({
                   ),
                 );
               }
-              if (shader.uniforms.uFoundGreen) {
-                shader.uniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
-              }
               if (shader.uniforms.uSelectInTransition) {
                 shader.uniforms.uSelectInTransition.value = 0.0;
               }
@@ -294,22 +310,12 @@ export function useGlobeAnimationLoop({
         }
       }
 
-      let endScreenShaderWork = false;
-      if (currentIsEndScreen) {
-        polygonMaterialCacheRef.current.cap.forEach((mat) => {
-          if (mat?.userData?.shader?.uniforms?.uTime) {
-            mat.userData.shader.uniforms.uTime.value = time / 1000;
-            endScreenShaderWork = true;
-          }
-        });
-      }
-
       const hasWork =
+        needsSharedTime ||
         needsSelectedShaderSync ||
         transitioningPreviousCountryRef?.current ||
         !glowSettled ||
-        needsGraticuleStyleRef.current ||
-        endScreenShaderWork;
+        needsGraticuleStyleRef.current;
 
       if (hasWork) {
         animFrameIdRef.current = requestAnimationFrame(animateScene);
@@ -382,7 +388,7 @@ export function useGlobeAnimationLoop({
     if (animFrameIdRef.current == null && animateSceneRef.current) {
       animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
     }
-  }, [selectedCountry, isError, isSuccess, transitioningPreviousCountryState]);
+  }, [selectedCountry, isError, isSuccess, isEndScreen, transitioningPreviousCountryState]);
 
   useEffect(() => {
     if ((countriesData && countriesData.length > 0) || (departmentsData && departmentsData.length > 0)) {

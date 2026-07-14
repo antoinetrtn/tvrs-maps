@@ -14,6 +14,10 @@ import {
 import { getPolygonAltitudeFor, GAME_REGIONS } from "../config/gameConfig";
 import { getPolygonMaterialForFeature } from "../utils/globePolygonMaterial";
 import {
+  clearAnimatedPolygonMaterials,
+  unregisterAnimatedPolygonMaterial,
+} from "../utils/polygonGlitchShader";
+import {
   FOUND_HIGHLIGHT,
   mutedFoundGreen,
   resolveCountryCapColor,
@@ -506,8 +510,12 @@ export function useGlobePolygons({
     return () => {
       materialCache.cap.clear();
       materialCache.side.clear();
-      sharedPool.forEach((material) => material.dispose());
+      sharedPool.forEach((material) => {
+        unregisterAnimatedPolygonMaterial(material);
+        material.dispose();
+      });
       sharedPool.clear();
+      clearAnimatedPolygonMaterials();
     };
   }, [isLight, globeTheme, globeLightingEnabled, mode, isDepartmentMode]);
 

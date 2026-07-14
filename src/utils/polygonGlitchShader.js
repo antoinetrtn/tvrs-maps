@@ -7,6 +7,30 @@ import {
 } from "../config/globeShaders";
 import { getFoundGreenThreeColor } from "./foundGreenPalette";
 
+/** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
+export const polygonGlitchUniforms = {
+  uTime: { value: 0 },
+  uFoundGreen: { value: getFoundGreenThreeColor().clone() },
+};
+
+const animatedPolygonMaterials = new Set();
+
+export function registerAnimatedPolygonMaterial(material) {
+  if (material) animatedPolygonMaterials.add(material);
+}
+
+export function unregisterAnimatedPolygonMaterial(material) {
+  animatedPolygonMaterials.delete(material);
+}
+
+export function clearAnimatedPolygonMaterials() {
+  animatedPolygonMaterials.clear();
+}
+
+export function getAnimatedPolygonMaterialCount() {
+  return animatedPolygonMaterials.size;
+}
+
 export function syncPolygonShaderUniforms(shader, {
   admin,
   selectedCountry,
@@ -29,9 +53,6 @@ export function syncPolygonShaderUniforms(shader, {
   }
   if (shader.uniforms.uIsFound) {
     shader.uniforms.uIsFound.value = isFound || isLearnSelected ? 1.0 : 0.0;
-  }
-  if (shader.uniforms.uFoundGreen) {
-    shader.uniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
   }
   if (shader.uniforms.uTargetColor) {
     shader.uniforms.uTargetColor.value.set(
@@ -58,14 +79,12 @@ export function attachPolygonGlitchShader(material, {
 }) {
   material.customProgramCacheKey = () => `shader-cap-glitch-v8-${kind}`;
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = { value: 0 };
+    shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uFadeProgress = { value: 0.0 };
     shader.uniforms.uTargetColor = {
       value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
     };
-    shader.uniforms.uFoundGreen = {
-      value: getFoundGreenThreeColor().clone(),
-    };
+    shader.uniforms.uFoundGreen = polygonGlitchUniforms.uFoundGreen;
     shader.uniforms.uIsError = {
       value: admin === selectedCountry && isError ? 1.0 : 0.0,
     };
@@ -83,6 +102,7 @@ export function attachPolygonGlitchShader(material, {
       value: isIncomingTransitioning ? 1.0 : 0.0,
     };
     material.userData.shader = shader;
+    registerAnimatedPolygonMaterial(material);
 
     shader.vertexShader = GLITCH_VERTEX_DECLARATIONS + shader.vertexShader;
     shader.vertexShader = shader.vertexShader.replace(

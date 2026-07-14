@@ -1,8 +1,5 @@
-import { getFoundGreenThreeColor } from "./foundGreenPalette";
-
 export function syncSelectedCountryShaderUniforms({
   shader,
-  timeSec,
   isLight,
   isBlackoutTheme,
   isError,
@@ -10,7 +7,6 @@ export function syncSelectedCountryShaderUniforms({
   isFound,
 }) {
   if (!shader?.uniforms) return;
-  if (shader.uniforms.uTime) shader.uniforms.uTime.value = timeSec;
   if (shader.uniforms.uFadeProgress) {
     shader.uniforms.uFadeProgress.value = 0.0;
   }
@@ -34,8 +30,5 @@ export function syncSelectedCountryShaderUniforms({
   }
   if (shader.uniforms.uIsFound) {
     shader.uniforms.uIsFound.value = isFound ? 1.0 : 0.0;
-  }
-  if (shader.uniforms.uFoundGreen) {
-    shader.uniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
   }
 }

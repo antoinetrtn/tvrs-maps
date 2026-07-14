@@ -1,4 +1,5 @@
 import { getFoundGreenThreeColor } from "./foundGreenPalette";
+import { polygonGlitchUniforms } from "./polygonGlitchShader";
 
 /** Push success/error flags to cached polygon shaders without waiting for React. */
 export function applyPolygonFeedbackUniforms({
@@ -11,12 +12,15 @@ export function applyPolygonFeedbackUniforms({
   if (!admin || !polygonMaterialCacheRef?.current) return;
 
   const time = performance.now() / 1000;
+  polygonGlitchUniforms.uTime.value = time;
+  if (isError || isSuccess) {
+    polygonGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
+  }
 
   ["cap", "side"].forEach((kind) => {
     const mat = polygonMaterialCacheRef.current[kind]?.get(admin);
     const shader = mat?.userData?.shader;
     if (!shader?.uniforms) return;
-    if (shader.uniforms.uTime) shader.uniforms.uTime.value = time;
     if (shader.uniforms.uIsError) {
       shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
     }
@@ -26,16 +30,13 @@ export function applyPolygonFeedbackUniforms({
     if (shader.uniforms.uIsSelection) {
       shader.uniforms.uIsSelection.value = 0.0;
     }
-    if (shader.uniforms.uFoundGreen) {
-      shader.uniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
-    }
   });
 
   if (mountainGlitchUniforms) {
     mountainGlitchUniforms.uTime.value = time;
     mountainGlitchUniforms.uIsError.value = isError ? 1.0 : 0.0;
     mountainGlitchUniforms.uIsSuccess.value = isSuccess ? 1.0 : 0.0;
-    if (mountainGlitchUniforms.uFoundGreen) {
+    if (isError || isSuccess) {
       mountainGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
     }
   }
