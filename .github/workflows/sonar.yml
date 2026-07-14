@@ -38,6 +38,7 @@ jobs:
         with:
           projectBaseDir: .
           args: >
+            -Dproject.settings=sonar-project.properties
             -Dsonar.projectKey=tvrs-maps
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
         env:
