@@ -66,8 +66,6 @@
     height: var(--control-lg);
     border-radius: var(--radius-sm);
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     width: 100%;
@@ -210,8 +208,6 @@
     cursor: pointer;
     color: var(--text-main);
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     transition: background var(--transition-spring), transform var(--transition-spring), border-color var(--transition-spring);
     outline: none; /* Remove blue focus ring */
@@ -344,11 +340,14 @@
     flex: 1;
     border-radius: var(--radius-sm);
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     transition: background var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
     min-width: 0;
+}
+
+.input-island > * {
+    position: relative;
+    z-index: 1;
 }
 
 
@@ -407,8 +406,6 @@
 
 .suggestions-list {
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm);
@@ -542,14 +539,6 @@
         box-shadow: 0 0 10px var(--color);
     }
 
-    .central-island-panel,
-    .hud-btn-circular,
-    .input-island,
-    .suggestions-list {
-        backdrop-filter: var(--glass-blur-compact);
-        -webkit-backdrop-filter: var(--glass-blur-compact);
-    }
-
     .hud-bottom-right {
         display: none !important;
     }
@@ -646,8 +635,6 @@
     align-items: center;
     justify-content: center;
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-sm);
     padding: 0 var(--spacing-sm);
@@ -680,8 +667,6 @@
     height: 40px;
     border-radius: var(--radius-sm);
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     color: var(--text-main);
@@ -745,8 +730,6 @@
 /* Learn Toggles */
 .learn-toggles-group {
     background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     display: flex;
@@ -802,8 +785,6 @@
     background: var(--glass-bg) !important;
     border: 1px solid var(--glass-border) !important;
     box-shadow: var(--glass-shadow-strong) !important;
-    backdrop-filter: var(--glass-blur) !important;
-    -webkit-backdrop-filter: var(--glass-blur) !important;
     border-radius: var(--radius-sm);
     transform-origin: top right;
     position: absolute;

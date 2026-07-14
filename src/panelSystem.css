@@ -292,8 +292,10 @@
 }
 
 /* ──── SHEET PANEL (popup on desktop, fullscreen on mobile) ──── */
-.sheet-panel {
+.sheet-panel,
+.sheet-panel.glass-panel {
   position: fixed;
+  isolation: isolate;
   bottom: calc(var(--spacing-lg) + var(--control-lg) + var(--spacing-md));
   right: var(--spacing-lg);
   width: clamp(280px, 36vw, 380px);

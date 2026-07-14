@@ -90,7 +90,6 @@ export function createGlobeLabelElement(d, {
 
   if (isGlitchMode) {
     const isCapitalsMode = d.mode === "capitals";
-    const isDeptMode = d.mode === "departments";
     const isReliefMode = d.mode === "rivers_mountains";
     const isErrorLabel = d.isError;
 
@@ -102,17 +101,10 @@ export function createGlobeLabelElement(d, {
     } else if (isCapitalsMode) {
       glitchLine1Class = "glitch-capital";
       glitchLine1Raw = d.capital;
-    } else if (isDeptMode) {
-      glitchLine1Class = "glitch-dept";
-      glitchLine1Raw = d.country;
     } else if (isReliefMode) {
       glitchLine1Class = "glitch-relief";
       glitchLine1Raw = d.country;
     }
-
-    const prefixHtml = isDeptMode && !isErrorLabel
-      ? `<span style="font-family: monospace; color: ${UI_COLORS.accent}; opacity: 0.85;">${t("dept_abbr")} ${d.admin}:</span>`
-      : "";
 
     const dotColor = isErrorLabel ? UI_COLORS.error : labelDot;
     const stalkColor = isErrorLabel ? UI_COLORS.error : labelStalk;
@@ -165,7 +157,6 @@ export function createGlobeLabelElement(d, {
               : ""
           }
           <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); height: calc(12px * var(--ui-scale, 1)); line-height: calc(12px * var(--ui-scale, 1)); display: flex; align-items: center; gap: 4px; font-family: var(--font-display, monospace) !important;">
-            ${prefixHtml}
             <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}" style="font-family: var(--font-display, monospace) !important;">${isErrorLabel ? glitchLine1Raw : scrambleText(glitchLine1Raw)}</span>
           </div>
           ${
@@ -192,30 +183,15 @@ export function createGlobeLabelElement(d, {
         clearInterval(interval);
         return;
       }
-      const countryEl = el.querySelector(".glitch-country");
-      const capitalEl = el.querySelector(".glitch-capital");
-      const deptEl = el.querySelector(".glitch-dept");
-      const reliefEl = el.querySelector(".glitch-relief");
-
-      if (countryEl) {
-        const raw = countryEl.getAttribute("data-text") || "";
-        countryEl.innerText = scrambleText(raw, Math.random());
-      }
-      if (capitalEl) {
-        const raw = capitalEl.getAttribute("data-text") || "";
-        capitalEl.innerText = scrambleText(raw, Math.random());
-      }
-      if (deptEl) {
-        const raw = deptEl.getAttribute("data-text") || "";
-        deptEl.innerText = scrambleText(raw, Math.random());
-      }
-      if (reliefEl) {
-        const raw = reliefEl.getAttribute("data-text") || "";
-        reliefEl.innerText = scrambleText(raw, Math.random());
-      }
+      el.querySelectorAll(".glitch-country, .glitch-capital, .glitch-relief").forEach((node) => {
+        const raw = node.getAttribute("data-text") || "";
+        node.innerText = scrambleText(raw, Math.random());
+      });
     }, 150);
   } else {
-    // Normal clean callout box (Mi    const isMtn = countryDataMap[d.admin]?.type === "mountain_range" || riversMountainsDataMap[d.admin]?.type === "mountain_range";
+    const isMtn =
+      countryDataMap[d.admin]?.type === "mountain_range" ||
+      riversMountainsDataMap[d.admin]?.type === "mountain_range";
     const iconSymbol = d.mode === "rivers_mountains" ? (isMtn ? "🏔️ " : "💧 ") : "";
 
     const displayName = revealAll ? d.country : "???";
