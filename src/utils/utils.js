@@ -1,6 +1,7 @@
 
 import { GAME_REGIONS } from "../config/gameConfig";
 import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
+import { riversMountainsDataMap } from "../data/riversMountainsData";
 
 /**
  * Normalizes input string for accents, lowercase, hyphens, and whitespace.
@@ -72,6 +73,87 @@ export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
   });
 
   return { stats: s, CONTINENT_ORDER };
+};
+
+/**
+ * Build grouped panel rows for the unified data table (learn + in-game).
+ */
+export const getPanelData = ({
+  dataMap,
+  foundList = [],
+  lang = 'fr',
+  mode = 'countries',
+  revealAll = false,
+  extraEntries = [],
+}) => {
+  const mergedMap = { ...dataMap };
+  extraEntries.forEach((entry) => {
+    if (entry?.key && !mergedMap[entry.key]) {
+      mergedMap[entry.key] = entry.data;
+    }
+  });
+
+  const { stats, CONTINENT_ORDER } = getGameStats(foundList, mergedMap, lang);
+
+  const rowsByRegion = {};
+  CONTINENT_ORDER.forEach((region) => {
+    const data = stats[region];
+    if (!data || data.total === 0) return;
+
+    rowsByRegion[region] = data.countries.map((c) => {
+      const item = mergedMap[c.key] || {};
+      const name =
+        lang === 'fr'
+          ? item.name_fr || item.name_en || c.name
+          : item.name_en || item.name_fr || c.name;
+      const capital =
+        lang === 'fr'
+          ? item.capital_fr || item.capital || c.capital
+          : item.capital || item.capital_fr || c.capital;
+      const sublabel =
+        mode === 'departments' || item.code
+          ? item.code
+          : mode === 'capitals'
+            ? capital
+            : capital;
+      const detail =
+        item.type === 'mountain_range'
+          ? `${item.height || '?'}m`
+          : item.type === 'river'
+            ? `${item.length || '?'}km`
+            : sublabel;
+
+      return {
+        key: c.key,
+        name,
+        sublabel: detail,
+        found: c.found,
+        revealed: revealAll || c.found,
+        region,
+      };
+    });
+  });
+
+  return { rowsByRegion, CONTINENT_ORDER, total: Object.keys(mergedMap).length };
+};
+
+export const buildLearnExtraEntries = (
+  mode,
+  learnShowDepartments,
+  learnShowRivers,
+  learnShowMountains,
+) => {
+  if (mode !== "learn" || learnShowDepartments) return [];
+  const entries = [];
+  Object.entries(riversMountainsDataMap).forEach(([key, data]) => {
+    if (data.type === "river" && learnShowRivers) {
+      entries.push({ key, data: { ...data, region: "Reliefs" } });
+    }
+    if (data.type === "mountain_range" && learnShowMountains) {
+      entries.push({ key, data: { ...data, region: "Reliefs" } });
+    }
+  });
+  return entries;
 };
 
 export const getFlagEmoji = (iso2) => {

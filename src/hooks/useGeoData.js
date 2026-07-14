@@ -4,7 +4,7 @@ import { departmentsDataMap } from "../data/departmentsData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { DATA_URLS } from "../config/gameConstants";
 
-export function useGeoData({ mode }) {
+export function useGeoData({ mode, learnShowDepartments = false }) {
   const [countriesData, setCountriesData] = useState([]);
   const [departmentsData, setDepartmentsData] = useState([]);
 
@@ -40,13 +40,14 @@ export function useGeoData({ mode }) {
     };
   }, []);
 
-  const isDepartmentsMode = mode === "departments";
+  const isDepartmentsMode =
+    mode === "departments" || (mode === "learn" && learnShowDepartments);
   const isRiversMountainsMode = mode === "rivers_mountains";
 
   const activeDataMap = useMemo(() => {
     if (isRiversMountainsMode) return riversMountainsDataMap;
     return isDepartmentsMode ? departmentsDataMap : countryDataMap;
-  }, [isDepartmentsMode, isRiversMountainsMode]);
+  }, [isDepartmentsMode, isRiversMountainsMode, learnShowDepartments, mode]);
 
   const allCountryKeys = useMemo(
     () => Object.keys(activeDataMap),

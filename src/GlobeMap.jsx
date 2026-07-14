@@ -40,10 +40,9 @@ import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { disposeBiomeCache, mountainGlitchUniforms } from "./utils/LowPolyBiomes";
 
-import { GLITCH_SELECTION_TRANSITION_MS } from "./config/gameConfig";
+import { GLITCH_SELECTION_TRANSITION_MS, isDepartmentView } from "./config/gameConfig";
 
 const SELECTION_TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
-
 const GlobeMap = ({
   mode,
   lang,
@@ -68,10 +67,12 @@ const GlobeMap = ({
   activeDataMap,
   globeTheme = "satellite",
   learnToggles,
+  isPanelOpen = false,
 }) => {
   const {
     showRivers: learnShowRivers = false,
     showMountains: learnShowMountains = false,
+    showDepartments: learnShowDepartments = false,
   } = learnToggles || {};
   const isLearnRivers = mode === "learn" && learnShowRivers;
   const isLearnMountains = mode === "learn" && learnShowMountains;
@@ -84,7 +85,10 @@ const GlobeMap = ({
   const [transitioningPreviousCountryState, setTransitioningPreviousCountryState] = useState(null);
   const selectionTransitionStartRef = useRef(0);
 
-  const isDepartmentMode = mode === "departments" && !isHomeScreen;
+  const isDepartmentMode = isDepartmentView(mode, {
+    isHomeScreen,
+    learnShowDepartments,
+  });
   const isRiversMountainsMode = mode === "rivers_mountains";
   const gameDataMap =
     isDepartmentMode || isRiversMountainsMode
@@ -182,7 +186,7 @@ const GlobeMap = ({
     visibleRenderCountriesData,
     countriesWithGeometry,
   } = useGlobeRenderData({
-    mode,
+    isDepartmentMode,
     isHomeScreen,
     isEndScreen,
     countriesData,
@@ -394,7 +398,7 @@ const GlobeMap = ({
 
   return (
     <div
-      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"}`}
+      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
     >
     <div
       className={`globe-container ${theme}`}
@@ -582,5 +586,4 @@ const GlobeMap = ({
     </div>
   );
 };
-
 export default React.memo(GlobeMap);

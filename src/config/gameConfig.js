@@ -12,6 +12,13 @@ const PLAY_MODES = ['countries', 'capitals', 'departments', 'rivers_mountains'];
 export const isPlayMode = (mode, { isHomeScreen = false, isEndScreen = false } = {}) =>
   PLAY_MODES.includes(mode) && !isHomeScreen && !isEndScreen;
 
+/** France department polygons (play mode or learn toggle). */
+export const isDepartmentView = (
+  mode,
+  { isHomeScreen = false, learnShowDepartments = false } = {},
+) =>
+  !isHomeScreen && (mode === 'departments' || (mode === 'learn' && learnShowDepartments));
+
 /**
  * Whether a feature's NAME should be scrambled (hidden) right now. Uniform across
  * every guessable mode — countries, capitals, departments and rivers/mountains all

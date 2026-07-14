@@ -35,7 +35,10 @@ export function useGlobeInteractions({
   const pointerNudgeRafRef = useRef(null);
   const pendingNudgeRef = useRef(null);
 
-  const isDepartmentMode = mode === "departments" && !isHomeScreen;
+  const isDepartmentMode =
+    (mode === "departments" ||
+      (mode === "learn" && learnToggles?.showDepartments)) &&
+    !isHomeScreen;
 
   const selectCountry = useCallback(
     (admin) => {

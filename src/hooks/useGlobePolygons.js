@@ -116,7 +116,7 @@ export function useGlobePolygons({
           return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, UI_COLORS.paper, 0.1);
         }
 
-        return UI_COLORS.mapBase;
+        return baseColor;
       }
 
       const admin = getFeatureAdmin(d);
@@ -153,7 +153,10 @@ export function useGlobePolygons({
         return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, targetColor, 0.1);
       }
 
-      return UI_COLORS.mapBase;
+      const isSatellite = globeTheme === "satellite";
+      return isSatellite
+        ? (REGION_COLORS_LABELS[region] || REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent)
+        : (REGION_COLORS_ATTENUATED[region] || getRegionSurfaceColor(region));
     },
     [
       selectedCountry,
@@ -204,11 +207,11 @@ export function useGlobePolygons({
       const region = countryDataMap[admin]?.region || "Unknown";
       const isFound = foundSet.has(admin) || mode === "learn";
 
-      if (UI_COLORS.useRegionalBorders && isFound) {
+      if (UI_COLORS.useRegionalBorders) {
         return REGION_COLORS_LABELS[region] || UI_COLORS.accent;
       }
 
-      return isFound ? UI_COLORS.borderFound : UI_COLORS.borderUnfound;
+      return isFound ? UI_COLORS.borderFound : lerpColor(UI_COLORS.borderUnfound, UI_COLORS.paper, isLight ? 0.35 : 0.28);
     },
     [
       selectedCountry,
@@ -248,10 +251,13 @@ export function useGlobePolygons({
           baseColor = UI_COLORS.error;
         }
       } else {
+        const isSatellite = globeTheme === "satellite";
         baseColor =
           foundSet.has(admin) || mode === "learn"
             ? getRegionSurfaceColor(region)
-            : UI_COLORS.mapBase;
+            : isSatellite
+              ? (REGION_COLORS_LABELS[region] || REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent)
+              : (REGION_COLORS_ATTENUATED[region] || getRegionSurfaceColor(region));
       }
       if (globeLightingEnabled) {
         if (admin === selectedCountry) {
@@ -351,12 +357,13 @@ export function useGlobePolygons({
         }
       } else if (isFound || mode === "learn") {
         // CRITICAL: must match getPolygonColor's satellite rule (label colors for found)
-        // This was the root cause of "bizarre colors on deselection in satellite per continent"
         baseColor = isSatellite
           ? (REGION_COLORS_LABELS[region] || UI_COLORS.accent)
           : getRegionSurfaceColor(region);
       } else {
-        baseColor = UI_COLORS.mapBase;
+        baseColor = isSatellite
+          ? (REGION_COLORS_LABELS[region] || REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent)
+          : (REGION_COLORS_ATTENUATED[region] || getRegionSurfaceColor(region));
       }
 
       const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
@@ -366,7 +373,7 @@ export function useGlobePolygons({
       return capColor;
     },
     [
-      foundSet, mode, getRegionSurfaceColor, REGION_COLORS_LABELS,
+      foundSet, mode, getRegionSurfaceColor, REGION_COLORS_LABELS, REGION_COLORS_ATTENUATED,
       UI_COLORS, isLight, lerpColor, isEndScreen, isPerfectScore, globeTheme
     ]
   );
@@ -477,14 +484,15 @@ export function useGlobePolygons({
           material.transparent = true;
           if (admin === selectedCountry) {
             material.wireframe = false;
+            material.opacity = 1.0;
           } else if (isFound) {
             material.wireframe = true;
+            material.opacity = 1.0;
+          } else if (kind === "cap") {
+            material.wireframe = true;
+            material.opacity = isLight ? 0.55 : 0.72;
           } else {
-            if (kind === "cap") {
-              material.opacity = 0.0;
-            } else {
-              material.visible = false;
-            }
+            material.visible = false;
           }
         }
         if (isShaderCap) {

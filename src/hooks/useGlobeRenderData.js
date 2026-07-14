@@ -13,7 +13,7 @@ import {
 } from "../utils/utils";
 
 export function useGlobeRenderData({
-  mode,
+  isDepartmentMode = false,
   isHomeScreen,
   isEndScreen,
   countriesData,
@@ -24,7 +24,6 @@ export function useGlobeRenderData({
   zoomLevel,
   perfProfile,
 }) {
-  const isDepartmentMode = mode === "departments" && !isHomeScreen;
 
   const selectableCountriesData = useMemo(() => {
     if (isDepartmentMode)

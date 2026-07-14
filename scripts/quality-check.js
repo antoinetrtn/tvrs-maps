@@ -130,7 +130,7 @@ const LEGACY_BASES = {
   'src/components/Logo.jsx': { maxDepth: 7, maxBlock2: 45, maxBlock3: 25 },
   'src/components/PixelFireworks.jsx': { maxDepth: 6, maxBlock2: 150, maxBlock3: 40 },
   'src/components/ProfilePanel.jsx': { maxDepth: 7, maxBlock2: 220, maxBlock3: 50 },
-  'src/components/ResultsModal.jsx': { maxDepth: 6, maxBlock2: 60, maxBlock3: 60 },
+
   'src/components/AuthModal.jsx': { maxDepth: 7, maxBlock2: 90, maxBlock3: 70 },
   'src/components/SpaceBackground.jsx': { maxDepth: 5, maxBlock2: 190, maxBlock3: 105 },
   'src/components/XpOrbsAnimation.jsx': { maxDepth: 5, maxBlock2: 155, maxBlock3: 90 },

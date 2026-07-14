@@ -56,6 +56,9 @@ export const translations = {
     labels_rivieres: "Rivières",
     show_mountains: "Afficher les montagnes",
     labels_montagnes: "Montagnes",
+    show_departments: "Afficher les départements français",
+    labels_departements: "Départements",
+    data_table: "Tableau des données",
 
     // Focus Badge Prompts
     department_prefix: "Département {code}",
@@ -91,6 +94,7 @@ export const translations = {
     region_Oceania: "Océanie",
     region_Antarctic: "Antarctique",
     region_France: "France",
+    region_Reliefs: "Reliefs & Fleuves",
     region_Unknown: "Inconnu",
 
     // Globe Themes
@@ -226,6 +230,9 @@ export const translations = {
     show_rivers: "Show rivers",
     labels_rivieres: "Rivers",
     show_mountains: "Show mountains",
+    show_departments: "Show French departments",
+    labels_departements: "Departments",
+    data_table: "Data table",
     labels_montagnes: "Mountains",
 
     // Focus Badge Prompts
@@ -262,6 +269,7 @@ export const translations = {
     region_Oceania: "Oceania",
     region_Antarctic: "Antarctica",
     region_France: "France",
+    region_Reliefs: "Rivers & Peaks",
     region_Unknown: "Unknown",
 
     // Globe Themes
