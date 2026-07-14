@@ -5,6 +5,11 @@ import {
   GLITCH_SELECTION_TRANSITION_MS,
   getDeselectGlitchFadeProgress,
 } from "../config/gameConfig";
+import { applyPolygonFeedbackUniforms } from "../utils/applyPolygonFeedbackUniforms";
+import { getFoundGreenThreeColor } from "../utils/foundGreenPalette";
+import { syncSelectedCountryShaderUniforms } from "../utils/selectionTransitionShader";
+
+const _transitionTargetColor = new THREE.Color();
 
 export function useGlobeAnimationLoop({
   globeEl,
@@ -21,21 +26,28 @@ export function useGlobeAnimationLoop({
   updateGlobeLighting,
   polygonMaterialCacheRef,
   sharedMaterialsRef,
+  mode = "countries",
   selectedCountry,
   isError,
   isSuccess,
   isEndScreen,
   transitioningPreviousCountryState,
+  transitioningIncomingCountryState,
   selectionTransitionStartRef,
   transitioningPreviousCountryRef,
+  transitioningIncomingCountryRef,
   setTransitioningPreviousCountryState,
+  setTransitioningIncomingCountryState,
   foundSet,
   getBaseColorForCountryAndKind,
+  lerpColor,
   globeMaterial,
   mountainGlitchUniforms,
   GLOBE_STYLE,
   countriesData,
   departmentsData,
+  globeFeedbackRef,
+  globeFeedbackApplierRef,
 }) {
   const animFrameIdRef = useRef(null);
   const animateSceneRef = useRef(null);
@@ -44,7 +56,6 @@ export function useGlobeAnimationLoop({
   const graticuleStyleUntilRef = useRef(0);
   const lastGraticuleStyleTimeRef = useRef(0);
   const prevSelectedCountryRef = useRef(null);
-  const selectedStrokeObjRef = useRef(null);
 
   const selectedCountryRef = useRef(null);
   const isErrorRef = useRef(false);
@@ -71,13 +82,21 @@ export function useGlobeAnimationLoop({
 
       const time = performance.now();
       const currentSelectedCountry = selectedCountryRef.current;
-      const currentIsError = isErrorRef.current;
-      const currentIsSuccess = isSuccessRef.current;
+      const imperativeFeedback = globeFeedbackRef?.current;
+      const currentIsError =
+        isErrorRef.current || !!imperativeFeedback?.isError;
+      const currentIsSuccess =
+        isSuccessRef.current || !!imperativeFeedback?.isSuccess;
       const currentIsEndScreen = isEndScreenRef.current;
 
-      if (perfProfile?.isMobile && lastAnimFrameTimeRef.current) {
+      const isUrgentAnim =
+        currentIsError ||
+        currentIsSuccess ||
+        !!transitioningPreviousCountryRef?.current;
+      const minFrameMs = isUrgentAnim ? 0 : perfProfile?.isMobile ? 30 : 33;
+      if (minFrameMs > 0 && lastAnimFrameTimeRef.current) {
         const elapsed = time - lastAnimFrameTimeRef.current;
-        if (elapsed < 30) {
+        if (elapsed < minFrameMs) {
           animFrameIdRef.current = requestAnimationFrame(animateScene);
           return;
         }
@@ -93,6 +112,9 @@ export function useGlobeAnimationLoop({
       mountainGlitchUniforms.uTime.value = time / 1000;
       mountainGlitchUniforms.uIsError.value = currentSelectedCountry && currentIsError ? 1.0 : 0.0;
       mountainGlitchUniforms.uIsSuccess.value = currentSelectedCountry && currentIsSuccess ? 1.0 : 0.0;
+      if (mountainGlitchUniforms.uFoundGreen) {
+        mountainGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
+      }
 
       if (needsGraticuleStyleRef.current) {
         if (time - lastGraticuleStyleTimeRef.current > 120) {
@@ -143,10 +165,12 @@ export function useGlobeAnimationLoop({
               const shader = mat.userData.shader;
               if (shader.uniforms.uIsError) shader.uniforms.uIsError.value = 0.0;
               if (shader.uniforms.uIsSuccess) shader.uniforms.uIsSuccess.value = 0.0;
+              if (shader.uniforms.uIsSelection) shader.uniforms.uIsSelection.value = 0.0;
             }
           });
           [oldCapMat, oldSideMat].forEach((mat, index) => {
-            if (!mat) return;
+            if (!mat || mat.userData.isFoundCap) return;
+            if (!mat.userData.shader && mat.userData.admin !== oldAdmin) return;
             const isCap = index === 0;
 
             if (globeLightingEnabled) {
@@ -159,122 +183,46 @@ export function useGlobeAnimationLoop({
                   : GLOBE_STYLE.lighting.material.sideEmissiveDark;
               const emissiveBoost = !isLight ? 0.18 : 0.05;
               mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost;
-            } else {
-              if (mat.userData.originalColor) {
-                mat.color.copy(mat.userData.originalColor);
-              }
-            }
-          });
-
-          if (selectedStrokeObjRef.current) {
-            const mat = selectedStrokeObjRef.current.material;
-            if (mat && mat.userData.originalColor) {
+            } else if (mat.userData.originalColor) {
               mat.color.copy(mat.userData.originalColor);
             }
-            selectedStrokeObjRef.current = null;
-          }
+          });
         }
         prevSelectedCountryRef.current = currentSelectedCountry;
 
-        if (currentSelectedCountry) {
-          scene.traverse((obj) => {
-            if (
-              obj.userData &&
-              getFeatureAdmin(obj.userData) === currentSelectedCountry
-            ) {
-              const isStroke =
-                obj.isLine ||
-                obj.type === "LineSegments" ||
-                obj.type === "Line" ||
-                (obj.material &&
-                  (obj.material.type === "LineBasicMaterial" ||
-                    obj.material.type === "Line2Material" ||
-                    obj.material.type === "ShaderMaterial"));
-              if (isStroke) {
-                selectedStrokeObjRef.current = obj;
-              }
-            }
+      }
+
+      const capMat = currentSelectedCountry
+        ? polygonMaterialCacheRef.current.cap.get(currentSelectedCountry)
+        : null;
+      const sideMat = currentSelectedCountry
+        ? polygonMaterialCacheRef.current.side.get(currentSelectedCountry)
+        : null;
+      const needsSelectedShaderSync =
+        !!currentSelectedCountry &&
+        (currentIsError ||
+          currentIsSuccess ||
+          !!capMat?.userData?.shader ||
+          !!sideMat?.userData?.shader);
+
+      if (needsSelectedShaderSync) {
+        [capMat, sideMat].forEach((mat, matIndex) => {
+          if (!mat || mat.userData.admin !== currentSelectedCountry) return;
+          mat.userData.kind = matIndex === 0 ? "cap" : "side";
+          syncSelectedCountryShaderUniforms({
+            shader: mat.userData.shader,
+            timeSec: time / 1000,
+            isLight,
+            isBlackoutTheme: UI_COLORS.isBlackoutTheme,
+            isError: currentIsError,
+            isSuccess: currentIsSuccess,
+            isFound: foundSet.has(currentSelectedCountry),
           });
-        }
+        });
       }
 
-      if (currentSelectedCountry) {
-        const pulseVal = Math.sin((time / 1000) * Math.PI * 2) * 0.5 + 0.5;
-        const capMat = polygonMaterialCacheRef.current.cap.get(currentSelectedCountry);
-        const sideMat =
-          polygonMaterialCacheRef.current.side.get(currentSelectedCountry);
-
-        [capMat, sideMat].forEach((mat) => {
-          if (mat && mat.userData.shader) {
-            const shader = mat.userData.shader;
-            if (shader.uniforms.uTime) {
-              shader.uniforms.uTime.value = time / 1000;
-            }
-            if (shader.uniforms.uFadeProgress) {
-              shader.uniforms.uFadeProgress.value = 0.0;
-            }
-            if (shader.uniforms.uIsError) {
-              shader.uniforms.uIsError.value = currentIsError ? 1.0 : 0.0;
-            }
-            if (shader.uniforms.uIsSuccess) {
-              shader.uniforms.uIsSuccess.value = currentIsSuccess ? 1.0 : 0.0;
-            }
-            if (shader.uniforms.uIsLight) {
-              shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
-            }
-            if (shader.uniforms.uTheme) {
-              shader.uniforms.uTheme.value = UI_COLORS.isBlackoutTheme ? 1.0 : 0.0;
-            }
-          }
-        });
-
-        [capMat, sideMat].forEach((mat, index) => {
-          if (!mat) return;
-          const isCap = index === 0;
-
-          if (globeLightingEnabled) {
-            const baseEmissiveIntensity = isCap
-              ? isLight
-                ? GLOBE_STYLE.lighting.material.capEmissiveLight
-                : GLOBE_STYLE.lighting.material.capEmissiveDark
-              : isLight
-                ? GLOBE_STYLE.lighting.material.sideEmissiveLight
-                : GLOBE_STYLE.lighting.material.sideEmissiveDark;
-
-            const emissiveBoost = !isLight ? 0.18 : 0.05;
-
-            mat.emissiveIntensity =
-              baseEmissiveIntensity + emissiveBoost + 0.15 + pulseVal * 0.35;
-          } else {
-            if (!mat.userData.originalColor) {
-              mat.userData.originalColor = mat.color.clone();
-            }
-            const paperColor = new THREE.Color(UI_COLORS.paper);
-            const lerped = mat.userData.originalColor.clone();
-            lerped.lerp(paperColor, pulseVal * 0.25);
-            mat.color.copy(lerped);
-          }
-        });
-
-        if (
-          selectedStrokeObjRef.current &&
-          selectedStrokeObjRef.current.material
-        ) {
-          const mat = selectedStrokeObjRef.current.material;
-          if (!mat.userData.originalColor) {
-            mat.userData.originalColor = mat.color.clone();
-          }
-          const paperColor = new THREE.Color(UI_COLORS.paper);
-          const lerped = mat.userData.originalColor.clone();
-          lerped.lerp(paperColor, pulseVal * 0.7);
-          mat.color.copy(lerped);
-          if (mat.needsUpdate !== undefined) {
-            mat.needsUpdate = true;
-          }
-        }
-      }
-
-      const prevCountry = transitioningPreviousCountryRef?.current;
+      const prevCountry =
+        mode !== "learn" ? transitioningPreviousCountryRef?.current : null;
       if (prevCountry) {
         const elapsed = time - selectionTransitionStartRef.current;
         const TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
@@ -306,6 +254,7 @@ export function useGlobeAnimationLoop({
               mat.dispose();
               sharedMaterialsRef.current.delete(key);
             }
+            polygonMaterialCacheRef.current[kind]?.delete(prevCountry);
           });
         } else {
           const fadeProgress = Math.min(
@@ -326,28 +275,41 @@ export function useGlobeAnimationLoop({
               if (shader.uniforms.uTargetColor) {
                 const targetKind = idx === 0 ? "cap" : "side";
                 shader.uniforms.uTargetColor.value.copy(
-                  new THREE.Color(getBaseColorForCountryAndKind(prevCountry, targetKind))
+                  _transitionTargetColor.set(
+                    getBaseColorForCountryAndKind(prevCountry, targetKind),
+                  ),
                 );
+              }
+              if (shader.uniforms.uFoundGreen) {
+                shader.uniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
+              }
+              if (shader.uniforms.uSelectInTransition) {
+                shader.uniforms.uSelectInTransition.value = 0.0;
+              }
+              if (shader.uniforms.uIsFound) {
+                shader.uniforms.uIsFound.value = foundSet.has(prevCountry) ? 1.0 : 0.0;
               }
             }
           });
         }
       }
 
+      let endScreenShaderWork = false;
       if (currentIsEndScreen) {
         polygonMaterialCacheRef.current.cap.forEach((mat) => {
-          if (mat && mat.userData.shader && mat.userData.shader.uniforms.uTime) {
+          if (mat?.userData?.shader?.uniforms?.uTime) {
             mat.userData.shader.uniforms.uTime.value = time / 1000;
+            endScreenShaderWork = true;
           }
         });
       }
 
       const hasWork =
-        currentSelectedCountry ||
+        needsSelectedShaderSync ||
         transitioningPreviousCountryRef?.current ||
         !glowSettled ||
         needsGraticuleStyleRef.current ||
-        currentIsEndScreen;
+        endScreenShaderWork;
 
       if (hasWork) {
         animFrameIdRef.current = requestAnimationFrame(animateScene);
@@ -386,12 +348,35 @@ export function useGlobeAnimationLoop({
     polygonMaterialCacheRef,
     sharedMaterialsRef,
     transitioningPreviousCountryRef,
+    transitioningIncomingCountryRef,
     selectionTransitionStartRef,
     setTransitioningPreviousCountryState,
+    setTransitioningIncomingCountryState,
     foundSet,
     getBaseColorForCountryAndKind,
+    lerpColor,
     GLOBE_STYLE,
+    mode,
   ]);
+
+  useEffect(() => {
+    if (!globeFeedbackApplierRef) return undefined;
+    globeFeedbackApplierRef.current = (admin, { isError = false, isSuccess = false }) => {
+      applyPolygonFeedbackUniforms({
+        polygonMaterialCacheRef,
+        admin,
+        isError,
+        isSuccess,
+        mountainGlitchUniforms,
+      });
+      if (animFrameIdRef.current == null && animateSceneRef.current) {
+        animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+      }
+    };
+    return () => {
+      globeFeedbackApplierRef.current = null;
+    };
+  }, [globeFeedbackApplierRef, polygonMaterialCacheRef, mountainGlitchUniforms]);
 
   useEffect(() => {
     if (animFrameIdRef.current == null && animateSceneRef.current) {

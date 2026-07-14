@@ -1,8 +1,8 @@
 import { useRef, useCallback } from "react";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
 import {
   getLngLatDistance,
   featureContainsLngLat,
+  clientToGlobeCoords,
 } from "../utils/utils";
 
 export function useGlobeInteractions({
@@ -17,15 +17,9 @@ export function useGlobeInteractions({
   mode,
   gameDataMap,
   selectableFeatureIndex,
-  isLearnRivers,
-  isLearnMountains,
-  learnToggles,
+  isDepartmentMode,
+  isRiversMountainsMode,
 }) {
-  const {
-    showRivers: learnShowRivers = false,
-    showMountains: learnShowMountains = false,
-  } = learnToggles || {};
-
   const tapRef = useRef(null);
   const lastTapRef = useRef(0);
   const isZoomDragging = useRef(false);
@@ -35,42 +29,23 @@ export function useGlobeInteractions({
   const pointerNudgeRafRef = useRef(null);
   const pendingNudgeRef = useRef(null);
 
-  const isDepartmentMode =
-    (mode === "departments" ||
-      (mode === "learn" && learnToggles?.showDepartments)) &&
-    !isHomeScreen;
-
   const selectCountry = useCallback(
     (admin) => {
       if (onCountrySelect) {
-        if (
-          !admin ||
-          gameDataMap[admin] ||
-          (mode === "learn" && riversMountainsDataMap[admin])
-        ) {
+        if (!admin || gameDataMap[admin]) {
           onCountrySelect(admin);
         }
       }
     },
-    [gameDataMap, onCountrySelect, mode],
+    [gameDataMap, onCountrySelect],
   );
 
   const selectCountryAtLngLat = useCallback(
     (lng, lat) => {
-      if (mode === "rivers_mountains" || isLearnRivers || isLearnMountains) {
+      if (isRiversMountainsMode) {
         let best = null;
-        const dataMap =
-          mode === "rivers_mountains" ? gameDataMap : riversMountainsDataMap;
-        Object.entries(dataMap).forEach(([admin, data]) => {
+        Object.entries(gameDataMap).forEach(([admin, data]) => {
           if (!data) return;
-          if (mode === "learn") {
-            if (data.type === "river" && !learnShowRivers) return;
-            if (
-              (data.type === "mountain" || data.type === "mountain_range") &&
-              !learnShowMountains
-            )
-              return;
-          }
 
           let dist;
           if (
@@ -90,7 +65,7 @@ export function useGlobeInteractions({
           if (!best || dist < best.dist) best = { admin, dist };
         });
 
-        const bestData = best ? dataMap[best.admin] : null;
+        const bestData = best ? gameDataMap[best.admin] : null;
         if (bestData) {
           const threshold = bestData.type === "river" ? 5.5 : 6.0;
           if (best.dist < threshold) {
@@ -138,13 +113,10 @@ export function useGlobeInteractions({
     [
       gameDataMap,
       isDepartmentMode,
+      isRiversMountainsMode,
       selectableFeatureIndex,
       selectCountry,
       mode,
-      isLearnRivers,
-      isLearnMountains,
-      learnShowRivers,
-      learnShowMountains,
     ],
   );
 
@@ -293,7 +265,7 @@ export function useGlobeInteractions({
         clientY += window.visualViewport.offsetTop || 0;
       }
 
-      const coords = globeEl.current.toGlobeCoords(clientX, clientY);
+      const coords = clientToGlobeCoords(globeEl, clientX, clientY);
       if (coords) {
         selectCountryAtLngLat(coords.lng, coords.lat);
       } else {

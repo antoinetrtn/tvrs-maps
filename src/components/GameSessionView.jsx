@@ -23,7 +23,7 @@ const GameSessionView = ({
       <>
         {isMobileViewport && (
           <div
-            className="panel-overlay open"
+            className="panel-overlay open game-panel-overlay"
             onClick={closePanel}
             aria-hidden="true"
           />

@@ -26,6 +26,7 @@ import {
   STORAGE_KEYS,
   PERFORMANCE,
 } from "./config/gameConstants";
+import { isValidLearnSubMode } from "./config/gameConfig";
 import { isSupabaseConfigured } from "./services/supabaseClient";
 
 import { useViewport } from "./hooks/useViewport";
@@ -99,31 +100,20 @@ function App() {
     [setTheme],
   );
 
-  const [learnToggles, setLearnToggles] = useState({
-    showCountryLabels: true,
-    showCapitals: false,
-    showRivers: false,
-    showMountains: false,
-    showDepartments: false,
-  });
+  const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
   const [learnSearchQuery, setLearnSearchQuery] = useState("");
 
-  const onToggleLearn = useCallback((key) => {
-    setLearnToggles((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  }, []);
-
-  const {
-    showRivers: learnShowRivers,
-    showMountains: learnShowMountains,
-    showDepartments: learnShowDepartments,
-  } = learnToggles;
+  const onLearnSubModeChange = useCallback((subMode) => {
+    if (!isValidLearnSubMode(subMode)) return;
+    setLearnSubMode(subMode);
+    setSelectedCountry(null);
+    setLearnSearchQuery("");
+  }, [setSelectedCountry]);
 
   const t = useTranslation(lang);
   const extInputRef = useRef(null);
+  const globeFeedbackApplierRef = useRef(null);
   const prevScreenRef = useRef(currentScreen);
 
   useEffect(() => {
@@ -162,7 +152,7 @@ function App() {
     activeDataMap,
     allCountryKeys,
     totalPossible,
-  } = useGeoData({ mode, learnShowDepartments });
+  } = useGeoData({ mode, learnSubMode });
 
   const {
     foundList,
@@ -186,6 +176,7 @@ function App() {
     resetGame,
     navigateFocus,
     resetNavigationTrail,
+    globeFeedbackRef,
   } = useGameSession({
     mode,
     allCountryKeys,
@@ -206,6 +197,7 @@ function App() {
     activeDataMap,
     extInputRef,
     effectiveKeyboardMode: isKeyboardMode,
+    globeFeedbackApplierRef,
   });
 
   const preserveInputFocus = useCallback(() => {
@@ -317,17 +309,15 @@ function App() {
   const {
     isMobileViewport,
     isPanelOpen,
-    learnExtraEntries,
     panelDataMap,
     panelMode,
     closePanel,
     handlePanelSelect,
-    learnShowDepartments: panelLearnDepartments,
   } = useGameDataPanelState({
     currentScreen,
     mode,
     viewport,
-    learnToggles,
+    learnSubMode,
     showLearnPanel,
     showInfoModal,
     showResultsTable,
@@ -345,20 +335,17 @@ function App() {
   useEffect(() => {
     if (
       mode === "learn" &&
-      panelLearnDepartments &&
       selectedCountry &&
       !activeDataMap[selectedCountry]
     ) {
       setSelectedCountry(null);
     }
-  }, [panelLearnDepartments, mode, selectedCountry, activeDataMap, setSelectedCountry]);
+  }, [learnSubMode, mode, selectedCountry, activeDataMap, setSelectedCountry]);
 
   const handleHudEnter = useHudAnswerHandler({
     mode,
     selectedCountry,
     handleSearch,
-    learnShowRivers,
-    learnShowMountains,
     specificCountryGuess,
     handleInput,
     setPopupError,
@@ -371,6 +358,11 @@ function App() {
     resetNavigationTrail,
     setPopupError,
     extInputRef,
+    onAfterSelect: (key) => {
+      if (mode === "learn" && isMobileViewport && key) {
+        setShowLearnPanel(true);
+      }
+    },
   });
 
   const sessionView = useGameSessionProps({
@@ -401,8 +393,8 @@ function App() {
     viewport,
     isKeyboardMode,
     globeTheme,
-    learnToggles,
-    onToggleLearn,
+    learnSubMode,
+    onLearnSubModeChange,
     learnSearchQuery,
     setLearnSearchQuery,
     setShowLearnPanel,
@@ -428,7 +420,8 @@ function App() {
     handlePanelSelect,
     panelMode,
     showResultsTable,
-    learnExtraEntries,
+    globeFeedbackRef,
+    globeFeedbackApplierRef,
   });
 
   return (

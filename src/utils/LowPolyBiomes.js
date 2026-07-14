@@ -1,9 +1,11 @@
 import * as THREE from 'three';
+import { FOUND_SURFACE_GREEN, getFoundGreenThreeColor } from './foundGreenPalette';
 
 export const mountainGlitchUniforms = {
   uTime: { value: 0 },
   uIsError: { value: 0 },
   uIsSuccess: { value: 0 },
+  uFoundGreen: { value: getFoundGreenThreeColor().clone() },
 };
 
 // Cache for shared geometries and materials to avoid recreation and boost performance
@@ -74,7 +76,7 @@ export const createMountainFeature = (
   // State A: Found -> beautiful solid regional color (shades of white/grey in blackout)
   const foundMatKey = `mountainFound_${themeName}_${foundColor || 'default'}`;
   const foundMat = getMaterial(foundMatKey, () => {
-    const col = new THREE.Color(foundColor || 0x05f298);
+    const col = new THREE.Color(foundColor || FOUND_SURFACE_GREEN);
     return new THREE.MeshPhongMaterial({
       color: col,
       emissive: 0x000000, // No emissive glow to preserve beautiful 3D shading on the facets
@@ -96,6 +98,7 @@ export const createMountainFeature = (
       shader.uniforms.uTime = mountainGlitchUniforms.uTime;
       shader.uniforms.uIsError = mountainGlitchUniforms.uIsError;
       shader.uniforms.uIsSuccess = mountainGlitchUniforms.uIsSuccess;
+      shader.uniforms.uFoundGreen = mountainGlitchUniforms.uFoundGreen;
       shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
 
       shader.vertexShader = `
@@ -113,6 +116,7 @@ export const createMountainFeature = (
         uniform float uIsLight;
         uniform float uIsError;
         uniform float uIsSuccess;
+        uniform vec3 uFoundGreen;
         float hash(vec2 p) {
           return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
         }
@@ -143,10 +147,11 @@ export const createMountainFeature = (
         }
 
         if (uIsSuccess > 0.5) {
-          // Success on peak: fast pulsing neon green flash
-          float pulse = sin(uTime * 15.0) * 0.4 + 0.6;
-          vec3 neonGreen = vec3(0.05, 0.92, 0.52);
-          finalColor = neonGreen * (pulse + 0.5);
+          float pulse = sin(uTime * 18.0) * 0.35 + 0.65;
+          float sweep = step(fract(vLocalPosition.y * 1.5 - uTime * 4.0), 0.35) * 0.40;
+          float successNoise = hash(noiseUv + sin(uTime * 45.0));
+          float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, successNoise);
+          finalColor = uFoundGreen * noisyIntensity;
         }
 
         gl_FragColor.rgb = finalColor;

@@ -10,8 +10,6 @@ export function useGlobeLighting({
   UI_COLORS,
   perfProfile,
   globeTheme,
-  selectedCountry,
-  REGION_COLORS,
   safeColor,
 }) {
   const globeLightingRef = useRef(null);
@@ -219,8 +217,6 @@ export function useGlobeLighting({
     UI_COLORS,
     perfProfile?.isMobile,
     globeTheme,
-    selectedCountry,
-    REGION_COLORS,
     safeColor,
     globeEl,
   ]);

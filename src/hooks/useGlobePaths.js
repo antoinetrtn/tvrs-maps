@@ -1,7 +1,5 @@
 import { useMemo } from "react";
 import * as THREE from "three";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
-
 const smoothedRiversCache = {};
 
 const getSmoothedRiverPath = (riverKey, pathCoords) => {
@@ -31,7 +29,7 @@ export const pathDashAnimateTimeAccessor = (d) => d.dashAnimateTime;
 
 export function useGlobePaths({
   mode,
-  isLearnRivers,
+  isRiversMountainsMode,
   gameDataMap,
   foundSet,
   isHomeScreen,
@@ -40,9 +38,9 @@ export function useGlobePaths({
   isError,
 }) {
   const riversBasePathsData = useMemo(() => {
-    if (mode !== "rivers_mountains" && !isLearnRivers) return [];
+    if (!isRiversMountainsMode) return [];
     const paths = [];
-    const dataMap = isLearnRivers ? riversMountainsDataMap : gameDataMap;
+    const dataMap = gameDataMap;
     Object.keys(dataMap).forEach((k) => {
       const data = dataMap[k];
       if (!data || data.type !== "river" || !data.path) return;
@@ -58,12 +56,11 @@ export function useGlobePaths({
       });
     });
     return paths;
-  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS, isLearnRivers]);
+  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS, isRiversMountainsMode]);
 
   const riversSelectedPathData = useMemo(() => {
-    if ((mode !== "rivers_mountains" && !isLearnRivers) || !selectedCountry)
-      return [];
-    const dataMap = isLearnRivers ? riversMountainsDataMap : gameDataMap;
+    if (!isRiversMountainsMode || !selectedCountry) return [];
+    const dataMap = gameDataMap;
     const data = dataMap[selectedCountry];
     if (!data || data.type !== "river" || !data.path) return [];
     const isFound =
@@ -106,7 +103,7 @@ export function useGlobePaths({
     selectedCountry,
     isError,
     UI_COLORS,
-    isLearnRivers,
+    isRiversMountainsMode,
   ]);
 
   const globePathsData = useMemo(

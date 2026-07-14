@@ -5,8 +5,6 @@ export function useHudAnswerHandler({
   mode,
   selectedCountry,
   handleSearch,
-  learnShowRivers,
-  learnShowMountains,
   specificCountryGuess,
   handleInput,
   setPopupError,
@@ -15,7 +13,7 @@ export function useHudAnswerHandler({
   return useCallback(
     (val) => {
       if (mode === "learn") {
-        const res = handleSearch(val, learnShowRivers, learnShowMountains);
+        const res = handleSearch(val);
         if (!res) {
           setPopupError(true);
           setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
@@ -47,8 +45,6 @@ export function useHudAnswerHandler({
       mode,
       selectedCountry,
       handleSearch,
-      learnShowRivers,
-      learnShowMountains,
       specificCountryGuess,
       handleInput,
       setPopupError,

@@ -13,6 +13,7 @@ export function useCountrySelectHandler({
   resetNavigationTrail,
   setPopupError,
   extInputRef,
+  onAfterSelect,
 }) {
   return useCallback(
     (c) => {
@@ -24,7 +25,10 @@ export function useCountrySelectHandler({
       setSelectedCountry(c);
       resetNavigationTrail(c);
       setPopupError(false);
-      if (c) refocusInput(extInputRef);
+      if (c) {
+        refocusInput(extInputRef);
+        onAfterSelect?.(c);
+      }
     },
     [
       selectedCountry,
@@ -32,6 +36,7 @@ export function useCountrySelectHandler({
       resetNavigationTrail,
       setPopupError,
       extInputRef,
+      onAfterSelect,
     ],
   );
 }

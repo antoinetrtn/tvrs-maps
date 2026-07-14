@@ -71,10 +71,13 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform vec3 uTargetColor;
   uniform float uIsError;
   uniform float uIsSuccess;
+  uniform float uIsSelection;
   uniform float uIsLight;
   uniform float uTheme;
   uniform float uIsSide;
   uniform float uIsFound;
+  uniform float uSelectInTransition;
+  uniform vec3 uFoundGreen;
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
@@ -90,13 +93,20 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
       return mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
     }
   }
-  vec3 computeSuccessEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 worldPos) {
-    float pulse = sin(time * 15.0) * 0.4 + 0.6;
-    float sweep = step(fract(worldPos.y * 0.08 - time * 2.0), 0.15) * 0.35;
+  vec3 computeSuccessEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 worldPos) {
+    float pulse = sin(time * 18.0) * 0.35 + 0.65;
+    float sweep = step(fract(worldPos.y * 0.12 - time * 4.0), 0.35) * 0.40;
+    float successNoise = hash(noiseUv + sin(time * 45.0));
+    float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, successNoise);
+    return uFoundGreen * noisyIntensity;
+  }
+  vec3 computeSelectionEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 worldPos) {
+    float pulse = sin(time * 5.5) * 0.18 + 0.82;
+    float sweep = step(fract(worldPos.y * 0.05 - time * 0.9), 0.1) * 0.18;
     if (theme > 0.9 && theme < 1.1) {
-      return vec3(pulse + sweep);
+      return greenColor * (pulse * 0.32 + sweep * 0.15 + 0.22);
     } else {
-      return mix(finalColor, greenColor * (pulse + sweep + 0.5), 0.85);
+      return mix(finalColor, greenColor * (pulse * 0.42 + sweep + 0.3), 0.52);
     }
   }
 `;
@@ -105,7 +115,8 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 export const GLITCH_FRAGMENT_BODY = `
   // Screen-space static — medium grain (~4–5px), uniform per country.
   float transitionActive = step(0.006, uFadeProgress) * (1.0 - step(0.994, uFadeProgress));
-  float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159));
+  float selectInScale = mix(1.0, 0.52, step(0.5, uSelectInTransition));
+  float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159)) * selectInScale;
   float t = uTime * (28.0 + glitchAmp * 62.0);
 
   vec2 blockUv = floor(gl_FragCoord.xy * 0.24);
@@ -121,7 +132,6 @@ export const GLITCH_FRAGMENT_BODY = `
 
   float staticColor = mix(baseMin, baseMax, noise) + scanline;
   vec3 staticVec = vec3(staticColor);
-  vec3 neonGreen = vec3(0.05, 0.92, 0.52);
 
   vec3 finalColor = gl_FragColor.rgb;
 
@@ -129,7 +139,9 @@ export const GLITCH_FRAGMENT_BODY = `
     if (uIsError > 0.5) {
       finalColor = computeErrorEffect(finalColor, uTime, uTheme, blockUv, vWorldPosition);
     } else if (uIsSuccess > 0.5) {
-      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vWorldPosition);
+      finalColor = computeSuccessEffect(finalColor, uTime, uTheme, blockUv, vWorldPosition);
+    } else if (uIsSelection > 0.5) {
+      finalColor = computeSelectionEffect(finalColor, uFoundGreen, uTime, uTheme, vWorldPosition);
     } else {
       vec2 uv = gl_FragCoord.xy;
       float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
@@ -138,14 +150,16 @@ export const GLITCH_FRAGMENT_BODY = `
       finalColor = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * wallNoise));
     }
   } else {
-    finalColor = staticVec;
-
     if (uIsError > 0.5) {
-      finalColor = computeErrorEffect(finalColor, uTime, uTheme, blockUv, vWorldPosition);
-    }
-
-    if (uIsSuccess > 0.5) {
-      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vWorldPosition);
+      finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
+    } else if (uIsSuccess > 0.5) {
+      finalColor = computeSuccessEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
+    } else if (uIsSelection > 0.5) {
+      finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
+    } else if (uIsFound > 0.5) {
+      finalColor = uFoundGreen;
+    } else {
+      finalColor = staticVec;
     }
   }
 
@@ -175,7 +189,15 @@ export const GLITCH_FRAGMENT_BODY = `
   float finalProgress = mix(glitchFade, uFadeProgress, mixBias);
 
   vec3 glitchColor = finalColor;
-  if (transitionActive > 0.5 && uIsSide < 0.5) {
+  bool isFoundCap = (uIsFound > 0.5) && (uIsSide < 0.5);
+  bool isSoftSelectIn =
+    (uSelectInTransition > 0.5) &&
+    (uIsSide < 0.5) &&
+    (uIsFound < 0.5) &&
+    (uIsError < 0.5) &&
+    (uIsSuccess < 0.5);
+
+  if (transitionActive > 0.5 && uIsSide < 0.5 && !isFoundCap && !isSoftSelectIn) {
     float chroma = (transitionNoise - 0.5) * 0.18 * glitchAmp;
     glitchColor.r = clamp(finalColor.r + chroma, 0.0, 1.0);
     glitchColor.b = clamp(finalColor.b - chroma, 0.0, 1.0);
@@ -187,13 +209,27 @@ export const GLITCH_FRAGMENT_BODY = `
     }
   }
 
-  gl_FragColor.rgb = mix(glitchColor, uTargetColor, finalProgress);
+  vec3 settleColor = mix(uTargetColor, uFoundGreen, step(0.5, uIsFound));
+
+  if (uIsError > 0.5 || uIsSuccess > 0.5) {
+    gl_FragColor.rgb = glitchColor;
+  } else if (isFoundCap) {
+    gl_FragColor.rgb = uFoundGreen;
+  } else if (isSoftSelectIn && transitionActive > 0.5) {
+    float reveal = 1.0 - uFadeProgress;
+    float grain = smoothstep(0.1, 0.6, reveal);
+    gl_FragColor.rgb = mix(settleColor, staticVec, grain * 0.5);
+  } else if (isSoftSelectIn) {
+    gl_FragColor.rgb = staticVec;
+  } else {
+    gl_FragColor.rgb = mix(glitchColor, settleColor, finalProgress);
+  }
 
   float finalAlpha = 1.0;
-  if (uTheme < 0.5) {
-    if (uIsFound < 0.5) {
-      finalAlpha = mix(1.0, 0.0, finalProgress);
-    }
+  if (uIsSuccess > 0.5 || uIsFound > 0.5) {
+    finalAlpha = 1.0;
+  } else if (uTheme < 0.5 && uIsFound < 0.5) {
+    finalAlpha = mix(1.0, 0.0, finalProgress);
   }
   gl_FragColor.a = finalAlpha;
 `;

@@ -1,13 +1,12 @@
 import { useMemo, useCallback } from "react";
-import { countryDataMap } from "../data/gameData";
-import { buildLearnExtraEntries } from "../utils/utils";
 import { BREAKPOINTS } from "../config/gameConstants";
+import { DEFAULT_LEARN_SUB_MODE } from "../config/gameConfig";
 
 export function useGameDataPanelState({
   currentScreen,
   mode,
   viewport,
-  learnToggles,
+  learnSubMode = DEFAULT_LEARN_SUB_MODE,
   showLearnPanel,
   showInfoModal,
   showResultsTable,
@@ -21,12 +20,6 @@ export function useGameDataPanelState({
   resetNavigationTrail,
   setPopupError,
 }) {
-  const {
-    showRivers: learnShowRivers,
-    showMountains: learnShowMountains,
-    showDepartments: learnShowDepartments,
-  } = learnToggles;
-
   const isMobileViewport = viewport.width < BREAKPOINTS.desktop;
 
   const isPanelOpen = useMemo(() => {
@@ -44,46 +37,43 @@ export function useGameDataPanelState({
     showResultsTable,
   ]);
 
-  const learnExtraEntries = useMemo(
-    () =>
-      buildLearnExtraEntries(
-        mode,
-        learnShowDepartments,
-        learnShowRivers,
-        learnShowMountains,
-      ),
-    [mode, learnShowDepartments, learnShowRivers, learnShowMountains],
+  const panelDataMap = activeDataMap;
+  const panelMode = mode === "learn" ? learnSubMode : mode;
+
+  const closePanel = useCallback(
+    ({ keepEndScreenHidden = false } = {}) => {
+      setShowLearnPanel(false);
+      setShowInfoModal(false);
+      setShowResultsTable(false);
+      if (isGameOver && !keepEndScreenHidden) setShowEndScreen(true);
+    },
+    [isGameOver, setShowEndScreen, setShowInfoModal, setShowLearnPanel, setShowResultsTable],
   );
-
-  const panelDataMap =
-    mode === "learn" && !learnShowDepartments ? countryDataMap : activeDataMap;
-  const panelMode =
-    mode === "learn" && learnShowDepartments ? "departments" : mode;
-
-  const closePanel = useCallback(() => {
-    setShowLearnPanel(false);
-    setShowInfoModal(false);
-    setShowResultsTable(false);
-    if (isGameOver) setShowEndScreen(true);
-  }, [isGameOver, setShowEndScreen, setShowInfoModal, setShowLearnPanel, setShowResultsTable]);
 
   const handlePanelSelect = useCallback(
     (key) => {
       setSelectedCountry(key);
       resetNavigationTrail(key);
       setPopupError(false);
+      if (isMobileViewport && key) {
+        closePanel({ keepEndScreenHidden: true });
+      }
     },
-    [resetNavigationTrail, setPopupError, setSelectedCountry],
+    [
+      resetNavigationTrail,
+      setPopupError,
+      setSelectedCountry,
+      isMobileViewport,
+      closePanel,
+    ],
   );
 
   return {
     isMobileViewport,
     isPanelOpen,
-    learnExtraEntries,
     panelDataMap,
     panelMode,
     closePanel,
     handlePanelSelect,
-    learnShowDepartments,
   };
 }

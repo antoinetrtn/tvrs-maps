@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { useRef, useMemo, useCallback } from "react";
 import Globe from "react-globe.gl";
 import { countryDataMap } from "./data/gameData";
 import {
@@ -15,9 +9,11 @@ import {
 import { useTranslation } from "./config/i18n";
 import SpaceBackground from "./components/SpaceBackground";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
+import { useGlobePanelShift } from "./hooks/useGlobePanelShift";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLighting } from "./hooks/useGlobeLighting";
-import { useGlobeAnimationLoop } from "./hooks/useGlobeAnimationLoop";
+import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
+import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobePolygons } from "./hooks/useGlobePolygons";
 import { useGlobeRenderData } from "./hooks/useGlobeRenderData";
 import {
@@ -37,11 +33,13 @@ import { useGlobeLabels } from "./hooks/useGlobeLabels";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
-import { disposeBiomeCache, mountainGlitchUniforms } from "./utils/LowPolyBiomes";
-
-import { GLITCH_SELECTION_TRANSITION_MS, isDepartmentView } from "./config/gameConfig";
-
-const SELECTION_TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
+import { mountainGlitchUniforms } from "./utils/LowPolyBiomes";
+import {
+  GLITCH_SELECTION_TRANSITION_MS,
+  isDepartmentView,
+  isLearnRiversMountainsView,
+  DEFAULT_LEARN_SUB_MODE,
+} from "./config/gameConfig";
 const GlobeMap = ({
   mode,
   lang,
@@ -65,30 +63,25 @@ const GlobeMap = ({
   globeLightingEnabled = true,
   activeDataMap,
   globeTheme = "satellite",
-  learnToggles,
+  learnSubMode = DEFAULT_LEARN_SUB_MODE,
   isPanelOpen = false,
+  globeFeedbackRef,
+  globeFeedbackApplierRef,
 }) => {
-  const {
-    showRivers: learnShowRivers = false,
-    showMountains: learnShowMountains = false,
-    showDepartments: learnShowDepartments = false,
-  } = learnToggles || {};
-  const isLearnRivers = mode === "learn" && learnShowRivers;
-  const isLearnMountains = mode === "learn" && learnShowMountains;
   const t = useTranslation(lang);
 
   const globeEl = useRef();
   const globeContentWrapperRef = useRef(null);
 
-  const transitioningPreviousCountryRef = useRef(null);
-  const [transitioningPreviousCountryState, setTransitioningPreviousCountryState] = useState(null);
-  const selectionTransitionStartRef = useRef(0);
+  const selectionTransition = useGlobeSelectionTransition();
 
   const isDepartmentMode = isDepartmentView(mode, {
     isHomeScreen,
-    learnShowDepartments,
+    learnSubMode,
   });
-  const isRiversMountainsMode = mode === "rivers_mountains";
+  const isRiversMountainsMode =
+    mode === "rivers_mountains" ||
+    isLearnRiversMountainsView(mode, { learnSubMode });
   const gameDataMap =
     isDepartmentMode || isRiversMountainsMode
       ? activeDataMap || {}
@@ -118,6 +111,7 @@ const GlobeMap = ({
     REGION_COLORS_LABELS,
     UI_COLORS,
     getBaseColorForCountryAndKind,
+    lerpColor,
   } = useGlobePolygons({
     mode,
     theme,
@@ -134,7 +128,7 @@ const GlobeMap = ({
     isPerfectScore,
     isError,
     isSuccess,
-    transitioningPreviousCountryState,
+    selectionTransition,
   });
 
   const {
@@ -151,8 +145,6 @@ const GlobeMap = ({
     UI_COLORS,
     perfProfile,
     globeTheme,
-    selectedCountry,
-    REGION_COLORS,
     safeColor: (c) => getOpaqueThreeColor(c),
   });
 
@@ -162,6 +154,7 @@ const GlobeMap = ({
     globeRenderWidth,
     globeHeight,
     homeGlobeOffset,
+    globePanelShift,
   } = useGlobeCamera({
     globeEl,
     selectedCountry,
@@ -174,10 +167,11 @@ const GlobeMap = ({
     gameDataMap,
     perfProfile,
     isPanelOpen,
-    setTransitioningPreviousCountryState,
-    selectionTransitionStartRef,
-    transitioningPreviousCountryRef,
+    mode,
+    selectionTransition,
   });
+
+  useGlobePanelShift(globePanelShift, globeContentWrapperRef);
 
   const {
     selectableFeatureIndex,
@@ -219,16 +213,15 @@ const GlobeMap = ({
     mode,
     gameDataMap,
     selectableFeatureIndex,
-    isLearnRivers,
-    isLearnMountains,
-    learnToggles,
+    isDepartmentMode,
+    isRiversMountainsMode,
   });
 
   const {
     globePathsData,
   } = useGlobePaths({
     mode,
-    isLearnRivers,
+    isRiversMountainsMode,
     gameDataMap,
     foundSet,
     isHomeScreen,
@@ -280,7 +273,7 @@ const GlobeMap = ({
     zoomLevel,
     perfProfile,
     gameDataMap,
-    learnToggles,
+    learnSubMode,
     countrySizes,
     lang,
     isError,
@@ -290,6 +283,7 @@ const GlobeMap = ({
     t,
     globeEl,
     isLight,
+    isPanelOpen,
   });
 
   const {
@@ -325,7 +319,7 @@ const GlobeMap = ({
     foundSet,
     isHomeScreen,
     globeTheme,
-    learnToggles,
+    isRiversMountainsMode,
   });
 
   const globeMaterial = useGlobeMaterial({
@@ -334,7 +328,8 @@ const GlobeMap = ({
     isLight,
   });
 
-  useGlobeAnimationLoop({
+  useGlobeSceneAnimation({
+    foundList,
     globeEl,
     isLight,
     UI_COLORS,
@@ -349,34 +344,23 @@ const GlobeMap = ({
     updateGlobeLighting,
     polygonMaterialCacheRef,
     sharedMaterialsRef,
+    mode,
     selectedCountry,
     isError,
     isSuccess,
     isEndScreen,
-    transitioningPreviousCountryState,
-    selectionTransitionStartRef,
-    transitioningPreviousCountryRef,
-    setTransitioningPreviousCountryState,
+    selectionTransition,
     foundSet,
     getBaseColorForCountryAndKind,
+    lerpColor,
     globeMaterial,
     mountainGlitchUniforms,
     GLOBE_STYLE,
     countriesData,
     departmentsData,
+    globeFeedbackRef,
+    globeFeedbackApplierRef,
   });
-
-  useEffect(() => {
-    if (foundList.length === 0) {
-      disposeBiomeCache();
-    }
-  }, [foundList]);
-
-  useEffect(() => {
-    return () => {
-      disposeBiomeCache();
-    };
-  }, []);
 
   const getPolygonCurvatureResolutionWrapped = useCallback(
     (d) => (d.isGhostCountry ? 1 : getPolygonCurvatureResolution(d)),
@@ -392,9 +376,7 @@ const GlobeMap = ({
     updateGlobeLighting();
   }, [styleGlobeGraticules, updateGlobeLighting]);
 
-  const activeAtmosphereColor = useMemo(() => {
-    return getOpaqueThreeColor(UI_COLORS.atmosphere);
-  }, [UI_COLORS.atmosphere]);
+  const activeAtmosphereColor = useMemo(() => getOpaqueThreeColor(UI_COLORS.atmosphere), [UI_COLORS.atmosphere]);
 
   return (
     <div
@@ -484,6 +466,7 @@ const GlobeMap = ({
           background: "transparent",
           width: globeRenderWidth,
           left: -homeGlobeOffset,
+          "--globe-panel-shift": `${globePanelShift}px`,
         }}
       >
         <Globe
@@ -526,7 +509,7 @@ const GlobeMap = ({
           polygonStrokeColor={getPolygonStrokeColorWrapped}
           polygonStrokeWidth={getPolygonStrokeWidth}
           polygonAltitudeUpdateMs={50}
-          polygonsTransitionDuration={SELECTION_TRANSITION_DURATION}
+          polygonsTransitionDuration={GLITCH_SELECTION_TRANSITION_MS}
           pointsData={
             perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
               ? visibleMarkersData
@@ -537,7 +520,7 @@ const GlobeMap = ({
           pointColor={getPointColorWrapped}
           pointRadius={getPointRadius}
           pointAltitude={getPointAltitude}
-          pointsTransitionDuration={SELECTION_TRANSITION_DURATION}
+          pointsTransitionDuration={GLITCH_SELECTION_TRANSITION_MS}
           htmlElementsData={labelsData}
           htmlElement={createLabelElement}
           htmlLat={getLatWrapped}

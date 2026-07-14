@@ -1,8 +1,6 @@
 
 import { GAME_REGIONS } from "../config/gameConfig";
 import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
-
 /**
  * Normalizes input string for accents, lowercase, hyphens, and whitespace.
  */
@@ -102,7 +100,7 @@ export const getPanelData = ({
 
     rowsByRegion[region] = data.countries.map((c) => {
       const item = mergedMap[c.key] || {};
-      const name =
+      const countryName =
         lang === 'fr'
           ? item.name_fr || item.name_en || c.name
           : item.name_en || item.name_fr || c.name;
@@ -110,11 +108,13 @@ export const getPanelData = ({
         lang === 'fr'
           ? item.capital_fr || item.capital || c.capital
           : item.capital || item.capital_fr || c.capital;
+      const isCapitalsMode = mode === 'capitals';
+      const name = isCapitalsMode ? capital : countryName;
       const sublabel =
         mode === 'departments' || item.code
           ? item.code
-          : mode === 'capitals'
-            ? capital
+          : isCapitalsMode
+            ? countryName
             : capital;
       const detail =
         item.type === 'mountain_range'
@@ -127,6 +127,7 @@ export const getPanelData = ({
         key: c.key,
         name,
         sublabel: detail,
+        iso2: item.iso2,
         found: c.found,
         revealed: revealAll || c.found,
         region,
@@ -137,23 +138,16 @@ export const getPanelData = ({
   return { rowsByRegion, CONTINENT_ORDER, total: Object.keys(mergedMap).length };
 };
 
-export const buildLearnExtraEntries = (
-  mode,
-  learnShowDepartments,
-  learnShowRivers,
-  learnShowMountains,
-) => {
-  if (mode !== "learn" || learnShowDepartments) return [];
-  const entries = [];
-  Object.entries(riversMountainsDataMap).forEach(([key, data]) => {
-    if (data.type === "river" && learnShowRivers) {
-      entries.push({ key, data: { ...data, region: "Reliefs" } });
-    }
-    if (data.type === "mountain_range" && learnShowMountains) {
-      entries.push({ key, data: { ...data, region: "Reliefs" } });
-    }
-  });
-  return entries;
+/** Convert viewport client coords to globe container space for raycasting. */
+export const clientToGlobeCoords = (globeEl, clientX, clientY) => {
+  if (!globeEl?.current?.toGlobeCoords) return null;
+  const canvas = globeEl.current.renderer?.()?.domElement;
+  if (!canvas) return globeEl.current.toGlobeCoords(clientX, clientY);
+  const rect = canvas.getBoundingClientRect();
+  return globeEl.current.toGlobeCoords(
+    clientX - rect.left,
+    clientY - rect.top,
+  );
 };
 
 export const getFlagEmoji = (iso2) => {

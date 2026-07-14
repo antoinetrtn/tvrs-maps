@@ -9,30 +9,42 @@ const GameDataPanelRow = ({
   onSelect,
   unrevealedLabel,
 }) => {
-  const displayName = row.revealed ? row.name : scrambleText(row.name || "");
-  const displaySub = row.revealed
+  const isRevealed = mode === "learn" || row.revealed;
+  const displayName = isRevealed ? row.name : scrambleText(row.name || "");
+  const displaySub = isRevealed
     ? row.sublabel
     : row.sublabel
       ? scrambleText(row.sublabel)
       : "";
+  const showFlag = row.iso2 && (mode === "learn" || isRevealed);
 
   return (
     <button
       type="button"
       role="row"
-      className={`data-panel-row ${row.found ? "found" : "missed"} ${isSelected ? "selected" : ""} ${row.revealed ? "revealed" : ""}`}
+      data-country-key={row.key}
+      className={`data-panel-row ${showFlag ? "has-flag" : ""} ${row.found ? "found" : "missed"} ${isSelected ? "selected" : ""} ${isRevealed ? "revealed" : ""}`}
       onClick={() => onSelect(row.key)}
-      title={row.revealed ? row.name : unrevealedLabel}
+      title={isRevealed ? row.name : unrevealedLabel}
     >
       <span className="data-panel-row-status" aria-hidden="true">
         {mode === "learn" ? (
-          <span className="status-dot" />
+          !isSelected ? <span className="status-dot" /> : null
         ) : row.found ? (
           <Check width={14} height={14} />
         ) : (
           <Minus width={14} height={14} />
         )}
       </span>
+      {showFlag && (
+        <img
+          src={`/flags/${row.iso2.toLowerCase()}.svg`}
+          className="data-panel-row-flag"
+          alt=""
+          width={28}
+          height={21}
+        />
+      )}
       <span className="data-panel-row-name">{displayName}</span>
       {displaySub && <span className="data-panel-row-sub">{displaySub}</span>}
     </button>

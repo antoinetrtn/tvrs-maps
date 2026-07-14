@@ -59,6 +59,10 @@ export const translations = {
     show_departments: "Afficher les départements français",
     labels_departements: "Départements",
     data_table: "Tableau des données",
+    learn_mode_countries: "Pays",
+    learn_mode_capitals: "Villes",
+    learn_mode_rivers_mountains: "Mont. & riv.",
+    learn_mode_departments: "Dépt.",
 
     // Focus Badge Prompts
     department_prefix: "Département {code}",
@@ -233,6 +237,10 @@ export const translations = {
     show_departments: "Show French departments",
     labels_departements: "Departments",
     data_table: "Data table",
+    learn_mode_countries: "Countries",
+    learn_mode_capitals: "Cities",
+    learn_mode_rivers_mountains: "Peaks & rivers",
+    learn_mode_departments: "Depts.",
     labels_montagnes: "Mountains",
 
     // Focus Badge Prompts

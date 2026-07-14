@@ -123,10 +123,18 @@ export function useGlobeCamera({
   gameDataMap,
   perfProfile,
   isPanelOpen = false,
-  setTransitioningPreviousCountryState,
-  selectionTransitionStartRef,
-  transitioningPreviousCountryRef,
+  mode = "countries",
+  selectionTransition,
 }) {
+  const {
+    transitioningPreviousCountryRef,
+    transitioningIncomingCountryRef,
+    selectionTransitionStartRef,
+  } = selectionTransition.refs;
+  const {
+    setTransitioningPreviousCountryState,
+    setTransitioningIncomingCountryState,
+  } = selectionTransition.setters;
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
 
@@ -235,6 +243,8 @@ export function useGlobeCamera({
   ]);
 
   useEffect(() => {
+    const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
+
     if (selectedCountry && globeEl.current) {
       const data =
         gameDataMap[selectedCountry] ||
@@ -254,21 +264,30 @@ export function useGlobeCamera({
           maxWindowHeight: maxWindowHeightRef.current,
         });
         const previousTarget = lastTargetRef.current;
+        const targetChanged =
+          !previousTarget ||
+          Math.abs(previousTarget.lat - target.lat) >= 0.001 ||
+          Math.abs(previousTarget.lng - target.lng) >= 0.001 ||
+          Math.abs(previousTarget.altitude - target.altitude) >= 0.001;
         const onlyViewportNudge =
+          !selectionChanged &&
           previousTarget &&
           previousSelectedCountryRef.current === selectedCountry &&
-          Math.abs(previousTarget.lat - target.lat) < 0.001 &&
-          Math.abs(previousTarget.lng - target.lng) < 0.001 &&
-          Math.abs(previousTarget.altitude - target.altitude) < 0.001;
-        const duration = isHomeScreen
-          ? 1800
-          : onlyViewportNudge
-            ? 180
-            : perfProfile?.isMobile ? 320 : 420;
-        globeEl.current.pointOfView(target, duration);
-        lastTargetRef.current = target;
+          targetChanged;
+
+        if (selectionChanged || onlyViewportNudge) {
+          const duration = isHomeScreen
+            ? 1800
+            : onlyViewportNudge
+              ? 180
+              : perfProfile?.isMobile
+                ? 320
+                : 420;
+          globeEl.current.pointOfView(target, duration);
+          lastTargetRef.current = target;
+        }
       }
-    } else if (globeEl.current) {
+    } else if (selectionChanged && globeEl.current) {
       applyIdleCameraPointOfView({
         globeEl,
         viewport,
@@ -277,19 +296,23 @@ export function useGlobeCamera({
         isDepartmentMode,
         wasHomeScreen: wasHomeScreenRef.current,
       });
+      lastTargetRef.current = null;
     }
 
-    if (selectedCountry !== previousSelectedCountryRef.current) {
-      if (transitioningPreviousCountryRef) {
-        transitioningPreviousCountryRef.current = previousSelectedCountryRef.current;
-      }
-      if (setTransitioningPreviousCountryState) {
+    if (selectionChanged) {
+      if (mode !== "learn") {
+        transitioningPreviousCountryRef.current =
+          previousSelectedCountryRef.current;
         setTransitioningPreviousCountryState(previousSelectedCountryRef.current);
+      } else {
+        transitioningPreviousCountryRef.current = null;
+        setTransitioningPreviousCountryState(null);
       }
-      if (selectionTransitionStartRef) {
-        selectionTransitionStartRef.current = performance.now();
-      }
+      transitioningIncomingCountryRef.current = null;
+      setTransitioningIncomingCountryState(null);
+      selectionTransitionStartRef.current = performance.now();
     }
+
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
   }, [
@@ -303,10 +326,10 @@ export function useGlobeCamera({
     isEndScreen,
     isDepartmentMode,
     gameDataMap,
+    mode,
     globeEl,
     setTransitioningPreviousCountryState,
-    selectionTransitionStartRef,
-    transitioningPreviousCountryRef,
+    setTransitioningIncomingCountryState,
   ]);
 
   const isMobileSize = viewport.width < 1024;
@@ -320,10 +343,12 @@ export function useGlobeCamera({
     maxWindowHeightRef.current = window.innerHeight;
   }
 
-  const panelLayoutWidth = isPanelOpen
-    ? getDataPanelLayoutWidth(viewport.width)
-    : 0;
-  const globeWidth = Math.max(320, maxWindowWidthRef.current - panelLayoutWidth);
+  const panelLayoutWidth =
+    isPanelOpen && !isHomeScreen && viewport.width >= 769
+      ? getDataPanelLayoutWidth(viewport.width)
+      : 0;
+  const globePanelShift = panelLayoutWidth > 0 ? -panelLayoutWidth / 2 : 0;
+  const globeWidth = Math.max(320, maxWindowWidthRef.current);
   const globeHeight = maxWindowHeightRef.current;
   const homeGlobeOffset =
     isHomeScreen && !isKeyboardMode && maxWindowWidthRef.current >= 769
@@ -353,5 +378,6 @@ export function useGlobeCamera({
     globeRenderWidth,
     globeHeight,
     homeGlobeOffset,
+    globePanelShift,
   };
 }

@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { Close, Home } from "pixelarticons/react";
 import { getThemeRegionColor } from "../config/designSystem";
-import { getPanelData, normalizeString, buildLearnExtraEntries } from "../utils/utils";
+import { getPanelData, normalizeString } from "../utils/utils";
 import { useTranslation } from "../config/i18n";
 import { GAME_REGIONS } from "../config/gameConfig";
 import GameDataPanelRow from "./GameDataPanelRow";
@@ -25,15 +25,16 @@ const GameDataPanel = ({
   title,
   score,
   total,
-  extraEntries: extraEntriesProp,
   searchQuery: controlledSearch,
   onSearchChange,
   showSearch = true,
   isLearnMode = false,
-  learnToggles,
-  onToggleLearn,
+  learnSubMode,
+  onLearnSubModeChange,
+  allowDeselect = true,
 }) => {
   const t = useTranslation(lang);
+  const scrollContainerRef = useRef(null);
   const [localSearch, setLocalSearch] = useState("");
   const searchQuery = controlledSearch ?? localSearch;
   const setSearchQuery = onSearchChange ?? setLocalSearch;
@@ -46,19 +47,6 @@ const GameDataPanel = ({
     return res;
   }, [globeTheme, theme]);
 
-  const learnExtraEntries = useMemo(
-    () =>
-      isLearnMode && learnToggles
-        ? buildLearnExtraEntries(
-            "learn",
-            learnToggles.showDepartments,
-            learnToggles.showRivers,
-            learnToggles.showMountains,
-          )
-        : extraEntriesProp || [],
-    [isLearnMode, learnToggles, extraEntriesProp],
-  );
-
   const { rowsByRegion, CONTINENT_ORDER } = useMemo(
     () =>
       getPanelData({
@@ -67,9 +55,8 @@ const GameDataPanel = ({
         lang,
         mode,
         revealAll: revealAll || isLearnMode,
-        extraEntries: learnExtraEntries,
       }),
-    [dataMap, foundList, lang, mode, revealAll, isLearnMode, learnExtraEntries],
+    [dataMap, foundList, lang, mode, revealAll, isLearnMode],
   );
 
   const normalizedQuery = normalizeString(searchQuery);
@@ -99,10 +86,18 @@ const GameDataPanel = ({
 
   const handleRowClick = useCallback(
     (key) => {
-      onSelectCountry?.(key === selectedCountry ? null : key);
+      onSelectCountry?.(allowDeselect && key === selectedCountry ? null : key);
     },
-    [onSelectCountry, selectedCountry],
+    [onSelectCountry, selectedCountry, allowDeselect],
   );
+
+  useEffect(() => {
+    if (!selectedCountry || !scrollContainerRef.current) return;
+    const row = scrollContainerRef.current.querySelector(
+      `[data-country-key="${selectedCountry}"]`,
+    );
+    row?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [selectedCountry]);
 
   const panelTitle =
     title ||
@@ -113,7 +108,7 @@ const GameDataPanel = ({
 
   return (
     <aside
-      className={`game-data-panel ${theme} ${variant} ${isGameOver ? "is-game-over" : ""}`}
+      className={`game-data-panel ${theme} ${variant} ${isLearnMode ? "learn-mode" : ""} ${isGameOver ? "is-game-over" : ""}`}
       aria-label={panelTitle}
     >
       <header className="data-panel-header">
@@ -146,31 +141,34 @@ const GameDataPanel = ({
         </div>
       </header>
 
-      {isLearnMode && learnToggles && onToggleLearn && (
+      {isLearnMode && learnSubMode && onLearnSubModeChange && (
         <div className="data-panel-toolbar">
           <LearnModeToggles
-            learnToggles={learnToggles}
-            onToggleLearn={onToggleLearn}
+            learnSubMode={learnSubMode}
+            onLearnSubModeChange={onLearnSubModeChange}
             lang={lang}
-            compact
           />
         </div>
       )}
 
-      {showSearch && (
-        <div className="data-panel-search">
-          <input
-            type="search"
-            className="data-panel-search-input"
-            placeholder={t("search_placeholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label={t("search_placeholder")}
-          />
-        </div>
-      )}
+      <div
+        ref={scrollContainerRef}
+        className={`data-panel-scroll scrollbar-styled ${showSearch ? "has-search" : ""}`}
+      >
+        {showSearch && (
+          <div className="data-panel-search-sticky">
+            <input
+              type="search"
+              className="data-panel-search-input"
+              placeholder={t("search_placeholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label={t("search_placeholder")}
+            />
+          </div>
+        )}
 
-      <div className="data-panel-body scrollbar-styled">
+        <div className="data-panel-body">
         {regionsToRender.map((region) => {
           const rows = filteredRegions[region];
           if (!rows || rows.length === 0) return null;
@@ -210,6 +208,7 @@ const GameDataPanel = ({
             </section>
           );
         })}
+        </div>
       </div>
     </aside>
   );

@@ -48,8 +48,6 @@ const GameHUD = ({
   isKeyboardMode,
   selectedCountry,
   globeTheme,
-  learnToggles,
-  onToggleLearn,
   learnSearchQuery = "",
   onLearnSearchChange,
   onToggleLearnPanel,

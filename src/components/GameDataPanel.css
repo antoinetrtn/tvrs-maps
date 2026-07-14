@@ -1,14 +1,16 @@
 .game-data-panel {
+  --selection-green: var(--selection-highlight, var(--crt-neon-green));
+  --selection-green-soft: color-mix(in srgb, var(--selection-green) 16%, transparent);
   display: flex;
   flex-direction: column;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--bg-color);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow-strong);
   color: var(--text-main);
-  z-index: 1102;
+  z-index: var(--z-sheet, 5100);
   pointer-events: auto;
+  isolation: isolate;
+  overflow: hidden;
 }
 
 .game-data-panel.side {
@@ -47,6 +49,7 @@
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--glass-border);
   flex-shrink: 0;
+  background: var(--bg-color);
 }
 
 .data-panel-title-block {
@@ -86,23 +89,33 @@
   padding: var(--spacing-sm) var(--spacing-md);
   border-bottom: 1px solid var(--glass-border);
   flex-shrink: 0;
+  background: var(--bg-color);
 }
 
-.data-panel-toolbar .learn-toggles-group {
+.data-panel-toolbar .learn-submode-control {
   width: 100%;
-  justify-content: space-between;
-  flex-wrap: wrap;
 }
 
-.data-panel-toolbar .learn-toggles-group.compact .learn-toggle-btn {
-  width: 34px;
-  height: 34px;
+.data-panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  --data-panel-search-offset: 0px;
 }
 
-.data-panel-search {
+.data-panel-scroll.has-search {
+  --data-panel-search-offset: 52px;
+}
+
+.data-panel-search-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   padding: var(--spacing-sm) var(--spacing-md);
   border-bottom: 1px solid var(--glass-border);
-  flex-shrink: 0;
+  background: var(--bg-color);
+  box-shadow: 0 1px 0 var(--bg-color);
 }
 
 .data-panel-search-input {
@@ -123,8 +136,6 @@
 }
 
 .data-panel-body {
-  flex: 1;
-  overflow-y: auto;
   padding: var(--spacing-sm);
   display: flex;
   flex-direction: column;
@@ -143,11 +154,11 @@
   gap: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   position: sticky;
-  top: 0;
-  background: color-mix(in srgb, var(--glass-bg) 92%, transparent);
-  backdrop-filter: var(--glass-blur-compact);
-  -webkit-backdrop-filter: var(--glass-blur-compact);
-  z-index: 1;
+  top: var(--data-panel-search-offset);
+  background: var(--bg-color);
+  z-index: 4;
+  margin-bottom: 2px;
+  box-shadow: 0 1px 0 var(--glass-border);
 }
 
 .data-panel-region-dot {
@@ -197,7 +208,13 @@
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
-    opacity var(--transition-fast);
+    opacity var(--transition-fast),
+    padding var(--transition-emphasized),
+    grid-template-columns var(--transition-emphasized);
+}
+
+.data-panel-row.has-flag {
+  grid-template-columns: 20px auto 1fr auto;
 }
 
 .data-panel-row:hover {
@@ -206,8 +223,17 @@
 }
 
 .data-panel-row.selected {
-  background: var(--accent-soft);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--glass-border));
+  padding: var(--spacing-md);
+  min-height: 56px;
+  background: var(--selection-green-soft);
+  border-color: color-mix(in srgb, var(--selection-green) 45%, var(--glass-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--selection-green) 12%, transparent);
+  font-size: 0.92rem;
+}
+
+.data-panel-row.selected .data-panel-row-name {
+  font-weight: 700;
+  color: var(--selection-green);
 }
 
 .data-panel-row.missed:not(.revealed) {
@@ -242,6 +268,29 @@
   background: var(--region-color);
 }
 
+.data-panel-row-flag {
+  width: 28px;
+  height: 21px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  flex-shrink: 0;
+  transition:
+    width var(--transition-emphasized),
+    height var(--transition-emphasized),
+    box-shadow var(--transition-emphasized);
+}
+
+.data-panel-row.selected .data-panel-row-flag {
+  width: 52px;
+  height: 39px;
+  border-color: color-mix(in srgb, var(--selection-green) 35%, var(--glass-border));
+  box-shadow:
+    var(--glass-shadow),
+    0 0 10px color-mix(in srgb, var(--selection-green) 30%, transparent);
+}
+
 .data-panel-row-name {
   min-width: 0;
   overflow: hidden;
@@ -257,6 +306,12 @@
   flex-shrink: 0;
 }
 
+.panel-overlay.game-panel-overlay {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: color-mix(in srgb, var(--overlay-bg) 55%, transparent);
+}
+
 /* Mobile overlay sheet */
 @media (max-width: 1023px) {
   .game-data-panel.side {
@@ -265,7 +320,9 @@
     right: 0;
     bottom: 0;
     width: 100%;
-    max-height: 72vh;
+    max-width: 100%;
+    margin: 0 auto;
+    max-height: min(78vh, 100dvh);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     animation: data-panel-sheet-up var(--transition-emphasized) both;
   }
