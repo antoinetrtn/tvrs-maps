@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { getFeatureAdmin } from "../utils/utils";
 import {
   GLITCH_SELECTION_TRANSITION_MS,
   getDeselectGlitchFadeProgress,
