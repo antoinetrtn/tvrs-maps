@@ -3,7 +3,7 @@ const GLOBE_RADIUS = 100;
 const GLOBE_CAMERA_NEAR = 1;
 
 /** UX floor — well above the hull; keeps dept. France view (0.3) reachable. */
-export const GLOBE_MIN_ALTITUDE = 0.2;
+export const GLOBE_MIN_ALTITUDE = 0.26;
 
 export const GLOBE_MAX_ALTITUDE = 4;
 
