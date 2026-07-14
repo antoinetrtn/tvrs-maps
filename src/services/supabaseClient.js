@@ -5,14 +5,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
-    supabaseAnonKey &&
-    supabaseUrl !== "YOUR_SUPABASE_URL" &&
-    supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY"
+  supabaseAnonKey &&
+  supabaseUrl !== "YOUR_SUPABASE_URL" &&
+  supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY"
 );
 
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 /**
  * Fetches user profile by ID.
@@ -37,15 +35,12 @@ export async function getProfile(profileId) {
 export async function isUsernameTaken(username, excludeProfileId = null) {
   if (!isSupabaseConfigured) return false;
   try {
-    let query = supabase
-      .from("profiles")
-      .select("id")
-      .eq("username", username);
-    
+    let query = supabase.from("profiles").select("id").eq("username", username);
+
     if (excludeProfileId) {
       query = query.filter("id", "neq", excludeProfileId);
     }
-    
+
     const { data, error } = await query;
     if (error) throw error;
     return data.length > 0;
@@ -77,15 +72,11 @@ export async function upsertProfile(
       xp,
       level,
       unlocked_badges: unlockedBadges,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
-    
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert(payload)
-      .select()
-      .single();
-      
+
+    const { data, error } = await supabase.from("profiles").upsert(payload).select().single();
+
     return { data, error };
   } catch (err) {
     return { data: null, error: err.message };
@@ -104,10 +95,10 @@ export async function submitLeaderboardScore(profileId, gameMode, score, timeSpe
         profile_id: profileId,
         game_mode: gameMode,
         score,
-        time_spent_seconds: timeSpentSeconds
+        time_spent_seconds: timeSpentSeconds,
       })
       .select();
-      
+
     return { data, error };
   } catch (err) {
     return { data: null, error: err.message };
@@ -123,7 +114,8 @@ export async function getLeaderboard(gameMode, limit = 50) {
   try {
     const { data, error } = await supabase
       .from("user_records")
-      .select(`
+      .select(
+        `
         id,
         max_score,
         best_time_seconds,
@@ -133,7 +125,8 @@ export async function getLeaderboard(gameMode, limit = 50) {
           avatar_id,
           avatar_color
         )
-      `)
+      `
+      )
       .eq("game_mode", gameMode)
       .gt("max_score", 0)
       // Sort by max_score descending first, and then by best_time_seconds ascending (lower time is better)
@@ -149,7 +142,7 @@ export async function getLeaderboard(gameMode, limit = 50) {
           profiles: row.profiles,
         }))
       : [];
-      
+
     return { data: mappedData, error };
   } catch (err) {
     return { data: [], error: err.message };
@@ -164,23 +157,23 @@ export async function getUserHistory(profileId, gameMode = null, limit = 50) {
   try {
     let query = supabase
       .from("leaderboards")
-      .select(`
+      .select(
+        `
         id,
         score,
         time_spent_seconds,
         created_at,
         game_mode
-      `)
+      `
+      )
       .eq("profile_id", profileId);
-      
+
     if (gameMode) {
       query = query.eq("game_mode", gameMode);
     }
-    
-    const { data, error } = await query
-      .order("created_at", { ascending: false })
-      .limit(limit);
-      
+
+    const { data, error } = await query.order("created_at", { ascending: false }).limit(limit);
+
     return { data, error };
   } catch (err) {
     return { data: [], error: err.message };
@@ -206,7 +199,13 @@ export async function getUserRecords(profileId) {
 /**
  * Synchronizes local stats to Supabase by upserting records.
  */
-export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSeconds, gamesPlayed) {
+export async function upsertUserRecord(
+  profileId,
+  gameMode,
+  maxScore,
+  bestTimeSeconds,
+  gamesPlayed
+) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const payload = {
@@ -214,7 +213,7 @@ export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSe
       game_mode: gameMode,
       max_score: maxScore,
       games_played: gamesPlayed,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
     if (bestTimeSeconds !== null) {
       payload.best_time_seconds = bestTimeSeconds;
@@ -229,7 +228,6 @@ export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSe
     return { data: null, error: err.message };
   }
 }
-
 
 /**
  * Supabase Auth Functions
@@ -261,8 +259,8 @@ export async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin
-      }
+        redirectTo: window.location.origin,
+      },
     });
     return { data, error };
   } catch (err) {

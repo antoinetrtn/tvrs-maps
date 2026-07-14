@@ -1,8 +1,9 @@
 import React from "react";
-import GameHUD from "./GameHUD.jsx";
+
 import GlobeMap from "../GlobeMap.jsx";
 import EndScreen from "./EndScreen.jsx";
 import GameDataPanel from "./GameDataPanel.jsx";
+import GameHUD from "./GameHUD.jsx";
 
 const GameSessionView = ({
   showEndScreen,

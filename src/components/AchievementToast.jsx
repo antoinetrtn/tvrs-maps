@@ -1,6 +1,8 @@
-import React, { useEffect } from "react";
-import InvaderAvatar from "./InvaderAvatar";
 import "./AchievementToast.css";
+
+import React, { useEffect } from "react";
+
+import InvaderAvatar from "./InvaderAvatar";
 
 const AchievementToast = ({
   title,
@@ -8,7 +10,7 @@ const AchievementToast = ({
   invaderId = "invader_3",
   color = "cyan",
   onClose,
-  duration = 4000
+  duration = 4000,
 }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -20,11 +22,11 @@ const AchievementToast = ({
 
   return (
     <div className="achievement-toast-wrapper">
-      <div 
+      <div
         className="achievement-toast-card glass-panel"
         style={{
           "--toast-color": color,
-          "--toast-color-glow": `${color}33` // transparent version for shadow glow
+          "--toast-color-glow": `${color}33`, // transparent version for shadow glow
         }}
       >
         <div className="achievement-toast-icon-container">

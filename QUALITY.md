@@ -96,9 +96,25 @@ Headless Chrome needs software WebGL: `--use-gl=angle --use-angle=swiftshader --
 
 ### CI Quality Pipeline
 A GitHub Action (`.github/workflows/quality.yml`) runs on push/PR to `main` and `dev`. It performs:
-1. `npm run lint` (checks formatting, design tokens, bans, and runs Knip dead code audit).
-2. `npm run test:run` (runs all unit tests in Vitest).
-3. `npm run build` (ensures Vite builds successfully).
+1. `npm run format:check` (Prettier).
+2. `npm run lint` (checks formatting, design tokens, bans, ESLint, and runs Knip dead code audit).
+3. `npm run test:run` (runs all unit tests in Vitest).
+4. `npm run build` (ensures Vite builds successfully).
+
+### Quality Tooling (ESLint, Prettier, Husky, Sonar, etc.)
+- **ESLint** (flat config): strict rules + react, hooks, a11y (some warn), security, promise, simple-import-sort, prettier, unused-imports.
+  - `npm run lint:eslint` (reports)
+  - `npm run lint:fix`
+- **Prettier**: formatting standard (double quotes, 2 spaces, semi, 100 cols). `npm run format`
+- **Husky + lint-staged**: fast checks on `git commit` (eslint + prettier on staged files only). Full `npm run check` on `git push`.
+- **Commitlint**: enforces Conventional Commits (e.g. `feat:`, `fix:`, `chore:`) via commit-msg hook.
+- **Knip**: dead code / unused exports detection.
+- **SonarQube Cloud** (optional but recommended): deeper static analysis (bugs, vulnerabilities, code smells, duplication, maintainability, hotspots). See `.github/workflows/sonar.yml` and `sonar-project.properties`.
+  - Requires `SONAR_TOKEN` secret in GitHub (from sonarcloud.io project).
+  - Once scans run, you can connect **SonarQube MCP Server** (https://github.com/SonarSource/sonarqube-mcp-server) in your AI coding agent (Cursor, Claude, VS Code, this Grok session, etc.). This lets the agent query live quality issues, hotspots and gates during development and reviews for even stronger feedback loops.
+- **Custom quality ratchets** in `scripts/quality-check.js` remain the project-specific guardrails (file sizes, no magic colors, nesting limits, globe rules, z-index, etc.).
+
+Run `npm run check` locally before pushing (now also enforced by pre-push).
 
 ### Database Migrations (Supabase)
 Any database schema changes must be version-controlled in the repository:

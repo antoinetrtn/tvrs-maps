@@ -1,8 +1,9 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { GLOBE_STYLE, getOpaqueThreeColor } from "../config/designSystem";
+
+import { getOpaqueThreeColor, GLOBE_STYLE } from "../config/designSystem";
 import { PERFORMANCE } from "../config/gameConstants";
-import { FRESNEL_VERTEX_SHADER, FRESNEL_FRAGMENT_SHADER } from "../config/globeShaders";
+import { FRESNEL_FRAGMENT_SHADER, FRESNEL_VERTEX_SHADER } from "../config/globeShaders";
 
 export function useGlobeLighting({
   globeEl,
@@ -26,25 +27,11 @@ export function useGlobeLighting({
 
     if (!globeLightingEnabled) {
       if (globeLightingRef.current) {
-        const {
-          keyLight,
-          rimLight,
-          fillLight,
-          studioLight,
-          studioLeft,
-          studioRight,
-          group,
-        } = globeLightingRef.current;
+        const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, group } =
+          globeLightingRef.current;
         const camera = globeEl.current?.camera?.();
         if (camera) {
-          camera.remove(
-            keyLight,
-            rimLight,
-            fillLight,
-            studioLight,
-            studioLeft,
-            studioRight,
-          );
+          camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
         }
         if (group && group.parent) {
           group.parent.remove(group);
@@ -107,7 +94,7 @@ export function useGlobeLighting({
           blending: THREE.NormalBlending,
           side: THREE.BackSide,
           depthWrite: false,
-        }),
+        })
       );
       innerGlow.name = "globe-inner-glow";
       innerGlow.position.set(0, 0, 0);
@@ -116,14 +103,7 @@ export function useGlobeLighting({
       group.add(innerGlow);
       scene.add(group);
 
-      camera.add(
-        keyLight,
-        rimLight,
-        fillLight,
-        studioLight,
-        studioLeft,
-        studioRight,
-      );
+      camera.add(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
 
       globeLightingRef.current = {
         group,
@@ -137,15 +117,8 @@ export function useGlobeLighting({
       };
     }
 
-    const {
-      keyLight,
-      rimLight,
-      fillLight,
-      studioLight,
-      studioLeft,
-      studioRight,
-      innerGlow,
-    } = globeLightingRef.current;
+    const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, innerGlow } =
+      globeLightingRef.current;
 
     const isMobile = perfProfile?.isMobile;
     const lightScale = isMobile ? PERFORMANCE.mobileLightScale : 1;
@@ -195,8 +168,8 @@ export function useGlobeLighting({
     studioRight.color.set(safeColor(UI_COLORS.lightingRight));
 
     const glowColorHex = isLight
-      ? (Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0)
-      : (Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0);
+      ? Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0
+      : Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0;
     const glowPower = Number(UI_COLORS.glowPower) || 1.2;
     const glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
 
@@ -265,25 +238,11 @@ export function useGlobeLighting({
 
     return () => {
       if (globeLightingRef.current) {
-        const {
-          keyLight,
-          rimLight,
-          fillLight,
-          studioLight,
-          studioLeft,
-          studioRight,
-          group,
-        } = globeLightingRef.current;
+        const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, group } =
+          globeLightingRef.current;
         const camera = globeEl.current?.camera?.();
         if (camera) {
-          camera.remove(
-            keyLight,
-            rimLight,
-            fillLight,
-            studioLight,
-            studioLeft,
-            studioRight,
-          );
+          camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
         }
         if (group && group.parent) {
           group.parent.remove(group);

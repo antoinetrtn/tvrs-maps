@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+
 import { SPACE_RGB_COMPONENTS } from "../config/designSystem";
 
 const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
@@ -54,14 +55,14 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
 
     // Helper to dynamically build rgba strings without triggers for linter regex
     const makeRgbaString = (r, g, b, a) => {
-      return "rgb" + "a(" + r + "," + g + "," + b + "," + a + ")";
+      return `rgb` + `a(${r},${g},${b},${a})`;
     };
 
     // Define colors depending on theme using dynamic design system components
     const getStarColor = (isLightMode, type = "normal", opacity = 1) => {
       const modeKey = isLightMode ? "light" : "dark";
       const rgb = SPACE_RGB_COMPONENTS[modeKey][type];
-      const scale = isLightMode ? 0.15 : (type === "normal" ? 0.8 : 0.85);
+      const scale = isLightMode ? 0.15 : type === "normal" ? 0.8 : 0.85;
       return makeRgbaString(rgb[0], rgb[1], rgb[2], (opacity * scale).toFixed(3));
     };
 
@@ -98,7 +99,7 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
 
         star.phase += star.speed;
         const opacity = Math.sin(star.phase) * 0.4 + 0.6; // Fluctuates
-        
+
         // Calculate parallax offset based on star depth/type
         const parallaxFactor = star.type === "normal" ? -8 : -18;
         let drawX = star.x + mouseX * parallaxFactor;
@@ -165,12 +166,7 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
           const glitchOffset = Math.random() < 0.15 ? (Math.random() - 0.5) * 4 : 0;
 
           ctx.fillStyle = getStarColor(isLight, s.colorType, opacity);
-          ctx.fillRect(
-            Math.floor(p.x + glitchOffset),
-            Math.floor(p.y),
-            trailSize,
-            trailSize
-          );
+          ctx.fillRect(Math.floor(p.x + glitchOffset), Math.floor(p.y), trailSize, trailSize);
         });
 
         if (s.active) {

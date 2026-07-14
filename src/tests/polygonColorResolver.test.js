@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { getThemeColors } from "../config/designSystem";
 import {
   FOUND_HIGHLIGHT,
@@ -38,7 +39,7 @@ describe("polygonColorResolver", () => {
 
   it("returns mapBase for unfound learn countries in resolver", () => {
     expect(resolveCountryCapColor({ ...baseCtx, mode: "learn", isLearn: true })).toBe(
-      UI_COLORS.mapBase,
+      UI_COLORS.mapBase
     );
   });
 
@@ -48,7 +49,7 @@ describe("polygonColorResolver", () => {
         isEndScreen: false,
         isFound: false,
         isSelected: false,
-      }),
+      })
     ).toBe(true);
     expect(
       resolveRegionalLandColor("Europe", {
@@ -57,7 +58,7 @@ describe("polygonColorResolver", () => {
         regionColorsAttenuated: { Europe: UI_COLORS.mapBorder },
         fallbackAccent: UI_COLORS.accent,
         fallbackRegionColor: UI_COLORS.mapBase,
-      }),
+      })
     ).toBe(UI_COLORS.accent);
   });
 
@@ -68,7 +69,7 @@ describe("polygonColorResolver", () => {
         mode: "learn",
         isLearn: true,
         selectedCountry: "FRA",
-      }),
+      })
     ).toBe(FOUND_HIGHLIGHT);
   });
 
@@ -129,7 +130,7 @@ describe("polygonColorResolver", () => {
       resolveCountryCapColor({
         ...baseCtx,
         foundSet: new Set(["FRA"]),
-      }),
+      })
     ).toBe(FOUND_SURFACE_GREEN);
     expect(resolveFoundCountryColor()).toBe(FOUND_SURFACE_GREEN);
     expect(mutedFoundGreen(UI_COLORS.mapBase, lerpColor)).toBe(FOUND_SURFACE_GREEN);
@@ -146,7 +147,7 @@ describe("polygonColorResolver", () => {
         isPrevTransitioning: false,
         isEndScreen: false,
         isHomeScreen: false,
-      }),
+      })
     ).toEqual({ useShader: false, isSelectionHighlight: false });
 
     expect(
@@ -159,7 +160,7 @@ describe("polygonColorResolver", () => {
         isPrevTransitioning: false,
         isEndScreen: false,
         isHomeScreen: false,
-      }),
+      })
     ).toEqual({ useShader: true, isSelectionHighlight: false });
 
     expect(
@@ -173,7 +174,7 @@ describe("polygonColorResolver", () => {
         isEndScreen: false,
         isHomeScreen: false,
         isSuccess: true,
-      }).useShader,
+      }).useShader
     ).toBe(true);
 
     expect(
@@ -186,7 +187,7 @@ describe("polygonColorResolver", () => {
         isPrevTransitioning: false,
         isEndScreen: false,
         isHomeScreen: false,
-      }).useShader,
+      }).useShader
     ).toBe(false);
 
     expect(
@@ -199,7 +200,7 @@ describe("polygonColorResolver", () => {
         isPrevTransitioning: true,
         isEndScreen: false,
         isHomeScreen: false,
-      }).useShader,
+      }).useShader
     ).toBe(false);
   });
 
@@ -214,7 +215,7 @@ describe("polygonColorResolver", () => {
         isPrevTransitioning: false,
         isEndScreen: false,
         isHomeScreen: true,
-      }),
+      })
     ).toEqual({ useShader: true, isSelectionHighlight: false });
   });
 });

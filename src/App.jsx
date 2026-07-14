@@ -1,37 +1,33 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import HomeScreen from "./components/HomeScreen.jsx";
-import GameSessionView from "./components/GameSessionView.jsx";
-import ConfirmationModal from "./components/ConfirmationModal.jsx";
-import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
-import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
-import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
-import { useGameSessionProps } from "./hooks/useGameSessionProps";
-
 import "./App.css";
-import { countryDataMap } from "./data/gameData";
-import { useTranslation } from "./config/i18n";
-import { useUserProfile } from "./hooks/useUserProfile";
-import {
-  getThemeCssVariables,
-  GLOBE_THEME_IDS,
-  DEFAULT_GLOBE_THEME,
-} from "./config/designSystem";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import AchievementToast from "./components/AchievementToast.jsx";
 import AuthModal from "./components/AuthModal.jsx";
-import {
-  DEFAULT_MODE,
-  DEFAULT_GAME_DURATION_SEC,
-  HOME_AUTOROTATE_INTERVAL_MS,
-  BREAKPOINTS,
-  STORAGE_KEYS,
-  PERFORMANCE,
-} from "./config/gameConstants";
+import ConfirmationModal from "./components/ConfirmationModal.jsx";
+import GameSessionView from "./components/GameSessionView.jsx";
+import HomeScreen from "./components/HomeScreen.jsx";
+import { DEFAULT_GLOBE_THEME, getThemeCssVariables, GLOBE_THEME_IDS } from "./config/designSystem";
 import { isValidLearnSubMode } from "./config/gameConfig";
-import { isSupabaseConfigured } from "./services/supabaseClient";
-
-import { useViewport } from "./hooks/useViewport";
-import { useGeoData } from "./hooks/useGeoData";
+import {
+  BREAKPOINTS,
+  DEFAULT_GAME_DURATION_SEC,
+  DEFAULT_MODE,
+  HOME_AUTOROTATE_INTERVAL_MS,
+  PERFORMANCE,
+  STORAGE_KEYS,
+} from "./config/gameConstants";
+import { useTranslation } from "./config/i18n";
+import { countryDataMap } from "./data/gameData";
+import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
+import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
 import { useGameSession } from "./hooks/useGameSession";
+import { useGameSessionProps } from "./hooks/useGameSessionProps";
+import { useGeoData } from "./hooks/useGeoData";
+import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
+import { useUserProfile } from "./hooks/useUserProfile";
+import { useViewport } from "./hooks/useViewport";
+import { isSupabaseConfigured } from "./services/supabaseClient";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home");
@@ -43,7 +39,7 @@ function App() {
     localRecords,
     topExplorers,
     updateGameRecord,
-    lastScores
+    lastScores,
   } = useUserProfile();
 
   const [mode, setMode] = useState(DEFAULT_MODE);
@@ -70,11 +66,9 @@ function App() {
     try {
       const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
       if (!cached || cached === "blackout") return "dark";
-    } catch (_) {}
+    } catch {}
     if (typeof window !== "undefined" && window.matchMedia) {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
     return "dark";
   });
@@ -83,7 +77,7 @@ function App() {
     try {
       const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
       if (cached && GLOBE_THEME_IDS.includes(cached)) return cached;
-    } catch (_) {}
+    } catch {}
     return DEFAULT_GLOBE_THEME;
   });
 
@@ -95,21 +89,24 @@ function App() {
       }
       try {
         localStorage.setItem(STORAGE_KEYS.globeTheme, t);
-      } catch (_) {}
+      } catch {}
     },
-    [setTheme],
+    [setTheme]
   );
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
   const [learnSearchQuery, setLearnSearchQuery] = useState("");
 
-  const onLearnSubModeChange = useCallback((subMode) => {
-    if (!isValidLearnSubMode(subMode)) return;
-    setLearnSubMode(subMode);
-    setSelectedCountry(null);
-    setLearnSearchQuery("");
-  }, [setSelectedCountry]);
+  const onLearnSubModeChange = useCallback(
+    (subMode) => {
+      if (!isValidLearnSubMode(subMode)) return;
+      setLearnSubMode(subMode);
+      setSelectedCountry(null);
+      setLearnSearchQuery("");
+    },
+    [setSelectedCountry]
+  );
 
   const t = useTranslation(lang);
   const extInputRef = useRef(null);
@@ -146,13 +143,8 @@ function App() {
   }, []);
 
   const { viewport, isKeyboardMode } = useViewport();
-  const {
-    countriesData,
-    departmentsData,
-    activeDataMap,
-    allCountryKeys,
-    totalPossible,
-  } = useGeoData({ mode, learnSubMode });
+  const { countriesData, departmentsData, activeDataMap, allCountryKeys, totalPossible } =
+    useGeoData({ mode, learnSubMode });
 
   const {
     foundList,
@@ -222,7 +214,7 @@ function App() {
       setShowResultsTable(false);
       setCurrentScreen("game");
     },
-    [resetGame],
+    [resetGame]
   );
 
   const goHome = useCallback(() => {
@@ -246,9 +238,7 @@ function App() {
       return;
     }
 
-    const keys = Object.keys(countryDataMap).filter(
-      (k) => countryDataMap[k]?.lat !== undefined,
-    );
+    const keys = Object.keys(countryDataMap).filter((k) => countryDataMap[k]?.lat !== undefined);
     if (keys.length === 0) return;
 
     let index = Math.floor(Math.random() * keys.length);
@@ -277,9 +267,7 @@ function App() {
 
   const perfProfile = useMemo(() => {
     const isMobile = viewport.width < BREAKPOINTS.mobile;
-    const isTablet =
-      viewport.width >= BREAKPOINTS.mobile &&
-      viewport.width < BREAKPOINTS.desktop;
+    const isTablet = viewport.width >= BREAKPOINTS.mobile && viewport.width < BREAKPOINTS.desktop;
     const tier = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
     const devicePixelRatio = window.devicePixelRatio || 1;
     const pixelRatio = Math.min(devicePixelRatio, PERFORMANCE.maxPixelRatio[tier]);
@@ -294,50 +282,39 @@ function App() {
       showAtmosphere: true,
       useImageTextures: false,
       cullOffscreenCountries: isMobile,
-      polygonCapCurvatureResolution:
-        PERFORMANCE.polygonCapCurvatureResolution[tier],
+      polygonCapCurvatureResolution: PERFORMANCE.polygonCapCurvatureResolution[tier],
     };
   }, [viewport.width]);
 
   const uiScale = (w = BREAKPOINTS.desktop) =>
-    w >= 1800 ? 0.78 : w >= 1400 ? 0.84 : w >= 1100 ? 0.90 : w >= 900 ? 0.95 : w < 520 ? 0.88 : 1;
+    w >= 1800 ? 0.78 : w >= 1400 ? 0.84 : w >= 1100 ? 0.9 : w >= 900 ? 0.95 : w < 520 ? 0.88 : 1;
   const appStyle = useMemo(
     () => getThemeCssVariables(theme, globeTheme, { uiScale: uiScale(viewport?.width) }),
-    [theme, globeTheme, viewport?.width],
+    [theme, globeTheme, viewport?.width]
   );
 
-  const {
-    isMobileViewport,
-    isPanelOpen,
-    panelDataMap,
-    panelMode,
-    closePanel,
-    handlePanelSelect,
-  } = useGameDataPanelState({
-    currentScreen,
-    mode,
-    viewport,
-    learnSubMode,
-    showLearnPanel,
-    showInfoModal,
-    showResultsTable,
-    activeDataMap,
-    isGameOver,
-    setShowLearnPanel,
-    setShowInfoModal,
-    setShowResultsTable,
-    setShowEndScreen,
-    setSelectedCountry,
-    resetNavigationTrail,
-    setPopupError,
-  });
+  const { isMobileViewport, isPanelOpen, panelDataMap, panelMode, closePanel, handlePanelSelect } =
+    useGameDataPanelState({
+      currentScreen,
+      mode,
+      viewport,
+      learnSubMode,
+      showLearnPanel,
+      showInfoModal,
+      showResultsTable,
+      activeDataMap,
+      isGameOver,
+      setShowLearnPanel,
+      setShowInfoModal,
+      setShowResultsTable,
+      setShowEndScreen,
+      setSelectedCountry,
+      resetNavigationTrail,
+      setPopupError,
+    });
 
   useEffect(() => {
-    if (
-      mode === "learn" &&
-      selectedCountry &&
-      !activeDataMap[selectedCountry]
-    ) {
+    if (mode === "learn" && selectedCountry && !activeDataMap[selectedCountry]) {
       setSelectedCountry(null);
     }
   }, [learnSubMode, mode, selectedCountry, activeDataMap, setSelectedCountry]);

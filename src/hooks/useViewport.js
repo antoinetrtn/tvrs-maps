@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { BREAKPOINTS, KEYBOARD_CLOSE_DELAY_MS } from "../config/gameConstants";
 
 export function useViewport() {
@@ -84,10 +85,7 @@ export function useViewport() {
       return undefined;
     }
 
-    const closeTimer = setTimeout(
-      () => setIsKeyboardMode(false),
-      KEYBOARD_CLOSE_DELAY_MS,
-    );
+    const closeTimer = setTimeout(() => setIsKeyboardMode(false), KEYBOARD_CLOSE_DELAY_MS);
     return () => clearTimeout(closeTimer);
   }, [keyboardModeCandidate]);
 

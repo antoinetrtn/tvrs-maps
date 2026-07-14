@@ -36,11 +36,22 @@ Avant de pousser vos modifications, vous **devez** exécuter le script de valida
 npm run check
 ```
 Ce script exécute successivement :
-1.  `npm run lint` : Vérification du linter, respect du design system et audit de code mort avec **Knip**.
-2.  `npm run test:run` : Exécution de tous les tests unitaires (via **Vitest**).
-3.  `npm run build` : Compilation du projet pour s'assurer qu'aucun bug de bundling n'existe.
+1. `npm run format:check`
+2. `npm run lint` (ESLint + plugins + règles custom + Knip)
+3. `npm run test:run`
+4. `npm run build`
 
-*Des hooks Git pre-commit et pre-push locaux sont installés automatiquement via `npm install` pour s'assurer que vous n'oubliez pas de lancer cette commande.*
+Hooks :
+- Husky + lint-staged : `git commit` → lint/format rapide sur les fichiers staged seulement.
+- pre-push : lance le `npm run check` complet.
+- commit-msg : Commitlint (conventional commits).
+
+Commandes utiles :
+- `npm run lint:fix`
+- `npm run format`
+- `npm run lint:eslint`
+
+*Les hooks sont gérés par Husky (prépare via `npm install`).*
 
 ---
 

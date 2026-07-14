@@ -1,12 +1,14 @@
-import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import "./GameDataPanel.css";
+
 import { Close, Home } from "pixelarticons/react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { getThemeRegionColor } from "../config/designSystem";
-import { getPanelData, normalizeString } from "../utils/utils";
-import { useTranslation } from "../config/i18n";
 import { GAME_REGIONS } from "../config/gameConfig";
+import { useTranslation } from "../config/i18n";
+import { getPanelData, normalizeString } from "../utils/utils";
 import GameDataPanelRow from "./GameDataPanelRow";
 import LearnModeToggles from "./LearnModeToggles";
-import "./GameDataPanel.css";
 
 const GameDataPanel = ({
   dataMap,
@@ -56,7 +58,7 @@ const GameDataPanel = ({
         mode,
         revealAll: revealAll || isLearnMode,
       }),
-    [dataMap, foundList, lang, mode, revealAll, isLearnMode],
+    [dataMap, foundList, lang, mode, revealAll, isLearnMode]
   );
 
   const normalizedQuery = normalizeString(searchQuery);
@@ -69,7 +71,7 @@ const GameDataPanel = ({
       const matches = rows.filter(
         (row) =>
           normalizeString(row.name).includes(normalizedQuery) ||
-          normalizeString(row.sublabel || "").includes(normalizedQuery),
+          normalizeString(row.sublabel || "").includes(normalizedQuery)
       );
       if (matches.length > 0) filtered[region] = matches;
     });
@@ -88,23 +90,19 @@ const GameDataPanel = ({
     (key) => {
       onSelectCountry?.(allowDeselect && key === selectedCountry ? null : key);
     },
-    [onSelectCountry, selectedCountry, allowDeselect],
+    [onSelectCountry, selectedCountry, allowDeselect]
   );
 
   useEffect(() => {
     if (!selectedCountry || !scrollContainerRef.current) return;
-    const row = scrollContainerRef.current.querySelector(
-      `[data-country-key="${selectedCountry}"]`,
-    );
+    const row = scrollContainerRef.current.querySelector(`[data-country-key="${selectedCountry}"]`);
     row?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [selectedCountry]);
 
   const panelTitle =
-    title ||
-    (isGameOver ? t("game_over") : isLearnMode ? t("mode_learn") : t("progress_title"));
+    title || (isGameOver ? t("game_over") : isLearnMode ? t("mode_learn") : t("progress_title"));
 
-  const scoreLabel =
-    score !== undefined && total !== undefined ? `${score}/${total}` : null;
+  const scoreLabel = score !== undefined && total !== undefined ? `${score}/${total}` : null;
 
   return (
     <aside
@@ -114,9 +112,7 @@ const GameDataPanel = ({
       <header className="data-panel-header">
         <div className="data-panel-title-block">
           <h2 className="data-panel-title">{panelTitle}</h2>
-          {scoreLabel && (
-            <span className="data-panel-score">{scoreLabel}</span>
-          )}
+          {scoreLabel && <span className="data-panel-score">{scoreLabel}</span>}
         </div>
         <div className="data-panel-header-actions">
           {isGameOver && onGoHome && (
@@ -130,11 +126,7 @@ const GameDataPanel = ({
             </button>
           )}
           {onClose && (
-            <button
-              className="panel-close-btn"
-              onClick={onClose}
-              aria-label={t("close")}
-            >
+            <button className="panel-close-btn" onClick={onClose} aria-label={t("close")}>
               <Close width={20} height={20} />
             </button>
           )}
@@ -169,45 +161,45 @@ const GameDataPanel = ({
         )}
 
         <div className="data-panel-body">
-        {regionsToRender.map((region) => {
-          const rows = filteredRegions[region];
-          if (!rows || rows.length === 0) return null;
+          {regionsToRender.map((region) => {
+            const rows = filteredRegions[region];
+            if (!rows || rows.length === 0) return null;
 
-          const regionLabel = t(`region_${region}`) || region;
-          const color = colors[region] || "var(--accent)";
-          const foundInRegion = rows.filter((r) => r.found).length;
+            const regionLabel = t(`region_${region}`) || region;
+            const color = colors[region] || "var(--accent)";
+            const foundInRegion = rows.filter((r) => r.found).length;
 
-          return (
-            <section
-              key={region}
-              className="data-panel-region"
-              style={{ "--region-color": color }}
-            >
-              <header className="data-panel-region-head">
-                <span className="data-panel-region-dot" />
-                <h3 className="data-panel-region-name">{regionLabel}</h3>
-                {!revealAll && !isLearnMode && (
-                  <span className="data-panel-region-count">
-                    {foundInRegion}/{rows.length}
-                  </span>
-                )}
-              </header>
+            return (
+              <section
+                key={region}
+                className="data-panel-region"
+                style={{ "--region-color": color }}
+              >
+                <header className="data-panel-region-head">
+                  <span className="data-panel-region-dot" />
+                  <h3 className="data-panel-region-name">{regionLabel}</h3>
+                  {!revealAll && !isLearnMode && (
+                    <span className="data-panel-region-count">
+                      {foundInRegion}/{rows.length}
+                    </span>
+                  )}
+                </header>
 
-              <div className="data-panel-table" role="table">
-                {rows.map((row) => (
-                  <GameDataPanelRow
-                    key={row.key}
-                    row={row}
-                    isSelected={row.key === selectedCountry}
-                    mode={isLearnMode ? "learn" : mode}
-                    onSelect={handleRowClick}
-                    unrevealedLabel={t("unrevealed_placeholder")}
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })}
+                <div className="data-panel-table" role="table">
+                  {rows.map((row) => (
+                    <GameDataPanelRow
+                      key={row.key}
+                      row={row}
+                      isSelected={row.key === selectedCountry}
+                      mode={isLearnMode ? "learn" : mode}
+                      onSelect={handleRowClick}
+                      unrevealedLabel={t("unrevealed_placeholder")}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
         </div>
       </div>
     </aside>

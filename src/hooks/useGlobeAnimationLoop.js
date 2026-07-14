@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+
 import {
-  GLITCH_SELECTION_TRANSITION_MS,
   getDeselectGlitchFadeProgress,
+  GLITCH_SELECTION_TRANSITION_MS,
 } from "../config/gameConfig";
 import { PERFORMANCE } from "../config/gameConstants";
 import { applyPolygonFeedbackUniforms } from "../utils/applyPolygonFeedbackUniforms";
@@ -37,7 +38,7 @@ export function useGlobeAnimationLoop({
   isSuccess,
   isEndScreen,
   transitioningPreviousCountryState,
-  transitioningIncomingCountryState,
+  _transitioningIncomingCountryState,
   selectionTransitionStartRef,
   transitioningPreviousCountryRef,
   transitioningIncomingCountryRef,
@@ -111,16 +112,12 @@ export function useGlobeAnimationLoop({
       const time = performance.now();
       const currentSelectedCountry = selectedCountryRef.current;
       const imperativeFeedback = globeFeedbackRef?.current;
-      const currentIsError =
-        isErrorRef.current || !!imperativeFeedback?.isError;
-      const currentIsSuccess =
-        isSuccessRef.current || !!imperativeFeedback?.isSuccess;
+      const currentIsError = isErrorRef.current || Boolean(imperativeFeedback?.isError);
+      const currentIsSuccess = isSuccessRef.current || Boolean(imperativeFeedback?.isSuccess);
       const currentIsEndScreen = isEndScreenRef.current;
 
       const isUrgentAnim =
-        currentIsError ||
-        currentIsSuccess ||
-        !!transitioningPreviousCountryRef?.current;
+        currentIsError || currentIsSuccess || Boolean(transitioningPreviousCountryRef?.current);
       const minFrameMs = isUrgentAnim
         ? 0
         : perfProfile?.isMobile
@@ -136,8 +133,7 @@ export function useGlobeAnimationLoop({
       lastAnimFrameTimeRef.current = time;
 
       const timeSec = time / 1000;
-      const needsMountainFeedback =
-        mountainGlitchActive && (currentIsError || currentIsSuccess);
+      const needsMountainFeedback = mountainGlitchActive && (currentIsError || currentIsSuccess);
 
       if (globeMaterial && globeMaterial.userData.shader) {
         if (globeMaterial.userData.shader.uniforms.uTime) {
@@ -152,15 +148,15 @@ export function useGlobeAnimationLoop({
         ? polygonMaterialCacheRef.current.side.get(currentSelectedCountry)
         : null;
       const selectedHasShader =
-        !!currentSelectedCountry &&
-        (!!capMat?.userData?.shader || !!sideMat?.userData?.shader);
+        Boolean(currentSelectedCountry) &&
+        (Boolean(capMat?.userData?.shader) || Boolean(sideMat?.userData?.shader));
       const hasAnimatedShaders = getAnimatedPolygonMaterialCount() > 0;
       const needsSharedTime =
         hasAnimatedShaders &&
         (currentIsEndScreen ||
           currentIsError ||
           currentIsSuccess ||
-          !!transitioningPreviousCountryRef?.current ||
+          Boolean(transitioningPreviousCountryRef?.current) ||
           selectedHasShader);
 
       if (needsSharedTime) {
@@ -207,22 +203,13 @@ export function useGlobeAnimationLoop({
           Math.abs(uniforms.glowColor.value.r - target.r) +
           Math.abs(uniforms.glowColor.value.g - target.g) +
           Math.abs(uniforms.glowColor.value.b - target.b);
-        const powerDelta = Math.abs(
-          targetGlowPowerRef.current - uniforms.power.value,
-        );
-        const coefDelta = Math.abs(
-          targetGlowCoefRef.current - uniforms.coef.value,
-        );
+        const powerDelta = Math.abs(targetGlowPowerRef.current - uniforms.power.value);
+        const coefDelta = Math.abs(targetGlowCoefRef.current - uniforms.coef.value);
         uniforms.glowColor.value.lerp(target, 0.08);
-        uniforms.power.value +=
-          (targetGlowPowerRef.current - uniforms.power.value) * 0.08;
-        uniforms.coef.value +=
-          (targetGlowCoefRef.current - uniforms.coef.value) * 0.08;
+        uniforms.power.value += (targetGlowPowerRef.current - uniforms.power.value) * 0.08;
+        uniforms.coef.value += (targetGlowCoefRef.current - uniforms.coef.value) * 0.08;
         const GLOW_EPS = 0.001;
-        glowSettled =
-          colorDelta < GLOW_EPS &&
-          powerDelta < GLOW_EPS &&
-          coefDelta < GLOW_EPS;
+        glowSettled = colorDelta < GLOW_EPS && powerDelta < GLOW_EPS && coefDelta < GLOW_EPS;
       }
 
       if (prevSelectedCountryRef.current !== currentSelectedCountry) {
@@ -260,11 +247,10 @@ export function useGlobeAnimationLoop({
           });
         }
         prevSelectedCountryRef.current = currentSelectedCountry;
-
       }
 
       const needsSelectedShaderSync =
-        !!currentSelectedCountry && (currentIsError || currentIsSuccess);
+        Boolean(currentSelectedCountry) && (currentIsError || currentIsSuccess);
 
       if (needsSelectedShaderSync) {
         [capMat, sideMat].forEach((mat, matIndex) => {
@@ -281,8 +267,7 @@ export function useGlobeAnimationLoop({
         });
       }
 
-      const prevCountry =
-        mode !== "learn" ? transitioningPreviousCountryRef?.current : null;
+      const prevCountry = mode !== "learn" ? transitioningPreviousCountryRef?.current : null;
       if (prevCountry) {
         const elapsed = time - selectionTransitionStartRef.current;
         const TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
@@ -320,7 +305,7 @@ export function useGlobeAnimationLoop({
         } else {
           const fadeProgress = Math.min(
             1,
-            Math.max(0, getDeselectGlitchFadeProgress(elapsed, TRANSITION_DURATION)),
+            Math.max(0, getDeselectGlitchFadeProgress(elapsed, TRANSITION_DURATION))
           );
 
           if (transitionColorsPrimedRef.current !== prevCountry) {
@@ -329,9 +314,7 @@ export function useGlobeAnimationLoop({
               if (mat?.userData?.shader?.uniforms?.uTargetColor) {
                 const targetKind = idx === 0 ? "cap" : "side";
                 mat.userData.shader.uniforms.uTargetColor.value.copy(
-                  _transitionTargetColor.set(
-                    getBaseColorForCountryAndKind(prevCountry, targetKind),
-                  ),
+                  _transitionTargetColor.set(getBaseColorForCountryAndKind(prevCountry, targetKind))
                 );
               }
             });
@@ -444,7 +427,10 @@ export function useGlobeAnimationLoop({
   }, [selectedCountry, isError, isSuccess, isEndScreen, transitioningPreviousCountryState]);
 
   useEffect(() => {
-    if ((countriesData && countriesData.length > 0) || (departmentsData && departmentsData.length > 0)) {
+    if (
+      (countriesData && countriesData.length > 0) ||
+      (departmentsData && departmentsData.length > 0)
+    ) {
       needsGraticuleStyleRef.current = true;
       graticuleStyleUntilRef.current = performance.now() + 500;
       updateGlobeLighting();

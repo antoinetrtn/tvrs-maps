@@ -83,7 +83,11 @@
   color: var(--text-main);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
   width: 100%;
   box-sizing: border-box;
 }
@@ -134,7 +138,11 @@
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
   position: relative;
 }
 
@@ -187,7 +195,11 @@
   border: 2px solid transparent;
   background-color: var(--option-color);
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
   padding: 0;
   box-shadow: 0 0 4px var(--shadow-subtle);
   flex-shrink: 0;
@@ -278,7 +290,12 @@
   left: 0;
   top: 0;
   bottom: 0;
-  background: linear-gradient(180deg, var(--xp-green-fill-top) 0%, var(--xp-green-inner) 50%, var(--xp-green-fill-bottom) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--xp-green-fill-top) 0%,
+    var(--xp-green-inner) 50%,
+    var(--xp-green-fill-bottom) 100%
+  );
   transition: width 0.4s ease-out;
 }
 
@@ -354,7 +371,11 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .badge-item-btn:hover {
@@ -464,7 +485,11 @@
   cursor: pointer;
   background: var(--text-main);
   color: var(--bg-color);
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .form-submit-btn:hover:not(:disabled) {
@@ -534,8 +559,14 @@
 }
 
 @keyframes blur-zoom-in {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .profile-blur-text {
@@ -580,7 +611,11 @@
   cursor: pointer;
   text-decoration: underline;
   opacity: 0.75;
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
   padding: var(--spacing-xs);
 }
 
@@ -659,8 +694,6 @@
     gap: var(--spacing-md) !important;
   }
 }
-
-
 
 /* Profile form structure - Flex layouts */
 .profile-tab-content,

@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { normalizeString } from "../utils/utils";
-import { FEEDBACK_TIMING } from "../config/gameConstants";
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { AVATAR_COLORS } from "../config/designSystem";
+import { FEEDBACK_TIMING } from "../config/gameConstants";
 import { CHALLENGES } from "../data/challenges";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
+import { normalizeString } from "../utils/utils";
 
 export function useGameSession({
   mode,
@@ -46,7 +47,7 @@ export function useGameSession({
       globeFeedbackRef.current = { isError, isSuccess };
       globeFeedbackApplierRef?.current?.(admin, { isError, isSuccess });
     },
-    [globeFeedbackApplierRef],
+    [globeFeedbackApplierRef]
   );
 
   const setPopupSuccess = useCallback((val) => {
@@ -88,10 +89,7 @@ export function useGameSession({
       const otherRegionList = [];
 
       Object.keys(activeDataMap).forEach((key) => {
-        if (
-          !currentFound.includes(key) &&
-          activeDataMap[key].lat !== undefined
-        ) {
+        if (!currentFound.includes(key) && activeDataMap[key].lat !== undefined) {
           let dLng = Math.abs(c1.lng - activeDataMap[key].lng);
           if (dLng > 180) dLng = 360 - dLng;
           const dist = Math.hypot(c1.lat - activeDataMap[key].lat, dLng);
@@ -113,13 +111,13 @@ export function useGameSession({
       }
       return null;
     },
-    [activeDataMap],
+    [activeDataMap]
   );
 
   const navigateFocus = useCallback(
     (direction) => {
       const unfoundKeys = allCountryKeys.filter(
-        (k) => !foundList.includes(k) && activeDataMap[k]?.lat !== undefined,
+        (k) => !foundList.includes(k) && activeDataMap[k]?.lat !== undefined
       );
       if (unfoundKeys.length === 0) return;
 
@@ -127,10 +125,7 @@ export function useGameSession({
 
       let nextCountry;
       if (!selectedCountry) {
-        nextCountry =
-          direction === "prev"
-            ? unfoundKeys[unfoundKeys.length - 1]
-            : unfoundKeys[0];
+        nextCountry = direction === "prev" ? unfoundKeys[unfoundKeys.length - 1] : unfoundKeys[0];
         resetNavigationTrail(nextCountry);
       } else {
         let trail = navigationTrailRef.current;
@@ -151,22 +146,16 @@ export function useGameSession({
           navigationTrailIndexRef.current = trailIndex + 1;
         } else {
           const excludedForNavigation = Array.from(
-            new Set([...foundList, ...trail, selectedCountry]),
+            new Set([...foundList, ...trail, selectedCountry])
           );
-          nextCountry = getClosestUnfound(
-            selectedCountry,
-            excludedForNavigation,
-          );
+          nextCountry = getClosestUnfound(selectedCountry, excludedForNavigation);
 
           if (nextCountry) {
             if (direction === "prev") {
               navigationTrailRef.current = [nextCountry, ...trail];
               navigationTrailIndexRef.current = 0;
             } else {
-              navigationTrailRef.current = [
-                ...trail.slice(0, trailIndex + 1),
-                nextCountry,
-              ];
+              navigationTrailRef.current = [...trail.slice(0, trailIndex + 1), nextCountry];
               navigationTrailIndexRef.current = trailIndex + 1;
             }
           }
@@ -179,11 +168,7 @@ export function useGameSession({
       setPopupError(false);
       setPopupWarning(false);
 
-      if (
-        extInputRef &&
-        extInputRef.current &&
-        document.activeElement !== extInputRef.current
-      ) {
+      if (extInputRef && extInputRef.current && document.activeElement !== extInputRef.current) {
         setTimeout(() => {
           if (extInputRef.current) extInputRef.current.focus();
         }, FEEDBACK_TIMING.focusKeyboardMs);
@@ -202,7 +187,7 @@ export function useGameSession({
       extInputRef,
       setPopupError,
       setPopupWarning,
-    ],
+    ]
   );
 
   const handleGameFinished = useCallback(
@@ -211,7 +196,8 @@ export function useGameSession({
       const timeSpent = gameDuration - timeLeft;
 
       const prevRecord = localRecords[mode] || { maxScore: 0, bestTime: null, gamesPlayed: 0 };
-      const isPB = finalScore > prevRecord.maxScore || (prevRecord.maxScore === 0 && finalScore > 0);
+      const isPB =
+        finalScore > prevRecord.maxScore || (prevRecord.maxScore === 0 && finalScore > 0);
 
       if (isPB) {
         setIsNewPB(true);
@@ -235,13 +221,22 @@ export function useGameSession({
               title: lang === "fr" ? chObj.titleFr : chObj.titleEn,
               message: `${lang === "fr" ? chObj.descFr : chObj.descEn} (Emote débloquée !)`,
               color: AVATAR_COLORS[chObj.color] || chObj.color,
-              invaderId: chObj.id
+              invaderId: chObj.id,
             });
           }
         });
       }
     },
-    [mode, gameDuration, timeLeft, updateGameRecord, localRecords, totalPossible, lang, addAchievementToQueue]
+    [
+      mode,
+      gameDuration,
+      timeLeft,
+      updateGameRecord,
+      localRecords,
+      totalPossible,
+      lang,
+      addAchievementToQueue,
+    ]
   );
 
   const stopGame = useCallback(() => {
@@ -252,7 +247,7 @@ export function useGameSession({
   }, [foundList.length, handleGameFinished]);
 
   const resetGame = useCallback(
-    (newMode) => {
+    (_newMode) => {
       setFoundList([]);
       setTimeLeft(gameDuration);
       setIsPlaying(false);
@@ -271,7 +266,7 @@ export function useGameSession({
       lightningCountRef.current = 0;
       successPendingRef.current.clear();
     },
-    [resetNavigationTrail, gameDuration, setSelectedCountry],
+    [resetNavigationTrail, gameDuration, setSelectedCountry]
   );
 
   const handleSuccessfulGuess = useCallback(
@@ -327,9 +322,7 @@ export function useGameSession({
         setSelectedCountry((prev) => {
           if (prev === guessedKey) {
             const nextCountry = getClosestUnfound(guessedKey, newFound);
-            navigationTrailRef.current = nextCountry
-              ? [guessedKey, nextCountry]
-              : [guessedKey];
+            navigationTrailRef.current = nextCountry ? [guessedKey, nextCountry] : [guessedKey];
             navigationTrailIndexRef.current = nextCountry ? 1 : 0;
             if (
               extInputRef &&
@@ -412,11 +405,7 @@ export function useGameSession({
           matchName = normalizeString(adminKey);
         }
 
-        if (
-          mode === "countries" ||
-          mode === "departments" ||
-          mode === "rivers_mountains"
-        ) {
+        if (mode === "countries" || mode === "departments" || mode === "rivers_mountains") {
           if (
             matchName === normalizedInput ||
             aliases.some((alias) => normalizeString(alias) === normalizedInput)
@@ -433,10 +422,7 @@ export function useGameSession({
       }
 
       if (matchFound) {
-        if (
-          foundList.includes(matchFound) ||
-          successPendingRef.current.has(matchFound)
-        ) {
+        if (foundList.includes(matchFound) || successPendingRef.current.has(matchFound)) {
           return "ALREADY_FOUND";
         }
         handleSuccessfulGuess(matchFound);
@@ -444,15 +430,7 @@ export function useGameSession({
       }
       return "ERROR";
     },
-    [
-      activeDataMap,
-      foundList,
-      isPlaying,
-      lang,
-      mode,
-      selectedCountry,
-      handleSuccessfulGuess,
-    ],
+    [activeDataMap, foundList, isPlaying, lang, mode, selectedCountry, handleSuccessfulGuess]
   );
 
   const specificCountryGuess = useCallback(
@@ -465,9 +443,7 @@ export function useGameSession({
 
       const normalizedInput = normalizeString(inputVal);
       const matchName =
-        lang === "fr"
-          ? normalizeString(mapped.name_fr)
-          : normalizeString(mapped.name_en);
+        lang === "fr" ? normalizeString(mapped.name_fr) : normalizeString(mapped.name_en);
       const matchCapital =
         lang === "fr" && mapped.capital_fr
           ? normalizeString(mapped.capital_fr)
@@ -478,9 +454,7 @@ export function useGameSession({
 
       let isSuccessVal = false;
       if (
-        (mode === "countries" ||
-          mode === "departments" ||
-          mode === "rivers_mountains") &&
+        (mode === "countries" || mode === "departments" || mode === "rivers_mountains") &&
         (matchName === normalizedInput ||
           aliases.some((alias) => normalizeString(alias) === normalizedInput))
       ) {
@@ -490,10 +464,7 @@ export function useGameSession({
       }
 
       if (isSuccessVal) {
-        if (
-          foundList.includes(selectedCountry) ||
-          successPendingRef.current.has(selectedCountry)
-        ) {
+        if (foundList.includes(selectedCountry) || successPendingRef.current.has(selectedCountry)) {
           setPopupWarning(true);
           setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
           return "ALREADY_FOUND";
@@ -522,7 +493,7 @@ export function useGameSession({
       setPopupError,
       setPopupWarning,
       triggerGlobeFeedback,
-    ],
+    ]
   );
 
   const handleSearch = useCallback(
@@ -559,16 +530,11 @@ export function useGameSession({
 
       return false;
     },
-    [activeDataMap, lang, setSelectedCountry, resetNavigationTrail],
+    [activeDataMap, lang, setSelectedCountry, resetNavigationTrail]
   );
 
   useEffect(() => {
-    if (
-      isPlaying &&
-      !isGameOver &&
-      foundList.length > 0 &&
-      foundList.length >= totalPossible
-    ) {
+    if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= totalPossible) {
       setIsGameOver(true);
       setIsPlaying(false);
       setShowEndScreen(true);

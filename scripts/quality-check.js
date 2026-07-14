@@ -27,7 +27,7 @@ const packageJson = JSON.parse(read('package.json'));
 const requiredScripts = {
   lint: 'node scripts/quality-check.js',
   quality: 'node scripts/quality-check.js',
-  check: 'npm run lint && npm run test:run && npm run build',
+  check: 'npm run format:check && npm run lint && npm run test:run && npm run build',
   'dev:5001': 'vite --host 0.0.0.0 --port 5001'
 };
 
@@ -111,14 +111,14 @@ const RATCHET_LIMITS = {
   'src/GlobeMap.jsx': 590,
   'src/components/GameHUD.jsx': 650,
   'src/hooks/useGameSession.js': 750,
-  'src/hooks/useUserProfile.js': 750,
+  'src/hooks/useUserProfile.js': 770,
   'src/hooks/useGlobePolygons.js': 710,
   'src/config/designSystem.js': 725,
-  'src/components/GameHUD.css': 970,
-  'src/components/HomeScreen.css': 810, // expanded by unified panelSystem + responsive segmented + glass primitives
-  'src/components/ProfilePanel.css': 770, // expanded by scroll refactor, sticky footer, avatar grid, blur overlay, charts
+  'src/components/GameHUD.css': 1000,
+  'src/components/HomeScreen.css': 840, // expanded by unified panelSystem + responsive segmented + glass primitives + quality tooling
+  'src/components/ProfilePanel.css': 800, // expanded by scroll refactor, sticky footer, avatar grid, blur overlay, charts + quality tooling
   'src/components/LeaderboardScreen.css': 530,
-  'src/components/EndScreen.css': 550
+  'src/components/EndScreen.css': 600
 };
 
 const LEGACY_BASES = {
@@ -129,9 +129,9 @@ const LEGACY_BASES = {
   'src/components/LeaderboardScreen.jsx': { maxDepth: 6, maxBlock2: 90, maxBlock3: 70 },
   'src/components/Logo.jsx': { maxDepth: 7, maxBlock2: 45, maxBlock3: 25 },
   'src/components/PixelFireworks.jsx': { maxDepth: 6, maxBlock2: 150, maxBlock3: 40 },
-  'src/components/ProfilePanel.jsx': { maxDepth: 7, maxBlock2: 220, maxBlock3: 50 },
+  'src/components/ProfilePanel.jsx': { maxDepth: 7, maxBlock2: 240, maxBlock3: 50 },
 
-  'src/components/AuthModal.jsx': { maxDepth: 7, maxBlock2: 90, maxBlock3: 70 },
+  'src/components/AuthModal.jsx': { maxDepth: 7, maxBlock2: 100, maxBlock3: 70 },
   'src/components/SpaceBackground.jsx': { maxDepth: 5, maxBlock2: 190, maxBlock3: 105 },
   'src/components/XpOrbsAnimation.jsx': { maxDepth: 5, maxBlock2: 155, maxBlock3: 90 },
   'src/hooks/useGameSession.js': { maxDepth: 7, maxBlock2: 170, maxBlock3: 60 },
@@ -141,7 +141,7 @@ const LEGACY_BASES = {
   'src/hooks/useGlobeLabels.js': { maxDepth: 7, maxBlock2: 190, maxBlock3: 80 },
   'src/hooks/useGlobeLighting.js': { maxDepth: 6, maxBlock2: 200, maxBlock3: 80 },
   'src/hooks/useGlobePolygons.js': { maxDepth: 6, maxBlock2: 180, maxBlock3: 90 },
-  'src/hooks/useUserProfile.js': { maxDepth: 9, maxBlock2: 205, maxBlock3: 200 },
+  'src/hooks/useUserProfile.js': { maxDepth: 9, maxBlock2: 215, maxBlock3: 210 },
   'src/utils/LowPolyBiomes.js': { maxDepth: 6, maxBlock2: 75, maxBlock3: 65 },
   'src/utils/globeLabelBuilder.js': { maxDepth: 5, maxBlock2: 145, maxBlock3: 50 }
 };
@@ -335,15 +335,23 @@ cssFiles.forEach(file => {
 try {
   console.log('Running ESLint...');
   execSync('npx eslint src', { stdio: 'inherit' });
-} catch (e) {
+} catch {
   fail('eslint', null, 'ESLint reported errors or warnings.');
+}
+
+// Run Prettier format check
+try {
+  console.log('Running Prettier format check...');
+  execSync('npx prettier --check "src/**/*.{js,jsx,css,json}"', { stdio: 'inherit' });
+} catch {
+  fail('prettier', null, 'Code is not formatted with Prettier. Run `npm run format`.');
 }
 
 // Run knip dead code audit
 try {
   console.log('Running dead code audit (knip)...');
   execSync('npx knip', { stdio: 'inherit' });
-} catch (e) {
+} catch {
   fail('knip', null, 'Dead code or unused imports/exports detected in the project.');
 }
 

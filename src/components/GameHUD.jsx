@@ -1,27 +1,14 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useRef,
-  useCallback,
-} from "react";
-import {
-  InfoBox,
-  Square,
-  ChevronLeft,
-  ChevronRight,
-  Home,
-  Play,
-} from "pixelarticons/react";
-import Logo from "./Logo";
-
 import "./GameHUD.css";
-import { getThemeRegionColor } from "../config/designSystem";
-import { useTranslation } from "../config/i18n";
-import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
-import { normalizeString } from "../utils/utils";
-import { BREAKPOINTS } from "../config/gameConstants";
 
+import { ChevronLeft, ChevronRight, Home, InfoBox, Play, Square } from "pixelarticons/react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { getThemeRegionColor } from "../config/designSystem";
+import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
+import { BREAKPOINTS } from "../config/gameConstants";
+import { useTranslation } from "../config/i18n";
+import { normalizeString } from "../utils/utils";
+import Logo from "./Logo";
 
 const GameHUD = ({
   mode,
@@ -36,7 +23,7 @@ const GameHUD = ({
   onStop,
   onInfo,
   isFocusedCountry,
-  onClearFocus,
+  _onClearFocus,
   onNavigateFocus,
   inputError,
   inputSuccess,
@@ -56,7 +43,6 @@ const GameHUD = ({
   hideLearnInput = false,
   hideHudPlayStop = false,
 }) => {
-
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [scoreGlow, setScoreGlow] = useState(false);
@@ -80,21 +66,15 @@ const GameHUD = ({
       if (!value) return;
       result[key] = {
         ...value,
-        normalizedNameFr: normalizeString(
-          value.name_fr || value.name_en || key,
-        ),
+        normalizedNameFr: normalizeString(value.name_fr || value.name_en || key),
         normalizedNameEn: normalizeString(value.name_en || key),
         normalizedCapitalFr: value.capital_fr
           ? normalizeString(value.capital_fr)
           : value.capital
             ? normalizeString(value.capital)
             : "",
-        normalizedCapitalEn: value.capital
-          ? normalizeString(value.capital)
-          : "",
-        normalizedAliases: (value.aliases || []).map((alias) =>
-          normalizeString(alias),
-        ),
+        normalizedCapitalEn: value.capital ? normalizeString(value.capital) : "",
+        normalizedAliases: (value.aliases || []).map((alias) => normalizeString(alias)),
       };
     });
     return result;
@@ -120,9 +100,7 @@ const GameHUD = ({
       const keysToCheck =
         mode === "learn"
           ? Object.keys(preNormalizedData)
-          : Object.keys(preNormalizedData).filter(
-              (k) => !foundList.includes(k),
-            );
+          : Object.keys(preNormalizedData).filter((k) => !foundList.includes(k));
 
       for (const adminKey of keysToCheck) {
         const mapped = preNormalizedData[adminKey];
@@ -131,35 +109,24 @@ const GameHUD = ({
         const normalizedNameToMatch =
           lang === "fr" ? mapped.normalizedNameFr : mapped.normalizedNameEn;
         const normalizedCapitalToMatch =
-          lang === "fr"
-            ? mapped.normalizedCapitalFr
-            : mapped.normalizedCapitalEn;
+          lang === "fr" ? mapped.normalizedCapitalFr : mapped.normalizedCapitalEn;
 
         const nameDisplay =
-          lang === "fr"
-            ? mapped.name_fr || mapped.name_en || adminKey
-            : mapped.name_en || adminKey;
+          lang === "fr" ? mapped.name_fr || mapped.name_en || adminKey : mapped.name_en || adminKey;
         const capitalDisplay =
-          lang === "fr" && mapped.capital_fr
-            ? mapped.capital_fr
-            : mapped.capital || null;
+          lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital || null;
 
         // In learn mode, match both name and capital
         if (mode === "learn") {
           const matchName = normalizedNameToMatch.includes(normalizedInput);
           const matchCap =
-            normalizedCapitalToMatch &&
-            normalizedCapitalToMatch.includes(normalizedInput);
+            normalizedCapitalToMatch && normalizedCapitalToMatch.includes(normalizedInput);
 
           // Suggestions should help with long/complex names
           if (matchName || matchCap) {
             const target = matchName ? nameDisplay : capitalDisplay;
             // Only suggest if input is long enough or target is complex (has spaces/hyphens)
-            if (
-              val.length >= 5 ||
-              target.includes(" ") ||
-              target.includes("-")
-            ) {
+            if (val.length >= 5 || target.includes(" ") || target.includes("-")) {
               newSuggestions.push({
                 key: adminKey,
                 display: target,
@@ -171,26 +138,18 @@ const GameHUD = ({
           }
         } else {
           const targetNormalized =
-            mode === "countries" ||
-            mode === "departments" ||
-            mode === "rivers_mountains"
+            mode === "countries" || mode === "departments" || mode === "rivers_mountains"
               ? normalizedNameToMatch
               : normalizedCapitalToMatch;
           const targetDisplay =
-            mode === "countries" ||
-            mode === "departments" ||
-            mode === "rivers_mountains"
+            mode === "countries" || mode === "departments" || mode === "rivers_mountains"
               ? nameDisplay
               : capitalDisplay;
 
-          if (
-            targetNormalized &&
-            targetNormalized.startsWith(normalizedInput)
-          ) {
+          if (targetNormalized && targetNormalized.startsWith(normalizedInput)) {
             const ratio = val.length / targetDisplay.length;
             const hasSeparator = val.includes(" ") || val.includes("-");
-            const isTargetCompound =
-              targetDisplay.includes(" ") || targetDisplay.includes("-");
+            const isTargetCompound = targetDisplay.includes(" ") || targetDisplay.includes("-");
 
             // Logic for game mode:
             // 1. If single word: must be at least 80% finished (e.g. "Franc" -> "France")
@@ -246,7 +205,10 @@ const GameHUD = ({
 
   const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
   const REGION_COLORS = useMemo(() => {
-    return GAME_REGIONS.reduce((acc, r) => ({ ...acc, [r]: getThemeRegionColor(globeTheme, theme, r) }), {});
+    return GAME_REGIONS.reduce(
+      (acc, r) => ({ ...acc, [r]: getThemeRegionColor(globeTheme, theme, r) }),
+      {}
+    );
   }, [globeTheme, theme]);
   const regionStats = useMemo(() => {
     if (!countryDataMap) return {};
@@ -265,9 +227,7 @@ const GameHUD = ({
     return stats;
   }, [foundList, countryDataMap]);
 
-  const progressPercent = totalPossible
-    ? Math.min((score / totalPossible) * 100, 100)
-    : 0;
+  const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
   const isDepartmentsMode = mode === "departments";
 
   const placeholderText = useMemo(() => {
@@ -278,16 +238,18 @@ const GameHUD = ({
   }, [mode, t]);
 
   // Determine which continent to highlight
-  const activeContinent = useMemo(() => 
-    (selectedCountry && countryDataMap) ? countryDataMap[selectedCountry]?.region : null
-  , [selectedCountry, countryDataMap]);
+  const activeContinent = useMemo(
+    () => (selectedCountry && countryDataMap ? countryDataMap[selectedCountry]?.region : null),
+    [selectedCountry, countryDataMap]
+  );
 
   const gaugeRegions = isDepartmentsMode
     ? ["France"]
     : CONTINENT_ORDER.filter((region) => region !== "France");
-  const getRegionColor = useCallback((region) =>
-    REGION_COLORS[region] || (isDepartmentsMode ? "var(--accent)" : "var(--warning)")
-  , [REGION_COLORS, isDepartmentsMode]);
+  const getRegionColor = useCallback(
+    (region) => REGION_COLORS[region] || (isDepartmentsMode ? "var(--accent)" : "var(--warning)"),
+    [REGION_COLORS, isDepartmentsMode]
+  );
 
   const isMobile = viewport.width < BREAKPOINTS.desktop;
 
@@ -345,7 +307,14 @@ const GameHUD = ({
                   <InfoBox width={18} height={18} />
                 </button>
               ) : (
-                <div style={{ display: "flex", gap: "var(--spacing-sm)", alignItems: "center", pointerEvents: "auto" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "var(--spacing-sm)",
+                    alignItems: "center",
+                    pointerEvents: "auto",
+                  }}
+                >
                   {isPlaying && !isGameOver ? (
                     <button
                       className="hud-btn-circular"
@@ -401,7 +370,11 @@ const GameHUD = ({
                   onClick={onInfo}
                   onMouseDown={(e) => e.preventDefault()}
                 >
-                  <div className={`island-font ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}>{formatTime(timeLeft)}</div>
+                  <div
+                    className={`island-font ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
+                  >
+                    {formatTime(timeLeft)}
+                  </div>
                   <div className="island-divider" />
                   <div className="island-progress-wrap">
                     <div className="progress-linear-container">
@@ -475,92 +448,98 @@ const GameHUD = ({
               );
             })}
           </div>
-          <button
-            className="hud-btn-circular"
-            onClick={onInfo}
-            title={t("information")}
-          >
+          <button className="hud-btn-circular" onClick={onInfo} title={t("information")}>
             <InfoBox width={18} height={18} />
           </button>
         </div>
       )}
 
-
-
       {!(hideLearnInput && mode === "learn") && (
-      <div
-        className={`bottom-hud-container ${isKeyboardMode ? "keyboard-mode" : ""} ${mode === "learn" ? "learn-search-bar" : ""}`}
-        style={
-          window.innerWidth < BREAKPOINTS.desktop
-            ? {
-                position: "absolute",
-                top: 0,
-                left: "50%",
-                transform: `translate3d(-50%, calc(${viewport.top + viewport.height - 24}px - env(safe-area-inset-bottom, 0px)), 0) translateY(-100%)`,
-                bottom: "auto",
-              }
-            : {}
-        }
-      >
-        {suggestions.length > 0 && (
-          <div className="suggestions-list animation-fade-in">
-            {suggestions.map((s, idx) => (
+        <div
+          className={`bottom-hud-container ${isKeyboardMode ? "keyboard-mode" : ""} ${mode === "learn" ? "learn-search-bar" : ""}`}
+          style={
+            window.innerWidth < BREAKPOINTS.desktop
+              ? {
+                  position: "absolute",
+                  top: 0,
+                  left: "50%",
+                  transform: `translate3d(-50%, calc(${viewport.top + viewport.height - 24}px - env(safe-area-inset-bottom, 0px)), 0) translateY(-100%)`,
+                  bottom: "auto",
+                }
+              : {}
+          }
+        >
+          {suggestions.length > 0 && (
+            <div className="suggestions-list animation-fade-in">
+              {suggestions.map((s, idx) => (
+                <button
+                  key={idx}
+                  className="suggestion-item"
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // STOPS BLUR
+                  }}
+                  onClick={() => submitSuggestion(s.display)}
+                  type="button"
+                >
+                  <span className="sug-text">{s.display}</span>
+                  {s.subtext && <small className="sug-sub">({s.subtext})</small>}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="bottom-hud-islands">
+            {isFocusedCountry && mode !== "learn" && (
               <button
-                key={idx}
-                className="suggestion-item"
-                onMouseDown={(e) => {
-                  e.preventDefault(); // STOPS BLUR
-                }}
-                onClick={() => submitSuggestion(s.display)}
-                type="button"
+                className="hud-btn-circular prev-btn"
+                onClick={() => onNavigateFocus("prev")}
+                onMouseDown={(e) => e.preventDefault()}
+                title={t("previous")}
               >
-                <span className="sug-text">{s.display}</span>
-                {s.subtext && <small className="sug-sub">({s.subtext})</small>}
+                <ChevronLeft width={18} height={18} />
               </button>
-            ))}
+            )}
+
+            <div
+              className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""}`}
+            >
+              <input
+                ref={extInputRef}
+                type="search"
+                name="q-resp"
+                id="q-resp-field"
+                inputMode="text"
+                enterKeyHint="done"
+                placeholder={placeholderText}
+                className="input-field"
+                value={
+                  mode === "learn" && learnSearchQuery !== undefined ? learnSearchQuery : inputValue
+                }
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                autoComplete="one-time-code"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck="false"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-form-type="other"
+                aria-label={t("quiz_answer")}
+              />
+            </div>
+
+            {isFocusedCountry && mode !== "learn" && (
+              <button
+                className="hud-btn-circular next-btn"
+                onClick={() => onNavigateFocus("next")}
+                onMouseDown={(e) => e.preventDefault()}
+                title={t("next")}
+              >
+                <ChevronRight width={18} height={18} />
+              </button>
+            )}
           </div>
-        )}
-
-        <div className="bottom-hud-islands">
-          {isFocusedCountry && mode !== "learn" && (
-            <button className="hud-btn-circular prev-btn" onClick={() => onNavigateFocus("prev")} onMouseDown={(e) => e.preventDefault()} title={t("previous")}>
-              <ChevronLeft width={18} height={18} />
-            </button>
-          )}
-
-          <div
-            className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""}`}
-          >
-            <input
-              ref={extInputRef}
-              type="search"
-              name="q-resp"
-              id="q-resp-field"
-              inputMode="text"
-              enterKeyHint="done"
-              placeholder={placeholderText}
-              className="input-field"
-              value={mode === "learn" && learnSearchQuery !== undefined ? learnSearchQuery : inputValue}
-              onChange={handleTextChange}
-              onKeyDown={handleKeyDown}
-              autoComplete="one-time-code"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck="false"
-              data-lpignore="true"
-              data-1p-ignore="true"
-              data-form-type="other"
-              aria-label={t("quiz_answer")}
-            />
-          </div>
-
-          {isFocusedCountry && mode !== "learn" && (
-            <button className="hud-btn-circular next-btn" onClick={() => onNavigateFocus("next")} onMouseDown={(e) => e.preventDefault()} title={t("next")}>
-              <ChevronRight width={18} height={18} />
-            </button>
-          )}
         </div>
-      </div>
       )}
     </>
   );

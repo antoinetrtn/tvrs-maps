@@ -1,6 +1,7 @@
-import { useMemo, useCallback } from "react";
-import { BREAKPOINTS } from "../config/gameConstants";
+import { useCallback, useMemo } from "react";
+
 import { DEFAULT_LEARN_SUB_MODE } from "../config/gameConfig";
+import { BREAKPOINTS } from "../config/gameConstants";
 
 export function useGameDataPanelState({
   currentScreen,
@@ -28,14 +29,7 @@ export function useGameDataPanelState({
       return isMobileViewport ? showLearnPanel : true;
     }
     return showInfoModal || showResultsTable;
-  }, [
-    currentScreen,
-    mode,
-    isMobileViewport,
-    showLearnPanel,
-    showInfoModal,
-    showResultsTable,
-  ]);
+  }, [currentScreen, mode, isMobileViewport, showLearnPanel, showInfoModal, showResultsTable]);
 
   const panelDataMap = activeDataMap;
   const panelMode = mode === "learn" ? learnSubMode : mode;
@@ -47,7 +41,7 @@ export function useGameDataPanelState({
       setShowResultsTable(false);
       if (isGameOver && !keepEndScreenHidden) setShowEndScreen(true);
     },
-    [isGameOver, setShowEndScreen, setShowInfoModal, setShowLearnPanel, setShowResultsTable],
+    [isGameOver, setShowEndScreen, setShowInfoModal, setShowLearnPanel, setShowResultsTable]
   );
 
   const handlePanelSelect = useCallback(
@@ -59,13 +53,7 @@ export function useGameDataPanelState({
         closePanel({ keepEndScreenHidden: true });
       }
     },
-    [
-      resetNavigationTrail,
-      setPopupError,
-      setSelectedCountry,
-      isMobileViewport,
-      closePanel,
-    ],
+    [resetNavigationTrail, setPopupError, setSelectedCountry, isMobileViewport, closePanel]
   );
 
   return {
