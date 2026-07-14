@@ -2,11 +2,8 @@ const GLOBE_RADIUS = 100;
 
 const GLOBE_CAMERA_NEAR = 1;
 
-const GLOBE_MIN_CAMERA_DISTANCE =
-  GLOBE_RADIUS + Math.max(0.001, GLOBE_CAMERA_NEAR * 1.1);
-
-export const GLOBE_MIN_ALTITUDE =
-  GLOBE_MIN_CAMERA_DISTANCE / GLOBE_RADIUS - 1;
+/** UX floor — well above the hull; keeps dept. France view (0.3) reachable. */
+export const GLOBE_MIN_ALTITUDE = 0.2;
 
 export const GLOBE_MAX_ALTITUDE = 4;
 
@@ -18,10 +15,9 @@ export function clampGlobeAltitude(altitude) {
   );
 }
 
-function applyGlobeZoomLimits(controls, cameraNear = GLOBE_CAMERA_NEAR) {
+function applyGlobeZoomLimits(controls) {
   if (!controls) return;
-  controls.minDistance =
-    GLOBE_RADIUS + Math.max(0.001, cameraNear * 1.1);
+  controls.minDistance = GLOBE_RADIUS * (1 + GLOBE_MIN_ALTITUDE);
   controls.maxDistance = GLOBE_RADIUS * 100;
 }
 
@@ -32,7 +28,7 @@ export function syncGlobeCameraAndZoomLimits(globeEl, controls) {
   camera.far = 1200;
   camera.clearViewOffset?.();
   camera.updateProjectionMatrix();
-  applyGlobeZoomLimits(controls, camera.near);
+  applyGlobeZoomLimits(controls);
   return camera;
 }
 
