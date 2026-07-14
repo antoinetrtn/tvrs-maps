@@ -52,18 +52,20 @@ export const FRESNEL_FRAGMENT_SHADER = `
   }
 `;
 
-// Vertices coordinate definitions for custom polygon effects
+// Vertices coordinate definitions for custom polygon effects.
+// World-space is required: mesh-local bounds vary wildly per country (Algeria vs
+// Luxembourg) and low-frequency local UVs produced globe-sized static bands.
 export const GLITCH_VERTEX_DECLARATIONS = `
-  varying vec3 vLocalPosition;
+  varying vec3 vWorldPosition;
 `;
 
 export const GLITCH_VERTEX_BODY = `
-  vLocalPosition = position;
+  vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
 `;
 
 // Uniforms declarations for country polygon shader
 export const GLITCH_FRAGMENT_DECLARATIONS = `
-  varying vec3 vLocalPosition;
+  varying vec3 vWorldPosition;
   uniform float uTime;
   uniform float uFadeProgress;
   uniform vec3 uTargetColor;
@@ -76,9 +78,9 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
-  vec3 computeErrorEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 localPos) {
+  vec3 computeErrorEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 worldPos) {
     float pulse = sin(time * 18.0) * 0.35 + 0.65;
-    float sweep = step(fract(localPos.y * 1.5 - time * 4.0), 0.35) * 0.40;
+    float sweep = step(fract(worldPos.y * 0.12 - time * 4.0), 0.35) * 0.40;
     float errorNoise = hash(noiseUv + sin(time * 45.0));
     float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
     vec3 errorRed = vec3(1.0, 0.27, 0.0);
@@ -88,9 +90,9 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
       return mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
     }
   }
-  vec3 computeSuccessEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 localPos) {
+  vec3 computeSuccessEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 worldPos) {
     float pulse = sin(time * 15.0) * 0.4 + 0.6;
-    float sweep = step(fract(localPos.y * 0.2 - time * 2.0), 0.15) * 0.35;
+    float sweep = step(fract(worldPos.y * 0.08 - time * 2.0), 0.15) * 0.35;
     if (theme > 0.9 && theme < 1.1) {
       return vec3(pulse + sweep);
     } else {
@@ -101,14 +103,21 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 
 // GLSL fragment logic for selected/transitioning country polygon glitching
 export const GLITCH_FRAGMENT_BODY = `
-  vec2 noiseUv = vLocalPosition.xy * 8.0 + vec2(vLocalPosition.z * 4.0);
-  float t = uTime * 28.0;
-  float noise = hash(noiseUv + sin(t));
+  // Screen-space static — medium grain (~4–5px), uniform per country.
+  float transitionActive = step(0.006, uFadeProgress) * (1.0 - step(0.994, uFadeProgress));
+  float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159));
+  float t = uTime * (28.0 + glitchAmp * 62.0);
 
-  // Dynamic static range: bright static in light theme, dark static in dark theme
+  vec2 blockUv = floor(gl_FragCoord.xy * 0.24);
+  vec2 noiseUv = gl_FragCoord.xy * 0.28;
+  float noiseCoarse = hash(blockUv + sin(t));
+  float noiseFine = hash(noiseUv + vec2(cos(t * 1.6), sin(t * 0.95)));
+  float noise = mix(noiseCoarse, noiseFine, 0.4);
+
   float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
   float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
-  float scanline = sin(vLocalPosition.y * 15.0 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
+  float scanline = sin(gl_FragCoord.y * 1.05 + uTime * (6.0 + glitchAmp * 14.0))
+    * ((uIsLight > 0.5) ? 0.03 : 0.048);
 
   float staticColor = mix(baseMin, baseMax, noise) + scanline;
   vec3 staticVec = vec3(staticColor);
@@ -117,13 +126,11 @@ export const GLITCH_FRAGMENT_BODY = `
   vec3 finalColor = gl_FragColor.rgb;
 
   if (uIsSide > 0.5) {
-    // SIDES / WALLS GEOMETRY
     if (uIsError > 0.5) {
-      finalColor = computeErrorEffect(finalColor, uTime, uTheme, noiseUv, vLocalPosition);
+      finalColor = computeErrorEffect(finalColor, uTime, uTheme, blockUv, vWorldPosition);
     } else if (uIsSuccess > 0.5) {
-      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vLocalPosition);
+      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vWorldPosition);
     } else {
-      // Normal selected side: holographic laser wall barrier!
       vec2 uv = gl_FragCoord.xy;
       float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
       float wallNoise = fract(sin(dot(uv + uTime, vec2(12.9898,78.233))) * 43758.5453);
@@ -131,52 +138,59 @@ export const GLITCH_FRAGMENT_BODY = `
       finalColor = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * wallNoise));
     }
   } else {
-    // TOP CAP GEOMETRY
-    // 100% monochrome static/noise glitch (shared across blackout & satellite themes)
     finalColor = staticVec;
 
     if (uIsError > 0.5) {
-      finalColor = computeErrorEffect(finalColor, uTime, uTheme, noiseUv, vLocalPosition);
+      finalColor = computeErrorEffect(finalColor, uTime, uTheme, blockUv, vWorldPosition);
     }
 
     if (uIsSuccess > 0.5) {
-      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vLocalPosition);
+      finalColor = computeSuccessEffect(finalColor, neonGreen, uTime, uTheme, vWorldPosition);
     }
   }
 
-  // Glitchy transition progress:
-  // Instead of a linear mix, we use noise to create a digital/analog "dissolve" or "dither" glitch.
-  float transitionNoise = hash(noiseUv * 1.5 + vec2(sin(uTime * 40.0), cos(uTime * 30.0)));
-  
-  // We also add scanline-based band tearing:
-  float horizontalTear = step(0.92, sin(vLocalPosition.y * 22.0 + uTime * 45.0));
-  
-  // Mix linear fade with noisy threshold.
-  // At the start of transition (uFadeProgress ~ 0), it's highly glitchy.
-  // At the end (uFadeProgress ~ 1), it settles to uTargetColor.
-  // We use step() on the noise to snap pixels to either the glitch or target color.
+  // Deselection dissolve: noisy digital dither + tears + chroma split
+  vec2 dissolveBlock = floor(gl_FragCoord.xy * 0.21)
+    + vec2(sin(uTime * 58.0), cos(uTime * 41.0)) * glitchAmp * 3.5;
+  float transitionNoise = hash(dissolveBlock);
+  float transitionNoise2 = hash(dissolveBlock * 1.9 + uTime * 3.7);
+  transitionNoise = mix(transitionNoise, transitionNoise2, 0.55 * max(glitchAmp, 0.35));
+
+  float horizontalTear = step(0.78, sin(gl_FragCoord.y * 0.038 + uTime * (48.0 + glitchAmp * 95.0)));
+  float verticalGlitch = step(0.86, hash(vec2(floor(gl_FragCoord.x * 0.07), floor(uTime * 24.0))));
+
   float glitchThreshold = uFadeProgress;
-  
-  // Add some horizontal tear glitching to the threshold to create horizontal bands that lag/snap
-  if (uFadeProgress > 0.02 && uFadeProgress < 0.98) {
-    glitchThreshold += (transitionNoise - 0.5) * 0.4;
+  if (transitionActive > 0.5) {
+    glitchThreshold += (transitionNoise - 0.5) * (0.62 + glitchAmp * 0.38);
     if (horizontalTear > 0.5) {
-      glitchThreshold = clamp(glitchThreshold - 0.3, 0.0, 1.0);
+      glitchThreshold = clamp(glitchThreshold - 0.28, 0.0, 1.0);
+    }
+    if (verticalGlitch > 0.5) {
+      glitchThreshold = clamp(glitchThreshold + 0.22, 0.0, 1.0);
     }
   }
-  
-  float glitchFade = step(transitionNoise, glitchThreshold);
-  
-  // Subtle glitch dissolve (game theme = léger glitch).
-  // On deselect/fade we bias more toward smooth + lighter noise to feel professional.
-  float mixBias = (uFadeProgress > 0.05 && uFadeProgress < 0.95) ? 0.38 : 0.22;
-  float finalProgress = mix(glitchFade, uFadeProgress, mixBias);
-  
-  gl_FragColor.rgb = mix(finalColor, uTargetColor, finalProgress);
 
-  // Smooth alpha fadeout in satellite mode for unfound countries
+  float glitchFade = step(transitionNoise, glitchThreshold);
+  float mixBias = transitionActive > 0.5 ? mix(0.06, 0.18, uFadeProgress) : 0.12;
+  float finalProgress = mix(glitchFade, uFadeProgress, mixBias);
+
+  vec3 glitchColor = finalColor;
+  if (transitionActive > 0.5 && uIsSide < 0.5) {
+    float chroma = (transitionNoise - 0.5) * 0.18 * glitchAmp;
+    glitchColor.r = clamp(finalColor.r + chroma, 0.0, 1.0);
+    glitchColor.b = clamp(finalColor.b - chroma, 0.0, 1.0);
+    if (horizontalTear > 0.5) {
+      glitchColor = mix(glitchColor, vec3(1.0), 0.32 * glitchAmp);
+    }
+    if (verticalGlitch > 0.5) {
+      glitchColor = mix(glitchColor, vec3(0.0), 0.2 * glitchAmp);
+    }
+  }
+
+  gl_FragColor.rgb = mix(glitchColor, uTargetColor, finalProgress);
+
   float finalAlpha = 1.0;
-  if (uTheme < 0.5) { // satellite theme
+  if (uTheme < 0.5) {
     if (uIsFound < 0.5) {
       finalAlpha = mix(1.0, 0.0, finalProgress);
     }

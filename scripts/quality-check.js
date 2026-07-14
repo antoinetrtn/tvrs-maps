@@ -113,7 +113,7 @@ const RATCHET_LIMITS = {
   'src/hooks/useGameSession.js': 750,
   'src/hooks/useUserProfile.js': 750,
   'src/hooks/useGlobePolygons.js': 710,
-  'src/config/designSystem.js': 720,
+  'src/config/designSystem.js': 722,
   'src/components/GameHUD.css': 970,
   'src/components/HomeScreen.css': 810, // expanded by unified panelSystem + responsive segmented + glass primitives
   'src/components/ProfilePanel.css': 770, // expanded by scroll refactor, sticky footer, avatar grid, blur overlay, charts

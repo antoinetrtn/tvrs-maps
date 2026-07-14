@@ -4,9 +4,7 @@ import { riversMountainsDataMap } from "../data/riversMountainsData";
 import {
   createMountainFeature,
 } from "../utils/LowPolyBiomes";
-import {
-  getThemeRegionColor,
-} from "../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
 import { RELIEF } from "../config/gameConfig";
 
 const BIOME_SCENE_SCALE = 9.2;
@@ -19,10 +17,7 @@ export function useGlobeBiomes({
   selectedCountry,
   foundSet,
   isHomeScreen,
-  UI_COLORS,
-  isLight,
   globeTheme,
-  theme,
 }) {
   const {
     showMountains: learnShowMountains = false,
@@ -90,7 +85,6 @@ export function useGlobeBiomes({
       const baseScale = d.scale * BIOME_SCENE_SCALE;
       if (mode === "rivers_mountains" || isLearnMountains) {
         if (d.type === "mountain" || d.type === "mountain_range") {
-          const regionColor = getThemeRegionColor(globeTheme, theme, d.region || "Unknown") || UI_COLORS.success;
           asset = createMountainFeature(
             globeTheme,
             isSelected,
@@ -102,7 +96,7 @@ export function useGlobeBiomes({
             d.lat,
             d.lng,
             baseScale * RELIEF.mountainScale,
-            regionColor,
+            GLITCH_EFFECT_SETTINGS.foundMountainColor,
           );
         } else {
           asset = new THREE.Group();
@@ -119,12 +113,12 @@ export function useGlobeBiomes({
       biomeObjectsCacheRef.current.set(key, alignedAsset);
       return alignedAsset;
     },
-    [theme, globeTheme, mode, selectedCountry, isLearnMountains, UI_COLORS],
+    [globeTheme, mode, selectedCountry, isLearnMountains],
   );
 
   useEffect(() => {
     biomeObjectsCacheRef.current.clear();
-  }, [globeTheme, theme]);
+  }, [globeTheme]);
 
   return {
     getBiomeAssetsData,

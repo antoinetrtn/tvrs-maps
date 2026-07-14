@@ -238,12 +238,80 @@ body {
 }
 
 /* Global Reusable Components */
+/*
+ * Glass blur: ONLY on large floating surfaces (sheet panels, input island,
+ * autocomplete). Buttons, HUD chips, nested .glass-panel cards use solid
+ * --glass-bg — stacking backdrop-filter on nested panels made menus unreadable.
+ * Blur lives on ::before for Android Chrome / iOS Safari compatibility.
+ */
+:is(
+  .glass-icon-btn,
+  .settings-trigger-btn,
+  .profile-trigger-btn,
+  .leaderboard-trigger-btn,
+  .hud-btn-circular,
+  .hud-mini-pill,
+  .central-island-panel,
+  .focus-mini-pill,
+  .home-podium-widget,
+  .learn-toggle-btn,
+  .sheet-panel,
+  .input-island,
+  .suggestions-list,
+  .learn-toggles-group,
+  .mobile-dropdown-menu
+) {
+  position: relative;
+}
+
+:is(
+  .sheet-panel,
+  .input-island,
+  .suggestions-list,
+  .mobile-dropdown-menu
+) {
+  isolation: isolate;
+}
+
+:is(
+  .sheet-panel,
+  .input-island,
+  .suggestions-list,
+  .mobile-dropdown-menu
+)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  -webkit-backdrop-filter: var(--glass-blur-compact);
+  backdrop-filter: var(--glass-blur-compact);
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+:is(
+  .glass-icon-btn:not(.profile-trigger-btn),
+  .settings-trigger-btn,
+  .leaderboard-trigger-btn,
+  .hud-btn-circular,
+  .hud-mini-pill,
+  .learn-toggle-btn,
+  .central-island-panel,
+  .sheet-panel,
+  .input-island,
+  .suggestions-list,
+  .learn-toggles-group,
+  .mobile-dropdown-menu
+) > * {
+  position: relative;
+  z-index: 1;
+}
+
 .glass-panel {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   border-radius: var(--radius-sm);
   transition: background var(--transition-normal), color var(--transition-normal);
 }
