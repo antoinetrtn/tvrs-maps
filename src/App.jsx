@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import GlobeMap from "./GlobeMap.jsx";
-import GameHUD from "./components/GameHUD.jsx";
 import HomeScreen from "./components/HomeScreen.jsx";
-import ResultsModal from "./components/ResultsModal.jsx";
-import EndScreen from "./components/EndScreen.jsx";
+import GameSessionView from "./components/GameSessionView.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
+import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
+import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
+import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
+import { useGameSessionProps } from "./hooks/useGameSessionProps";
 
 import "./App.css";
 import { countryDataMap } from "./data/gameData";
@@ -23,9 +24,9 @@ import {
   HOME_AUTOROTATE_INTERVAL_MS,
   BREAKPOINTS,
   STORAGE_KEYS,
-  FEEDBACK_TIMING,
   PERFORMANCE,
 } from "./config/gameConstants";
+import { isValidLearnSubMode } from "./config/gameConfig";
 import { isSupabaseConfigured } from "./services/supabaseClient";
 
 import { useViewport } from "./hooks/useViewport";
@@ -99,27 +100,20 @@ function App() {
     [setTheme],
   );
 
-  const [learnToggles, setLearnToggles] = useState({
-    showCountryLabels: true,
-    showCapitals: false,
-    showRivers: false,
-    showMountains: false,
-  });
+  const [learnSubMode, setLearnSubMode] = useState("countries");
+  const [showLearnPanel, setShowLearnPanel] = useState(false);
+  const [learnSearchQuery, setLearnSearchQuery] = useState("");
 
-  const onToggleLearn = useCallback((key) => {
-    setLearnToggles((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  }, []);
-
-  const {
-    showRivers: learnShowRivers,
-    showMountains: learnShowMountains,
-  } = learnToggles;
+  const onLearnSubModeChange = useCallback((subMode) => {
+    if (!isValidLearnSubMode(subMode)) return;
+    setLearnSubMode(subMode);
+    setSelectedCountry(null);
+    setLearnSearchQuery("");
+  }, [setSelectedCountry]);
 
   const t = useTranslation(lang);
   const extInputRef = useRef(null);
+  const globeFeedbackApplierRef = useRef(null);
   const prevScreenRef = useRef(currentScreen);
 
   useEffect(() => {
@@ -158,7 +152,7 @@ function App() {
     activeDataMap,
     allCountryKeys,
     totalPossible,
-  } = useGeoData({ mode });
+  } = useGeoData({ mode, learnSubMode });
 
   const {
     foundList,
@@ -182,6 +176,7 @@ function App() {
     resetGame,
     navigateFocus,
     resetNavigationTrail,
+    globeFeedbackRef,
   } = useGameSession({
     mode,
     allCountryKeys,
@@ -202,6 +197,7 @@ function App() {
     activeDataMap,
     extInputRef,
     effectiveKeyboardMode: isKeyboardMode,
+    globeFeedbackApplierRef,
   });
 
   const preserveInputFocus = useCallback(() => {
@@ -220,6 +216,10 @@ function App() {
     (selectedMode) => {
       resetGame(selectedMode);
       setMode(selectedMode);
+      setLearnSearchQuery("");
+      setShowLearnPanel(false);
+      setShowInfoModal(false);
+      setShowResultsTable(false);
       setCurrentScreen("game");
     },
     [resetGame],
@@ -228,6 +228,10 @@ function App() {
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
     setMode(DEFAULT_MODE);
+    setShowLearnPanel(false);
+    setLearnSearchQuery("");
+    setShowInfoModal(false);
+    setShowResultsTable(false);
     setCurrentScreen("home");
   }, [resetGame]);
 
@@ -302,9 +306,127 @@ function App() {
     [theme, globeTheme, viewport?.width],
   );
 
+  const {
+    isMobileViewport,
+    isPanelOpen,
+    panelDataMap,
+    panelMode,
+    closePanel,
+    handlePanelSelect,
+  } = useGameDataPanelState({
+    currentScreen,
+    mode,
+    viewport,
+    learnSubMode,
+    showLearnPanel,
+    showInfoModal,
+    showResultsTable,
+    activeDataMap,
+    isGameOver,
+    setShowLearnPanel,
+    setShowInfoModal,
+    setShowResultsTable,
+    setShowEndScreen,
+    setSelectedCountry,
+    resetNavigationTrail,
+    setPopupError,
+  });
+
+  useEffect(() => {
+    if (
+      mode === "learn" &&
+      selectedCountry &&
+      !activeDataMap[selectedCountry]
+    ) {
+      setSelectedCountry(null);
+    }
+  }, [learnSubMode, mode, selectedCountry, activeDataMap, setSelectedCountry]);
+
+  const handleHudEnter = useHudAnswerHandler({
+    mode,
+    selectedCountry,
+    handleSearch,
+    specificCountryGuess,
+    handleInput,
+    setPopupError,
+    setPopupWarning,
+  });
+
+  const handleCountrySelect = useCountrySelectHandler({
+    selectedCountry,
+    setSelectedCountry,
+    resetNavigationTrail,
+    setPopupError,
+    extInputRef,
+    onAfterSelect: (key) => {
+      if (mode === "learn" && isMobileViewport && key) {
+        setShowLearnPanel(true);
+      }
+    },
+  });
+
+  const sessionView = useGameSessionProps({
+    mode,
+    goHome,
+    lang,
+    score,
+    totalPossible,
+    timeLeft,
+    handleHudEnter,
+    isPlaying,
+    isGameOver,
+    handleCustomConfirm,
+    stopGame,
+    t,
+    setShowInfoModal,
+    selectedCountry,
+    setSelectedCountry,
+    resetNavigationTrail,
+    navigateFocus,
+    popupError,
+    popupWarning,
+    popupSuccess,
+    extInputRef,
+    foundList,
+    activeDataMap,
+    theme,
+    viewport,
+    isKeyboardMode,
+    globeTheme,
+    learnSubMode,
+    onLearnSubModeChange,
+    learnSearchQuery,
+    setLearnSearchQuery,
+    setShowLearnPanel,
+    showLearnPanel,
+    isMobileViewport,
+    countriesData,
+    departmentsData,
+    handleCountrySelect,
+    perfProfile,
+    currentScreen,
+    showEndScreen,
+    preserveInputFocus,
+    countryDataMap,
+    setShowEndScreen,
+    setShowResultsTable,
+    lastScores,
+    localRecords,
+    isNewPB,
+    xpResult,
+    isPanelOpen,
+    closePanel,
+    panelDataMap,
+    handlePanelSelect,
+    panelMode,
+    showResultsTable,
+    globeFeedbackRef,
+    globeFeedbackApplierRef,
+  });
+
   return (
     <div
-      className={`app-container ${theme} ${isScreenGlitching ? "glitch-active" : ""}`}
+      className={`app-container ${theme} ${isScreenGlitching ? "glitch-active" : ""} ${isPanelOpen ? "data-panel-open" : ""}`}
       data-theme={theme}
       style={appStyle}
     >
@@ -329,171 +451,12 @@ function App() {
           session={session}
           onOpenAuth={() => setShowAuthModal(true)}
         />
-      ) : (
-        !showEndScreen && (
-          <GameHUD
-            mode={mode}
-            onGoHome={goHome}
-            lang={lang}
-            score={score}
-            totalPossible={totalPossible}
-            timeLeft={timeLeft}
-            onEnter={(val) => {
-              if (mode === "learn") {
-                const res = handleSearch(val, learnShowRivers, learnShowMountains);
-                if (!res) {
-                  setPopupError(true);
-                  setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
-                }
-                return res;
-              }
-
-              let res;
-              if (selectedCountry) {
-                res = specificCountryGuess(val);
-              } else {
-                res = handleInput(val);
-                if (res === "ALREADY_FOUND") {
-                  setPopupWarning(true);
-                  setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
-                } else if (res === "ERROR") {
-                  setPopupError(true);
-                  setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
-                }
-              }
-              return (
-                res === "SUCCESS" ||
-                res === true ||
-                res === "ERROR" ||
-                res === "ALREADY_FOUND"
-              );
-            }}
-            isPlaying={isPlaying}
-            isGameOver={isGameOver}
-            onStop={() => handleCustomConfirm(t("stop_game_confirm"), stopGame)}
-            onInfo={() => setShowInfoModal(true)}
-            isFocusedCountry={!!selectedCountry}
-            onClearFocus={() => {
-              setSelectedCountry(null);
-              resetNavigationTrail(null);
-            }}
-            onNavigateFocus={navigateFocus}
-            inputError={popupError}
-            inputWarning={popupWarning}
-            inputSuccess={popupSuccess}
-            extInputRef={extInputRef}
-            foundList={foundList}
-            countryDataMap={activeDataMap}
-            theme={theme}
-            viewport={viewport}
-            isKeyboardMode={isKeyboardMode}
-            selectedCountry={selectedCountry}
-            globeTheme={globeTheme}
-            learnToggles={learnToggles}
-            onToggleLearn={onToggleLearn}
-          />
-        )
-      )}
-      <GlobeMap
-        mode={mode}
-        lang={lang}
-        countriesData={countriesData}
-        departmentsData={departmentsData}
-        foundList={foundList}
-        selectedCountry={selectedCountry}
-        shouldAutoRotate={false}
-        onCountrySelect={(c) => {
-          if (c === selectedCountry && c !== null) {
-            setPopupError(false);
-            if (extInputRef.current) {
-              extInputRef.current.focus();
-              setTimeout(() => {
-                if (extInputRef.current) extInputRef.current.focus();
-              }, 50);
-              setTimeout(() => {
-                if (extInputRef.current) extInputRef.current.focus();
-              }, 150);
-            }
-            return;
-          }
-          setSelectedCountry(c);
-          resetNavigationTrail(c);
-          setPopupError(false);
-          if (c && extInputRef.current) {
-            extInputRef.current.focus();
-            setTimeout(() => {
-              if (extInputRef.current) extInputRef.current.focus();
-            }, 50);
-            setTimeout(() => {
-              if (extInputRef.current) extInputRef.current.focus();
-            }, 150);
-          }
-        }}
-        theme={theme}
-        viewport={viewport}
-        isError={popupError}
-        isSuccess={popupSuccess}
-        hasActiveFeedback={popupError || popupSuccess}
-        perfProfile={perfProfile}
-        isHomeScreen={currentScreen === "home"}
-        isKeyboardMode={isKeyboardMode}
-        isEndScreen={showEndScreen}
-        isPerfectScore={foundList.length === totalPossible}
-        onPreserveInputFocus={preserveInputFocus}
-        globeLightingEnabled={true}
-        activeDataMap={activeDataMap}
-        globeTheme={globeTheme}
-        learnToggles={learnToggles}
+      ) : null}
+      <GameSessionView
+        {...sessionView}
+        isMobileViewport={isMobileViewport}
+        closePanel={closePanel}
       />
-      {showEndScreen && (
-        <EndScreen
-          foundList={foundList}
-          totalCountries={totalPossible}
-          countryDataMap={countryDataMap}
-          activeDataMap={activeDataMap}
-          onRestart={goHome}
-          onViewTable={() => {
-            setShowEndScreen(false);
-            setShowResultsTable(true);
-          }}
-          theme={theme}
-          lang={lang}
-          globeTheme={globeTheme}
-          lastScores={lastScores[mode] || []}
-          maxScore={localRecords[mode]?.maxScore || 0}
-          isNewPB={isNewPB}
-          xpResult={xpResult}
-        />
-      )}
-      {(showResultsTable || showInfoModal) && (
-        <ResultsModal
-          foundList={foundList}
-          totalCountries={totalPossible}
-          countryDataMap={countryDataMap}
-          activeDataMap={activeDataMap}
-          onRestart={
-            isGameOver
-              ? goHome
-              : () =>
-                  handleCustomConfirm(t("restart_game_confirm"), () => {
-                    resetGame(mode);
-                    setShowInfoModal(false);
-                  })
-          }
-          onClose={() => {
-            setShowResultsTable(false);
-            setShowInfoModal(false);
-            if (isGameOver) setShowEndScreen(true);
-          }}
-          isGameOver={isGameOver}
-          onStop={stopGame}
-          isPlaying={isPlaying}
-          mode={mode}
-          theme={theme}
-          lang={lang}
-          globeTheme={globeTheme}
-        />
-      )}
       {confirmState && (
         <ConfirmationModal
           message={confirmState.message}

@@ -28,8 +28,8 @@ export const KEYBOARD_CLOSE_DELAY_MS = 180;
  * in one place.
  */
 export const FEEDBACK_TIMING = {
-  successHoldMs: 600, // success flash before auto-advancing (free search)
-  successHoldFocusedMs: 400, // success flash when a country is already focused
+  successHoldMs: 620, // success flash before auto-advancing (free search)
+  successHoldFocusedMs: 520, // success flash when a country is already focused
   flashMs: 500, // error / "already found" warning flash
   focusGlobeClickMs: 80, // delay before re-focusing input after a globe click
   focusKeyboardMs: 50, // delay before re-focusing input during navigation
@@ -42,6 +42,13 @@ export const BREAKPOINTS = {
   mobile: 768,
   desktop: 1024,
 };
+
+/** Width reserved on the right for the data panel (panel + gutters). */
+export function getDataPanelLayoutWidth(viewportWidth) {
+  if (viewportWidth < 769) return 0;
+  const panel = Math.min(380, Math.round(viewportWidth * 0.34));
+  return panel + 32;
+}
 
 // --- Persistence -------------------------------------------------------------
 export const STORAGE_KEYS = {

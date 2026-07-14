@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   isPlayMode,
+  getPlayVisibleCountryKeys,
+  getLearnLabelLimit,
   shouldScrambleLabel,
   getPolygonAltitudeFor,
   getRegionAbbr,
@@ -21,6 +23,29 @@ describe("Game Configuration Utilities", () => {
       expect(isPlayMode("countries", { isHomeScreen: true })).toBe(false);
       expect(isPlayMode("countries", { isEndScreen: true })).toBe(false);
       expect(isPlayMode("unknown_mode")).toBe(false);
+    });
+  });
+
+  describe("getPlayVisibleCountryKeys", () => {
+    it("returns selected country and last validated", () => {
+      expect(getPlayVisibleCountryKeys("DEU", ["FRA", "BEL"])).toEqual([
+        "DEU",
+        "BEL",
+      ]);
+    });
+
+    it("dedupes when selected is the last validated", () => {
+      expect(getPlayVisibleCountryKeys("BEL", ["FRA", "BEL"])).toEqual([
+        "BEL",
+      ]);
+    });
+  });
+
+  describe("getLearnLabelLimit", () => {
+    it("caps learn labels by device tier", () => {
+      expect(getLearnLabelLimit({ isMobile: true })).toBe(6);
+      expect(getLearnLabelLimit({ maxLabels: 8 })).toBe(10);
+      expect(getLearnLabelLimit({ maxLabels: 20 })).toBe(16);
     });
   });
 

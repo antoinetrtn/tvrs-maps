@@ -8,9 +8,46 @@
 
 const PLAY_MODES = ['countries', 'capitals', 'departments', 'rivers_mountains'];
 
+export const LEARN_SUB_MODES = ['countries', 'capitals', 'rivers_mountains', 'departments'];
+export const DEFAULT_LEARN_SUB_MODE = 'countries';
+
+const LEARN_LABEL_LIMITS = { mobile: 6, tablet: 10, desktop: 16 };
+
+/** Max labels on the globe in learn — names are always visible, keep the view sparse. */
+export function getLearnLabelLimit({ isMobile, maxLabels } = {}) {
+  if (isMobile) return LEARN_LABEL_LIMITS.mobile;
+  if (typeof maxLabels === 'number' && maxLabels <= 8) return LEARN_LABEL_LIMITS.tablet;
+  return LEARN_LABEL_LIMITS.desktop;
+}
+
+export const isValidLearnSubMode = (subMode) => LEARN_SUB_MODES.includes(subMode);
+
 // A real quiz round (not learn / home / end screen): answers are hidden until found.
 export const isPlayMode = (mode, { isHomeScreen = false, isEndScreen = false } = {}) =>
   PLAY_MODES.includes(mode) && !isHomeScreen && !isEndScreen;
+
+/** In play mode, only the active target + last validated country stay on the globe. */
+export function getPlayVisibleCountryKeys(selectedCountry, foundList = []) {
+  const keys = [];
+  if (selectedCountry) keys.push(selectedCountry);
+  const lastFound = foundList[foundList.length - 1];
+  if (lastFound && lastFound !== selectedCountry) keys.push(lastFound);
+  return [...new Set(keys)];
+}
+
+/** France department polygons (play mode or learn sub-mode). */
+export const isDepartmentView = (
+  mode,
+  { isHomeScreen = false, learnSubMode = DEFAULT_LEARN_SUB_MODE } = {},
+) =>
+  !isHomeScreen &&
+  (mode === 'departments' || (mode === 'learn' && learnSubMode === 'departments'));
+
+/** Rivers & mountains in learn sub-mode. */
+export const isLearnRiversMountainsView = (
+  mode,
+  { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {},
+) => mode === 'learn' && learnSubMode === 'rivers_mountains';
 
 /**
  * Whether a feature's NAME should be scrambled (hidden) right now. Uniform across

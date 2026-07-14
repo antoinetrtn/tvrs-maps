@@ -1,11 +1,145 @@
 import { useMemo, useCallback, useRef } from "react";
 import { countryDataMap } from "../data/gameData";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { createGlobeLabelElement } from "../utils/globeLabelBuilder";
+import {
+  getLearnLabelLimit,
+  getPlayVisibleCountryKeys,
+} from "../config/gameConfig";
 import {
   getFlagEmoji,
   getLabelRenderRadius,
 } from "../utils/utils";
+
+function getLabelVisibilityThreshold({
+  isDepartmentMode,
+  isLearnMode,
+  isSelected,
+  isHomeScreen,
+  isRivMount,
+  size,
+}) {
+  if (isDepartmentMode) return 1.05;
+  if (isSelected) return 10;
+  if (isHomeScreen) return 1.8;
+  if (isRivMount) return 2.5;
+  if (isLearnMode) return Math.min(2.1, 0.55 + size * 1.4);
+  return Math.min(3.0, 0.8 + size * 2.0);
+}
+
+function getLabelRadius({
+  isDepartmentMode,
+  isLearnMode,
+  zoomLevel,
+  isMobile,
+}) {
+  if (isDepartmentMode) {
+    return isLearnMode
+      ? Math.max(8, 16 / Math.max(0.35, zoomLevel))
+      : Math.max(10, 22 / Math.max(0.18, zoomLevel));
+  }
+  if (isLearnMode) {
+    return getLabelRenderRadius(zoomLevel, isMobile) * 0.62;
+  }
+  return getLabelRenderRadius(zoomLevel, isMobile);
+}
+
+function resolveLabelEntry(
+  { key, data, modeName, hideCountryLine = false },
+  ctx,
+) {
+  if (!data) return null;
+
+  const {
+    mode,
+    selectedCountry,
+    foundSet,
+    countrySizes,
+    isHomeScreen,
+    isEndScreen,
+    isDepartmentMode,
+    zoomLevel,
+    pov,
+    perfProfile,
+    lang,
+    isError,
+    isPanelOpen,
+    labelsCacheRef,
+  } = ctx;
+
+  const isSelected = key === selectedCountry;
+  const isFound = foundSet.has(key);
+  const size = countrySizes[key] || 0.5;
+  const isPlayMode = mode !== "learn" && !isHomeScreen && !isEndScreen;
+  if (isPlayMode && !isFound && !isSelected) return null;
+
+  const isRivMount = modeName === "rivers_mountains";
+  const isLearnMode = mode === "learn";
+  const visibilityThreshold = getLabelVisibilityThreshold({
+    isDepartmentMode,
+    isLearnMode,
+    isSelected,
+    isHomeScreen,
+    isRivMount,
+    size,
+  });
+  if (zoomLevel > visibilityThreshold) return null;
+
+  let dLng = Math.abs(data.lng - pov.lng);
+  if (dLng > 180) dLng = 360 - dLng;
+  const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
+
+  const labelRadius = getLabelRadius({
+    isDepartmentMode,
+    isLearnMode,
+    zoomLevel,
+    isMobile: !!perfProfile?.isMobile,
+  });
+  if (!isSelected && distToCenter > labelRadius) return null;
+
+  const learnShowCapitals = modeName === "capitals";
+  const cacheKey = `${key}_${modeName}`;
+  const cached = labelsCacheRef.current[cacheKey];
+  if (
+    cached &&
+    cached.isSelected === isSelected &&
+    cached.lang === lang &&
+    cached.isFound === isFound &&
+    cached.globalMode === mode &&
+    cached.mode === modeName &&
+    cached.learnShowCapitals === learnShowCapitals &&
+    cached.hideCountryLine === hideCountryLine &&
+    cached.isError === (isSelected && isError) &&
+    cached.isPanelOpen === isPanelOpen
+  ) {
+    cached.distToCenter = distToCenter;
+    return cached;
+  }
+
+  const newLabel = {
+    admin: key,
+    lat: data.lat,
+    lng: data.lng,
+    country: lang === "fr" ? data.name_fr || key : data.name_en || key,
+    capital: lang === "fr" ? data.capital_fr || data.capital : data.capital,
+    region: data.region,
+    flag: getFlagEmoji(data.iso2),
+    iso2: data.iso2,
+    code: data.code,
+    size,
+    distToCenter,
+    isSelected,
+    isFound,
+    isError: isSelected && isError,
+    globalMode: mode,
+    mode: modeName,
+    learnShowCapitals,
+    hideCountryLine,
+    lang,
+    isPanelOpen,
+  };
+  labelsCacheRef.current[cacheKey] = newLabel;
+  return newLabel;
+}
 
 export function useGlobeLabels({
   mode,
@@ -20,7 +154,7 @@ export function useGlobeLabels({
   zoomLevel,
   perfProfile,
   gameDataMap,
-  learnToggles,
+  learnSubMode,
   countrySizes,
   lang,
   isError,
@@ -30,15 +164,19 @@ export function useGlobeLabels({
   t,
   globeEl,
   isLight,
+  isPanelOpen = false,
 }) {
-  const {
-    showCountryLabels: learnShowCountryLabels = true,
-    showCapitals: learnShowCapitals = false,
-    showRivers: learnShowRivers = false,
-    showMountains: learnShowMountains = false,
-  } = learnToggles || {};
-
   const labelsCacheRef = useRef({});
+  const labelSourceKeysRef = useRef({ map: null, keys: [] });
+
+  const getLabelSourceKeys = () => {
+    if (labelSourceKeysRef.current.map === gameDataMap) {
+      return labelSourceKeysRef.current.keys;
+    }
+    const keys = Object.keys(gameDataMap);
+    labelSourceKeysRef.current = { map: gameDataMap, keys };
+    return keys;
+  };
 
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
@@ -54,7 +192,7 @@ export function useGlobeLabels({
         });
       }
     } else if (isDepartmentMode) {
-      Object.keys(gameDataMap).forEach((k) => {
+      getLabelSourceKeys().forEach((k) => {
         labelsToProcess.push({
           key: k,
           data: gameDataMap[k],
@@ -62,7 +200,7 @@ export function useGlobeLabels({
         });
       });
     } else if (isRiversMountainsMode) {
-      Object.keys(gameDataMap).forEach((k) => {
+      getLabelSourceKeys().forEach((k) => {
         labelsToProcess.push({
           key: k,
           data: gameDataMap[k],
@@ -70,52 +208,19 @@ export function useGlobeLabels({
         });
       });
     } else if (mode === "learn") {
-      if (learnShowCountryLabels || learnShowCapitals) {
-        Object.keys(countryDataMap).forEach((k) => {
-          labelsToProcess.push({
-            key: k,
-            data: countryDataMap[k],
-            modeName: learnShowCountryLabels ? "countries" : "capitals",
-            hideCountryLine: !learnShowCountryLabels,
-          });
+      const modeName = learnSubMode === "capitals" ? "capitals" : "countries";
+      getLabelSourceKeys().forEach((k) => {
+        labelsToProcess.push({
+          key: k,
+          data: gameDataMap[k],
+          modeName,
+          hideCountryLine: learnSubMode === "capitals",
         });
-      }
-      if (learnShowRivers) {
-        Object.keys(riversMountainsDataMap).forEach((k) => {
-          if (riversMountainsDataMap[k].type === "river") {
-            labelsToProcess.push({
-              key: k,
-              data: riversMountainsDataMap[k],
-              modeName: "rivers_mountains",
-            });
-          }
-        });
-      }
-      if (learnShowMountains) {
-        Object.keys(riversMountainsDataMap).forEach((k) => {
-          if (
-            riversMountainsDataMap[k].type === "mountain" ||
-            riversMountainsDataMap[k].type === "mountain_range"
-          ) {
-            labelsToProcess.push({
-              key: k,
-              data: riversMountainsDataMap[k],
-              modeName: "rivers_mountains",
-            });
-          }
-        });
-      }
+      });
     } else {
-      const keys =
-        isEndScreen
-          ? Object.keys(countryDataMap)
-          : perfProfile?.isMobile
-            ? selectedCountry
-              ? [...new Set([selectedCountry, ...foundList.slice(-1)])]
-              : foundList.slice(-2)
-            : selectedCountry && !foundList.includes(selectedCountry)
-              ? [...foundList, selectedCountry]
-              : foundList;
+      const keys = isEndScreen
+        ? Object.keys(countryDataMap)
+        : getPlayVisibleCountryKeys(selectedCountry, foundList);
       keys.forEach((k) => {
         labelsToProcess.push({
           key: k,
@@ -125,102 +230,39 @@ export function useGlobeLabels({
       });
     }
 
-    const pov = cameraPOV;
+    const labelCtx = {
+      mode,
+      selectedCountry,
+      foundSet,
+      countrySizes,
+      isHomeScreen,
+      isEndScreen,
+      isDepartmentMode,
+      zoomLevel,
+      pov: cameraPOV,
+      perfProfile,
+      lang,
+      isError,
+      isPanelOpen,
+      labelsCacheRef,
+    };
 
     const filtered = labelsToProcess
-      .map(({ key, data, modeName, hideCountryLine = false }) => {
-        if (!data) return null;
-
-        const isSelected = key === selectedCountry;
-        const isFound = foundSet.has(key);
-        const size = countrySizes[key] || 0.5;
-
-        const isPlayMode = mode !== "learn" && !isHomeScreen && !isEndScreen;
-        if (isPlayMode && !isFound && !isSelected) {
-          return null;
-        }
-
-        const isRivMount = modeName === "rivers_mountains";
-        const visibilityThreshold = isDepartmentMode
-          ? 1.05
-          : isSelected
-            ? 10
-            : isHomeScreen
-              ? 1.8
-              : isRivMount
-                ? 2.5
-                : Math.min(3.0, 0.8 + size * 2.0);
-
-        if (zoomLevel > visibilityThreshold) return null;
-
-        let dLng = Math.abs(data.lng - pov.lng);
-        if (dLng > 180) dLng = 360 - dLng;
-        const distToCenter = Math.hypot(dLng, data.lat - pov.lat);
-
-        const isLearnMode = mode === "learn";
-        const labelRadius = isLearnMode
-          ? 85
-          : isDepartmentMode
-            ? 7
-            : getLabelRenderRadius(zoomLevel, !!perfProfile?.isMobile);
-        if (!isSelected && distToCenter > labelRadius) return null;
-
-        const cacheKey = `${key}_${modeName}`;
-        const cached = labelsCacheRef.current[cacheKey];
-        if (
-          cached &&
-          cached.isSelected === isSelected &&
-          cached.lang === lang &&
-          cached.isFound === isFound &&
-          cached.globalMode === mode &&
-          cached.mode === modeName &&
-          cached.learnShowCapitals === learnShowCapitals &&
-          cached.hideCountryLine === hideCountryLine &&
-          cached.isError === (isSelected && isError)
-        ) {
-          cached.distToCenter = distToCenter;
-          return cached;
-        }
-
-        const newLabel = {
-          admin: key,
-          lat: data.lat,
-          lng: data.lng,
-          country: lang === "fr" ? data.name_fr || key : data.name_en || key,
-          capital:
-            lang === "fr" ? data.capital_fr || data.capital : data.capital,
-          region: data.region,
-          flag: getFlagEmoji(data.iso2),
-          iso2: data.iso2,
-          code: data.code,
-          size,
-          distToCenter,
-          isSelected,
-          isFound,
-          isError: isSelected && isError,
-          globalMode: mode,
-          mode: modeName,
-          learnShowCapitals,
-          hideCountryLine,
-          lang,
-        };
-        labelsCacheRef.current[cacheKey] = newLabel;
-        return newLabel;
-      })
+      .map((entry) => resolveLabelEntry(entry, labelCtx))
       .filter((d) => d !== null)
       .sort((a, b) => {
         if (a.isSelected) return -1;
         if (b.isSelected) return 1;
-        if (mode === "learn") {
-          return a.admin.localeCompare(b.admin);
-        }
         return a.distToCenter - b.distToCenter;
       });
 
-    if (isDepartmentMode)
-      return filtered.slice(0, perfProfile?.isMobile ? 10 : 18);
     if (mode === "learn") {
-      const limit = perfProfile?.isMobile ? 120 : 180;
+      const limit = getLearnLabelLimit(perfProfile);
+      return filtered.slice(0, limit);
+    }
+
+    if (isDepartmentMode) {
+      const limit = perfProfile?.isMobile ? 28 : 56;
       return filtered.slice(0, limit);
     }
     return perfProfile?.maxLabels
@@ -237,16 +279,15 @@ export function useGlobeLabels({
     mode,
     selectedCountry,
     isHomeScreen,
+    isEndScreen,
     isDepartmentMode,
     isRiversMountainsMode,
     gameDataMap,
     foundSet,
-    learnShowCountryLabels,
-    learnShowCapitals,
-    learnShowRivers,
-    learnShowMountains,
+    learnSubMode,
     isError,
     globeEl,
+    isPanelOpen,
   ]);
 
   const createLabelElement = useCallback(
@@ -261,6 +302,7 @@ export function useGlobeLabels({
         globeTheme,
         mode,
         t,
+        isPanelOpen,
       });
     },
     [
@@ -273,6 +315,7 @@ export function useGlobeLabels({
       globeTheme,
       mode,
       t,
+      isPanelOpen,
     ],
   );
 

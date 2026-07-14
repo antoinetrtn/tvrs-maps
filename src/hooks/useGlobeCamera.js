@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
+import { getDataPanelLayoutWidth } from "../config/gameConstants";
+import {
+  readClampedGlobePov,
+  syncGlobeCameraAndZoomLimits,
+} from "../utils/globeAltitude";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
@@ -121,10 +126,19 @@ export function useGlobeCamera({
   isDepartmentMode,
   gameDataMap,
   perfProfile,
-  setTransitioningPreviousCountryState,
-  selectionTransitionStartRef,
-  transitioningPreviousCountryRef,
+  isPanelOpen = false,
+  mode = "countries",
+  selectionTransition,
 }) {
+  const {
+    transitioningPreviousCountryRef,
+    transitioningIncomingCountryRef,
+    selectionTransitionStartRef,
+  } = selectionTransition.refs;
+  const {
+    setTransitioningPreviousCountryState,
+    setTransitioningIncomingCountryState,
+  } = selectionTransition.setters;
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
 
@@ -162,26 +176,26 @@ export function useGlobeCamera({
           controls.zoomToCursor = false;
           controls.minPolarAngle = ORBIT_POLE_GUARD_ANGLE;
           controls.maxPolarAngle = Math.PI - ORBIT_POLE_GUARD_ANGLE;
+          syncGlobeCameraAndZoomLimits(globeEl.current, controls);
 
           changeHandler = () => {
             if (isInteractingRef.current) return;
-            if (globeEl.current) {
-              const pov = globeEl.current.pointOfView();
-              setZoomLevel((prev) => {
-                if (Math.abs(prev - pov.altitude) > 0.08) return pov.altitude;
-                return prev;
-              });
-              setCameraPOV((prev) => {
-                const threshold = isHomeScreen ? 15 : 10;
-                if (
-                  Math.abs(prev.lat - pov.lat) > threshold ||
-                  Math.abs(prev.lng - pov.lng) > threshold
-                ) {
-                  return { lat: pov.lat, lng: pov.lng };
-                }
-                return prev;
-              });
-            }
+            const pov = readClampedGlobePov(globeEl.current);
+            if (!pov) return;
+            setZoomLevel((prev) => {
+              if (Math.abs(prev - pov.altitude) > 0.08) return pov.altitude;
+              return prev;
+            });
+            setCameraPOV((prev) => {
+              const threshold = isHomeScreen ? 15 : 10;
+              if (
+                Math.abs(prev.lat - pov.lat) > threshold ||
+                Math.abs(prev.lng - pov.lng) > threshold
+              ) {
+                return { lat: pov.lat, lng: pov.lng };
+              }
+              return prev;
+            });
           };
 
           startHandler = () => {
@@ -190,11 +204,10 @@ export function useGlobeCamera({
 
           endHandler = () => {
             isInteractingRef.current = false;
-            if (globeEl.current) {
-              const pov = globeEl.current.pointOfView();
-              setZoomLevel(pov.altitude);
-              setCameraPOV({ lat: pov.lat, lng: pov.lng });
-            }
+            const pov = readClampedGlobePov(globeEl.current);
+            if (!pov) return;
+            setZoomLevel(pov.altitude);
+            setCameraPOV({ lat: pov.lat, lng: pov.lng });
           };
 
           controls.addEventListener("change", changeHandler);
@@ -202,13 +215,7 @@ export function useGlobeCamera({
           controls.addEventListener("end", endHandler);
         }
 
-        const camera = globeEl.current.camera();
-        if (camera) {
-          camera.clearViewOffset();
-          camera.near = 1;
-          camera.far = 1200;
-          camera.updateProjectionMatrix();
-        }
+        syncGlobeCameraAndZoomLimits(globeEl.current, controlsReference);
       } catch (e) {}
     }
 
@@ -233,6 +240,8 @@ export function useGlobeCamera({
   ]);
 
   useEffect(() => {
+    const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
+
     if (selectedCountry && globeEl.current) {
       const data =
         gameDataMap[selectedCountry] ||
@@ -252,21 +261,30 @@ export function useGlobeCamera({
           maxWindowHeight: maxWindowHeightRef.current,
         });
         const previousTarget = lastTargetRef.current;
+        const targetChanged =
+          !previousTarget ||
+          Math.abs(previousTarget.lat - target.lat) >= 0.001 ||
+          Math.abs(previousTarget.lng - target.lng) >= 0.001 ||
+          Math.abs(previousTarget.altitude - target.altitude) >= 0.001;
         const onlyViewportNudge =
+          !selectionChanged &&
           previousTarget &&
           previousSelectedCountryRef.current === selectedCountry &&
-          Math.abs(previousTarget.lat - target.lat) < 0.001 &&
-          Math.abs(previousTarget.lng - target.lng) < 0.001 &&
-          Math.abs(previousTarget.altitude - target.altitude) < 0.001;
-        const duration = isHomeScreen
-          ? 1800
-          : onlyViewportNudge
-            ? 180
-            : perfProfile?.isMobile ? 320 : 420;
-        globeEl.current.pointOfView(target, duration);
-        lastTargetRef.current = target;
+          targetChanged;
+
+        if (selectionChanged || onlyViewportNudge) {
+          const duration = isHomeScreen
+            ? 1800
+            : onlyViewportNudge
+              ? 180
+              : perfProfile?.isMobile
+                ? 320
+                : 420;
+          globeEl.current.pointOfView(target, duration);
+          lastTargetRef.current = target;
+        }
       }
-    } else if (globeEl.current) {
+    } else if (selectionChanged && globeEl.current) {
       applyIdleCameraPointOfView({
         globeEl,
         viewport,
@@ -275,19 +293,23 @@ export function useGlobeCamera({
         isDepartmentMode,
         wasHomeScreen: wasHomeScreenRef.current,
       });
+      lastTargetRef.current = null;
     }
 
-    if (selectedCountry !== previousSelectedCountryRef.current) {
-      if (transitioningPreviousCountryRef) {
-        transitioningPreviousCountryRef.current = previousSelectedCountryRef.current;
-      }
-      if (setTransitioningPreviousCountryState) {
+    if (selectionChanged) {
+      if (mode !== "learn") {
+        transitioningPreviousCountryRef.current =
+          previousSelectedCountryRef.current;
         setTransitioningPreviousCountryState(previousSelectedCountryRef.current);
+      } else {
+        transitioningPreviousCountryRef.current = null;
+        setTransitioningPreviousCountryState(null);
       }
-      if (selectionTransitionStartRef) {
-        selectionTransitionStartRef.current = performance.now();
-      }
+      transitioningIncomingCountryRef.current = null;
+      setTransitioningIncomingCountryState(null);
+      selectionTransitionStartRef.current = performance.now();
     }
+
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
   }, [
@@ -301,10 +323,10 @@ export function useGlobeCamera({
     isEndScreen,
     isDepartmentMode,
     gameDataMap,
+    mode,
     globeEl,
     setTransitioningPreviousCountryState,
-    selectionTransitionStartRef,
-    transitioningPreviousCountryRef,
+    setTransitioningIncomingCountryState,
   ]);
 
   const isMobileSize = viewport.width < 1024;
@@ -318,11 +340,16 @@ export function useGlobeCamera({
     maxWindowHeightRef.current = window.innerHeight;
   }
 
-  const globeWidth = maxWindowWidthRef.current;
+  const panelLayoutWidth =
+    isPanelOpen && !isHomeScreen && viewport.width >= 769
+      ? getDataPanelLayoutWidth(viewport.width)
+      : 0;
+  const globePanelShift = panelLayoutWidth > 0 ? -panelLayoutWidth / 2 : 0;
+  const globeWidth = Math.max(320, maxWindowWidthRef.current);
   const globeHeight = maxWindowHeightRef.current;
   const homeGlobeOffset =
-    isHomeScreen && !isKeyboardMode && globeWidth >= 769
-      ? Math.round(globeWidth * 0.14)
+    isHomeScreen && !isKeyboardMode && maxWindowWidthRef.current >= 769
+      ? Math.round(maxWindowWidthRef.current * 0.14)
       : 0;
   const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
 
@@ -348,5 +375,6 @@ export function useGlobeCamera({
     globeRenderWidth,
     globeHeight,
     homeGlobeOffset,
+    globePanelShift,
   };
 }

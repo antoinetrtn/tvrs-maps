@@ -1,7 +1,6 @@
 
 import { GAME_REGIONS } from "../config/gameConfig";
 import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-
 /**
  * Normalizes input string for accents, lowercase, hyphens, and whitespace.
  */
@@ -72,6 +71,83 @@ export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
   });
 
   return { stats: s, CONTINENT_ORDER };
+};
+
+/**
+ * Build grouped panel rows for the unified data table (learn + in-game).
+ */
+export const getPanelData = ({
+  dataMap,
+  foundList = [],
+  lang = 'fr',
+  mode = 'countries',
+  revealAll = false,
+  extraEntries = [],
+}) => {
+  const mergedMap = { ...dataMap };
+  extraEntries.forEach((entry) => {
+    if (entry?.key && !mergedMap[entry.key]) {
+      mergedMap[entry.key] = entry.data;
+    }
+  });
+
+  const { stats, CONTINENT_ORDER } = getGameStats(foundList, mergedMap, lang);
+
+  const rowsByRegion = {};
+  CONTINENT_ORDER.forEach((region) => {
+    const data = stats[region];
+    if (!data || data.total === 0) return;
+
+    rowsByRegion[region] = data.countries.map((c) => {
+      const item = mergedMap[c.key] || {};
+      const countryName =
+        lang === 'fr'
+          ? item.name_fr || item.name_en || c.name
+          : item.name_en || item.name_fr || c.name;
+      const capital =
+        lang === 'fr'
+          ? item.capital_fr || item.capital || c.capital
+          : item.capital || item.capital_fr || c.capital;
+      const isCapitalsMode = mode === 'capitals';
+      const name = isCapitalsMode ? capital : countryName;
+      const sublabel =
+        mode === 'departments' || item.code
+          ? item.code
+          : isCapitalsMode
+            ? countryName
+            : capital;
+      const detail =
+        item.type === 'mountain_range'
+          ? `${item.height || '?'}m`
+          : item.type === 'river'
+            ? `${item.length || '?'}km`
+            : sublabel;
+
+      return {
+        key: c.key,
+        name,
+        sublabel: detail,
+        iso2: item.iso2,
+        found: c.found,
+        revealed: revealAll || c.found,
+        region,
+      };
+    });
+  });
+
+  return { rowsByRegion, CONTINENT_ORDER, total: Object.keys(mergedMap).length };
+};
+
+/** Convert viewport client coords to globe container space for raycasting. */
+export const clientToGlobeCoords = (globeEl, clientX, clientY) => {
+  if (!globeEl?.current?.toGlobeCoords) return null;
+  const canvas = globeEl.current.renderer?.()?.domElement;
+  if (!canvas) return globeEl.current.toGlobeCoords(clientX, clientY);
+  const rect = canvas.getBoundingClientRect();
+  return globeEl.current.toGlobeCoords(
+    clientX - rect.left,
+    clientY - rect.top,
+  );
 };
 
 export const getFlagEmoji = (iso2) => {

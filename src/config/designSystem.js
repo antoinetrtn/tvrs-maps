@@ -116,6 +116,7 @@ const THEME = {
     subtleTint: "rgba(0, 0, 0, 0.05)",
     highlight: "rgba(0, 0, 0, 0.08)",
     success: "#000000",
+    selectionHighlight: "#2dffa8",
     gold: "#666666",
     error: "#ff4500",
     errorDeep: "#e63e00",
@@ -172,6 +173,7 @@ const THEME = {
     subtleTint: "rgba(255, 255, 255, 0.08)",
     highlight: "rgba(255, 255, 255, 0.15)",
     success: "#ffffff",
+    selectionHighlight: "#2dffa8",
     gold: "#cccccc",
     error: "#ff4500",
     errorDeep: "#e63e00",
@@ -511,6 +513,7 @@ export const getThemeCssVariables = (
     "--accent-soft": theme.accentSoft,
     "--accent-glow": theme.accentGlow,
     "--success": theme.success,
+    "--selection-highlight": theme.selectionHighlight,
     "--gold": theme.gold,
     "--warning": theme.warning,
     "--error": theme.error,
@@ -575,8 +578,8 @@ export const getThemeCssVariables = (
     "--color-error-glow-strong": "rgba(255, 69, 0, 0.4)",
     "--color-pink": "#f472b6",
     "--color-amber": "#fbbf24",
-    // Expose raw scale for any component that wants fluid calc(var(--base-foo) * var(--ui-scale))
-    "--ui-scale": scale,
+    "--ui-scale": scale, // fluid calc(var(--base-foo) * var(--ui-scale))
+    "--globe-flag-scale": Math.max(scale, 1.12),
   };
 };
 
@@ -674,14 +677,15 @@ export const SPACE_RGB_COMPONENTS = {
     magenta: [255, 0, 127]
   }
 };
-
 // Standardized retro TV glitch shader effect parameters and state rules
 export const GLITCH_EFFECT_SETTINGS = {
   speedTimeFactor: 28.0,
   scanlineFrequency: 15.0,
   scanlineAmplitude: 5.0,
-  colorSuccess: [0.05, 0.92, 0.52], // Neon green
-  foundMountainColor: '#05f298', // constant found-mountain tint (all themes)
+  colorSuccess: [0.176, 1.0, 0.659],
+  foundGreenSurface: "#2dffa8",
+  selectionHighlight: "#2dffa8",
+  foundMountainColor: "#2dffa8",
   colorError: [1.0, 0.27, 0.0],    // Orange-red
   sideWallOpacity: 0.55,
   noiseRangeDark: { min: 0.12, max: 0.68 },

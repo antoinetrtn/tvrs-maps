@@ -1,6 +1,5 @@
 import { useMemo, useCallback, useRef, useEffect } from "react";
 import * as THREE from "three";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
 import {
   createMountainFeature,
 } from "../utils/LowPolyBiomes";
@@ -12,24 +11,19 @@ const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;
 
 export function useGlobeBiomes({
   mode,
-  learnToggles,
+  isRiversMountainsMode,
   gameDataMap,
   selectedCountry,
   foundSet,
   isHomeScreen,
   globeTheme,
 }) {
-  const {
-    showMountains: learnShowMountains = false,
-  } = learnToggles || {};
-  const isLearnMountains = mode === "learn" && learnShowMountains;
-
   const biomeObjectsCacheRef = useRef(new Map());
 
   const getBiomeAssetsData = useMemo(() => {
-    if (mode !== "rivers_mountains" && !isLearnMountains) return [];
+    if (!isRiversMountainsMode) return [];
     const assets = [];
-    const dataMap = isLearnMountains ? riversMountainsDataMap : gameDataMap;
+    const dataMap = gameDataMap;
 
     Object.keys(dataMap).forEach((k) => {
       const data = dataMap[k];
@@ -59,17 +53,17 @@ export function useGlobeBiomes({
     });
 
     return assets;
-  }, [gameDataMap, mode, foundSet, isHomeScreen, isLearnMountains]);
+  }, [gameDataMap, foundSet, isHomeScreen, isRiversMountainsMode]);
 
   const getBiomeAltitude = useCallback(
     (d) => {
       const admin = d.admin;
-      if (mode === "rivers_mountains" || isLearnMountains) {
+      if (isRiversMountainsMode) {
         return admin === selectedCountry ? 0.003 : 0.0015;
       }
       return admin === selectedCountry ? 0.0025 : 0.0015;
     },
-    [selectedCountry, mode, isLearnMountains],
+    [selectedCountry, isRiversMountainsMode],
   );
 
   const createBiomeThreeObject = useCallback(
@@ -83,7 +77,7 @@ export function useGlobeBiomes({
 
       let asset;
       const baseScale = d.scale * BIOME_SCENE_SCALE;
-      if (mode === "rivers_mountains" || isLearnMountains) {
+      if (isRiversMountainsMode) {
         if (d.type === "mountain" || d.type === "mountain_range") {
           asset = createMountainFeature(
             globeTheme,
@@ -113,7 +107,7 @@ export function useGlobeBiomes({
       biomeObjectsCacheRef.current.set(key, alignedAsset);
       return alignedAsset;
     },
-    [globeTheme, mode, selectedCountry, isLearnMountains],
+    [globeTheme, selectedCountry, isRiversMountainsMode],
   );
 
   useEffect(() => {

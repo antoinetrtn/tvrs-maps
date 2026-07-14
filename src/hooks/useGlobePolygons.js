@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { countryDataMap } from "../data/gameData";
 import {
   GLOBE_STYLE,
+  GLITCH_EFFECT_SETTINGS,
   getOpaqueThreeColor,
   getThemeColors,
   getThemeRegionColor,
@@ -10,16 +11,21 @@ import {
   getThemeRegionColorLabel,
   getThemeDepartmentColor,
 } from "../config/designSystem";
+import { getPolygonAltitudeFor, GAME_REGIONS } from "../config/gameConfig";
+import { getPolygonMaterialForFeature } from "../utils/globePolygonMaterial";
 import {
-  getPolygonAltitudeFor,
-  GAME_REGIONS,
-} from "../config/gameConfig";
+  clearAnimatedPolygonMaterials,
+  unregisterAnimatedPolygonMaterial,
+} from "../utils/polygonGlitchShader";
 import {
-  GLITCH_VERTEX_DECLARATIONS,
-  GLITCH_VERTEX_BODY,
-  GLITCH_FRAGMENT_DECLARATIONS,
-  GLITCH_FRAGMENT_BODY,
-} from "../config/globeShaders";
+  FOUND_HIGHLIGHT,
+  mutedFoundGreen,
+  resolveCountryCapColor,
+  resolveFoundCountryColor,
+  resolveFoundCountryStroke,
+  resolveRegionalLandColor,
+  shouldUseRegionalUnfoundLand,
+} from "../utils/polygonColorResolver";
 import { getFeatureAdmin } from "../utils/utils";
 
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
@@ -42,8 +48,10 @@ export function useGlobePolygons({
   isPerfectScore,
   isError,
   isSuccess,
-  transitioningPreviousCountryState,
+  selectionTransition,
 }) {
+  const { transitioningPreviousCountryState, transitioningIncomingCountryState } =
+    selectionTransition.state;
   const polygonMaterialCacheRef = useRef({ cap: new Map(), side: new Map() });
   const sharedMaterialsRef = useRef(new Map());
 
@@ -100,60 +108,90 @@ export function useGlobePolygons({
         if (d.isGhostCountry) return UI_COLORS.mapBase;
         if (isEndScreen && !foundSet.has(admin)) return UI_COLORS.error;
 
-        const regionCode = d.properties?.region || "Unknown";
-        let baseColor = getThemeDepartmentColor(globeTheme, theme, regionCode, UI_COLORS.mapBase);
+        const isDeptFound = foundSet.has(admin);
+        const isDeptSelected = admin === selectedCountry;
 
-        if (foundSet.has(admin) || mode === "learn") {
-          if (admin === selectedCountry) {
+        if (mode === "learn") {
+          if (isDeptSelected) {
             if (isError) return UI_COLORS.error;
-            return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, UI_COLORS.paper, 0.15);
+            return FOUND_HIGHLIGHT;
           }
-          return baseColor;
+          const regionCode = d.properties?.region || "Europe";
+          return resolveRegionalLandColor(regionCode, {
+            globeTheme,
+            regionColorsLabels: REGION_COLORS_LABELS,
+            regionColorsAttenuated: REGION_COLORS_ATTENUATED,
+            fallbackAccent: UI_COLORS.accent,
+            fallbackRegionColor: getRegionSurfaceColor(regionCode),
+          });
         }
 
-        if (admin === selectedCountry) {
+        if (isDeptFound) {
+          if (isDeptSelected) {
+            if (isError) return UI_COLORS.error;
+            return FOUND_HIGHLIGHT;
+          }
+          const regionCode = d.properties?.region || "Unknown";
+          const deptTint = getThemeDepartmentColor(
+            globeTheme,
+            theme,
+            regionCode,
+            UI_COLORS.mapBase,
+          );
+          return mutedFoundGreen(deptTint, lerpColor);
+        }
+
+        if (isDeptSelected) {
           if (isError) return UI_COLORS.error;
-          return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, UI_COLORS.paper, 0.1);
+          return UI_COLORS.mapBase;
         }
 
-        return UI_COLORS.mapBase;
+        const regionCode = d.properties?.region || "Europe";
+        return resolveRegionalLandColor(regionCode, {
+          globeTheme,
+          regionColorsLabels: REGION_COLORS_LABELS,
+          regionColorsAttenuated: REGION_COLORS_ATTENUATED,
+          fallbackAccent: UI_COLORS.accent,
+          fallbackRegionColor: getRegionSurfaceColor(regionCode),
+        });
       }
 
       const admin = getFeatureAdmin(d);
       const region = countryDataMap[admin]?.region || "Unknown";
+      const resolved = resolveCountryCapColor({
+        admin,
+        region,
+        mode,
+        foundSet,
+        selectedCountry,
+        isError,
+        isSuccess,
+        isEndScreen,
+        isPerfectScore,
+        isLearn: mode === "learn",
+        isLight,
+        UI_COLORS,
+        lerpColor,
+        mapBase: UI_COLORS.mapBase,
+      });
 
-      if (isEndScreen) {
-        if (foundSet.has(admin)) {
-          return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-        }
-        return UI_COLORS.error;
+      if (
+        shouldUseRegionalUnfoundLand({
+          isEndScreen,
+          isFound: foundSet.has(admin),
+          isSelected: admin === selectedCountry,
+        })
+      ) {
+        return resolveRegionalLandColor(region, {
+          globeTheme,
+          regionColorsLabels: REGION_COLORS_LABELS,
+          regionColorsAttenuated: REGION_COLORS_ATTENUATED,
+          fallbackAccent: UI_COLORS.accent,
+          fallbackRegionColor: getRegionSurfaceColor(region),
+        });
       }
 
-      if (foundSet.has(admin) || mode === "learn") {
-        const isSatellite = globeTheme === "satellite";
-        const baseColor = isSatellite
-          ? (REGION_COLORS_LABELS[region] || UI_COLORS.accent)
-          : getRegionSurfaceColor(region);
-        if (admin === selectedCountry) {
-          if (isError) return UI_COLORS.error;
-          return UI_COLORS.mapSurfaceSelected || lerpColor(
-            baseColor,
-            UI_COLORS.paper,
-            0.1 *
-              GLOBE_STYLE.lighting.capPulseToPaper[isLight ? "light" : "dark"],
-          );
-        }
-        return baseColor;
-      }
-
-      if (admin === selectedCountry) {
-        if (isError) return UI_COLORS.error;
-        const baseColor = REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
-        const targetColor = REGION_COLORS[region] || UI_COLORS.accent;
-        return UI_COLORS.mapSurfaceSelected || lerpColor(baseColor, targetColor, 0.1);
-      }
-
-      return UI_COLORS.mapBase;
+      return resolved;
     },
     [
       selectedCountry,
@@ -164,6 +202,7 @@ export function useGlobePolygons({
       REGION_COLORS_LABELS,
       UI_COLORS,
       isError,
+      isSuccess,
       isHomeScreen,
       isDepartmentMode,
       isEndScreen,
@@ -183,6 +222,15 @@ export function useGlobePolygons({
 
       if (isSelected) {
         if (isError) return UI_COLORS.error;
+        if (isSuccess) return GLITCH_EFFECT_SETTINGS.selectionHighlight;
+        if (mode === "learn" || foundSet.has(admin)) {
+          return resolveFoundCountryStroke({
+            isLight,
+            isSelected: true,
+            UI_COLORS,
+            lerpColor,
+          });
+        }
         return UI_COLORS.accent;
       }
 
@@ -196,24 +244,36 @@ export function useGlobePolygons({
           return isLight
             ? lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.12)
             : lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.08);
-        if (foundSet.has(admin))
-          return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
+        if (foundSet.has(admin)) {
+          if (isPerfectScore) return UI_COLORS.gold;
+          return resolveFoundCountryStroke({
+            isLight,
+            isSelected,
+            UI_COLORS,
+            lerpColor,
+          });
+        }
         return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
       }
 
-      const region = countryDataMap[admin]?.region || "Unknown";
-      const isFound = foundSet.has(admin) || mode === "learn";
+      const isFound = foundSet.has(admin);
 
-      if (UI_COLORS.useRegionalBorders && isFound) {
-        return REGION_COLORS_LABELS[region] || UI_COLORS.accent;
+      if (isFound) {
+        return resolveFoundCountryStroke({
+          isLight,
+          isSelected,
+          UI_COLORS,
+          lerpColor,
+        });
       }
 
-      return isFound ? UI_COLORS.borderFound : UI_COLORS.borderUnfound;
+      return lerpColor(UI_COLORS.borderUnfound, UI_COLORS.paper, isLight ? 0.35 : 0.28);
     },
     [
       selectedCountry,
       UI_COLORS,
       isError,
+      isSuccess,
       foundSet,
       mode,
       isHomeScreen,
@@ -240,6 +300,10 @@ export function useGlobePolygons({
       const admin = getFeatureAdmin(d);
       const region = countryDataMap[admin]?.region || "Unknown";
 
+      if (foundSet.has(admin) && !isEndScreen) {
+        return resolveFoundCountryColor();
+      }
+
       let baseColor;
       if (isEndScreen) {
         if (foundSet.has(admin)) {
@@ -248,90 +312,54 @@ export function useGlobePolygons({
           baseColor = UI_COLORS.error;
         }
       } else {
-        baseColor =
-          foundSet.has(admin) || mode === "learn"
-            ? getRegionSurfaceColor(region)
-            : UI_COLORS.mapBase;
+        baseColor = resolveCountryCapColor({
+          admin,
+          region,
+          mode,
+          foundSet,
+          selectedCountry,
+          isError,
+          isSuccess,
+          isEndScreen,
+          isPerfectScore,
+          isLearn: mode === "learn",
+          isLight,
+          UI_COLORS,
+          lerpColor,
+          mapBase: UI_COLORS.mapBase,
+        });
       }
-      if (globeLightingEnabled) {
-        if (admin === selectedCountry) {
-          if (isError)
-            return isLight ? UI_COLORS.errorDeep : UI_COLORS.errorDeeper;
-          if (UI_COLORS.mapSurfaceSelected) return UI_COLORS.mapSurfaceSelected;
 
-          const sideBaseColor =
-            foundSet.has(admin) || mode === "learn"
-              ? getRegionSurfaceColor(region)
-              : REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent;
-
-          return lerpColor(
-            sideBaseColor,
-            UI_COLORS.black,
-            isLight
-              ? GLOBE_STYLE.lighting.sideDarken.selectedLight
-              : GLOBE_STYLE.lighting.sideDarken.selectedDark,
-          );
-        }
-        if (foundSet.has(admin) || mode === "learn") {
-          const base = getRegionSurfaceColor(region);
-          return lerpColor(
-            base,
-            UI_COLORS.black,
-            isLight
+      const darken =
+        admin === selectedCountry
+          ? isLight
+            ? GLOBE_STYLE.lighting.sideDarken.selectedLight
+            : GLOBE_STYLE.lighting.sideDarken.selectedDark
+          : foundSet.has(admin) || (mode === "learn" && admin === selectedCountry)
+            ? isLight
               ? GLOBE_STYLE.lighting.sideDarken.foundLight
-              : GLOBE_STYLE.lighting.sideDarken.foundDark,
-          );
-        }
-        return lerpColor(
-          UI_COLORS.mapBase,
-          UI_COLORS.black,
-          isLight
-            ? GLOBE_STYLE.lighting.sideDarken.baseLight
-            : GLOBE_STYLE.lighting.sideDarken.baseDark,
-        );
-      }
+              : GLOBE_STYLE.lighting.sideDarken.foundDark
+            : isLight
+              ? GLOBE_STYLE.lighting.sideDarken.baseLight
+              : GLOBE_STYLE.lighting.sideDarken.baseDark;
 
-      if (admin === selectedCountry) {
-        if (isError)
-          return isLight ? UI_COLORS.errorMuted : UI_COLORS.errorDeep;
-        if (UI_COLORS.mapSurfaceSelected) return UI_COLORS.mapSurfaceSelected;
-
-        const capColor =
-          foundSet.has(admin) || mode === "learn"
-            ? lerpColor(
-                getRegionSurfaceColor(region),
-                UI_COLORS.paper,
-                0.1 *
-                  GLOBE_STYLE.lighting.capPulseToPaper[
-                    isLight ? "light" : "dark"
-                  ],
-              )
-            : lerpColor(
-                REGION_COLORS_ATTENUATED[region] || UI_COLORS.accent,
-                REGION_COLORS[region] || UI_COLORS.accent,
-                0.1,
-              );
-
-        return lerpColor(capColor, UI_COLORS.black, isLight ? 0.24 : 0.08);
-      }
-
-      return lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
+      return lerpColor(baseColor, UI_COLORS.black, darken);
     },
     [
       foundSet,
-      REGION_COLORS,
-      REGION_COLORS_ATTENUATED,
       UI_COLORS,
       selectedCountry,
+      isError,
+      isSuccess,
       isLight,
-      globeLightingEnabled,
+      isEndScreen,
+      isPerfectScore,
       mode,
-      isHomeScreen,
       isDepartmentMode,
       lerpColor,
       getPolygonColor,
-      getRegionSurfaceColor,
       globeTheme,
+      theme,
     ],
   );
 
@@ -340,7 +368,6 @@ export function useGlobePolygons({
       const data = countryDataMap[admin];
       const region = data?.region || "Unknown";
       const isFound = foundSet.has(admin);
-      const isSatellite = globeTheme === "satellite";
 
       let baseColor;
       if (isEndScreen) {
@@ -349,14 +376,27 @@ export function useGlobePolygons({
         } else {
           baseColor = UI_COLORS.error;
         }
-      } else if (isFound || mode === "learn") {
-        // CRITICAL: must match getPolygonColor's satellite rule (label colors for found)
-        // This was the root cause of "bizarre colors on deselection in satellite per continent"
-        baseColor = isSatellite
-          ? (REGION_COLORS_LABELS[region] || UI_COLORS.accent)
-          : getRegionSurfaceColor(region);
       } else {
-        baseColor = UI_COLORS.mapBase;
+        baseColor = resolveCountryCapColor({
+          admin,
+          region,
+          mode,
+          foundSet,
+          selectedCountry,
+          isError,
+          isSuccess,
+          isEndScreen,
+          isPerfectScore,
+          isLearn: mode === "learn",
+          isLight,
+          UI_COLORS,
+          lerpColor,
+          mapBase: UI_COLORS.mapBase,
+        });
+      }
+
+      if (isFound && !isEndScreen) {
+        return resolveFoundCountryColor();
       }
 
       const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
@@ -366,8 +406,16 @@ export function useGlobePolygons({
       return capColor;
     },
     [
-      foundSet, mode, getRegionSurfaceColor, REGION_COLORS_LABELS,
-      UI_COLORS, isLight, lerpColor, isEndScreen, isPerfectScore, globeTheme
+      foundSet,
+      mode,
+      selectedCountry,
+      isError,
+      isSuccess,
+      UI_COLORS,
+      isLight,
+      lerpColor,
+      isEndScreen,
+      isPerfectScore,
     ]
   );
 
@@ -377,170 +425,41 @@ export function useGlobePolygons({
       const cache = polygonMaterialCacheRef.current[kind];
       const color =
         kind === "cap" ? getPolygonColor(d) : getPolygonSideColor(d);
+      const isFound = foundSet.has(admin);
+      const isLearnSelected = mode === "learn" && admin === selectedCountry;
+      const isHighlightedOnGlobe =
+        isFound || isLearnSelected || admin === selectedCountry;
 
-      const ExpectedMaterialClass = THREE.MeshPhongMaterial;
-      const isFound = foundSet.has(admin) || mode === "learn";
-
-      let emissiveHex = UI_COLORS.black;
-      let emissiveIntensity = 0;
-      let specularHex = THREE.Color
-        ? new THREE.Color(UI_COLORS.black)
-        : UI_COLORS.black;
-      let shininess = 0.7;
-
-      if (UI_COLORS.polyMatMatte) {
-        if (!isFound && admin !== selectedCountry) {
-          emissiveHex = UI_COLORS.black;
-          emissiveIntensity = 0;
-          specularHex = new THREE.Color(0, 0, 0);
-          shininess = 0.0;
-        } else {
-          emissiveHex = color;
-          emissiveIntensity = isLight
-            ? (Number(UI_COLORS.polyMatEmissiveIntensityFoundLight) || 0.22)
-            : (Number(UI_COLORS.polyMatEmissiveIntensityFoundDark) || 0.52);
-          specularHex = new THREE.Color(0, 0, 0);
-          shininess = 0.0;
-        }
-      } else if (isDepartmentMode && !d.isGhostCountry) {
-        emissiveHex = color;
-        emissiveIntensity =
-          kind === "cap" ? (isLight ? 0.08 : 0.12) : isLight ? 0.04 : 0.07;
-        specularHex = UI_COLORS.mapBorder;
-        shininess = kind === "cap" ? 2 : 1;
-      } else if (globeLightingEnabled) {
-        emissiveHex = color;
-
-        const baseEmissiveIntensity =
-          kind === "cap"
-            ? isLight
-              ? GLOBE_STYLE.lighting.material.capEmissiveLight
-              : GLOBE_STYLE.lighting.material.capEmissiveDark
-            : isLight
-              ? GLOBE_STYLE.lighting.material.sideEmissiveLight
-              : GLOBE_STYLE.lighting.material.sideEmissiveDark;
-
-        const emissiveBoost = !isLight ? 0.18 : 0.05;
-
-        emissiveIntensity =
-          baseEmissiveIntensity +
-          emissiveBoost +
-          (admin === selectedCountry ? 0.1 : 0);
-
-        specularHex =
-          admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder;
-        const baseShininess =
-          kind === "cap"
-            ? isLight
-              ? GLOBE_STYLE.lighting.material.capShininessLight
-              : GLOBE_STYLE.lighting.material.capShininessDark
-            : isLight
-              ? GLOBE_STYLE.lighting.material.sideShininessLight
-              : GLOBE_STYLE.lighting.material.sideShininessDark;
-
-        shininess =
-          baseShininess + (admin === selectedCountry ? 30 : isLight ? 0 : 25);
-      }
-
-      const isIsolated = admin === selectedCountry;
-      const isPrevTransitioning = admin === transitioningPreviousCountryState;
-      const isShaderCap =
-        (kind === "cap" || kind === "side") &&
-        (isIsolated || isPrevTransitioning || (isEndScreen && !foundSet.has(admin)));
-      const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
-
-      const cacheKey = isShaderCap
-        ? `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}`
-        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`;
-
-      let material = sharedMaterialsRef.current.get(cacheKey);
-
-      if (!material) {
-        material = new ExpectedMaterialClass({
-          side: THREE.DoubleSide,
-          blending: THREE.NormalBlending,
-          depthWrite: true,
-        });
-
-        material.color.set(safeColor(color));
-        material.flatShading = false;
-        material.emissive.set(safeColor(emissiveHex));
-        material.emissiveIntensity = emissiveIntensity;
-
-        if (material.isMeshPhongMaterial) {
-          material.specular.set(safeColor(specularHex));
-          material.shininess = shininess;
-        }
-
-        const isSatellite = globeTheme === "satellite";
-        if (isSatellite) {
-          material.transparent = true;
-          if (admin === selectedCountry) {
-            material.wireframe = false;
-          } else if (isFound) {
-            material.wireframe = true;
-          } else {
-            if (kind === "cap") {
-              material.opacity = 0.0;
-            } else {
-              material.visible = false;
-            }
-          }
-        }
-        if (isShaderCap) {
-          if (kind === "side") {
-            material.transparent = true;
-            material.opacity = 0.55;
-          }
-          material.customProgramCacheKey = () => `shader-cap-glitch-${kind}`;
-          material.onBeforeCompile = (shader) => {
-            shader.uniforms.uTime = { value: 0 };
-            shader.uniforms.uFadeProgress = { value: 0.0 };
-            shader.uniforms.uTargetColor = {
-              value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
-            };
-            shader.uniforms.uIsError = {
-              value: admin === selectedCountry && isError ? 1.0 : 0.0,
-            };
-            shader.uniforms.uIsSuccess = {
-              value: admin === selectedCountry && isSuccess ? 1.0 : 0.0,
-            };
-            shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
-            shader.uniforms.uTheme = {
-              value: UI_COLORS.isBlackoutTheme ? 1.0 : 0.0,
-            };
-            shader.uniforms.uIsSide = {
-              value: kind === "side" ? 1.0 : 0.0,
-            };
-            shader.uniforms.uIsFound = {
-              value: isFound ? 1.0 : 0.0,
-            };
-            material.userData.shader = shader;
-
-            shader.vertexShader = GLITCH_VERTEX_DECLARATIONS + shader.vertexShader;
-
-            shader.vertexShader = shader.vertexShader.replace(
-              `#include <begin_vertex>`,
-              `#include <begin_vertex>
-              ${GLITCH_VERTEX_BODY}
-            `
-            );
-
-            shader.fragmentShader = GLITCH_FRAGMENT_DECLARATIONS + shader.fragmentShader;
-
-            shader.fragmentShader = shader.fragmentShader.replace(
-              `#include <dithering_fragment>`,
-              GLITCH_FRAGMENT_BODY
-            );
-          };
-        }
-
-        material.userData.isIsolated = isIsolated;
-        material.userData.isShared = !isIsolated;
-        material.userData.admin = admin;
-
-        sharedMaterialsRef.current.set(cacheKey, material);
-      }
+      const material = getPolygonMaterialForFeature({
+        d,
+        kind,
+        color,
+        admin,
+        selectedCountry,
+        showFoundOnGlobe: isFound,
+        isHighlightedOnGlobe,
+        isLearnSelected,
+        isFound,
+        mode,
+        foundSet,
+        isEndScreen,
+        isHomeScreen,
+        isError,
+        isSuccess,
+        transitioningPreviousCountryState,
+        transitioningIncomingCountryState,
+        isDepartmentMode,
+        globeTheme,
+        isLight,
+        globeLightingEnabled,
+        perfProfile,
+        UI_COLORS,
+        safeColor,
+        sharedMaterialsRef,
+        getBaseColorForCountryAndKind,
+        mapBase: UI_COLORS.mapBase,
+        lerpColor,
+      });
 
       cache.set(admin, material);
       return material;
@@ -559,11 +478,13 @@ export function useGlobePolygons({
       perfProfile,
       isHomeScreen,
       transitioningPreviousCountryState,
+      transitioningIncomingCountryState,
       getBaseColorForCountryAndKind,
       safeColor,
       isError,
       isSuccess,
       isEndScreen,
+      lerpColor,
     ],
   );
 
@@ -589,8 +510,12 @@ export function useGlobePolygons({
     return () => {
       materialCache.cap.clear();
       materialCache.side.clear();
-      sharedPool.forEach((material) => material.dispose());
+      sharedPool.forEach((material) => {
+        unregisterAnimatedPolygonMaterial(material);
+        material.dispose();
+      });
       sharedPool.clear();
+      clearAnimatedPolygonMaterials();
     };
   }, [isLight, globeTheme, globeLightingEnabled, mode, isDepartmentMode]);
 
@@ -614,8 +539,16 @@ export function useGlobePolygons({
       if (isDepartmentMode && d.isGhostCountry) {
         return perfProfile?.isMobile ? 0.1 : 0.15;
       }
-      if (isSelected) return perfProfile?.isMobile ? 5.5 : 7.5;
+      if (isSelected) {
+        const isGreenFill = foundSet.has(admin) || mode === "learn";
+        if (isGreenFill) return perfProfile?.isMobile ? 10 : 14;
+        return perfProfile?.isMobile ? 5.5 : 7.5;
+      }
       if (isDepartmentMode) return perfProfile?.isMobile ? 0.85 : 1.1;
+      if (foundSet.has(admin)) {
+        const base = perfProfile?.isMobile ? 0.7 : 0.95;
+        return base + (isLight ? 0.15 : 0.25);
+      }
       const thickness = perfProfile?.isMobile
         ? (Number(UI_COLORS.strokeWidthMobile) || 0.55)
         : (Number(UI_COLORS.strokeWidthDesktop) || 0.75);
@@ -631,6 +564,8 @@ export function useGlobePolygons({
       perfProfile?.isMobile,
       selectedCountry,
       isDepartmentMode,
+      foundSet,
+      mode,
       UI_COLORS,
     ],
   );
@@ -685,6 +620,7 @@ export function useGlobePolygons({
     REGION_COLORS_LABELS,
     UI_COLORS,
     getBaseColorForCountryAndKind,
+    lerpColor,
     getPolygonColor,
     getPolygonSideColor,
     getPolygonStroke,

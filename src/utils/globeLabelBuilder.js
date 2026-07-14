@@ -3,6 +3,16 @@ import { scrambleText } from "./utils";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 
+function buildGlobeLabelFlagHtml(iso2, { compact = false, prominent = false } = {}) {
+  if (!iso2 || iso2.length !== 2) return "";
+  const w = compact ? 16 : prominent ? 56 : 44;
+  const h = compact ? 12 : prominent ? 42 : 33;
+  const scaleVar = prominent
+    ? "var(--globe-flag-scale, 1.15)"
+    : "var(--globe-flag-scale, var(--ui-scale, 1))";
+  return `<img src="/flags/${iso2.toLowerCase()}.svg" alt="" class="globe-label-flag${compact ? " compact" : prominent ? " prominent" : ""}" width="${w}" height="${h}" style="width:calc(${w}px * ${scaleVar});height:calc(${h}px * ${scaleVar});object-fit:cover;border-radius:3px;border:1px solid color-mix(in srgb, var(--text-main) 22%, transparent);box-shadow:0 2px 6px color-mix(in srgb, var(--bg-color) 55%, transparent);flex-shrink:0;display:block;" />`;
+}
+
 /**
  * Scramble text dynamically with a ratio of random glyphs.
  */
@@ -36,7 +46,8 @@ export function createGlobeLabelElement(d, {
   gameDataMap,
   globeTheme,
   mode,
-  t
+  t,
+  isPanelOpen = false,
 }) {
   const el = document.createElement("div");
 
@@ -56,7 +67,6 @@ export function createGlobeLabelElement(d, {
     if (colorType === "paper") {
       color = isHighlight ? UI_COLORS.accent : UI_COLORS.textMuted;
     } else {
-      // regional
       color = isHighlight
         ? REGION_COLORS_LABELS[d.region] || UI_COLORS.accent
         : UI_COLORS.textMuted;
@@ -64,7 +74,7 @@ export function createGlobeLabelElement(d, {
   }
 
   const labelText = UI_COLORS.globeLabelText || UI_COLORS.textMain;
-  const labelDot = UI_COLORS.globeLabelDot || color;
+  const labelDot = UI_COLORS.globeLabelDot || UI_COLORS.textMain;
   const labelStalk = UI_COLORS.globeLabelStalk || UI_COLORS.accent;
 
   // Set root to 0 size so its center is the exact lat/lng
@@ -76,7 +86,20 @@ export function createGlobeLabelElement(d, {
 
   const isPlayMode =
     mode !== "learn" && d.mode !== "learn" && !isHomeScreen && !isEndScreen;
-  const revealAll = !isPlayMode || d.isFound;
+  const revealAll = mode === "learn" || !isPlayMode || d.isFound;
+  const isDeptMode = d.mode === "departments";
+  const showLabelFlag =
+    d.iso2 && !isDeptMode && d.mode !== "rivers_mountains";
+  const flagProminent = showLabelFlag && isPlayMode && d.isSelected && !isPanelOpen;
+  const flagHtml = showLabelFlag
+    ? buildGlobeLabelFlagHtml(d.iso2, {
+        compact: isPanelOpen,
+        prominent: flagProminent,
+      })
+    : "";
+  const labelRowLayout = isPanelOpen
+    ? "flex-direction: row; align-items: center; gap: 4px;"
+    : "flex-direction: column; align-items: center; gap: 3px;";
 
   // Uniform scramble across every guessable mode (countries, capitals, departments,
   // rivers/mountains) so no mode leaks its answer as readable text.
@@ -151,18 +174,14 @@ export function createGlobeLabelElement(d, {
           text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
           opacity: ${isHomeScreen ? 0.6 : 1};
         ">
-          ${
-            d.iso2
-              ? `<img src="/flags/${d.iso2.toLowerCase()}.svg" class="globe-label-flag" style="width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 5px;" alt="" />`
-              : ""
-          }
-          <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); height: calc(12px * var(--ui-scale, 1)); line-height: calc(12px * var(--ui-scale, 1)); display: flex; align-items: center; gap: 4px; font-family: var(--font-display, monospace) !important;">
+          <div style="font-weight: 700; font-size: calc(13px * var(--ui-scale, 1)); min-height: calc(15px * var(--ui-scale, 1)); line-height: calc(15px * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: var(--font-display, monospace) !important; ${flagHtml ? labelRowLayout : ""}">
+            ${flagHtml || ""}
             <span class="${glitchLine1Class}" data-text="${glitchLine1Raw}" style="font-family: var(--font-display, monospace) !important;">${isErrorLabel ? glitchLine1Raw : scrambleText(glitchLine1Raw)}</span>
           </div>
           ${
             isCapitalsMode && !isErrorLabel
               ? `
-            <div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); height: calc(10px * var(--ui-scale, 1)); line-height: calc(10px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: var(--font-display, monospace) !important;">
+            <div style="font-weight: 500; font-size: calc(11px * var(--ui-scale, 1)); height: calc(13px * var(--ui-scale, 1)); line-height: calc(13px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: var(--font-display, monospace) !important;">
               <span class="glitch-country" data-text="${d.country}" style="font-family: var(--font-display, monospace) !important;">${scrambleText(d.country)}</span>
             </div>
           `
@@ -198,7 +217,13 @@ export function createGlobeLabelElement(d, {
     const displayCapital = revealAll ? d.capital : "???";
 
     const hasCapitalLine = (d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals)) && d.capital;
-    const isDeptMode = d.mode === "departments";
+    const deptMainSize = isDeptMode ? "14px" : "13px";
+    const deptSubSize = isDeptMode ? "12px" : "11px";
+    const deptMainHeight = isDeptMode ? "17px" : "15px";
+    const deptSubHeight = isDeptMode ? "15px" : "13px";
+    const labelBg = isDeptMode
+      ? `background: color-mix(in srgb, ${UI_COLORS.black} 68%, transparent); padding: 3px 7px; border-radius: 5px; box-shadow: 0 1px 4px color-mix(in srgb, ${UI_COLORS.black} 40%, transparent);`
+      : "";
 
     const getScrambledHtml = (ratio) => {
       let scrambledLine1;
@@ -206,25 +231,22 @@ export function createGlobeLabelElement(d, {
       const scramble = (txt) => ratio <= 0.0 ? txt : scrambleTextWithRatio(txt, ratio);
 
       if (isDeptMode) {
-        const rawCode = d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 0px 3px; border-radius: 3px; font-size: calc(8.5px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 3px;">${d.code}</span>` : "";
+        const rawCode = d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>` : "";
         scrambledLine1 = `${rawCode}<span>${scramble(displayName)}</span>`;
-        if (d.capital) scrambledLine2 = `(${scramble(displayCapital)})`;
+        if (d.capital) scrambledLine2 = scramble(displayCapital);
       } else {
         const baseLine1Text = hasCapitalLine ? `${d.capital}` : `${d.country}`;
-        const inlineFlag = d.iso2 ? "" : (d.flag || "");
-        const prefix = hasCapitalLine ? `${inlineFlag}` : `${iconSymbol || inlineFlag}`;
-        scrambledLine1 = `<span>${prefix} ${scramble(baseLine1Text)}</span>`;
+        const emojiPrefix = d.iso2 ? "" : `${iconSymbol || d.flag || ""}`;
+        const textSpan = `<span>${emojiPrefix}${emojiPrefix ? " " : ""}${scramble(baseLine1Text)}</span>`;
+        scrambledLine1 = flagHtml
+          ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
+          : textSpan;
         if (hasCapitalLine && !d.hideCountryLine) scrambledLine2 = scramble(d.country);
       }
 
-      const flagAbove = d.iso2
-        ? `<img src="/flags/${d.iso2.toLowerCase()}.svg" class="globe-label-flag" style="width: 48px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); margin-bottom: 5px;" alt="" />`
-        : "";
-
       return `
-        ${flagAbove}
-        <div style="font-weight: 700; font-size: calc(10px * var(--ui-scale, 1)); height: calc(12px * var(--ui-scale, 1)); line-height: calc(12px * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">${scrambledLine1}</div>
-        ${scrambledLine2 ? `<div style="font-weight: 500; font-size: calc(8.5px * var(--ui-scale, 1)); height: calc(10px * var(--ui-scale, 1)); line-height: calc(10px * var(--ui-scale, 1)); color: color-mix(in srgb, ${UI_COLORS.textMuted} 80%, transparent); margin-top: 1px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">${scrambledLine2}</div>` : ""}
+        <div style="${labelBg} font-weight: 700; font-size: calc(${deptMainSize} * var(--ui-scale, 1)); min-height: calc(${deptMainHeight} * var(--ui-scale, 1)); line-height: calc(${deptMainHeight} * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">${scrambledLine1}</div>
+        ${scrambledLine2 ? `<div style="font-weight: ${isDeptMode ? 600 : 500}; font-size: calc(${deptSubSize} * var(--ui-scale, 1)); min-height: calc(${deptSubHeight} * var(--ui-scale, 1)); line-height: calc(${deptSubHeight} * var(--ui-scale, 1)); color: ${isDeptMode ? `color-mix(in srgb, ${UI_COLORS.textMain} 96%, transparent)` : `color-mix(in srgb, ${UI_COLORS.textMain} 88%, transparent)`}; margin-top: ${isDeptMode ? "3px" : "2px"}; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"}; text-shadow: ${isDeptMode ? `0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 70%, transparent)` : "none"};">${scrambledLine2}</div>` : ""}
       `;
     };
 
@@ -265,7 +287,7 @@ export function createGlobeLabelElement(d, {
           font-family: var(--font-main);
           white-space: nowrap;
           color: ${labelText};
-          text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
+          text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 75%, transparent);
           opacity: ${isHomeScreen ? 0.6 : 1};
         ">
           ${getScrambledHtml(1.0)}
@@ -275,7 +297,7 @@ export function createGlobeLabelElement(d, {
 
     let scrambleProgress = 0.0;
     let hasBeenAttached = false;
-    
+
     const mountInterval = setInterval(() => {
       const isAttached = document.body.contains(el);
       if (isAttached) {
@@ -286,7 +308,7 @@ export function createGlobeLabelElement(d, {
         return;
       }
 
-      scrambleProgress += 0.08; // ~360ms total duration
+      scrambleProgress += 0.08;
       const textContainer = el.querySelector(".normal-text-container");
       if (!textContainer) return;
 
