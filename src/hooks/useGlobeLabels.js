@@ -167,6 +167,16 @@ export function useGlobeLabels({
   isPanelOpen = false,
 }) {
   const labelsCacheRef = useRef({});
+  const labelSourceKeysRef = useRef({ map: null, keys: [] });
+
+  const getLabelSourceKeys = () => {
+    if (labelSourceKeysRef.current.map === gameDataMap) {
+      return labelSourceKeysRef.current.keys;
+    }
+    const keys = Object.keys(gameDataMap);
+    labelSourceKeysRef.current = { map: gameDataMap, keys };
+    return keys;
+  };
 
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
@@ -182,7 +192,7 @@ export function useGlobeLabels({
         });
       }
     } else if (isDepartmentMode) {
-      Object.keys(gameDataMap).forEach((k) => {
+      getLabelSourceKeys().forEach((k) => {
         labelsToProcess.push({
           key: k,
           data: gameDataMap[k],
@@ -190,7 +200,7 @@ export function useGlobeLabels({
         });
       });
     } else if (isRiversMountainsMode) {
-      Object.keys(gameDataMap).forEach((k) => {
+      getLabelSourceKeys().forEach((k) => {
         labelsToProcess.push({
           key: k,
           data: gameDataMap[k],
@@ -199,7 +209,7 @@ export function useGlobeLabels({
       });
     } else if (mode === "learn") {
       const modeName = learnSubMode === "capitals" ? "capitals" : "countries";
-      Object.keys(gameDataMap).forEach((k) => {
+      getLabelSourceKeys().forEach((k) => {
         labelsToProcess.push({
           key: k,
           data: gameDataMap[k],
@@ -269,6 +279,7 @@ export function useGlobeLabels({
     mode,
     selectedCountry,
     isHomeScreen,
+    isEndScreen,
     isDepartmentMode,
     isRiversMountainsMode,
     gameDataMap,

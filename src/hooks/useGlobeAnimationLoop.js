@@ -48,6 +48,7 @@ export function useGlobeAnimationLoop({
   lerpColor,
   globeMaterial,
   mountainGlitchUniforms,
+  mountainGlitchActive = false,
   GLOBE_STYLE,
   countriesData,
   departmentsData,
@@ -56,6 +57,8 @@ export function useGlobeAnimationLoop({
 }) {
   const animFrameIdRef = useRef(null);
   const animateSceneRef = useRef(null);
+  const sceneWaitTimeoutRef = useRef(null);
+  const transitionColorsPrimedRef = useRef(null);
   const lastAnimFrameTimeRef = useRef(0);
   const needsGraticuleStyleRef = useRef(true);
   const graticuleStyleUntilRef = useRef(0);
@@ -78,10 +81,30 @@ export function useGlobeAnimationLoop({
     styleGlobeGraticules();
     updateGlobeLighting();
 
+    const clearScheduledFrame = () => {
+      if (animFrameIdRef.current != null) {
+        cancelAnimationFrame(animFrameIdRef.current);
+        animFrameIdRef.current = null;
+      }
+      if (sceneWaitTimeoutRef.current != null) {
+        clearTimeout(sceneWaitTimeoutRef.current);
+        sceneWaitTimeoutRef.current = null;
+      }
+    };
+
+    const scheduleFrame = () => {
+      clearScheduledFrame();
+      animFrameIdRef.current = requestAnimationFrame(animateScene);
+    };
+
     const animateScene = () => {
+      animFrameIdRef.current = null;
       const scene = globeEl.current?.scene?.();
       if (!scene) {
-        animFrameIdRef.current = requestAnimationFrame(animateScene);
+        sceneWaitTimeoutRef.current = setTimeout(() => {
+          sceneWaitTimeoutRef.current = null;
+          scheduleFrame();
+        }, 50);
         return;
       }
 
@@ -102,13 +125,15 @@ export function useGlobeAnimationLoop({
       if (minFrameMs > 0 && lastAnimFrameTimeRef.current) {
         const elapsed = time - lastAnimFrameTimeRef.current;
         if (elapsed < minFrameMs) {
-          animFrameIdRef.current = requestAnimationFrame(animateScene);
+          scheduleFrame();
           return;
         }
       }
       lastAnimFrameTimeRef.current = time;
 
       const timeSec = time / 1000;
+      const needsMountainFeedback =
+        mountainGlitchActive && (currentIsError || currentIsSuccess);
 
       if (globeMaterial && globeMaterial.userData.shader) {
         if (globeMaterial.userData.shader.uniforms.uTime) {
@@ -138,14 +163,24 @@ export function useGlobeAnimationLoop({
         polygonGlitchUniforms.uTime.value = timeSec;
       }
       if (currentIsError || currentIsSuccess) {
-        polygonGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
+        const foundGreen = getFoundGreenThreeColor();
+        polygonGlitchUniforms.uFoundGreen.value.copy(foundGreen);
+        if (needsMountainFeedback) {
+          mountainGlitchUniforms.uFoundGreen.value.copy(foundGreen);
+        }
       }
 
-      mountainGlitchUniforms.uTime.value = timeSec;
-      mountainGlitchUniforms.uIsError.value = currentSelectedCountry && currentIsError ? 1.0 : 0.0;
-      mountainGlitchUniforms.uIsSuccess.value = currentSelectedCountry && currentIsSuccess ? 1.0 : 0.0;
-      if (currentIsError || currentIsSuccess) {
-        mountainGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
+      if (mountainGlitchActive) {
+        mountainGlitchUniforms.uTime.value = timeSec;
+        if (needsMountainFeedback) {
+          mountainGlitchUniforms.uIsError.value =
+            currentSelectedCountry && currentIsError ? 1.0 : 0.0;
+          mountainGlitchUniforms.uIsSuccess.value =
+            currentSelectedCountry && currentIsSuccess ? 1.0 : 0.0;
+        } else {
+          mountainGlitchUniforms.uIsError.value = 0.0;
+          mountainGlitchUniforms.uIsSuccess.value = 0.0;
+        }
       }
 
       if (needsGraticuleStyleRef.current) {
@@ -284,20 +319,26 @@ export function useGlobeAnimationLoop({
             Math.max(0, getDeselectGlitchFadeProgress(elapsed, TRANSITION_DURATION)),
           );
 
-          [prevCapMat, prevSideMat].forEach((mat, idx) => {
+          if (transitionColorsPrimedRef.current !== prevCountry) {
+            transitionColorsPrimedRef.current = prevCountry;
+            [prevCapMat, prevSideMat].forEach((mat, idx) => {
+              if (mat?.userData?.shader?.uniforms?.uTargetColor) {
+                const targetKind = idx === 0 ? "cap" : "side";
+                mat.userData.shader.uniforms.uTargetColor.value.copy(
+                  _transitionTargetColor.set(
+                    getBaseColorForCountryAndKind(prevCountry, targetKind),
+                  ),
+                );
+              }
+            });
+          }
+
+          [prevCapMat, prevSideMat].forEach((mat) => {
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;
               if (shader.uniforms.uFadeProgress) {
                 const isMissedOnEnd = currentIsEndScreen && !foundSet.has(prevCountry);
                 shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : fadeProgress;
-              }
-              if (shader.uniforms.uTargetColor) {
-                const targetKind = idx === 0 ? "cap" : "side";
-                shader.uniforms.uTargetColor.value.copy(
-                  _transitionTargetColor.set(
-                    getBaseColorForCountryAndKind(prevCountry, targetKind),
-                  ),
-                );
               }
               if (shader.uniforms.uSelectInTransition) {
                 shader.uniforms.uSelectInTransition.value = 0.0;
@@ -308,6 +349,8 @@ export function useGlobeAnimationLoop({
             }
           });
         }
+      } else {
+        transitionColorsPrimedRef.current = null;
       }
 
       const hasWork =
@@ -318,23 +361,20 @@ export function useGlobeAnimationLoop({
         needsGraticuleStyleRef.current;
 
       if (hasWork) {
-        animFrameIdRef.current = requestAnimationFrame(animateScene);
+        scheduleFrame();
       } else {
-        animFrameIdRef.current = null;
+        clearScheduledFrame();
       }
     };
 
     animateSceneRef.current = animateScene;
 
-    if (animFrameIdRef.current == null) {
-      animFrameIdRef.current = requestAnimationFrame(animateScene);
+    if (animFrameIdRef.current == null && sceneWaitTimeoutRef.current == null) {
+      scheduleFrame();
     }
 
     return () => {
-      if (animFrameIdRef.current != null) {
-        cancelAnimationFrame(animFrameIdRef.current);
-        animFrameIdRef.current = null;
-      }
+      clearScheduledFrame();
     };
   }, [
     globeTheme,
@@ -351,6 +391,7 @@ export function useGlobeAnimationLoop({
     globeLightingRef,
     globeMaterial,
     mountainGlitchUniforms,
+    mountainGlitchActive,
     polygonMaterialCacheRef,
     sharedMaterialsRef,
     transitioningPreviousCountryRef,
@@ -375,8 +416,12 @@ export function useGlobeAnimationLoop({
         isSuccess,
         mountainGlitchUniforms,
       });
-      if (animFrameIdRef.current == null && animateSceneRef.current) {
-        animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+      if (
+        animFrameIdRef.current == null &&
+        sceneWaitTimeoutRef.current == null &&
+        animateSceneRef.current
+      ) {
+        animateSceneRef.current();
       }
     };
     return () => {
@@ -385,8 +430,12 @@ export function useGlobeAnimationLoop({
   }, [globeFeedbackApplierRef, polygonMaterialCacheRef, mountainGlitchUniforms]);
 
   useEffect(() => {
-    if (animFrameIdRef.current == null && animateSceneRef.current) {
-      animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+    if (
+      animFrameIdRef.current == null &&
+      sceneWaitTimeoutRef.current == null &&
+      animateSceneRef.current
+    ) {
+      animateSceneRef.current();
     }
   }, [selectedCountry, isError, isSuccess, isEndScreen, transitioningPreviousCountryState]);
 
@@ -396,8 +445,12 @@ export function useGlobeAnimationLoop({
       graticuleStyleUntilRef.current = performance.now() + 500;
       updateGlobeLighting();
       styleGlobeGraticules();
-      if (animFrameIdRef.current == null && animateSceneRef.current) {
-        animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+      if (
+        animFrameIdRef.current == null &&
+        sceneWaitTimeoutRef.current == null &&
+        animateSceneRef.current
+      ) {
+        animateSceneRef.current();
       }
     }
   }, [countriesData, departmentsData, updateGlobeLighting, styleGlobeGraticules]);
@@ -405,8 +458,12 @@ export function useGlobeAnimationLoop({
   const handleGlobeReady = () => {
     needsGraticuleStyleRef.current = true;
     graticuleStyleUntilRef.current = performance.now() + 400;
-    if (animFrameIdRef.current == null && animateSceneRef.current) {
-      animFrameIdRef.current = requestAnimationFrame(animateSceneRef.current);
+    if (
+      animFrameIdRef.current == null &&
+      sceneWaitTimeoutRef.current == null &&
+      animateSceneRef.current
+    ) {
+      animateSceneRef.current();
     }
     styleGlobeGraticules();
     updateGlobeLighting();

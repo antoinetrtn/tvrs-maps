@@ -13,6 +13,8 @@ export function useGlobeLighting({
   safeColor,
 }) {
   const globeLightingRef = useRef(null);
+  const graticuleMaterialsRef = useRef([]);
+  const graticuleCacheKeyRef = useRef("");
   const targetGlowColorRef = useRef(new THREE.Color(0x38bdf8));
   const targetGlowPowerRef = useRef(1.2);
   const targetGlowCoefRef = useRef(1.0);
@@ -157,11 +159,13 @@ export function useGlobeLighting({
       innerGlow.visible = true;
     }
 
-    scene.traverse((obj) => {
-      if (obj.isLight && !obj.name.startsWith("globe-")) {
-        obj.intensity = 0;
-      }
-    });
+    if (justCreatedLighting) {
+      scene.traverse((obj) => {
+        if (obj.isLight && !obj.name.startsWith("globe-")) {
+          obj.intensity = 0;
+        }
+      });
+    }
 
     if (UI_COLORS.isBlackoutTheme) {
       keyLight.intensity = isLight ? 0.28 : 0.44;
@@ -225,23 +229,37 @@ export function useGlobeLighting({
     const scene = globeEl.current?.scene?.();
     if (!scene) return;
 
-    let graticuleColor = new THREE.Color(getOpaqueThreeColor(UI_COLORS.graticule));
-    let graticuleOpacity = Number(UI_COLORS.graticuleOpacity) || (isLight
-      ? GLOBE_STYLE.lighting.graticuleOpacity.light
-      : GLOBE_STYLE.lighting.graticuleOpacity.dark);
+    const graticuleColor = new THREE.Color(getOpaqueThreeColor(UI_COLORS.graticule));
+    const graticuleOpacity =
+      Number(UI_COLORS.graticuleOpacity) ||
+      (isLight
+        ? GLOBE_STYLE.lighting.graticuleOpacity.light
+        : GLOBE_STYLE.lighting.graticuleOpacity.dark);
 
-    scene.traverse((obj) => {
-      const material = obj.material;
-      if (
-        obj.type === "LineSegments" &&
-        material?.type === "LineBasicMaterial" &&
-        material.transparent === true
-      ) {
-        material.color.copy(graticuleColor);
-        material.opacity = graticuleOpacity;
-        material.depthWrite = false;
-        material.needsUpdate = true;
-      }
+    const cacheKey = `${globeTheme}-${UI_COLORS.graticule}-${isLight}`;
+    if (graticuleCacheKeyRef.current !== cacheKey) {
+      graticuleCacheKeyRef.current = cacheKey;
+      graticuleMaterialsRef.current = [];
+    }
+
+    if (graticuleMaterialsRef.current.length === 0) {
+      scene.traverse((obj) => {
+        const material = obj.material;
+        if (
+          obj.type === "LineSegments" &&
+          material?.type === "LineBasicMaterial" &&
+          material.transparent === true
+        ) {
+          graticuleMaterialsRef.current.push(material);
+        }
+      });
+    }
+
+    graticuleMaterialsRef.current.forEach((material) => {
+      material.color.copy(graticuleColor);
+      material.opacity = graticuleOpacity;
+      material.depthWrite = false;
+      material.needsUpdate = true;
     });
   }, [isLight, UI_COLORS, globeTheme, globeEl]);
 

@@ -355,6 +355,7 @@ const GlobeMap = ({
     lerpColor,
     globeMaterial,
     mountainGlitchUniforms,
+    mountainGlitchActive: isRiversMountainsMode,
     GLOBE_STYLE,
     countriesData,
     departmentsData,
