@@ -28,8 +28,8 @@ export const KEYBOARD_CLOSE_DELAY_MS = 180;
  * in one place.
  */
 export const FEEDBACK_TIMING = {
-  successHoldMs: 600, // success flash before auto-advancing (free search)
-  successHoldFocusedMs: 400, // success flash when a country is already focused
+  successHoldMs: 620, // success flash before auto-advancing (free search)
+  successHoldFocusedMs: 520, // success flash when a country is already focused
   flashMs: 500, // error / "already found" warning flash
   focusGlobeClickMs: 80, // delay before re-focusing input after a globe click
   focusKeyboardMs: 50, // delay before re-focusing input during navigation
@@ -42,6 +42,13 @@ export const BREAKPOINTS = {
   mobile: 768,
   desktop: 1024,
 };
+
+/** Width reserved on the right for the data panel (panel + gutters). */
+export function getDataPanelLayoutWidth(viewportWidth) {
+  if (viewportWidth < BREAKPOINTS.desktop) return 0;
+  const panel = Math.min(380, Math.round(viewportWidth * 0.34));
+  return panel + 32;
+}
 
 // --- Persistence -------------------------------------------------------------
 export const STORAGE_KEYS = {
@@ -60,4 +67,10 @@ export const PERFORMANCE = {
   maxPixelRatio: { mobile: 1.25, tablet: 1.5, desktop: 2.0 },
   maxLabels: { mobile: 4, tablet: 8, desktop: 20 },
   polygonCapCurvatureResolution: { mobile: 3.0, tablet: 2.5, desktop: 2.0 },
+  /** Scales globe accent lights on mobile — keeps the look, saves GPU vs full desktop. */
+  mobileLightScale: 0.9,
+  /** Fresnel atmosphere sphere segments (width × height). */
+  innerGlowSegments: { mobile: 32, desktop: 48 },
+  /** Min ms between non-urgent globe animation frames. */
+  animationFrameMs: { mobile: 40, desktop: 33 },
 };

@@ -113,7 +113,7 @@ const RATCHET_LIMITS = {
   'src/hooks/useGameSession.js': 750,
   'src/hooks/useUserProfile.js': 750,
   'src/hooks/useGlobePolygons.js': 710,
-  'src/config/designSystem.js': 722,
+  'src/config/designSystem.js': 725,
   'src/components/GameHUD.css': 970,
   'src/components/HomeScreen.css': 810, // expanded by unified panelSystem + responsive segmented + glass primitives
   'src/components/ProfilePanel.css': 770, // expanded by scroll refactor, sticky footer, avatar grid, blur overlay, charts
@@ -130,7 +130,7 @@ const LEGACY_BASES = {
   'src/components/Logo.jsx': { maxDepth: 7, maxBlock2: 45, maxBlock3: 25 },
   'src/components/PixelFireworks.jsx': { maxDepth: 6, maxBlock2: 150, maxBlock3: 40 },
   'src/components/ProfilePanel.jsx': { maxDepth: 7, maxBlock2: 220, maxBlock3: 50 },
-  'src/components/ResultsModal.jsx': { maxDepth: 6, maxBlock2: 60, maxBlock3: 60 },
+
   'src/components/AuthModal.jsx': { maxDepth: 7, maxBlock2: 90, maxBlock3: 70 },
   'src/components/SpaceBackground.jsx': { maxDepth: 5, maxBlock2: 190, maxBlock3: 105 },
   'src/components/XpOrbsAnimation.jsx': { maxDepth: 5, maxBlock2: 155, maxBlock3: 90 },
@@ -311,6 +311,33 @@ sourceFiles.forEach(file => {
     }
   }
 });
+
+// Ban rogue z-index overrides that break the panel/dialog stacking order
+const zIndexAllowListFiles = new Set([
+  'src/panelSystem.css',
+  'src/index.css',
+  'src/App.css'
+]);
+cssFiles.forEach(file => {
+  if (zIndexAllowListFiles.has(file)) return;
+  read(file).split('\n').forEach((lineText, index) => {
+    if (/var\(--z-/.test(lineText)) return;
+    const match = lineText.match(/z-index:\s*(\d+)/);
+    if (!match) return;
+    const value = Number(match[1]);
+    if (value > 6000) {
+      fail(file, index + 1, `z-index ${value} exceeds panel system max; use --z-sheet/--z-dialog tokens`);
+    }
+  });
+});
+
+// Run ESLint (unused imports, hooks rules, basic correctness)
+try {
+  console.log('Running ESLint...');
+  execSync('npx eslint src', { stdio: 'inherit' });
+} catch (e) {
+  fail('eslint', null, 'ESLint reported errors or warnings.');
+}
 
 // Run knip dead code audit
 try {

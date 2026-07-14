@@ -174,6 +174,16 @@
   justify-content: center;
   animation: fadeInSimple 0.8s ease both;
   animation-delay: 0.4s;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding-top: var(--spacing-md);
+  padding-bottom: max(var(--spacing-md), var(--safe-bottom));
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--bg-color) 90%, transparent) 55%,
+    transparent
+  );
 }
 
 .progress-info {
@@ -308,8 +318,8 @@
   transition: transform var(--transition-instant), background-color var(--transition-instant), box-shadow var(--transition-instant);
 }
 
-/* Mobile adjustments */
-@media (max-width: 640px) {
+/* Narrow / short viewports: scrollable content + sticky home button */
+@media (max-width: 900px), (max-height: 720px) {
   .end-screen-content {
     overflow-y: auto;
     pointer-events: auto;
@@ -317,49 +327,14 @@
     gap: var(--spacing-md);
     padding-top: max(var(--spacing-md), var(--safe-top));
     padding-bottom: max(var(--spacing-lg), var(--safe-bottom));
+    -webkit-overflow-scrolling: touch;
   }
 
-  .end-screen-spacer {
-    display: none;
-  }
-
-  .continents-progress-bars {
-    padding: var(--spacing-md);
-    gap: var(--spacing-md);
-  }
-
-  .progress-bars-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-ms);
-  }
-
-  .end-screen-header h1 {
-    font-size: 2.2rem;
-  }
-}
-
-/* Short / landscape phones: let the content scroll instead of clipping */
-@media (max-height: 600px) {
-  .end-screen-content {
-    overflow-y: auto;
-    pointer-events: auto;
-    justify-content: flex-start;
-    gap: var(--spacing-md);
-    padding-top: max(var(--spacing-md), var(--safe-top));
-  }
-
-  .end-screen-spacer {
-    min-height: 40px;
-    flex: 0 0 auto;
-  }
-
-  .end-screen-header h1 {
-    font-size: 1.9rem;
-  }
-
-  .continents-progress-bars {
-    margin-bottom: var(--spacing-md);
-  }
+  .end-screen-spacer { display: none; }
+  .end-screen-header h1 { font-size: clamp(1.6rem, 5vw, 2.2rem); }
+  .continents-progress-bars { padding: var(--spacing-md); gap: var(--spacing-md); margin-bottom: var(--spacing-md); }
+  .progress-bars-grid { grid-template-columns: 1fr; gap: var(--spacing-ms); }
+  .end-screen-xp-card, .end-screen-history { margin-bottom: var(--spacing-md); }
 }
 
 /* History scores section styling */

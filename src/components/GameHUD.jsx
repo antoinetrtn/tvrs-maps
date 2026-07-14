@@ -6,23 +6,21 @@ import React, {
   useCallback,
 } from "react";
 import {
-  Globe,
-  MapPin,
   InfoBox,
   Square,
   ChevronLeft,
   ChevronRight,
   Home,
   Play,
-  Waves,
-  TreePine,
 } from "pixelarticons/react";
 import Logo from "./Logo";
+
 import "./GameHUD.css";
 import { getThemeRegionColor } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
 import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { normalizeString } from "../utils/utils";
+import { BREAKPOINTS } from "../config/gameConstants";
 
 
 const GameHUD = ({
@@ -51,15 +49,14 @@ const GameHUD = ({
   isKeyboardMode,
   selectedCountry,
   globeTheme,
-  learnToggles,
-  onToggleLearn,
+  learnSearchQuery = "",
+  onLearnSearchChange,
+  onToggleLearnPanel,
+  showLearnPanel,
+  hideLearnInput = false,
+  hideHudPlayStop = false,
 }) => {
-  const {
-    showCountryLabels: learnShowCountryLabels,
-    showCapitals: learnShowCapitals,
-    showRivers: learnShowRivers,
-    showMountains: learnShowMountains,
-  } = learnToggles || {};
+
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [scoreGlow, setScoreGlow] = useState(false);
@@ -112,6 +109,9 @@ const GameHUD = ({
   const handleTextChange = (e) => {
     const val = e.target.value;
     setInputValue(val);
+    if (mode === "learn" && onLearnSearchChange) {
+      onLearnSearchChange(val);
+    }
 
     // Stricter trigger: at least 4 chars and must represent a significant part of the word
     if (val.length >= 4) {
@@ -128,18 +128,18 @@ const GameHUD = ({
         const mapped = preNormalizedData[adminKey];
         if (!mapped) continue;
 
-        let normalizedNameToMatch =
+        const normalizedNameToMatch =
           lang === "fr" ? mapped.normalizedNameFr : mapped.normalizedNameEn;
-        let normalizedCapitalToMatch =
+        const normalizedCapitalToMatch =
           lang === "fr"
             ? mapped.normalizedCapitalFr
             : mapped.normalizedCapitalEn;
 
-        let nameDisplay =
+        const nameDisplay =
           lang === "fr"
             ? mapped.name_fr || mapped.name_en || adminKey
             : mapped.name_en || adminKey;
-        let capitalDisplay =
+        const capitalDisplay =
           lang === "fr" && mapped.capital_fr
             ? mapped.capital_fr
             : mapped.capital || null;
@@ -170,13 +170,13 @@ const GameHUD = ({
             }
           }
         } else {
-          let targetNormalized =
+          const targetNormalized =
             mode === "countries" ||
             mode === "departments" ||
             mode === "rivers_mountains"
               ? normalizedNameToMatch
               : normalizedCapitalToMatch;
-          let targetDisplay =
+          const targetDisplay =
             mode === "countries" ||
             mode === "departments" ||
             mode === "rivers_mountains"
@@ -289,7 +289,7 @@ const GameHUD = ({
     REGION_COLORS[region] || (isDepartmentsMode ? "var(--accent)" : "var(--warning)")
   , [REGION_COLORS, isDepartmentsMode]);
 
-  const isMobile = viewport.width < 1024;
+  const isMobile = viewport.width < BREAKPOINTS.desktop;
 
   return (
     <>
@@ -336,40 +336,14 @@ const GameHUD = ({
 
             <div className="hud-top-right">
               {mode === "learn" ? (
-                <div className="learn-toggles-group glass-panel">
-                  <button
-                    className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showCountryLabels")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("show_country_labels")}
-                  >
-                    <Globe width={16} height={16} />
-                  </button>
-                  <button
-                    className={`learn-toggle-btn ${learnShowCapitals ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showCapitals")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("show_capitals")}
-                  >
-                    <MapPin width={16} height={16} />
-                  </button>
-                  <button
-                    className={`learn-toggle-btn ${learnShowRivers ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showRivers")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("show_rivers")}
-                  >
-                    <Waves width={16} height={16} />
-                  </button>
-                  <button
-                    className={`learn-toggle-btn ${learnShowMountains ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showMountains")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("show_mountains")}
-                  >
-                    <TreePine width={16} height={16} />
-                  </button>
-                </div>
+                <button
+                  className={`hud-btn-circular ${showLearnPanel ? "active" : ""}`}
+                  onClick={onToggleLearnPanel}
+                  onMouseDown={(e) => e.preventDefault()}
+                  title={t("data_table")}
+                >
+                  <InfoBox width={18} height={18} />
+                </button>
               ) : (
                 <div style={{ display: "flex", gap: "var(--spacing-sm)", alignItems: "center", pointerEvents: "auto" }}>
                   {isPlaying && !isGameOver ? (
@@ -448,42 +422,7 @@ const GameHUD = ({
             </div>
 
             <div className="hud-top-right">
-              {mode === "learn" ? (
-                <div className="learn-toggles-group glass-panel">
-                  <button
-                    className={`learn-toggle-btn ${learnShowCountryLabels ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showCountryLabels")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("labels_pays")}
-                  >
-                    <Globe width={16} height={16} />
-                  </button>
-                  <button
-                    className={`learn-toggle-btn ${learnShowCapitals ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showCapitals")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("labels_capitales")}
-                  >
-                    <MapPin width={16} height={16} />
-                  </button>
-                  <button
-                    className={`learn-toggle-btn ${learnShowRivers ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showRivers")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("labels_rivieres")}
-                  >
-                    <Waves width={16} height={16} />
-                  </button>
-                  <button
-                    className={`learn-toggle-btn ${learnShowMountains ? "active" : ""}`}
-                    onClick={() => onToggleLearn("showMountains")}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("labels_montagnes")}
-                  >
-                    <TreePine width={16} height={16} />
-                  </button>
-                </div>
-              ) : isPlaying && !isGameOver ? (
+              {mode === "learn" ? null : hideHudPlayStop ? null : isPlaying && !isGameOver ? (
                 <button
                   className="hud-btn-circular"
                   style={{ color: "var(--error)" }}
@@ -548,10 +487,11 @@ const GameHUD = ({
 
 
 
+      {!(hideLearnInput && mode === "learn") && (
       <div
-        className={`bottom-hud-container ${isKeyboardMode ? "keyboard-mode" : ""}`}
+        className={`bottom-hud-container ${isKeyboardMode ? "keyboard-mode" : ""} ${mode === "learn" ? "learn-search-bar" : ""}`}
         style={
-          window.innerWidth < 1024
+          window.innerWidth < BREAKPOINTS.desktop
             ? {
                 position: "absolute",
                 top: 0,
@@ -600,7 +540,7 @@ const GameHUD = ({
               enterKeyHint="done"
               placeholder={placeholderText}
               className="input-field"
-              value={inputValue}
+              value={mode === "learn" && learnSearchQuery !== undefined ? learnSearchQuery : inputValue}
               onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               autoComplete="one-time-code"
@@ -621,6 +561,7 @@ const GameHUD = ({
           )}
         </div>
       </div>
+      )}
     </>
   );
 };

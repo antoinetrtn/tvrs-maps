@@ -10,10 +10,11 @@ import {
   getLngLatBounds,
   getMobileRenderRadius,
   getLngLatDistance,
+  getCanonicalPosition,
 } from "../utils/utils";
 
 export function useGlobeRenderData({
-  mode,
+  isDepartmentMode = false,
   isHomeScreen,
   isEndScreen,
   countriesData,
@@ -24,7 +25,6 @@ export function useGlobeRenderData({
   zoomLevel,
   perfProfile,
 }) {
-  const isDepartmentMode = mode === "departments" && !isHomeScreen;
 
   const selectableCountriesData = useMemo(() => {
     if (isDepartmentMode)
@@ -120,6 +120,8 @@ export function useGlobeRenderData({
     });
   }, [
     cameraPOV,
+    cameraPOV?.lat,
+    cameraPOV?.lng,
     countrySizes,
     isEndScreen,
     isHomeScreen,
@@ -139,6 +141,32 @@ export function useGlobeRenderData({
     return set;
   }, [countriesData, departmentsData, isDepartmentMode]);
 
+  // GLOBAL SHAPE-BASED POSITIONS: for every feature that has geometry,
+  // compute the true centroid from the rendered polygons.
+  // Also for rivers/mountains: derive from their path shape.
+  // This rule ensures points/labels/camera always target the exact visual shape.
+  const canonicalPositions = useMemo(() => {
+    const map = {};
+    selectableFeatureIndex.forEach((entry) => {
+      if (!entry.admin) return;
+      const pos = getCanonicalPosition({}, entry.polygons);
+      if (pos) {
+        map[entry.admin] = pos;
+      }
+    });
+    // Path-based (rivers, mountain ranges) — use midpoint of the shape path
+    Object.keys(gameDataMap || {}).forEach((k) => {
+      if (!map[k]) {
+        const d = gameDataMap[k];
+        if (d && Array.isArray(d.path) && d.path.length) {
+          const pos = getCanonicalPosition(d);
+          if (pos) map[k] = pos;
+        }
+      }
+    });
+    return map;
+  }, [selectableFeatureIndex, gameDataMap]);
+
   return {
     isDepartmentMode,
     selectableCountriesData,
@@ -148,5 +176,6 @@ export function useGlobeRenderData({
     countrySizes,
     visibleRenderCountriesData,
     countriesWithGeometry,
+    canonicalPositions,
   };
 }

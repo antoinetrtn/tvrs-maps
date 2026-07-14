@@ -1,7 +1,6 @@
 
 import { GAME_REGIONS } from "../config/gameConfig";
 import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-
 /**
  * Normalizes input string for accents, lowercase, hyphens, and whitespace.
  */
@@ -72,6 +71,83 @@ export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
   });
 
   return { stats: s, CONTINENT_ORDER };
+};
+
+/**
+ * Build grouped panel rows for the unified data table (learn + in-game).
+ */
+export const getPanelData = ({
+  dataMap,
+  foundList = [],
+  lang = 'fr',
+  mode = 'countries',
+  revealAll = false,
+  extraEntries = [],
+}) => {
+  const mergedMap = { ...dataMap };
+  extraEntries.forEach((entry) => {
+    if (entry?.key && !mergedMap[entry.key]) {
+      mergedMap[entry.key] = entry.data;
+    }
+  });
+
+  const { stats, CONTINENT_ORDER } = getGameStats(foundList, mergedMap, lang);
+
+  const rowsByRegion = {};
+  CONTINENT_ORDER.forEach((region) => {
+    const data = stats[region];
+    if (!data || data.total === 0) return;
+
+    rowsByRegion[region] = data.countries.map((c) => {
+      const item = mergedMap[c.key] || {};
+      const countryName =
+        lang === 'fr'
+          ? item.name_fr || item.name_en || c.name
+          : item.name_en || item.name_fr || c.name;
+      const capital =
+        lang === 'fr'
+          ? item.capital_fr || item.capital || c.capital
+          : item.capital || item.capital_fr || c.capital;
+      const isCapitalsMode = mode === 'capitals';
+      const name = isCapitalsMode ? capital : countryName;
+      const sublabel =
+        mode === 'departments' || item.code
+          ? item.code
+          : isCapitalsMode
+            ? countryName
+            : capital;
+      const detail =
+        item.type === 'mountain_range'
+          ? `${item.height || '?'}m`
+          : item.type === 'river'
+            ? `${item.length || '?'}km`
+            : sublabel;
+
+      return {
+        key: c.key,
+        name,
+        sublabel: detail,
+        iso2: item.iso2,
+        found: c.found,
+        revealed: revealAll || c.found,
+        region,
+      };
+    });
+  });
+
+  return { rowsByRegion, CONTINENT_ORDER, total: Object.keys(mergedMap).length };
+};
+
+/** Convert viewport client coords to globe container space for raycasting. */
+export const clientToGlobeCoords = (globeEl, clientX, clientY) => {
+  if (!globeEl?.current?.toGlobeCoords) return null;
+  const canvas = globeEl.current.renderer?.()?.domElement;
+  if (!canvas) return globeEl.current.toGlobeCoords(clientX, clientY);
+  const rect = canvas.getBoundingClientRect();
+  return globeEl.current.toGlobeCoords(
+    clientX - rect.left,
+    clientY - rect.top,
+  );
 };
 
 export const getFlagEmoji = (iso2) => {
@@ -221,6 +297,64 @@ export const getLngLatDistance = (lngA, latA, lngB, latB) => {
   if (dLng > 180) dLng = 360 - dLng;
   return Math.hypot(dLng, latA - latB);
 };
+
+/**
+ * GLOBAL RULE for accurate placement on shapes:
+ * Compute a representative point directly from the actual geometry/shape.
+ * - For polygon features (countries, departments): centroid of the main exterior ring.
+ * - For path features (rivers, mountain ranges): midpoint of the path.
+ * This guarantees labels, points, and camera targets sit on the rendered shape,
+ * not on approximate manual coordinates.
+ */
+function averagePoints(points) {
+  if (!points || points.length === 0) return null;
+  let sumLat = 0;
+  let sumLng = 0;
+  for (const [lng, lat] of points) {
+    sumLng += lng;
+    sumLat += lat;
+  }
+  return { lat: sumLat / points.length, lng: sumLng / points.length };
+}
+
+function computePolygonCentroid(polygons) {
+  if (!polygons || polygons.length === 0) return null;
+  // Use the first (main) polygon's exterior ring. GeoJSON: [ [ [lng,lat], ... ] ]
+  const exterior = polygons[0]?.[0];
+  if (!exterior || exterior.length < 3) return null;
+  // Drop closing point if duplicate
+  const pts = exterior[exterior.length - 1] &&
+    exterior[0][0] === exterior[exterior.length - 1][0] &&
+    exterior[0][1] === exterior[exterior.length - 1][1]
+    ? exterior.slice(0, -1)
+    : exterior;
+  return averagePoints(pts);
+}
+
+/**
+ * Global resolver: returns {lat, lng} placed on the shape when possible.
+ * Pass polygons (from geo feature) when available for countries/depts.
+ * For rivers/mountains uses the path midpoint directly.
+ */
+export function getCanonicalPosition(data = {}, polygons = null) {
+  if (polygons && polygons.length > 0) {
+    const c = computePolygonCentroid(polygons);
+    if (c) return c;
+  }
+  if (data.path && Array.isArray(data.path) && data.path.length > 0) {
+    const path = data.path;
+    if (path.length === 1) {
+      const p = path[0];
+      return { lat: p[0], lng: p[1] };
+    }
+    const mid = path[Math.floor(path.length / 2)];
+    return { lat: mid[0], lng: mid[1] };
+  }
+  if (typeof data.lat === 'number' && typeof data.lng === 'number') {
+    return { lat: data.lat, lng: data.lng };
+  }
+  return null;
+}
 
 export const getMobileRenderRadius = (zoomLevel) => {
   if (zoomLevel >= 1.6) return 118;

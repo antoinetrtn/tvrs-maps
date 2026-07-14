@@ -1,12 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { normalizeString } from "../utils/utils";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
-import { CHALLENGES } from "../data/challenges";
-import { isSupabaseConfigured, upsertProfile } from "../services/supabaseClient";
-import { AVATAR_COLORS, getThemeRegionColorLabel } from "../config/designSystem";
 import { FEEDBACK_TIMING } from "../config/gameConstants";
-import { getLevelAndProgress } from "../utils/gamification";
-import { checkChallengesRealTime } from "./useUserProfile";
+import { AVATAR_COLORS } from "../config/designSystem";
+import { CHALLENGES } from "../data/challenges";
+import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 
 export function useGameSession({
   mode,
@@ -28,6 +25,7 @@ export function useGameSession({
   activeDataMap,
   extInputRef,
   effectiveKeyboardMode,
+  globeFeedbackApplierRef,
 }) {
   const [foundList, setFoundList] = useState([]);
   const score = foundList.length;
@@ -41,8 +39,24 @@ export function useGameSession({
   const popupError = feedback === "error";
   const popupWarning = feedback === "warning";
 
-  const setPopupSuccess = useCallback((val) => setFeedback(val ? "success" : null), []);
-  const setPopupError = useCallback((val) => setFeedback(val ? "error" : null), []);
+  const globeFeedbackRef = useRef({ isError: false, isSuccess: false });
+
+  const triggerGlobeFeedback = useCallback(
+    (admin, { isError = false, isSuccess = false } = {}) => {
+      globeFeedbackRef.current = { isError, isSuccess };
+      globeFeedbackApplierRef?.current?.(admin, { isError, isSuccess });
+    },
+    [globeFeedbackApplierRef],
+  );
+
+  const setPopupSuccess = useCallback((val) => {
+    if (!val) globeFeedbackRef.current.isSuccess = false;
+    setFeedback(val ? "success" : null);
+  }, []);
+  const setPopupError = useCallback((val) => {
+    if (!val) globeFeedbackRef.current.isError = false;
+    setFeedback(val ? "error" : null);
+  }, []);
   const setPopupWarning = useCallback((val) => setFeedback(val ? "warning" : null), []);
 
   const [isNewPB, setIsNewPB] = useState(false);
@@ -55,6 +69,7 @@ export function useGameSession({
   const guessesThisGameRef = useRef([]);
   const lastGuessTimeRef = useRef(0);
   const lightningCountRef = useRef(0);
+  const successPendingRef = useRef(new Set());
 
   const navigationTrailRef = useRef([]);
   const navigationTrailIndexRef = useRef(-1);
@@ -69,8 +84,8 @@ export function useGameSession({
       const c1 = activeDataMap[fromAdmin];
       if (!c1 || c1.lat === undefined) return null;
 
-      let sameRegionList = [];
-      let otherRegionList = [];
+      const sameRegionList = [];
+      const otherRegionList = [];
 
       Object.keys(activeDataMap).forEach((key) => {
         if (
@@ -254,153 +269,60 @@ export function useGameSession({
       guessesThisGameRef.current = [];
       lastGuessTimeRef.current = Date.now();
       lightningCountRef.current = 0;
+      successPendingRef.current.clear();
     },
     [resetNavigationTrail, gameDuration, setSelectedCountry],
   );
 
   const handleSuccessfulGuess = useCallback(
-    (guessedKey, timing) => {
+    (guessedKey) => {
       const newFound = [...foundList, guessedKey];
-      setFoundList(newFound);
+      successPendingRef.current.add(guessedKey);
+      triggerGlobeFeedback(guessedKey, { isError: false, isSuccess: true });
       setPopupError(false);
       setPopupWarning(false);
       setPopupSuccess(true);
-      setSelectedCountry(guessedKey);
-
-      const now = Date.now();
-      const lastGuessDuration = (now - lastGuessTimeRef.current) / 1000;
-      lastGuessTimeRef.current = now;
-      
-      guessesThisGameRef.current.push(guessedKey);
-      
-      if (lastGuessDuration <= 3) {
-        speedGuessCount3sRef.current += 1;
-      }
-      if (lastGuessDuration <= 1) {
-        speedGuessCount1sRef.current += 1;
-      }
-      
-      guessTimestampsRef.current.push(now);
-      if (guessTimestampsRef.current.length >= 3) {
-        const thirdLast = guessTimestampsRef.current[guessTimestampsRef.current.length - 3];
-        if (now - thirdLast <= 5000) {
-          lightningCountRef.current += 1;
-        }
-      }
-
-      const guessItem = activeDataMap[guessedKey];
-      const region = guessItem?.region;
-      const newlyConqueredRegions = [];
-      if (region && region !== "Unknown") {
-        const allInRegion = Object.keys(activeDataMap).filter(
-          (k) => activeDataMap[k]?.region === region
-        );
-        if (allInRegion.length > 0) {
-          const wasCompletedBefore = foundList.filter(
-            (k) => activeDataMap[k]?.region === region
-          ).length === allInRegion.length;
-          const isCompletedNow = newFound.filter(
-            (k) => activeDataMap[k]?.region === region
-          ).length === allInRegion.length;
-
-          if (!wasCompletedBefore && isCompletedNow) {
-            conqueredRegionsThisGameRef.current.push(region);
-            newlyConqueredRegions.push(region);
-            
-            const labelColor = getThemeRegionColorLabel(globeTheme, theme, region);
-            const invaders = ["invader_1", "invader_2", "invader_3", "invader_4", "invader_5", "invader_6", "invader_7", "invader_8"];
-            const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-            const invaderId = invaders[regionHash % invaders.length];
-
-            addAchievementToQueue({
-              title: t("achievement_continent_conquered"),
-              message: t("achievement_continent_desc", { region: t(`region_${region}`) || region }),
-              color: labelColor,
-              invaderId: invaderId
-            });
-          }
-        }
-      }
-
-      const hour = new Date().getHours();
-      const currentBadges = userProfile.unlockedBadges || [];
-      const sessionData = {
-        mode,
-        score: newFound.length,
-        timeSpent: gameDuration - timeLeft,
-        timeLeft,
-        accuracy: 1,
-        isGameOver: false,
-        perfect: false,
-        continentsConquered: newlyConqueredRegions,
-        consecutiveCorrect: newFound.length,
-        lastGuessDuration,
-        guessesThisGame: guessesThisGameRef.current,
-        speedGuessCount3s: speedGuessCount3sRef.current,
-        speedGuessCount1s: speedGuessCount1sRef.current,
-        lightningCount: lightningCountRef.current,
-        gameDuration,
-        isNight: hour >= 22 || hour < 4,
-        isLunch: hour >= 12 && hour < 14
-      };
-
-      const unlocked = checkChallengesRealTime(currentBadges, localRecords, sessionData);
-      if (unlocked.length > 0) {
-        const gainedAchievementXp = unlocked.length * 100;
-        const newXp = (userProfile.xp || 0) + gainedAchievementXp;
-        const { level: newLevel } = getLevelAndProgress(newXp);
-
-        const levelBadges = [];
-        for (let lvl = 2; lvl <= newLevel; lvl++) {
-          if ([2, 5, 10, 15, 20].includes(lvl)) {
-            const chId = `ch_gen_lvl_${lvl}`;
-            if (!currentBadges.includes(chId) && !unlocked.includes(chId)) {
-              levelBadges.push(chId);
-            }
-          }
-        }
-
-        const updatedBadges = [...currentBadges, ...unlocked, ...levelBadges];
-        const finalXp = newXp + levelBadges.length * 100;
-        const { level: finalLevel } = getLevelAndProgress(finalXp);
-
-        const updatedProfile = {
-          ...userProfile,
-          xp: finalXp,
-          level: finalLevel,
-          unlockedBadges: updatedBadges
-        };
-        setUserProfile(updatedProfile);
-        localStorage.setItem("tvrs-user-profile", JSON.stringify(updatedProfile));
-
-        const allUnlocked = [...unlocked, ...levelBadges];
-        allUnlocked.forEach((chId) => {
-          const chObj = CHALLENGES.find((c) => c.id === chId);
-          if (chObj) {
-            addAchievementToQueue({
-              title: lang === "fr" ? chObj.titleFr : chObj.titleEn,
-              message: `${lang === "fr" ? chObj.descFr : chObj.descEn} (Emote débloquée !)`,
-              color: AVATAR_COLORS[chObj.color] || chObj.color,
-              invaderId: chObj.id
-            });
-          }
+      if (selectedCountry !== guessedKey) {
+        setSelectedCountry(guessedKey);
+        requestAnimationFrame(() => {
+          triggerGlobeFeedback(guessedKey, { isError: false, isSuccess: true });
         });
-
-        if (isSupabaseConfigured) {
-          const activeUserId = session?.user?.id || userProfile.id;
-          upsertProfile(
-            activeUserId,
-            updatedProfile.username,
-            updatedProfile.avatarId,
-            updatedProfile.avatarColor,
-            updatedProfile.xp,
-            updatedProfile.level,
-            updatedProfile.unlockedBadges
-          ).catch((err) => console.error("Error syncing real-time challenge:", err));
-        }
       }
+
+      requestAnimationFrame(() => {
+        recordSuccessfulGuessSideEffects({
+          guessedKey,
+          foundList,
+          newFound,
+          activeDataMap,
+          refs: {
+            lastGuessTimeRef,
+            guessesThisGameRef,
+            speedGuessCount3sRef,
+            speedGuessCount1sRef,
+            guessTimestampsRef,
+            lightningCountRef,
+            conqueredRegionsThisGameRef,
+          },
+          mode,
+          gameDuration,
+          timeLeft,
+          globeTheme,
+          theme,
+          t,
+          lang,
+          userProfile,
+          localRecords,
+          session,
+          setUserProfile,
+          addAchievementToQueue,
+        });
+      });
 
       setTimeout(() => {
+        successPendingRef.current.delete(guessedKey);
+        triggerGlobeFeedback(guessedKey, { isError: false, isSuccess: false });
+        setFoundList(newFound);
         setPopupSuccess(false);
         setSelectedCountry((prev) => {
           if (prev === guessedKey) {
@@ -421,7 +343,7 @@ export function useGameSession({
           }
           return prev;
         });
-      }, timing);
+      }, FEEDBACK_TIMING.flashMs);
     },
     [
       foundList,
@@ -443,6 +365,8 @@ export function useGameSession({
       extInputRef,
       addAchievementToQueue,
       setPopupSuccess,
+      triggerGlobeFeedback,
+      selectedCountry,
     ]
   );
 
@@ -467,7 +391,7 @@ export function useGameSession({
       if (!normalizedInput) return false;
       let matchFound = null;
 
-      for (let adminKey of Object.keys(activeDataMap)) {
+      for (const adminKey of Object.keys(activeDataMap)) {
         const mapped = activeDataMap[adminKey];
         let matchName = null;
         let matchCapital = null;
@@ -509,10 +433,13 @@ export function useGameSession({
       }
 
       if (matchFound) {
-        if (foundList.includes(matchFound)) {
+        if (
+          foundList.includes(matchFound) ||
+          successPendingRef.current.has(matchFound)
+        ) {
           return "ALREADY_FOUND";
         }
-        handleSuccessfulGuess(matchFound, FEEDBACK_TIMING.successHoldMs);
+        handleSuccessfulGuess(matchFound);
         return "SUCCESS";
       }
       return "ERROR";
@@ -537,11 +464,11 @@ export function useGameSession({
       if (!isPlaying && mode !== "learn") setIsPlaying(true);
 
       const normalizedInput = normalizeString(inputVal);
-      let matchName =
+      const matchName =
         lang === "fr"
           ? normalizeString(mapped.name_fr)
           : normalizeString(mapped.name_en);
-      let matchCapital =
+      const matchCapital =
         lang === "fr" && mapped.capital_fr
           ? normalizeString(mapped.capital_fr)
           : mapped.capital
@@ -563,19 +490,24 @@ export function useGameSession({
       }
 
       if (isSuccessVal) {
-        if (foundList.includes(selectedCountry)) {
+        if (
+          foundList.includes(selectedCountry) ||
+          successPendingRef.current.has(selectedCountry)
+        ) {
           setPopupWarning(true);
           setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
           return "ALREADY_FOUND";
         }
 
-        handleSuccessfulGuess(selectedCountry, FEEDBACK_TIMING.successHoldFocusedMs);
-        setPopupError(false);
-        setPopupWarning(false);
+        handleSuccessfulGuess(selectedCountry);
         return "SUCCESS";
       } else {
+        triggerGlobeFeedback(selectedCountry, { isError: true, isSuccess: false });
         setPopupError(true);
-        setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
+        setTimeout(() => {
+          triggerGlobeFeedback(selectedCountry, { isError: false, isSuccess: false });
+          setPopupError(false);
+        }, FEEDBACK_TIMING.flashMs);
         return "ERROR";
       }
     },
@@ -589,15 +521,16 @@ export function useGameSession({
       handleSuccessfulGuess,
       setPopupError,
       setPopupWarning,
+      triggerGlobeFeedback,
     ],
   );
 
   const handleSearch = useCallback(
-    (inputVal, learnShowRivers, learnShowMountains) => {
+    (inputVal) => {
       const normalizedInput = normalizeString(inputVal);
       if (!normalizedInput) return false;
 
-      for (let adminKey of Object.keys(activeDataMap)) {
+      for (const adminKey of Object.keys(activeDataMap)) {
         const mapped = activeDataMap[adminKey];
         if (!mapped) continue;
 
@@ -624,43 +557,9 @@ export function useGameSession({
         }
       }
 
-      if (mode === "learn") {
-        for (let adminKey of Object.keys(riversMountainsDataMap)) {
-          const mapped = riversMountainsDataMap[adminKey];
-          if (!mapped) continue;
-          if (mapped.type === "river" && !learnShowRivers) continue;
-          if (
-            (mapped.type === "mountain" || mapped.type === "mountain_range") &&
-            !learnShowMountains
-          )
-            continue;
-
-          const matchName =
-            lang === "fr"
-              ? normalizeString(mapped.name_fr || mapped.name_en || adminKey)
-              : normalizeString(mapped.name_en || adminKey);
-          const aliases = mapped.aliases || [];
-
-          if (
-            matchName === normalizedInput ||
-            aliases.some((alias) => normalizeString(alias) === normalizedInput)
-          ) {
-            setSelectedCountry(adminKey);
-            resetNavigationTrail(adminKey);
-            return true;
-          }
-        }
-      }
-
       return false;
     },
-    [
-      activeDataMap,
-      lang,
-      mode,
-      setSelectedCountry,
-      resetNavigationTrail,
-    ],
+    [activeDataMap, lang, setSelectedCountry, resetNavigationTrail],
   );
 
   useEffect(() => {
@@ -738,5 +637,6 @@ export function useGameSession({
     resetGame,
     navigateFocus,
     resetNavigationTrail,
+    globeFeedbackRef,
   };
 }
