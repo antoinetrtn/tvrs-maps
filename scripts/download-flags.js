@@ -13,6 +13,11 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
+const sanitizeForLog = (value) =>
+  String(value ?? "")
+    .replace(/[\r\n]/g, " ")
+    .replace(/[\x00-\x1F\x7F]/g, " ");
+
 const downloadFile = (url, dest) => {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
@@ -63,9 +68,10 @@ const run = async () => {
           console.log(`Downloaded flag for ${name} (${iso2.toUpperCase()})`);
         } catch (err) {
           failCount++;
-          const safeErrorMessage = String(err?.message ?? err).replace(/[\r\n]/g, " ");
+          const safeName = sanitizeForLog(name);
+          const safeErrorMessage = sanitizeForLog(err?.message ?? err);
           console.error(
-            `Failed to download flag for ${name} (${iso2.toUpperCase()}):`,
+            `Failed to download flag for ${safeName} (${iso2.toUpperCase()}):`,
             safeErrorMessage
           );
         }
