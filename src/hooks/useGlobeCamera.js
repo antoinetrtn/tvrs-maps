@@ -3,6 +3,10 @@ import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
 import { getDataPanelLayoutWidth } from "../config/gameConstants";
+import {
+  readClampedGlobePov,
+  syncGlobeCameraAndZoomLimits,
+} from "../utils/globeAltitude";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 
@@ -172,26 +176,26 @@ export function useGlobeCamera({
           controls.zoomToCursor = false;
           controls.minPolarAngle = ORBIT_POLE_GUARD_ANGLE;
           controls.maxPolarAngle = Math.PI - ORBIT_POLE_GUARD_ANGLE;
+          syncGlobeCameraAndZoomLimits(globeEl.current, controls);
 
           changeHandler = () => {
             if (isInteractingRef.current) return;
-            if (globeEl.current) {
-              const pov = globeEl.current.pointOfView();
-              setZoomLevel((prev) => {
-                if (Math.abs(prev - pov.altitude) > 0.08) return pov.altitude;
-                return prev;
-              });
-              setCameraPOV((prev) => {
-                const threshold = isHomeScreen ? 15 : 10;
-                if (
-                  Math.abs(prev.lat - pov.lat) > threshold ||
-                  Math.abs(prev.lng - pov.lng) > threshold
-                ) {
-                  return { lat: pov.lat, lng: pov.lng };
-                }
-                return prev;
-              });
-            }
+            const pov = readClampedGlobePov(globeEl.current);
+            if (!pov) return;
+            setZoomLevel((prev) => {
+              if (Math.abs(prev - pov.altitude) > 0.08) return pov.altitude;
+              return prev;
+            });
+            setCameraPOV((prev) => {
+              const threshold = isHomeScreen ? 15 : 10;
+              if (
+                Math.abs(prev.lat - pov.lat) > threshold ||
+                Math.abs(prev.lng - pov.lng) > threshold
+              ) {
+                return { lat: pov.lat, lng: pov.lng };
+              }
+              return prev;
+            });
           };
 
           startHandler = () => {
@@ -200,11 +204,10 @@ export function useGlobeCamera({
 
           endHandler = () => {
             isInteractingRef.current = false;
-            if (globeEl.current) {
-              const pov = globeEl.current.pointOfView();
-              setZoomLevel(pov.altitude);
-              setCameraPOV({ lat: pov.lat, lng: pov.lng });
-            }
+            const pov = readClampedGlobePov(globeEl.current);
+            if (!pov) return;
+            setZoomLevel(pov.altitude);
+            setCameraPOV({ lat: pov.lat, lng: pov.lng });
           };
 
           controls.addEventListener("change", changeHandler);
@@ -212,13 +215,7 @@ export function useGlobeCamera({
           controls.addEventListener("end", endHandler);
         }
 
-        const camera = globeEl.current.camera();
-        if (camera) {
-          camera.clearViewOffset();
-          camera.near = 1;
-          camera.far = 1200;
-          camera.updateProjectionMatrix();
-        }
+        syncGlobeCameraAndZoomLimits(globeEl.current, controlsReference);
       } catch (e) {}
     }
 

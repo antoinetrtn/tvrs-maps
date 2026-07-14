@@ -17,25 +17,29 @@ const GameDataPanelRow = ({
       ? scrambleText(row.sublabel)
       : "";
   const showFlag = row.iso2 && (mode === "learn" || isRevealed);
+  const showLearnStatus = mode === "learn" && !isSelected;
+  const isLearnSelected = mode === "learn" && isSelected;
 
   return (
     <button
       type="button"
       role="row"
       data-country-key={row.key}
-      className={`data-panel-row ${showFlag ? "has-flag" : ""} ${row.found ? "found" : "missed"} ${isSelected ? "selected" : ""} ${isRevealed ? "revealed" : ""}`}
+      className={`data-panel-row ${showFlag ? "has-flag" : ""} ${row.found ? "found" : "missed"} ${isSelected ? "selected" : ""} ${isRevealed ? "revealed" : ""} ${isLearnSelected ? "learn-selected" : ""}`}
       onClick={() => onSelect(row.key)}
       title={isRevealed ? row.name : unrevealedLabel}
     >
-      <span className="data-panel-row-status" aria-hidden="true">
-        {mode === "learn" ? (
-          !isSelected ? <span className="status-dot" /> : null
-        ) : row.found ? (
-          <Check width={14} height={14} />
-        ) : (
-          <Minus width={14} height={14} />
-        )}
-      </span>
+      {(mode !== "learn" || showLearnStatus) && (
+        <span className="data-panel-row-status" aria-hidden="true">
+          {mode === "learn" ? (
+            <span className="status-dot" />
+          ) : row.found ? (
+            <Check width={14} height={14} />
+          ) : (
+            <Minus width={14} height={14} />
+          )}
+        </span>
+      )}
       {showFlag && (
         <img
           src={`/flags/${row.iso2.toLowerCase()}.svg`}

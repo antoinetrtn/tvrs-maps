@@ -4,6 +4,7 @@ import {
   featureContainsLngLat,
   clientToGlobeCoords,
 } from "../utils/utils";
+import { clampGlobeAltitude } from "../utils/globeAltitude";
 
 export function useGlobeInteractions({
   globeEl,
@@ -159,9 +160,8 @@ export function useGlobeInteractions({
     const deltaY = touch.clientY - startY.current;
     const currentPOV = globeEl.current.pointOfView();
     const zoomSpeed = 0.005;
-    const newAlt = Math.max(
-      0.1,
-      Math.min(4, currentPOV.altitude - deltaY * zoomSpeed),
+    const newAlt = clampGlobeAltitude(
+      currentPOV.altitude - deltaY * zoomSpeed,
     );
     globeEl.current.pointOfView({ altitude: newAlt }, 0);
     startY.current = touch.clientY;

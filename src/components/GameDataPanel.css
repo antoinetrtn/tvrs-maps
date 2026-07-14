@@ -231,6 +231,11 @@
   font-size: 0.92rem;
 }
 
+.data-panel-row.learn-selected.has-flag {
+  grid-template-columns: auto 1fr auto;
+  gap: var(--spacing-md);
+}
+
 .data-panel-row.selected .data-panel-row-name {
   font-weight: 700;
   color: var(--selection-green);
