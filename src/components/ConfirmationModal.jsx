@@ -1,7 +1,9 @@
+import "../App.css";
+
 import React from "react";
 import { createPortal } from "react-dom";
+
 import { useTranslation } from "../config/i18n";
-import "../App.css";
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
   const t = useTranslation(lang);
@@ -19,7 +21,7 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   );
 };
 

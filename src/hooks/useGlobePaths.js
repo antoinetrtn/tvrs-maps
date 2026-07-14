@@ -6,9 +6,7 @@ const getSmoothedRiverPath = (riverKey, pathCoords) => {
   if (smoothedRiversCache[riverKey]) return smoothedRiversCache[riverKey];
   if (!pathCoords || pathCoords.length < 2) return pathCoords;
 
-  const points = pathCoords.map(
-    ([lat, lng]) => new THREE.Vector3(lat, lng, 0.006),
-  );
+  const points = pathCoords.map(([lat, lng]) => new THREE.Vector3(lat, lng, 0.006));
   const curve = new THREE.CatmullRomCurve3(points);
   const smoothPoints = curve.getPoints(60);
   const result = smoothPoints.map((p) => [p.x, p.y, p.z]);
@@ -63,8 +61,7 @@ export function useGlobePaths({
     const dataMap = gameDataMap;
     const data = dataMap[selectedCountry];
     if (!data || data.type !== "river" || !data.path) return [];
-    const isFound =
-      foundSet.has(selectedCountry) || mode === "learn" || isHomeScreen;
+    const isFound = foundSet.has(selectedCountry) || mode === "learn" || isHomeScreen;
     const color = isFound
       ? isError
         ? UI_COLORS.error
@@ -108,7 +105,7 @@ export function useGlobePaths({
 
   const globePathsData = useMemo(
     () => [...riversBasePathsData, ...riversSelectedPathData],
-    [riversBasePathsData, riversSelectedPathData],
+    [riversBasePathsData, riversSelectedPathData]
   );
 
   return {

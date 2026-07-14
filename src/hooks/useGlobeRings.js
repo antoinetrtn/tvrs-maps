@@ -1,7 +1,8 @@
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import * as THREE from "three";
-import { countryDataMap } from "../data/gameData";
+
 import { getOpaqueThreeColor } from "../config/designSystem";
+import { countryDataMap } from "../data/gameData";
 
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();
@@ -20,21 +21,18 @@ export function useGlobeRings({
   REGION_COLORS,
   isLight,
 }) {
-  const lerpColor = useCallback(
-    (a, b, amount) => {
-      try {
-        const colorA = getOpaqueThreeColor(a);
-        const colorB = getOpaqueThreeColor(b);
-        _lerpColor1.set(colorA);
-        _lerpColor2.set(colorB);
-        _lerpColor1.lerp(_lerpColor2, Math.max(0, Math.min(1, amount)));
-        return `#${_lerpColor1.getHexString()}`;
-      } catch (e) {
-        return getOpaqueThreeColor(a);
-      }
-    },
-    [],
-  );
+  const lerpColor = useCallback((a, b, amount) => {
+    try {
+      const colorA = getOpaqueThreeColor(a);
+      const colorB = getOpaqueThreeColor(b);
+      _lerpColor1.set(colorA);
+      _lerpColor2.set(colorB);
+      _lerpColor1.lerp(_lerpColor2, Math.max(0, Math.min(1, amount)));
+      return `#${_lerpColor1.getHexString()}`;
+    } catch {
+      return getOpaqueThreeColor(a);
+    }
+  }, []);
 
   const ringsData = useMemo(() => {
     if (!selectedCountry) return [];
@@ -51,8 +49,7 @@ export function useGlobeRings({
     }
 
     const region = mapped.region || "Unknown";
-    const isFound =
-      foundSet.has(selectedCountry) || mode === "learn" || isHomeScreen;
+    const isFound = foundSet.has(selectedCountry) || mode === "learn" || isHomeScreen;
 
     const baseColor = isError
       ? UI_COLORS.error
@@ -63,11 +60,7 @@ export function useGlobeRings({
           REGION_COLORS[region] ||
           UI_COLORS.accent;
 
-    const softColor = lerpColor(
-      baseColor,
-      UI_COLORS.paper,
-      isLight ? 0.35 : 0.2,
-    );
+    const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
 
     if (isDepartmentMode || isRiversMountainsMode) {
       return [
@@ -90,10 +83,38 @@ export function useGlobeRings({
       // Uses subtle glitchy cyan/magenta bias via softColor + base.
       // Much less huge than before. Theme-friendly "léger" scan.
       return [
-        { lat: mapped.lat, lng: mapped.lng, color: baseColor, maxRadius: 0.12, speed: 0.9, repeat: 420 },
-        { lat: mapped.lat, lng: mapped.lng, color: softColor, maxRadius: 0.28, speed: 1.4, repeat: 620 },
-        { lat: mapped.lat, lng: mapped.lng, color: softColor, maxRadius: 0.48, speed: 1.9, repeat: 780 },
-        { lat: mapped.lat, lng: mapped.lng, color: baseColor, maxRadius: 0.68, speed: 2.6, repeat: 1100 },
+        {
+          lat: mapped.lat,
+          lng: mapped.lng,
+          color: baseColor,
+          maxRadius: 0.12,
+          speed: 0.9,
+          repeat: 420,
+        },
+        {
+          lat: mapped.lat,
+          lng: mapped.lng,
+          color: softColor,
+          maxRadius: 0.28,
+          speed: 1.4,
+          repeat: 620,
+        },
+        {
+          lat: mapped.lat,
+          lng: mapped.lng,
+          color: softColor,
+          maxRadius: 0.48,
+          speed: 1.9,
+          repeat: 780,
+        },
+        {
+          lat: mapped.lat,
+          lng: mapped.lng,
+          color: baseColor,
+          maxRadius: 0.68,
+          speed: 2.6,
+          repeat: 1100,
+        },
       ];
     }
 
@@ -139,7 +160,7 @@ export function useGlobeRings({
 
   const getSelectionEffectAltitude = useCallback(
     () => (isDepartmentMode || isRiversMountainsMode ? 0.0035 : 0.0055),
-    [isDepartmentMode, isRiversMountainsMode],
+    [isDepartmentMode, isRiversMountainsMode]
   );
 
   return {

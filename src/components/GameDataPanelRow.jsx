@@ -1,21 +1,12 @@
-import React from "react";
 import { Check, Minus } from "pixelarticons/react";
+import React from "react";
+
 import { scrambleText } from "../utils/utils";
 
-const GameDataPanelRow = ({
-  row,
-  isSelected,
-  mode,
-  onSelect,
-  unrevealedLabel,
-}) => {
+const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) => {
   const isRevealed = mode === "learn" || row.revealed;
   const displayName = isRevealed ? row.name : scrambleText(row.name || "");
-  const displaySub = isRevealed
-    ? row.sublabel
-    : row.sublabel
-      ? scrambleText(row.sublabel)
-      : "";
+  const displaySub = isRevealed ? row.sublabel : row.sublabel ? scrambleText(row.sublabel) : "";
   const showFlag = row.iso2 && (mode === "learn" || isRevealed);
   const showLearnStatus = mode === "learn" && !isSelected;
   const isLearnSelected = mode === "learn" && isSelected;

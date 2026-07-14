@@ -1,4 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": ["src/types/supabase.ts"]
+  "ignore": [
+    "src/types/supabase.ts",
+    "scripts/setup-hooks.js"
+  ]
 }

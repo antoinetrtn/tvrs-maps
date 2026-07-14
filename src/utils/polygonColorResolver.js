@@ -10,12 +10,7 @@ export function resolveFoundCountryColor() {
 }
 
 /** Dark edge visible on bright found fill. */
-export function resolveFoundCountryStroke({
-  isLight,
-  isSelected = false,
-  UI_COLORS,
-  lerpColor,
-}) {
+export function resolveFoundCountryStroke({ isLight, isSelected = false, UI_COLORS, lerpColor }) {
   if (isSelected) {
     return lerpColor(FOUND_SURFACE_GREEN, UI_COLORS.black, isLight ? 0.78 : 0.72);
   }
@@ -29,27 +24,15 @@ export function mutedFoundGreen(_mapBase, _lerpColor) {
 /** Unfound land tint — same continental shades in learn and play. */
 export function resolveRegionalLandColor(
   region,
-  {
-    globeTheme,
-    regionColorsLabels,
-    regionColorsAttenuated,
-    fallbackAccent,
-    fallbackRegionColor,
-  },
+  { globeTheme, regionColorsLabels, regionColorsAttenuated, fallbackAccent, fallbackRegionColor }
 ) {
   const isSatellite = globeTheme === "satellite";
   return isSatellite
-    ? regionColorsLabels[region] ||
-        regionColorsAttenuated[region] ||
-        fallbackAccent
+    ? regionColorsLabels[region] || regionColorsAttenuated[region] || fallbackAccent
     : regionColorsAttenuated[region] || fallbackRegionColor;
 }
 
-export function shouldUseRegionalUnfoundLand({
-  isEndScreen,
-  isFound,
-  isSelected,
-}) {
+export function shouldUseRegionalUnfoundLand({ isEndScreen, isFound, isSelected }) {
   return !isEndScreen && !isFound && !isSelected;
 }
 
@@ -117,8 +100,7 @@ export function resolvePolygonShaderMode({
   const isLearn = mode === "learn";
   const isPlay = !isLearn && !isHomeScreen && !isEndScreen;
   const isEndMissed = isEndScreen && !isFound;
-  const playSelectedShader =
-    isPlay && isIsolated && (isError || isSuccess || !isFound);
+  const playSelectedShader = isPlay && isIsolated && (isError || isSuccess || !isFound);
   const homeSelectedShader = isHomeScreen && isIsolated;
   const isPrevShader = isPrevTransitioning && !isFound;
 

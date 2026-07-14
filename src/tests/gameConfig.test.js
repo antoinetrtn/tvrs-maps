@@ -1,12 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  isPlayMode,
-  getPlayVisibleCountryKeys,
   getLearnLabelLimit,
-  shouldScrambleLabel,
+  getPlayVisibleCountryKeys,
   getPolygonAltitudeFor,
   getRegionAbbr,
+  isPlayMode,
   POLYGON_ALTITUDE,
+  shouldScrambleLabel,
 } from "../config/gameConfig";
 
 describe("Game Configuration Utilities", () => {
@@ -28,16 +29,11 @@ describe("Game Configuration Utilities", () => {
 
   describe("getPlayVisibleCountryKeys", () => {
     it("returns selected country and last validated", () => {
-      expect(getPlayVisibleCountryKeys("DEU", ["FRA", "BEL"])).toEqual([
-        "DEU",
-        "BEL",
-      ]);
+      expect(getPlayVisibleCountryKeys("DEU", ["FRA", "BEL"])).toEqual(["DEU", "BEL"]);
     });
 
     it("dedupes when selected is the last validated", () => {
-      expect(getPlayVisibleCountryKeys("BEL", ["FRA", "BEL"])).toEqual([
-        "BEL",
-      ]);
+      expect(getPlayVisibleCountryKeys("BEL", ["FRA", "BEL"])).toEqual(["BEL"]);
     });
   });
 
@@ -56,7 +52,9 @@ describe("Game Configuration Utilities", () => {
 
     it("should return isSelected on home screen", () => {
       expect(shouldScrambleLabel("countries", { isHomeScreen: true, isSelected: true })).toBe(true);
-      expect(shouldScrambleLabel("countries", { isHomeScreen: true, isSelected: false })).toBe(false);
+      expect(shouldScrambleLabel("countries", { isHomeScreen: true, isSelected: false })).toBe(
+        false
+      );
     });
 
     it("should return false if not in play mode", () => {
@@ -71,20 +69,30 @@ describe("Game Configuration Utilities", () => {
 
   describe("getPolygonAltitudeFor", () => {
     it("should return ghost country altitude if in department mode and ghost country", () => {
-      expect(getPolygonAltitudeFor({ isDepartmentMode: true, isGhostCountry: true })).toBe(POLYGON_ALTITUDE.ghostCountry);
+      expect(getPolygonAltitudeFor({ isDepartmentMode: true, isGhostCountry: true })).toBe(
+        POLYGON_ALTITUDE.ghostCountry
+      );
     });
 
     it("should return selected department altitude if in department mode and selected", () => {
-      expect(getPolygonAltitudeFor({ isDepartmentMode: true, isSelected: true })).toBe(POLYGON_ALTITUDE.departmentSelected);
+      expect(getPolygonAltitudeFor({ isDepartmentMode: true, isSelected: true })).toBe(
+        POLYGON_ALTITUDE.departmentSelected
+      );
     });
 
     it("should return selected country altitude if selected and not department mode", () => {
-      expect(getPolygonAltitudeFor({ isDepartmentMode: false, isSelected: true })).toBe(POLYGON_ALTITUDE.selected);
+      expect(getPolygonAltitudeFor({ isDepartmentMode: false, isSelected: true })).toBe(
+        POLYGON_ALTITUDE.selected
+      );
     });
 
     it("should return base altitude otherwise", () => {
-      expect(getPolygonAltitudeFor({ isDepartmentMode: false, isSelected: false })).toBe(POLYGON_ALTITUDE.base);
-      expect(getPolygonAltitudeFor({ isDepartmentMode: true, isSelected: false, isGhostCountry: false })).toBe(POLYGON_ALTITUDE.base);
+      expect(getPolygonAltitudeFor({ isDepartmentMode: false, isSelected: false })).toBe(
+        POLYGON_ALTITUDE.base
+      );
+      expect(
+        getPolygonAltitudeFor({ isDepartmentMode: true, isSelected: false, isGhostCountry: false })
+      ).toBe(POLYGON_ALTITUDE.base);
     });
   });
 

@@ -1,7 +1,7 @@
 import { shouldScrambleLabel } from "../config/gameConfig";
-import { scrambleText } from "./utils";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
+import { scrambleText } from "./utils";
 
 function buildGlobeLabelFlagHtml(iso2, { compact = false, prominent = false } = {}) {
   if (!iso2 || iso2.length !== 2) return "";
@@ -34,30 +34,29 @@ function scrambleTextWithRatio(text, ratio) {
 
 /**
  * Creates and configures a DOM element representing a label on the 3D globe.
- * Handles both the glitch/scrambling state and normal clean state, including 
+ * Handles both the glitch/scrambling state and normal clean state, including
  * the lifecycle intervals for active text animation.
  */
-export function createGlobeLabelElement(d, {
-  REGION_COLORS_LABELS,
-  UI_COLORS,
-  isHomeScreen,
-  isEndScreen,
-  isLight,
-  gameDataMap,
-  globeTheme,
-  mode,
-  t,
-  isPanelOpen = false,
-}) {
+export function createGlobeLabelElement(
+  d,
+  {
+    REGION_COLORS_LABELS,
+    UI_COLORS,
+    isHomeScreen,
+    isEndScreen,
+    _isLight,
+    _gameDataMap,
+    _globeTheme,
+    mode,
+    t,
+    isPanelOpen = false,
+  }
+) {
   const el = document.createElement("div");
 
   let color;
   if (d.mode === "departments") {
-    color = d.isFound
-      ? UI_COLORS.success
-      : d.isSelected
-        ? UI_COLORS.accent
-        : UI_COLORS.textMuted;
+    color = d.isFound ? UI_COLORS.success : d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
   } else if (isHomeScreen) {
     color = d.isSelected ? UI_COLORS.accent : UI_COLORS.textMuted;
   } else {
@@ -84,12 +83,10 @@ export function createGlobeLabelElement(d, {
   el.style.pointerEvents = "none";
   el.style.userSelect = "none";
 
-  const isPlayMode =
-    mode !== "learn" && d.mode !== "learn" && !isHomeScreen && !isEndScreen;
+  const isPlayMode = mode !== "learn" && d.mode !== "learn" && !isHomeScreen && !isEndScreen;
   const revealAll = mode === "learn" || !isPlayMode || d.isFound;
   const isDeptMode = d.mode === "departments";
-  const showLabelFlag =
-    d.iso2 && !isDeptMode && d.mode !== "rivers_mountains";
+  const showLabelFlag = d.iso2 && !isDeptMode && d.mode !== "rivers_mountains";
   const flagProminent = showLabelFlag && isPlayMode && d.isSelected && !isPanelOpen;
   const flagHtml = showLabelFlag
     ? buildGlobeLabelFlagHtml(d.iso2, {
@@ -216,7 +213,8 @@ export function createGlobeLabelElement(d, {
     const displayName = revealAll ? d.country : "???";
     const displayCapital = revealAll ? d.capital : "???";
 
-    const hasCapitalLine = (d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals)) && d.capital;
+    const hasCapitalLine =
+      (d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals)) && d.capital;
     const deptMainSize = isDeptMode ? "14px" : "13px";
     const deptSubSize = isDeptMode ? "12px" : "11px";
     const deptMainHeight = isDeptMode ? "17px" : "15px";
@@ -228,10 +226,12 @@ export function createGlobeLabelElement(d, {
     const getScrambledHtml = (ratio) => {
       let scrambledLine1;
       let scrambledLine2 = null;
-      const scramble = (txt) => ratio <= 0.0 ? txt : scrambleTextWithRatio(txt, ratio);
+      const scramble = (txt) => (ratio <= 0.0 ? txt : scrambleTextWithRatio(txt, ratio));
 
       if (isDeptMode) {
-        const rawCode = d.code ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>` : "";
+        const rawCode = d.code
+          ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>`
+          : "";
         scrambledLine1 = `${rawCode}<span>${scramble(displayName)}</span>`;
         if (d.capital) scrambledLine2 = scramble(displayCapital);
       } else {

@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Globe, MapPin, Hash, TreePine, Close } from "pixelarticons/react";
-import InvaderAvatar from "./InvaderAvatar";
-import { useTranslation } from "../config/i18n";
-import { formatTime } from "../utils/utils";
-import {
-  isSupabaseConfigured,
-  getLeaderboard,
-  getUserHistory,
-} from "../services/supabaseClient";
-import SegmentedControl from "./SegmentedControl";
 import "./LeaderboardScreen.css";
+
+import { Close, Globe, Hash, MapPin, TreePine } from "pixelarticons/react";
+import React, { useEffect, useRef, useState } from "react";
+
+import { useTranslation } from "../config/i18n";
+import { getLeaderboard, getUserHistory, isSupabaseConfigured } from "../services/supabaseClient";
+import { formatTime } from "../utils/utils";
+import InvaderAvatar from "./InvaderAvatar";
+import SegmentedControl from "./SegmentedControl";
 
 const MODE_ICONS = {
   countries: <Globe width={16} height={16} />,
@@ -27,7 +25,7 @@ const formatDate = (isoString) => {
     const hours = String(d.getHours()).padStart(2, "0");
     const minutes = String(d.getMinutes()).padStart(2, "0");
     return `${day}/${month} ${hours}:${minutes}`;
-  } catch (_) {
+  } catch {
     return "";
   }
 };
@@ -38,7 +36,7 @@ const LeaderboardScreen = ({
   onBack,
   lang = "fr",
   theme = "dark",
-  isOpen = false
+  isOpen = false,
 }) => {
   const t = useTranslation(lang);
   const [colMode, setColMode] = useState("countries");
@@ -179,7 +177,9 @@ const LeaderboardScreen = ({
     return (
       <div className="evolution-chart-container glass-panel">
         <span className="chart-title text-natural-case">
-          {lang === "fr" ? "Évolution des scores (10 dernières)" : "Score Evolution (Last 10 games)"}
+          {lang === "fr"
+            ? "Évolution des scores (10 dernières)"
+            : "Score Evolution (Last 10 games)"}
         </span>
         <div className="evolution-chart">
           {recentGames.map((game, idx) => {
@@ -192,10 +192,7 @@ const LeaderboardScreen = ({
                   <span className="tooltip-date">{formatDate(game.created_at)}</span>
                 </div>
                 <div className="chart-bar-track">
-                  <div
-                    className="chart-bar-fill"
-                    style={{ height: `${Math.max(8, pct)}%` }}
-                  />
+                  <div className="chart-bar-fill" style={{ height: `${Math.max(8, pct)}%` }} />
                 </div>
                 <span className="chart-bar-label">#{recentGames.length - idx}</span>
               </div>
@@ -212,8 +209,8 @@ const LeaderboardScreen = ({
         <div className="leaderboard-empty-state">
           <p>{t("not_connected")}</p>
           <p style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "8px" }}>
-            {lang === "fr" 
-              ? "Connectez-vous pour voir l'historique complet de vos parties." 
+            {lang === "fr"
+              ? "Connectez-vous pour voir l'historique complet de vos parties."
               : "Sign in to see your complete game history."}
           </p>
         </div>
@@ -248,7 +245,7 @@ const LeaderboardScreen = ({
     return (
       <div className="personal-history-layout">
         {renderEvolutionChart()}
-        
+
         <div className="leaderboard-table-container scrollbar-styled">
           <table className="leaderboard-table personal-history-table">
             <thead>
@@ -310,7 +307,7 @@ const LeaderboardScreen = ({
           value={activeTab}
           onChange={setActiveTab}
         />
-        
+
         <button className="panel-close-btn" onClick={onBack} title={t("close")}>
           <Close width={20} height={20} />
         </button>
@@ -389,7 +386,7 @@ const LeaderboardScreen = ({
                       const prof = row.profiles || {
                         username: "Anonyme",
                         avatar_id: "invader_1",
-                        avatar_color: "cyan"
+                        avatar_color: "cyan",
                       };
                       const isTop3 = index < 3;
                       const rankLabels = ["1st", "2nd", "3rd"];

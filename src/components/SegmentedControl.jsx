@@ -12,7 +12,13 @@ import React from "react";
  *     onChange={setActive}
  *   />
  */
-export default function SegmentedControl({ options = [], value, onChange, className = "", size = "md" }) {
+export default function SegmentedControl({
+  options = [],
+  value,
+  onChange,
+  className = "",
+  size = "md",
+}) {
   return (
     <div className={`segmented-control segmented-${size} ${className}`}>
       {options.map((opt) => {

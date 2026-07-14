@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
-import { countryDataMap } from "../data/gameData";
-import { departmentsDataMap } from "../data/departmentsData";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
-import { DATA_URLS } from "../config/gameConstants";
+import { useEffect, useMemo, useState } from "react";
+
 import { DEFAULT_LEARN_SUB_MODE } from "../config/gameConfig";
+import { DATA_URLS } from "../config/gameConstants";
+import { departmentsDataMap } from "../data/departmentsData";
+import { countryDataMap } from "../data/gameData";
+import { riversMountainsDataMap } from "../data/riversMountainsData";
 
 export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
   const [countriesData, setCountriesData] = useState([]);
@@ -17,6 +18,7 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
         if (!cancelled && data && data.features) {
           setCountriesData(data.features);
         }
+        return;
       })
       .catch((err) => console.error("Failed to load map data", err));
     return () => {
@@ -32,21 +34,18 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
         if (!cancelled && data && data.features) {
           setDepartmentsData(data.features);
         }
+        return;
       })
-      .catch((err) =>
-        console.error("Failed to load departments map data", err),
-      );
+      .catch((err) => console.error("Failed to load departments map data", err));
     return () => {
       cancelled = true;
     };
   }, []);
 
   const isLearn = mode === "learn";
-  const isDepartmentsMode =
-    mode === "departments" || (isLearn && learnSubMode === "departments");
+  const isDepartmentsMode = mode === "departments" || (isLearn && learnSubMode === "departments");
   const isRiversMountainsMode =
-    mode === "rivers_mountains" ||
-    (isLearn && learnSubMode === "rivers_mountains");
+    mode === "rivers_mountains" || (isLearn && learnSubMode === "rivers_mountains");
 
   const activeDataMap = useMemo(() => {
     if (isRiversMountainsMode) return riversMountainsDataMap;
@@ -54,10 +53,7 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
     return countryDataMap;
   }, [isDepartmentsMode, isRiversMountainsMode]);
 
-  const allCountryKeys = useMemo(
-    () => Object.keys(activeDataMap),
-    [activeDataMap],
-  );
+  const allCountryKeys = useMemo(() => Object.keys(activeDataMap), [activeDataMap]);
   const totalPossible = allCountryKeys.length;
 
   return {

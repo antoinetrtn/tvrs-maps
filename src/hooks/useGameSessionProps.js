@@ -72,7 +72,7 @@ export function useGameSessionProps({
         isGameOver,
         onStop: () => handleCustomConfirm(t("stop_game_confirm"), stopGame),
         onInfo: () => setShowInfoModal(true),
-        isFocusedCountry: !!selectedCountry,
+        isFocusedCountry: Boolean(selectedCountry),
         onClearFocus: () => {
           setSelectedCountry(null);
           resetNavigationTrail(null);
@@ -146,8 +146,7 @@ export function useGameSessionProps({
         foundList,
         selectedCountry,
         onSelectCountry: handlePanelSelect,
-        onClose:
-          mode !== "learn" || isMobileViewport ? closePanel : undefined,
+        onClose: mode !== "learn" || isMobileViewport ? closePanel : undefined,
         onGoHome: isGameOver ? goHome : undefined,
         mode: panelMode,
         theme,
@@ -227,6 +226,6 @@ export function useGameSessionProps({
       showResultsTable,
       globeFeedbackRef,
       globeFeedbackApplierRef,
-    ],
+    ]
   );
 }

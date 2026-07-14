@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
 export const translations = {
   fr: {
@@ -77,7 +77,8 @@ export const translations = {
     incredible: "Incroyable !",
     well_done: "Bravo !",
     achievement_continent_conquered: "Continent Conquis !",
-    achievement_continent_desc: "Félicitations ! Tu as trouvé tous les pays de la région {region} !",
+    achievement_continent_desc:
+      "Félicitations ! Tu as trouvé tous les pays de la région {region} !",
     last_scores: "Derniers scores",
     new_pb: "Nouveau Record !",
     view_table: "Voir le tableau",
@@ -161,14 +162,15 @@ export const translations = {
     stats_total_xp: "XP total",
     stats_games_played: "Total parties",
     stats_badges_unlocked: "Badges débloqués",
-    
+
     // Badges
     badge_first_step_title: "Premier Pas",
     badge_first_step_desc: "Trouve au moins 1 élément géographique dans une partie.",
     badge_explorer_title: "Explorateur",
     badge_explorer_desc: "Joue au moins une fois à tous les modes de jeu quiz.",
     badge_speed_runner_title: "Bolide",
-    badge_speed_runner_desc: "Termine une partie chronométrée avec plus de la moitié du temps restant.",
+    badge_speed_runner_desc:
+      "Termine une partie chronométrée avec plus de la moitié du temps restant.",
     badge_centurion_title: "Centurion",
     badge_centurion_desc: "Atteins un score de 100 points ou plus dans une seule partie.",
     badge_perfectionist_title: "Perfectionniste",
@@ -340,7 +342,7 @@ export const translations = {
     stats_total_xp: "Total XP",
     stats_games_played: "Total games",
     stats_badges_unlocked: "Badges unlocked",
-    
+
     // Badges
     badge_first_step_title: "First Step",
     badge_first_step_desc: "Find at least 1 geographic item in a game.",
@@ -358,7 +360,7 @@ export const translations = {
     badge_loyal_player_desc: "Play 10 games in total on TVRS Maps.",
     badge_night_owl_title: "Night Owl",
     badge_night_owl_desc: "Complete a game between 10 PM and 4 AM.",
-  }
+  },
 };
 
 /**
@@ -369,12 +371,12 @@ export const translations = {
 export const useTranslation = (lang) => {
   return useMemo(() => {
     return (key, params = {}) => {
-      const activeLang = lang === 'fr' ? 'fr' : 'en';
-      let text = translations[activeLang]?.[key] || translations['en']?.[key] || key;
+      const activeLang = lang === "fr" ? "fr" : "en";
+      let text = translations[activeLang]?.[key] || translations["en"]?.[key] || key;
 
-      if (typeof text === 'string' && Object.keys(params).length > 0) {
+      if (typeof text === "string" && Object.keys(params).length > 0) {
         Object.entries(params).forEach(([k, v]) => {
-          text = text.replace(new RegExp(`{${k}}`, 'g'), v);
+          text = text.replace(new RegExp(`{${k}}`, "g"), v);
         });
       }
       return text;

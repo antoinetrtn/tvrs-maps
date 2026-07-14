@@ -1,13 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { Close, ArrowLeft, User, Earth, Gamepad } from "pixelarticons/react";
-import { useTranslation } from "../config/i18n";
-import {
-  signInWithEmail,
-  signUpWithEmail,
-  signInWithGoogle
-} from "../services/supabaseClient";
 import "./AuthModal.css";
+
+import { ArrowLeft, Close, Earth, Gamepad, User } from "pixelarticons/react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+
+import { useTranslation } from "../config/i18n";
+import { signInWithEmail, signInWithGoogle, signUpWithEmail } from "../services/supabaseClient";
 
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {
   const t = useTranslation(lang);
@@ -124,10 +122,17 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         } else {
           const msg = (signUpError.message || "").toLowerCase();
           if (msg.includes("rate") || msg.includes("too many") || msg.includes("429")) {
-            setErrorMsg("Trop de tentatives. Veuillez attendre quelques minutes (limite Supabase).");
-          } else if (msg.includes("already registered") || msg.includes("user already registered")) {
+            setErrorMsg(
+              "Trop de tentatives. Veuillez attendre quelques minutes (limite Supabase)."
+            );
+          } else if (
+            msg.includes("already registered") ||
+            msg.includes("user already registered")
+          ) {
             setKnownAccountExists(true);
-            setErrorMsg("Un compte existe déjà avec cet e-mail, mais le mot de passe est incorrect.");
+            setErrorMsg(
+              "Un compte existe déjà avec cet e-mail, mais le mot de passe est incorrect."
+            );
           } else {
             setErrorMsg(signUpError.message || t("auth_error"));
           }
@@ -195,29 +200,17 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   // (lint ratchet: max depth ≤5). Each step is a self-contained block.
   const renderInitialFlow = () => (
     <div className="auth-modal-initial-flow">
-      <button
-        type="button"
-        onClick={() => setStep("email")}
-        className="auth-row-btn tvrs-btn"
-      >
+      <button type="button" onClick={() => setStep("email")} className="auth-row-btn tvrs-btn">
         <User width={16} height={16} className="auth-btn-icon" />
         <span>Compte TVRS</span>
       </button>
 
-      <button
-        type="button"
-        onClick={handleGoogleSignIn}
-        className="auth-row-btn google-btn"
-      >
+      <button type="button" onClick={handleGoogleSignIn} className="auth-row-btn google-btn">
         <Earth width={16} height={16} className="auth-btn-icon" />
         <span>Continuer avec Google</span>
       </button>
 
-      <button
-        type="button"
-        onClick={onGuest}
-        className="auth-row-btn guest-btn"
-      >
+      <button type="button" onClick={onGuest} className="auth-row-btn guest-btn">
         <Gamepad width={16} height={16} className="auth-btn-icon" />
         <span>Continuer en invité (Guest)</span>
       </button>
@@ -236,7 +229,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           className="glass-panel"
           disabled={loading}
           required
-          autoFocus
+          autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
         />
       </div>
       <button type="submit" disabled={loading} className="btn-primary auth-modal-submit-btn">
@@ -249,12 +242,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
     <form onSubmit={handleSubmit} className="auth-modal-form">
       <div className="form-group">
         <label>{t("auth_email")}</label>
-        <input
-          type="email"
-          value={email}
-          className="glass-panel disabled-input"
-          disabled
-        />
+        <input type="email" value={email} className="glass-panel disabled-input" disabled />
       </div>
 
       <div className="form-group">
@@ -267,7 +255,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           className="glass-panel"
           disabled={loading}
           required
-          autoFocus
+          autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
         />
       </div>
 
@@ -276,7 +264,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         disabled={loading || isCooldown}
         className="btn-primary auth-modal-submit-btn"
       >
-        {loading ? t("saving") : (isCooldown ? "Attendez..." : passwordButtonLabel)}
+        {loading ? t("saving") : isCooldown ? "Attendez..." : passwordButtonLabel}
       </button>
     </form>
   );
@@ -284,8 +272,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   if (!isOpen) return null;
 
   const title =
-    step === "initial" ? "Authentification" :
-    step === "email" ? "Compte TVRS" : t("auth_password");
+    step === "initial" ? "Authentification" : step === "email" ? "Compte TVRS" : t("auth_password");
 
   const renderHeader = () => (
     <div className="panel-header">
@@ -307,9 +294,14 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   );
 
   // Compute content outside JSX to reduce brace depth in return statement
-  const stepContent = step === "initial" ? renderInitialFlow() :
-    step === "email" ? renderEmailStep() :
-    (!successMsg ? renderPasswordStep() : null);
+  const stepContent =
+    step === "initial"
+      ? renderInitialFlow()
+      : step === "email"
+        ? renderEmailStep()
+        : !successMsg
+          ? renderPasswordStep()
+          : null;
 
   return createPortal(
     <div className={`dialog-panel ${theme}`} onClick={onClose}>
@@ -320,7 +312,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         {stepContent}
       </div>
     </div>,
-    document.body,
+    document.body
   );
 };
 

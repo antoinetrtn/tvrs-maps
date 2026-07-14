@@ -7,7 +7,7 @@ export const CHALLENGES = [
     titleEn: "First Step",
     descFr: "Joue ta première partie sur TVRS Maps.",
     descEn: "Play your first game on TVRS Maps.",
-    color: "cyan"
+    color: "cyan",
   },
   {
     id: "ch_gen_play_5",
@@ -16,7 +16,7 @@ export const CHALLENGES = [
     titleEn: "Apprentice Explorer",
     descFr: "Joue 5 parties au total.",
     descEn: "Play 5 total games.",
-    color: "lime"
+    color: "lime",
   },
   {
     id: "ch_gen_play_10",
@@ -25,7 +25,7 @@ export const CHALLENGES = [
     titleEn: "Map Pillar",
     descFr: "Joue 10 parties au total.",
     descEn: "Play 10 total games.",
-    color: "purple"
+    color: "purple",
   },
   {
     id: "ch_gen_play_25",
@@ -34,7 +34,7 @@ export const CHALLENGES = [
     titleEn: "Globe Veteran",
     descFr: "Joue 25 parties au total.",
     descEn: "Play 25 total games.",
-    color: "orange"
+    color: "orange",
   },
   {
     id: "ch_gen_play_50",
@@ -43,7 +43,7 @@ export const CHALLENGES = [
     titleEn: "Supreme Geographer",
     descFr: "Joue 50 parties au total.",
     descEn: "Play 50 total games.",
-    color: "magenta"
+    color: "magenta",
   },
   {
     id: "ch_gen_lvl_2",
@@ -52,7 +52,7 @@ export const CHALLENGES = [
     titleEn: "Level 2 Reached",
     descFr: "Atteins le niveau 2 de progression.",
     descEn: "Reach progression level 2.",
-    color: "cyan"
+    color: "cyan",
   },
   {
     id: "ch_gen_lvl_5",
@@ -61,7 +61,7 @@ export const CHALLENGES = [
     titleEn: "Level 5 Reached",
     descFr: "Atteins le niveau 5 de progression.",
     descEn: "Reach progression level 5.",
-    color: "yellow"
+    color: "yellow",
   },
   {
     id: "ch_gen_lvl_10",
@@ -70,7 +70,7 @@ export const CHALLENGES = [
     titleEn: "Level 10 Reached",
     descFr: "Atteins le niveau 10 de progression.",
     descEn: "Reach progression level 10.",
-    color: "blue"
+    color: "blue",
   },
   {
     id: "ch_gen_lvl_15",
@@ -79,7 +79,7 @@ export const CHALLENGES = [
     titleEn: "Level 15 Reached",
     descFr: "Atteins le niveau 15 de progression.",
     descEn: "Reach progression level 15.",
-    color: "pink"
+    color: "pink",
   },
   {
     id: "ch_gen_lvl_20",
@@ -88,7 +88,7 @@ export const CHALLENGES = [
     titleEn: "Level 20 Reached",
     descFr: "Atteins le niveau 20 de progression.",
     descEn: "Reach progression level 20.",
-    color: "magenta"
+    color: "magenta",
   },
 
   // CONTINENTS
@@ -99,7 +99,7 @@ export const CHALLENGES = [
     titleEn: "European Conquest",
     descFr: "Trouve tous les pays d'Europe dans une partie.",
     descEn: "Find all European countries in a single game.",
-    color: "cyan"
+    color: "cyan",
   },
   {
     id: "ch_cont_europe_5",
@@ -108,7 +108,7 @@ export const CHALLENGES = [
     titleEn: "European Sovereign",
     descFr: "Complète l'Europe 5 fois au total.",
     descEn: "Complete Europe 5 times in total.",
-    color: "blue"
+    color: "blue",
   },
   {
     id: "ch_cont_africa",
@@ -117,7 +117,7 @@ export const CHALLENGES = [
     titleEn: "African Sands",
     descFr: "Trouve tous les pays d'Afrique dans une partie.",
     descEn: "Find all African countries in a single game.",
-    color: "yellow"
+    color: "yellow",
   },
   {
     id: "ch_cont_africa_5",
@@ -126,7 +126,7 @@ export const CHALLENGES = [
     titleEn: "African Pharaoh",
     descFr: "Complète l'Afrique 5 fois au total.",
     descEn: "Complete Africa 5 times in total.",
-    color: "orange"
+    color: "orange",
   },
   {
     id: "ch_cont_asia",
@@ -135,7 +135,7 @@ export const CHALLENGES = [
     titleEn: "Rising Sun",
     descFr: "Trouve tous les pays d'Asie dans une partie.",
     descEn: "Find all Asian countries in a single game.",
-    color: "magenta"
+    color: "magenta",
   },
   {
     id: "ch_cont_asia_5",
@@ -144,7 +144,7 @@ export const CHALLENGES = [
     titleEn: "Asian Emperor",
     descFr: "Complète l'Asie 5 fois au total.",
     descEn: "Complete Asia 5 times in total.",
-    color: "purple"
+    color: "purple",
   },
   {
     id: "ch_cont_americas",
@@ -153,7 +153,7 @@ export const CHALLENGES = [
     titleEn: "New World",
     descFr: "Trouve tous les pays des Amériques dans une partie.",
     descEn: "Find all American countries in a single game.",
-    color: "lime"
+    color: "lime",
   },
   {
     id: "ch_cont_americas_5",
@@ -162,7 +162,7 @@ export const CHALLENGES = [
     titleEn: "American Pioneer",
     descFr: "Complète les Amériques 5 fois au total.",
     descEn: "Complete the Americas 5 times in total.",
-    color: "green"
+    color: "green",
   },
   {
     id: "ch_cont_oceania",
@@ -171,7 +171,7 @@ export const CHALLENGES = [
     titleEn: "Distant Archipelagos",
     descFr: "Trouve tous les pays d'Océanie dans une partie.",
     descEn: "Find all Oceanian countries in a single game.",
-    color: "pink"
+    color: "pink",
   },
   {
     id: "ch_cont_oceania_5",
@@ -180,7 +180,7 @@ export const CHALLENGES = [
     titleEn: "Pacific Navigator",
     descFr: "Complète l'Océanie 5 fois au total.",
     descEn: "Complete Oceania 5 times in total.",
-    color: "amber"
+    color: "amber",
   },
 
   // SCORES
@@ -191,7 +191,7 @@ export const CHALLENGES = [
     titleEn: "Country Beginner",
     descFr: "Marque 10 points en mode pays.",
     descEn: "Score 10 points in Country mode.",
-    color: "cyan"
+    color: "cyan",
   },
   {
     id: "ch_score_countries_20",
@@ -200,7 +200,7 @@ export const CHALLENGES = [
     titleEn: "Country Mapper",
     descFr: "Marque 20 points en mode pays.",
     descEn: "Score 20 points in Country mode.",
-    color: "lime"
+    color: "lime",
   },
   {
     id: "ch_score_countries_50",
@@ -209,7 +209,7 @@ export const CHALLENGES = [
     titleEn: "Country Expert",
     descFr: "Marque 50 points en mode pays.",
     descEn: "Score 50 points in Country mode.",
-    color: "yellow"
+    color: "yellow",
   },
   {
     id: "ch_score_countries_100",
@@ -218,7 +218,7 @@ export const CHALLENGES = [
     titleEn: "Country Genius",
     descFr: "Marque 100 points en mode pays.",
     descEn: "Score 100 points in Country mode.",
-    color: "magenta"
+    color: "magenta",
   },
   {
     id: "ch_score_capitals_10",
@@ -227,7 +227,7 @@ export const CHALLENGES = [
     titleEn: "City Visitor",
     descFr: "Marque 10 points en mode capitales.",
     descEn: "Score 10 points in Capital mode.",
-    color: "blue"
+    color: "blue",
   },
   {
     id: "ch_score_capitals_20",
@@ -236,7 +236,7 @@ export const CHALLENGES = [
     titleEn: "Retro Urbanist",
     descFr: "Marque 20 points en mode capitales.",
     descEn: "Score 20 points in Capital mode.",
-    color: "purple"
+    color: "purple",
   },
   {
     id: "ch_score_capitals_50",
@@ -245,7 +245,7 @@ export const CHALLENGES = [
     titleEn: "World Mayor",
     descFr: "Marque 50 points en mode capitales.",
     descEn: "Score 50 points in Capital mode.",
-    color: "orange"
+    color: "orange",
   },
   {
     id: "ch_score_capitals_100",
@@ -254,7 +254,7 @@ export const CHALLENGES = [
     titleEn: "Capital Emperor",
     descFr: "Marque 100 points en mode capitales.",
     descEn: "Score 100 points in Capital mode.",
-    color: "magenta"
+    color: "magenta",
   },
   {
     id: "ch_score_departments_10",
@@ -263,7 +263,7 @@ export const CHALLENGES = [
     titleEn: "Department Walk",
     descFr: "Marque 10 points en mode départements.",
     descEn: "Score 10 points in Department mode.",
-    color: "pink"
+    color: "pink",
   },
   {
     id: "ch_score_departments_20",
@@ -272,7 +272,7 @@ export const CHALLENGES = [
     titleEn: "Local Citizen",
     descFr: "Marque 20 points en mode départements.",
     descEn: "Score 20 points in Department mode.",
-    color: "yellow"
+    color: "yellow",
   },
   {
     id: "ch_score_departments_50",
@@ -281,7 +281,7 @@ export const CHALLENGES = [
     titleEn: "France Prefect",
     descFr: "Marque 50 points en mode départements.",
     descEn: "Score 50 points in Department mode.",
-    color: "lime"
+    color: "lime",
   },
   {
     id: "ch_score_departments_100",
@@ -290,7 +290,7 @@ export const CHALLENGES = [
     titleEn: "Hexagon Master",
     descFr: "Marque 100 points en mode départements.",
     descEn: "Score 100 points in Department mode.",
-    color: "cyan"
+    color: "cyan",
   },
 
   // SPEED
@@ -301,7 +301,7 @@ export const CHALLENGES = [
     titleEn: "Flash Reflex",
     descFr: "Trouve un élément en moins de 3 secondes.",
     descEn: "Find an element in less than 3 seconds.",
-    color: "yellow"
+    color: "yellow",
   },
   {
     id: "ch_speed_10_guesses_30s",
@@ -310,7 +310,7 @@ export const CHALLENGES = [
     titleEn: "Sprint Series",
     descFr: "Trouve 10 éléments en moins de 30 secondes.",
     descEn: "Find 10 elements in less than 30 seconds.",
-    color: "orange"
+    color: "orange",
   },
   {
     id: "ch_speed_20_guesses_60s",
@@ -319,7 +319,7 @@ export const CHALLENGES = [
     titleEn: "Pixel Blast",
     descFr: "Trouve 20 éléments en moins de 60 secondes.",
     descEn: "Find 20 elements in less than 60 seconds.",
-    color: "magenta"
+    color: "magenta",
   },
   {
     id: "ch_speed_under_2m",
@@ -328,7 +328,7 @@ export const CHALLENGES = [
     titleEn: "Express Marathon",
     descFr: "Termine une partie en moins de 2 minutes.",
     descEn: "Complete a game in less than 2 minutes.",
-    color: "purple"
+    color: "purple",
   },
   {
     id: "ch_speed_under_1m",
@@ -337,7 +337,7 @@ export const CHALLENGES = [
     titleEn: "Sonic Speed",
     descFr: "Termine une partie en moins de 1 minute.",
     descEn: "Complete a game in less than 1 minute.",
-    color: "pink"
+    color: "pink",
   },
   {
     id: "ch_speed_under_30s",
@@ -346,7 +346,7 @@ export const CHALLENGES = [
     titleEn: "Hyperspace Velocity",
     descFr: "Termine une partie en moins de 30 secondes.",
     descEn: "Complete a game in less than 30 seconds.",
-    color: "cyan"
+    color: "cyan",
   },
   {
     id: "ch_speed_half_time",
@@ -355,7 +355,7 @@ export const CHALLENGES = [
     titleEn: "Retro Racer",
     descFr: "Finis une partie en moins de la moitié du temps alloué.",
     descEn: "Complete a game in less than half the allocated time.",
-    color: "lime"
+    color: "lime",
   },
   {
     id: "ch_speed_blitz",
@@ -364,7 +364,7 @@ export const CHALLENGES = [
     titleEn: "Light Speed",
     descFr: "Trouve un élément en moins de 1 seconde.",
     descEn: "Find an element in less than 1 second.",
-    color: "amber"
+    color: "amber",
   },
   {
     id: "ch_speed_perfect_100",
@@ -373,7 +373,7 @@ export const CHALLENGES = [
     titleEn: "Perfect Precision",
     descFr: "Termine une partie à 100% correct en moins de 2 minutes.",
     descEn: "Complete a 100% correct game in less than 2 minutes.",
-    color: "green"
+    color: "green",
   },
   {
     id: "ch_speed_lightning",
@@ -382,7 +382,7 @@ export const CHALLENGES = [
     titleEn: "Divine Lightning",
     descFr: "Trouve 3 éléments corrects en moins de 5 secondes.",
     descEn: "Find 3 correct elements in less than 5 seconds.",
-    color: "yellow"
+    color: "yellow",
   },
 
   // RELIEF & SPECIALTY
@@ -393,7 +393,7 @@ export const CHALLENGES = [
     titleEn: "Hill Climber",
     descFr: "Marque 10 points en mode fleuves & montagnes.",
     descEn: "Score 10 points in Rivers & Mountains mode.",
-    color: "lime"
+    color: "lime",
   },
   {
     id: "ch_relief_score_20",
@@ -402,7 +402,7 @@ export const CHALLENGES = [
     titleEn: "Amateur Mountaineer",
     descFr: "Marque 20 points en mode fleuves & montagnes.",
     descEn: "Score 20 points in Rivers & Mountains mode.",
-    color: "green"
+    color: "green",
   },
   {
     id: "ch_relief_score_30",
@@ -411,7 +411,7 @@ export const CHALLENGES = [
     titleEn: "Peak Master",
     descFr: "Marque 30 points en mode fleuves & montagnes.",
     descEn: "Score 30 points in Rivers & Mountains mode.",
-    color: "emerald"
+    color: "emerald",
   },
   {
     id: "ch_relief_score_40",
@@ -420,7 +420,7 @@ export const CHALLENGES = [
     titleEn: "Everest God",
     descFr: "Marque 40 points en mode fleuves & montagnes.",
     descEn: "Score 40 points in Rivers & Mountains mode.",
-    color: "magenta"
+    color: "magenta",
   },
   {
     id: "ch_special_night",
@@ -429,7 +429,7 @@ export const CHALLENGES = [
     titleEn: "Night Owl",
     descFr: "Joue une partie de nuit entre 22h et 4h du matin.",
     descEn: "Play a game at night between 10 PM and 4 AM.",
-    color: "blue"
+    color: "blue",
   },
   {
     id: "ch_special_lunch",
@@ -438,7 +438,7 @@ export const CHALLENGES = [
     titleEn: "Lunch Break",
     descFr: "Joue une partie à midi entre 12h et 14h.",
     descEn: "Play a game at lunchtime between 12 PM and 2 PM.",
-    color: "yellow"
+    color: "yellow",
   },
   {
     id: "ch_special_perfect",
@@ -447,7 +447,7 @@ export const CHALLENGES = [
     titleEn: "Perfectionist",
     descFr: "Finis une partie complète à 100% correct.",
     descEn: "Finish a full game with 100% accuracy.",
-    color: "pink"
+    color: "pink",
   },
   {
     id: "ch_special_islands",
@@ -456,13 +456,28 @@ export const CHALLENGES = [
     titleEn: "Island Keeper",
     descFr: "Trouve au moins 5 îles géographiques dans une partie.",
     descEn: "Find at least 5 geographic islands in a single game.",
-    color: "cyan"
-  }
+    color: "cyan",
+  },
 ];
 
 // Helper of geographic islands
 export const ISLANDS_LIST = [
-  "Iceland", "Madagascar", "New Zealand", "Japan", "United Kingdom", "Ireland",
-  "Sri Lanka", "Cuba", "Taiwan", "Philippines", "Indonesia", "Australia",
-  "Cyprus", "Jamaica", "Haiti", "Dominican Republic", "Papua New Guinea", "Fiji"
+  "Iceland",
+  "Madagascar",
+  "New Zealand",
+  "Japan",
+  "United Kingdom",
+  "Ireland",
+  "Sri Lanka",
+  "Cuba",
+  "Taiwan",
+  "Philippines",
+  "Indonesia",
+  "Australia",
+  "Cyprus",
+  "Jamaica",
+  "Haiti",
+  "Dominican Republic",
+  "Papua New Guinea",
+  "Fiji",
 ];

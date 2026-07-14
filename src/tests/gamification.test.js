@@ -1,8 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { normalizeString } from "../utils/utils";
-import { getLevelAndProgress, getAvatarUnlockLevel } from "../utils/gamification";
-import { checkChallengesRealTime } from "../hooks/useUserProfile";
+import { describe, expect, it } from "vitest";
+
 import { getProceduralDesign } from "../components/InvaderAvatar";
+import { checkChallengesRealTime } from "../hooks/useUserProfile";
+import { getAvatarUnlockLevel, getLevelAndProgress } from "../utils/gamification";
+import { normalizeString } from "../utils/utils";
 
 const updateScoreHistory = (currentHistory, newScore) => {
   const nextHistory = [...currentHistory, newScore].slice(-3);
@@ -64,7 +65,7 @@ describe("Gamification System Logic", () => {
     it("should generate a symmetric 11x8 design for any string ID", () => {
       const design = getProceduralDesign("ch_score_countries_10");
       expect(design).toHaveLength(8);
-      
+
       design.forEach((row) => {
         expect(row).toHaveLength(11);
         // Verify horizontal symmetry: columns 0-4 must match columns 10-6 in reverse
@@ -87,7 +88,7 @@ describe("Gamification System Logic", () => {
       countries: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       capitals: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       departments: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
-      rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 }
+      rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
     };
 
     it("should unlock ch_gen_play_1 when playing the first game", () => {
@@ -103,7 +104,7 @@ describe("Gamification System Logic", () => {
         guessesThisGame: [],
         speedGuessCount3s: 0,
         speedGuessCount1s: 0,
-        lightningCount: 0
+        lightningCount: 0,
       };
 
       const unlocked = checkChallengesRealTime([], mockRecords, sessionData);
@@ -123,7 +124,7 @@ describe("Gamification System Logic", () => {
         guessesThisGame: [],
         speedGuessCount3s: 0,
         speedGuessCount1s: 0,
-        lightningCount: 0
+        lightningCount: 0,
       };
 
       const unlocked = checkChallengesRealTime([], mockRecords, sessionData);
@@ -144,7 +145,7 @@ describe("Gamification System Logic", () => {
         lastGuessDuration: 2.5,
         speedGuessCount3s: 1,
         speedGuessCount1s: 0,
-        lightningCount: 0
+        lightningCount: 0,
       };
 
       const unlocked = checkChallengesRealTime([], mockRecords, sessionData);
@@ -165,7 +166,7 @@ describe("Gamification System Logic", () => {
         lastGuessDuration: 3,
         speedGuessCount3s: 0,
         speedGuessCount1s: 0,
-        lightningCount: 0
+        lightningCount: 0,
       };
 
       const unlocked = checkChallengesRealTime([], mockRecords, sessionData);

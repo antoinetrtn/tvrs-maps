@@ -17,9 +17,11 @@
   -webkit-backdrop-filter: var(--glass-blur-compact);
   border: 2px solid var(--toast-color);
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 32px var(--shadow-subtle), 0 0 12px var(--toast-color-glow);
+  box-shadow:
+    0 8px 32px var(--shadow-subtle),
+    0 0 12px var(--toast-color-glow);
   pointer-events: auto;
-  
+
   /* Single CSS animation to manage the slide-in, stay, and slide-out */
   animation: toast-slide-in-out 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -87,7 +89,7 @@
     left: 16px;
     right: 16px;
   }
-  
+
   .achievement-toast-card {
     width: calc(100% - 32px);
     margin: 0 auto;

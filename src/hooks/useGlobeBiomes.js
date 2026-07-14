@@ -1,10 +1,9 @@
-import { useMemo, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import {
-  createMountainFeature,
-} from "../utils/LowPolyBiomes";
+
 import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
 import { RELIEF } from "../config/gameConfig";
+import { createMountainFeature } from "../utils/LowPolyBiomes";
 
 const BIOME_SCENE_SCALE = 9.2;
 const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;
@@ -63,7 +62,7 @@ export function useGlobeBiomes({
       }
       return admin === selectedCountry ? 0.0025 : 0.0015;
     },
-    [selectedCountry, isRiversMountainsMode],
+    [selectedCountry, isRiversMountainsMode]
   );
 
   const createBiomeThreeObject = useCallback(
@@ -90,7 +89,7 @@ export function useGlobeBiomes({
             d.lat,
             d.lng,
             baseScale * RELIEF.mountainScale,
-            GLITCH_EFFECT_SETTINGS.foundMountainColor,
+            GLITCH_EFFECT_SETTINGS.foundMountainColor
           );
         } else {
           asset = new THREE.Group();
@@ -107,7 +106,7 @@ export function useGlobeBiomes({
       biomeObjectsCacheRef.current.set(key, alignedAsset);
       return alignedAsset;
     },
-    [globeTheme, selectedCountry, isRiversMountainsMode],
+    [globeTheme, selectedCountry, isRiversMountainsMode]
   );
 
   useEffect(() => {

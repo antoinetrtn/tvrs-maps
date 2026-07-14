@@ -1,12 +1,15 @@
-
-import { GAME_REGIONS } from "../config/gameConfig";
 import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
+import { GAME_REGIONS } from "../config/gameConfig";
 /**
  * Normalizes input string for accents, lowercase, hyphens, and whitespace.
  */
 export const normalizeString = (str) => {
   if (!str) return "";
-  const normalized = str.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const normalized = str
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
   return normalized.replace(/[-']/g, " ").replace(/\s+/g, " ").trim();
 };
 
@@ -38,32 +41,32 @@ export const scrambleText = (text, seed = 0) => {
     .join("");
 };
 
-export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
+export const getGameStats = (foundList, countryDataMap, lang = "fr") => {
   const baseOrder = GAME_REGIONS;
   const dynamicRegions = Object.values(countryDataMap)
-    .map(item => item?.region)
+    .map((item) => item?.region)
     .filter(Boolean);
   const CONTINENT_ORDER = Array.from(new Set([...baseOrder, ...dynamicRegions]));
   const s = {};
-  CONTINENT_ORDER.forEach(reg => s[reg] = { total: 0, found: 0, countries: [] });
-  
-  Object.keys(countryDataMap).forEach(k => {
+  CONTINENT_ORDER.forEach((reg) => (s[reg] = { total: 0, found: 0, countries: [] }));
+
+  Object.keys(countryDataMap).forEach((k) => {
     const country = countryDataMap[k];
     let reg = country?.region;
-    if (!reg || !s[reg]) reg = 'Unknown';
-    
+    if (!reg || !s[reg]) reg = "Unknown";
+
     s[reg].total++;
     const isFound = foundList.includes(k);
     if (isFound) s[reg].found++;
     s[reg].countries.push({
       key: k,
       found: isFound,
-      name: lang === 'fr' ? (country.name_fr || k) : (country.name_en || k),
-      capital: lang === 'fr' ? (country.capital_fr || country.capital) : country.capital
+      name: lang === "fr" ? country.name_fr || k : country.name_en || k,
+      capital: lang === "fr" ? country.capital_fr || country.capital : country.capital,
     });
   });
 
-  CONTINENT_ORDER.forEach(reg => {
+  CONTINENT_ORDER.forEach((reg) => {
     s[reg].countries.sort((a, b) => {
       if (a.found !== b.found) return a.found ? -1 : 1;
       return a.name.localeCompare(b.name);
@@ -79,8 +82,8 @@ export const getGameStats = (foundList, countryDataMap, lang = 'fr') => {
 export const getPanelData = ({
   dataMap,
   foundList = [],
-  lang = 'fr',
-  mode = 'countries',
+  lang = "fr",
+  mode = "countries",
   revealAll = false,
   extraEntries = [],
 }) => {
@@ -101,26 +104,22 @@ export const getPanelData = ({
     rowsByRegion[region] = data.countries.map((c) => {
       const item = mergedMap[c.key] || {};
       const countryName =
-        lang === 'fr'
+        lang === "fr"
           ? item.name_fr || item.name_en || c.name
           : item.name_en || item.name_fr || c.name;
       const capital =
-        lang === 'fr'
+        lang === "fr"
           ? item.capital_fr || item.capital || c.capital
           : item.capital || item.capital_fr || c.capital;
-      const isCapitalsMode = mode === 'capitals';
+      const isCapitalsMode = mode === "capitals";
       const name = isCapitalsMode ? capital : countryName;
       const sublabel =
-        mode === 'departments' || item.code
-          ? item.code
-          : isCapitalsMode
-            ? countryName
-            : capital;
+        mode === "departments" || item.code ? item.code : isCapitalsMode ? countryName : capital;
       const detail =
-        item.type === 'mountain_range'
-          ? `${item.height || '?'}m`
-          : item.type === 'river'
-            ? `${item.length || '?'}km`
+        item.type === "mountain_range"
+          ? `${item.height || "?"}m`
+          : item.type === "river"
+            ? `${item.length || "?"}km`
             : sublabel;
 
       return {
@@ -144,10 +143,7 @@ export const clientToGlobeCoords = (globeEl, clientX, clientY) => {
   const canvas = globeEl.current.renderer?.()?.domElement;
   if (!canvas) return globeEl.current.toGlobeCoords(clientX, clientY);
   const rect = canvas.getBoundingClientRect();
-  return globeEl.current.toGlobeCoords(
-    clientX - rect.left,
-    clientY - rect.top,
-  );
+  return globeEl.current.toGlobeCoords(clientX - rect.left, clientY - rect.top);
 };
 
 export const getFlagEmoji = (iso2) => {
@@ -179,15 +175,8 @@ export const getCleanRingForRendering = (ring) => {
   const cleanRing = ring.reduce((points, point) => {
     if (!Array.isArray(point) || point.length < 2) return points;
     const normalizedPoint = [Number(point[0]), Number(point[1])];
-    if (
-      !Number.isFinite(normalizedPoint[0]) ||
-      !Number.isFinite(normalizedPoint[1])
-    )
-      return points;
-    if (
-      points.length &&
-      areLngLatPointsEqual(points[points.length - 1], normalizedPoint)
-    )
+    if (!Number.isFinite(normalizedPoint[0]) || !Number.isFinite(normalizedPoint[1])) return points;
+    if (points.length && areLngLatPointsEqual(points[points.length - 1], normalizedPoint))
       return points;
     points.push(normalizedPoint);
     return points;
@@ -221,9 +210,7 @@ export const getRenderGeometry = (feature) => {
   }
 
   if (geometry.type === "MultiPolygon") {
-    const coordinates = geometry.coordinates
-      .map(getExteriorPolygonForRendering)
-      .filter(Boolean);
+    const coordinates = geometry.coordinates.map(getExteriorPolygonForRendering).filter(Boolean);
     if (!coordinates.length) return null;
     return {
       ...geometry,
@@ -256,10 +243,7 @@ export const getLngLatBounds = (polygons) => {
 
 export const pointInBounds = (lng, lat, bounds) => {
   return (
-    lng >= bounds.minLng &&
-    lng <= bounds.maxLng &&
-    lat >= bounds.minLat &&
-    lat <= bounds.maxLat
+    lng >= bounds.minLng && lng <= bounds.maxLng && lat >= bounds.minLat && lat <= bounds.maxLat
   );
 };
 
@@ -270,8 +254,7 @@ const pointInRing = (lng, lat, ring) => {
     const [lngJ, latJ] = ring[j];
     const intersects =
       latI > lat !== latJ > lat &&
-      lng <
-        ((lngJ - lngI) * (lat - latI)) / (latJ - latI || Number.EPSILON) + lngI;
+      lng < ((lngJ - lngI) * (lat - latI)) / (latJ - latI || Number.EPSILON) + lngI;
     if (intersects) inside = !inside;
   }
   return inside;
@@ -287,9 +270,7 @@ export const pointInPolygon = (lng, lat, polygon) => {
 
 export const featureContainsLngLat = (featureIndexEntry, lng, lat) => {
   if (!pointInBounds(lng, lat, featureIndexEntry.bounds)) return false;
-  return featureIndexEntry.polygons.some((polygon) =>
-    pointInPolygon(lng, lat, polygon),
-  );
+  return featureIndexEntry.polygons.some((polygon) => pointInPolygon(lng, lat, polygon));
 };
 
 export const getLngLatDistance = (lngA, latA, lngB, latB) => {
@@ -323,11 +304,12 @@ function computePolygonCentroid(polygons) {
   const exterior = polygons[0]?.[0];
   if (!exterior || exterior.length < 3) return null;
   // Drop closing point if duplicate
-  const pts = exterior[exterior.length - 1] &&
+  const pts =
+    exterior[exterior.length - 1] &&
     exterior[0][0] === exterior[exterior.length - 1][0] &&
     exterior[0][1] === exterior[exterior.length - 1][1]
-    ? exterior.slice(0, -1)
-    : exterior;
+      ? exterior.slice(0, -1)
+      : exterior;
   return averagePoints(pts);
 }
 
@@ -350,7 +332,7 @@ export function getCanonicalPosition(data = {}, polygons = null) {
     const mid = path[Math.floor(path.length / 2)];
     return { lat: mid[0], lng: mid[1] };
   }
-  if (typeof data.lat === 'number' && typeof data.lng === 'number') {
+  if (typeof data.lat === "number" && typeof data.lng === "number") {
     return { lat: data.lat, lng: data.lng };
   }
   return null;
@@ -377,9 +359,9 @@ export const getLabelRenderRadius = (zoomLevel, isMobile) => {
 export const getFeatureAdmin = (feature) => {
   if (!feature || !feature.properties) return undefined;
   const props = feature.properties;
-  
+
   // Custom mapping for Somaliland to Somalia
   if (props.ADMIN === "Somaliland") return "Somalia";
-  
+
   return props.code || props.ADMIN || props.name || props.NAME;
 };

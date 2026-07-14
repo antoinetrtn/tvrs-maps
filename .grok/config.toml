@@ -1,0 +1,42 @@
+# Project-scoped Grok config for tvrs-maps
+# This file can be committed (use ${VAR} for secrets).
+
+[mcp]
+# Increase MCP output size if Sonar returns large issue lists
+# max_output_bytes = 60000
+
+# SonarQube MCP Server (quality & security analysis)
+# 
+# 1. Create a project on https://sonarcloud.io (or your SonarQube Server)
+# 2. Generate a token (User > My Account > Security > Tokens)
+# 3. Set the token in your environment:
+#    export SONARQUBE_TOKEN="your-token-here"
+#    export SONARQUBE_URL="https://sonarcloud.io"   # or https://your-sonarqube-server
+#    export SONARQUBE_ORG="your-org-key"            # only for SonarCloud usually
+#
+# Recommended: use --scope project when adding so it stays with the repo.
+#
+# Add via CLI (preferred):
+#   grok mcp add --scope project sonarqube -- docker run --init --pull=always -i --rm \
+#     -e SONARQUBE_TOKEN -e SONARQUBE_URL -e SONARQUBE_ORG \
+#     sonarsource/sonarqube-mcp
+#
+# Then in this session: press Ctrl+L or type /mcps , enable it, refresh with 'r'.
+# Use search_tool with query like "sonar" or "sonarqube" to discover tools.
+
+[mcp_servers.sonarqube]
+command = "docker"
+args = [
+  "run",
+  "--init",
+  "--pull=always",
+  "-i",
+  "--rm",
+  "-e", "SONARQUBE_TOKEN",
+  "-e", "SONARQUBE_URL",
+  "-e", "SONARQUBE_ORG",
+  "sonarsource/sonarqube-mcp"
+]
+enabled = true
+# You can tune timeouts for large analyses
+# startup_timeout_sec = 60

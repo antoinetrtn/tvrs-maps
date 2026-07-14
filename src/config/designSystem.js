@@ -78,10 +78,7 @@ const STYLE_TOKENS = {
 // 2. CORE THEMES
 // ==========================================
 
-export const THEMES_LIST = [
-  { id: "satellite" },
-  { id: "blackout" },
-];
+export const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
 
 // Valid globe-theme ids, derived from THEMES_LIST so the list lives in one place.
 export const GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
@@ -495,7 +492,7 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
 export const getThemeCssVariables = (
   systemTheme = "dark",
   globeTheme = "satellite",
-  { uiScale = 1 } = {},
+  { uiScale = 1 } = {}
 ) => {
   const theme = getThemeColors(globeTheme, systemTheme);
 
@@ -584,7 +581,7 @@ export const getThemeCssVariables = (
 };
 
 const normalizeRegion = (region) => {
-  return region === "France" ? "Europe" : (region || "Unknown");
+  return region === "France" ? "Europe" : region || "Unknown";
 };
 
 const resolveThemePalette = (globeTheme) => {
@@ -601,11 +598,7 @@ export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
   return colors[normRegion] || colors.Unknown || "#888888";
 };
 
-export const getThemeRegionColorAttenuated = (
-  globeTheme,
-  systemTheme,
-  region,
-) => {
+export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) => {
   const normRegion = normalizeRegion(region);
   const { palette } = resolveThemePalette(globeTheme);
   const sysTheme = systemTheme || "dark";
@@ -625,12 +618,12 @@ export const getThemeRegionColorAttenuated = (
       const mr = Math.round(r * 0.5 + 255 * 0.5);
       const mg = Math.round(g * 0.5 + 255 * 0.5);
       const mb = Math.round(b * 0.5 + 255 * 0.5);
-      return `#${mr.toString(16).padStart(2, '0')}${mg.toString(16).padStart(2, '0')}${mb.toString(16).padStart(2, '0')}`;
+      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
     } else {
       const mr = Math.round(r * 0.4);
       const mg = Math.round(g * 0.4);
       const mb = Math.round(b * 0.4);
-      return `#${mr.toString(16).padStart(2, '0')}${mg.toString(16).padStart(2, '0')}${mb.toString(16).padStart(2, '0')}`;
+      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
     }
   }
   return baseColor;
@@ -663,19 +656,18 @@ export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fal
   return colors[regionCode] || fallbackColor;
 };
 
-
 // Global RGB configurations for SpaceBackground to comply with linter rules
 export const SPACE_RGB_COMPONENTS = {
   light: {
     normal: [15, 23, 42],
     cyan: [15, 23, 42],
-    magenta: [15, 23, 42]
+    magenta: [15, 23, 42],
   },
   dark: {
     normal: [255, 255, 255],
     cyan: [0, 240, 255],
-    magenta: [255, 0, 127]
-  }
+    magenta: [255, 0, 127],
+  },
 };
 // Standardized retro TV glitch shader effect parameters and state rules
 export const GLITCH_EFFECT_SETTINGS = {
@@ -686,7 +678,7 @@ export const GLITCH_EFFECT_SETTINGS = {
   foundGreenSurface: "#2dffa8",
   selectionHighlight: "#2dffa8",
   foundMountainColor: "#2dffa8",
-  colorError: [1.0, 0.27, 0.0],    // Orange-red
+  colorError: [1.0, 0.27, 0.0], // Orange-red
   sideWallOpacity: 0.55,
   noiseRangeDark: { min: 0.12, max: 0.68 },
   noiseRangeLight: { min: 0.65, max: 0.98 },
@@ -699,8 +691,8 @@ export const GLITCH_EFFECT_SETTINGS = {
   rules: {
     unfoundCap: "Transparent (opacity: 0.0) during transitions, hidden side walls",
     selectedCap: "Solid opaque cap rendering high-speed television static noise glitch",
-    foundCap: "Wireframe mesh displaying high-contrast neon label color of its region"
-  }
+    foundCap: "Wireframe mesh displaying high-contrast neon label color of its region",
+  },
 };
 
 export const AVATAR_COLORS = {
@@ -713,12 +705,12 @@ export const AVATAR_COLORS = {
   blue: "#2196f3",
   lime: "#a3e635",
   pink: "#f472b6",
-  amber: "#fbbf24"
+  amber: "#fbbf24",
 };
 
 export const GAME_XP_COLORS = {
   greenInner: "#55ff55",
   greenOuter: "#00aa00",
   yellowInner: "#ffff55",
-  yellowOuter: "#7f7f00"
+  yellowOuter: "#7f7f00",
 };

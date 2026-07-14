@@ -12,10 +12,7 @@ export const GLOBE_MAX_ALTITUDE = 4;
 
 export function clampGlobeAltitude(altitude) {
   if (!Number.isFinite(altitude)) return 2.5;
-  return Math.max(
-    GLOBE_MIN_ALTITUDE,
-    Math.min(GLOBE_MAX_ALTITUDE, altitude),
-  );
+  return Math.max(GLOBE_MIN_ALTITUDE, Math.min(GLOBE_MAX_ALTITUDE, altitude));
 }
 
 function applyGlobeZoomLimits(controls) {

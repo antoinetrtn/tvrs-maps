@@ -37,6 +37,6 @@ export function useCountrySelectHandler({
       setPopupError,
       extInputRef,
       onAfterSelect,
-    ],
+    ]
   );
 }

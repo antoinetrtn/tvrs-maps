@@ -42,7 +42,9 @@
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform var(--transition-spring), opacity var(--transition-spring);
+  transition:
+    transform var(--transition-spring),
+    opacity var(--transition-spring);
 }
 
 .modal-btn.confirm {
@@ -56,7 +58,9 @@
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-2.5px) scale(1.02);
-  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
   animation: btn-hover-flicker 0.3s steps(2) infinite;
 }
 
@@ -80,7 +84,9 @@
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-2.5px) scale(1.02);
-  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
   animation: btn-hover-flicker 0.3s steps(2) infinite;
 }
 
@@ -95,13 +101,23 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes float {
-  from { transform: translateX(0); }
-  to { transform: translateX(100px); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100px);
+  }
 }
 
 .animation-fade-in {
@@ -109,8 +125,14 @@
 }
 
 @keyframes animation-fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes label-appear {
@@ -118,8 +140,8 @@
     opacity: 0;
     filter: blur(4px);
   }
-  to { 
-    opacity: 1; 
+  to {
+    opacity: 1;
     filter: blur(0);
   }
 }
@@ -127,8 +149,6 @@
 .globe-label-element {
   animation: label-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
-
 
 .globe-content-wrapper {
   --globe-layout-x: 0px;
@@ -154,16 +174,38 @@
   pointer-events: none;
   mix-blend-mode: screen;
   background:
-    radial-gradient(circle at 50% 50%, var(--highlight) 0%, color-mix(in srgb, var(--accent-glow) 18%, transparent) 30%, color-mix(in srgb, var(--accent-glow) 9%, transparent) 52%, transparent 74%),
-    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent-glow) 16%, transparent) 0%, color-mix(in srgb, var(--accent-glow) 7%, transparent) 42%, transparent 68%);
+    radial-gradient(
+      circle at 50% 50%,
+      var(--highlight) 0%,
+      color-mix(in srgb, var(--accent-glow) 18%, transparent) 30%,
+      color-mix(in srgb, var(--accent-glow) 9%, transparent) 52%,
+      transparent 74%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--accent-glow) 16%, transparent) 0%,
+      color-mix(in srgb, var(--accent-glow) 7%, transparent) 42%,
+      transparent 68%
+    );
   opacity: 0.68;
 }
 
 .globe-studio-overlay.light {
   mix-blend-mode: multiply;
   background:
-    radial-gradient(circle at 50% 50%, var(--highlight) 0%, var(--highlight-soft) 32%, color-mix(in srgb, var(--accent-glow) 8%, transparent) 54%, transparent 74%),
-    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 5%, transparent) 0%, color-mix(in srgb, var(--accent) 2%, transparent) 44%, transparent 68%);
+    radial-gradient(
+      circle at 50% 50%,
+      var(--highlight) 0%,
+      var(--highlight-soft) 32%,
+      color-mix(in srgb, var(--accent-glow) 8%, transparent) 54%,
+      transparent 74%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--accent) 5%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 2%, transparent) 44%,
+      transparent 68%
+    );
   opacity: 0.48;
 }
 
@@ -191,7 +233,7 @@
 }
 
 .app-container::after {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   background: repeating-linear-gradient(
@@ -212,17 +254,35 @@
 }
 
 @keyframes screen-shake {
-  0% { transform: translate(2px, 1px) rotate(0deg); }
-  20% { transform: translate(-1px, -2px) rotate(0.1deg); }
-  40% { transform: translate(-3px, 1px) rotate(-0.1deg); }
-  60% { transform: translate(1px, 2px) rotate(0deg); }
-  80% { transform: translate(-1px, -1px) rotate(0.1deg); }
-  100% { transform: translate(2px, -2px) rotate(-0.1deg); }
+  0% {
+    transform: translate(2px, 1px) rotate(0deg);
+  }
+  20% {
+    transform: translate(-1px, -2px) rotate(0.1deg);
+  }
+  40% {
+    transform: translate(-3px, 1px) rotate(-0.1deg);
+  }
+  60% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(0.1deg);
+  }
+  100% {
+    transform: translate(2px, -2px) rotate(-0.1deg);
+  }
 }
 
 @keyframes scanline-flicker {
-  0% { opacity: 0.15; background-color: var(--glitch-magenta-flicker); }
-  100% { opacity: 0.3; background-color: var(--glitch-cyan-flicker); }
+  0% {
+    opacity: 0.15;
+    background-color: var(--glitch-magenta-flicker);
+  }
+  100% {
+    opacity: 0.3;
+    background-color: var(--glitch-cyan-flicker);
+  }
 }
 
 /* Pulsing red panic vignette overlay when time is running out (<= 30s) */
