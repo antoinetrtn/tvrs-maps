@@ -47,37 +47,7 @@
   letter-spacing: 0.01em;
 }
 
-/* Minimize / restore — lets the player explore the globe behind */
-.end-screen-minimize-btn {
-  position: absolute;
-  top: calc(var(--spacing-md) + var(--safe-top));
-  right: var(--spacing-md);
-  z-index: 6;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  min-height: var(--control-lg);
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-main);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
-  pointer-events: auto;
-  animation: fadeInSimple 0.8s ease both;
-  transition:
-    color var(--transition-fast),
-    border-color var(--transition-fast),
-    transform var(--transition-spring);
-}
-
-.end-screen-minimize-btn:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
-
+/* Restore chip — shown while the end screen is minimized over the globe */
 .end-screen-restore-chip {
   position: absolute;
   bottom: calc(var(--spacing-lg) + var(--safe-bottom));
@@ -311,8 +281,17 @@
   transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.end-screen-actions .btn-primary {
-  width: 100%;
+.end-screen-actions {
+  gap: var(--spacing-sm);
+}
+
+.end-screen-actions .btn-primary,
+.end-screen-actions .btn-secondary {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
 }
 
 /* .btn-primary lives in index.css (shared with ProfilePanel and AuthModal). */
@@ -334,16 +313,6 @@
   }
   .end-screen-header h1 {
     font-size: clamp(1.6rem, 5vw, 2.2rem);
-    /* Keep the centered title clear of the top-right minimize button */
-    padding: 0 var(--control-lg);
-  }
-  .end-screen-minimize-btn {
-    padding: var(--spacing-xs);
-    min-width: var(--control-lg);
-    justify-content: center;
-  }
-  .end-screen-minimize-btn span {
-    display: none;
   }
   .continents-progress-bars {
     padding: var(--spacing-md);
@@ -452,34 +421,26 @@
   }
 }
 
-/* Personal Best Badge — uses the trophy gold tokens (readable in both themes) */
+/* Personal Best Badge — quiet gold pill, no pulse */
 .new-pb-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--spacing-xs);
   max-width: min(90vw, 320px);
   white-space: nowrap;
-  margin: var(--spacing-xs) auto 0;
+  margin: var(--spacing-sm) auto 0;
   padding: var(--spacing-xxs) var(--spacing-md);
-  background: var(--color-gold-glow);
+  background: color-mix(in srgb, var(--color-gold) 10%, transparent);
   color: var(--color-gold);
-  border: 1px solid var(--color-gold);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(0.8rem, 2.5vw, 0.95rem);
-  box-shadow: 0 0 10px var(--color-gold-glow);
-  animation: pb-badge-pulse 2.4s ease-in-out infinite alternate;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+  border-radius: var(--radius-full);
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   pointer-events: auto;
-}
-
-@keyframes pb-badge-pulse {
-  0% {
-    box-shadow: 0 0 4px var(--color-gold-glow);
-  }
-  100% {
-    box-shadow: 0 0 12px var(--color-gold-glow);
-  }
 }
 
 /* Gamification End Screen XP Card */

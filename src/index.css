@@ -32,8 +32,6 @@
   --glitch-magenta-soft: rgba(255, 0, 127, 0.5);
   --glitch-cyan: rgba(0, 240, 255, 0.6);
   --glitch-cyan-soft: rgba(0, 240, 255, 0.5);
-  --glitch-magenta-flicker: rgba(255, 0, 127, 0.02);
-  --glitch-cyan-flicker: rgba(0, 240, 255, 0.02);
   --scanline-color: rgba(255, 255, 255, 0.05);
   --home-card-bg: rgba(10, 10, 10, 0.94);
   --home-scanline: rgba(0, 0, 0, 0.22);
@@ -162,8 +160,6 @@
   --glitch-magenta-soft: rgba(219, 39, 119, 0.4);
   --glitch-cyan: rgba(8, 145, 178, 0.5);
   --glitch-cyan-soft: rgba(8, 145, 178, 0.4);
-  --glitch-magenta-flicker: rgba(219, 39, 119, 0.02);
-  --glitch-cyan-flicker: rgba(8, 145, 178, 0.02);
   --scanline-color: rgba(15, 23, 42, 0.03);
   --home-card-bg: var(--glass-bg);
   --home-scanline: rgba(15, 23, 42, 0.04);
@@ -387,6 +383,34 @@ body {
     transform var(--transition-instant),
     background-color var(--transition-instant),
     box-shadow var(--transition-instant);
+}
+
+/* Shared secondary button — quieter sibling of .btn-primary. */
+.btn-secondary {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  transition:
+    transform var(--transition-spring),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2.5px) scale(1.02);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--glass-hover);
+}
+
+.btn-secondary:active {
+  transform: translateY(0.5px) scale(0.98);
+  transition: transform var(--transition-instant);
 }
 
 @keyframes modalEnter {

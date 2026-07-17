@@ -15,6 +15,7 @@ import {
   DEFAULT_MODE,
   HOME_AUTOROTATE_INTERVAL_MS,
   PERFORMANCE,
+  SCREEN_TRANSITION_MS,
   STORAGE_KEYS,
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
@@ -136,7 +137,7 @@ function App() {
     }
 
     setIsScreenGlitching(true);
-    const timer = setTimeout(() => setIsScreenGlitching(false), 220);
+    const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
     return () => clearTimeout(timer);
   }, [currentScreen, showResultsTable]);
 

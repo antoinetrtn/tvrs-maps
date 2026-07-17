@@ -128,22 +128,13 @@ const EndScreen = ({
       {/* Retro fireworks on Level Up or Personal Best */}
       {(isNewPB || showLevelUp) && <PixelFireworks duration={8000} />}
 
-      <button
-        type="button"
-        className="end-screen-minimize-btn glass-panel"
-        onClick={() => setMinimized(true)}
-        title={t("explore_globe")}
-      >
-        <ChevronDown width={16} height={16} />
-        <span>{t("explore_globe")}</span>
-      </button>
-
       <div className="end-screen-content scrollbar-styled">
         <div className="end-screen-header">
           <h1>{getTitle()}</h1>
           {isNewPB && (
             <div className="new-pb-badge">
-              <span>★ {t("new_pb")} ★</span>
+              <Trophy width={14} height={14} />
+              <span>{t("new_pb")}</span>
             </div>
           )}
         </div>
@@ -261,6 +252,10 @@ const EndScreen = ({
         )}
 
         <div className="end-screen-actions">
+          <button className="btn-secondary" onClick={() => setMinimized(true)}>
+            <ChevronDown width={16} height={16} />
+            {t("explore_globe")}
+          </button>
           <button className="btn-primary" onClick={onRestart}>
             {t("home")}
           </button>

@@ -423,17 +423,12 @@ const GameHUD = ({
                       {score}/{totalPossible}
                     </span>
                   </div>
-                  {heartsRow && (
-                    <>
-                      <div className="island-divider" />
-                      {heartsRow}
-                    </>
-                  )}
                 </div>
               )}
             </div>
 
             <div className="hud-top-right">
+              {heartsRow}
               {mode === "learn" ? null : hideHudPlayStop ? null : isPlaying && !isGameOver ? (
                 <button
                   className="hud-btn-circular"

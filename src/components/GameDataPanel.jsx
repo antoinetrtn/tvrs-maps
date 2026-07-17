@@ -115,16 +115,6 @@ const GameDataPanel = ({
           {scoreLabel && <span className="data-panel-score">{scoreLabel}</span>}
         </div>
         <div className="data-panel-header-actions">
-          {isGameOver && onGoHome && (
-            <button
-              className="panel-back-btn"
-              onClick={onGoHome}
-              aria-label={t("home")}
-              title={t("home")}
-            >
-              <Home width={20} height={20} />
-            </button>
-          )}
           {onClose && (
             <button className="panel-close-btn" onClick={onClose} aria-label={t("close")}>
               <Close width={20} height={20} />
@@ -202,6 +192,15 @@ const GameDataPanel = ({
           })}
         </div>
       </div>
+
+      {isGameOver && onGoHome && (
+        <div className="panel-footer data-panel-footer">
+          <button className="btn-primary" onClick={onGoHome}>
+            <Home width={16} height={16} />
+            {t("home")}
+          </button>
+        </div>
+      )}
     </aside>
   );
 };

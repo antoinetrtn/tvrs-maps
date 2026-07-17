@@ -22,6 +22,9 @@ export const HOME_AUTOROTATE_INTERVAL_MS = 5500;
 // Mobile soft-keyboard open/close debounce.
 export const KEYBOARD_CLOSE_DELAY_MS = 180;
 
+// Screen transition: UI soft fade duration (matches screen-soft-in in App.css)
+export const SCREEN_TRANSITION_MS = 280;
+
 /**
  * Transient input-feedback durations (popup success/error/warning flashes and
  * focus re-assertion delays). Grouped so the whole guessing UX can be retuned

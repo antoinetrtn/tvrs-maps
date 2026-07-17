@@ -6,6 +6,11 @@
   pointer-events: auto;
 }
 
+/* Desktop: hearts sit in the top-right group, next to play/stop */
+.hud-top-right .hud-hearts {
+  margin-right: var(--spacing-sm);
+}
+
 .hud-hearts .heart-full {
   color: var(--error);
 }
