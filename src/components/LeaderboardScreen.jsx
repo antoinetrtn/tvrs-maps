@@ -67,9 +67,9 @@ const GlobalScoreRow = ({ row, index, hardcoreLabel }) => {
         </div>
       </td>
       <td className="col-score highlight-cyan">
-        <ScoreCell value={row.max_score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />
+        <ScoreCell value={row.score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />
       </td>
-      <td className="col-time highlight-magenta">{formatTime(row.best_time_seconds)}</td>
+      <td className="col-time highlight-magenta">{formatTime(row.time_spent_seconds)}</td>
     </tr>
   );
 };
@@ -162,7 +162,7 @@ const LeaderboardScreen = ({
         if (!isMounted) return;
 
         if (fetchErr) {
-          setError(fetchErr);
+          setError(fetchErr.message || String(fetchErr));
         } else {
           const result = data || [];
           setScoresData(result);
@@ -210,7 +210,7 @@ const LeaderboardScreen = ({
         if (!isMounted) return;
 
         if (fetchErr) {
-          setHistoryError(fetchErr);
+          setHistoryError(fetchErr.message || String(fetchErr));
         } else {
           const result = data || [];
           setHistoryData(result);
