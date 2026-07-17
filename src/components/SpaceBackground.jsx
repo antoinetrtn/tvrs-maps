@@ -8,6 +8,54 @@ import { BREAKPOINTS, PERFORMANCE } from "../config/gameConstants";
 // visually identical at any frame rate.
 const REFERENCE_FRAME_MS = 1000 / 60;
 
+const getTargetStarCount = (w, h) => {
+  const baseDensity = w < 768 ? 4000 : 8000;
+  return Math.max(120, Math.min(Math.floor((w * h) / baseDensity), 450));
+};
+
+const spawnStars = (stars, w, h) => {
+  const count = getTargetStarCount(w, h);
+  stars.length = 0;
+  for (let i = 0; i < count; i++) {
+    let starType = "normal";
+    const randType = Math.random();
+    if (randType < 0.08) starType = "cyan";
+    else if (randType < 0.16) starType = "magenta";
+
+    stars.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      size: Math.random() < 0.7 ? 2 : Math.random() < 0.9 ? 3 : 4,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.01 + Math.random() * 0.03,
+      type: starType,
+    });
+  }
+};
+
+const spawnShootingStar = (shootingStars, width, height, isLight) => {
+  const side = Math.random() < 0.5;
+  const startX = side ? Math.random() * (width * 0.4) : width - Math.random() * (width * 0.4);
+  const startY = Math.random() * (height * 0.4);
+  const angle = Math.random() * 0.15 + 0.35;
+  const speed = 6 + Math.random() * 8;
+
+  const colors = ["normal", "cyan", "magenta"];
+  const randColor = isLight ? "normal" : colors[Math.floor(Math.random() * colors.length)];
+
+  shootingStars.push({
+    x: startX,
+    y: startY,
+    vx: side ? speed * Math.cos(angle) : -speed * Math.cos(angle),
+    vy: speed * Math.sin(angle),
+    size: Math.random() < 0.5 ? 3 : 4,
+    trail: [],
+    maxTrailLength: 12 + Math.floor(Math.random() * 16),
+    colorType: randColor,
+    active: true,
+  });
+};
+
 const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
   const canvasRef = useRef(null);
 
@@ -23,39 +71,14 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
     let height = (canvas.height = window.innerHeight);
 
     // Initialize Twinkling Stars
-    const getTargetStarCount = (w, h) => {
-      const baseDensity = w < 768 ? 4000 : 8000;
-      return Math.max(120, Math.min(Math.floor((w * h) / baseDensity), 450));
-    };
-
     const stars = [];
-    const spawnStars = (w, h) => {
-      const count = getTargetStarCount(w, h);
-      stars.length = 0;
-      for (let i = 0; i < count; i++) {
-        let starType = "normal";
-        const randType = Math.random();
-        if (randType < 0.08) starType = "cyan";
-        else if (randType < 0.16) starType = "magenta";
-
-        stars.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          size: Math.random() < 0.7 ? 2 : Math.random() < 0.9 ? 3 : 4,
-          phase: Math.random() * Math.PI * 2,
-          speed: 0.01 + Math.random() * 0.03,
-          type: starType,
-        });
-      }
-    };
-
-    spawnStars(width, height);
+    spawnStars(stars, width, height);
 
     // Dynamic resize handler
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      spawnStars(width, height);
+      spawnStars(stars, width, height);
     };
     window.addEventListener("resize", handleResize);
 
@@ -139,26 +162,7 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
 
       // 2. Spawn Shooting Stars (probability scaled to stay constant per second)
       if (Math.random() < 0.003 * frameScale && shootingStars.length < 3) {
-        const side = Math.random() < 0.5;
-        const startX = side ? Math.random() * (width * 0.4) : width - Math.random() * (width * 0.4);
-        const startY = Math.random() * (height * 0.4);
-        const angle = Math.random() * 0.15 + 0.35;
-        const speed = 6 + Math.random() * 8;
-
-        const colors = ["normal", "cyan", "magenta"];
-        const randColor = isLight ? "normal" : colors[Math.floor(Math.random() * colors.length)];
-
-        shootingStars.push({
-          x: startX,
-          y: startY,
-          vx: side ? speed * Math.cos(angle) : -speed * Math.cos(angle),
-          vy: speed * Math.sin(angle),
-          size: Math.random() < 0.5 ? 3 : 4,
-          trail: [],
-          maxTrailLength: 12 + Math.floor(Math.random() * 16),
-          colorType: randColor,
-          active: true,
-        });
+        spawnShootingStar(shootingStars, width, height, isLight);
       }
 
       // 3. Update & Draw Shooting Stars

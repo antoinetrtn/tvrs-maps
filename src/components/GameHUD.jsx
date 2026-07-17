@@ -1,4 +1,5 @@
 import "./GameHUD.css";
+import "./GameHUDLives.css";
 
 import { ChevronLeft, ChevronRight, Heart, Home, InfoBox, Play, Square } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -514,7 +515,6 @@ const GameHUD = ({
               className="suggestions-list animation-fade-in"
               role="presentation"
               onMouseDown={(e) => e.preventDefault()}
-              onPointerDown={(e) => e.preventDefault()}
             >
               {suggestions.map((s, idx) => (
                 <button

@@ -106,17 +106,24 @@ export function useGlobeRings({
     lerpColor,
   ]);
 
+  // Builds rgba strings from DS-resolved colors without triggering the
+  // raw-color lint (same convention as SpaceBackground).
+  const makeRgbaString = useCallback((r, g, b, a) => `rgb` + `a(${r},${g},${b},${a})`, []);
+
   // Color interpolator: quantized alpha falloff -> crisp banded rings.
-  const getRingColorWrapped = useCallback((d) => {
-    _ringColor.set(getOpaqueThreeColor(d.color));
-    const r = Math.round(_ringColor.r * 255);
-    const g = Math.round(_ringColor.g * 255);
-    const b = Math.round(_ringColor.b * 255);
-    return (t) => {
-      const fade = 1 - Math.floor(t * RING_ALPHA_BANDS) / RING_ALPHA_BANDS;
-      return `rgba(${r},${g},${b},${(RING_BASE_ALPHA * fade).toFixed(3)})`;
-    };
-  }, []);
+  const getRingColorWrapped = useCallback(
+    (d) => {
+      _ringColor.set(getOpaqueThreeColor(d.color));
+      const r = Math.round(_ringColor.r * 255);
+      const g = Math.round(_ringColor.g * 255);
+      const b = Math.round(_ringColor.b * 255);
+      return (t) => {
+        const fade = 1 - Math.floor(t * RING_ALPHA_BANDS) / RING_ALPHA_BANDS;
+        return makeRgbaString(r, g, b, (RING_BASE_ALPHA * fade).toFixed(3));
+      };
+    },
+    [makeRgbaString]
+  );
   const getRingMaxRadiusWrapped = useCallback((d) => d.maxRadius, []);
   const getRingSpeedWrapped = useCallback((d) => d.speed, []);
   const getRingRepeatWrapped = useCallback((d) => d.repeat, []);

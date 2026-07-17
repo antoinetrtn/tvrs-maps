@@ -25,8 +25,6 @@
 //   lg  = 14px  — Reserved / exceptional: only for containers that
 //                  wrap `md` children with extra spacing. Rarely
 //                  needed in practice.
-//   xl  = 26px  — Deprecated — too round for the current boxy
-//                  style. Avoid in new code.
 //   full= 9999px — Circles (gauges, spinners) and thin progress
 //                  bars only.
 //
@@ -39,7 +37,6 @@ const STYLE_TOKENS = {
     sm: "4px",
     md: "calc(var(--radius-sm) + var(--spacing-xs))",
     lg: "calc(var(--radius-md) + var(--spacing-xs) * 1.5)",
-    xl: "calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs))",
     full: "9999px",
   },
   spacing: {
@@ -529,12 +526,9 @@ export const getThemeCssVariables = (
     "--highlight": theme.highlight,
     "--map-border": theme.mapBorder,
     "--grid-dot": theme.gridDot,
-    "--theme-dot-satellite": "#10b981",
-    "--theme-dot-blackout": "#ffffff",
     "--radius-sm": STYLE_TOKENS.radius.sm,
     "--radius-md": STYLE_TOKENS.radius.md,
     "--radius-lg": STYLE_TOKENS.radius.lg,
-    "--radius-xl": STYLE_TOKENS.radius.xl,
     "--radius-full": STYLE_TOKENS.radius.full,
     "--spacing-xxs": STYLE_TOKENS.spacing.xxs,
     "--spacing-xs": STYLE_TOKENS.spacing.xs,
@@ -558,10 +552,6 @@ export const getThemeCssVariables = (
     "--color-magenta": "#ff007f",
     "--color-cyan-glow": "rgba(0, 240, 255, 0.12)",
     "--color-magenta-glow": "rgba(255, 0, 127, 0.12)",
-    "--color-cyan-bg": "rgba(0, 240, 255, 0.1)",
-    "--color-cyan-border": "rgba(0, 240, 255, 0.2)",
-    "--color-error-bg": "rgba(255, 69, 0, 0.1)",
-    "--color-error-border": "rgba(255, 69, 0, 0.2)",
     "--color-gold": "#ffd700",
     "--color-gold-glow": "rgba(255, 215, 0, 0.25)",
     "--color-silver": "#c0c0c0",
@@ -573,8 +563,6 @@ export const getThemeCssVariables = (
     "--color-lime": "#a3e635",
     "--color-lime-glow-strong": "rgba(163, 230, 53, 0.4)",
     "--color-error-glow-strong": "rgba(255, 69, 0, 0.4)",
-    "--color-pink": "#f472b6",
-    "--color-amber": "#fbbf24",
     "--ui-scale": scale, // fluid calc(var(--base-foo) * var(--ui-scale))
     "--globe-flag-scale": Math.max(scale, 1.12),
   };
