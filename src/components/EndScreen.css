@@ -21,6 +21,9 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  /* Always the scroll container so the sticky actions row actually sticks
+     (no visible change when nothing overflows). */
+  overflow-y: auto;
   padding: max(40px, calc(20px + var(--safe-top))) 20px max(20px, var(--safe-bottom));
   background: radial-gradient(
     circle at center,
@@ -198,6 +201,7 @@
   animation: fadeInSimple 0.8s ease both;
 }
 
+/* No background band here — the buttons carry their own glass surface. */
 .end-screen-actions {
   max-width: 600px;
   width: 90%;
@@ -209,13 +213,9 @@
   position: sticky;
   bottom: 0;
   z-index: 5;
+  flex-shrink: 0;
   padding-top: var(--spacing-md);
   padding-bottom: max(var(--spacing-md), var(--safe-bottom));
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--bg-color) 90%, transparent) 55%,
-    transparent
-  );
 }
 
 .progress-info {
@@ -292,6 +292,15 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
+}
+
+/* Over the globe, the quiet secondary needs its own glass surface + blur
+   to stay readable without any backdrop band. */
+.end-screen-actions .btn-secondary,
+.end-screen-actions .btn-primary {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-compact);
+  -webkit-backdrop-filter: var(--glass-blur-compact);
 }
 
 /* .btn-primary lives in index.css (shared with ProfilePanel and AuthModal). */
