@@ -1,11 +1,15 @@
 /* Leaderboard specific styles */
 
-.leaderboard-panel {
-  width: 460px !important;
-  height: 800px !important;
-  max-height: calc(100vh - 140px) !important;
-  max-height: calc(100dvh - 140px) !important;
-  overflow: hidden !important;
+/* Desktop-only dimensions — below 1025px the shared .sheet-panel fullscreen
+   rules (panelSystem.css) take over. */
+@media (min-width: 1025px) {
+  .leaderboard-panel {
+    width: 460px !important;
+    height: 800px !important;
+    max-height: calc(100vh - 140px) !important;
+    max-height: calc(100dvh - 140px) !important;
+    overflow: hidden !important;
+  }
 }
 
 .leaderboard-panel .panel-header {

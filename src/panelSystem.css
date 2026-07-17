@@ -337,7 +337,10 @@
   pointer-events: auto;
 }
 
-@media (max-width: 640px) {
+/* Below the desktop breakpoint (aligned with the HUD's mobile layout switch),
+   every sheet panel becomes a fullscreen slide-up sheet. Single source of
+   truth — components must NOT duplicate this block. */
+@media (max-width: 1024px) {
   .sheet-panel {
     position: fixed !important;
     top: 0 !important;
