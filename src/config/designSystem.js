@@ -679,7 +679,13 @@ export const GLITCH_EFFECT_SETTINGS = {
   selectionHighlight: "#2dffa8",
   foundMountainColor: "#2dffa8",
   colorError: [1.0, 0.27, 0.0], // Orange-red
-  sideWallOpacity: 0.55,
+  // Extruded side walls share the cap's effect pipeline, opaque and slightly
+  // shaded darker so the extrusion keeps its depth cue.
+  sideWallOpacity: 1.0,
+  sideShadeFactor: 0.82,
+  // Desktop DPR the screen-space glitch grain is tuned against; lower actual
+  // ratios (mobile cap 1.25) are compensated in-shader via uPixelScale.
+  referencePixelRatio: 2.0,
   noiseRangeDark: { min: 0.12, max: 0.68 },
   noiseRangeLight: { min: 0.65, max: 0.98 },
   asciiScramble: {

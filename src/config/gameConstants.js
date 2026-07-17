@@ -28,8 +28,7 @@ export const KEYBOARD_CLOSE_DELAY_MS = 180;
  * in one place.
  */
 export const FEEDBACK_TIMING = {
-  successHoldMs: 620, // success flash before auto-advancing (free search)
-  successHoldFocusedMs: 520, // success flash when a country is already focused
+  successFlashMs: 380, // success pixel-resolve flash before auto-advancing (drives uSuccessDuration)
   flashMs: 500, // error / "already found" warning flash
   focusGlobeClickMs: 80, // delay before re-focusing input after a globe click
   focusKeyboardMs: 50, // delay before re-focusing input during navigation

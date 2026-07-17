@@ -336,7 +336,7 @@ export function useGameSession({
           }
           return prev;
         });
-      }, FEEDBACK_TIMING.flashMs);
+      }, FEEDBACK_TIMING.successFlashMs);
     },
     [
       foundList,

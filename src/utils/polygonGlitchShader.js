@@ -1,5 +1,7 @@
 import * as THREE from "three";
 
+import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
+import { FEEDBACK_TIMING } from "../config/gameConstants";
 import {
   GLITCH_FRAGMENT_BODY,
   GLITCH_FRAGMENT_DECLARATIONS,
@@ -12,6 +14,11 @@ import { getFoundGreenThreeColor } from "./foundGreenPalette";
 export const polygonGlitchUniforms = {
   uTime: { value: 0 },
   uFoundGreen: { value: getFoundGreenThreeColor().clone() },
+  // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
+  uPixelScale: { value: 1 },
+  // Success flash timeline — stamped (in uTime seconds) when a guess lands.
+  uSuccessStart: { value: -10 },
+  uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
 };
 
 const animatedPolygonMaterials = new Set();
@@ -80,9 +87,13 @@ export function attachPolygonGlitchShader(
     getBaseColorForCountryAndKind,
   }
 ) {
-  material.customProgramCacheKey = () => `shader-cap-glitch-v8-${kind}`;
+  material.customProgramCacheKey = () => `shader-cap-glitch-v9-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+    shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+    shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
+    shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
+    shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
     shader.uniforms.uFadeProgress = { value: 0.0 };
     shader.uniforms.uTargetColor = {
       value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
