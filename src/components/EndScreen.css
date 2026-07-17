@@ -47,22 +47,75 @@
   letter-spacing: 0.01em;
 }
 
-.end-screen-header p {
-  font-size: 1.25rem;
-  margin-top: var(--spacing-sm);
-  opacity: 0.9;
+/* Minimize / restore — lets the player explore the globe behind */
+.end-screen-minimize-btn {
+  position: absolute;
+  top: calc(var(--spacing-md) + var(--safe-top));
+  right: var(--spacing-md);
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-height: var(--control-lg);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: fadeInSimple 0.8s ease both;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-spring);
 }
 
-.final-score {
+.end-screen-minimize-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.end-screen-restore-chip {
+  position: absolute;
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+  /* Centered via auto margins — the slideUp animation owns the transform. */
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: fit-content;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: var(--control-lg);
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: var(--radius-full);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: slideUp var(--transition-emphasized) both;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-spring);
+}
+
+.end-screen-restore-chip:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.restore-chip-score {
   font-family: var(--font-display);
-  font-weight: 200;
   font-variant-numeric: tabular-nums;
   color: var(--success);
-}
-
-.perfect-game .final-score {
-  color: var(--gold);
-  text-shadow: 0 0 20px var(--gold-soft);
 }
 
 .perfect-game .end-screen-header h1 {
@@ -262,9 +315,8 @@
   width: 100%;
 }
 
-.btn-primary,
-.btn-secondary {
-  padding: 12px 24px;
+.btn-primary {
+  padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 1rem;
@@ -272,10 +324,6 @@
   transition:
     transform var(--transition-spring),
     opacity var(--transition-spring);
-  border: none;
-}
-
-.btn-primary {
   background: var(--glass-border);
   color: var(--text-main);
   border: 1px solid var(--glass-border);
@@ -307,38 +355,6 @@
     box-shadow var(--transition-instant);
 }
 
-.btn-secondary {
-  background: var(--subtle-tint-strong);
-  color: var(--text-main);
-  backdrop-filter: var(--glass-blur-compact);
-  -webkit-backdrop-filter: var(--glass-blur-compact);
-  border: 1px solid var(--glass-border-strong);
-}
-
-.btn-secondary:hover {
-  transform: translateY(-2.5px) scale(1.02);
-  background: var(--glass-hover);
-  border-color: var(--accent);
-  color: var(--accent);
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
-}
-
-.btn-secondary:active {
-  transform: translateY(0.5px) scale(0.98);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border-color: var(--accent);
-  box-shadow: 0 2px 8px var(--accent-soft);
-  text-shadow: none;
-  transition:
-    transform var(--transition-instant),
-    background-color var(--transition-instant),
-    box-shadow var(--transition-instant);
-}
-
 /* Narrow / short viewports: scrollable content + sticky home button */
 @media (max-width: 900px), (max-height: 720px) {
   .end-screen-content {
@@ -356,6 +372,16 @@
   }
   .end-screen-header h1 {
     font-size: clamp(1.6rem, 5vw, 2.2rem);
+    /* Keep the centered title clear of the top-right minimize button */
+    padding: 0 var(--control-lg);
+  }
+  .end-screen-minimize-btn {
+    padding: var(--spacing-xs);
+    min-width: var(--control-lg);
+    justify-content: center;
+  }
+  .end-screen-minimize-btn span {
+    display: none;
   }
   .continents-progress-bars {
     padding: var(--spacing-md);
@@ -364,7 +390,7 @@
   }
   .progress-bars-grid {
     grid-template-columns: 1fr;
-    gap: var(--spacing-ms);
+    gap: var(--spacing-sm);
   }
   .end-screen-xp-card,
   .end-screen-history {
@@ -464,31 +490,33 @@
   }
 }
 
-/* Personal Best Badge */
+/* Personal Best Badge — uses the trophy gold tokens (readable in both themes) */
 .new-pb-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: min(90vw, 320px);
+  white-space: nowrap;
   margin: var(--spacing-xs) auto 0;
-  padding: 4px 12px;
-  background: linear-gradient(135deg, var(--gold-soft) 0%, transparent 100%);
-  color: var(--gold);
-  border: 1px solid var(--gold);
+  padding: var(--spacing-xxs) var(--spacing-md);
+  background: var(--color-gold-glow);
+  color: var(--color-gold);
+  border: 1px solid var(--color-gold);
   border-radius: var(--radius-sm);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 0.95rem;
-  box-shadow: 0 0 10px var(--gold-soft);
-  animation: pb-badge-pulse 1.5s ease-in-out infinite alternate;
+  font-size: clamp(0.8rem, 2.5vw, 0.95rem);
+  box-shadow: 0 0 10px var(--color-gold-glow);
+  animation: pb-badge-pulse 2.4s ease-in-out infinite alternate;
   pointer-events: auto;
 }
 
 @keyframes pb-badge-pulse {
   0% {
-    box-shadow: 0 0 4px var(--gold-soft);
-    transform: scale(0.98);
+    box-shadow: 0 0 4px var(--color-gold-glow);
   }
   100% {
-    box-shadow: 0 0 12px var(--gold-soft);
-    transform: scale(1.02);
+    box-shadow: 0 0 12px var(--color-gold-glow);
   }
 }
 

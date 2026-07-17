@@ -144,6 +144,8 @@ export function useGameSessionProps({
         maxScore: localRecords[mode]?.maxScore || 0,
         isNewPB,
         xpResult,
+        livesLeft,
+        isHardcoreRun,
       },
       panelProps: {
         dataMap: panelDataMap,

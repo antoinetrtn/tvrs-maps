@@ -1,6 +1,6 @@
 import "./EndScreen.css";
 
-import { InfoBox, Trophy } from "pixelarticons/react";
+import { ChevronDown, ChevronUp, InfoBox, Trophy } from "pixelarticons/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { getThemeRegionColor } from "../config/designSystem";
@@ -25,9 +25,16 @@ const EndScreen = ({
   maxScore = 0,
   isNewPB = false,
   xpResult = null,
+  livesLeft = null,
+  isHardcoreRun = false,
 }) => {
   const dataMap = activeDataMap || countryDataMap;
   const t = useTranslation(lang);
+
+  // Minimized: the summary collapses to a floating chip so the player can
+  // freely explore their hits/misses on the globe (crucial on mobile, where
+  // the full end screen captures every pointer event).
+  const [minimized, setMinimized] = useState(false);
 
   const orbsSourceRef = useRef(null);
   const orbsTargetRef = useRef(null);
@@ -48,6 +55,7 @@ const EndScreen = ({
   const isPerfectScore = foundList.length === totalCountries;
 
   const getTitle = () => {
+    if (isHardcoreRun && livesLeft === 0) return t("hardcore_game_over");
     if (isPerfectScore) return t("incredible");
     return t("well_done");
   };
@@ -84,6 +92,25 @@ const EndScreen = ({
     setAnimatingOrbs(false);
   };
 
+  if (minimized) {
+    return (
+      <div className={`end-screen-overlay minimized ${theme}`}>
+        <button
+          type="button"
+          className="end-screen-restore-chip glass-panel"
+          onClick={() => setMinimized(false)}
+          title={t("back_to_results")}
+        >
+          <ChevronUp width={16} height={16} />
+          <span className="restore-chip-score">
+            {foundList.length}/{totalCountries}
+          </span>
+          <span className="restore-chip-label">{t("back_to_results")}</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""} ${theme}`}>
       {/* XP Orbs Particle Component */}
@@ -100,6 +127,16 @@ const EndScreen = ({
 
       {/* Retro fireworks on Level Up or Personal Best */}
       {(isNewPB || showLevelUp) && <PixelFireworks duration={8000} />}
+
+      <button
+        type="button"
+        className="end-screen-minimize-btn glass-panel"
+        onClick={() => setMinimized(true)}
+        title={t("explore_globe")}
+      >
+        <ChevronDown width={16} height={16} />
+        <span>{t("explore_globe")}</span>
+      </button>
 
       <div className="end-screen-content scrollbar-styled">
         <div className="end-screen-header">
