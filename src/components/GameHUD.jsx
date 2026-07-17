@@ -508,7 +508,14 @@ const GameHUD = ({
           }
         >
           {suggestions.length > 0 && (
-            <div className="suggestions-list animation-fade-in">
+            /* preventDefault on the container too: taps landing in the gaps or
+               padding between items must not blur the input (mobile keyboard). */
+            <div
+              className="suggestions-list animation-fade-in"
+              role="presentation"
+              onMouseDown={(e) => e.preventDefault()}
+              onPointerDown={(e) => e.preventDefault()}
+            >
               {suggestions.map((s, idx) => (
                 <button
                   key={idx}
