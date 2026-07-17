@@ -1,6 +1,6 @@
 import "./LeaderboardScreen.css";
 
-import { Close, Globe, Hash, MapPin, TreePine } from "pixelarticons/react";
+import { Close, Globe, Hash, Heart, MapPin, TreePine } from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
@@ -275,7 +275,19 @@ const LeaderboardScreen = ({
                 return (
                   <tr key={row.id}>
                     <td className="col-date">{formatDate(row.created_at)}</td>
-                    <td className="col-score highlight-cyan">{row.score}</td>
+                    <td className="col-score highlight-cyan">
+                      <span className="score-cell">
+                        {row.score}
+                        {row.hardcore && (
+                          <Heart
+                            width={12}
+                            height={12}
+                            className="hardcore-badge"
+                            aria-label={t("hardcore_mode")}
+                          />
+                        )}
+                      </span>
+                    </td>
                     <td className="col-time highlight-magenta">
                       {formatTime(row.time_spent_seconds)}
                     </td>
@@ -409,9 +421,21 @@ const LeaderboardScreen = ({
                               <span className="player-username">{prof.username}</span>
                             </div>
                           </td>
-                          <td className="col-score highlight-cyan">{row.score}</td>
+                          <td className="col-score highlight-cyan">
+                            <span className="score-cell">
+                              {row.max_score}
+                              {row.hardcore && (
+                                <Heart
+                                  width={12}
+                                  height={12}
+                                  className="hardcore-badge"
+                                  aria-label={t("hardcore_mode")}
+                                />
+                              )}
+                            </span>
+                          </td>
                           <td className="col-time highlight-magenta">
-                            {formatTime(row.time_spent_seconds)}
+                            {formatTime(row.best_time_seconds)}
                           </td>
                         </tr>
                       );

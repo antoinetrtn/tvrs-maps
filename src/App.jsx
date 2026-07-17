@@ -47,6 +47,20 @@ function App() {
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
 
+  const [hardcoreMode, setHardcoreModeRaw] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.hardcoreMode) === "true";
+    } catch {
+      return false;
+    }
+  });
+  const setHardcoreMode = useCallback((value) => {
+    setHardcoreModeRaw(value);
+    try {
+      localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(value));
+    } catch {}
+  }, []);
+
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
@@ -169,6 +183,8 @@ function App() {
     navigateFocus,
     resetNavigationTrail,
     globeFeedbackRef,
+    livesLeft,
+    isHardcoreRun,
   } = useGameSession({
     mode,
     allCountryKeys,
@@ -190,6 +206,7 @@ function App() {
     extInputRef,
     effectiveKeyboardMode: isKeyboardMode,
     globeFeedbackApplierRef,
+    hardcoreMode,
   });
 
   const preserveInputFocus = useCallback(() => {
@@ -399,6 +416,8 @@ function App() {
     showResultsTable,
     globeFeedbackRef,
     globeFeedbackApplierRef,
+    livesLeft,
+    isHardcoreRun,
   });
 
   return (
@@ -419,6 +438,8 @@ function App() {
           setLang={setLang}
           gameDuration={gameDuration}
           setGameDuration={setGameDuration}
+          hardcoreMode={hardcoreMode}
+          setHardcoreMode={setHardcoreMode}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
           topExplorers={topExplorers}

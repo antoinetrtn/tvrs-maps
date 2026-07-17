@@ -86,7 +86,13 @@ export async function upsertProfile(
 /**
  * Submits a score entry to the global leaderboard.
  */
-export async function submitLeaderboardScore(profileId, gameMode, score, timeSpentSeconds) {
+export async function submitLeaderboardScore(
+  profileId,
+  gameMode,
+  score,
+  timeSpentSeconds,
+  hardcore = false
+) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const { data, error } = await supabase
@@ -96,6 +102,7 @@ export async function submitLeaderboardScore(profileId, gameMode, score, timeSpe
         game_mode: gameMode,
         score,
         time_spent_seconds: timeSpentSeconds,
+        hardcore,
       })
       .select();
 
@@ -119,6 +126,7 @@ export async function getLeaderboard(gameMode, limit = 50) {
         id,
         max_score,
         best_time_seconds,
+        hardcore,
         profiles (
           id,
           username,
@@ -163,7 +171,8 @@ export async function getUserHistory(profileId, gameMode = null, limit = 50) {
         score,
         time_spent_seconds,
         created_at,
-        game_mode
+        game_mode,
+        hardcore
       `
       )
       .eq("profile_id", profileId);
@@ -204,7 +213,8 @@ export async function upsertUserRecord(
   gameMode,
   maxScore,
   bestTimeSeconds,
-  gamesPlayed
+  gamesPlayed,
+  hardcore = null
 ) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
@@ -217,6 +227,10 @@ export async function upsertUserRecord(
     };
     if (bestTimeSeconds !== null) {
       payload.best_time_seconds = bestTimeSeconds;
+    }
+    // Only stamped when the best run changed — null keeps the stored flag.
+    if (hardcore !== null) {
+      payload.hardcore = hardcore;
     }
     const { data, error } = await supabase
       .from("user_records")

@@ -1,11 +1,11 @@
 import "./GameHUD.css";
 
-import { ChevronLeft, ChevronRight, Home, InfoBox, Play, Square } from "pixelarticons/react";
+import { ChevronLeft, ChevronRight, Heart, Home, InfoBox, Play, Square } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getThemeRegionColor } from "../config/designSystem";
 import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
-import { BREAKPOINTS } from "../config/gameConstants";
+import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
 import { normalizeString } from "../utils/utils";
 import Logo from "./Logo";
@@ -42,6 +42,8 @@ const GameHUD = ({
   showLearnPanel,
   hideLearnInput = false,
   hideHudPlayStop = false,
+  livesLeft = null,
+  isHardcoreRun = false,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -56,6 +58,20 @@ const GameHUD = ({
     }
     prevScoreRef.current = score;
   }, [score]);
+
+  // Hardcore lives: brief shake when a heart is lost.
+  const [livesShake, setLivesShake] = useState(false);
+  const prevLivesRef = useRef(livesLeft);
+  useEffect(() => {
+    const prev = prevLivesRef.current;
+    prevLivesRef.current = livesLeft;
+    if (livesLeft !== null && prev !== null && livesLeft < prev) {
+      setLivesShake(true);
+      const timer = setTimeout(() => setLivesShake(false), 500);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [livesLeft]);
 
   const t = useTranslation(lang);
 
@@ -253,6 +269,24 @@ const GameHUD = ({
 
   const isMobile = viewport.width < BREAKPOINTS.desktop;
 
+  const heartsRow =
+    isHardcoreRun && livesLeft !== null ? (
+      <div
+        className={`hud-hearts ${livesShake ? "hearts-shake" : ""}`}
+        title={t("hardcore_lives")}
+        aria-label={`${t("hardcore_lives")}: ${livesLeft}/${HARDCORE_LIVES}`}
+      >
+        {Array.from({ length: HARDCORE_LIVES }, (_, i) => (
+          <Heart
+            key={i}
+            width={14}
+            height={14}
+            className={i < livesLeft ? "heart-full" : "heart-lost"}
+          />
+        ))}
+      </div>
+    ) : null;
+
   return (
     <>
       <div
@@ -292,9 +326,7 @@ const GameHUD = ({
               )}
             </div>
 
-            <div className="hud-top-center">
-              {/* Center is empty on mobile for layout density */}
-            </div>
+            <div className="hud-top-center">{heartsRow}</div>
 
             <div className="hud-top-right">
               {mode === "learn" ? (
@@ -390,6 +422,12 @@ const GameHUD = ({
                       {score}/{totalPossible}
                     </span>
                   </div>
+                  {heartsRow && (
+                    <>
+                      <div className="island-divider" />
+                      {heartsRow}
+                    </>
+                  )}
                 </div>
               )}
             </div>

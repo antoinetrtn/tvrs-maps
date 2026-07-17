@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AVATAR_COLORS } from "../config/designSystem";
-import { AUTO_NAVIGATION, FEEDBACK_TIMING } from "../config/gameConstants";
+import { AUTO_NAVIGATION, FEEDBACK_TIMING, HARDCORE_LIVES } from "../config/gameConstants";
 import { CHALLENGES } from "../data/challenges";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 import { normalizeString } from "../utils/utils";
@@ -27,6 +27,7 @@ export function useGameSession({
   extInputRef,
   effectiveKeyboardMode,
   globeFeedbackApplierRef,
+  hardcoreMode = false,
 }) {
   const [foundList, setFoundList] = useState([]);
   const score = foundList.length;
@@ -34,6 +35,14 @@ export function useGameSession({
   const [isGameOver, setIsGameOver] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(gameDuration);
+
+  // Hardcore: the run ends after HARDCORE_LIVES wrong answers.
+  const [mistakes, setMistakes] = useState(0);
+  const isHardcoreRun = hardcoreMode && mode !== "learn";
+  const livesLeft = isHardcoreRun ? Math.max(0, HARDCORE_LIVES - mistakes) : null;
+  const registerMistake = useCallback(() => {
+    setMistakes((prev) => prev + 1);
+  }, []);
 
   const [feedback, setFeedback] = useState(null);
   const popupSuccess = feedback === "success";
@@ -221,7 +230,8 @@ export function useGameSession({
         timeSpent,
         totalPossible,
         gameDuration,
-        conqueredRegionsThisGameRef.current
+        conqueredRegionsThisGameRef.current,
+        isHardcoreRun
       );
       setXpResult(res);
 
@@ -248,6 +258,7 @@ export function useGameSession({
       totalPossible,
       lang,
       addAchievementToQueue,
+      isHardcoreRun,
     ]
   );
 
@@ -257,6 +268,13 @@ export function useGameSession({
     setShowEndScreen(true);
     handleGameFinished(foundList.length);
   }, [foundList.length, handleGameFinished]);
+
+  // Hardcore: out of lives -> the run ends (after the error flash plays out).
+  useEffect(() => {
+    if (!isHardcoreRun || isGameOver || mistakes < HARDCORE_LIVES) return undefined;
+    const timer = setTimeout(() => stopGame(), FEEDBACK_TIMING.flashMs);
+    return () => clearTimeout(timer);
+  }, [mistakes, isHardcoreRun, isGameOver, stopGame]);
 
   const resetGame = useCallback(
     (_newMode) => {
@@ -277,6 +295,7 @@ export function useGameSession({
       lastGuessTimeRef.current = Date.now();
       lightningCountRef.current = 0;
       successPendingRef.current.clear();
+      setMistakes(0);
     },
     [resetNavigationTrail, gameDuration, setSelectedCountry]
   );
@@ -440,9 +459,19 @@ export function useGameSession({
         handleSuccessfulGuess(matchFound);
         return "SUCCESS";
       }
+      registerMistake();
       return "ERROR";
     },
-    [activeDataMap, foundList, isPlaying, lang, mode, selectedCountry, handleSuccessfulGuess]
+    [
+      activeDataMap,
+      foundList,
+      isPlaying,
+      lang,
+      mode,
+      selectedCountry,
+      handleSuccessfulGuess,
+      registerMistake,
+    ]
   );
 
   const specificCountryGuess = useCallback(
@@ -485,6 +514,7 @@ export function useGameSession({
         handleSuccessfulGuess(selectedCountry);
         return "SUCCESS";
       } else {
+        registerMistake();
         triggerGlobeFeedback(selectedCountry, { isError: true, isSuccess: false });
         setPopupError(true);
         setTimeout(() => {
@@ -505,6 +535,7 @@ export function useGameSession({
       setPopupError,
       setPopupWarning,
       triggerGlobeFeedback,
+      registerMistake,
     ]
   );
 
@@ -616,5 +647,7 @@ export function useGameSession({
     navigateFocus,
     resetNavigationTrail,
     globeFeedbackRef,
+    livesLeft,
+    isHardcoreRun,
   };
 }
