@@ -37,6 +37,28 @@ export const FEEDBACK_TIMING = {
 // --- Layout breakpoints ------------------------------------------------------
 // Kept in sync with the CSS media queries. `desktop` is the HUD/keyboard cutoff,
 // `mobile` separates phone from tablet for the performance profile.
+// --- Auto-navigation ---------------------------------------------------------
+// After a correct guess the focus advances to a nearby unfound target. Instead
+// of always the single nearest (fully deterministic tours), it picks among the
+// closest few with a proximity bias so runs differ while staying coherent.
+export const AUTO_NAVIGATION = {
+  candidatePool: 3,
+  weights: [0.6, 0.25, 0.15],
+};
+
+// --- Game start view ---------------------------------------------------------
+// Camera anchors a new run can land on (varied instead of always Europe),
+// jittered so two runs on the same region still differ.
+export const GAME_START_VIEWPOINTS = [
+  { lat: 30, lng: 10 }, // Europe / Afrique du Nord
+  { lat: 10, lng: 20 }, // Afrique
+  { lat: 25, lng: -95 }, // Amérique du Nord
+  { lat: -15, lng: -60 }, // Amérique du Sud
+  { lat: 25, lng: 90 }, // Asie
+  { lat: -20, lng: 140 }, // Océanie
+];
+export const GAME_START_VIEW_JITTER_DEG = 8;
+
 export const BREAKPOINTS = {
   mobile: 768,
   desktop: 1024,

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AVATAR_COLORS } from "../config/designSystem";
-import { FEEDBACK_TIMING } from "../config/gameConstants";
+import { AUTO_NAVIGATION, FEEDBACK_TIMING } from "../config/gameConstants";
 import { CHALLENGES } from "../data/challenges";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 import { normalizeString } from "../utils/utils";
@@ -102,12 +102,24 @@ export function useGameSession({
         }
       });
 
+      // Proximity-biased pick among the closest few — keeps the tour coherent
+      // (same region first, nearby targets) while varying run to run.
+      const pickWeightedNearest = (list) => {
+        list.sort((a, b) => a.dist - b.dist);
+        const pool = list.slice(0, AUTO_NAVIGATION.candidatePool);
+        const r = Math.random();
+        let acc = 0;
+        for (let i = 0; i < pool.length; i += 1) {
+          acc += AUTO_NAVIGATION.weights[i] ?? 0;
+          if (r < acc) return pool[i].key;
+        }
+        return pool[0].key;
+      };
+
       if (sameRegionList.length > 0) {
-        sameRegionList.sort((a, b) => a.dist - b.dist);
-        return sameRegionList[0].key;
+        return pickWeightedNearest(sameRegionList);
       } else if (otherRegionList.length > 0) {
-        otherRegionList.sort((a, b) => a.dist - b.dist);
-        return otherRegionList[0].key;
+        return pickWeightedNearest(otherRegionList);
       }
       return null;
     },
