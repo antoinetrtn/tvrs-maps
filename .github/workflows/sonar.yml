@@ -33,18 +33,12 @@ jobs:
       # - name: Run tests with coverage
       #   run: npm run test:coverage
 
+      # All configuration (projectKey, organization, sources, exclusions...)
+      # lives in sonar-project.properties, read automatically from the root.
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         with:
           projectBaseDir: .
-          args: >
-            -Dproject.settings=sonar-project.properties
-            -Dsonar.projectKey=tvrs-maps
-            -Dsonar.organization=${{ secrets.SONAR_ORG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-        # We explicitly pass projectKey and organization via args to avoid
-        # "project key empty" or "NONE" configuration file issues.
-        # Other settings (sources, exclusions, etc.) come from sonar-project.properties.
