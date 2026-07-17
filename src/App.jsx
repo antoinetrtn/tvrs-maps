@@ -15,6 +15,7 @@ import {
   DEFAULT_MODE,
   HOME_AUTOROTATE_INTERVAL_MS,
   PERFORMANCE,
+  SCREEN_TRANSITION_MS,
   STORAGE_KEYS,
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
@@ -46,6 +47,20 @@ function App() {
   const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
+
+  const [hardcoreMode, setHardcoreModeRaw] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.hardcoreMode) === "true";
+    } catch {
+      return false;
+    }
+  });
+  const setHardcoreMode = useCallback((value) => {
+    setHardcoreModeRaw(value);
+    try {
+      localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(value));
+    } catch {}
+  }, []);
 
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -122,7 +137,7 @@ function App() {
     }
 
     setIsScreenGlitching(true);
-    const timer = setTimeout(() => setIsScreenGlitching(false), 220);
+    const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
     return () => clearTimeout(timer);
   }, [currentScreen, showResultsTable]);
 
@@ -169,6 +184,8 @@ function App() {
     navigateFocus,
     resetNavigationTrail,
     globeFeedbackRef,
+    livesLeft,
+    isHardcoreRun,
   } = useGameSession({
     mode,
     allCountryKeys,
@@ -190,6 +207,7 @@ function App() {
     extInputRef,
     effectiveKeyboardMode: isKeyboardMode,
     globeFeedbackApplierRef,
+    hardcoreMode,
   });
 
   const preserveInputFocus = useCallback(() => {
@@ -399,6 +417,8 @@ function App() {
     showResultsTable,
     globeFeedbackRef,
     globeFeedbackApplierRef,
+    livesLeft,
+    isHardcoreRun,
   });
 
   return (
@@ -419,6 +439,8 @@ function App() {
           setLang={setLang}
           gameDuration={gameDuration}
           setGameDuration={setGameDuration}
+          hardcoreMode={hardcoreMode}
+          setHardcoreMode={setHardcoreMode}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
           topExplorers={topExplorers}

@@ -57,6 +57,8 @@ export function useGameSessionProps({
   showResultsTable,
   globeFeedbackRef,
   globeFeedbackApplierRef,
+  livesLeft,
+  isHardcoreRun,
 }) {
   return useMemo(
     () => ({
@@ -96,6 +98,8 @@ export function useGameSessionProps({
         hideLearnInput: mode === "learn" && !isMobileViewport,
         isPanelOpen: isPanelOpen && mode !== "learn",
         hideHudPlayStop: isPanelOpen && mode !== "learn",
+        livesLeft,
+        isHardcoreRun,
       },
       globeProps: {
         mode,
@@ -140,6 +144,8 @@ export function useGameSessionProps({
         maxScore: localRecords[mode]?.maxScore || 0,
         isNewPB,
         xpResult,
+        livesLeft,
+        isHardcoreRun,
       },
       panelProps: {
         dataMap: panelDataMap,
@@ -226,6 +232,8 @@ export function useGameSessionProps({
       showResultsTable,
       globeFeedbackRef,
       globeFeedbackApplierRef,
+      livesLeft,
+      isHardcoreRun,
     ]
   );
 }

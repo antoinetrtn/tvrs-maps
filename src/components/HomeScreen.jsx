@@ -8,6 +8,7 @@ import {
   Earth,
   Globe,
   Hash,
+  Heart,
   MapPin,
   Minus,
   Moon,
@@ -36,6 +37,8 @@ const HomeScreen = ({
   setLang,
   gameDuration,
   setGameDuration,
+  hardcoreMode = false,
+  setHardcoreMode,
   globeTheme,
   setGlobeTheme,
   topExplorers = [],
@@ -348,6 +351,26 @@ const HomeScreen = ({
                 <span>+1 Min</span>
               </button>
             </div>
+          </div>
+
+          {/* Hardcore Mode Selector */}
+          <div className="settings-card glass-panel">
+            <div className="settings-card-header">
+              <span className="section-label">{t("hardcore_mode")}</span>
+            </div>
+            <SegmentedControl
+              options={[
+                { value: "normal", label: t("hardcore_off") },
+                {
+                  value: "hardcore",
+                  label: t("hardcore_on"),
+                  icon: <Heart width={14} height={14} />,
+                },
+              ]}
+              value={hardcoreMode ? "hardcore" : "normal"}
+              onChange={(v) => setHardcoreMode?.(v === "hardcore")}
+            />
+            <p className="settings-hint">{t("hardcore_desc")}</p>
           </div>
 
           {/* Language Selector */}

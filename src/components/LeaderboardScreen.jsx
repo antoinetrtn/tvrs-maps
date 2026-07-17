@@ -1,6 +1,7 @@
 import "./LeaderboardScreen.css";
+import "./LeaderboardScreenMobile.css";
 
-import { Close, Globe, Hash, MapPin, TreePine } from "pixelarticons/react";
+import { Close, Globe, Hash, Heart, MapPin, TreePine } from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
@@ -28,6 +29,76 @@ const formatDate = (isoString) => {
   } catch {
     return "";
   }
+};
+
+/** Score value with the hardcore heart badge when the run was hardcore. */
+const ScoreCell = ({ value, hardcore, hardcoreLabel }) => (
+  <span className="score-cell">
+    {value}
+    {hardcore && (
+      <Heart width={12} height={12} className="hardcore-badge" aria-label={hardcoreLabel} />
+    )}
+  </span>
+);
+
+const RANK_LABELS = ["1st", "2nd", "3rd"];
+
+/** One row of the global leaderboard (user_records shape). */
+const GlobalScoreRow = ({ row, index, hardcoreLabel }) => {
+  const prof = row.profiles || {
+    username: "Anonyme",
+    avatar_id: "invader_1",
+    avatar_color: "cyan",
+  };
+  const isTop3 = index < 3;
+  const rankColorClass = isTop3 ? `rank-${index + 1}` : "";
+
+  return (
+    <tr>
+      <td className="col-rank">
+        <span className={`rank-badge ${rankColorClass}`}>
+          {isTop3 ? RANK_LABELS[index] : index + 1}
+        </span>
+      </td>
+      <td className="col-player">
+        <div className="player-cell">
+          <InvaderAvatar invaderId={prof.avatar_id} color={prof.avatar_color} size={20} />
+          <span className="player-username">{prof.username}</span>
+        </div>
+      </td>
+      <td className="col-score highlight-cyan">
+        <ScoreCell value={row.score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />
+      </td>
+      <td className="col-time highlight-magenta">{formatTime(row.time_spent_seconds)}</td>
+    </tr>
+  );
+};
+
+/** One row of the personal history (leaderboards shape) with score trend. */
+const HistoryRow = ({ row, previousRow, hardcoreLabel }) => {
+  let evoIcon = <span className="evo-bullet">●</span>;
+  let evoClass = "evo-equal";
+
+  if (previousRow) {
+    if (row.score > previousRow.score) {
+      evoIcon = <span className="evo-arrow">▲</span>;
+      evoClass = "evo-up";
+    } else if (row.score < previousRow.score) {
+      evoIcon = <span className="evo-arrow">▼</span>;
+      evoClass = "evo-down";
+    }
+  }
+
+  return (
+    <tr>
+      <td className="col-date">{formatDate(row.created_at)}</td>
+      <td className="col-score highlight-cyan">
+        <ScoreCell value={row.score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />
+      </td>
+      <td className="col-time highlight-magenta">{formatTime(row.time_spent_seconds)}</td>
+      <td className={`col-evo ${evoClass}`}>{evoIcon}</td>
+    </tr>
+  );
 };
 
 const LeaderboardScreen = ({
@@ -91,7 +162,7 @@ const LeaderboardScreen = ({
         if (!isMounted) return;
 
         if (fetchErr) {
-          setError(fetchErr);
+          setError(fetchErr.message || String(fetchErr));
         } else {
           const result = data || [];
           setScoresData(result);
@@ -139,7 +210,7 @@ const LeaderboardScreen = ({
         if (!isMounted) return;
 
         if (fetchErr) {
-          setHistoryError(fetchErr);
+          setHistoryError(fetchErr.message || String(fetchErr));
         } else {
           const result = data || [];
           setHistoryData(result);
@@ -257,32 +328,14 @@ const LeaderboardScreen = ({
               </tr>
             </thead>
             <tbody>
-              {historyData.map((row, index) => {
-                let evoIcon = <span className="evo-bullet">●</span>;
-                let evoClass = "evo-equal";
-
-                if (index + 1 < historyData.length) {
-                  const prevGame = historyData[index + 1];
-                  if (row.score > prevGame.score) {
-                    evoIcon = <span className="evo-arrow">▲</span>;
-                    evoClass = "evo-up";
-                  } else if (row.score < prevGame.score) {
-                    evoIcon = <span className="evo-arrow">▼</span>;
-                    evoClass = "evo-down";
-                  }
-                }
-
-                return (
-                  <tr key={row.id}>
-                    <td className="col-date">{formatDate(row.created_at)}</td>
-                    <td className="col-score highlight-cyan">{row.score}</td>
-                    <td className="col-time highlight-magenta">
-                      {formatTime(row.time_spent_seconds)}
-                    </td>
-                    <td className={`col-evo ${evoClass}`}>{evoIcon}</td>
-                  </tr>
-                );
-              })}
+              {historyData.map((row, index) => (
+                <HistoryRow
+                  key={row.id}
+                  row={row}
+                  previousRow={historyData[index + 1]}
+                  hardcoreLabel={t("hardcore_mode")}
+                />
+              ))}
             </tbody>
           </table>
         </div>
@@ -382,40 +435,14 @@ const LeaderboardScreen = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {scoresData.map((row, index) => {
-                      const prof = row.profiles || {
-                        username: "Anonyme",
-                        avatar_id: "invader_1",
-                        avatar_color: "cyan",
-                      };
-                      const isTop3 = index < 3;
-                      const rankLabels = ["1st", "2nd", "3rd"];
-                      const rankColorClass = isTop3 ? `rank-${index + 1}` : "";
-
-                      return (
-                        <tr key={row.id}>
-                          <td className="col-rank">
-                            <span className={`rank-badge ${rankColorClass}`}>
-                              {isTop3 ? rankLabels[index] : index + 1}
-                            </span>
-                          </td>
-                          <td className="col-player">
-                            <div className="player-cell">
-                              <InvaderAvatar
-                                invaderId={prof.avatar_id}
-                                color={prof.avatar_color}
-                                size={20}
-                              />
-                              <span className="player-username">{prof.username}</span>
-                            </div>
-                          </td>
-                          <td className="col-score highlight-cyan">{row.score}</td>
-                          <td className="col-time highlight-magenta">
-                            {formatTime(row.time_spent_seconds)}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {scoresData.map((row, index) => (
+                      <GlobalScoreRow
+                        key={row.id}
+                        row={row}
+                        index={index}
+                        hardcoreLabel={t("hardcore_mode")}
+                      />
+                    ))}
                   </tbody>
                 </table>
               )}

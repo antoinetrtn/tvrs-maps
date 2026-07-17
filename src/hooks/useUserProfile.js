@@ -545,7 +545,8 @@ export function useUserProfile() {
       timeSpent,
       totalPossible = 0,
       gameDuration = 0,
-      continentsConquered = []
+      continentsConquered = [],
+      hardcore = false
     ) => {
       const oldXp = userProfile.xp || 0;
       const oldLevel = userProfile.level || 1;
@@ -584,13 +585,16 @@ export function useUserProfile() {
 
       let nextMaxScore = currentRecord.maxScore;
       let nextBestTime = currentRecord.bestTime;
+      let isNewBestRun = false;
 
       if (finalScore > currentRecord.maxScore) {
         nextMaxScore = finalScore;
         nextBestTime = timeSpent;
+        isNewBestRun = true;
       } else if (finalScore === currentRecord.maxScore) {
         if (currentRecord.bestTime === null || timeSpent < currentRecord.bestTime) {
           nextBestTime = timeSpent;
+          isNewBestRun = true;
         }
       }
 
@@ -598,6 +602,8 @@ export function useUserProfile() {
         maxScore: nextMaxScore,
         bestTime: nextBestTime,
         gamesPlayed: nextGamesPlayed,
+        // Whether the standing best run was achieved in hardcore.
+        hardcore: isNewBestRun ? hardcore : Boolean(currentRecord.hardcore),
       };
 
       const updatedRecords = {
@@ -710,7 +716,8 @@ export function useUserProfile() {
           gameMode,
           nextMaxScore,
           nextBestTime,
-          nextGamesPlayed
+          nextGamesPlayed,
+          isNewBestRun ? hardcore : null
         );
         if (recordErr) console.error("Error syncing user record to Supabase:", recordErr);
 
@@ -719,7 +726,8 @@ export function useUserProfile() {
             activeUserId,
             gameMode,
             finalScore,
-            timeSpent
+            timeSpent,
+            hardcore
           );
           if (scoreErr) {
             console.error("Error submitting score to Supabase:", scoreErr);

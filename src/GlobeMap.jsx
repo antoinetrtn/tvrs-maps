@@ -302,12 +302,12 @@ const GlobeMap = ({
     selectedCountry,
     isError,
     UI_COLORS,
-    gameDataMap,
     foundSet,
     isHomeScreen,
     REGION_COLORS_LABELS,
     REGION_COLORS,
     isLight,
+    countriesWithGeometry,
   });
 
   const { getBiomeAssetsData, getBiomeAltitude, createBiomeThreeObject } = useGlobeBiomes({

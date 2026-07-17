@@ -437,6 +437,8 @@
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
+  /* Comfortable touch target — a missed tap closes the mobile keyboard. */
+  min-height: var(--control-lg);
   color: var(--text-main);
   font-size: 0.9rem;
   font-weight: 500;
@@ -448,6 +450,12 @@
     background var(--transition-spring),
     transform var(--transition-spring),
     border-color var(--transition-spring);
+}
+
+@media (max-width: 1024px) {
+  .suggestion-item {
+    font-size: 1rem;
+  }
 }
 
 .suggestion-item:hover {

@@ -22,14 +22,16 @@ export const HOME_AUTOROTATE_INTERVAL_MS = 5500;
 // Mobile soft-keyboard open/close debounce.
 export const KEYBOARD_CLOSE_DELAY_MS = 180;
 
+// Screen transition: UI soft fade duration (matches screen-soft-in in App.css)
+export const SCREEN_TRANSITION_MS = 280;
+
 /**
  * Transient input-feedback durations (popup success/error/warning flashes and
  * focus re-assertion delays). Grouped so the whole guessing UX can be retuned
  * in one place.
  */
 export const FEEDBACK_TIMING = {
-  successHoldMs: 620, // success flash before auto-advancing (free search)
-  successHoldFocusedMs: 520, // success flash when a country is already focused
+  successFlashMs: 380, // success pixel-resolve flash before auto-advancing (drives uSuccessDuration)
   flashMs: 500, // error / "already found" warning flash
   focusGlobeClickMs: 80, // delay before re-focusing input after a globe click
   focusKeyboardMs: 50, // delay before re-focusing input during navigation
@@ -38,6 +40,28 @@ export const FEEDBACK_TIMING = {
 // --- Layout breakpoints ------------------------------------------------------
 // Kept in sync with the CSS media queries. `desktop` is the HUD/keyboard cutoff,
 // `mobile` separates phone from tablet for the performance profile.
+// --- Auto-navigation ---------------------------------------------------------
+// After a correct guess the focus advances to a nearby unfound target. Instead
+// of always the single nearest (fully deterministic tours), it picks among the
+// closest few with a proximity bias so runs differ while staying coherent.
+export const AUTO_NAVIGATION = {
+  candidatePool: 3,
+  weights: [0.6, 0.25, 0.15],
+};
+
+// --- Game start view ---------------------------------------------------------
+// Camera anchors a new run can land on (varied instead of always Europe),
+// jittered so two runs on the same region still differ.
+export const GAME_START_VIEWPOINTS = [
+  { lat: 30, lng: 10 }, // Europe / Afrique du Nord
+  { lat: 10, lng: 20 }, // Afrique
+  { lat: 25, lng: -95 }, // Amérique du Nord
+  { lat: -15, lng: -60 }, // Amérique du Sud
+  { lat: 25, lng: 90 }, // Asie
+  { lat: -20, lng: 140 }, // Océanie
+];
+export const GAME_START_VIEW_JITTER_DEG = 8;
+
 export const BREAKPOINTS = {
   mobile: 768,
   desktop: 1024,
@@ -53,7 +77,12 @@ export function getDataPanelLayoutWidth(viewportWidth) {
 // --- Persistence -------------------------------------------------------------
 export const STORAGE_KEYS = {
   globeTheme: "tvrs-globe-theme",
+  hardcoreMode: "tvrs-hardcore-mode",
 };
+
+// --- Hardcore mode -----------------------------------------------------------
+// Optional difficulty: the run ends after this many wrong answers.
+export const HARDCORE_LIVES = 5;
 
 // --- Remote data sources -----------------------------------------------------
 export const DATA_URLS = {

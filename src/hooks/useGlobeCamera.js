@@ -1,13 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 
+import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
 import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
-import { BREAKPOINTS, getDataPanelLayoutWidth } from "../config/gameConstants";
+import {
+  BREAKPOINTS,
+  GAME_START_VIEW_JITTER_DEG,
+  GAME_START_VIEWPOINTS,
+  getDataPanelLayoutWidth,
+} from "../config/gameConstants";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { readClampedGlobePov, syncGlobeCameraAndZoomLimits } from "../utils/globeAltitude";
+import { polygonGlitchUniforms } from "../utils/polygonGlitchShader";
 import { getCanonicalPosition } from "../utils/utils";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
+
+// A new run lands on a random region anchor (jittered) instead of always the
+// same Europe-facing view.
+const getRandomGameStartView = () => {
+  const base = GAME_START_VIEWPOINTS[Math.floor(Math.random() * GAME_START_VIEWPOINTS.length)];
+  const jitter = () => (Math.random() * 2 - 1) * GAME_START_VIEW_JITTER_DEG;
+  return { lat: base.lat + jitter(), lng: base.lng + jitter() };
+};
 
 const getDepartmentModeFrancePointOfView = (width) => ({
   lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
@@ -110,8 +125,13 @@ const applyIdleCameraPointOfView = ({
   }
 
   if (wasHomeScreen) {
+    const startView = getRandomGameStartView();
     globeEl.current.pointOfView(
-      { lat: 18, lng: 20, altitude: viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35 },
+      {
+        lat: startView.lat,
+        lng: startView.lng,
+        altitude: viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35,
+      },
       700
     );
   }
@@ -160,8 +180,13 @@ export function useGlobeCamera({
       try {
         const renderer = globeEl.current.renderer();
         if (renderer) {
-          renderer.setPixelRatio(perfProfile?.pixelRatio || 1);
+          const pixelRatio = perfProfile?.pixelRatio || 1;
+          renderer.setPixelRatio(pixelRatio);
           renderer.sortObjects = true;
+          // Keep the screen-space glitch grain the same visual size regardless
+          // of the device's capped pixel ratio (mobile 1.25 vs desktop 2.0).
+          polygonGlitchUniforms.uPixelScale.value =
+            GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
         }
 
         const controls = globeEl.current.controls();

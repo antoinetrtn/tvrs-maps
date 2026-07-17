@@ -16,6 +16,10 @@ export function applyPolygonFeedbackUniforms({
   if (isError || isSuccess) {
     polygonGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
   }
+  if (isSuccess) {
+    // Stamp the success flash start so the shader's pixel-resolve runs 0 -> 1.
+    polygonGlitchUniforms.uSuccessStart.value = time;
+  }
 
   ["cap", "side"].forEach((kind) => {
     const mat = polygonMaterialCacheRef.current[kind]?.get(admin);

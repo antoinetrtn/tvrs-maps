@@ -32,8 +32,6 @@
   --glitch-magenta-soft: rgba(255, 0, 127, 0.5);
   --glitch-cyan: rgba(0, 240, 255, 0.6);
   --glitch-cyan-soft: rgba(0, 240, 255, 0.5);
-  --glitch-magenta-flicker: rgba(255, 0, 127, 0.02);
-  --glitch-cyan-flicker: rgba(0, 240, 255, 0.02);
   --scanline-color: rgba(255, 255, 255, 0.05);
   --home-card-bg: rgba(10, 10, 10, 0.94);
   --home-scanline: rgba(0, 0, 0, 0.22);
@@ -53,7 +51,6 @@
   --radius-sm: 4px;
   --radius-md: calc(var(--radius-sm) + var(--spacing-xs));
   --radius-lg: calc(var(--radius-md) + var(--spacing-xs) * 1.5);
-  --radius-xl: calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs));
   --radius-full: 9999px;
 
   --spacing-xxs: 2px;
@@ -163,8 +160,6 @@
   --glitch-magenta-soft: rgba(219, 39, 119, 0.4);
   --glitch-cyan: rgba(8, 145, 178, 0.5);
   --glitch-cyan-soft: rgba(8, 145, 178, 0.4);
-  --glitch-magenta-flicker: rgba(219, 39, 119, 0.02);
-  --glitch-cyan-flicker: rgba(8, 145, 178, 0.02);
   --scanline-color: rgba(15, 23, 42, 0.03);
   --home-card-bg: var(--glass-bg);
   --home-scanline: rgba(15, 23, 42, 0.04);
@@ -347,6 +342,75 @@ body {
 .btn-icon.active {
   background: var(--accent-soft);
   color: var(--accent);
+}
+
+/* Shared primary button — used by EndScreen, ProfilePanel and AuthModal. */
+.btn-primary {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    transform var(--transition-spring),
+    opacity var(--transition-spring);
+  background: var(--glass-border);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2.5px) scale(1.02);
+  box-shadow:
+    0 0 0 1px var(--accent-soft),
+    0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--glass-hover);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.btn-primary:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition:
+    transform var(--transition-instant),
+    background-color var(--transition-instant),
+    box-shadow var(--transition-instant);
+}
+
+/* Shared secondary button — quieter sibling of .btn-primary. */
+.btn-secondary {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  transition:
+    transform var(--transition-spring),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2.5px) scale(1.02);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--glass-hover);
+}
+
+.btn-secondary:active {
+  transform: translateY(0.5px) scale(0.98);
+  transition: transform var(--transition-instant);
 }
 
 @keyframes modalEnter {

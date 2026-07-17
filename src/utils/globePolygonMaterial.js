@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { GLOBE_STYLE } from "../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../config/designSystem";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
@@ -225,8 +225,10 @@ export function getPolygonMaterialForFeature({
           material.transparent = false;
           material.opacity = 1.0;
         } else {
+          // Transparent flag kept so the shader's dissolve alpha applies on
+          // deselection; the wall itself renders the full cap effect.
           material.transparent = true;
-          material.opacity = 0.55;
+          material.opacity = GLITCH_EFFECT_SETTINGS.sideWallOpacity;
         }
       }
       attachPolygonGlitchShader(material, {
