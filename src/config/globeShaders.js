@@ -231,11 +231,9 @@ export const GLITCH_FRAGMENT_BODY = `
     gl_FragColor.rgb = mix(glitchColor, settleColor, finalProgress);
   }
 
-  float finalAlpha = 1.0;
-  if (uIsSuccess > 0.5 || uIsFound > 0.5) {
-    finalAlpha = 1.0;
-  } else if (uTheme < 0.5 && uIsFound < 0.5) {
-    finalAlpha = mix(1.0, 0.0, finalProgress);
-  }
-  gl_FragColor.a = finalAlpha;
+  // Caps stay fully opaque through the deselect. The dissolve now morphs the
+  // cap's COLOR toward its resting tint (uTargetColor) and hands off to the base
+  // material; fading alpha to 0 here used to punch a one-frame black hole through
+  // to the globe — the "blink" against the grayscale countries.
+  gl_FragColor.a = 1.0;
 `;
