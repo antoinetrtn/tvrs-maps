@@ -1,8 +1,9 @@
+import { Globe, Hash, MapPin, Waves } from "pixelarticons/react";
 import React, { useMemo } from "react";
-import { Globe, MapPin, Waves, Hash } from "pixelarticons/react";
-import SegmentedControl from "./SegmentedControl";
+
 import { LEARN_SUB_MODES } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
+import SegmentedControl from "./SegmentedControl";
 
 const LearnModeToggles = ({ learnSubMode, onLearnSubModeChange, lang }) => {
   const t = useTranslation(lang);
@@ -28,7 +29,7 @@ const LearnModeToggles = ({ learnSubMode, onLearnSubModeChange, lang }) => {
           icon: icons[value],
         };
       }),
-    [t],
+    [t]
   );
 
   return (

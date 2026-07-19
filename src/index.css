@@ -32,8 +32,6 @@
   --glitch-magenta-soft: rgba(255, 0, 127, 0.5);
   --glitch-cyan: rgba(0, 240, 255, 0.6);
   --glitch-cyan-soft: rgba(0, 240, 255, 0.5);
-  --glitch-magenta-flicker: rgba(255, 0, 127, 0.02);
-  --glitch-cyan-flicker: rgba(0, 240, 255, 0.02);
   --scanline-color: rgba(255, 255, 255, 0.05);
   --home-card-bg: rgba(10, 10, 10, 0.94);
   --home-scanline: rgba(0, 0, 0, 0.22);
@@ -53,7 +51,6 @@
   --radius-sm: 4px;
   --radius-md: calc(var(--radius-sm) + var(--spacing-xs));
   --radius-lg: calc(var(--radius-md) + var(--spacing-xs) * 1.5);
-  --radius-xl: calc(var(--radius-lg) + var(--spacing-sm) + var(--spacing-xs));
   --radius-full: 9999px;
 
   --spacing-xxs: 2px;
@@ -64,10 +61,10 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
 
-  --font-main: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-main: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Display face for headings, scores, timers and large numerals */
-  --font-display: 'Bitcount Single', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  
+  --font-display: "Bitcount Single", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-emphasized: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -88,28 +85,32 @@
   --xp-green-outer: #00aa00;
   --xp-yellow-inner: #ffff55;
   --xp-yellow-outer: #7f7f00;
-  
+
   --xp-black: #000000;
   --xp-bar-bg: #111111;
   --xp-bar-border-light: #555555;
   --xp-bar-border-dark: #333333;
-  
+
   --xp-shadow-heavy: rgba(0, 0, 0, 0.8);
   --xp-shadow-medium: rgba(0, 0, 0, 0.5);
   --xp-shadow-light: rgba(0, 0, 0, 0.4);
-  
+
   --xp-green-glow: rgba(85, 255, 85, 0.25);
   --xp-green-fill-top: #7fff7f;
   --xp-green-fill-bottom: #00aa00;
   --xp-green-fill-overlay: rgba(0, 0, 0, 0.15);
-  
+
   --xp-error-bg: rgba(255, 69, 0, 0.1);
   --xp-error-border: rgba(255, 69, 0, 0.3);
   --xp-success-bg: rgba(0, 240, 255, 0.1);
   --xp-success-border: rgba(0, 240, 255, 0.3);
 
   /* CRT DIAGNOSTIC TERMINAL SETTINGS PANEL VARIABLES */
-  --crt-panel-bg: radial-gradient(circle at 50% 50%, rgba(16, 26, 44, 0.98) 0%, rgba(6, 9, 18, 0.99) 100%);
+  --crt-panel-bg: radial-gradient(
+    circle at 50% 50%,
+    rgba(16, 26, 44, 0.98) 0%,
+    rgba(6, 9, 18, 0.99) 100%
+  );
   --crt-scanline-color: rgba(18, 16, 16, 0);
   --crt-scanline-stripes: rgba(0, 0, 0, 0.28);
   --crt-glow-color: rgba(0, 240, 255, 0.15);
@@ -138,7 +139,7 @@
   --bg-color: #f1f5f9;
   --text-main: #0f172a;
   --text-muted: #475569;
-  
+
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(15, 23, 42, 0.08);
   --glass-hover: rgba(15, 23, 42, 0.05);
@@ -148,7 +149,7 @@
   --modal-header-bg: rgba(255, 255, 255, 0.4);
   --subtle-tint-strong: rgba(0, 0, 0, 0.1);
   --highlight-soft: rgba(0, 0, 0, 0.03);
-  
+
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
   --accent-soft: rgba(37, 99, 235, 0.1);
@@ -159,14 +160,16 @@
   --glitch-magenta-soft: rgba(219, 39, 119, 0.4);
   --glitch-cyan: rgba(8, 145, 178, 0.5);
   --glitch-cyan-soft: rgba(8, 145, 178, 0.4);
-  --glitch-magenta-flicker: rgba(219, 39, 119, 0.02);
-  --glitch-cyan-flicker: rgba(8, 145, 178, 0.02);
   --scanline-color: rgba(15, 23, 42, 0.03);
   --home-card-bg: var(--glass-bg);
   --home-scanline: rgba(15, 23, 42, 0.04);
 
   /* CRT DIAGNOSTIC TERMINAL SETTINGS PANEL LIGHT OVERRIDES */
-  --crt-panel-bg: radial-gradient(circle at 50% 50%, rgba(240, 244, 250, 0.98) 0%, rgba(220, 225, 235, 0.99) 100%);
+  --crt-panel-bg: radial-gradient(
+    circle at 50% 50%,
+    rgba(240, 244, 250, 0.98) 0%,
+    rgba(220, 225, 235, 0.99) 100%
+  );
   --crt-scanline-color: rgba(255, 255, 255, 0.5);
   --crt-scanline-stripes: rgba(15, 23, 42, 0.04);
   --crt-glow-color: rgba(8, 145, 178, 0.05);
@@ -200,7 +203,10 @@
   outline: none !important;
 }
 
-input, button, textarea, select {
+input,
+button,
+textarea,
+select {
   -webkit-tap-highlight-color: transparent;
   outline: none !important;
 }
@@ -214,7 +220,8 @@ input, button, textarea, select {
   appearance: none !important;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -228,7 +235,9 @@ body {
   background-color: var(--bg-color);
   color: var(--text-main);
   font-family: var(--font-main);
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  transition:
+    background-color var(--transition-normal),
+    color var(--transition-normal);
 }
 
 #root {
@@ -264,22 +273,12 @@ body {
   position: relative;
 }
 
-:is(
-  .sheet-panel,
-  .input-island,
-  .suggestions-list,
-  .mobile-dropdown-menu
-) {
+:is(.sheet-panel, .input-island, .suggestions-list, .mobile-dropdown-menu) {
   isolation: isolate;
 }
 
-:is(
-  .sheet-panel,
-  .input-island,
-  .suggestions-list,
-  .mobile-dropdown-menu
-)::before {
-  content: '';
+:is(.sheet-panel, .input-island, .suggestions-list, .mobile-dropdown-menu)::before {
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -291,19 +290,20 @@ body {
 }
 
 :is(
-  .glass-icon-btn:not(.profile-trigger-btn),
-  .settings-trigger-btn,
-  .leaderboard-trigger-btn,
-  .hud-btn-circular,
-  .hud-mini-pill,
-  .learn-toggle-btn,
-  .central-island-panel,
-  .sheet-panel,
-  .input-island,
-  .suggestions-list,
-  .learn-toggles-group,
-  .mobile-dropdown-menu
-) > * {
+    .glass-icon-btn:not(.profile-trigger-btn),
+    .settings-trigger-btn,
+    .leaderboard-trigger-btn,
+    .hud-btn-circular,
+    .hud-mini-pill,
+    .learn-toggle-btn,
+    .central-island-panel,
+    .sheet-panel,
+    .input-island,
+    .suggestions-list,
+    .learn-toggles-group,
+    .mobile-dropdown-menu
+  )
+  > * {
   position: relative;
   z-index: 1;
 }
@@ -313,7 +313,9 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius-sm);
-  transition: background var(--transition-normal), color var(--transition-normal);
+  transition:
+    background var(--transition-normal),
+    color var(--transition-normal);
 }
 
 .btn-icon {
@@ -327,7 +329,9 @@ body {
   color: var(--text-muted);
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .btn-icon:hover {
@@ -340,37 +344,114 @@ body {
   color: var(--accent);
 }
 
+/* Shared primary button — used by EndScreen, ProfilePanel and AuthModal. */
+.btn-primary {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition:
+    transform var(--transition-spring),
+    opacity var(--transition-spring);
+  background: var(--glass-border);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2.5px) scale(1.02);
+  box-shadow:
+    0 0 0 1px var(--accent-soft),
+    0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--glass-hover);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.btn-primary:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition:
+    transform var(--transition-instant),
+    background-color var(--transition-instant),
+    box-shadow var(--transition-instant);
+}
+
+/* Shared secondary button — quieter sibling of .btn-primary. */
+.btn-secondary {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  transition:
+    transform var(--transition-spring),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2.5px) scale(1.02);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--glass-hover);
+}
+
+.btn-secondary:active {
+  transform: translateY(0.5px) scale(0.98);
+  transition: transform var(--transition-instant);
+}
+
 @keyframes modalEnter {
-  from { 
-    opacity: 0; 
-    transform: scale(0.98) translateY(10px); 
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
     filter: blur(4px);
   }
-  to { 
-    opacity: 1; 
-    transform: scale(1) translateY(0); 
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
     filter: blur(0);
   }
 }
 
 @keyframes btn-hover-flicker {
   0% {
-    text-shadow: -1px 0 rgba(255, 0, 127, 0.6), 1px 0 rgba(0, 240, 255, 0.6);
+    text-shadow:
+      -1px 0 rgba(255, 0, 127, 0.6),
+      1px 0 rgba(0, 240, 255, 0.6);
     border-color: var(--accent);
   }
   50% {
-    text-shadow: 1px 0 rgba(255, 0, 127, 0.6), -1px 0 rgba(0, 240, 255, 0.6);
+    text-shadow:
+      1px 0 rgba(255, 0, 127, 0.6),
+      -1px 0 rgba(0, 240, 255, 0.6);
     border-color: var(--accent-hover);
   }
   100% {
-    text-shadow: -0.5px 0.5px rgba(255, 0, 127, 0.6), 0.5px -0.5px rgba(0, 240, 255, 0.6);
+    text-shadow:
+      -0.5px 0.5px rgba(255, 0, 127, 0.6),
+      0.5px -0.5px rgba(0, 240, 255, 0.6);
     border-color: var(--accent);
   }
 }
 
 /* Glitch hover effect - shared utility class */
 .glitch-hover:hover {
-  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
   animation: btn-hover-flicker 0.3s steps(2) infinite;
 }
 
@@ -383,5 +464,3 @@ body {
   text-shadow: none;
   transition: transform var(--transition-instant);
 }
-
-

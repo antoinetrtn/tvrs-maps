@@ -1,8 +1,8 @@
-import { CHALLENGES } from "../data/challenges";
-import { isSupabaseConfigured, upsertProfile } from "../services/supabaseClient";
 import { AVATAR_COLORS, getThemeRegionColorLabel } from "../config/designSystem";
-import { getLevelAndProgress } from "../utils/gamification";
+import { CHALLENGES } from "../data/challenges";
 import { checkChallengesRealTime } from "../hooks/useUserProfile";
+import { isSupabaseConfigured, upsertProfile } from "../services/supabaseClient";
+import { getLevelAndProgress } from "../utils/gamification";
 
 const CONTINENT_INVADERS = [
   "invader_1",
@@ -26,10 +26,7 @@ function trackGuessTiming(refs, guessedKey) {
 
   refs.guessTimestampsRef.current.push(now);
   if (refs.guessTimestampsRef.current.length >= 3) {
-    const thirdLast =
-      refs.guessTimestampsRef.current[
-        refs.guessTimestampsRef.current.length - 3
-      ];
+    const thirdLast = refs.guessTimestampsRef.current[refs.guessTimestampsRef.current.length - 3];
     if (now - thirdLast <= 5000) refs.lightningCountRef.current += 1;
   }
 
@@ -50,25 +47,19 @@ function checkContinentConquest({
   const region = activeDataMap[guessedKey]?.region;
   if (!region || region === "Unknown") return [];
 
-  const allInRegion = Object.keys(activeDataMap).filter(
-    (k) => activeDataMap[k]?.region === region,
-  );
+  const allInRegion = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.region === region);
   if (allInRegion.length === 0) return [];
 
   const wasCompletedBefore =
-    foundList.filter((k) => activeDataMap[k]?.region === region).length ===
-    allInRegion.length;
+    foundList.filter((k) => activeDataMap[k]?.region === region).length === allInRegion.length;
   const isCompletedNow =
-    newFound.filter((k) => activeDataMap[k]?.region === region).length ===
-    allInRegion.length;
+    newFound.filter((k) => activeDataMap[k]?.region === region).length === allInRegion.length;
 
   if (wasCompletedBefore || !isCompletedNow) return [];
 
   conqueredRegionsThisGameRef.current.push(region);
   const labelColor = getThemeRegionColorLabel(globeTheme, theme, region);
-  const regionHash = region
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
   addAchievementToQueue({
     title: t("achievement_continent_conquered"),
@@ -138,7 +129,7 @@ function applyUnlockedChallenges({
       updatedProfile.avatarColor,
       updatedProfile.xp,
       updatedProfile.level,
-      updatedProfile.unlockedBadges,
+      updatedProfile.unlockedBadges
     ).catch((err) => console.error("Error syncing real-time challenge:", err));
   }
 }

@@ -1,5 +1,6 @@
-import * as THREE from 'three';
-import { FOUND_SURFACE_GREEN, getFoundGreenThreeColor } from './foundGreenPalette';
+import * as THREE from "three";
+
+import { FOUND_SURFACE_GREEN, getFoundGreenThreeColor } from "./foundGreenPalette";
 
 export const mountainGlitchUniforms = {
   uTime: { value: 0 },
@@ -11,7 +12,7 @@ export const mountainGlitchUniforms = {
 // Cache for shared geometries and materials to avoid recreation and boost performance
 const cache = {
   geometries: {},
-  materials: {}
+  materials: {},
 };
 
 // Helper to get or create a shared geometry
@@ -32,33 +33,31 @@ const getMaterial = (key, creator) => {
 
 // Clear cache on hot reload or disposal
 export const disposeBiomeCache = () => {
-  Object.values(cache.geometries).forEach(g => g.dispose());
-  Object.values(cache.materials).forEach(m => m.dispose());
+  Object.values(cache.geometries).forEach((g) => g.dispose());
+  Object.values(cache.materials).forEach((m) => m.dispose());
   cache.geometries = {};
   cache.materials = {};
 };
-
-
 
 // Helper to interpolate a point at parameter t (0 to 1) along a polyline path
 const interpolatePath = (path, t) => {
   if (!path || path.length === 0) return [0, 0];
   if (path.length === 1) return path[0];
-  
+
   const segments = path.length - 1;
   const rawIndex = t * segments;
   const index = Math.min(segments - 1, Math.floor(rawIndex));
   const frac = rawIndex - index;
-  
+
   const p1 = path[index];
   const p2 = path[index + 1];
-  
+
   const lat = p1[0] + (p2[0] - p1[0]) * frac;
   const lng = p1[1] + (p2[1] - p1[1]) * frac;
   return [lat, lng];
 };
 export const createMountainFeature = (
-  themeName = 'dark',
+  themeName = "dark",
   isSelected = false,
   isFound = false,
   bearing = 0,
@@ -71,10 +70,10 @@ export const createMountainFeature = (
   foundColor = null
 ) => {
   const group = new THREE.Group();
-  const isLight = themeName === 'light';
+  const isLight = themeName === "light";
 
   // State A: Found -> beautiful solid regional color (shades of white/grey in blackout)
-  const foundMatKey = `mountainFound_${themeName}_${foundColor || 'default'}`;
+  const foundMatKey = `mountainFound_${themeName}_${foundColor || "default"}`;
   const foundMat = getMaterial(foundMatKey, () => {
     const col = new THREE.Color(foundColor || FOUND_SURFACE_GREEN);
     return new THREE.MeshPhongMaterial({
@@ -86,14 +85,14 @@ export const createMountainFeature = (
   });
 
   // State B: Unfound and Selected -> TV static glitch shader material
-  const glitchMatKey = `mountainGlitch_${themeName}_${isLight ? 'light' : 'dark'}`;
+  const glitchMatKey = `mountainGlitch_${themeName}_${isLight ? "light" : "dark"}`;
   const glitchMat = getMaterial(glitchMatKey, () => {
     const mat = new THREE.MeshPhongMaterial({
       flatShading: true,
       shininess: 0,
       specular: 0x000000,
     });
-    mat.customProgramCacheKey = () => `mountain-glitch-${themeName}-${isLight ? 'light' : 'dark'}`;
+    mat.customProgramCacheKey = () => `mountain-glitch-${themeName}-${isLight ? "light" : "dark"}`;
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = mountainGlitchUniforms.uTime;
       shader.uniforms.uIsError = mountainGlitchUniforms.uIsError;
@@ -103,12 +102,12 @@ export const createMountainFeature = (
 
       shader.vertexShader = `
         varying vec3 vLocalPosition;
-      ` + shader.vertexShader.replace(
+      ${shader.vertexShader.replace(
         `#include <begin_vertex>`,
         `#include <begin_vertex>
         vLocalPosition = position;
         `
-      );
+      )}`;
 
       shader.fragmentShader = `
         varying vec3 vLocalPosition;
@@ -120,7 +119,7 @@ export const createMountainFeature = (
         float hash(vec2 p) {
           return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
         }
-      ` + shader.fragmentShader.replace(
+      ${shader.fragmentShader.replace(
         `#include <dithering_fragment>`,
         `
         #include <dithering_fragment>
@@ -156,31 +155,35 @@ export const createMountainFeature = (
 
         gl_FragColor.rgb = finalColor;
         `
-      );
+      )}`;
     };
     return mat;
   });
 
   // State C: Unfound and Unselected -> solid opaque slate grey (no transparency!)
   const baseMatKey = `mountainBase_${themeName}`;
-  const baseMat = getMaterial(baseMatKey, () => new THREE.MeshPhongMaterial({
-    color: isLight ? 0x475569 : 0x8ba2b5, // Brighter slate-blue-grey on dark, darker slate-grey on light
-    emissive: isLight ? 0x000000 : 0x111620, // Subtle dark blue-grey emissive for low-poly shading on dark themes
-    specular: isLight ? 0x222222 : 0x444444, // Specular highlights for facet readability
-    shininess: 15,
-    flatShading: true,
-  }));
+  const baseMat = getMaterial(
+    baseMatKey,
+    () =>
+      new THREE.MeshPhongMaterial({
+        color: isLight ? 0x475569 : 0x8ba2b5, // Brighter slate-blue-grey on dark, darker slate-grey on light
+        emissive: isLight ? 0x000000 : 0x111620, // Subtle dark blue-grey emissive for low-poly shading on dark themes
+        specular: isLight ? 0x222222 : 0x444444, // Specular highlights for facet readability
+        shininess: 15,
+        flatShading: true,
+      })
+  );
 
-  const activeMat = isFound ? foundMat : (isSelected ? glitchMat : baseMat);
+  const activeMat = isFound ? foundMat : isSelected ? glitchMat : baseMat;
 
   if (path && Array.isArray(path) && path.length > 0) {
     const N = Math.max(10, Math.round(spread * 4.5));
     for (let i = 0; i < N; i++) {
-      const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
+      const tNorm = N > 1 ? i / (N - 1) : 0.5;
       const [pLat, pLng] = interpolatePath(path, tNorm);
 
       const R = 100;
-      const latRad = pLat * Math.PI / 180;
+      const latRad = (pLat * Math.PI) / 180;
       const dx = R * Math.cos(latRad) * (pLng - centerLng) * (Math.PI / 180);
       const dz = R * (pLat - centerLat) * (Math.PI / 180);
 
@@ -193,7 +196,7 @@ export const createMountainFeature = (
 
       const t = tNorm - 0.5;
       const bellFactor = Math.cos(t * Math.PI);
-      
+
       const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7;
       const randomRadiusVar = 0.8 + ((Math.cos(i * 22.7) + 1) / 2) * 0.5;
       const hFactor = bellFactor * randomHeightVar;
@@ -224,7 +227,7 @@ export const createMountainFeature = (
 
       const peak = new THREE.Mesh(peakGeo, activeMat);
       peak.position.set(localX, peakHeight / 2 - deltaY, localZ);
-      peak.rotation.y = ((i * 19.3) % (Math.PI * 2));
+      peak.rotation.y = (i * 19.3) % (Math.PI * 2);
       group.add(peak);
     }
   } else {
@@ -233,14 +236,14 @@ export const createMountainFeature = (
     const R = 100;
     const spreadWorld = R * spread * (Math.PI / 180);
     const localSpread = spreadWorld / groupScale;
-    const rad = (bearing || 0) * Math.PI / 180;
+    const rad = ((bearing || 0) * Math.PI) / 180;
     const dx = Math.cos(rad);
     const dz = Math.sin(rad);
     const perpX = -dz;
     const perpZ = dx;
 
     for (let i = 0; i < N; i++) {
-      const tNorm = (N > 1) ? (i / (N - 1)) : 0.5;
+      const tNorm = N > 1 ? i / (N - 1) : 0.5;
       const t = tNorm - 0.5;
       const bellFactor = Math.cos(t * Math.PI);
       const randomHeightVar = 0.65 + ((Math.sin(i * 14.3) + 1) / 2) * 0.7;
@@ -284,13 +287,13 @@ export const createMountainFeature = (
 
       const peak = new THREE.Mesh(peakGeo, activeMat);
       peak.position.set(X, peakHeight / 2 - deltaY, Z);
-      peak.rotation.y = ((i * 19.3) % (Math.PI * 2));
+      peak.rotation.y = (i * 19.3) % (Math.PI * 2);
       group.add(peak);
     }
   }
 
   // Force culling and optimize shadows
-  group.traverse(child => {
+  group.traverse((child) => {
     if (child.isMesh) {
       child.castShadow = false;
       child.receiveShadow = false;

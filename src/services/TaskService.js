@@ -10,45 +10,45 @@ export class TaskService {
    * Helper to generate a unique ID.
    */
   _generateId() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
       return crypto.randomUUID();
     }
-    return 'task-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+    return `task-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
   }
 
   /**
    * Validates task input fields.
    */
   _validateTaskData(data, isUpdate = false) {
-    if (data === null || typeof data !== 'object') {
+    if (data === null || typeof data !== "object") {
       throw new Error("Task data must be an object");
     }
 
     // Title validation
     if (isUpdate) {
-      if ('title' in data && (typeof data.title !== 'string' || data.title.trim() === '')) {
+      if ("title" in data && (typeof data.title !== "string" || data.title.trim() === "")) {
         throw new Error("Title must be a non-empty string");
       }
     } else {
-      if (!data.title || typeof data.title !== 'string' || data.title.trim() === '') {
+      if (!data.title || typeof data.title !== "string" || data.title.trim() === "") {
         throw new Error("Title is required and must be a non-empty string");
       }
     }
 
     // Status validation
-    const validStatuses = ['pending', 'in_progress', 'completed'];
-    if ('status' in data && !validStatuses.includes(data.status)) {
-      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    const validStatuses = ["pending", "in_progress", "completed"];
+    if ("status" in data && !validStatuses.includes(data.status)) {
+      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(", ")}`);
     }
 
     // Priority validation
-    const validPriorities = ['low', 'medium', 'high'];
-    if ('priority' in data && !validPriorities.includes(data.priority)) {
-      throw new Error(`Invalid priority. Must be one of: ${validPriorities.join(', ')}`);
+    const validPriorities = ["low", "medium", "high"];
+    if ("priority" in data && !validPriorities.includes(data.priority)) {
+      throw new Error(`Invalid priority. Must be one of: ${validPriorities.join(", ")}`);
     }
 
     // Due date validation
-    if ('dueDate' in data && data.dueDate !== null) {
+    if ("dueDate" in data && data.dueDate !== null) {
       const date = new Date(data.dueDate);
       if (isNaN(date.getTime())) {
         throw new Error("Invalid dueDate. Must be a valid Date object or ISO string");
@@ -68,12 +68,12 @@ export class TaskService {
     const newTask = {
       id: this._generateId(),
       title: taskData.title.trim(),
-      description: taskData.description ? String(taskData.description).trim() : '',
-      status: taskData.status || 'pending',
-      priority: taskData.priority || 'medium',
+      description: taskData.description ? String(taskData.description).trim() : "",
+      status: taskData.status || "pending",
+      priority: taskData.priority || "medium",
       dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     this.tasks.push(newTask);
@@ -86,7 +86,7 @@ export class TaskService {
    * @returns {Object} The task.
    */
   getTask(id) {
-    const task = this.tasks.find(t => t.id === id);
+    const task = this.tasks.find((t) => t.id === id);
     if (!task) {
       throw new Error(`Task with ID ${id} not found`);
     }
@@ -99,7 +99,7 @@ export class TaskService {
    * @returns {Array} List of matching tasks.
    */
   getTasks(filters = {}) {
-    return this.tasks.filter(task => {
+    return this.tasks.filter((task) => {
       if (filters.status && task.status !== filters.status) {
         return false;
       }
@@ -139,15 +139,15 @@ export class TaskService {
     this._validateTaskData(updates, true);
 
     const now = new Date();
-    const updatableFields = ['title', 'description', 'status', 'priority', 'dueDate'];
+    const updatableFields = ["title", "description", "status", "priority", "dueDate"];
 
-    updatableFields.forEach(field => {
+    updatableFields.forEach((field) => {
       if (field in updates) {
-        if (field === 'title') {
+        if (field === "title") {
           task.title = updates.title.trim();
-        } else if (field === 'description') {
-          task.description = updates.description ? String(updates.description).trim() : '';
-        } else if (field === 'dueDate') {
+        } else if (field === "description") {
+          task.description = updates.description ? String(updates.description).trim() : "";
+        } else if (field === "dueDate") {
           task.dueDate = updates.dueDate ? new Date(updates.dueDate) : null;
         } else {
           task.status = updates.status || task.status;
@@ -166,7 +166,7 @@ export class TaskService {
    * @returns {Object} The deleted task.
    */
   deleteTask(id) {
-    const index = this.tasks.findIndex(t => t.id === id);
+    const index = this.tasks.findIndex((t) => t.id === id);
     if (index === -1) {
       throw new Error(`Task with ID ${id} not found`);
     }
@@ -187,8 +187,8 @@ export class TaskService {
    */
   getOverdueTasks() {
     const now = new Date();
-    return this.tasks.filter(task => {
-      return task.status !== 'completed' && task.dueDate && task.dueDate < now;
+    return this.tasks.filter((task) => {
+      return task.status !== "completed" && task.dueDate && task.dueDate < now;
     });
   }
 
@@ -205,7 +205,7 @@ export class TaskService {
         pending: 0,
         inProgress: 0,
         completionRate: 0,
-        byPriority: { low: 0, medium: 0, high: 0 }
+        byPriority: { low: 0, medium: 0, high: 0 },
       };
     }
 
@@ -214,9 +214,9 @@ export class TaskService {
     let inProgress = 0;
     const byPriority = { low: 0, medium: 0, high: 0 };
 
-    this.tasks.forEach(task => {
-      if (task.status === 'completed') completed++;
-      else if (task.status === 'in_progress') inProgress++;
+    this.tasks.forEach((task) => {
+      if (task.status === "completed") completed++;
+      else if (task.status === "in_progress") inProgress++;
       else pending++;
 
       if (task.priority in byPriority) {
@@ -232,7 +232,7 @@ export class TaskService {
       pending,
       inProgress,
       completionRate,
-      byPriority
+      byPriority,
     };
   }
 }

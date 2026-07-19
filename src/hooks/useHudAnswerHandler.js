@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+
 import { FEEDBACK_TIMING } from "../config/gameConstants";
 
 export function useHudAnswerHandler({
@@ -34,12 +35,7 @@ export function useHudAnswerHandler({
           setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
         }
       }
-      return (
-        res === "SUCCESS" ||
-        res === true ||
-        res === "ERROR" ||
-        res === "ALREADY_FOUND"
-      );
+      return res === "SUCCESS" || res === true || res === "ERROR" || res === "ALREADY_FOUND";
     },
     [
       mode,
@@ -49,6 +45,6 @@ export function useHudAnswerHandler({
       handleInput,
       setPopupError,
       setPopupWarning,
-    ],
+    ]
   );
 }

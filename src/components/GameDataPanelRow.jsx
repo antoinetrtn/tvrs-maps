@@ -1,22 +1,15 @@
-import React from "react";
 import { Check, Minus } from "pixelarticons/react";
+import React from "react";
+
 import { scrambleText } from "../utils/utils";
 
-const GameDataPanelRow = ({
-  row,
-  isSelected,
-  mode,
-  onSelect,
-  unrevealedLabel,
-}) => {
+const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) => {
   const isRevealed = mode === "learn" || row.revealed;
   const displayName = isRevealed ? row.name : scrambleText(row.name || "");
-  const displaySub = isRevealed
-    ? row.sublabel
-    : row.sublabel
-      ? scrambleText(row.sublabel)
-      : "";
-  const showFlag = row.iso2 && (mode === "learn" || isRevealed);
+  const displaySub = isRevealed ? row.sublabel : row.sublabel ? scrambleText(row.sublabel) : "";
+  // The flag is always visible (it already shows on the globe labels);
+  // only the name stays scrambled until the country is found.
+  const showFlag = Boolean(row.iso2);
   const showLearnStatus = mode === "learn" && !isSelected;
   const isLearnSelected = mode === "learn" && isSelected;
 

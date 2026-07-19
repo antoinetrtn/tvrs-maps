@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
 import "./PixelFireworks.css";
+
+import React, { useEffect, useRef } from "react";
 
 import { AVATAR_COLORS } from "../config/designSystem";
 

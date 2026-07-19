@@ -1,30 +1,33 @@
-import React, { useRef, useState, useCallback } from "react";
+import "./HomeScreen.css";
+
 import {
-  Globe,
-  MapPin,
   BookOpen,
-  CloudSun,
-  Moon,
   Clock,
-  Plus,
-  Minus,
+  Close,
+  CloudSun,
+  Earth,
+  Globe,
   Hash,
+  Heart,
+  MapPin,
+  Minus,
+  Moon,
+  Plus,
   Settings2,
   TreePine,
-  Close,
-  Earth,
   User,
 } from "pixelarticons/react";
-import Logo from "./Logo";
-import InvaderAvatar from "./InvaderAvatar";
-import ProfilePanel from "./ProfilePanel";
-import LeaderboardScreen from "./LeaderboardScreen";
-import SegmentedControl from "./SegmentedControl";
-import GlassIconButton from "./GlassIconButton";
+import React, { useCallback, useRef, useState } from "react";
+
 import { THEMES_LIST } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
-import "./HomeScreen.css";
+import GlassIconButton from "./GlassIconButton";
+import InvaderAvatar from "./InvaderAvatar";
+import LeaderboardScreen from "./LeaderboardScreen";
+import Logo from "./Logo";
+import ProfilePanel from "./ProfilePanel";
+import SegmentedControl from "./SegmentedControl";
 
 const HomeScreen = ({
   onStartGame,
@@ -34,6 +37,8 @@ const HomeScreen = ({
   setLang,
   gameDuration,
   setGameDuration,
+  hardcoreMode = false,
+  setHardcoreMode,
   globeTheme,
   setGlobeTheme,
   topExplorers = [],
@@ -71,8 +76,8 @@ const HomeScreen = ({
       profiles: {
         username: "???",
         avatar_id: "invader_1",
-        avatar_color: "gray"
-      }
+        avatar_color: "gray",
+      },
     });
   }
 
@@ -96,14 +101,8 @@ const HomeScreen = ({
     const dragIntensity = event.pointerType === "touch" ? 1.18 : 1;
     const intensity = isDraggingRef.current ? dragIntensity : 0.28;
 
-    card.style.setProperty(
-      "--card-rotate-x",
-      `${(-y * 16 * intensity).toFixed(2)}deg`,
-    );
-    card.style.setProperty(
-      "--card-rotate-y",
-      `${(x * 18 * intensity).toFixed(2)}deg`,
-    );
+    card.style.setProperty("--card-rotate-x", `${(-y * 16 * intensity).toFixed(2)}deg`);
+    card.style.setProperty("--card-rotate-y", `${(x * 18 * intensity).toFixed(2)}deg`);
     card.style.setProperty("--card-glow-x", `${((x + 0.5) * 100).toFixed(1)}%`);
     card.style.setProperty("--card-glow-y", `${((y + 0.5) * 100).toFixed(1)}%`);
   };
@@ -156,148 +155,136 @@ const HomeScreen = ({
       <div className={`home-screen-overlay ${theme}`}>
         <div
           className="home-content glass-panel"
-        ref={cardRef}
-        onPointerMove={handleCardPointerMove}
-        onPointerDown={handleCardPointerDown}
-        onPointerUp={handleCardPointerUp}
-        onPointerCancel={handleCardPointerUp}
-        onPointerLeave={handleCardPointerLeave}
-      >
-        <Logo size="large" className="home-logo" />
-
-
-
-        <div className="home-buttons">
-          <button
-            className="home-btn mode-countries"
-            onClick={() => onStartGame("countries")}
-          >
-            <Globe width={20} height={20} />
-            <span className="btn-title">{t("mode_countries")}</span>
-          </button>
-
-          <button
-            className="home-btn mode-capitals"
-            onClick={() => onStartGame("capitals")}
-          >
-            <MapPin width={20} height={20} />
-            <span className="btn-title">{t("mode_capitals")}</span>
-          </button>
-
-          <button
-            className="home-btn mode-departments"
-            onClick={() => onStartGame("departments")}
-          >
-            <Hash width={18} height={18} className="home-btn-icon hash-icon" />
-            <span className="btn-title">{t("mode_departments")}</span>
-          </button>
-
-          <button
-            className="home-btn mode-rivers-mountains"
-            onClick={() => onStartGame("rivers_mountains")}
-          >
-            <TreePine width={20} height={20} />
-            <span className="btn-title">{t("mode_rivers_mountains")}</span>
-          </button>
-
-          <button
-            className="home-btn mode-learn"
-            onClick={() => onStartGame("learn")}
-          >
-            <BookOpen width={20} height={20} />
-            <span className="btn-title">{t("mode_learn")}</span>
-          </button>
-      </div>
-    </div>
-
-      <div className="home-bottom-right">
-        {/* Common component usage for uniform header actions + no more style drift */}
-        <div
-          className="home-podium-widget glass-panel"
-          onClick={(e) => {
-            e.stopPropagation();
-            setLeaderboardOpen((prev) => !prev);
-            setProfileOpen(false);
-            setSettingsOpen(false);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          title={t("leaderboard")}
+          ref={cardRef}
+          onPointerMove={handleCardPointerMove}
+          onPointerDown={handleCardPointerDown}
+          onPointerUp={handleCardPointerUp}
+          onPointerCancel={handleCardPointerUp}
+          onPointerLeave={handleCardPointerLeave}
         >
-          <div className="widget-spot rank-2">
-            <div className="widget-avatar">
-              <InvaderAvatar
-                invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
-                color={displayExplorers[1].profiles?.avatar_color || "cyan"}
-                size={20}
-              />
-            </div>
-            <span className="widget-rank-num">2</span>
-          </div>
-          <div className="widget-spot rank-1">
-            <div className="widget-avatar">
-              <InvaderAvatar
-                invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
-                color={displayExplorers[0].profiles?.avatar_color || "cyan"}
-                size={20}
-              />
-            </div>
-            <span className="widget-rank-num">1</span>
-          </div>
-          <div className="widget-spot rank-3">
-            <div className="widget-avatar">
-              <InvaderAvatar
-                invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
-                color={displayExplorers[2].profiles?.avatar_color || "cyan"}
-                size={20}
-              />
-            </div>
-            <span className="widget-rank-num">3</span>
+          <Logo size="large" className="home-logo" />
+
+          <div className="home-buttons">
+            <button className="home-btn mode-countries" onClick={() => onStartGame("countries")}>
+              <Globe width={20} height={20} />
+              <span className="btn-title">{t("mode_countries")}</span>
+            </button>
+
+            <button className="home-btn mode-capitals" onClick={() => onStartGame("capitals")}>
+              <MapPin width={20} height={20} />
+              <span className="btn-title">{t("mode_capitals")}</span>
+            </button>
+
+            <button
+              className="home-btn mode-departments"
+              onClick={() => onStartGame("departments")}
+            >
+              <Hash width={18} height={18} className="home-btn-icon hash-icon" />
+              <span className="btn-title">{t("mode_departments")}</span>
+            </button>
+
+            <button
+              className="home-btn mode-rivers-mountains"
+              onClick={() => onStartGame("rivers_mountains")}
+            >
+              <TreePine width={20} height={20} />
+              <span className="btn-title">{t("mode_rivers_mountains")}</span>
+            </button>
+
+            <button className="home-btn mode-learn" onClick={() => onStartGame("learn")}>
+              <BookOpen width={20} height={20} />
+              <span className="btn-title">{t("mode_learn")}</span>
+            </button>
           </div>
         </div>
 
-        <GlassIconButton
-          className="profile-trigger-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            setProfileOpen((prev) => !prev);
-            setSettingsOpen(false);
-            setLeaderboardOpen(false);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
-        >
-          {/* Inner container clips the XP progress fill to the rounded button shape */}
-          <div className="profile-xp-progress-container">
-            <span
-              className="profile-xp-progress"
-              style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
-            />
+        <div className="home-bottom-right">
+          {/* Common component usage for uniform header actions + no more style drift */}
+          <div
+            className="home-podium-widget glass-panel"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLeaderboardOpen((prev) => !prev);
+              setProfileOpen(false);
+              setSettingsOpen(false);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={t("leaderboard")}
+          >
+            <div className="widget-spot rank-2">
+              <div className="widget-avatar">
+                <InvaderAvatar
+                  invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
+                  color={displayExplorers[1].profiles?.avatar_color || "cyan"}
+                  size={20}
+                />
+              </div>
+              <span className="widget-rank-num">2</span>
+            </div>
+            <div className="widget-spot rank-1">
+              <div className="widget-avatar">
+                <InvaderAvatar
+                  invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
+                  color={displayExplorers[0].profiles?.avatar_color || "cyan"}
+                  size={20}
+                />
+              </div>
+              <span className="widget-rank-num">1</span>
+            </div>
+            <div className="widget-spot rank-3">
+              <div className="widget-avatar">
+                <InvaderAvatar
+                  invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
+                  color={displayExplorers[2].profiles?.avatar_color || "cyan"}
+                  size={20}
+                />
+              </div>
+              <span className="widget-rank-num">3</span>
+            </div>
           </div>
-          <div className="profile-icon">
-            <User width={20} height={20} />
-          </div>
-          <span className="profile-btn-level-tag">{level}</span>
-        </GlassIconButton>
 
-        <GlassIconButton
-          className="settings-trigger-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSettingsOpen((prev) => !prev);
-            setProfileOpen(false);
-            setLeaderboardOpen(false);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          title={t("settings")}
-        >
-          <Settings2 width={20} height={20} />
-        </GlassIconButton>
-      </div>
+          <GlassIconButton
+            className="profile-trigger-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setProfileOpen((prev) => !prev);
+              setSettingsOpen(false);
+              setLeaderboardOpen(false);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+          >
+            {/* Inner container clips the XP progress fill to the rounded button shape */}
+            <div className="profile-xp-progress-container">
+              <span
+                className="profile-xp-progress"
+                style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
+              />
+            </div>
+            <div className="profile-icon">
+              <User width={20} height={20} />
+            </div>
+            <span className="profile-btn-level-tag">{level}</span>
+          </GlassIconButton>
 
+          <GlassIconButton
+            className="settings-trigger-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSettingsOpen((prev) => !prev);
+              setProfileOpen(false);
+              setLeaderboardOpen(false);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            title={t("settings")}
+          >
+            <Settings2 width={20} height={20} />
+          </GlassIconButton>
+        </div>
       </div>
 
       <div
-        className={`panel-overlay ${(settingsOpen || profileOpen || leaderboardOpen) ? "open" : ""}`}
+        className={`panel-overlay ${settingsOpen || profileOpen || leaderboardOpen ? "open" : ""}`}
         onClick={(e) => {
           e.stopPropagation();
           setSettingsOpen(false);
@@ -332,16 +319,16 @@ const HomeScreen = ({
             <div className="settings-card-header">
               <span className="section-label">{t("game_duration")}</span>
             </div>
-            
+
             <div className="settings-duration-display">
               <Clock width={18} height={18} className="duration-icon" />
               <span className="duration-value">{Math.floor(gameDuration / 60)} min</span>
             </div>
 
             <div className="settings-stepper-actions">
-              <button 
+              <button
                 type="button"
-                className="settings-btn-stepper" 
+                className="settings-btn-stepper"
                 onClick={(e) => {
                   e.stopPropagation();
                   adjustDuration(-60);
@@ -351,9 +338,9 @@ const HomeScreen = ({
                 <Minus width={16} height={16} />
                 <span>-1 Min</span>
               </button>
-              <button 
+              <button
                 type="button"
-                className="settings-btn-stepper" 
+                className="settings-btn-stepper"
                 onClick={(e) => {
                   e.stopPropagation();
                   adjustDuration(60);
@@ -364,6 +351,26 @@ const HomeScreen = ({
                 <span>+1 Min</span>
               </button>
             </div>
+          </div>
+
+          {/* Hardcore Mode Selector */}
+          <div className="settings-card glass-panel">
+            <div className="settings-card-header">
+              <span className="section-label">{t("hardcore_mode")}</span>
+            </div>
+            <SegmentedControl
+              options={[
+                { value: "normal", label: t("hardcore_off") },
+                {
+                  value: "hardcore",
+                  label: t("hardcore_on"),
+                  icon: <Heart width={14} height={14} />,
+                },
+              ]}
+              value={hardcoreMode ? "hardcore" : "normal"}
+              onChange={(v) => setHardcoreMode?.(v === "hardcore")}
+            />
+            <p className="settings-hint">{t("hardcore_desc")}</p>
           </div>
 
           {/* Language Selector */}
@@ -389,7 +396,11 @@ const HomeScreen = ({
             <SegmentedControl
               options={[
                 { value: "dark", label: t("theme_dark"), icon: <Moon width={14} height={14} /> },
-                { value: "light", label: t("theme_light"), icon: <CloudSun width={14} height={14} /> },
+                {
+                  value: "light",
+                  label: t("theme_light"),
+                  icon: <CloudSun width={14} height={14} />,
+                },
               ]}
               value={theme}
               onChange={(v) => setTheme(v)}
@@ -405,7 +416,12 @@ const HomeScreen = ({
               options={THEMES_LIST.map((tObj) => ({
                 value: tObj.id,
                 label: t(`theme_${tObj.id}`),
-                icon: tObj.id === "satellite" ? <Earth width={14} height={14} /> : <Globe width={14} height={14} />,
+                icon:
+                  tObj.id === "satellite" ? (
+                    <Earth width={14} height={14} />
+                  ) : (
+                    <Globe width={14} height={14} />
+                  ),
               }))}
               value={globeTheme}
               onChange={(v) => setGlobeTheme(v)}

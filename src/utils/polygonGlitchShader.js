@@ -1,9 +1,12 @@
 import * as THREE from "three";
+
+import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
+import { FEEDBACK_TIMING } from "../config/gameConstants";
 import {
-  GLITCH_VERTEX_DECLARATIONS,
-  GLITCH_VERTEX_BODY,
-  GLITCH_FRAGMENT_DECLARATIONS,
   GLITCH_FRAGMENT_BODY,
+  GLITCH_FRAGMENT_DECLARATIONS,
+  GLITCH_VERTEX_BODY,
+  GLITCH_VERTEX_DECLARATIONS,
 } from "../config/globeShaders";
 import { getFoundGreenThreeColor } from "./foundGreenPalette";
 
@@ -11,6 +14,11 @@ import { getFoundGreenThreeColor } from "./foundGreenPalette";
 export const polygonGlitchUniforms = {
   uTime: { value: 0 },
   uFoundGreen: { value: getFoundGreenThreeColor().clone() },
+  // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
+  uPixelScale: { value: 1 },
+  // Success flash timeline — stamped (in uTime seconds) when a guess lands.
+  uSuccessStart: { value: -10 },
+  uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
 };
 
 const animatedPolygonMaterials = new Set();
@@ -31,55 +39,61 @@ export function getAnimatedPolygonMaterialCount() {
   return animatedPolygonMaterials.size;
 }
 
-export function syncPolygonShaderUniforms(shader, {
-  admin,
-  selectedCountry,
-  isError,
-  isSuccess,
-  isFound,
-  isLearnSelected,
-  isIncomingTransitioning,
-  kind,
-  getBaseColorForCountryAndKind,
-}) {
+export function syncPolygonShaderUniforms(
+  shader,
+  {
+    admin,
+    selectedCountry,
+    isError,
+    isSuccess,
+    isFound,
+    isLearnSelected,
+    isIncomingTransitioning,
+    kind,
+    getBaseColorForCountryAndKind,
+  }
+) {
   if (!shader) return;
   if (shader.uniforms.uIsError) {
-    shader.uniforms.uIsError.value =
-      admin === selectedCountry && isError ? 1.0 : 0.0;
+    shader.uniforms.uIsError.value = admin === selectedCountry && isError ? 1.0 : 0.0;
   }
   if (shader.uniforms.uIsSuccess) {
-    shader.uniforms.uIsSuccess.value =
-      admin === selectedCountry && isSuccess ? 1.0 : 0.0;
+    shader.uniforms.uIsSuccess.value = admin === selectedCountry && isSuccess ? 1.0 : 0.0;
   }
   if (shader.uniforms.uIsFound) {
     shader.uniforms.uIsFound.value = isFound || isLearnSelected ? 1.0 : 0.0;
   }
   if (shader.uniforms.uTargetColor) {
-    shader.uniforms.uTargetColor.value.set(
-      getBaseColorForCountryAndKind(admin, kind),
-    );
+    shader.uniforms.uTargetColor.value.set(getBaseColorForCountryAndKind(admin, kind));
   }
   if (shader.uniforms.uSelectInTransition) {
     shader.uniforms.uSelectInTransition.value = isIncomingTransitioning ? 1.0 : 0.0;
   }
 }
 
-export function attachPolygonGlitchShader(material, {
-  admin,
-  kind,
-  selectedCountry,
-  isError,
-  isSuccess,
-  isSelectionHighlight,
-  isLight,
-  isBlackoutTheme,
-  isFound,
-  isIncomingTransitioning,
-  getBaseColorForCountryAndKind,
-}) {
-  material.customProgramCacheKey = () => `shader-cap-glitch-v8-${kind}`;
+export function attachPolygonGlitchShader(
+  material,
+  {
+    admin,
+    kind,
+    selectedCountry,
+    isError,
+    isSuccess,
+    isSelectionHighlight,
+    isLight,
+    isBlackoutTheme,
+    isFound,
+    isIncomingTransitioning,
+    getBaseColorForCountryAndKind,
+  }
+) {
+  material.customProgramCacheKey = () => `shader-cap-glitch-v9-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+    shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+    shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
+    shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
+    shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
     shader.uniforms.uFadeProgress = { value: 0.0 };
     shader.uniforms.uTargetColor = {
       value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
@@ -109,13 +123,13 @@ export function attachPolygonGlitchShader(material, {
       `#include <begin_vertex>`,
       `#include <begin_vertex>
       ${GLITCH_VERTEX_BODY}
-    `,
+    `
     );
 
     shader.fragmentShader = GLITCH_FRAGMENT_DECLARATIONS + shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace(
       `#include <dithering_fragment>`,
-      GLITCH_FRAGMENT_BODY,
+      GLITCH_FRAGMENT_BODY
     );
   };
 }

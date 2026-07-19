@@ -1,17 +1,14 @@
-import { useMemo, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import * as THREE from "three";
-import { countryDataMap } from "../data/gameData";
+
 import {
-  GLOBE_STYLE,
   getOpaqueThreeColor,
   getThemeRegionColor,
   getThemeRegionColorAttenuated,
+  GLOBE_STYLE,
 } from "../config/designSystem";
-import {
-  getLngLatDistance,
-  getMobileRenderRadius,
-  getCanonicalPosition,
-} from "../utils/utils";
+import { countryDataMap } from "../data/gameData";
+import { getCanonicalPosition, getLngLatDistance, getMobileRenderRadius } from "../utils/utils";
 
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();
@@ -36,27 +33,24 @@ export function useGlobeMarkers({
   theme,
   canonicalPositions = {},
 }) {
-  const lerpColor = useCallback(
-    (a, b, amount) => {
-      try {
-        const colorA = getOpaqueThreeColor(a);
-        const colorB = getOpaqueThreeColor(b);
-        _lerpColor1.set(colorA);
-        _lerpColor2.set(colorB);
-        _lerpColor1.lerp(_lerpColor2, Math.max(0, Math.min(1, amount)));
-        return `#${_lerpColor1.getHexString()}`;
-      } catch (e) {
-        return getOpaqueThreeColor(a);
-      }
-    },
-    [],
-  );
+  const lerpColor = useCallback((a, b, amount) => {
+    try {
+      const colorA = getOpaqueThreeColor(a);
+      const colorB = getOpaqueThreeColor(b);
+      _lerpColor1.set(colorA);
+      _lerpColor2.set(colorB);
+      _lerpColor1.lerp(_lerpColor2, Math.max(0, Math.min(1, amount)));
+      return `#${_lerpColor1.getHexString()}`;
+    } catch {
+      return getOpaqueThreeColor(a);
+    }
+  }, []);
 
   const getRegionSurfaceColor = useCallback(
     (region) => {
       return getThemeRegionColor(globeTheme, theme, region) || UI_COLORS.success;
     },
-    [globeTheme, theme, UI_COLORS],
+    [globeTheme, theme, UI_COLORS]
   );
 
   const markersData = useMemo(() => {
@@ -88,12 +82,7 @@ export function useGlobeMarkers({
 
     return markersData.filter((marker) => {
       if (marker.admin === selectedCountry) return true;
-      const distToCenter = getLngLatDistance(
-        marker.lng,
-        marker.lat,
-        pov.lng,
-        pov.lat,
-      );
+      const distToCenter = getLngLatDistance(marker.lng, marker.lat, pov.lng, pov.lat);
       return distToCenter <= renderRadius + 12;
     });
   }, [
@@ -110,10 +99,8 @@ export function useGlobeMarkers({
     (d) => {
       if (isDepartmentMode) {
         if (isEndScreen && !foundSet.has(d.admin)) return UI_COLORS.error;
-        if (foundSet.has(d.admin))
-          return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-        if (d.admin === selectedCountry)
-          return isError ? UI_COLORS.error : UI_COLORS.accent;
+        if (foundSet.has(d.admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
+        if (d.admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
         return UI_COLORS.mapBorderMuted;
       }
 
@@ -135,8 +122,7 @@ export function useGlobeMarkers({
           return lerpColor(
             baseColor,
             UI_COLORS.paper,
-            0.5 *
-              GLOBE_STYLE.lighting.capPulseToPaper[isLight ? "light" : "dark"],
+            0.5 * GLOBE_STYLE.lighting.capPulseToPaper[isLight ? "light" : "dark"]
           );
         }
         return baseColor;
@@ -144,7 +130,8 @@ export function useGlobeMarkers({
 
       if (isSelected) {
         if (isError) return UI_COLORS.error;
-        const baseColor = getThemeRegionColorAttenuated(globeTheme, theme, region) || UI_COLORS.accent;
+        const baseColor =
+          getThemeRegionColorAttenuated(globeTheme, theme, region) || UI_COLORS.accent;
         const targetColor = getThemeRegionColor(globeTheme, theme, region) || UI_COLORS.accent;
         return lerpColor(baseColor, targetColor, 0.3);
       }
@@ -165,7 +152,7 @@ export function useGlobeMarkers({
       isLight,
       lerpColor,
       theme,
-    ],
+    ]
   );
 
   const getPointRadius = useCallback(
@@ -177,7 +164,7 @@ export function useGlobeMarkers({
         : d.admin === selectedCountry
           ? 0.22
           : 0.12,
-    [isDepartmentMode, selectedCountry],
+    [isDepartmentMode, selectedCountry]
   );
 
   const getPointAltitude = useCallback(
@@ -185,12 +172,12 @@ export function useGlobeMarkers({
       if (selectedCountry && d.admin === selectedCountry) return 0.01;
       return 0.0015;
     },
-    [selectedCountry],
+    [selectedCountry]
   );
 
   const getPointColorWrapped = useCallback(
     (d) => getOpaqueThreeColor(getPointColor(d)),
-    [getPointColor],
+    [getPointColor]
   );
 
   return {

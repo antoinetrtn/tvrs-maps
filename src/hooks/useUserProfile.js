@@ -1,15 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
-import {
-  isSupabaseConfigured,
-  supabase,
-  getProfile,
-  upsertProfile,
-  getUserRecords,
-  upsertUserRecord,
-  submitLeaderboardScore,
-  getLeaderboard
-} from "../services/supabaseClient";
+import { useCallback, useEffect, useState } from "react";
+
 import { CHALLENGES, ISLANDS_LIST } from "../data/challenges";
+import {
+  getLeaderboard,
+  getProfile,
+  getUserRecords,
+  isSupabaseConfigured,
+  submitLeaderboardScore,
+  supabase,
+  upsertProfile,
+  upsertUserRecord,
+} from "../services/supabaseClient";
 import { getLevelAndProgress } from "../utils/gamification";
 
 export function checkChallengesRealTime(currentBadges, localRecords, sessionData) {
@@ -20,7 +21,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
     }
   };
 
-  const totalGames = Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0) +
+  const totalGames =
+    Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0) +
     (sessionData.isGameOver ? 1 : 0);
 
   const gameMode = sessionData.mode;
@@ -62,7 +64,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         break;
       case "ch_cont_europe_5":
         {
-          const count = currentBadges.filter((b) => b.startsWith("conquered_Europe_")).length +
+          const count =
+            currentBadges.filter((b) => b.startsWith("conquered_Europe_")).length +
             (sessionData.continentsConquered?.includes("Europe") ? 1 : 0);
           if (count >= 5) addBadge(ch.id);
         }
@@ -72,7 +75,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         break;
       case "ch_cont_africa_5":
         {
-          const count = currentBadges.filter((b) => b.startsWith("conquered_Africa_")).length +
+          const count =
+            currentBadges.filter((b) => b.startsWith("conquered_Africa_")).length +
             (sessionData.continentsConquered?.includes("Africa") ? 1 : 0);
           if (count >= 5) addBadge(ch.id);
         }
@@ -82,7 +86,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         break;
       case "ch_cont_asia_5":
         {
-          const count = currentBadges.filter((b) => b.startsWith("conquered_Asia_")).length +
+          const count =
+            currentBadges.filter((b) => b.startsWith("conquered_Asia_")).length +
             (sessionData.continentsConquered?.includes("Asia") ? 1 : 0);
           if (count >= 5) addBadge(ch.id);
         }
@@ -92,7 +97,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         break;
       case "ch_cont_americas_5":
         {
-          const count = currentBadges.filter((b) => b.startsWith("conquered_Americas_")).length +
+          const count =
+            currentBadges.filter((b) => b.startsWith("conquered_Americas_")).length +
             (sessionData.continentsConquered?.includes("Americas") ? 1 : 0);
           if (count >= 5) addBadge(ch.id);
         }
@@ -102,7 +108,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         break;
       case "ch_cont_oceania_5":
         {
-          const count = currentBadges.filter((b) => b.startsWith("conquered_Oceania_")).length +
+          const count =
+            currentBadges.filter((b) => b.startsWith("conquered_Oceania_")).length +
             (sessionData.continentsConquered?.includes("Oceania") ? 1 : 0);
           if (count >= 5) addBadge(ch.id);
         }
@@ -150,7 +157,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
 
       // Speed
       case "ch_speed_fast_guess":
-        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 3) addBadge(ch.id);
+        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 3)
+          addBadge(ch.id);
         break;
       case "ch_speed_10_guesses_30s":
         if (sessionData.speedGuessCount3s >= 10) addBadge(ch.id);
@@ -159,13 +167,16 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         if (sessionData.speedGuessCount3s >= 20) addBadge(ch.id);
         break;
       case "ch_speed_under_2m":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 120 && sessionData.score > 0) addBadge(ch.id);
+        if (sessionData.isGameOver && sessionData.timeSpent <= 120 && sessionData.score > 0)
+          addBadge(ch.id);
         break;
       case "ch_speed_under_1m":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 60 && sessionData.score > 0) addBadge(ch.id);
+        if (sessionData.isGameOver && sessionData.timeSpent <= 60 && sessionData.score > 0)
+          addBadge(ch.id);
         break;
       case "ch_speed_under_30s":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 30 && sessionData.score > 0) addBadge(ch.id);
+        if (sessionData.isGameOver && sessionData.timeSpent <= 30 && sessionData.score > 0)
+          addBadge(ch.id);
         break;
       case "ch_speed_half_time":
         if (
@@ -178,7 +189,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         }
         break;
       case "ch_speed_blitz":
-        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 1) addBadge(ch.id);
+        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 1)
+          addBadge(ch.id);
         break;
       case "ch_speed_perfect_100":
         if (
@@ -220,7 +232,8 @@ export function checkChallengesRealTime(currentBadges, localRecords, sessionData
         break;
       case "ch_special_islands":
         {
-          const islands = sessionData.guessesThisGame?.filter((k) => ISLANDS_LIST.includes(k)).length || 0;
+          const islands =
+            sessionData.guessesThisGame?.filter((k) => ISLANDS_LIST.includes(k)).length || 0;
           if (islands >= 5) addBadge(ch.id);
         }
         break;
@@ -263,11 +276,11 @@ export function useUserProfile() {
             xp: 0,
             level: 1,
             unlockedBadges: [],
-            ...parsed
+            ...parsed,
           };
         }
       }
-    } catch (_) {}
+    } catch {}
 
     const getSecureRandomIntInRange = (min, maxExclusive) => {
       const range = maxExclusive - min;
@@ -298,11 +311,11 @@ export function useUserProfile() {
       avatarColor: "cyan",
       xp: 0,
       level: 1,
-      unlockedBadges: []
+      unlockedBadges: [],
     };
     try {
       localStorage.setItem("tvrs-user-profile", JSON.stringify(newProfile));
-    } catch (_) {}
+    } catch {}
     return newProfile;
   });
 
@@ -311,14 +324,14 @@ export function useUserProfile() {
       countries: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       capitals: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       departments: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
-      rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 }
+      rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
     };
     try {
       const cached = localStorage.getItem("tvrs-local-records");
       if (cached) {
         return { ...defaultRecords, ...JSON.parse(cached) };
       }
-    } catch (_) {}
+    } catch {}
     return defaultRecords;
   });
 
@@ -327,14 +340,14 @@ export function useUserProfile() {
       countries: [],
       capitals: [],
       departments: [],
-      rivers_mountains: []
+      rivers_mountains: [],
     };
     try {
       const cached = localStorage.getItem("tvrs-last-scores");
       if (cached) {
         return { ...defaultScores, ...JSON.parse(cached) };
       }
-    } catch (_) {}
+    } catch {}
     return defaultScores;
   });
 
@@ -362,11 +375,17 @@ export function useUserProfile() {
   useEffect(() => {
     if (!isSupabaseConfigured) return;
 
-    supabase.auth.getSession().then(({ data: { session: activeSession } }) => {
-      setSession(activeSession);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: activeSession } }) => {
+        setSession(activeSession);
+        return;
+      })
+      .catch(() => {});
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, activeSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, activeSession) => {
       setSession(activeSession);
     });
 
@@ -392,13 +411,13 @@ export function useUserProfile() {
         try {
           const cached = localStorage.getItem("tvrs-user-profile");
           if (cached) localProfile = JSON.parse(cached);
-        } catch (_) {}
+        } catch {}
 
         if (profileErr || !dbProfile) {
           const uploadId = session?.user?.id || userProfile.id;
           const merged = {
             ...userProfile,
-            id: uploadId
+            id: uploadId,
           };
           await upsertProfile(
             uploadId,
@@ -425,10 +444,11 @@ export function useUserProfile() {
             id: dbProfile.id,
             username: dbProfile.username || localProfile.username || userProfile.username,
             avatarId: dbProfile.avatar_id || localProfile.avatarId || userProfile.avatarId,
-            avatarColor: dbProfile.avatar_color || localProfile.avatarColor || userProfile.avatarColor,
+            avatarColor:
+              dbProfile.avatar_color || localProfile.avatarColor || userProfile.avatarColor,
             xp: mergedXp,
             level: mergedLevel,
-            unlockedBadges: mergedBadges
+            unlockedBadges: mergedBadges,
           };
 
           await upsertProfile(
@@ -463,7 +483,10 @@ export function useUserProfile() {
               if (dbMaxScore > localRec.maxScore) {
                 useDb = true;
               } else if (dbMaxScore === localRec.maxScore) {
-                if (localRec.bestTime === null || (dbBestTime !== null && dbBestTime < localRec.bestTime)) {
+                if (
+                  localRec.bestTime === null ||
+                  (dbBestTime !== null && dbBestTime < localRec.bestTime)
+                ) {
                   useDb = true;
                 }
               }
@@ -471,7 +494,7 @@ export function useUserProfile() {
               mergedRecords[modeKey] = {
                 maxScore: useDb ? dbMaxScore : localRec.maxScore,
                 bestTime: useDb ? dbBestTime : localRec.bestTime,
-                gamesPlayed: Math.max(localRec.gamesPlayed, dbGamesPlayed)
+                gamesPlayed: Math.max(localRec.gamesPlayed, dbGamesPlayed),
               };
             }
           });
@@ -516,14 +539,23 @@ export function useUserProfile() {
   }, [session, userProfile.id]);
 
   const updateGameRecord = useCallback(
-    async (gameMode, finalScore, timeSpent, totalPossible = 0, gameDuration = 0, continentsConquered = []) => {
+    async (
+      gameMode,
+      finalScore,
+      timeSpent,
+      totalPossible = 0,
+      gameDuration = 0,
+      continentsConquered = [],
+      hardcore = false
+    ) => {
       const oldXp = userProfile.xp || 0;
       const oldLevel = userProfile.level || 1;
 
       // Base gameplay XP
       const foundXp = finalScore * 10;
       const completionXp = 50;
-      const conquestXp = (Array.isArray(continentsConquered) ? continentsConquered.length : 0) * 100;
+      const conquestXp =
+        (Array.isArray(continentsConquered) ? continentsConquered.length : 0) * 100;
       const perfectXp = finalScore > 0 && finalScore === totalPossible ? 250 : 0;
       let gainedXp = foundXp + completionXp + conquestXp + perfectXp;
 
@@ -544,37 +576,48 @@ export function useUserProfile() {
       }
 
       // Update local records
-      const currentRecord = localRecords[gameMode] || { maxScore: 0, bestTime: null, gamesPlayed: 0 };
+      const currentRecord = localRecords[gameMode] || {
+        maxScore: 0,
+        bestTime: null,
+        gamesPlayed: 0,
+      };
       const nextGamesPlayed = currentRecord.gamesPlayed + 1;
 
       let nextMaxScore = currentRecord.maxScore;
       let nextBestTime = currentRecord.bestTime;
+      let isNewBestRun = false;
 
       if (finalScore > currentRecord.maxScore) {
         nextMaxScore = finalScore;
         nextBestTime = timeSpent;
+        isNewBestRun = true;
       } else if (finalScore === currentRecord.maxScore) {
         if (currentRecord.bestTime === null || timeSpent < currentRecord.bestTime) {
           nextBestTime = timeSpent;
+          isNewBestRun = true;
         }
       }
 
       const updatedRecord = {
         maxScore: nextMaxScore,
         bestTime: nextBestTime,
-        gamesPlayed: nextGamesPlayed
+        gamesPlayed: nextGamesPlayed,
+        // Whether the standing best run was achieved in hardcore.
+        hardcore: isNewBestRun ? hardcore : Boolean(currentRecord.hardcore),
       };
 
       const updatedRecords = {
         ...localRecords,
-        [gameMode]: updatedRecord
+        [gameMode]: updatedRecord,
       };
 
       // Add incremental continents markers
       const continentMarkers = [];
       if (Array.isArray(continentsConquered) && continentsConquered.length > 0) {
         continentsConquered.forEach((region) => {
-          const prevCompletions = currentBadges.filter((b) => b.startsWith(`conquered_${region}_`)).length;
+          const prevCompletions = currentBadges.filter((b) =>
+            b.startsWith(`conquered_${region}_`)
+          ).length;
           if (prevCompletions < 5) {
             continentMarkers.push(`conquered_${region}_${prevCompletions + 1}`);
           }
@@ -600,12 +643,16 @@ export function useUserProfile() {
         lightningCount: 0,
         gameDuration,
         isNight: hour >= 22 || hour < 4,
-        isLunch: hour >= 12 && hour < 14
+        isLunch: hour >= 12 && hour < 14,
       };
 
       const baseBadgesPlusMarkers = [...currentBadges, ...levelBadges, ...continentMarkers];
-      const newlyUnlocked = checkChallengesRealTime(baseBadgesPlusMarkers, localRecords, sessionData);
-      
+      const newlyUnlocked = checkChallengesRealTime(
+        baseBadgesPlusMarkers,
+        localRecords,
+        sessionData
+      );
+
       // Award +100 XP per unlocked achievement
       const totalNewlyUnlocked = [...levelBadges, ...newlyUnlocked];
       const achievementXp = totalNewlyUnlocked.length * 100;
@@ -637,7 +684,7 @@ export function useUserProfile() {
         id: activeUserId,
         xp: finalXp,
         level: finalLevel,
-        unlockedBadges: updatedBadges
+        unlockedBadges: updatedBadges,
       };
 
       setUserProfile(updatedProfile);
@@ -669,12 +716,19 @@ export function useUserProfile() {
           gameMode,
           nextMaxScore,
           nextBestTime,
-          nextGamesPlayed
+          nextGamesPlayed,
+          isNewBestRun ? hardcore : null
         );
         if (recordErr) console.error("Error syncing user record to Supabase:", recordErr);
 
         if (finalScore > 0) {
-          const { error: scoreErr } = await submitLeaderboardScore(activeUserId, gameMode, finalScore, timeSpent);
+          const { error: scoreErr } = await submitLeaderboardScore(
+            activeUserId,
+            gameMode,
+            finalScore,
+            timeSpent,
+            hardcore
+          );
           if (scoreErr) {
             console.error("Error submitting score to Supabase:", scoreErr);
           } else {
@@ -692,9 +746,9 @@ export function useUserProfile() {
           completion: completionXp,
           conquest: conquestXp,
           perfect: perfectXp,
-          achievements: achievementXp
+          achievements: achievementXp,
         },
-        newlyUnlockedBadges: totalNewlyUnlocked
+        newlyUnlockedBadges: totalNewlyUnlocked,
       };
     },
     [session, userProfile, localRecords, lastScores, fetchTopExplorers]
@@ -708,6 +762,6 @@ export function useUserProfile() {
     topExplorers,
     updateGameRecord,
     fetchTopExplorers,
-    lastScores
+    lastScores,
   };
 }

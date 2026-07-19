@@ -1,22 +1,19 @@
-import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { countryDataMap } from "../data/gameData";
+
 import {
-  GLOBE_STYLE,
-  GLITCH_EFFECT_SETTINGS,
   getOpaqueThreeColor,
   getThemeColors,
+  getThemeDepartmentColor,
   getThemeRegionColor,
   getThemeRegionColorAttenuated,
   getThemeRegionColorLabel,
-  getThemeDepartmentColor,
+  GLITCH_EFFECT_SETTINGS,
+  GLOBE_STYLE,
 } from "../config/designSystem";
-import { getPolygonAltitudeFor, GAME_REGIONS } from "../config/gameConfig";
+import { GAME_REGIONS, getPolygonAltitudeFor } from "../config/gameConfig";
+import { countryDataMap } from "../data/gameData";
 import { getPolygonMaterialForFeature } from "../utils/globePolygonMaterial";
-import {
-  clearAnimatedPolygonMaterials,
-  unregisterAnimatedPolygonMaterial,
-} from "../utils/polygonGlitchShader";
 import {
   FOUND_HIGHLIGHT,
   mutedFoundGreen,
@@ -26,6 +23,10 @@ import {
   resolveRegionalLandColor,
   shouldUseRegionalUnfoundLand,
 } from "../utils/polygonColorResolver";
+import {
+  clearAnimatedPolygonMaterials,
+  unregisterAnimatedPolygonMaterial,
+} from "../utils/polygonGlitchShader";
 import { getFeatureAdmin } from "../utils/utils";
 
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
@@ -41,7 +42,7 @@ export function useGlobePolygons({
   perfProfile,
   selectedCountry,
   foundSet,
-  foundList,
+  _foundList,
   isHomeScreen,
   isEndScreen,
   isDepartmentMode,
@@ -66,29 +67,28 @@ export function useGlobePolygons({
         _lerpColor2.set(colorB);
         _lerpColor1.lerp(_lerpColor2, Math.max(0, Math.min(1, amount)));
         return `#${_lerpColor1.getHexString()}`;
-      } catch (e) {
+      } catch {
         return safeColor(a);
       }
     },
-    [safeColor],
+    [safeColor]
   );
 
-  const { REGION_COLORS, REGION_COLORS_ATTENUATED, REGION_COLORS_LABELS } =
-    useMemo(() => {
-      const surface = {};
-      const attenuated = {};
-      const labels = {};
-      GAME_REGIONS.forEach((r) => {
-        surface[r] = getThemeRegionColor(globeTheme, theme, r);
-        attenuated[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
-        labels[r] = getThemeRegionColorLabel(globeTheme, theme, r);
-      });
-      return {
-        REGION_COLORS: surface,
-        REGION_COLORS_ATTENUATED: attenuated,
-        REGION_COLORS_LABELS: labels,
-      };
-    }, [globeTheme, theme]);
+  const { REGION_COLORS, REGION_COLORS_ATTENUATED, REGION_COLORS_LABELS } = useMemo(() => {
+    const surface = {};
+    const attenuated = {};
+    const labels = {};
+    GAME_REGIONS.forEach((r) => {
+      surface[r] = getThemeRegionColor(globeTheme, theme, r);
+      attenuated[r] = getThemeRegionColorAttenuated(globeTheme, theme, r);
+      labels[r] = getThemeRegionColorLabel(globeTheme, theme, r);
+    });
+    return {
+      REGION_COLORS: surface,
+      REGION_COLORS_ATTENUATED: attenuated,
+      REGION_COLORS_LABELS: labels,
+    };
+  }, [globeTheme, theme]);
 
   const UI_COLORS = useMemo(() => {
     return getThemeColors(globeTheme, theme);
@@ -98,7 +98,7 @@ export function useGlobePolygons({
     (region) => {
       return REGION_COLORS[region] || UI_COLORS.success;
     },
-    [REGION_COLORS, UI_COLORS.success],
+    [REGION_COLORS, UI_COLORS.success]
   );
 
   const getPolygonColor = useCallback(
@@ -136,7 +136,7 @@ export function useGlobePolygons({
             globeTheme,
             theme,
             regionCode,
-            UI_COLORS.mapBase,
+            UI_COLORS.mapBase
           );
           return mutedFoundGreen(deptTint, lerpColor);
         }
@@ -212,7 +212,7 @@ export function useGlobePolygons({
       theme,
       isLight,
       lerpColor,
-    ],
+    ]
   );
 
   const getPolygonStroke = useCallback(
@@ -283,18 +283,14 @@ export function useGlobePolygons({
       isPerfectScore,
       globeTheme,
       REGION_COLORS_LABELS,
-    ],
+    ]
   );
 
   const getPolygonSideColor = useCallback(
     (d) => {
       if (isDepartmentMode) {
         if (d.isGhostCountry) return UI_COLORS.mapSea;
-        return lerpColor(
-          getPolygonColor(d),
-          UI_COLORS.black,
-          isLight ? 0.012 : 0.02,
-        );
+        return lerpColor(getPolygonColor(d), UI_COLORS.black, isLight ? 0.012 : 0.02);
       }
 
       const admin = getFeatureAdmin(d);
@@ -360,7 +356,7 @@ export function useGlobePolygons({
       getPolygonColor,
       globeTheme,
       theme,
-    ],
+    ]
   );
 
   const getBaseColorForCountryAndKind = useCallback(
@@ -369,13 +365,40 @@ export function useGlobePolygons({
       const region = data?.region || "Unknown";
       const isFound = foundSet.has(admin);
 
+      if (isFound && !isEndScreen) {
+        return resolveFoundCountryColor();
+      }
+
+      // The deselect dissolve must SETTLE on the country's resting look, else the
+      // glitch-out ends on a color the base material never shows and snaps/blinks
+      // on hand-off. An unfound cap rests on the regional land tint (see
+      // getPolygonColor) — NOT mapBase — so target that exact tint here. Using the
+      // mapBase-derived cap made the cap fade toward near-black against the
+      // grayscale globe.
+      if (
+        kind === "cap" &&
+        shouldUseRegionalUnfoundLand({
+          isEndScreen,
+          isFound,
+          isSelected: admin === selectedCountry,
+        })
+      ) {
+        return resolveRegionalLandColor(region, {
+          globeTheme,
+          regionColorsLabels: REGION_COLORS_LABELS,
+          regionColorsAttenuated: REGION_COLORS_ATTENUATED,
+          fallbackAccent: UI_COLORS.accent,
+          fallbackRegionColor: getRegionSurfaceColor(region),
+        });
+      }
+
       let baseColor;
       if (isEndScreen) {
-        if (isFound) {
-          baseColor = isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-        } else {
-          baseColor = UI_COLORS.error;
-        }
+        baseColor = isFound
+          ? isPerfectScore
+            ? UI_COLORS.gold
+            : UI_COLORS.success
+          : UI_COLORS.error;
       } else {
         baseColor = resolveCountryCapColor({
           admin,
@@ -395,10 +418,6 @@ export function useGlobePolygons({
         });
       }
 
-      if (isFound && !isEndScreen) {
-        return resolveFoundCountryColor();
-      }
-
       const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
       if (kind === "side") {
         return lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08);
@@ -416,6 +435,10 @@ export function useGlobePolygons({
       lerpColor,
       isEndScreen,
       isPerfectScore,
+      globeTheme,
+      REGION_COLORS_LABELS,
+      REGION_COLORS_ATTENUATED,
+      getRegionSurfaceColor,
     ]
   );
 
@@ -423,12 +446,10 @@ export function useGlobePolygons({
     (d, kind) => {
       const admin = getFeatureAdmin(d) || "unknown";
       const cache = polygonMaterialCacheRef.current[kind];
-      const color =
-        kind === "cap" ? getPolygonColor(d) : getPolygonSideColor(d);
+      const color = kind === "cap" ? getPolygonColor(d) : getPolygonSideColor(d);
       const isFound = foundSet.has(admin);
       const isLearnSelected = mode === "learn" && admin === selectedCountry;
-      const isHighlightedOnGlobe =
-        isFound || isLearnSelected || admin === selectedCountry;
+      const isHighlightedOnGlobe = isFound || isLearnSelected || admin === selectedCountry;
 
       const material = getPolygonMaterialForFeature({
         d,
@@ -485,12 +506,12 @@ export function useGlobePolygons({
       isSuccess,
       isEndScreen,
       lerpColor,
-    ],
+    ]
   );
 
   const getPolygonCapMaterial = useCallback(
     (d) => getPolygonMaterial(d, "cap"),
-    [getPolygonMaterial],
+    [getPolygonMaterial]
   );
 
   const getPolygonSideMaterial = useCallback(
@@ -501,7 +522,7 @@ export function useGlobePolygons({
       }
       return invisibleMaterial;
     },
-    [selectedCountry, getPolygonMaterial],
+    [selectedCountry, getPolygonMaterial]
   );
 
   useEffect(() => {
@@ -525,11 +546,11 @@ export function useGlobePolygons({
       const isSelected = admin === selectedCountry;
       return getPolygonAltitudeFor({
         isDepartmentMode,
-        isGhostCountry: !!(isDepartmentMode && d.isGhostCountry),
+        isGhostCountry: Boolean(isDepartmentMode && d.isGhostCountry),
         isSelected,
       });
     },
-    [isDepartmentMode, selectedCountry],
+    [isDepartmentMode, selectedCountry]
   );
 
   const getPolygonStrokeWidth = useCallback(
@@ -551,9 +572,7 @@ export function useGlobePolygons({
         return base + (isLight ? 0.15 : 0.25);
       }
       const thickness =
-        Number(UI_COLORS.strokeWidthDesktop) ||
-        Number(UI_COLORS.strokeWidthMobile) ||
-        0.75;
+        Number(UI_COLORS.strokeWidthDesktop) || Number(UI_COLORS.strokeWidthMobile) || 0.75;
 
       if (!UI_COLORS.isBlackoutTheme && (isLight || globeLightingEnabled)) {
         return (thickness + 0.2) * strokeScale;
@@ -569,7 +588,7 @@ export function useGlobePolygons({
       foundSet,
       mode,
       UI_COLORS,
-    ],
+    ]
   );
 
   const getPolygonCurvatureResolution = useCallback(
@@ -590,20 +609,20 @@ export function useGlobePolygons({
       }
       return baseRes;
     },
-    [perfProfile?.polygonCapCurvatureResolution],
+    [perfProfile?.polygonCapCurvatureResolution]
   );
 
   const getPolygonCapColorWrapped = useCallback(
     (d) => safeColor(getPolygonColor(d)),
-    [safeColor, getPolygonColor],
+    [safeColor, getPolygonColor]
   );
   const getPolygonSideColorWrapped = useCallback(
     (d) => safeColor(getPolygonSideColor(d)),
-    [safeColor, getPolygonSideColor],
+    [safeColor, getPolygonSideColor]
   );
   const getPolygonStrokeColorWrapped = useCallback(
     (d) => safeColor(getPolygonStroke(d)),
-    [safeColor, getPolygonStroke],
+    [safeColor, getPolygonStroke]
   );
 
   return {

@@ -1,33 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { User, Close, Trophy, Lock } from "pixelarticons/react";
-import InvaderAvatar from "./InvaderAvatar";
+import "./ProfilePanel.css";
+
+import { Close, Lock, Trophy, User } from "pixelarticons/react";
+import React, { useEffect, useState } from "react";
+
 import { AVATAR_COLORS } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
-import { getLevelAndProgress } from "../utils/gamification";
 import { CHALLENGES } from "../data/challenges";
 import {
   isSupabaseConfigured,
-  upsertProfile,
   isUsernameTaken,
-  signOut
+  signOut,
+  upsertProfile,
 } from "../services/supabaseClient";
+import { getLevelAndProgress } from "../utils/gamification";
+import InvaderAvatar from "./InvaderAvatar";
 import SegmentedControl from "./SegmentedControl";
-import "./ProfilePanel.css";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes
 const CHALLENGE_AVATARS = {
-  ch_gen_play_1: { invaderId: "invader_1", color: "cyan" },         // Premier Pas
-  ch_gen_play_10: { invaderId: "invader_2", color: "purple" },      // Pilier Cartographe
-  ch_gen_play_50: { invaderId: "invader_3", color: "magenta" },     // Géographe Suprême
-  ch_cont_europe: { invaderId: "invader_4", color: "cyan" },        // Conquête de l'Europe
-  ch_cont_africa: { invaderId: "invader_5", color: "yellow" },      // Terres Africaines
-  ch_cont_asia: { invaderId: "invader_6", color: "magenta" },       // Soleil Levant
-  ch_cont_americas: { invaderId: "invader_7", color: "lime" },      // Nouveau Monde
-  ch_cont_oceania: { invaderId: "invader_8", color: "pink" },       // Archipels Lointains
-  ch_score_countries_50: { invaderId: "invader_9", color: "yellow" },// Expert Pays
-  ch_score_capitals_50: { invaderId: "invader_10", color: "orange" },// Maire du Monde
+  ch_gen_play_1: { invaderId: "invader_1", color: "cyan" }, // Premier Pas
+  ch_gen_play_10: { invaderId: "invader_2", color: "purple" }, // Pilier Cartographe
+  ch_gen_play_50: { invaderId: "invader_3", color: "magenta" }, // Géographe Suprême
+  ch_cont_europe: { invaderId: "invader_4", color: "cyan" }, // Conquête de l'Europe
+  ch_cont_africa: { invaderId: "invader_5", color: "yellow" }, // Terres Africaines
+  ch_cont_asia: { invaderId: "invader_6", color: "magenta" }, // Soleil Levant
+  ch_cont_americas: { invaderId: "invader_7", color: "lime" }, // Nouveau Monde
+  ch_cont_oceania: { invaderId: "invader_8", color: "pink" }, // Archipels Lointains
+  ch_score_countries_50: { invaderId: "invader_9", color: "yellow" }, // Expert Pays
+  ch_score_capitals_50: { invaderId: "invader_10", color: "orange" }, // Maire du Monde
   ch_speed_fast_guess: { invaderId: "invader_11", color: "yellow" }, // Réflexe Éclair
-  ch_relief_score_20: { invaderId: "invader_12", color: "green" }    // Alpiniste Amateur
+  ch_relief_score_20: { invaderId: "invader_12", color: "green" }, // Alpiniste Amateur
 };
 
 const ProfilePanel = ({
@@ -39,7 +41,7 @@ const ProfilePanel = ({
   theme = "dark",
   localRecords,
   session,
-  onOpenAuth
+  onOpenAuth,
 }) => {
   const t = useTranslation(lang);
   const [activeTab, setActiveTab] = useState("profile"); // "profile" | "stats"
@@ -90,7 +92,7 @@ const ProfilePanel = ({
           ...userProfile,
           username: cleanUsername,
           avatarId: selectedAvatar,
-          avatarColor: selectedColor
+          avatarColor: selectedColor,
         };
 
         const { error } = await upsertProfile(
@@ -112,7 +114,7 @@ const ProfilePanel = ({
           ...userProfile,
           username: cleanUsername,
           avatarId: selectedAvatar,
-          avatarColor: selectedColor
+          avatarColor: selectedColor,
         };
         setUserProfile(guestProfile);
         localStorage.setItem("tvrs-user-profile", JSON.stringify(guestProfile));
@@ -138,7 +140,7 @@ const ProfilePanel = ({
         xp: 0,
         unlockedBadges: [],
         avatarId: "invader_1",
-        avatarColor: "cyan"
+        avatarColor: "cyan",
       };
       setUserProfile(guestProfile);
       localStorage.setItem("tvrs-user-profile", JSON.stringify(guestProfile));
@@ -149,7 +151,10 @@ const ProfilePanel = ({
 
   const { level, xpInLevel, xpNeededForNext, percent } = getLevelAndProgress(userProfile.xp || 0);
   const unlockedBadges = userProfile.unlockedBadges || [];
-  const totalGamesPlayed = Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0);
+  const totalGamesPlayed = Object.values(localRecords || {}).reduce(
+    (acc, rec) => acc + (rec.gamesPlayed || 0),
+    0
+  );
 
   const filterLabels = {
     all: lang === "fr" ? "Tout" : "All",
@@ -157,7 +162,7 @@ const ProfilePanel = ({
     continents: lang === "fr" ? "Continents" : "Continents",
     scores: lang === "fr" ? "Scores" : "Scores",
     speed: lang === "fr" ? "Vitesse" : "Speed",
-    relief: lang === "fr" ? "Relief" : "Relief"
+    relief: lang === "fr" ? "Relief" : "Relief",
   };
 
   const filteredChallenges = CHALLENGES.filter((ch) => {
@@ -165,7 +170,8 @@ const ProfilePanel = ({
     return ch.category === challengesFilter;
   });
 
-  const selectedChallengeObj = CHALLENGES.find((ch) => ch.id === selectedChallengeId) || CHALLENGES[0];
+  const selectedChallengeObj =
+    CHALLENGES.find((ch) => ch.id === selectedChallengeId) || CHALLENGES[0];
   const isSelectedChallengeUnlocked = unlockedBadges.includes(selectedChallengeId);
 
   const getChallengeTitle = (ch) => (lang === "fr" ? ch.titleFr : ch.titleEn);
@@ -184,7 +190,7 @@ const ProfilePanel = ({
       isLocked,
       label,
       unlockDesc: `${label}: ${desc}`,
-      color: mapping.color
+      color: mapping.color,
     };
   });
 
@@ -203,8 +209,16 @@ const ProfilePanel = ({
       <div className="panel-header">
         <SegmentedControl
           options={[
-            { value: "profile", label: t("tab_profile"), icon: <User width={14} height={14} className="tab-icon" /> },
-            { value: "stats", label: t("tab_stats"), icon: <Trophy width={14} height={14} className="tab-icon" /> },
+            {
+              value: "profile",
+              label: t("tab_profile"),
+              icon: <User width={14} height={14} className="tab-icon" />,
+            },
+            {
+              value: "stats",
+              label: t("tab_stats"),
+              icon: <Trophy width={14} height={14} className="tab-icon" />,
+            },
           ]}
           value={activeTab}
           onChange={setActiveTab}
@@ -243,9 +257,10 @@ const ProfilePanel = ({
               </div>
             )}
 
-            <div className={`profile-customization-container ${isSupabaseConfigured && !session ? "blurred" : ""}`}>
+            <div
+              className={`profile-customization-container ${isSupabaseConfigured && !session ? "blurred" : ""}`}
+            >
               <form onSubmit={handleSaveProfile} className="profile-form">
-                
                 {/* Scrollable Middle Area - contains sticky header + content in ONE scroll block (no double scroll) */}
                 <div className="profile-form-middle scrollbar-styled">
                   {/* Sticky Top Header Area (nom/username sticky, like mobile no-double-scroll logic) */}
@@ -267,14 +282,19 @@ const ProfilePanel = ({
 
                   {/* Content: niv (level), invader, stats etc. scroll together as one block */}
                   {/* Minecraft Style XP Block (Moved to Default Profile Tab) */}
-                  <div className="xp-progression-card glass-panel" style={{ marginBottom: "var(--spacing-md)" }}>
+                  <div
+                    className="xp-progression-card glass-panel"
+                    style={{ marginBottom: "var(--spacing-md)" }}
+                  >
                     <div className="xp-card-header">
                       <div className="xp-avatar-wrap">
                         <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={36} />
                       </div>
                       <div className="xp-level-info">
                         <span className="xp-level-title">{t("level", { level })}</span>
-                        <span className="xp-total-count">{t("xp_label", { current: xpInLevel, next: xpNeededForNext })}</span>
+                        <span className="xp-total-count">
+                          {t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+                        </span>
                       </div>
                     </div>
                     <div className="minecraft-xp-bar-container">
@@ -295,7 +315,8 @@ const ProfilePanel = ({
                     <div className="quick-stat-card glass-panel">
                       <span className="stat-label">{t("stats_badges_unlocked")}</span>
                       <span className="stat-value">
-                        {unlockedBadges.filter((b) => b.startsWith("ch_")).length} / {CHALLENGES.length}
+                        {unlockedBadges.filter((b) => b.startsWith("ch_")).length} /{" "}
+                        {CHALLENGES.length}
                       </span>
                     </div>
                   </div>
@@ -348,9 +369,13 @@ const ProfilePanel = ({
                     disabled={isSaving || (isSupabaseConfigured && !session)}
                     className={`btn-primary form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
                   >
-                    {saveSuccess ? `✓ ${t("profile_saved")}` : (isSaving ? t("saving") : t("save_profile"))}
+                    {saveSuccess
+                      ? `✓ ${t("profile_saved")}`
+                      : isSaving
+                        ? t("saving")
+                        : t("save_profile")}
                   </button>
-                  
+
                   {/* Clean Logout inside the sticky footer */}
                   {isSupabaseConfigured && session && (
                     <div className="profile-signout-wrapper">
@@ -368,7 +393,7 @@ const ProfilePanel = ({
             {/* Scrollable Middle Area (Contains ONLY Achievements) */}
             <div className="badges-gallery-section">
               <span className="section-label">Challenges & Émotes</span>
-              
+
               <div className="nav-chips">
                 {["all", "general", "continents", "scores", "speed", "relief"].map((cat) => (
                   <button
@@ -391,8 +416,12 @@ const ProfilePanel = ({
                       className={`badge-item-btn glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
                       onClick={() => setSelectedChallengeId(ch.id)}
                       style={{
-                        "--badge-color-glow": isUnlocked ? `${AVATAR_COLORS[ch.color]}33` : "transparent",
-                        "--badge-color-border": isUnlocked ? AVATAR_COLORS[ch.color] : "var(--glass-border)"
+                        "--badge-color-glow": isUnlocked
+                          ? `${AVATAR_COLORS[ch.color]}33`
+                          : "transparent",
+                        "--badge-color-border": isUnlocked
+                          ? AVATAR_COLORS[ch.color]
+                          : "var(--glass-border)",
                       }}
                     >
                       <div className="badge-item-inner">
@@ -418,7 +447,11 @@ const ProfilePanel = ({
               <div className="badge-detail-header">
                 <div
                   className="badge-detail-icon-glow"
-                  style={{ "--badge-detail-color": isSelectedChallengeUnlocked ? AVATAR_COLORS[selectedChallengeObj.color] : "gray" }}
+                  style={{
+                    "--badge-detail-color": isSelectedChallengeUnlocked
+                      ? AVATAR_COLORS[selectedChallengeObj.color]
+                      : "gray",
+                  }}
                 >
                   <InvaderAvatar
                     invaderId={selectedChallengeObj.id}
@@ -430,14 +463,14 @@ const ProfilePanel = ({
                   <h3 className="badge-detail-name text-natural-case">
                     {getChallengeTitle(selectedChallengeObj)}
                   </h3>
-                  <span className={`badge-detail-status ${isSelectedChallengeUnlocked ? "unlocked" : "locked"}`}>
+                  <span
+                    className={`badge-detail-status ${isSelectedChallengeUnlocked ? "unlocked" : "locked"}`}
+                  >
                     {isSelectedChallengeUnlocked ? "Débloqué (Émote OK)" : "Verrouillé"}
                   </span>
                 </div>
               </div>
-              <p className="badge-detail-description">
-                {getChallengeDesc(selectedChallengeObj)}
-              </p>
+              <p className="badge-detail-description">{getChallengeDesc(selectedChallengeObj)}</p>
             </div>
           </div>
         )}

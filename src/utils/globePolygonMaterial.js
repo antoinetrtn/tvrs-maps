@@ -1,11 +1,9 @@
 import * as THREE from "three";
-import { GLOBE_STYLE } from "../config/designSystem";
+
+import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../config/designSystem";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
-import {
-  attachPolygonGlitchShader,
-  syncPolygonShaderUniforms,
-} from "./polygonGlitchShader";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
+import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
 
 function resolvePolygonEmissiveProps({
   color,
@@ -54,8 +52,7 @@ function resolvePolygonEmissiveProps({
   if (isDepartmentMode && !isGhostCountry) {
     return {
       emissiveHex: color,
-      emissiveIntensity:
-        kind === "cap" ? (isLight ? 0.08 : 0.12) : isLight ? 0.04 : 0.07,
+      emissiveIntensity: kind === "cap" ? (isLight ? 0.08 : 0.12) : isLight ? 0.04 : 0.07,
       specularHex: UI_COLORS.mapBorder,
       shininess: kind === "cap" ? 2 : 1,
     };
@@ -125,20 +122,19 @@ export function getPolygonMaterialForFeature({
   mapBase: _mapBase,
   lerpColor: _lerpColor,
 }) {
-  const { emissiveHex, emissiveIntensity, specularHex, shininess } =
-    resolvePolygonEmissiveProps({
-      color,
-      kind,
-      admin,
-      selectedCountry,
-      showFoundOnGlobe,
-      isHighlightedOnGlobe,
-      isDepartmentMode,
-      isGhostCountry: d.isGhostCountry,
-      globeLightingEnabled,
-      isLight,
-      UI_COLORS,
-    });
+  const { emissiveHex, emissiveIntensity, specularHex, shininess } = resolvePolygonEmissiveProps({
+    color,
+    kind,
+    admin,
+    selectedCountry,
+    showFoundOnGlobe,
+    isHighlightedOnGlobe,
+    isDepartmentMode,
+    isGhostCountry: d.isGhostCountry,
+    globeLightingEnabled,
+    isLight,
+    UI_COLORS,
+  });
 
   const isIsolated = admin === selectedCountry;
   const isPrevTransitioning = admin === transitioningPreviousCountryState;
@@ -157,8 +153,7 @@ export function getPolygonMaterialForFeature({
     isSuccess,
   });
   const isShaderCap = shaderMode.useShader;
-  const isSelectionHighlight =
-    shaderMode.isSelectionHighlight && !isError && !isSuccess;
+  const isSelectionHighlight = shaderMode.isSelectionHighlight && !isError && !isSuccess;
   const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
 
   const isFoundCapMaterial = showFoundOnGlobe && kind === "cap" && !isShaderCap;
@@ -199,8 +194,7 @@ export function getPolygonMaterialForFeature({
 
     const isSatellite = globeTheme === "satellite";
     const shaderNeedsOpaque =
-      isShaderCap &&
-      (isSuccess || isFound || isLearnSelected || admin === selectedCountry);
+      isShaderCap && (isSuccess || isFound || isLearnSelected || admin === selectedCountry);
 
     if (isSatellite) {
       if (shaderNeedsOpaque || showFoundOnGlobe || isLearnSelected) {
@@ -231,8 +225,10 @@ export function getPolygonMaterialForFeature({
           material.transparent = false;
           material.opacity = 1.0;
         } else {
+          // Transparent flag kept so the shader's dissolve alpha applies on
+          // deselection; the wall itself renders the full cap effect.
           material.transparent = true;
-          material.opacity = 0.55;
+          material.opacity = GLITCH_EFFECT_SETTINGS.sideWallOpacity;
         }
       }
       attachPolygonGlitchShader(material, {
@@ -251,8 +247,7 @@ export function getPolygonMaterialForFeature({
     }
 
     material.userData.isIsolated = isIsolated;
-    material.userData.isShared =
-      !isFoundCapMaterial && !(isDepartmentMode || isIsolated);
+    material.userData.isShared = !isFoundCapMaterial && !(isDepartmentMode || isIsolated);
     material.userData.admin = admin;
     sharedMaterialsRef.current.set(cacheKey, material);
   } else if (isShaderCap) {

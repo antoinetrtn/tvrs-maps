@@ -10,7 +10,7 @@
   align-items: center;
   pointer-events: none;
   /* Let globe interactions through if needed, but we'll re-enable on content */
-  font-family: var(--font-main, 'Inter', system-ui, sans-serif);
+  font-family: var(--font-main, "Inter", system-ui, sans-serif);
 }
 
 .end-screen-content {
@@ -21,8 +21,15 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  /* Always the scroll container so the sticky actions row actually sticks
+     (no visible change when nothing overflows). */
+  overflow-y: auto;
   padding: max(40px, calc(20px + var(--safe-top))) 20px max(20px, var(--safe-bottom));
-  background: radial-gradient(circle at center, transparent 0%, color-mix(in srgb, var(--bg-color) 40%, transparent) 100%);
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    color-mix(in srgb, var(--bg-color) 40%, transparent) 100%
+  );
   color: var(--text-main);
   text-align: center;
 }
@@ -43,22 +50,45 @@
   letter-spacing: 0.01em;
 }
 
-.end-screen-header p {
-  font-size: 1.25rem;
-  margin-top: var(--spacing-sm);
-  opacity: 0.9;
+/* Restore chip — shown while the end screen is minimized over the globe */
+.end-screen-restore-chip {
+  position: absolute;
+  bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+  /* Centered via auto margins — the slideUp animation owns the transform. */
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: fit-content;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: var(--control-lg);
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border-radius: var(--radius-full);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: slideUp var(--transition-emphasized) both;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-spring);
 }
 
-.final-score {
+.end-screen-restore-chip:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.restore-chip-score {
   font-family: var(--font-display);
-  font-weight: 200;
   font-variant-numeric: tabular-nums;
   color: var(--success);
-}
-
-.perfect-game .final-score {
-  color: var(--gold);
-  text-shadow: 0 0 20px var(--gold-soft);
 }
 
 .perfect-game .end-screen-header h1 {
@@ -90,7 +120,10 @@
   animation: slideUp var(--transition-emphasized) both;
   animation-delay: 0.2s;
   cursor: pointer;
-  transition: transform var(--transition-layout), box-shadow var(--transition-normal), border-color var(--transition-normal);
+  transition:
+    transform var(--transition-layout),
+    box-shadow var(--transition-normal),
+    border-color var(--transition-normal);
 }
 
 .continents-progress-bars:hover {
@@ -126,7 +159,9 @@
   justify-content: center;
   color: var(--text-muted);
   opacity: 0.8;
-  transition: color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .continents-progress-bars:hover .progress-info-icon {
@@ -166,6 +201,7 @@
   animation: fadeInSimple 0.8s ease both;
 }
 
+/* No background band here — the buttons carry their own glass surface. */
 .end-screen-actions {
   max-width: 600px;
   width: 90%;
@@ -177,13 +213,9 @@
   position: sticky;
   bottom: 0;
   z-index: 5;
+  flex-shrink: 0;
   padding-top: var(--spacing-md);
   padding-bottom: max(var(--spacing-md), var(--safe-bottom));
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--bg-color) 90%, transparent) 55%,
-    transparent
-  );
 }
 
 .progress-info {
@@ -249,74 +281,29 @@
   transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.end-screen-actions {
+  gap: var(--spacing-sm);
+}
+
+.end-screen-actions .btn-primary,
+.end-screen-actions .btn-secondary {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+/* Over the globe, the quiet secondary needs its own glass surface + blur
+   to stay readable without any backdrop band. */
+.end-screen-actions .btn-secondary,
 .end-screen-actions .btn-primary {
-  width: 100%;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 12px 24px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: transform var(--transition-spring), opacity var(--transition-spring);
-  border: none;
-}
-
-.btn-primary {
-  background: var(--glass-border);
-  color: var(--text-main);
-  border: 1px solid var(--glass-border);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2.5px) scale(1.02);
-  box-shadow: 
-    0 0 0 1px var(--accent-soft),
-    0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--glass-hover);
-  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
-}
-
-.btn-primary:active {
-  transform: translateY(0.5px) scale(0.98);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-soft);
-  text-shadow: none;
-  transition: transform var(--transition-instant), background-color var(--transition-instant), box-shadow var(--transition-instant);
-}
-
-.btn-secondary {
-  background: var(--subtle-tint-strong);
-  color: var(--text-main);
+  background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
-  border: 1px solid var(--glass-border-strong);
 }
 
-.btn-secondary:hover {
-  transform: translateY(-2.5px) scale(1.02);
-  background: var(--glass-hover);
-  border-color: var(--accent);
-  color: var(--accent);
-  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
-}
-
-.btn-secondary:active {
-  transform: translateY(0.5px) scale(0.98);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border-color: var(--accent);
-  box-shadow: 0 2px 8px var(--accent-soft);
-  text-shadow: none;
-  transition: transform var(--transition-instant), background-color var(--transition-instant), box-shadow var(--transition-instant);
-}
+/* .btn-primary lives in index.css (shared with ProfilePanel and AuthModal). */
 
 /* Narrow / short viewports: scrollable content + sticky home button */
 @media (max-width: 900px), (max-height: 720px) {
@@ -330,11 +317,25 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .end-screen-spacer { display: none; }
-  .end-screen-header h1 { font-size: clamp(1.6rem, 5vw, 2.2rem); }
-  .continents-progress-bars { padding: var(--spacing-md); gap: var(--spacing-md); margin-bottom: var(--spacing-md); }
-  .progress-bars-grid { grid-template-columns: 1fr; gap: var(--spacing-ms); }
-  .end-screen-xp-card, .end-screen-history { margin-bottom: var(--spacing-md); }
+  .end-screen-spacer {
+    display: none;
+  }
+  .end-screen-header h1 {
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+  }
+  .continents-progress-bars {
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+  .progress-bars-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-ms);
+  }
+  .end-screen-xp-card,
+  .end-screen-history {
+    margin-bottom: var(--spacing-md);
+  }
 }
 
 /* History scores section styling */
@@ -405,44 +406,50 @@
 }
 
 @keyframes trophy-glow-gold {
-  0% { filter: drop-shadow(0 0 2px var(--color-gold-glow)); }
-  100% { filter: drop-shadow(0 0 10px var(--color-gold-glow)); }
-}
-@keyframes trophy-glow-silver {
-  0% { filter: drop-shadow(0 0 2px var(--color-silver-glow)); }
-  100% { filter: drop-shadow(0 0 10px var(--color-silver-glow)); }
-}
-@keyframes trophy-glow-bronze {
-  0% { filter: drop-shadow(0 0 2px var(--color-bronze-glow)); }
-  100% { filter: drop-shadow(0 0 10px var(--color-bronze-glow)); }
-}
-
-/* Personal Best Badge */
-.new-pb-badge {
-  display: inline-block;
-  margin: var(--spacing-xs) auto 0;
-  padding: 4px 12px;
-  background: linear-gradient(135deg, var(--gold-soft) 0%, transparent 100%);
-  color: var(--gold);
-  border: 1px solid var(--gold);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.95rem;
-  box-shadow: 0 0 10px var(--gold-soft);
-  animation: pb-badge-pulse 1.5s ease-in-out infinite alternate;
-  pointer-events: auto;
-}
-
-@keyframes pb-badge-pulse {
   0% {
-    box-shadow: 0 0 4px var(--gold-soft);
-    transform: scale(0.98);
+    filter: drop-shadow(0 0 2px var(--color-gold-glow));
   }
   100% {
-    box-shadow: 0 0 12px var(--gold-soft);
-    transform: scale(1.02);
+    filter: drop-shadow(0 0 10px var(--color-gold-glow));
   }
+}
+@keyframes trophy-glow-silver {
+  0% {
+    filter: drop-shadow(0 0 2px var(--color-silver-glow));
+  }
+  100% {
+    filter: drop-shadow(0 0 10px var(--color-silver-glow));
+  }
+}
+@keyframes trophy-glow-bronze {
+  0% {
+    filter: drop-shadow(0 0 2px var(--color-bronze-glow));
+  }
+  100% {
+    filter: drop-shadow(0 0 10px var(--color-bronze-glow));
+  }
+}
+
+/* Personal Best Badge — quiet gold pill, no pulse */
+.new-pb-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  max-width: min(90vw, 320px);
+  white-space: nowrap;
+  margin: var(--spacing-sm) auto 0;
+  padding: var(--spacing-xxs) var(--spacing-md);
+  background: color-mix(in srgb, var(--color-gold) 10%, transparent);
+  color: var(--color-gold);
+  border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+  border-radius: var(--radius-full);
+  font-family: var(--font-main);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: auto;
 }
 
 /* Gamification End Screen XP Card */
@@ -498,21 +505,39 @@
   font-weight: 900;
   color: var(--xp-yellow-inner);
   animation: level-up-flicker 0.2s steps(2) infinite alternate;
-  text-shadow: -1px 0 var(--glitch-magenta), 1px 0 var(--glitch-cyan);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
 }
 
 @keyframes level-up-shake-anim {
-  0% { transform: scale(1); }
-  20% { transform: scale(1.04) rotate(1deg); }
-  40% { transform: scale(1.02) rotate(-1deg); }
-  60% { transform: scale(1.03) rotate(1deg); }
-  80% { transform: scale(1.01) rotate(0); }
-  100% { transform: scale(1) rotate(0); }
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.04) rotate(1deg);
+  }
+  40% {
+    transform: scale(1.02) rotate(-1deg);
+  }
+  60% {
+    transform: scale(1.03) rotate(1deg);
+  }
+  80% {
+    transform: scale(1.01) rotate(0);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
 }
 
 @keyframes level-up-flicker {
-  0% { opacity: 0.9; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 640px) {

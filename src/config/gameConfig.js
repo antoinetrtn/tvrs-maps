@@ -6,17 +6,17 @@
  * lives here so a single mode can't drift visually from the others.
  */
 
-const PLAY_MODES = ['countries', 'capitals', 'departments', 'rivers_mountains'];
+const PLAY_MODES = ["countries", "capitals", "departments", "rivers_mountains"];
 
-export const LEARN_SUB_MODES = ['countries', 'capitals', 'rivers_mountains', 'departments'];
-export const DEFAULT_LEARN_SUB_MODE = 'countries';
+export const LEARN_SUB_MODES = ["countries", "capitals", "rivers_mountains", "departments"];
+export const DEFAULT_LEARN_SUB_MODE = "countries";
 
 const LEARN_LABEL_LIMITS = { mobile: 6, tablet: 10, desktop: 16 };
 
 /** Max labels on the globe in learn — names are always visible, keep the view sparse. */
 export function getLearnLabelLimit({ isMobile, maxLabels } = {}) {
   if (isMobile) return LEARN_LABEL_LIMITS.mobile;
-  if (typeof maxLabels === 'number' && maxLabels <= 8) return LEARN_LABEL_LIMITS.tablet;
+  if (typeof maxLabels === "number" && maxLabels <= 8) return LEARN_LABEL_LIMITS.tablet;
   return LEARN_LABEL_LIMITS.desktop;
 }
 
@@ -38,23 +38,23 @@ export function getPlayVisibleCountryKeys(selectedCountry, foundList = []) {
 /** France department polygons (play mode or learn sub-mode). */
 export const isDepartmentView = (
   mode,
-  { isHomeScreen = false, learnSubMode = DEFAULT_LEARN_SUB_MODE } = {},
+  { isHomeScreen = false, learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}
 ) =>
-  !isHomeScreen &&
-  (mode === 'departments' || (mode === 'learn' && learnSubMode === 'departments'));
+  !isHomeScreen && (mode === "departments" || (mode === "learn" && learnSubMode === "departments"));
 
 /** Rivers & mountains in learn sub-mode. */
-export const isLearnRiversMountainsView = (
-  mode,
-  { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {},
-) => mode === 'learn' && learnSubMode === 'rivers_mountains';
+export const isLearnRiversMountainsView = (mode, { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}) =>
+  mode === "learn" && learnSubMode === "rivers_mountains";
 
 /**
  * Whether a feature's NAME should be scrambled (hidden) right now. Uniform across
  * every guessable mode — countries, capitals, departments and rivers/mountains all
  * scramble the answer until it is found.
  */
-export const shouldScrambleLabel = (mode, { isFound, isHomeScreen = false, isEndScreen = false, isSelected = false, isLearn = false } = {}) => {
+export const shouldScrambleLabel = (
+  mode,
+  { isFound, isHomeScreen = false, isEndScreen = false, isSelected = false, isLearn = false } = {}
+) => {
   if (isLearn) return false; // learn mode reveals everything — never scramble
   if (isHomeScreen) return isSelected; // home showcases a single scrambling target
   if (!isPlayMode(mode, { isHomeScreen, isEndScreen })) return false;
@@ -73,12 +73,13 @@ export const POLYGON_ALTITUDE = {
   selected: 0.008,
   departmentBase: 0.0025,
   departmentSelected: 0.0038,
-  ghostCountry: 0.001
+  ghostCountry: 0.001,
 };
 
 export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSelected }) => {
   if (isDepartmentMode && isGhostCountry) return POLYGON_ALTITUDE.ghostCountry;
-  if (isSelected) return isDepartmentMode ? POLYGON_ALTITUDE.departmentSelected : POLYGON_ALTITUDE.selected;
+  if (isSelected)
+    return isDepartmentMode ? POLYGON_ALTITUDE.departmentSelected : POLYGON_ALTITUDE.selected;
   return POLYGON_ALTITUDE.base;
 };
 
@@ -92,28 +93,26 @@ export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSele
  * placeholder to full size.
  */
 export const RELIEF = {
-  mountainScale: 0.62,   // found: stable, geographically-representative size
-  targetHintScale: 0.5   // unfound: neutral, still clearly visible/clickable
+  mountainScale: 0.62, // found: stable, geographically-representative size
+  targetHintScale: 0.5, // unfound: neutral, still clearly visible/clickable
 };
 
 /** Shader dissolve when deselecting a country (ms). Kept in sync with polygon altitude tween. */
 export const GLITCH_SELECTION_TRANSITION_MS = 360;
 
-/** Stuttery 0→1 curve: linger in heavy glitch, burst, then snap to target. */
-export const getDeselectGlitchFadeProgress = (elapsedMs, durationMs = GLITCH_SELECTION_TRANSITION_MS) => {
-  const holdMs = Math.round(durationMs * 0.32);
-  const burstMs = Math.round(durationMs * 0.48);
-  if (elapsedMs <= holdMs) {
-    return (elapsedMs / holdMs) * 0.22;
-  }
-  if (elapsedMs <= holdMs + burstMs) {
-    const burstT = (elapsedMs - holdMs) / burstMs;
-    return 0.22 + burstT * 0.48 + Math.sin(burstT * 28.0) * 0.04;
-  }
-  const settleT =
-    (elapsedMs - holdMs - burstMs) /
-    Math.max(1, durationMs - holdMs - burstMs);
-  return 0.7 + settleT * 0.3;
+/**
+ * Smooth 0→1 dissolve curve (smootherstep). The previous version lingered in a
+ * heavy-glitch hold, then burst with a sine stutter and snapped to the target —
+ * which read as a brutal, jittery deselect. A monotonic S-curve dissolves the
+ * country gracefully; the digital character now comes only from the shader's
+ * noise threshold, not from a jerky timeline.
+ */
+export const getDeselectGlitchFadeProgress = (
+  elapsedMs,
+  durationMs = GLITCH_SELECTION_TRANSITION_MS
+) => {
+  const t = Math.min(1, Math.max(0, elapsedMs / Math.max(1, durationMs)));
+  return t * t * t * (t * (t * 6 - 15) + 10);
 };
 
 export const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(["France"]);

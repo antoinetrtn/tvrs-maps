@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from "react";
-import { GAME_XP_COLORS } from "../config/designSystem";
 import "./XpOrbsAnimation.css";
+
+import React, { useEffect, useRef } from "react";
+
+import { GAME_XP_COLORS } from "../config/designSystem";
 
 const XpOrbsAnimation = ({
   sourceRef,
@@ -8,7 +10,7 @@ const XpOrbsAnimation = ({
   onOrbCollect,
   onComplete,
   count = 15,
-  active = true
+  active = true,
 }) => {
   const canvasRef = useRef(null);
 
@@ -44,14 +46,14 @@ const XpOrbsAnimation = ({
       constructor(idx) {
         this.x = startX + (Math.random() - 0.5) * 30;
         this.y = startY + (Math.random() - 0.5) * 30;
-        
+
         // Bezier characteristics
         this.progress = 0;
         this.delay = idx * 80 + Math.random() * 40;
         this.speed = Math.random() * 0.025 + 0.02; // Staggered speed
 
         const midX = (startX + endX) / 2;
-        
+
         // Push control point up for a nice arc
         this.cpX = midX + (Math.random() - 0.5) * 160;
         this.cpY = Math.min(startY, endY) - 120 - Math.random() * 80;
@@ -91,13 +93,14 @@ const XpOrbsAnimation = ({
 
         const t = this.progress;
         const mt = 1 - t;
-        
+
         // Quadratic bezier
         const bx = mt * mt * startX + 2 * mt * t * this.cpX + t * t * endX;
         const by = mt * mt * startY + 2 * mt * t * this.cpY + t * t * endY;
-        
+
         // Perpendicular offset oscillation
-        const wobble = Math.sin(time * this.wobbleSpeed + this.wobblePhase) * this.wobbleAmount * (1 - t);
+        const wobble =
+          Math.sin(time * this.wobbleSpeed + this.wobblePhase) * this.wobbleAmount * (1 - t);
 
         this.x = bx + wobble;
         this.y = by + wobble * 0.3;
@@ -107,7 +110,7 @@ const XpOrbsAnimation = ({
         if (this.delay > 0 || this.collected) return;
 
         c.save();
-        
+
         const s = Math.floor(this.size);
         const border = 2;
 

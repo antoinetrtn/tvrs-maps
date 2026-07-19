@@ -1,11 +1,15 @@
 /* Leaderboard specific styles */
 
-.leaderboard-panel {
-  width: 460px !important;
-  height: 800px !important;
-  max-height: calc(100vh - 140px) !important;
-  max-height: calc(100dvh - 140px) !important;
-  overflow: hidden !important;
+/* Desktop-only dimensions — below 1025px the shared .sheet-panel fullscreen
+   rules (panelSystem.css) take over. */
+@media (min-width: 1025px) {
+  .leaderboard-panel {
+    width: 460px !important;
+    height: 800px !important;
+    max-height: calc(100vh - 140px) !important;
+    max-height: calc(100dvh - 140px) !important;
+    overflow: hidden !important;
+  }
 }
 
 .leaderboard-panel .panel-header {
@@ -34,8 +38,6 @@
   background: transparent;
 }
 
-
-
 .leaderboard-controls {
   display: flex;
   align-items: center;
@@ -49,8 +51,6 @@
   padding-bottom: var(--spacing-xs);
   flex-shrink: 0;
 }
-
-
 
 /* Table styles */
 .leaderboard-table-container {
@@ -96,6 +96,17 @@
   text-align: center;
 }
 
+.score-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xxs);
+}
+
+.hardcore-badge {
+  color: var(--error);
+  flex-shrink: 0;
+}
 
 .rank-badge {
   display: inline-flex;
@@ -186,50 +197,8 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Responsive layout for mobile viewports */
-@media (max-width: 768px) {
-  .leaderboard-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--spacing-sm);
-    border-bottom: none;
-    padding-bottom: 0;
-    margin-bottom: var(--spacing-md);
-  }
-
-
-
-
-  .leaderboard-table th,
-  .leaderboard-table td {
-    padding: var(--spacing-xs) var(--spacing-xs) !important;
-    font-size: 0.78rem;
-  }
-
-  .col-rank {
-    width: 45px !important;
-  }
-  
-  .col-score {
-    width: 70px !important;
-  }
-  
-  .col-time {
-    width: 70px !important;
-  }
-
-  .player-cell {
-    gap: var(--spacing-xs) !important;
-  }
-
-  .player-username {
-    max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  to {
+    transform: rotate(360deg);
   }
 }
 
@@ -375,7 +344,9 @@
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px) scale(0.95);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
   z-index: 10;
   min-width: 70px;
   box-shadow: var(--glass-shadow-strong);
@@ -455,35 +426,26 @@
     max-width: 220px;
     margin-right: var(--spacing-xs);
   }
-  
+
   .panel-tab-btn {
     font-size: 0.7rem;
     padding: 4px 6px;
   }
-  
+
   .personal-stats-grid {
     gap: 6px;
     margin-bottom: var(--spacing-sm);
   }
-  
+
   .personal-stat-card {
     padding: var(--spacing-xs) 2px;
   }
-  
+
   .personal-stat-card .stat-value {
     font-size: 1rem;
-  }
-  
-  .col-date {
-    width: 85px !important;
-  }
-  
-  .col-evo {
-    width: 45px !important;
   }
 
   .evolution-chart {
     height: 60px;
   }
 }
-

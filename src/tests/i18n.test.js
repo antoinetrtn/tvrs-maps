@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { useTranslation, translations } from "../config/i18n";
 import { renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
+import { translations, useTranslation } from "../config/i18n";
 
 describe("i18n translation system", () => {
   it("should have matching translation keys for fr and en", () => {

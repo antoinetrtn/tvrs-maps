@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { useGlobeAnimationLoop } from "./useGlobeAnimationLoop";
+
 import { disposeBiomeCache } from "../utils/LowPolyBiomes";
+import { useGlobeAnimationLoop } from "./useGlobeAnimationLoop";
 
 /** Wires globe animation loop + biome cache lifecycle. */
 export function useGlobeSceneAnimation({
@@ -42,14 +43,10 @@ export function useGlobeSceneAnimation({
     transitioningIncomingCountryRef,
     selectionTransitionStartRef,
   } = selectionTransition.refs;
-  const {
-    transitioningPreviousCountryState,
-    transitioningIncomingCountryState,
-  } = selectionTransition.state;
-  const {
-    setTransitioningPreviousCountryState,
-    setTransitioningIncomingCountryState,
-  } = selectionTransition.setters;
+  const { transitioningPreviousCountryState, transitioningIncomingCountryState } =
+    selectionTransition.state;
+  const { setTransitioningPreviousCountryState, setTransitioningIncomingCountryState } =
+    selectionTransition.setters;
 
   useGlobeAnimationLoop({
     globeEl,

@@ -1,11 +1,7 @@
-import { useMemo, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 
-export function useGlobeMaterial({
-  UI_COLORS,
-  globeLightingEnabled,
-  isLight,
-}) {
+export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
   const customGlobeTexture = useMemo(() => {
     if (UI_COLORS.globeTextureUrl) {
       const loader = new THREE.TextureLoader();
@@ -30,7 +26,9 @@ export function useGlobeMaterial({
 
     if (matType === "basic") {
       const baseColor = UI_COLORS.globeMaterialColor
-        ? (UI_COLORS.globeMaterialColor.startsWith("#") ? UI_COLORS.globeMaterialColor : UI_COLORS[UI_COLORS.globeMaterialColor] || UI_COLORS.mapSea)
+        ? UI_COLORS.globeMaterialColor.startsWith("#")
+          ? UI_COLORS.globeMaterialColor
+          : UI_COLORS[UI_COLORS.globeMaterialColor] || UI_COLORS.mapSea
         : UI_COLORS.mapSea;
       return new THREE.MeshBasicMaterial({
         color: baseColor,
@@ -67,12 +65,7 @@ export function useGlobeMaterial({
       opacity: 1,
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7,
     });
-  }, [
-    UI_COLORS,
-    isLight,
-    globeLightingEnabled,
-    customGlobeTexture,
-  ]);
+  }, [UI_COLORS, isLight, globeLightingEnabled, customGlobeTexture]);
 
   useEffect(() => {
     return () => {

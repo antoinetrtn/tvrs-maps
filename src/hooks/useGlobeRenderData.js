@@ -1,16 +1,15 @@
 import { useMemo } from "react";
+
+import { DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS } from "../config/gameConfig";
 import { countryDataMap } from "../data/gameData";
 import {
-  DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS,
-} from "../config/gameConfig";
-import {
+  getCanonicalPosition,
   getFeatureAdmin,
-  getRenderGeometry,
   getFeaturePolygons,
   getLngLatBounds,
-  getMobileRenderRadius,
   getLngLatDistance,
-  getCanonicalPosition,
+  getMobileRenderRadius,
+  getRenderGeometry,
 } from "../utils/utils";
 
 export function useGlobeRenderData({
@@ -25,15 +24,10 @@ export function useGlobeRenderData({
   zoomLevel,
   perfProfile,
 }) {
-
   const selectableCountriesData = useMemo(() => {
     if (isDepartmentMode)
-      return departmentsData.filter(
-        (feature) => gameDataMap[getFeatureAdmin(feature)],
-      );
-    return countriesData.filter(
-      (feature) => countryDataMap[getFeatureAdmin(feature)],
-    );
+      return departmentsData.filter((feature) => gameDataMap[getFeatureAdmin(feature)]);
+    return countriesData.filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
   }, [countriesData, departmentsData, gameDataMap, isDepartmentMode]);
 
   const baseRenderCountriesData = useMemo(() => {
@@ -47,12 +41,7 @@ export function useGlobeRenderData({
     if (!isDepartmentMode) return baseRenderCountriesData;
 
     const ghostWorld = countriesData
-      .filter(
-        (feature) =>
-          !DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS.has(
-            getFeatureAdmin(feature),
-          ),
-      )
+      .filter((feature) => !DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS.has(getFeatureAdmin(feature)))
       .map((feature) => ({
         ...feature,
         isGhostCountry: true,
@@ -104,17 +93,11 @@ export function useGlobeRenderData({
       if (admin === selectedCountry) return true;
 
       const data = countryDataMap[admin];
-      if (!data || data.lat === undefined || data.lng === undefined)
-        return true;
+      if (!data || data.lat === undefined || data.lng === undefined) return true;
 
       const size = countrySizes[admin] || 1;
       const sizeBuffer = Math.min(70, Math.max(8, size * 0.75));
-      const distToCenter = getLngLatDistance(
-        data.lng,
-        data.lat,
-        pov.lng,
-        pov.lat,
-      );
+      const distToCenter = getLngLatDistance(data.lng, data.lat, pov.lng, pov.lat);
 
       return distToCenter <= renderRadius + sizeBuffer;
     });

@@ -78,6 +78,10 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsFound;
   uniform float uSelectInTransition;
   uniform vec3 uFoundGreen;
+  uniform float uPixelScale;
+  uniform float uSideShade;
+  uniform float uSuccessStart;
+  uniform float uSuccessDuration;
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
@@ -93,12 +97,20 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
       return mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
     }
   }
-  vec3 computeSuccessEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 worldPos) {
-    float pulse = sin(time * 18.0) * 0.35 + 0.65;
-    float sweep = step(fract(worldPos.y * 0.12 - time * 4.0), 0.35) * 0.40;
-    float successNoise = hash(noiseUv + sin(time * 45.0));
-    float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, successNoise);
-    return uFoundGreen * noisyIntensity;
+  vec3 computeSuccessEffect(vec3 finalColor, float time, float theme, vec2 blockUv, vec3 worldPos) {
+    // Progress 0 -> 1 over the success flash (uSuccessStart is stamped on the guess).
+    float p = clamp((time - uSuccessStart) / uSuccessDuration, 0.0, 1.0);
+    // Chunky pixel blocks lock onto the found green, noisiest blocks resolving last.
+    float blockNoise = hash(blockUv * 0.5 + 17.0);
+    float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
+    // White-hot flicker on the blocks still resolving.
+    float flick = mix(0.8, 1.25, hash(blockUv + floor(time * 60.0)));
+    vec3 hot = mix(vec3(1.0), uFoundGreen, 0.35) * flick;
+    // Single fast scanline sweep down the country during the burst.
+    float sweep = step(fract(worldPos.y * 0.12 - p * 2.4), 0.16)
+      * (1.0 - smoothstep(0.35, 0.75, p)) * 0.6;
+    // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
+    return mix(hot, uFoundGreen, resolved) + uFoundGreen * sweep;
   }
   vec3 computeSelectionEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 worldPos) {
     float pulse = sin(time * 5.5) * 0.18 + 0.82;
@@ -119,68 +131,59 @@ export const GLITCH_FRAGMENT_BODY = `
   float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159)) * selectInScale;
   float t = uTime * (28.0 + glitchAmp * 62.0);
 
-  vec2 blockUv = floor(gl_FragCoord.xy * 0.24);
-  vec2 noiseUv = gl_FragCoord.xy * 0.28;
+  // DPR-normalized screen coords: same visual grain size on mobile and desktop.
+  vec2 fragPx = gl_FragCoord.xy * uPixelScale;
+
+  vec2 blockUv = floor(fragPx * 0.24);
+  vec2 noiseUv = fragPx * 0.28;
   float noiseCoarse = hash(blockUv + sin(t));
   float noiseFine = hash(noiseUv + vec2(cos(t * 1.6), sin(t * 0.95)));
   float noise = mix(noiseCoarse, noiseFine, 0.4);
 
   float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
   float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
-  float scanline = sin(gl_FragCoord.y * 1.05 + uTime * (6.0 + glitchAmp * 14.0))
+  float scanline = sin(fragPx.y * 1.05 + uTime * (6.0 + glitchAmp * 14.0))
     * ((uIsLight > 0.5) ? 0.03 : 0.048);
 
   float staticColor = mix(baseMin, baseMax, noise) + scanline;
   vec3 staticVec = vec3(staticColor);
 
+  // Caps and extruded side walls share one effect pipeline; sides are shaded
+  // slightly darker below so the extrusion keeps its depth cue.
   vec3 finalColor = gl_FragColor.rgb;
-
-  if (uIsSide > 0.5) {
-    if (uIsError > 0.5) {
-      finalColor = computeErrorEffect(finalColor, uTime, uTheme, blockUv, vWorldPosition);
-    } else if (uIsSuccess > 0.5) {
-      finalColor = computeSuccessEffect(finalColor, uTime, uTheme, blockUv, vWorldPosition);
-    } else if (uIsSelection > 0.5) {
-      finalColor = computeSelectionEffect(finalColor, uFoundGreen, uTime, uTheme, vWorldPosition);
-    } else {
-      vec2 uv = gl_FragCoord.xy;
-      float beamPattern = sin(uv.y * 0.4 - uTime * 15.0) * 0.5 + 0.5;
-      float wallNoise = fract(sin(dot(uv + uTime, vec2(12.9898,78.233))) * 43758.5453);
-      vec3 beamColor = vec3(1.0);
-      finalColor = mix(gl_FragColor.rgb, beamColor, 0.3 + 0.7 * beamPattern * (0.8 + 0.2 * wallNoise));
-    }
+  if (uIsError > 0.5) {
+    finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
+  } else if (uIsSuccess > 0.5) {
+    finalColor = computeSuccessEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
+  } else if (uIsSelection > 0.5) {
+    finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
+  } else if (uIsFound > 0.5) {
+    finalColor = uFoundGreen;
   } else {
-    if (uIsError > 0.5) {
-      finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
-    } else if (uIsSuccess > 0.5) {
-      finalColor = computeSuccessEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
-    } else if (uIsSelection > 0.5) {
-      finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
-    } else if (uIsFound > 0.5) {
-      finalColor = uFoundGreen;
-    } else {
-      finalColor = staticVec;
-    }
+    finalColor = staticVec;
   }
+  finalColor *= mix(1.0, uSideShade, step(0.5, uIsSide));
 
   // Deselection dissolve: noisy digital dither + tears + chroma split
-  vec2 dissolveBlock = floor(gl_FragCoord.xy * 0.21)
+  vec2 dissolveBlock = floor(fragPx * 0.21)
     + vec2(sin(uTime * 58.0), cos(uTime * 41.0)) * glitchAmp * 3.5;
   float transitionNoise = hash(dissolveBlock);
   float transitionNoise2 = hash(dissolveBlock * 1.9 + uTime * 3.7);
   transitionNoise = mix(transitionNoise, transitionNoise2, 0.55 * max(glitchAmp, 0.35));
 
-  float horizontalTear = step(0.78, sin(gl_FragCoord.y * 0.038 + uTime * (48.0 + glitchAmp * 95.0)));
-  float verticalGlitch = step(0.86, hash(vec2(floor(gl_FragCoord.x * 0.07), floor(uTime * 24.0))));
+  float horizontalTear = step(0.78, sin(fragPx.y * 0.038 + uTime * (48.0 + glitchAmp * 95.0)));
+  float verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x * 0.07), floor(uTime * 24.0))));
 
   float glitchThreshold = uFadeProgress;
   if (transitionActive > 0.5) {
-    glitchThreshold += (transitionNoise - 0.5) * (0.62 + glitchAmp * 0.38);
+    // Softer threshold noise + gentler tears → the dissolve edge breaks up
+    // evenly instead of ripping the country apart in big chunks.
+    glitchThreshold += (transitionNoise - 0.5) * (0.46 + glitchAmp * 0.30);
     if (horizontalTear > 0.5) {
-      glitchThreshold = clamp(glitchThreshold - 0.28, 0.0, 1.0);
+      glitchThreshold = clamp(glitchThreshold - 0.16, 0.0, 1.0);
     }
     if (verticalGlitch > 0.5) {
-      glitchThreshold = clamp(glitchThreshold + 0.22, 0.0, 1.0);
+      glitchThreshold = clamp(glitchThreshold + 0.12, 0.0, 1.0);
     }
   }
 
@@ -189,47 +192,48 @@ export const GLITCH_FRAGMENT_BODY = `
   float finalProgress = mix(glitchFade, uFadeProgress, mixBias);
 
   vec3 glitchColor = finalColor;
-  bool isFoundCap = (uIsFound > 0.5) && (uIsSide < 0.5);
+  bool isFoundSurface = (uIsFound > 0.5);
   bool isSoftSelectIn =
     (uSelectInTransition > 0.5) &&
-    (uIsSide < 0.5) &&
     (uIsFound < 0.5) &&
     (uIsError < 0.5) &&
     (uIsSuccess < 0.5);
 
-  if (transitionActive > 0.5 && uIsSide < 0.5 && !isFoundCap && !isSoftSelectIn) {
-    float chroma = (transitionNoise - 0.5) * 0.18 * glitchAmp;
+  if (transitionActive > 0.5 && !isFoundSurface && !isSoftSelectIn) {
+    // Subtle chroma split + gentle tear tinting. The full white/black strobe
+    // flashes here used to read as a harsh, ugly deselect — softened well down
+    // so the dissolve stays digital without jarring the eye.
+    float chroma = (transitionNoise - 0.5) * 0.11 * glitchAmp;
     glitchColor.r = clamp(finalColor.r + chroma, 0.0, 1.0);
     glitchColor.b = clamp(finalColor.b - chroma, 0.0, 1.0);
     if (horizontalTear > 0.5) {
-      glitchColor = mix(glitchColor, vec3(1.0), 0.32 * glitchAmp);
+      glitchColor = mix(glitchColor, vec3(1.0), 0.13 * glitchAmp);
     }
     if (verticalGlitch > 0.5) {
-      glitchColor = mix(glitchColor, vec3(0.0), 0.2 * glitchAmp);
+      glitchColor = mix(glitchColor, vec3(0.0), 0.08 * glitchAmp);
     }
   }
 
-  vec3 settleColor = mix(uTargetColor, uFoundGreen, step(0.5, uIsFound));
+  float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
+  vec3 settleColor = mix(uTargetColor, uFoundGreen * sideShade, step(0.5, uIsFound));
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
-  } else if (isFoundCap) {
-    gl_FragColor.rgb = uFoundGreen;
+  } else if (isFoundSurface) {
+    gl_FragColor.rgb = uFoundGreen * sideShade;
   } else if (isSoftSelectIn && transitionActive > 0.5) {
     float reveal = 1.0 - uFadeProgress;
     float grain = smoothstep(0.1, 0.6, reveal);
-    gl_FragColor.rgb = mix(settleColor, staticVec, grain * 0.5);
+    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, grain * 0.5);
   } else if (isSoftSelectIn) {
-    gl_FragColor.rgb = staticVec;
+    gl_FragColor.rgb = staticVec * sideShade;
   } else {
     gl_FragColor.rgb = mix(glitchColor, settleColor, finalProgress);
   }
 
-  float finalAlpha = 1.0;
-  if (uIsSuccess > 0.5 || uIsFound > 0.5) {
-    finalAlpha = 1.0;
-  } else if (uTheme < 0.5 && uIsFound < 0.5) {
-    finalAlpha = mix(1.0, 0.0, finalProgress);
-  }
-  gl_FragColor.a = finalAlpha;
+  // Caps stay fully opaque through the deselect. The dissolve now morphs the
+  // cap's COLOR toward its resting tint (uTargetColor) and hands off to the base
+  // material; fading alpha to 0 here used to punch a one-frame black hole through
+  // to the globe — the "blink" against the grayscale countries.
+  gl_FragColor.a = 1.0;
 `;

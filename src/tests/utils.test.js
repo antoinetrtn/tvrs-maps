@@ -1,17 +1,18 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  getGameStats,
-  getFeatureAdmin,
-  getFlagEmoji,
   areLngLatPointsEqual,
   getCleanRingForRendering,
   getExteriorPolygonForRendering,
+  getFeatureAdmin,
+  getFlagEmoji,
+  getGameStats,
+  getLabelRenderRadius,
   getLngLatBounds,
-  pointInBounds,
-  pointInPolygon,
   getLngLatDistance,
   getMobileRenderRadius,
-  getLabelRenderRadius,
+  pointInBounds,
+  pointInPolygon,
 } from "../utils/utils";
 
 describe("Geographical and Math Utilities", () => {
@@ -49,7 +50,12 @@ describe("Geographical and Math Utilities", () => {
   describe("getCleanRingForRendering", () => {
     it("should return null for invalid/short rings", () => {
       expect(getCleanRingForRendering([])).toBeNull();
-      expect(getCleanRingForRendering([[0, 0], [1, 1]])).toBeNull();
+      expect(
+        getCleanRingForRendering([
+          [0, 0],
+          [1, 1],
+        ])
+      ).toBeNull();
     });
 
     it("should clean up and close rings correctly", () => {
@@ -57,7 +63,7 @@ describe("Geographical and Math Utilities", () => {
         [0, 0],
         [1, 1],
         [2, 0],
-        [0, 0] // already closed
+        [0, 0], // already closed
       ];
       const clean = getCleanRingForRendering(ring);
       expect(clean).not.toBeNull();
@@ -66,7 +72,7 @@ describe("Geographical and Math Utilities", () => {
       const unclosed = [
         [0, 0],
         [1, 1],
-        [2, 0]
+        [2, 0],
       ];
       const cleanUnclosed = getCleanRingForRendering(unclosed);
       expect(cleanUnclosed).not.toBeNull();
@@ -81,7 +87,7 @@ describe("Geographical and Math Utilities", () => {
         [1, 1],
         ["invalid", 2], // invalid
         [2, 0],
-        [0, 0]
+        [0, 0],
       ];
       const clean = getCleanRingForRendering(ring);
       expect(clean.length).toBe(4);
@@ -92,8 +98,18 @@ describe("Geographical and Math Utilities", () => {
   describe("getExteriorPolygonForRendering", () => {
     it("should extract exterior ring", () => {
       const polygon = [
-        [[0, 0], [1, 1], [2, 0], [0, 0]], // exterior
-        [[0.5, 0.2], [0.8, 0.2], [0.5, 0.5], [0.5, 0.2]] // interior (hole)
+        [
+          [0, 0],
+          [1, 1],
+          [2, 0],
+          [0, 0],
+        ], // exterior
+        [
+          [0.5, 0.2],
+          [0.8, 0.2],
+          [0.5, 0.5],
+          [0.5, 0.2],
+        ], // interior (hole)
       ];
       const ext = getExteriorPolygonForRendering(polygon);
       expect(ext).not.toBeNull();
@@ -106,15 +122,20 @@ describe("Geographical and Math Utilities", () => {
     it("should return correct bounding box limits", () => {
       const polygons = [
         [
-          [[0, 10], [5, 15], [10, 10], [0, 10]]
-        ]
+          [
+            [0, 10],
+            [5, 15],
+            [10, 10],
+            [0, 10],
+          ],
+        ],
       ];
       const bounds = getLngLatBounds(polygons);
       expect(bounds).toEqual({
         minLng: 0,
         maxLng: 10,
         minLat: 10,
-        maxLat: 15
+        maxLat: 15,
       });
     });
   });
@@ -132,7 +153,12 @@ describe("Geographical and Math Utilities", () => {
     it("should test point-in-polygon correctly", () => {
       // Triangle: (0,0), (10,0), (0,10)
       const polygon = [
-        [[0, 0], [10, 0], [0, 10], [0, 0]]
+        [
+          [0, 0],
+          [10, 0],
+          [0, 10],
+          [0, 0],
+        ],
       ];
       expect(pointInPolygon(1, 1, polygon)).toBe(true);
       expect(pointInPolygon(2, 2, polygon)).toBe(true);
@@ -168,7 +194,12 @@ describe("Geographical and Math Utilities", () => {
       const mockCountryDataMap = {
         FR: { name_fr: "France", name_en: "France", capital: "Paris", region: "Europe" },
         DE: { name_fr: "Allemagne", name_en: "Germany", capital: "Berlin", region: "Europe" },
-        US: { name_fr: "États-Unis", name_en: "United States", capital: "Washington", region: "Americas" }
+        US: {
+          name_fr: "États-Unis",
+          name_en: "United States",
+          capital: "Washington",
+          region: "Americas",
+        },
       };
 
       const foundList = ["FR"];

@@ -1,18 +1,28 @@
-import { useState, useEffect, useRef } from "react";
-import { countryDataMap } from "../data/gameData";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
+import { useEffect, useRef, useState } from "react";
+
+import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
 import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
 import {
-  getDataPanelLayoutWidth,
   BREAKPOINTS,
+  GAME_START_VIEW_JITTER_DEG,
+  GAME_START_VIEWPOINTS,
+  getDataPanelLayoutWidth,
 } from "../config/gameConstants";
-import {
-  readClampedGlobePov,
-  syncGlobeCameraAndZoomLimits,
-} from "../utils/globeAltitude";
+import { countryDataMap } from "../data/gameData";
+import { riversMountainsDataMap } from "../data/riversMountainsData";
+import { readClampedGlobePov, syncGlobeCameraAndZoomLimits } from "../utils/globeAltitude";
+import { polygonGlitchUniforms } from "../utils/polygonGlitchShader";
 import { getCanonicalPosition } from "../utils/utils";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
+
+// A new run lands on a random region anchor (jittered) instead of always the
+// same Europe-facing view.
+const getRandomGameStartView = () => {
+  const base = GAME_START_VIEWPOINTS[Math.floor(Math.random() * GAME_START_VIEWPOINTS.length)];
+  const jitter = () => (Math.random() * 2 - 1) * GAME_START_VIEW_JITTER_DEG;
+  return { lat: base.lat + jitter(), lng: base.lng + jitter() };
+};
 
 const getDepartmentModeFrancePointOfView = (width) => ({
   lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
@@ -35,7 +45,8 @@ const buildSelectedCountryCameraTarget = ({
   canonicalPositions = {},
 }) => {
   // GLOBAL RULE: force camera target to exact shape position (centroid or path midpoint)
-  const canonical = (data && canonicalPositions[data.admin || '']) || getCanonicalPosition(data || {});
+  const canonical =
+    (data && canonicalPositions[data.admin || ""]) || getCanonicalPosition(data || {});
   const useLat = canonical ? canonical.lat : data?.lat;
   const useLng = canonical ? canonical.lng : data?.lng;
 
@@ -53,18 +64,14 @@ const buildSelectedCountryCameraTarget = ({
         ? 1.8
         : 0.68;
   const preservedAltitude =
-    currentPOV && Number.isFinite(currentPOV.altitude)
-      ? currentPOV.altitude
-      : fallbackAltitude;
+    currentPOV && Number.isFinite(currentPOV.altitude) ? currentPOV.altitude : fallbackAltitude;
   const isKeyboardOpen = isMobile && isKeyboardMode;
   const keyboardHeight = Math.max(0, maxWindowHeight - viewport.height);
   const keyboardRatio = keyboardHeight / maxWindowHeight;
   const bottomHUDRatio = isMobile ? 0.15 : 0;
   const occlusionRatio = isKeyboardOpen ? keyboardRatio : bottomHUDRatio;
   const visibleHeightDegrees = 36 * preservedAltitude;
-  const latOffset = isHomeScreen
-    ? 0
-    : -visibleHeightDegrees * (occlusionRatio * 0.7);
+  const latOffset = isHomeScreen ? 0 : -visibleHeightDegrees * (occlusionRatio * 0.7);
 
   return {
     lat: (useLat ?? 0) + latOffset,
@@ -90,7 +97,7 @@ const applyIdleCameraPointOfView = ({
       isDepartmentMode
         ? getDepartmentModeFrancePointOfView(viewport.width)
         : { lat: 20, lng: 0, altitude: viewport.width < BREAKPOINTS.mobile ? 2.2 : 1.8 },
-      1200,
+      1200
     );
     return;
   }
@@ -101,7 +108,7 @@ const applyIdleCameraPointOfView = ({
       const currentPOV = globeEl.current.pointOfView();
       globeEl.current.pointOfView(
         { lat: 18, lng: currentPOV?.lng ?? 20, altitude: overviewAltitude },
-        1000,
+        1000
       );
     } else {
       globeEl.current.pointOfView({ altitude: overviewAltitude }, 1000);
@@ -112,15 +119,20 @@ const applyIdleCameraPointOfView = ({
   if (isDepartmentMode) {
     globeEl.current.pointOfView(
       getDepartmentModeFrancePointOfView(viewport.width),
-      wasHomeScreen ? 1100 : 700,
+      wasHomeScreen ? 1100 : 700
     );
     return;
   }
 
   if (wasHomeScreen) {
+    const startView = getRandomGameStartView();
     globeEl.current.pointOfView(
-      { lat: 18, lng: 20, altitude: viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35 },
-      700,
+      {
+        lat: startView.lat,
+        lng: startView.lng,
+        altitude: viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35,
+      },
+      700
     );
   }
 };
@@ -146,10 +158,8 @@ export function useGlobeCamera({
     transitioningIncomingCountryRef,
     selectionTransitionStartRef,
   } = selectionTransition.refs;
-  const {
-    setTransitioningPreviousCountryState,
-    setTransitioningIncomingCountryState,
-  } = selectionTransition.setters;
+  const { setTransitioningPreviousCountryState, setTransitioningIncomingCountryState } =
+    selectionTransition.setters;
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
 
@@ -170,8 +180,13 @@ export function useGlobeCamera({
       try {
         const renderer = globeEl.current.renderer();
         if (renderer) {
-          renderer.setPixelRatio(perfProfile?.pixelRatio || 1);
+          const pixelRatio = perfProfile?.pixelRatio || 1;
+          renderer.setPixelRatio(pixelRatio);
           renderer.sortObjects = true;
+          // Keep the screen-space glitch grain the same visual size regardless
+          // of the device's capped pixel ratio.
+          polygonGlitchUniforms.uPixelScale.value =
+            GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
         }
 
         const controls = globeEl.current.controls();
@@ -227,28 +242,19 @@ export function useGlobeCamera({
         }
 
         syncGlobeCameraAndZoomLimits(globeEl.current, controlsReference);
-      } catch (e) {}
+      } catch {}
     }
 
     return () => {
       if (controlsReference) {
         try {
-          if (changeHandler)
-            controlsReference.removeEventListener("change", changeHandler);
-          if (startHandler)
-            controlsReference.removeEventListener("start", startHandler);
-          if (endHandler)
-            controlsReference.removeEventListener("end", endHandler);
-        } catch (e) {}
+          if (changeHandler) controlsReference.removeEventListener("change", changeHandler);
+          if (startHandler) controlsReference.removeEventListener("start", startHandler);
+          if (endHandler) controlsReference.removeEventListener("end", endHandler);
+        } catch {}
       }
     };
-  }, [
-    shouldAutoRotate,
-    perfProfile?.pixelRatio,
-    perfProfile?.isMobile,
-    isHomeScreen,
-    globeEl,
-  ]);
+  }, [shouldAutoRotate, perfProfile?.pixelRatio, perfProfile?.isMobile, isHomeScreen, globeEl]);
 
   useEffect(() => {
     const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
@@ -260,7 +266,7 @@ export function useGlobeCamera({
         riversMountainsDataMap[selectedCountry];
 
       if (data && data.lat !== undefined) {
-        const hasPreviousSelection = !!previousSelectedCountryRef.current;
+        const hasPreviousSelection = Boolean(previousSelectedCountryRef.current);
         const target = buildSelectedCountryCameraTarget({
           data,
           viewport,
@@ -285,10 +291,16 @@ export function useGlobeCamera({
           targetChanged;
 
         if (selectionChanged || onlyViewportNudge) {
+          // A viewport nudge (keyboard open/close on mobile) recenters the same
+          // country: glide it a touch slower on mobile so a large keyboard
+          // offset doesn't snap the globe. Real selection changes keep their
+          // snappier timing.
           const duration = isHomeScreen
             ? 1800
             : onlyViewportNudge
-              ? 180
+              ? perfProfile?.isMobile
+                ? 340
+                : 180
               : perfProfile?.isMobile
                 ? 320
                 : 420;
@@ -310,8 +322,7 @@ export function useGlobeCamera({
 
     if (selectionChanged) {
       if (mode !== "learn") {
-        transitioningPreviousCountryRef.current =
-          previousSelectedCountryRef.current;
+        transitioningPreviousCountryRef.current = previousSelectedCountryRef.current;
         setTransitioningPreviousCountryState(previousSelectedCountryRef.current);
       } else {
         transitioningPreviousCountryRef.current = null;
@@ -327,8 +338,11 @@ export function useGlobeCamera({
   }, [
     selectedCountry,
     viewport.width,
-    viewport.height,
-    viewport.top,
+    // NOTE: viewport.height / viewport.top are intentionally NOT dependencies.
+    // visualViewport fires a burst of resize events while the keyboard slides
+    // in/out; reacting to each one re-fired the camera animation and made the
+    // globe stutter. The keyboard offset is instead recomputed only when the
+    // debounced isKeyboardMode boolean flips (open → once, close → once).
     isHomeScreen,
     perfProfile,
     isKeyboardMode,
@@ -367,14 +381,12 @@ export function useGlobeCamera({
 
   // Ensure reliable home overview camera + right-side positioning (for left UI card) when returning to accueil on desktop.
   // This recovers the movement animation and visual composition if the main selected effect didn't trigger it.
+  // Desktop/tablet only: the lat:16/lng:28 bias pairs the globe with the left-padded
+  // UI card. On phones there is no left card, so this bias only fought the centered
+  // overview from applyIdleCameraPointOfView and produced a double-animation lurch.
   useEffect(() => {
-    if (isHomeScreen && globeEl.current) {
-      const overviewAltitude = viewport.width < BREAKPOINTS.mobile ? 2.5 : 1.1;
-      // Slight positive lng to bias the view nicely with left-padded UI (globe "on the right").
-      globeEl.current.pointOfView(
-        { lat: 16, lng: 28, altitude: overviewAltitude },
-        950
-      );
+    if (isHomeScreen && globeEl.current && viewport.width >= BREAKPOINTS.mobile) {
+      globeEl.current.pointOfView({ lat: 16, lng: 28, altitude: 1.1 }, 950);
     }
   }, [isHomeScreen, globeEl, viewport.width]);
 

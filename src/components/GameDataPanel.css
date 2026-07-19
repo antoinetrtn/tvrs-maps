@@ -25,10 +25,30 @@
 
 .game-data-panel.overlay {
   position: fixed;
-  inset: max(var(--spacing-md), var(--safe-top)) max(var(--spacing-md), env(safe-area-inset-right, 0px))
-    max(var(--spacing-md), var(--safe-bottom)) max(var(--spacing-md), env(safe-area-inset-left, 0px));
+  inset: max(var(--spacing-md), var(--safe-top))
+    max(var(--spacing-md), env(safe-area-inset-right, 0px))
+    max(var(--spacing-md), var(--safe-bottom))
+    max(var(--spacing-md), env(safe-area-inset-left, 0px));
+  /* Centered column on large screens instead of an edge-to-edge sheet */
+  width: min(860px, calc(100vw - 2 * var(--spacing-md)));
+  margin-inline: auto;
   border-radius: var(--radius-md);
   z-index: var(--z-fullpage);
+}
+
+/* Results footer: sticky standard panel-footer with the shared primary button */
+.data-panel-footer {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-md) max(var(--spacing-sm), var(--safe-bottom));
+}
+
+.data-panel-footer .btn-primary {
+  width: min(100%, 320px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
 }
 
 @keyframes data-panel-slide-in {
@@ -350,9 +370,10 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1024px) {
   .game-data-panel.overlay {
     inset: 0;
+    width: 100%;
     border-radius: 0;
   }
 }

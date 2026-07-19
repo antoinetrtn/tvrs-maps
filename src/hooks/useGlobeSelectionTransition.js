@@ -3,11 +3,9 @@ import { useMemo, useRef, useState } from "react";
 /** Refs + state for polygon select-in / deselect-out glitch transitions. */
 export function useGlobeSelectionTransition() {
   const transitioningPreviousCountryRef = useRef(null);
-  const [transitioningPreviousCountryState, setTransitioningPreviousCountryState] =
-    useState(null);
+  const [transitioningPreviousCountryState, setTransitioningPreviousCountryState] = useState(null);
   const transitioningIncomingCountryRef = useRef(null);
-  const [transitioningIncomingCountryState, setTransitioningIncomingCountryState] =
-    useState(null);
+  const [transitioningIncomingCountryState, setTransitioningIncomingCountryState] = useState(null);
   const selectionTransitionStartRef = useRef(0);
 
   return useMemo(
@@ -26,6 +24,6 @@ export function useGlobeSelectionTransition() {
         setTransitioningIncomingCountryState,
       },
     }),
-    [transitioningPreviousCountryState, transitioningIncomingCountryState],
+    [transitioningPreviousCountryState, transitioningIncomingCountryState]
   );
 }

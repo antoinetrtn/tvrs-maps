@@ -57,6 +57,8 @@ export function useGameSessionProps({
   showResultsTable,
   globeFeedbackRef,
   globeFeedbackApplierRef,
+  livesLeft,
+  isHardcoreRun,
 }) {
   return useMemo(
     () => ({
@@ -72,7 +74,7 @@ export function useGameSessionProps({
         isGameOver,
         onStop: () => handleCustomConfirm(t("stop_game_confirm"), stopGame),
         onInfo: () => setShowInfoModal(true),
-        isFocusedCountry: !!selectedCountry,
+        isFocusedCountry: Boolean(selectedCountry),
         onClearFocus: () => {
           setSelectedCountry(null);
           resetNavigationTrail(null);
@@ -96,6 +98,8 @@ export function useGameSessionProps({
         hideLearnInput: mode === "learn" && !isMobileViewport,
         isPanelOpen: isPanelOpen && mode !== "learn",
         hideHudPlayStop: isPanelOpen && mode !== "learn",
+        livesLeft,
+        isHardcoreRun,
       },
       globeProps: {
         mode,
@@ -140,14 +144,15 @@ export function useGameSessionProps({
         maxScore: localRecords[mode]?.maxScore || 0,
         isNewPB,
         xpResult,
+        livesLeft,
+        isHardcoreRun,
       },
       panelProps: {
         dataMap: panelDataMap,
         foundList,
         selectedCountry,
         onSelectCountry: handlePanelSelect,
-        onClose:
-          mode !== "learn" || isMobileViewport ? closePanel : undefined,
+        onClose: mode !== "learn" || isMobileViewport ? closePanel : undefined,
         onGoHome: isGameOver ? goHome : undefined,
         mode: panelMode,
         theme,
@@ -227,6 +232,8 @@ export function useGameSessionProps({
       showResultsTable,
       globeFeedbackRef,
       globeFeedbackApplierRef,
-    ],
+      livesLeft,
+      isHardcoreRun,
+    ]
   );
 }

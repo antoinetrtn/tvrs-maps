@@ -20,7 +20,7 @@ export function getLevelAndProgress(totalXp = 0) {
     level,
     xpInLevel: tempXp,
     xpNeededForNext: level * 200,
-    percent: Math.min(100, Math.floor((tempXp / (level * 200)) * 100))
+    percent: Math.min(100, Math.floor((tempXp / (level * 200)) * 100)),
   };
 }
 

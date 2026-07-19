@@ -1,13 +1,15 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
-import { InfoBox, Trophy } from "pixelarticons/react";
-import XpOrbsAnimation from "./XpOrbsAnimation";
-import { getLevelAndProgress } from "../utils/gamification";
+import "./EndScreen.css";
+
+import { ChevronDown, ChevronUp, InfoBox, Trophy } from "pixelarticons/react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 import { getThemeRegionColor } from "../config/designSystem";
-import { useTranslation } from "../config/i18n";
 import { GAME_REGIONS } from "../config/gameConfig";
+import { useTranslation } from "../config/i18n";
+import { getLevelAndProgress } from "../utils/gamification";
 import { getGameStats } from "../utils/utils";
 import PixelFireworks from "./PixelFireworks";
-import "./EndScreen.css";
+import XpOrbsAnimation from "./XpOrbsAnimation";
 
 const EndScreen = ({
   foundList,
@@ -22,11 +24,18 @@ const EndScreen = ({
   lastScores = [],
   maxScore = 0,
   isNewPB = false,
-  xpResult = null
+  xpResult = null,
+  livesLeft = null,
+  isHardcoreRun = false,
 }) => {
   const dataMap = activeDataMap || countryDataMap;
   const t = useTranslation(lang);
-  
+
+  // Minimized: the summary collapses to a floating chip so the player can
+  // freely explore their hits/misses on the globe (crucial on mobile, where
+  // the full end screen captures every pointer event).
+  const [minimized, setMinimized] = useState(false);
+
   const orbsSourceRef = useRef(null);
   const orbsTargetRef = useRef(null);
 
@@ -46,6 +55,7 @@ const EndScreen = ({
   const isPerfectScore = foundList.length === totalCountries;
 
   const getTitle = () => {
+    if (isHardcoreRun && livesLeft === 0) return t("hardcore_game_over");
     if (isPerfectScore) return t("incredible");
     return t("well_done");
   };
@@ -82,10 +92,27 @@ const EndScreen = ({
     setAnimatingOrbs(false);
   };
 
+  if (minimized) {
+    return (
+      <div className={`end-screen-overlay minimized ${theme}`}>
+        <button
+          type="button"
+          className="end-screen-restore-chip glass-panel"
+          onClick={() => setMinimized(false)}
+          title={t("back_to_results")}
+        >
+          <ChevronUp width={16} height={16} />
+          <span className="restore-chip-score">
+            {foundList.length}/{totalCountries}
+          </span>
+          <span className="restore-chip-label">{t("back_to_results")}</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""} ${theme}`}
-    >
+    <div className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""} ${theme}`}>
       {/* XP Orbs Particle Component */}
       {xpResult && gainedXp > 0 && (
         <XpOrbsAnimation
@@ -106,7 +133,8 @@ const EndScreen = ({
           <h1>{getTitle()}</h1>
           {isNewPB && (
             <div className="new-pb-badge">
-              <span>★ {t("new_pb")} ★</span>
+              <Trophy width={14} height={14} />
+              <span>{t("new_pb")}</span>
             </div>
           )}
         </div>
@@ -131,40 +159,37 @@ const EndScreen = ({
           </div>
 
           <div className="progress-bars-grid">
-            {CONTINENT_ORDER.filter(
-              (reg) => reg !== "Unknown" && stats[reg].total > 0
-            ).map((region) => {
-              const data = stats[region];
-              const pct = Math.round((data.found / data.total) * 100);
-              const color = colors[region] || "var(--accent)";
-              const label = t(`region_${region}`) || region;
+            {CONTINENT_ORDER.filter((reg) => reg !== "Unknown" && stats[reg].total > 0).map(
+              (region) => {
+                const data = stats[region];
+                const pct = Math.round((data.found / data.total) * 100);
+                const color = colors[region] || "var(--accent)";
+                const label = t(`region_${region}`) || region;
 
-              return (
-                <div
-                  key={region}
-                  className="progress-item"
-                  style={{ "--continent-color": color }}
-                >
-                  <div className="progress-info">
-                    <div className="progress-title">
-                      <span className="progress-dot" />
-                      <span className="progress-label">{label}</span>
-                    </div>
-                    <div className="progress-stats">
-                      <div className="progress-track">
-                        <div
-                          className="progress-fill"
-                          style={{ width: `${pct}%` }}
-                        />
+                return (
+                  <div
+                    key={region}
+                    className="progress-item"
+                    style={{ "--continent-color": color }}
+                  >
+                    <div className="progress-info">
+                      <div className="progress-title">
+                        <span className="progress-dot" />
+                        <span className="progress-label">{label}</span>
                       </div>
-                      <span className="progress-count">
-                        {data.found}/{data.total}
-                      </span>
+                      <div className="progress-stats">
+                        <div className="progress-track">
+                          <div className="progress-fill" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="progress-count">
+                          {data.found}/{data.total}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              }
+            )}
           </div>
         </div>
 
@@ -182,14 +207,10 @@ const EndScreen = ({
               <div className="minecraft-xp-bar-fill" style={{ width: `${percent}%` }} />
             </div>
             {showLevelUp && (
-              <div className="end-screen-level-up-banner text-natural-case">
-                {t("level_up")}
-              </div>
+              <div className="end-screen-level-up-banner text-natural-case">{t("level_up")}</div>
             )}
           </div>
         )}
-
-
 
         {lastScores && lastScores.length > 0 && (
           <div className="end-screen-history glass-panel">
@@ -231,6 +252,10 @@ const EndScreen = ({
         )}
 
         <div className="end-screen-actions">
+          <button className="btn-secondary" onClick={() => setMinimized(true)}>
+            <ChevronDown width={16} height={16} />
+            {t("explore_globe")}
+          </button>
           <button className="btn-primary" onClick={onRestart}>
             {t("home")}
           </button>
@@ -239,7 +264,5 @@ const EndScreen = ({
     </div>
   );
 };
-
-
 
 export default React.memo(EndScreen);

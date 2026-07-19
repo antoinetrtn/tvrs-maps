@@ -1,4 +1,5 @@
 import React from "react";
+
 import { AVATAR_COLORS } from "../config/designSystem";
 
 const INVADER_DESIGNS = {
@@ -10,7 +11,7 @@ const INVADER_DESIGNS = {
     "11111111111",
     "10111111101",
     "10100000101",
-    "00011011000"
+    "00011011000",
   ],
   invader_2: [
     "00011111000",
@@ -20,7 +21,7 @@ const INVADER_DESIGNS = {
     "00011111000",
     "00110001100",
     "01100000110",
-    "11000000011"
+    "11000000011",
   ],
   invader_3: [
     "00001110000",
@@ -30,7 +31,7 @@ const INVADER_DESIGNS = {
     "11111111111",
     "00110011000",
     "01101101100",
-    "11000000110"
+    "11000000110",
   ],
   invader_4: [
     "00001110000",
@@ -40,7 +41,7 @@ const INVADER_DESIGNS = {
     "01110001110",
     "01000000010",
     "01100001100",
-    "10010010010"
+    "10010010010",
   ],
   invader_5: [
     "00111111100",
@@ -50,7 +51,7 @@ const INVADER_DESIGNS = {
     "11111111111",
     "01100000110",
     "01100000110",
-    "00110001100"
+    "00110001100",
   ],
   invader_6: [
     "00011111000",
@@ -60,7 +61,7 @@ const INVADER_DESIGNS = {
     "01111111110",
     "00101010100",
     "01001010010",
-    "10000000001"
+    "10000000001",
   ],
   invader_7: [
     "01100000110",
@@ -70,7 +71,7 @@ const INVADER_DESIGNS = {
     "11111111111",
     "01111111110",
     "00100000100",
-    "01100000110"
+    "01100000110",
   ],
   invader_8: [
     "00011111000",
@@ -80,7 +81,7 @@ const INVADER_DESIGNS = {
     "11111111111",
     "11111111111",
     "01101010110",
-    "10001010001"
+    "10001010001",
   ],
   invader_9: [
     "00011111000",
@@ -90,7 +91,7 @@ const INVADER_DESIGNS = {
     "10111111101",
     "10011111001",
     "01000000010",
-    "00110001100"
+    "00110001100",
   ],
   invader_10: [
     "00100000100",
@@ -100,7 +101,7 @@ const INVADER_DESIGNS = {
     "11111111111",
     "01111111110",
     "00100000100",
-    "01000000010"
+    "01000000010",
   ],
   invader_11: [
     "01111111110",
@@ -110,7 +111,7 @@ const INVADER_DESIGNS = {
     "10001110001",
     "10100000101",
     "10011111001",
-    "01100000110"
+    "01100000110",
   ],
   invader_12: [
     "00001110000",
@@ -120,17 +121,18 @@ const INVADER_DESIGNS = {
     "10111111101",
     "00100000100",
     "01010001010",
-    "10000000001"
-  ]
+    "10000000001",
+  ],
 };
 
+/* eslint-disable react-refresh/only-export-components -- shared design helper for avatar variants */
 export const getProceduralDesign = (id) => {
   if (!id) return INVADER_DESIGNS.invader_1;
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   const design = [];
   for (let r = 0; r < 8; r++) {
     const halfRow = [];
@@ -138,22 +140,30 @@ export const getProceduralDesign = (id) => {
       // Deterministic pseudo-randomness based on ID
       const x = Math.sin(hash + r * 17 + c * 31) * 10000;
       const rand = x - Math.floor(x);
-      
+
       let threshold = 0.52;
       if (r === 0) threshold = 0.72; // antennae
       if (r === 7) threshold = 0.65; // feet
       if (c === 0) threshold = 0.68; // edges
-      
+
       halfRow.push(rand > threshold ? "1" : "0");
     }
-    
+
     // Mirror design: columns 0-4, column 5 (center), columns 4-0
     const fullRow = [
-      halfRow[0], halfRow[1], halfRow[2], halfRow[3], halfRow[4],
+      halfRow[0],
+      halfRow[1],
+      halfRow[2],
+      halfRow[3],
+      halfRow[4],
       halfRow[5],
-      halfRow[4], halfRow[3], halfRow[2], halfRow[1], halfRow[0]
+      halfRow[4],
+      halfRow[3],
+      halfRow[2],
+      halfRow[1],
+      halfRow[0],
     ].join("");
-    
+
     design.push(fullRow);
   }
 
@@ -175,7 +185,7 @@ export const getProceduralDesign = (id) => {
       "11111111111",
       "10111111101",
       "10100000101",
-      "00011011000"
+      "00011011000",
     ];
   }
   return design;
@@ -183,12 +193,7 @@ export const getProceduralDesign = (id) => {
 
 // AVATAR_COLORS is imported from designSystem to satisfy the lint rules
 
-const InvaderAvatar = ({
-  invaderId = "invader_1",
-  color = "cyan",
-  size = 48,
-  className = ""
-}) => {
+const InvaderAvatar = ({ invaderId = "invader_1", color = "cyan", size = 48, className = "" }) => {
   // Safe design retrieval with fallback
   const design = INVADER_DESIGNS[invaderId] || getProceduralDesign(invaderId);
   const hexColor = AVATAR_COLORS[color] || color;
@@ -199,13 +204,7 @@ const InvaderAvatar = ({
     for (let colIndex = 0; colIndex < row.length; colIndex++) {
       if (row[colIndex] === "1") {
         pixels.push(
-          <rect
-            key={`${rowIndex}-${colIndex}`}
-            x={colIndex}
-            y={rowIndex}
-            width={1}
-            height={1}
-          />
+          <rect key={`${rowIndex}-${colIndex}`} x={colIndex} y={rowIndex} width={1} height={1} />
         );
       }
     }
@@ -221,7 +220,7 @@ const InvaderAvatar = ({
         fill: hexColor,
         display: "inline-block",
         verticalAlign: "middle",
-        shapeRendering: "crispEdges"
+        shapeRendering: "crispEdges",
       }}
     >
       {pixels}

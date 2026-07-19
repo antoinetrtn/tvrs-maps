@@ -1,0 +1,102 @@
+/* Responsive layout for mobile viewports — tables become stacked cards. */
+@media (max-width: 768px) {
+  .leaderboard-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .leaderboard-table {
+    display: block;
+  }
+
+  .leaderboard-table thead {
+    display: none;
+  }
+
+  .leaderboard-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .leaderboard-table tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "rank player score"
+      "rank player time";
+    align-items: center;
+    column-gap: var(--spacing-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .leaderboard-table td {
+    display: block;
+    padding: 0 !important;
+    border-bottom: none;
+    font-size: 0.85rem;
+  }
+
+  .col-rank {
+    grid-area: rank;
+    width: auto !important;
+  }
+
+  .col-player {
+    grid-area: player;
+    min-width: 0;
+  }
+
+  .col-score {
+    grid-area: score;
+    width: auto !important;
+    text-align: right;
+    font-size: 1rem;
+  }
+
+  .col-time {
+    grid-area: time;
+    width: auto !important;
+    text-align: right;
+    font-size: 0.75rem;
+  }
+
+  .score-cell {
+    justify-content: flex-end;
+  }
+
+  .player-cell {
+    gap: var(--spacing-xs) !important;
+  }
+
+  .player-username {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Personal history cards: date on the left, score/time stacked, trend right. */
+  .personal-history-table tr {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "date score evo"
+      "date time evo";
+  }
+
+  .col-date {
+    grid-area: date;
+    width: auto !important;
+  }
+
+  .col-evo {
+    grid-area: evo;
+    width: auto !important;
+  }
+}

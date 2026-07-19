@@ -1,11 +1,8 @@
-import { useRef, useCallback } from "react";
-import {
-  getLngLatDistance,
-  featureContainsLngLat,
-  clientToGlobeCoords,
-} from "../utils/utils";
-import { clampGlobeAltitude } from "../utils/globeAltitude";
+import { useCallback, useRef } from "react";
+
 import { BREAKPOINTS } from "../config/gameConstants";
+import { clampGlobeAltitude } from "../utils/globeAltitude";
+import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../utils/utils";
 
 export function useGlobeInteractions({
   globeEl,
@@ -39,7 +36,7 @@ export function useGlobeInteractions({
         }
       }
     },
-    [gameDataMap, onCountrySelect],
+    [gameDataMap, onCountrySelect]
   );
 
   const selectCountryAtLngLat = useCallback(
@@ -50,11 +47,7 @@ export function useGlobeInteractions({
           if (!data) return;
 
           let dist;
-          if (
-            data.type === "river" &&
-            Array.isArray(data.path) &&
-            data.path.length > 0
-          ) {
+          if (data.type === "river" && Array.isArray(data.path) && data.path.length > 0) {
             dist = data.path.reduce((min, [pLat, pLng]) => {
               const d = getLngLatDistance(lng, lat, pLng, pLat);
               return d < min ? d : min;
@@ -92,9 +85,7 @@ export function useGlobeInteractions({
         return;
       }
 
-      const match = selectableFeatureIndex.find((entry) =>
-        featureContainsLngLat(entry, lng, lat),
-      );
+      const match = selectableFeatureIndex.find((entry) => featureContainsLngLat(entry, lng, lat));
       if (match) {
         selectCountry(match.admin);
         return;
@@ -119,7 +110,7 @@ export function useGlobeInteractions({
       selectableFeatureIndex,
       selectCountry,
       mode,
-    ],
+    ]
   );
 
   const resetGlobeNudge = useCallback(() => {
@@ -130,44 +121,47 @@ export function useGlobeInteractions({
       pointerNudgeRafRef.current = null;
     }
     pendingNudgeRef.current = null;
-    wrapper.style.transition =
-      "transform 520ms cubic-bezier(0.18, 0.9, 0.22, 1.18)";
+    wrapper.style.transition = "transform 520ms cubic-bezier(0.18, 0.9, 0.22, 1.18)";
     wrapper.style.setProperty("--globe-nudge-x", "0px");
     wrapper.style.setProperty("--globe-nudge-y", "0px");
   }, [globeContentWrapperRef]);
 
-  const handleTouchStart = useCallback((e) => {
-    if (e.touches.length !== 1) return;
-    const now = Date.now();
-    const touch = e.touches[0];
-    if (now - lastTapRef.current < 300) {
-      isZoomDragging.current = true;
-      startY.current = touch.clientY;
-      try {
-        const controls = globeEl.current?.controls?.();
-        if (controls) {
-          savedControlsEnabledRef.current = controls.enableRotate;
-          controls.enableRotate = false;
-        }
-      } catch (_) {}
-      e.preventDefault();
-    }
-    lastTapRef.current = now;
-  }, [globeEl]);
+  const handleTouchStart = useCallback(
+    (e) => {
+      if (e.touches.length !== 1) return;
+      const now = Date.now();
+      const touch = e.touches[0];
+      if (now - lastTapRef.current < 300) {
+        isZoomDragging.current = true;
+        startY.current = touch.clientY;
+        try {
+          const controls = globeEl.current?.controls?.();
+          if (controls) {
+            savedControlsEnabledRef.current = controls.enableRotate;
+            controls.enableRotate = false;
+          }
+        } catch {}
+        e.preventDefault();
+      }
+      lastTapRef.current = now;
+    },
+    [globeEl]
+  );
 
-  const handleTouchMove = useCallback((e) => {
-    if (!isZoomDragging.current || !globeEl.current) return;
-    const touch = e.touches[0];
-    const deltaY = touch.clientY - startY.current;
-    const currentPOV = globeEl.current.pointOfView();
-    const zoomSpeed = 0.005;
-    const newAlt = clampGlobeAltitude(
-      currentPOV.altitude - deltaY * zoomSpeed,
-    );
-    globeEl.current.pointOfView({ altitude: newAlt }, 0);
-    startY.current = touch.clientY;
-    e.preventDefault();
-  }, [globeEl]);
+  const handleTouchMove = useCallback(
+    (e) => {
+      if (!isZoomDragging.current || !globeEl.current) return;
+      const touch = e.touches[0];
+      const deltaY = touch.clientY - startY.current;
+      const currentPOV = globeEl.current.pointOfView();
+      const zoomSpeed = 0.005;
+      const newAlt = clampGlobeAltitude(currentPOV.altitude - deltaY * zoomSpeed);
+      globeEl.current.pointOfView({ altitude: newAlt }, 0);
+      startY.current = touch.clientY;
+      e.preventDefault();
+    },
+    [globeEl]
+  );
 
   const handleTouchEnd = useCallback(() => {
     if (isZoomDragging.current) {
@@ -176,18 +170,14 @@ export function useGlobeInteractions({
         if (controls) {
           controls.enableRotate = savedControlsEnabledRef.current;
         }
-      } catch (_) {}
+      } catch {}
     }
     isZoomDragging.current = false;
   }, [globeEl]);
 
   const handlePointerDown = useCallback(
     (event) => {
-      if (
-        event.pointerType === "touch" &&
-        isKeyboardMode &&
-        viewport.width < BREAKPOINTS.desktop
-      ) {
+      if (event.pointerType === "touch" && isKeyboardMode && viewport.width < BREAKPOINTS.desktop) {
         event.preventDefault();
         onPreserveInputFocus?.();
       }
@@ -200,19 +190,17 @@ export function useGlobeInteractions({
       };
 
       if (globeContentWrapperRef.current && !isHomeScreen) {
-        globeContentWrapperRef.current.style.transition =
-          "transform 80ms linear";
+        globeContentWrapperRef.current.style.transition = "transform 80ms linear";
       }
     },
-    [isHomeScreen, isKeyboardMode, onPreserveInputFocus, viewport.width, globeContentWrapperRef],
+    [isHomeScreen, isKeyboardMode, onPreserveInputFocus, viewport.width, globeContentWrapperRef]
   );
 
   const handlePointerMove = useCallback(
     (event) => {
       const tap = tapRef.current;
       const wrapper = globeContentWrapperRef.current;
-      if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen)
-        return;
+      if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen) return;
 
       const dx = event.clientX - tap.x;
       const dy = event.clientY - tap.y;
@@ -232,7 +220,7 @@ export function useGlobeInteractions({
         });
       }
     },
-    [isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef],
+    [isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
   );
 
   const handlePointerUp = useCallback(
@@ -247,14 +235,9 @@ export function useGlobeInteractions({
       const dy = event.clientY - tap.y;
       const moved = Math.hypot(dx, dy);
       const elapsed = performance.now() - tap.t;
-      if (moved > 10 || elapsed > 600 || !globeEl.current?.toGlobeCoords)
-        return;
+      if (moved > 10 || elapsed > 600 || !globeEl.current?.toGlobeCoords) return;
 
-      if (
-        event.pointerType === "touch" &&
-        isKeyboardMode &&
-        viewport.width < BREAKPOINTS.desktop
-      ) {
+      if (event.pointerType === "touch" && isKeyboardMode && viewport.width < BREAKPOINTS.desktop) {
         event.preventDefault();
         onPreserveInputFocus?.();
       }
@@ -282,7 +265,7 @@ export function useGlobeInteractions({
       selectCountry,
       viewport.width,
       globeEl,
-    ],
+    ]
   );
 
   const handleBackgroundClick = useCallback(() => {
@@ -291,11 +274,14 @@ export function useGlobeInteractions({
     }
   }, [isHomeScreen, selectCountry]);
 
-  const handleGlobeClick = useCallback((obj) => {
-    if (!isHomeScreen) {
-      selectCountry(obj.admin);
-    }
-  }, [isHomeScreen, selectCountry]);
+  const handleGlobeClick = useCallback(
+    (obj) => {
+      if (!isHomeScreen) {
+        selectCountry(obj.admin);
+      }
+    },
+    [isHomeScreen, selectCountry]
+  );
 
   return {
     handleTouchStart,

@@ -17,10 +17,11 @@ Ce guide fournit les instructions spécifiques pour développer, tester et inter
 
 ## 2. Commandes de Validation Locale
 Toujours exécuter et valider localement avant de pousser :
-*   `npm run lint` : Lance l'analyseur statique et vérifie la qualité du code.
-*   `npm run test` : Lance Vitest pour les tests unitaires.
-*   `npm run test:e2e` : Lance Playwright pour exécuter les tests de bout en bout (démarre automatiquement le serveur local sur le port 5001).
-*   `npm run check` : Chaîne les tests lint, unitaires et le build de production pour valider l'ensemble du projet.
+*   `npm run lint` : Qualité complète (Prettier, custom ratchets, ESLint + plugins, Knip).
+*   `npm run format` / `format:check`, `lint:fix`, `lint:eslint`
+*   `npm run test` : Vitest.
+*   `npm run test:e2e` : Playwright (port 5001).
+*   `npm run check` : format + lint + tests + build (obligatoire avant push ; hooks Husky + pre-push).
 
 ---
 

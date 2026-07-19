@@ -5,14 +5,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
-    supabaseAnonKey &&
-    supabaseUrl !== "YOUR_SUPABASE_URL" &&
-    supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY"
+  supabaseAnonKey &&
+  supabaseUrl !== "YOUR_SUPABASE_URL" &&
+  supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY"
 );
 
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 /**
  * Fetches user profile by ID.
@@ -37,15 +35,12 @@ export async function getProfile(profileId) {
 export async function isUsernameTaken(username, excludeProfileId = null) {
   if (!isSupabaseConfigured) return false;
   try {
-    let query = supabase
-      .from("profiles")
-      .select("id")
-      .eq("username", username);
-    
+    let query = supabase.from("profiles").select("id").eq("username", username);
+
     if (excludeProfileId) {
       query = query.filter("id", "neq", excludeProfileId);
     }
-    
+
     const { data, error } = await query;
     if (error) throw error;
     return data.length > 0;
@@ -77,15 +72,11 @@ export async function upsertProfile(
       xp,
       level,
       unlocked_badges: unlockedBadges,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
-    
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert(payload)
-      .select()
-      .single();
-      
+
+    const { data, error } = await supabase.from("profiles").upsert(payload).select().single();
+
     return { data, error };
   } catch (err) {
     return { data: null, error: err.message };
@@ -95,19 +86,30 @@ export async function upsertProfile(
 /**
  * Submits a score entry to the global leaderboard.
  */
-export async function submitLeaderboardScore(profileId, gameMode, score, timeSpentSeconds) {
+export async function submitLeaderboardScore(
+  profileId,
+  gameMode,
+  score,
+  timeSpentSeconds,
+  hardcore = false
+) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
-    const { data, error } = await supabase
-      .from("leaderboards")
-      .insert({
-        profile_id: profileId,
-        game_mode: gameMode,
-        score,
-        time_spent_seconds: timeSpentSeconds
-      })
-      .select();
-      
+    const insertRow = (row) => supabase.from("leaderboards").insert(row).select();
+    const row = {
+      profile_id: profileId,
+      game_mode: gameMode,
+      score,
+      time_spent_seconds: timeSpentSeconds,
+      hardcore,
+    };
+    let { data, error } = await insertRow(row);
+    // Graceful fallback while the hardcore migration is not deployed yet.
+    if (isMissingHardcoreColumn(error)) {
+      const { hardcore: _hc, ...legacyRow } = row;
+      ({ data, error } = await insertRow(legacyRow));
+    }
+
     return { data, error };
   } catch (err) {
     return { data: null, error: err.message };
@@ -118,38 +120,53 @@ export async function submitLeaderboardScore(profileId, gameMode, score, timeSpe
  * Fetches global leaderboard scores for a given game mode.
  * Returns the top scores, including player profile info.
  */
+/** True when the DB predates the hardcore migration (column not deployed yet). */
+function isMissingHardcoreColumn(error) {
+  return Boolean(error) && /hardcore/i.test(error.message || "");
+}
+
 export async function getLeaderboard(gameMode, limit = 50) {
   if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
-    const { data, error } = await supabase
-      .from("user_records")
-      .select(`
+    const fetchWith = (columns) =>
+      supabase
+        .from("user_records")
+        .select(columns)
+        .eq("game_mode", gameMode)
+        .gt("max_score", 0)
+        // Sort by max_score descending first, then best_time_seconds ascending (lower is better)
+        .order("max_score", { ascending: false })
+        .order("best_time_seconds", { ascending: true, nullsFirst: false })
+        .limit(limit);
+
+    const COLUMNS = `
         id,
         max_score,
         best_time_seconds,
+        hardcore,
         profiles (
           id,
           username,
           avatar_id,
           avatar_color
         )
-      `)
-      .eq("game_mode", gameMode)
-      .gt("max_score", 0)
-      // Sort by max_score descending first, and then by best_time_seconds ascending (lower time is better)
-      .order("max_score", { ascending: false })
-      .order("best_time_seconds", { ascending: true, nullsFirst: false })
-      .limit(limit);
+      `;
+    let { data, error } = await fetchWith(COLUMNS);
+    // Graceful fallback while the hardcore migration is not deployed yet.
+    if (isMissingHardcoreColumn(error)) {
+      ({ data, error } = await fetchWith(COLUMNS.replace("hardcore,", "")));
+    }
 
     const mappedData = data
       ? data.map((row) => ({
           id: row.id,
           score: row.max_score,
           time_spent_seconds: row.best_time_seconds,
+          hardcore: Boolean(row.hardcore),
           profiles: row.profiles,
         }))
       : [];
-      
+
     return { data: mappedData, error };
   } catch (err) {
     return { data: [], error: err.message };
@@ -162,25 +179,28 @@ export async function getLeaderboard(gameMode, limit = 50) {
 export async function getUserHistory(profileId, gameMode = null, limit = 50) {
   if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
-    let query = supabase
-      .from("leaderboards")
-      .select(`
+    const fetchWith = (columns) => {
+      let query = supabase.from("leaderboards").select(columns).eq("profile_id", profileId);
+      if (gameMode) {
+        query = query.eq("game_mode", gameMode);
+      }
+      return query.order("created_at", { ascending: false }).limit(limit);
+    };
+
+    const COLUMNS = `
         id,
         score,
         time_spent_seconds,
         created_at,
-        game_mode
-      `)
-      .eq("profile_id", profileId);
-      
-    if (gameMode) {
-      query = query.eq("game_mode", gameMode);
+        game_mode,
+        hardcore
+      `;
+    let { data, error } = await fetchWith(COLUMNS);
+    // Graceful fallback while the hardcore migration is not deployed yet.
+    if (isMissingHardcoreColumn(error)) {
+      ({ data, error } = await fetchWith(COLUMNS.replace(",\n        hardcore", "")));
     }
-    
-    const { data, error } = await query
-      .order("created_at", { ascending: false })
-      .limit(limit);
-      
+
     return { data, error };
   } catch (err) {
     return { data: [], error: err.message };
@@ -206,7 +226,14 @@ export async function getUserRecords(profileId) {
 /**
  * Synchronizes local stats to Supabase by upserting records.
  */
-export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSeconds, gamesPlayed) {
+export async function upsertUserRecord(
+  profileId,
+  gameMode,
+  maxScore,
+  bestTimeSeconds,
+  gamesPlayed,
+  hardcore = null
+) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
     const payload = {
@@ -214,22 +241,32 @@ export async function upsertUserRecord(profileId, gameMode, maxScore, bestTimeSe
       game_mode: gameMode,
       max_score: maxScore,
       games_played: gamesPlayed,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
     if (bestTimeSeconds !== null) {
       payload.best_time_seconds = bestTimeSeconds;
     }
-    const { data, error } = await supabase
-      .from("user_records")
-      .upsert(payload, { onConflict: "profile_id,game_mode" })
-      .select()
-      .single();
+    // Only stamped when the best run changed — null keeps the stored flag.
+    if (hardcore !== null) {
+      payload.hardcore = hardcore;
+    }
+    const upsertRow = (row) =>
+      supabase
+        .from("user_records")
+        .upsert(row, { onConflict: "profile_id,game_mode" })
+        .select()
+        .single();
+    let { data, error } = await upsertRow(payload);
+    // Graceful fallback while the hardcore migration is not deployed yet.
+    if (isMissingHardcoreColumn(error)) {
+      const { hardcore: _hc, ...legacyPayload } = payload;
+      ({ data, error } = await upsertRow(legacyPayload));
+    }
     return { data, error };
   } catch (err) {
     return { data: null, error: err.message };
   }
 }
-
 
 /**
  * Supabase Auth Functions
@@ -261,8 +298,8 @@ export async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin
-      }
+        redirectTo: window.location.origin,
+      },
     });
     return { data, error };
   } catch (err) {

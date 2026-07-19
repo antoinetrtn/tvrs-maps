@@ -1,15 +1,9 @@
-import { useMemo, useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
+
+import { getLearnLabelLimit, getPlayVisibleCountryKeys } from "../config/gameConfig";
 import { countryDataMap } from "../data/gameData";
 import { createGlobeLabelElement } from "../utils/globeLabelBuilder";
-import {
-  getLearnLabelLimit,
-  getPlayVisibleCountryKeys,
-} from "../config/gameConfig";
-import {
-  getFlagEmoji,
-  getLabelRenderRadius,
-  getCanonicalPosition,
-} from "../utils/utils";
+import { getCanonicalPosition, getFlagEmoji, getLabelRenderRadius } from "../utils/utils";
 
 function getLabelVisibilityThreshold({
   isDepartmentMode,
@@ -27,12 +21,7 @@ function getLabelVisibilityThreshold({
   return Math.min(3.0, 0.8 + size * 2.0);
 }
 
-function getLabelRadius({
-  isDepartmentMode,
-  isLearnMode,
-  zoomLevel,
-  isMobile,
-}) {
+function getLabelRadius({ isDepartmentMode, isLearnMode, zoomLevel, isMobile }) {
   if (isDepartmentMode) {
     return isLearnMode
       ? Math.max(8, 16 / Math.max(0.35, zoomLevel))
@@ -44,10 +33,7 @@ function getLabelRadius({
   return getLabelRenderRadius(zoomLevel, isMobile);
 }
 
-function resolveLabelEntry(
-  { key, data, modeName, hideCountryLine = false },
-  ctx,
-) {
+function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx) {
   if (!data) return null;
 
   const {
@@ -86,11 +72,15 @@ function resolveLabelEntry(
   });
   if (zoomLevel > visibilityThreshold) return null;
 
-  // GLOBAL SHAPE RULE — resolve once for distance + label position
+  // GLOBAL SHAPE RULE — resolve once for distance + label position.
+  // In capitals mode the pin must sit on the *capital* (data.lat/lng), not the
+  // country's polygon centroid — otherwise it floats over the geographic middle
+  // of the country instead of the actual city.
+  const isCapitalPin = modeName === "capitals";
   const fromMap = ctxCanonical[key];
   const canonical = fromMap || getCanonicalPosition(data, null);
-  const useLat = canonical ? canonical.lat : data.lat;
-  const useLng = canonical ? canonical.lng : data.lng;
+  const useLat = isCapitalPin ? data.lat : canonical ? canonical.lat : data.lat;
+  const useLng = isCapitalPin ? data.lng : canonical ? canonical.lng : data.lng;
 
   let dLng = Math.abs(useLng - pov.lng);
   if (dLng > 180) dLng = 360 - dLng;
@@ -100,7 +90,7 @@ function resolveLabelEntry(
     isDepartmentMode,
     isLearnMode,
     zoomLevel,
-    isMobile: !!perfProfile?.isMobile,
+    isMobile: Boolean(perfProfile?.isMobile),
   });
   if (!isSelected && distToCenter > labelRadius) return null;
 
@@ -275,9 +265,7 @@ export function useGlobeLabels({
       const limit = perfProfile?.isMobile ? 28 : 56;
       return filtered.slice(0, limit);
     }
-    return perfProfile?.maxLabels
-      ? filtered.slice(0, perfProfile.maxLabels)
-      : filtered;
+    return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
   }, [
     foundList,
     countrySizes,
@@ -328,7 +316,7 @@ export function useGlobeLabels({
       mode,
       t,
       isPanelOpen,
-    ],
+    ]
   );
 
   const getHtmlAltitude = useCallback(
@@ -336,7 +324,7 @@ export function useGlobeLabels({
       if (selectedCountry && d.admin === selectedCountry) return 0.0085;
       return 0.002;
     },
-    [selectedCountry],
+    [selectedCountry]
   );
 
   return {
