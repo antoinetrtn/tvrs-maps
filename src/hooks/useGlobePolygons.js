@@ -365,13 +365,40 @@ export function useGlobePolygons({
       const region = data?.region || "Unknown";
       const isFound = foundSet.has(admin);
 
+      if (isFound && !isEndScreen) {
+        return resolveFoundCountryColor();
+      }
+
+      // The deselect dissolve must SETTLE on the country's resting look, else the
+      // glitch-out ends on a color the base material never shows and snaps/blinks
+      // on hand-off. An unfound cap rests on the regional land tint (see
+      // getPolygonColor) — NOT mapBase — so target that exact tint here. Using the
+      // mapBase-derived cap made the cap fade toward near-black against the
+      // grayscale globe.
+      if (
+        kind === "cap" &&
+        shouldUseRegionalUnfoundLand({
+          isEndScreen,
+          isFound,
+          isSelected: admin === selectedCountry,
+        })
+      ) {
+        return resolveRegionalLandColor(region, {
+          globeTheme,
+          regionColorsLabels: REGION_COLORS_LABELS,
+          regionColorsAttenuated: REGION_COLORS_ATTENUATED,
+          fallbackAccent: UI_COLORS.accent,
+          fallbackRegionColor: getRegionSurfaceColor(region),
+        });
+      }
+
       let baseColor;
       if (isEndScreen) {
-        if (isFound) {
-          baseColor = isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-        } else {
-          baseColor = UI_COLORS.error;
-        }
+        baseColor = isFound
+          ? isPerfectScore
+            ? UI_COLORS.gold
+            : UI_COLORS.success
+          : UI_COLORS.error;
       } else {
         baseColor = resolveCountryCapColor({
           admin,
@@ -391,10 +418,6 @@ export function useGlobePolygons({
         });
       }
 
-      if (isFound && !isEndScreen) {
-        return resolveFoundCountryColor();
-      }
-
       const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
       if (kind === "side") {
         return lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08);
@@ -412,6 +435,10 @@ export function useGlobePolygons({
       lerpColor,
       isEndScreen,
       isPerfectScore,
+      globeTheme,
+      REGION_COLORS_LABELS,
+      REGION_COLORS_ATTENUATED,
+      getRegionSurfaceColor,
     ]
   );
 
