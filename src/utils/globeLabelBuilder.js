@@ -142,7 +142,7 @@ export function createGlobeLabelElement(
           left: -3px;
           top: -3px;
           box-shadow: 0 0 8px ${dotColor};
-          opacity: ${isHomeScreen ? 0.5 : 1};
+          opacity: 1;
         "></div>
         <!-- Stalk Line (Shortened to 15px) -->
         <div style="
@@ -153,7 +153,7 @@ export function createGlobeLabelElement(
           left: -0.6px;
           bottom: 3px;
           box-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 85%, transparent);
-          opacity: ${isHomeScreen ? 0.4 : 0.85};
+          opacity: 0.85;
         "></div>
         <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
         <div class="scramble-callout" style="
@@ -169,7 +169,7 @@ export function createGlobeLabelElement(
           white-space: nowrap;
           color: ${textColor};
           text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
-          opacity: ${isHomeScreen ? 0.6 : 1};
+          opacity: 1;
         ">
           <div style="font-weight: 700; font-size: calc(13px * var(--ui-scale, 1)); min-height: calc(15px * var(--ui-scale, 1)); line-height: calc(15px * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: var(--font-display, monospace) !important; ${flagHtml ? labelRowLayout : ""}">
             ${flagHtml || ""}
@@ -262,7 +262,7 @@ export function createGlobeLabelElement(
           left: -3px;
           top: -3px;
           box-shadow: 0 0 8px ${labelDot};
-          opacity: ${isHomeScreen ? 0.5 : 1};
+          opacity: 1;
         "></div>
         <!-- Stalk Line (Shortened to 15px) -->
         <div style="
@@ -273,7 +273,7 @@ export function createGlobeLabelElement(
           left: -0.6px;
           bottom: 3px;
           box-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 85%, transparent);
-          opacity: ${isHomeScreen ? 0.4 : 0.85};
+          opacity: 0.85;
         "></div>
         <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
         <div class="normal-text-container" style="
@@ -288,7 +288,7 @@ export function createGlobeLabelElement(
           white-space: nowrap;
           color: ${labelText};
           text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 75%, transparent);
-          opacity: ${isHomeScreen ? 0.6 : 1};
+          opacity: 1;
         ">
           ${getScrambledHtml(1.0)}
         </div>

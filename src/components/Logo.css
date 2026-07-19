@@ -186,7 +186,7 @@
       -1px 0 var(--glitch-magenta-soft),
       1px 0 var(--glitch-cyan-soft);
     transform: translate(-50%, -50%) skew(0deg) translateZ(30px) scale(var(--ascii-scale, 0.35));
-    opacity: 0.95;
+    opacity: 1;
   }
   93% {
     text-shadow:
@@ -194,7 +194,7 @@
       2.5px -0.8px var(--glitch-cyan);
     transform: translate(-50%, -50%) skew(0.5deg) translateZ(30px) translateX(1px)
       scale(var(--ascii-scale, 0.35));
-    opacity: 0.9;
+    opacity: 0.96;
   }
   94% {
     text-shadow:
@@ -209,7 +209,7 @@
       -1px 0 var(--glitch-magenta-soft),
       1px 0 var(--glitch-cyan-soft);
     transform: translate(-50%, -50%) skew(0deg) translateZ(30px) scale(var(--ascii-scale, 0.35));
-    opacity: 0.95;
+    opacity: 1;
   }
 }
 

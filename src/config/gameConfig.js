@@ -100,22 +100,19 @@ export const RELIEF = {
 /** Shader dissolve when deselecting a country (ms). Kept in sync with polygon altitude tween. */
 export const GLITCH_SELECTION_TRANSITION_MS = 360;
 
-/** Stuttery 0→1 curve: linger in heavy glitch, burst, then snap to target. */
+/**
+ * Smooth 0→1 dissolve curve (smootherstep). The previous version lingered in a
+ * heavy-glitch hold, then burst with a sine stutter and snapped to the target —
+ * which read as a brutal, jittery deselect. A monotonic S-curve dissolves the
+ * country gracefully; the digital character now comes only from the shader's
+ * noise threshold, not from a jerky timeline.
+ */
 export const getDeselectGlitchFadeProgress = (
   elapsedMs,
   durationMs = GLITCH_SELECTION_TRANSITION_MS
 ) => {
-  const holdMs = Math.round(durationMs * 0.32);
-  const burstMs = Math.round(durationMs * 0.48);
-  if (elapsedMs <= holdMs) {
-    return (elapsedMs / holdMs) * 0.22;
-  }
-  if (elapsedMs <= holdMs + burstMs) {
-    const burstT = (elapsedMs - holdMs) / burstMs;
-    return 0.22 + burstT * 0.48 + Math.sin(burstT * 28.0) * 0.04;
-  }
-  const settleT = (elapsedMs - holdMs - burstMs) / Math.max(1, durationMs - holdMs - burstMs);
-  return 0.7 + settleT * 0.3;
+  const t = Math.min(1, Math.max(0, elapsedMs / Math.max(1, durationMs)));
+  return t * t * t * (t * (t * 6 - 15) + 10);
 };
 
 export const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(["France"]);
