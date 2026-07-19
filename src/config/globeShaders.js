@@ -176,12 +176,14 @@ export const GLITCH_FRAGMENT_BODY = `
 
   float glitchThreshold = uFadeProgress;
   if (transitionActive > 0.5) {
-    glitchThreshold += (transitionNoise - 0.5) * (0.62 + glitchAmp * 0.38);
+    // Softer threshold noise + gentler tears → the dissolve edge breaks up
+    // evenly instead of ripping the country apart in big chunks.
+    glitchThreshold += (transitionNoise - 0.5) * (0.46 + glitchAmp * 0.30);
     if (horizontalTear > 0.5) {
-      glitchThreshold = clamp(glitchThreshold - 0.28, 0.0, 1.0);
+      glitchThreshold = clamp(glitchThreshold - 0.16, 0.0, 1.0);
     }
     if (verticalGlitch > 0.5) {
-      glitchThreshold = clamp(glitchThreshold + 0.22, 0.0, 1.0);
+      glitchThreshold = clamp(glitchThreshold + 0.12, 0.0, 1.0);
     }
   }
 
@@ -198,14 +200,17 @@ export const GLITCH_FRAGMENT_BODY = `
     (uIsSuccess < 0.5);
 
   if (transitionActive > 0.5 && !isFoundSurface && !isSoftSelectIn) {
-    float chroma = (transitionNoise - 0.5) * 0.18 * glitchAmp;
+    // Subtle chroma split + gentle tear tinting. The full white/black strobe
+    // flashes here used to read as a harsh, ugly deselect — softened well down
+    // so the dissolve stays digital without jarring the eye.
+    float chroma = (transitionNoise - 0.5) * 0.11 * glitchAmp;
     glitchColor.r = clamp(finalColor.r + chroma, 0.0, 1.0);
     glitchColor.b = clamp(finalColor.b - chroma, 0.0, 1.0);
     if (horizontalTear > 0.5) {
-      glitchColor = mix(glitchColor, vec3(1.0), 0.32 * glitchAmp);
+      glitchColor = mix(glitchColor, vec3(1.0), 0.13 * glitchAmp);
     }
     if (verticalGlitch > 0.5) {
-      glitchColor = mix(glitchColor, vec3(0.0), 0.2 * glitchAmp);
+      glitchColor = mix(glitchColor, vec3(0.0), 0.08 * glitchAmp);
     }
   }
 
