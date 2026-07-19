@@ -72,11 +72,15 @@ function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx
   });
   if (zoomLevel > visibilityThreshold) return null;
 
-  // GLOBAL SHAPE RULE — resolve once for distance + label position
+  // GLOBAL SHAPE RULE — resolve once for distance + label position.
+  // In capitals mode the pin must sit on the *capital* (data.lat/lng), not the
+  // country's polygon centroid — otherwise it floats over the geographic middle
+  // of the country instead of the actual city.
+  const isCapitalPin = modeName === "capitals";
   const fromMap = ctxCanonical[key];
   const canonical = fromMap || getCanonicalPosition(data, null);
-  const useLat = canonical ? canonical.lat : data.lat;
-  const useLng = canonical ? canonical.lng : data.lng;
+  const useLat = isCapitalPin ? data.lat : canonical ? canonical.lat : data.lat;
+  const useLng = isCapitalPin ? data.lng : canonical ? canonical.lng : data.lng;
 
   let dLng = Math.abs(useLng - pov.lng);
   if (dLng > 180) dLng = 360 - dLng;

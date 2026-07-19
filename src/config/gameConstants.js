@@ -93,7 +93,10 @@ export const DATA_URLS = {
 // --- Performance profile -----------------------------------------------------
 // Caps and per-device tuning consumed by App's perfProfile memo.
 export const PERFORMANCE = {
-  maxPixelRatio: { mobile: 1.25, tablet: 1.5, desktop: 2.0 },
+  // Cap at 2.0 across tiers: on DPR-3 phones a 1.25 cap rendered the globe at
+  // ~0.4x physical resolution → blurry country borders. 2.0 is the widely-used
+  // sweet spot (sharp strokes without paying the 5.76x fill cost of full DPR-3).
+  maxPixelRatio: { mobile: 2.0, tablet: 2.0, desktop: 2.0 },
   maxLabels: { mobile: 4, tablet: 8, desktop: 20 },
   polygonCapCurvatureResolution: { mobile: 3.0, tablet: 2.5, desktop: 2.0 },
   /** Scales globe accent lights on mobile — keeps the look, saves GPU vs full desktop. */

@@ -1,7 +1,7 @@
 import "./GameHUD.css";
 import "./GameHUDLives.css";
 
-import { ChevronLeft, ChevronRight, Heart, Home, InfoBox, Play, Square } from "pixelarticons/react";
+import { ChevronLeft, ChevronRight, Home, InfoBox, Play, Square } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getThemeRegionColor } from "../config/designSystem";
@@ -10,6 +10,7 @@ import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
 import { normalizeString } from "../utils/utils";
 import Logo from "./Logo";
+import { PixelHeart } from "./PixelHeart";
 
 const GameHUD = ({
   mode,
@@ -278,7 +279,7 @@ const GameHUD = ({
         aria-label={`${t("hardcore_lives")}: ${livesLeft}/${HARDCORE_LIVES}`}
       >
         {Array.from({ length: HARDCORE_LIVES }, (_, i) => (
-          <Heart
+          <PixelHeart
             key={i}
             width={14}
             height={14}

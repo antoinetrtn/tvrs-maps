@@ -184,7 +184,7 @@ export function useGlobeCamera({
           renderer.setPixelRatio(pixelRatio);
           renderer.sortObjects = true;
           // Keep the screen-space glitch grain the same visual size regardless
-          // of the device's capped pixel ratio (mobile 1.25 vs desktop 2.0).
+          // of the device's capped pixel ratio.
           polygonGlitchUniforms.uPixelScale.value =
             GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
         }
@@ -291,10 +291,16 @@ export function useGlobeCamera({
           targetChanged;
 
         if (selectionChanged || onlyViewportNudge) {
+          // A viewport nudge (keyboard open/close on mobile) recenters the same
+          // country: glide it a touch slower on mobile so a large keyboard
+          // offset doesn't snap the globe. Real selection changes keep their
+          // snappier timing.
           const duration = isHomeScreen
             ? 1800
             : onlyViewportNudge
-              ? 180
+              ? perfProfile?.isMobile
+                ? 340
+                : 180
               : perfProfile?.isMobile
                 ? 320
                 : 420;
@@ -332,8 +338,11 @@ export function useGlobeCamera({
   }, [
     selectedCountry,
     viewport.width,
-    viewport.height,
-    viewport.top,
+    // NOTE: viewport.height / viewport.top are intentionally NOT dependencies.
+    // visualViewport fires a burst of resize events while the keyboard slides
+    // in/out; reacting to each one re-fired the camera animation and made the
+    // globe stutter. The keyboard offset is instead recomputed only when the
+    // debounced isKeyboardMode boolean flips (open → once, close → once).
     isHomeScreen,
     perfProfile,
     isKeyboardMode,
@@ -372,11 +381,12 @@ export function useGlobeCamera({
 
   // Ensure reliable home overview camera + right-side positioning (for left UI card) when returning to accueil on desktop.
   // This recovers the movement animation and visual composition if the main selected effect didn't trigger it.
+  // Desktop/tablet only: the lat:16/lng:28 bias pairs the globe with the left-padded
+  // UI card. On phones there is no left card, so this bias only fought the centered
+  // overview from applyIdleCameraPointOfView and produced a double-animation lurch.
   useEffect(() => {
-    if (isHomeScreen && globeEl.current) {
-      const overviewAltitude = viewport.width < BREAKPOINTS.mobile ? 2.5 : 1.1;
-      // Slight positive lng to bias the view nicely with left-padded UI (globe "on the right").
-      globeEl.current.pointOfView({ lat: 16, lng: 28, altitude: overviewAltitude }, 950);
+    if (isHomeScreen && globeEl.current && viewport.width >= BREAKPOINTS.mobile) {
+      globeEl.current.pointOfView({ lat: 16, lng: 28, altitude: 1.1 }, 950);
     }
   }, [isHomeScreen, globeEl, viewport.width]);
 
