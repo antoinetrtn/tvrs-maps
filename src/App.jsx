@@ -41,6 +41,7 @@ function App() {
     topExplorers,
     updateGameRecord,
     lastScores,
+    localGameHistory,
   } = useUserProfile();
 
   const [mode, setMode] = useState(DEFAULT_MODE);
@@ -457,6 +458,7 @@ function App() {
           userProfile={userProfile}
           setUserProfile={setUserProfile}
           localRecords={localRecords}
+          localGameHistory={localGameHistory}
           session={session}
           onOpenAuth={() => setShowAuthModal(true)}
         />

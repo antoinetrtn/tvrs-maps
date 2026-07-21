@@ -42,6 +42,7 @@ const HomeScreen = ({
   userProfile,
   setUserProfile,
   localRecords = {},
+  localGameHistory = [],
   session = null,
   onOpenAuth,
 }) => {
@@ -411,6 +412,8 @@ const HomeScreen = ({
       <LeaderboardScreen
         userProfile={userProfile}
         localRecords={localRecords}
+        localGameHistory={localGameHistory}
+        session={session}
         onBack={() => setLeaderboardOpen(false)}
         lang={lang}
         theme={theme}
