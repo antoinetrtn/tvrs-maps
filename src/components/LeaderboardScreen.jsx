@@ -104,6 +104,8 @@ const HistoryRow = ({ row, previousRow, hardcoreLabel }) => {
 const LeaderboardScreen = ({
   userProfile,
   localRecords = {},
+  localGameHistory = [],
+  session = null,
   onBack,
   lang = "fr",
   theme = "dark",
@@ -193,32 +195,35 @@ const LeaderboardScreen = ({
     let isMounted = true;
 
     const fetchHistory = async () => {
-      if (!isSupabaseConfigured || !userProfile?.id) {
-        return;
-      }
-      const key = getCacheKey("personal", colMode);
-      const cached = getCached(key);
-      if (cached) {
-        setHistoryData(cached);
+      const activeUserId = session?.user?.id || userProfile?.id;
+      const localModeHistory = (localGameHistory || []).filter((g) => g.game_mode === colMode);
+
+      if (!isSupabaseConfigured || !activeUserId) {
+        setHistoryData(localModeHistory);
+        setHistoryLoading(false);
         return;
       }
       setHistoryLoading(true);
       setHistoryError(null);
       try {
-        const { data, error: fetchErr } = await getUserHistory(userProfile.id, colMode);
+        const { data } = await getUserHistory(activeUserId, colMode);
 
         if (!isMounted) return;
 
-        if (fetchErr) {
-          setHistoryError(fetchErr.message || String(fetchErr));
-        } else {
-          const result = data || [];
-          setHistoryData(result);
-          setCached(key, result);
-        }
-      } catch (err) {
+        const dbData = data || [];
+        const mergedHistory = [...dbData];
+        const existingIds = new Set(dbData.map((d) => d.id));
+        localModeHistory.forEach((loc) => {
+          if (!existingIds.has(loc.id)) {
+            mergedHistory.push(loc);
+          }
+        });
+        mergedHistory.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+        setHistoryData(mergedHistory);
+      } catch {
         if (isMounted) {
-          setHistoryError(err.message || "Erreur de chargement");
+          setHistoryData(localModeHistory);
         }
       } finally {
         if (isMounted) {
@@ -234,7 +239,7 @@ const LeaderboardScreen = ({
     return () => {
       isMounted = false;
     };
-  }, [colMode, userProfile?.id, isOpen, activeTab]);
+  }, [colMode, userProfile?.id, session, localGameHistory, isOpen, activeTab]);
 
   const currentRecord = localRecords?.[colMode] || { maxScore: 0, bestTime: null, gamesPlayed: 0 };
 
