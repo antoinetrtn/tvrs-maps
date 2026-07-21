@@ -12,6 +12,7 @@ import {
   GLITCH_SELECTION_TRANSITION_MS,
   isDepartmentView,
   isLearnRiversMountainsView,
+  isUsStatesView,
 } from "./config/gameConfig";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
@@ -46,6 +47,7 @@ const GlobeMap = ({
   lang,
   countriesData,
   departmentsData = [],
+  usStatesData = [],
   foundList,
   onCountrySelect,
   shouldAutoRotate,
@@ -83,10 +85,16 @@ const GlobeMap = ({
     isHomeScreen,
     learnSubMode,
   });
+  const isUsStatesMode = isUsStatesView(mode, {
+    isHomeScreen,
+    learnSubMode,
+  });
   const isRiversMountainsMode =
     mode === "rivers_mountains" || isLearnRiversMountainsView(mode, { learnSubMode });
   const gameDataMap =
-    isDepartmentMode || isRiversMountainsMode ? activeDataMap || {} : countryDataMap;
+    isDepartmentMode || isRiversMountainsMode || isUsStatesMode
+      ? activeDataMap || {}
+      : countryDataMap;
 
   const foundSet = useMemo(() => {
     if (isHomeScreen) {
@@ -126,10 +134,12 @@ const GlobeMap = ({
     isHomeScreen,
     isEndScreen,
     isDepartmentMode,
+    isUsStatesMode,
     isPerfectScore,
     isError,
     isSuccess,
     selectionTransition,
+    gameDataMap,
   });
 
   const {
@@ -152,10 +162,12 @@ const GlobeMap = ({
   // renderData first (using ref for last POV) so we can give camera fresh canonicals.
   const renderDataResult = useGlobeRenderData({
     isDepartmentMode,
+    isUsStatesMode,
     isHomeScreen,
     isEndScreen,
     countriesData,
     departmentsData,
+    usStatesData,
     gameDataMap,
     selectedCountry,
     cameraPOV: lastCameraPOVRef.current,
@@ -174,6 +186,11 @@ const GlobeMap = ({
 
   canonicalRef.current = canonicalPositions;
 
+  const polygonsData =
+    perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
+      ? visibleRenderCountriesData
+      : renderCountriesData;
+
   const { zoomLevel, cameraPOV, globeRenderWidth, globeHeight, homeGlobeOffset, globePanelShift } =
     useGlobeCamera({
       globeEl,
@@ -183,7 +200,7 @@ const GlobeMap = ({
       isHomeScreen,
       isKeyboardMode,
       isEndScreen,
-      isDepartmentMode,
+      learnSubMode,
       gameDataMap,
       perfProfile,
       isPanelOpen,
@@ -197,6 +214,8 @@ const GlobeMap = ({
   // Stash fresh POV/zoom for next render's renderData call.
   lastCameraPOVRef.current = cameraPOV;
   lastZoomRef.current = zoomLevel;
+
+  const isRegionalMode = isDepartmentMode || isUsStatesMode;
 
   const {
     handleTouchStart,
@@ -219,7 +238,7 @@ const GlobeMap = ({
     mode,
     gameDataMap,
     selectableFeatureIndex,
-    isDepartmentMode,
+    isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
   });
 
@@ -242,7 +261,7 @@ const GlobeMap = ({
     getPointAltitude,
   } = useGlobeMarkers({
     mode,
-    isDepartmentMode,
+    isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
     isHomeScreen,
     isEndScreen,
@@ -265,7 +284,7 @@ const GlobeMap = ({
     mode,
     isHomeScreen,
     isEndScreen,
-    isDepartmentMode,
+    isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
     selectedCountry,
     foundSet,
@@ -297,7 +316,7 @@ const GlobeMap = ({
     getSelectionEffectAltitude,
   } = useGlobeRings({
     mode,
-    isDepartmentMode,
+    isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
     selectedCountry,
     isError,
@@ -492,11 +511,7 @@ const GlobeMap = ({
             }}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
-            polygonsData={
-              perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
-                ? visibleRenderCountriesData
-                : renderCountriesData
-            }
+            polygonsData={polygonsData}
             polygonGeoJsonGeometry="renderGeometry"
             polygonCapCurvatureResolution={getPolygonCurvatureResolutionWrapped}
             polygonAltitude={getPolygonAltitude}

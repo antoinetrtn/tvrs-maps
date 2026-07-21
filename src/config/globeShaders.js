@@ -125,6 +125,8 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 
 // GLSL fragment logic for selected/transitioning country polygon glitching
 export const GLITCH_FRAGMENT_BODY = `
+  vec3 litRestingColor = gl_FragColor.rgb;
+
   // Screen-space static — medium grain (~4–5px), uniform per country.
   float transitionActive = step(0.006, uFadeProgress) * (1.0 - step(0.994, uFadeProgress));
   float selectInScale = mix(1.0, 0.52, step(0.5, uSelectInTransition));
@@ -210,7 +212,7 @@ export const GLITCH_FRAGMENT_BODY = `
   }
 
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
-  vec3 settleColor = mix(uTargetColor, uFoundGreen * sideShade, step(0.5, uIsFound));
+  vec3 settleColor = mix(litRestingColor, uFoundGreen * sideShade, step(0.5, uIsFound));
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
@@ -227,7 +229,7 @@ export const GLITCH_FRAGMENT_BODY = `
   }
 
   // Caps stay fully opaque through the deselect. The dissolve now morphs the
-  // cap's COLOR toward its resting tint (uTargetColor) and hands off to the base
+  // cap's COLOR toward its resting tint (litRestingColor) and hands off to the base
   // material; fading alpha to 0 here used to punch a one-frame black hole through
   // to the globe — the "blink" against the grayscale countries.
   gl_FragColor.a = 1.0;

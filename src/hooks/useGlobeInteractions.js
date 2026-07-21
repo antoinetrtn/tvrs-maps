@@ -74,17 +74,7 @@ export function useGlobeInteractions({
         }
       }
 
-      if (isDepartmentMode) {
-        let best = null;
-        Object.entries(gameDataMap).forEach(([admin, data]) => {
-          if (data.lat === undefined || data.lng === undefined) return;
-          const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
-          if (!best || dist < best.dist) best = { admin, dist };
-        });
-        selectCountry(best && best.dist < 2.2 ? best.admin : null);
-        return;
-      }
-
+      const isUsStatesMode = mode === "us_states" || mode?.includes("us_states");
       const match = selectableFeatureIndex.find((entry) => featureContainsLngLat(entry, lng, lat));
       if (match) {
         selectCountry(match.admin);
@@ -93,13 +83,15 @@ export function useGlobeInteractions({
 
       let best = null;
       Object.entries(gameDataMap).forEach(([admin, data]) => {
-        if (data.lat === undefined || data.lng === undefined) return;
+        if (!data || data.lat === undefined || data.lng === undefined) return;
         const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
         if (!best || dist < best.dist) best = { admin, dist };
       });
-      if (best && best.dist < 6) {
+
+      const maxDist = isDepartmentMode ? 2.5 : isUsStatesMode ? 4.5 : 6.0;
+      if (best && best.dist < maxDist) {
         selectCountry(best.admin);
-      } else {
+      } else if (mode !== "learn") {
         selectCountry(null);
       }
     },

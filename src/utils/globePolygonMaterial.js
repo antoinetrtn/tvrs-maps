@@ -33,10 +33,18 @@ function resolvePolygonEmissiveProps({
   }
 
   if (UI_COLORS.polyMatMatte) {
+    if (isGhostCountry) {
+      return {
+        emissiveHex: color,
+        emissiveIntensity: 0.12,
+        specularHex: new THREE.Color(0, 0, 0),
+        shininess: 0,
+      };
+    }
     if (!isHighlightedOnGlobe) {
       return {
-        emissiveHex: UI_COLORS.black,
-        emissiveIntensity: 0,
+        emissiveHex: color,
+        emissiveIntensity: 0.05,
         specularHex: new THREE.Color(0, 0, 0),
         shininess: 0,
       };
@@ -121,21 +129,8 @@ export function getPolygonMaterialForFeature({
   getBaseColorForCountryAndKind,
   mapBase: _mapBase,
   lerpColor: _lerpColor,
+  restingColor,
 }) {
-  const { emissiveHex, emissiveIntensity, specularHex, shininess } = resolvePolygonEmissiveProps({
-    color,
-    kind,
-    admin,
-    selectedCountry,
-    showFoundOnGlobe,
-    isHighlightedOnGlobe,
-    isDepartmentMode,
-    isGhostCountry: d.isGhostCountry,
-    globeLightingEnabled,
-    isLight,
-    UI_COLORS,
-  });
-
   const isIsolated = admin === selectedCountry;
   const isPrevTransitioning = admin === transitioningPreviousCountryState;
   const isIncomingTransitioning = admin === transitioningIncomingCountryState;
@@ -156,6 +151,25 @@ export function getPolygonMaterialForFeature({
   const isSelectionHighlight = shaderMode.isSelectionHighlight && !isError && !isSuccess;
   const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
 
+  const colorToUse = isShaderCap ? restingColor : color;
+  const selectedCountryToUse = isShaderCap ? null : selectedCountry;
+  const showFoundOnGlobeToUse = isShaderCap ? isFound || isLearnSelected : showFoundOnGlobe;
+  const isHighlightedOnGlobeToUse = isShaderCap ? isFound || isLearnSelected : isHighlightedOnGlobe;
+
+  const { emissiveHex, emissiveIntensity, specularHex, shininess } = resolvePolygonEmissiveProps({
+    color: colorToUse,
+    kind,
+    admin,
+    selectedCountry: selectedCountryToUse,
+    showFoundOnGlobe: showFoundOnGlobeToUse,
+    isHighlightedOnGlobe: isHighlightedOnGlobeToUse,
+    isDepartmentMode,
+    isGhostCountry: d.isGhostCountry,
+    globeLightingEnabled,
+    isLight,
+    UI_COLORS,
+  });
+
   const isFoundCapMaterial = showFoundOnGlobe && kind === "cap" && !isShaderCap;
   const cacheKey = isShaderCap
     ? `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}`
@@ -174,17 +188,17 @@ export function getPolygonMaterialForFeature({
       depthWrite: true,
     });
 
-    const isFoundCap = showFoundOnGlobe && kind === "cap";
+    const isFoundCap = showFoundOnGlobe && kind === "cap" && !isShaderCap;
     if (isFoundCap) {
       material.color.set(0x000000);
-      material.emissive.set(safeColor(color));
+      material.emissive.set(safeColor(colorToUse));
       material.emissiveIntensity = getFoundCapEmissiveIntensity();
       material.specular.set(0x000000);
       material.shininess = 0;
       material.toneMapped = false;
       material.userData.isFoundCap = true;
     } else {
-      material.color.set(safeColor(color));
+      material.color.set(safeColor(colorToUse));
       material.emissive.set(safeColor(emissiveHex));
       material.emissiveIntensity = emissiveIntensity;
       material.specular.set(safeColor(specularHex));
@@ -197,18 +211,14 @@ export function getPolygonMaterialForFeature({
       isShaderCap && (isSuccess || isFound || isLearnSelected || admin === selectedCountry);
 
     if (isSatellite) {
-      if (shaderNeedsOpaque || showFoundOnGlobe || isLearnSelected) {
+      if (shaderNeedsOpaque || isLearnSelected) {
         material.transparent = false;
         material.wireframe = false;
         material.opacity = 1.0;
-      } else if (isShaderCap && admin === selectedCountry) {
+      } else if (showFoundOnGlobe) {
         material.transparent = false;
         material.wireframe = false;
         material.opacity = 1.0;
-      } else if (kind === "cap") {
-        material.transparent = true;
-        material.wireframe = true;
-        material.opacity = isLight ? 0.55 : 0.72;
       } else {
         material.transparent = true;
         material.visible = false;

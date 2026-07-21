@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AVATAR_COLORS } from "../config/designSystem";
+import { getActiveModeConfig } from "../config/gameConfig";
 import { AUTO_NAVIGATION, FEEDBACK_TIMING, HARDCORE_LIVES } from "../config/gameConstants";
 import { CHALLENGES } from "../data/challenges";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
@@ -436,16 +437,17 @@ export function useGameSession({
           matchName = normalizeString(adminKey);
         }
 
-        if (mode === "countries" || mode === "departments" || mode === "rivers_mountains") {
+        const config = getActiveModeConfig(mode);
+        if (config.targetCheck === "capital") {
+          if (matchCapital && matchCapital === normalizedInput) {
+            matchFound = adminKey;
+            break;
+          }
+        } else {
           if (
             matchName === normalizedInput ||
             aliases.some((alias) => normalizeString(alias) === normalizedInput)
           ) {
-            matchFound = adminKey;
-            break;
-          }
-        } else if (mode === "capitals" && matchCapital) {
-          if (matchCapital === normalizedInput) {
             matchFound = adminKey;
             break;
           }
@@ -493,15 +495,14 @@ export function useGameSession({
             : null;
       const aliases = mapped.aliases || [];
 
+      const config = getActiveModeConfig(mode);
       let isSuccessVal = false;
-      if (
-        (mode === "countries" || mode === "departments" || mode === "rivers_mountains") &&
-        (matchName === normalizedInput ||
-          aliases.some((alias) => normalizeString(alias) === normalizedInput))
-      ) {
-        isSuccessVal = true;
-      } else if (mode === "capitals" && matchCapital === normalizedInput) {
-        isSuccessVal = true;
+      if (config.targetCheck === "capital") {
+        isSuccessVal = matchCapital && matchCapital === normalizedInput;
+      } else {
+        isSuccessVal =
+          matchName === normalizedInput ||
+          aliases.some((alias) => normalizeString(alias) === normalizedInput);
       }
 
       if (isSuccessVal) {

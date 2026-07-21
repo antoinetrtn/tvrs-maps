@@ -28,8 +28,48 @@ export function resolveRegionalLandColor(
 ) {
   const isSatellite = globeTheme === "satellite";
   return isSatellite
-    ? regionColorsLabels[region] || regionColorsAttenuated[region] || fallbackAccent
+    ? regionColorsLabels[region] ||
+        regionColorsAttenuated[region] ||
+        fallbackRegionColor ||
+        fallbackAccent
     : regionColorsAttenuated[region] || fallbackRegionColor;
+}
+
+export function resolveGhostCountryColor(d, countryDataMap, opts) {
+  const admin = d?.properties?.ADMIN || d?.properties?.code || d?.properties?.name;
+  const reg = countryDataMap[admin]?.region || d?.properties?.region || "Americas";
+  return resolveRegionalLandColor(reg, opts);
+}
+
+export function resolvePolygonStrokeWidth({
+  admin,
+  isGhostCountry,
+  selectedCountry,
+  isRegionalMode,
+  foundSet,
+  mode,
+  isLight,
+  globeLightingEnabled,
+  perfProfile,
+  UI_COLORS,
+}) {
+  const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
+  const isSelected = admin === selectedCountry;
+  if (isRegionalMode && isGhostCountry) return 0.15 * strokeScale;
+  if (isSelected) {
+    const isGreenFill = foundSet.has(admin) || mode === "learn";
+    return (isGreenFill ? 14 : 7.5) * strokeScale;
+  }
+  if (isRegionalMode) return 1.1 * strokeScale;
+  if (foundSet.has(admin)) {
+    return (0.95 + (isLight ? 0.15 : 0.25)) * strokeScale;
+  }
+  const thickness =
+    Number(UI_COLORS.strokeWidthDesktop) || Number(UI_COLORS.strokeWidthMobile) || 0.75;
+  if (!UI_COLORS.isBlackoutTheme && (isLight || globeLightingEnabled)) {
+    return (thickness + 0.2) * strokeScale;
+  }
+  return thickness * strokeScale;
 }
 
 export function shouldUseRegionalUnfoundLand({ isEndScreen, isFound, isSelected }) {

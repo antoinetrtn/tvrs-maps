@@ -1,20 +1,16 @@
 import "./HomeScreen.css";
 
 import {
-  BookOpen,
   Clock,
   Close,
   CloudSun,
   Earth,
   Globe,
-  Hash,
   Heart,
-  MapPin,
   Minus,
   Moon,
   Plus,
   Settings2,
-  TreePine,
   User,
 } from "pixelarticons/react";
 import React, { useCallback, useRef, useState } from "react";
@@ -23,6 +19,7 @@ import { THEMES_LIST } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import GlassIconButton from "./GlassIconButton";
+import HomeScreenCategoryCarousel from "./HomeScreenCategoryCarousel";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardScreen from "./LeaderboardScreen";
 import Logo from "./Logo";
@@ -164,38 +161,7 @@ const HomeScreen = ({
         >
           <Logo size="large" className="home-logo" />
 
-          <div className="home-buttons">
-            <button className="home-btn mode-countries" onClick={() => onStartGame("countries")}>
-              <Globe width={20} height={20} />
-              <span className="btn-title">{t("mode_countries")}</span>
-            </button>
-
-            <button className="home-btn mode-capitals" onClick={() => onStartGame("capitals")}>
-              <MapPin width={20} height={20} />
-              <span className="btn-title">{t("mode_capitals")}</span>
-            </button>
-
-            <button
-              className="home-btn mode-departments"
-              onClick={() => onStartGame("departments")}
-            >
-              <Hash width={18} height={18} className="home-btn-icon hash-icon" />
-              <span className="btn-title">{t("mode_departments")}</span>
-            </button>
-
-            <button
-              className="home-btn mode-rivers-mountains"
-              onClick={() => onStartGame("rivers_mountains")}
-            >
-              <TreePine width={20} height={20} />
-              <span className="btn-title">{t("mode_rivers_mountains")}</span>
-            </button>
-
-            <button className="home-btn mode-learn" onClick={() => onStartGame("learn")}>
-              <BookOpen width={20} height={20} />
-              <span className="btn-title">{t("mode_learn")}</span>
-            </button>
-          </div>
+          <HomeScreenCategoryCarousel onStartGame={onStartGame} lang={lang} />
         </div>
 
         <div className="home-bottom-right">

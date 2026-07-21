@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 
-import { DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS } from "../config/gameConfig";
 import { countryDataMap } from "../data/gameData";
 import {
   getCanonicalPosition,
@@ -14,10 +13,12 @@ import {
 
 export function useGlobeRenderData({
   isDepartmentMode = false,
+  isUsStatesMode = false,
   isHomeScreen,
   isEndScreen,
   countriesData,
   departmentsData,
+  usStatesData = [],
   gameDataMap,
   selectedCountry,
   cameraPOV,
@@ -27,8 +28,10 @@ export function useGlobeRenderData({
   const selectableCountriesData = useMemo(() => {
     if (isDepartmentMode)
       return departmentsData.filter((feature) => gameDataMap[getFeatureAdmin(feature)]);
+    if (isUsStatesMode)
+      return usStatesData.filter((feature) => gameDataMap[getFeatureAdmin(feature)]);
     return countriesData.filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
-  }, [countriesData, departmentsData, gameDataMap, isDepartmentMode]);
+  }, [countriesData, departmentsData, usStatesData, gameDataMap, isDepartmentMode, isUsStatesMode]);
 
   const baseRenderCountriesData = useMemo(() => {
     return selectableCountriesData.map((feature) => ({
@@ -38,10 +41,13 @@ export function useGlobeRenderData({
   }, [selectableCountriesData]);
 
   const renderCountriesData = useMemo(() => {
-    if (!isDepartmentMode) return baseRenderCountriesData;
+    if (!isDepartmentMode && !isUsStatesMode) return baseRenderCountriesData;
+
+    const exclusions = isDepartmentMode ? ["France"] : ["United States of America"];
+    const exclusionSet = new Set(exclusions);
 
     const ghostWorld = countriesData
-      .filter((feature) => !DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS.has(getFeatureAdmin(feature)))
+      .filter((feature) => !exclusionSet.has(getFeatureAdmin(feature)))
       .map((feature) => ({
         ...feature,
         isGhostCountry: true,
@@ -55,7 +61,7 @@ export function useGlobeRenderData({
         isDepartmentFeature: true,
       })),
     ];
-  }, [baseRenderCountriesData, countriesData, isDepartmentMode]);
+  }, [baseRenderCountriesData, countriesData, isDepartmentMode, isUsStatesMode]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData
@@ -88,6 +94,7 @@ export function useGlobeRenderData({
     const renderRadius = getMobileRenderRadius(zoomLevel);
 
     return renderCountriesData.filter((feature) => {
+      if (feature.isGhostCountry) return true;
       const admin = getFeatureAdmin(feature);
       if (!admin) return false;
       if (admin === selectedCountry) return true;
@@ -116,13 +123,13 @@ export function useGlobeRenderData({
 
   const countriesWithGeometry = useMemo(() => {
     const set = new Set();
-    const list = isDepartmentMode ? departmentsData : countriesData;
+    const list = isDepartmentMode ? departmentsData : isUsStatesMode ? usStatesData : countriesData;
     list.forEach((feature) => {
       const admin = getFeatureAdmin(feature);
       if (admin) set.add(admin);
     });
     return set;
-  }, [countriesData, departmentsData, isDepartmentMode]);
+  }, [countriesData, departmentsData, usStatesData, isDepartmentMode, isUsStatesMode]);
 
   // GLOBAL SHAPE-BASED POSITIONS: for every feature that has geometry,
   // compute the true centroid from the rendered polygons.

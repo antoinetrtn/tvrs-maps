@@ -158,8 +158,14 @@ function App() {
   }, []);
 
   const { viewport, isKeyboardMode } = useViewport();
-  const { countriesData, departmentsData, activeDataMap, allCountryKeys, totalPossible } =
-    useGeoData({ mode, learnSubMode });
+  const {
+    countriesData,
+    departmentsData,
+    usStatesData,
+    activeDataMap,
+    allCountryKeys,
+    totalPossible,
+  } = useGeoData({ mode, learnSubMode });
 
   const {
     foundList,
@@ -223,9 +229,12 @@ function App() {
   }, []);
 
   const startGame = useCallback(
-    (selectedMode) => {
+    (selectedMode, subMode) => {
       resetGame(selectedMode);
       setMode(selectedMode);
+      if (selectedMode === "learn" && subMode) {
+        setLearnSubMode(subMode);
+      }
       setLearnSearchQuery("");
       setShowLearnPanel(false);
       setShowInfoModal(false);
@@ -397,6 +406,7 @@ function App() {
     isMobileViewport,
     countriesData,
     departmentsData,
+    usStatesData,
     handleCountrySelect,
     perfProfile,
     currentScreen,

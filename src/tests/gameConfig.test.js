@@ -17,6 +17,7 @@ describe("Game Configuration Utilities", () => {
       expect(isPlayMode("capitals")).toBe(true);
       expect(isPlayMode("departments")).toBe(true);
       expect(isPlayMode("rivers_mountains")).toBe(true);
+      expect(isPlayMode("us_states")).toBe(true);
     });
 
     it("should return false for home screen, end screen, learn mode, or unknown modes", () => {
