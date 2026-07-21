@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { CHALLENGES, ISLANDS_LIST } from "../data/challenges";
 import {
   getLeaderboard,
   getProfile,
@@ -11,237 +10,10 @@ import {
   upsertProfile,
   upsertUserRecord,
 } from "../services/supabaseClient";
+import { checkChallengesRealTime } from "../utils/achievementEvaluator";
 import { getLevelAndProgress } from "../utils/gamification";
 
-export function checkChallengesRealTime(currentBadges, localRecords, sessionData) {
-  const newlyUnlocked = [];
-  const addBadge = (id) => {
-    if (!currentBadges.includes(id) && !newlyUnlocked.includes(id)) {
-      newlyUnlocked.push(id);
-    }
-  };
-
-  const totalGames =
-    Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0) +
-    (sessionData.isGameOver ? 1 : 0);
-
-  const gameMode = sessionData.mode;
-
-  // Evaluate each challenge
-  CHALLENGES.forEach((ch) => {
-    if (currentBadges.includes(ch.id)) return;
-
-    switch (ch.id) {
-      // General Play Counts
-      case "ch_gen_play_1":
-        if (totalGames >= 1) addBadge(ch.id);
-        break;
-      case "ch_gen_play_5":
-        if (totalGames >= 5) addBadge(ch.id);
-        break;
-      case "ch_gen_play_10":
-        if (totalGames >= 10) addBadge(ch.id);
-        break;
-      case "ch_gen_play_25":
-        if (totalGames >= 25) addBadge(ch.id);
-        break;
-      case "ch_gen_play_50":
-        if (totalGames >= 50) addBadge(ch.id);
-        break;
-
-      // General Levels (checked separately during level calculation, but safe to check here too)
-      case "ch_gen_lvl_2":
-      case "ch_gen_lvl_5":
-      case "ch_gen_lvl_10":
-      case "ch_gen_lvl_15":
-      case "ch_gen_lvl_20":
-        // Evaluated based on active level
-        break;
-
-      // Continents
-      case "ch_cont_europe":
-        if (sessionData.continentsConquered?.includes("Europe")) addBadge(ch.id);
-        break;
-      case "ch_cont_europe_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Europe_")).length +
-            (sessionData.continentsConquered?.includes("Europe") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_africa":
-        if (sessionData.continentsConquered?.includes("Africa")) addBadge(ch.id);
-        break;
-      case "ch_cont_africa_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Africa_")).length +
-            (sessionData.continentsConquered?.includes("Africa") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_asia":
-        if (sessionData.continentsConquered?.includes("Asia")) addBadge(ch.id);
-        break;
-      case "ch_cont_asia_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Asia_")).length +
-            (sessionData.continentsConquered?.includes("Asia") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_americas":
-        if (sessionData.continentsConquered?.includes("Americas")) addBadge(ch.id);
-        break;
-      case "ch_cont_americas_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Americas_")).length +
-            (sessionData.continentsConquered?.includes("Americas") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_oceania":
-        if (sessionData.continentsConquered?.includes("Oceania")) addBadge(ch.id);
-        break;
-      case "ch_cont_oceania_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Oceania_")).length +
-            (sessionData.continentsConquered?.includes("Oceania") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-
-      // Scores
-      case "ch_score_countries_10":
-        if (gameMode === "countries" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_score_countries_20":
-        if (gameMode === "countries" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_score_countries_50":
-        if (gameMode === "countries" && sessionData.score >= 50) addBadge(ch.id);
-        break;
-      case "ch_score_countries_100":
-        if (gameMode === "countries" && sessionData.score >= 100) addBadge(ch.id);
-        break;
-
-      case "ch_score_capitals_10":
-        if (gameMode === "capitals" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_score_capitals_20":
-        if (gameMode === "capitals" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_score_capitals_50":
-        if (gameMode === "capitals" && sessionData.score >= 50) addBadge(ch.id);
-        break;
-      case "ch_score_capitals_100":
-        if (gameMode === "capitals" && sessionData.score >= 100) addBadge(ch.id);
-        break;
-
-      case "ch_score_departments_10":
-        if (gameMode === "departments" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_score_departments_20":
-        if (gameMode === "departments" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_score_departments_50":
-        if (gameMode === "departments" && sessionData.score >= 50) addBadge(ch.id);
-        break;
-      case "ch_score_departments_100":
-        if (gameMode === "departments" && sessionData.score >= 100) addBadge(ch.id);
-        break;
-
-      // Speed
-      case "ch_speed_fast_guess":
-        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 3)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_10_guesses_30s":
-        if (sessionData.speedGuessCount3s >= 10) addBadge(ch.id);
-        break;
-      case "ch_speed_20_guesses_60s":
-        if (sessionData.speedGuessCount3s >= 20) addBadge(ch.id);
-        break;
-      case "ch_speed_under_2m":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 120 && sessionData.score > 0)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_under_1m":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 60 && sessionData.score > 0)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_under_30s":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 30 && sessionData.score > 0)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_half_time":
-        if (
-          sessionData.isGameOver &&
-          sessionData.gameDuration > 0 &&
-          sessionData.timeSpent <= sessionData.gameDuration / 2 &&
-          sessionData.score > 0
-        ) {
-          addBadge(ch.id);
-        }
-        break;
-      case "ch_speed_blitz":
-        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 1)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_perfect_100":
-        if (
-          sessionData.isGameOver &&
-          sessionData.perfect &&
-          sessionData.score >= 100 &&
-          sessionData.timeSpent <= 120
-        ) {
-          addBadge(ch.id);
-        }
-        break;
-      case "ch_speed_lightning":
-        if (sessionData.lightningCount >= 1) addBadge(ch.id);
-        break;
-
-      // Relief
-      case "ch_relief_score_10":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_relief_score_20":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_relief_score_30":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 30) addBadge(ch.id);
-        break;
-      case "ch_relief_score_40":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 40) addBadge(ch.id);
-        break;
-
-      // Specialties
-      case "ch_special_night":
-        if (sessionData.isNight) addBadge(ch.id);
-        break;
-      case "ch_special_lunch":
-        if (sessionData.isLunch) addBadge(ch.id);
-        break;
-      case "ch_special_perfect":
-        if (sessionData.isGameOver && sessionData.perfect && sessionData.score > 0) addBadge(ch.id);
-        break;
-      case "ch_special_islands":
-        {
-          const islands =
-            sessionData.guessesThisGame?.filter((k) => ISLANDS_LIST.includes(k)).length || 0;
-          if (islands >= 5) addBadge(ch.id);
-        }
-        break;
-    }
-  });
-
-  return newlyUnlocked;
-}
+export { checkChallengesRealTime };
 
 export function useUserProfile() {
   const [session, setSession] = useState(null);
@@ -325,6 +97,7 @@ export function useUserProfile() {
       capitals: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       departments: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      us_states: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
     };
     try {
       const cached = localStorage.getItem("tvrs-local-records");
@@ -341,6 +114,7 @@ export function useUserProfile() {
       capitals: [],
       departments: [],
       rivers_mountains: [],
+      us_states: [],
     };
     try {
       const cached = localStorage.getItem("tvrs-last-scores");

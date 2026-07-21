@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-import { DEPARTMENT_MODE_FRANCE_VIEW } from "../config/gameConfig";
+import { getActiveModeConfig } from "../config/gameConfig";
 import {
   BREAKPOINTS,
   GAME_START_VIEW_JITTER_DEG,
@@ -24,21 +24,25 @@ const getRandomGameStartView = () => {
   return { lat: base.lat + jitter(), lng: base.lng + jitter() };
 };
 
-const getDepartmentModeFrancePointOfView = (width) => ({
-  lat: DEPARTMENT_MODE_FRANCE_VIEW.lat,
-  lng: DEPARTMENT_MODE_FRANCE_VIEW.lng,
-  altitude:
-    width < BREAKPOINTS.mobile
-      ? DEPARTMENT_MODE_FRANCE_VIEW.altitude.mobile
-      : DEPARTMENT_MODE_FRANCE_VIEW.altitude.desktop,
-});
+const getCustomModePointOfView = (mode, learnSubMode, width) => {
+  const config = getActiveModeConfig(mode, learnSubMode);
+  if (config && config.viewPoint) {
+    const isMobile = width < BREAKPOINTS.mobile;
+    return {
+      lat: config.viewPoint.lat,
+      lng: config.viewPoint.lng,
+      altitude: isMobile ? config.viewPoint.altitude.mobile : config.viewPoint.altitude.desktop,
+    };
+  }
+  return null;
+};
 
 const buildSelectedCountryCameraTarget = ({
   data,
   viewport,
   isHomeScreen,
   isKeyboardMode,
-  isDepartmentMode,
+  customPOV,
   hasPreviousSelection,
   currentPOV,
   maxWindowHeight,
@@ -51,15 +55,13 @@ const buildSelectedCountryCameraTarget = ({
   const useLng = canonical ? canonical.lng : data?.lng;
 
   const isMobile = viewport.width < BREAKPOINTS.mobile;
-  const departmentFranceAltitude = isDepartmentMode
-    ? getDepartmentModeFrancePointOfView(viewport.width).altitude
-    : null;
+  const customModeAltitude = customPOV ? customPOV.altitude : null;
   const fallbackAltitude = isHomeScreen
     ? isMobile
       ? 2.0
       : 1.25
-    : isDepartmentMode
-      ? departmentFranceAltitude
+    : customPOV
+      ? customModeAltitude
       : isMobile
         ? 1.8
         : 0.68;
@@ -89,13 +91,13 @@ const applyIdleCameraPointOfView = ({
   viewport,
   isEndScreen,
   isHomeScreen,
-  isDepartmentMode,
+  customPOV,
   wasHomeScreen,
 }) => {
   if (isEndScreen) {
     globeEl.current.pointOfView(
-      isDepartmentMode
-        ? getDepartmentModeFrancePointOfView(viewport.width)
+      customPOV
+        ? customPOV
         : { lat: 20, lng: 0, altitude: viewport.width < BREAKPOINTS.mobile ? 2.2 : 1.8 },
       1200
     );
@@ -116,11 +118,8 @@ const applyIdleCameraPointOfView = ({
     return;
   }
 
-  if (isDepartmentMode) {
-    globeEl.current.pointOfView(
-      getDepartmentModeFrancePointOfView(viewport.width),
-      wasHomeScreen ? 1100 : 700
-    );
+  if (customPOV) {
+    globeEl.current.pointOfView(customPOV, wasHomeScreen ? 1100 : 700);
     return;
   }
 
@@ -145,7 +144,7 @@ export function useGlobeCamera({
   isHomeScreen,
   isKeyboardMode,
   isEndScreen,
-  isDepartmentMode,
+  learnSubMode,
   gameDataMap,
   perfProfile,
   isPanelOpen = false,
@@ -258,6 +257,7 @@ export function useGlobeCamera({
 
   useEffect(() => {
     const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
+    const customPOV = getCustomModePointOfView(mode, learnSubMode, viewport.width);
 
     if (selectedCountry && globeEl.current) {
       const data =
@@ -272,7 +272,7 @@ export function useGlobeCamera({
           viewport,
           isHomeScreen,
           isKeyboardMode,
-          isDepartmentMode,
+          customPOV,
           hasPreviousSelection,
           currentPOV: globeEl.current.pointOfView(),
           maxWindowHeight: maxWindowHeightRef.current,
@@ -314,7 +314,7 @@ export function useGlobeCamera({
         viewport,
         isEndScreen,
         isHomeScreen,
-        isDepartmentMode,
+        customPOV,
         wasHomeScreen: wasHomeScreenRef.current,
       });
       lastTargetRef.current = null;
@@ -347,9 +347,9 @@ export function useGlobeCamera({
     perfProfile,
     isKeyboardMode,
     isEndScreen,
-    isDepartmentMode,
     gameDataMap,
     mode,
+    learnSubMode,
     globeEl,
     setTransitioningPreviousCountryState,
     setTransitioningIncomingCountryState,
@@ -395,7 +395,6 @@ export function useGlobeCamera({
     cameraPOV,
     maxWindowWidthRef,
     maxWindowHeightRef,
-    getDepartmentModeFrancePointOfView,
     globeRenderWidth,
     globeHeight,
     homeGlobeOffset,

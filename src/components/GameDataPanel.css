@@ -112,8 +112,56 @@
   background: var(--bg-color);
 }
 
-.data-panel-toolbar .learn-submode-control {
+.data-panel-toolbar .learn-carousel-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
+  gap: var(--spacing-sm);
+}
+
+.learn-carousel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-border);
+  color: var(--text-main);
+  cursor: pointer;
+  transition:
+    background var(--transition-spring),
+    transform var(--transition-spring);
+}
+
+.learn-carousel-arrow:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.learn-carousel-arrow:active {
+  transform: scale(0.95);
+}
+
+.learn-carousel-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-soft);
+}
+
+.learn-carousel-icon {
+  display: flex;
+  align-items: center;
 }
 
 .data-panel-scroll {

@@ -1,0 +1,125 @@
+.category-carousel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--spacing-sm);
+  transform: translateZ(26px);
+}
+
+.carousel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.carousel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-border);
+  color: var(--text-main);
+  cursor: pointer;
+  transition:
+    background var(--transition-spring),
+    transform var(--transition-spring);
+}
+
+.carousel-arrow:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.carousel-arrow:active {
+  transform: scale(0.95);
+}
+
+.carousel-info {
+  flex: 1;
+  text-align: center;
+}
+
+.carousel-category-title {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-soft);
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: -4px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.4;
+  cursor: pointer;
+  transition:
+    background var(--transition-normal),
+    opacity var(--transition-normal),
+    transform var(--transition-normal);
+}
+
+.carousel-dot:hover {
+  opacity: 0.8;
+}
+
+.carousel-dot.active {
+  background: var(--accent);
+  opacity: 1;
+  transform: scale(1.2);
+  box-shadow: 0 0 6px var(--accent-soft);
+}
+
+.mode-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+}
+
+.mode-row .home-btn {
+  flex: 1;
+}
+
+.mode-row .learn-icon-btn {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-spring);
+}
+
+.mode-row .learn-icon-btn:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-soft);
+}
+
+.mode-row .learn-icon-btn:active {
+  transform: scale(0.95);
+}
