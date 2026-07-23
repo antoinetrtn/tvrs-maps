@@ -38,6 +38,7 @@ const GameHUD = ({
   isKeyboardMode,
   selectedCountry,
   globeTheme,
+  learnSubMode,
   learnSearchQuery = "",
   onLearnSearchChange,
   onToggleLearnPanel,
@@ -185,9 +186,9 @@ const GameHUD = ({
                   mode === "departments"
                     ? mapped.code
                     : mode === "rivers_mountains"
-                      ? mapped.type === "mountain_range"
-                        ? `${mapped.height}m`
-                        : `${mapped.length}km`
+                      ? mapped.type === "mountain_range" || mapped.type === "mountain"
+                        ? `🏔️ ${mapped.height || "?"} m`
+                        : `💧 ${mapped.length || "?"} km`
                       : mode === "capitals"
                         ? null
                         : mapped?.capital_fr || mapped?.capital,
@@ -250,10 +251,15 @@ const GameHUD = ({
 
   const placeholderText = useMemo(() => {
     if (mode === "learn") {
-      return t("search_placeholder");
+      return learnSubMode === "rivers_mountains"
+        ? t("search_placeholder_rivers_mountains")
+        : t("search_placeholder");
+    }
+    if (mode === "rivers_mountains") {
+      return t("search_placeholder_rivers_mountains");
     }
     return t("answer_placeholder");
-  }, [mode, t]);
+  }, [mode, learnSubMode, t]);
 
   // Determine which continent to highlight
   const activeContinent = useMemo(

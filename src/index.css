@@ -2,6 +2,7 @@
   /* COLORS - Core (Blackout dark is the default — keep these in sync with
      THEME_OVERRIDES.blackout.dark so first paint matches before React mounts) */
   --bg-color: #000000;
+  --black: #000000;
   --text-main: #ffffff;
   --text-muted: #888888;
 

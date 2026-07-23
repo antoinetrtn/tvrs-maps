@@ -49,19 +49,32 @@ function App() {
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
 
-  const [hardcoreMode, setHardcoreModeRaw] = useState(() => {
+  const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
-      return localStorage.getItem(STORAGE_KEYS.hardcoreMode) === "true";
+      const storedPeaceful = localStorage.getItem(STORAGE_KEYS.peacefulMode);
+      if (storedPeaceful !== null) {
+        return storedPeaceful === "true";
+      }
+      const storedHardcore = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
+      if (storedHardcore !== null) {
+        return storedHardcore === "false";
+      }
+      return false; // Peaceful OFF = Hardcore ON by default!
     } catch {
       return false;
     }
   });
-  const setHardcoreMode = useCallback((value) => {
-    setHardcoreModeRaw(value);
+
+  const setPeacefulMode = useCallback((value) => {
+    setPeacefulModeRaw(value);
     try {
-      localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(value));
+      localStorage.setItem(STORAGE_KEYS.peacefulMode, String(value));
+      localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(!value));
     } catch {}
   }, []);
+
+  const hardcoreMode = !peacefulMode;
+  const setHardcoreMode = useCallback((value) => setPeacefulMode(!value), [setPeacefulMode]);
 
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -218,6 +231,7 @@ function App() {
   });
 
   const preserveInputFocus = useCallback(() => {
+    if (mode === "learn") return;
     const input = extInputRef.current;
     if (!input) return;
     if (document.activeElement !== input) {
@@ -227,7 +241,7 @@ function App() {
         input.focus();
       }
     }
-  }, []);
+  }, [mode]);
 
   const startGame = useCallback(
     (selectedMode, subMode) => {
@@ -363,6 +377,7 @@ function App() {
     resetNavigationTrail,
     setPopupError,
     extInputRef,
+    isLearnMode: mode === "learn",
     onAfterSelect: (key) => {
       if (mode === "learn" && isMobileViewport && key) {
         setShowLearnPanel(true);
@@ -452,6 +467,8 @@ function App() {
           setGameDuration={setGameDuration}
           hardcoreMode={hardcoreMode}
           setHardcoreMode={setHardcoreMode}
+          peacefulMode={peacefulMode}
+          setPeacefulMode={setPeacefulMode}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
           topExplorers={topExplorers}

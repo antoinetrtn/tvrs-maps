@@ -607,14 +607,14 @@ export function useGameSession({
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
         return;
       }
-      if (selectedCountry) {
+      if (isPlaying && selectedCountry) {
         if (e.key === "ArrowRight") navigateFocus("next");
         if (e.key === "ArrowLeft") navigateFocus("prev");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedCountry, navigateFocus]);
+  }, [isPlaying, selectedCountry, navigateFocus]);
 
   return {
     foundList,

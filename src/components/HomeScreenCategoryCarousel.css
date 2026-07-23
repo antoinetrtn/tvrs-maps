@@ -1,125 +1,429 @@
-.category-carousel {
+/* ==========================================================================
+   HOMEPAGE 3D CARD DECK (Jeu de cartes empilées en éventail "en bazar")
+   ========================================================================== */
+
+.cards-deck-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  gap: var(--spacing-sm);
-  transform: translateZ(26px);
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 0;
+  user-select: none;
 }
 
-.carousel-header {
+/* When user is actively dragging, disable pointer events on click zones to prevent drag traps */
+.cards-deck-wrapper.is-user-dragging .deck-click-zone {
+  pointer-events: none !important;
+}
+
+/* Split Interactive Click/Tap Zones - 100% INVISIBLE background (NO grey circle tint overlay) */
+.deck-click-zone {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 75px;
+  height: 250px;
+  z-index: 180;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+  background: transparent !important;
+}
+
+.deck-click-zone.left {
+  left: -20px;
+  justify-content: flex-start;
+  padding-left: 6px;
+}
+
+.deck-click-zone.right {
+  right: -20px;
+  justify-content: flex-end;
+  padding-right: 6px;
+}
+
+.deck-click-zone:hover {
+  background: transparent !important;
+}
+
+.deck-click-zone:hover .deck-arrow {
+  opacity: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.15);
+  box-shadow: 0 0 12px var(--accent-soft);
+}
+
+.deck-click-zone:active .deck-arrow {
+  transform: scale(0.92);
+}
+
+/* Round Arrow Badge inside the Half-Circle Zone */
+.deck-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--glass-border-strong);
+  background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
+  color: var(--text-main);
+  opacity: 0.55;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--bg-color) 60%, transparent);
+  pointer-events: none;
+  transition:
+    color var(--transition-spring),
+    border-color var(--transition-spring),
+    opacity var(--transition-spring),
+    transform var(--transition-spring),
+    box-shadow var(--transition-spring);
+}
+
+/* 3D Stack Stage - Strict Preserve 3D for Z-Buffer Depth Sorting */
+.deck-stage {
+  position: relative;
+  width: 320px;
+  height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  touch-action: none !important;
+  cursor: grab;
+}
+
+.deck-stage:active {
+  cursor: grabbing;
+}
+
+/* Individual Stacked Card Base - 100% SOLID PURE OPAQUE BACKGROUND (ALPHA = 1.0) */
+.deck-mode-card {
+  --card-accent: var(--accent);
+  position: absolute;
+  top: 20px;
+  width: 320px;
+  height: 250px;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg, 18px);
+  background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
+  background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid var(--glass-border-strong);
+  box-shadow:
+    0 16px 36px var(--bg-color),
+    inset 0 1px 0 color-mix(in srgb, var(--text-main) 14%, transparent);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.deck-mode-card[data-mode="countries"] {
+  --card-accent: var(--accent);
+}
+
+.deck-mode-card[data-mode="capitals"] {
+  --card-accent: var(--info, var(--accent));
+}
+
+.deck-mode-card[data-mode="departments"] {
+  --card-accent: var(--purple, var(--accent));
+}
+
+/* US States: Vibrant Amber Gold instead of muted dark grey */
+.deck-mode-card[data-mode="us_states"] {
+  --card-accent: color-mix(in srgb, var(--gold-light) 90%, var(--accent));
+}
+
+.deck-mode-card[data-mode="rivers_mountains"] {
+  --card-accent: var(--success, var(--accent));
+}
+
+/* Top Active Card: 100% Solid Opaque Pitch Dark, vibrant accent border glow */
+.deck-mode-card.is-top-card {
+  height: 250px;
+  background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
+  background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
+  box-shadow:
+    0 16px 36px var(--bg-color),
+    0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
+}
+
+/* Stacked cards behind: 100% Solid Opaque Pitch Dark with mode border */
+.deck-mode-card.is-stacked-card {
+  cursor: pointer;
+  height: 250px;
+  background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
+  background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
+  box-shadow:
+    0 16px 36px var(--bg-color),
+    0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
+  transition:
+    transform 160ms cubic-bezier(0.1, 0.9, 0.2, 1),
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease-out;
+}
+
+.deck-mode-card.is-stacked-card:hover {
+  filter: brightness(1.2);
+  border-color: var(--card-accent);
+}
+
+.deck-mode-card.is-stacked-card .card-actions {
+  pointer-events: none;
+}
+
+/* Scanline Overlay */
+.card-scanline-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--text-main) 3%, transparent) 0px,
+    color-mix(in srgb, var(--text-main) 3%, transparent) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  z-index: 1;
+}
+
+/* Parallax Background Artwork */
+.card-parallax-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+  transition: transform 400ms cubic-bezier(0.18, 0.9, 0.26, 1.15);
+  z-index: 0;
+}
+
+.card-ambient-glow {
+  position: absolute;
+  top: -30%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(
+    circle at 50% 30%,
+    color-mix(in srgb, var(--card-accent) 18%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* Card Header & Content */
+.card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: transform 400ms cubic-bezier(0.18, 0.9, 0.26, 1.15);
+  text-align: left;
+}
+
+.card-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 0.15rem;
 }
 
-.carousel-arrow {
+.card-badge {
+  font-family: var(--font-display, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: var(--radius-xs, 4px);
+  background: color-mix(in srgb, var(--card-accent) 20%, transparent);
+  color: var(--card-accent);
+  border: 1px solid color-mix(in srgb, var(--card-accent) 35%, transparent);
+}
+
+.card-mode-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-border);
+  color: var(--card-accent);
+}
+
+.card-title {
+  font-family: var(--font-main);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.card-desc {
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Actions Footer */
+.card-actions {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+}
+
+.card-play-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 44px;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--card-accent);
+  color: var(--text-inverse);
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--card-accent) 40%, transparent);
+  transition: all var(--transition-spring);
+}
+
+.card-play-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--card-accent) 60%, transparent);
+}
+
+.card-play-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.card-learn-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--glass-border-strong);
+  background: var(--glass-bg);
   color: var(--text-main);
   cursor: pointer;
-  transition:
-    background var(--transition-spring),
-    transform var(--transition-spring);
+  transition: all var(--transition-spring);
 }
 
-.carousel-arrow:hover {
-  background: var(--glass-hover);
+.card-learn-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--glass-hover);
+  box-shadow: 0 0 12px var(--accent-soft);
+  transform: translateY(-2px);
 }
 
-.carousel-arrow:active {
-  transform: scale(0.95);
+.card-learn-btn:active {
+  transform: translateY(0) scale(0.95);
 }
 
-.carousel-info {
-  flex: 1;
-  text-align: center;
-}
-
-.carousel-category-title {
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--accent);
-  text-shadow: 0 0 8px var(--accent-soft);
-}
-
-.carousel-dots {
+/* Dots Row - Pixel Squares */
+.deck-dots-row {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-top: -4px;
-  margin-bottom: var(--spacing-sm);
+  gap: 8px;
+  margin-top: 1.25rem;
+  width: 100%;
 }
 
-.carousel-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  opacity: 0.4;
+.deck-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+  opacity: 0.5;
+  border: none;
   cursor: pointer;
+  padding: 0;
   transition:
     background var(--transition-normal),
     opacity var(--transition-normal),
     transform var(--transition-normal);
 }
 
-.carousel-dot:hover {
-  opacity: 0.8;
+.deck-dot:hover {
+  opacity: 0.9;
+  background: var(--text-main);
 }
 
-.carousel-dot.active {
+.deck-dot.active {
+  width: 7px;
+  height: 7px;
+  border-radius: 0;
   background: var(--accent);
   opacity: 1;
-  transform: scale(1.2);
   box-shadow: 0 0 6px var(--accent-soft);
 }
 
-.mode-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  align-items: center;
-}
+/* Responsive Scaling */
+@media (max-width: 480px) {
+  .cards-deck-wrapper {
+    max-width: 100%;
+    padding: 0;
+  }
 
-.mode-row .home-btn {
-  flex: 1;
-}
+  .deck-stage {
+    width: 290px;
+    height: 250px;
+  }
 
-.mode-row .learn-icon-btn {
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  background: var(--glass-border);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-spring);
-}
+  .deck-mode-card {
+    width: 290px;
+    height: 235px;
+    padding: 1rem;
+  }
 
-.mode-row .learn-icon-btn:hover {
-  background: var(--glass-hover);
-  border-color: var(--accent);
-  color: var(--accent);
-  box-shadow: 0 0 12px var(--accent-soft);
-}
+  .deck-click-zone.left {
+    left: -15px;
+    width: 60px;
+  }
 
-.mode-row .learn-icon-btn:active {
-  transform: scale(0.95);
+  .deck-click-zone.right {
+    right: -15px;
+    width: 60px;
+  }
 }
