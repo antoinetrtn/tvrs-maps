@@ -115,12 +115,12 @@ export const getPanelData = ({
       const name = isCapitalsMode ? capital : countryName;
       const sublabel =
         mode === "departments" || item.code ? item.code : isCapitalsMode ? countryName : capital;
-      const detail =
-        item.type === "mountain_range"
-          ? `${item.height || "?"}m`
-          : item.type === "river"
-            ? `${item.length || "?"}km`
-            : sublabel;
+      const isMtn = item.type === "mountain_range" || item.type === "mountain";
+      const detail = isMtn
+        ? `🏔️ ${item.height ? Number(item.height).toLocaleString(lang === "fr" ? "fr-FR" : "en-US") : "?"} m`
+        : item.type === "river"
+          ? `💧 ${item.length ? Number(item.length).toLocaleString(lang === "fr" ? "fr-FR" : "en-US") : "?"} km`
+          : sublabel;
 
       return {
         key: c.key,

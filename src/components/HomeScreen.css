@@ -17,46 +17,26 @@
   animation: home-overlay-fade 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.home-content {
-  --card-rotate-x: 0deg;
-  --card-rotate-y: 0deg;
-  --card-glow-x: 50%;
-  --card-glow-y: 20%;
+.home-stage-container {
   pointer-events: auto;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-ms);
-  padding: var(--spacing-xl);
-  /* Solid-ish bg for the card content. Blur is provided by a dedicated layer below. */
-  background:
-    repeating-linear-gradient(
-      0deg,
-      var(--home-scanline) 0px,
-      var(--home-scanline) 1px,
-      transparent 1px,
-      transparent 3px
-    ),
-    var(--home-card-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--glass-shadow);
-  text-align: center;
-  max-width: 90vw;
-  width: clamp(300px, 82vw, 380px);
-  z-index: 1;
-  /* Do NOT put overflow:hidden here — it breaks backdrop-filter on many Android Chrome versions. */
-  transform-style: preserve-3d;
-  transform: rotateX(var(--card-rotate-x)) rotateY(var(--card-rotate-y)) translateZ(0);
-  transition:
-    transform var(--transition-layout),
-    box-shadow var(--transition-normal),
-    border-color var(--transition-normal);
-  will-change: transform;
-  animation: home-card-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-  user-select: none;
-  touch-action: none;
+  gap: var(--spacing-sm, 0.5rem);
+  width: clamp(320px, 88vw, 440px);
+  z-index: 10;
+  animation: home-card-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.home-logo {
+  position: relative;
+  margin-bottom: var(--spacing-sm);
+  padding: 0;
+  background: none !important;
+  filter: drop-shadow(0 0 24px var(--black))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--black) 90%, transparent))
+    drop-shadow(0 4px 16px color-mix(in srgb, var(--black) 85%, transparent));
 }
 
 /* Backdrop blur layer for glassmorphism (Android Chrome safe) */

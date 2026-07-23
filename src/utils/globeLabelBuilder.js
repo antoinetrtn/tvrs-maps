@@ -205,9 +205,8 @@ export function createGlobeLabelElement(
       });
     }, 150);
   } else {
-    const isMtn =
-      countryDataMap[d.admin]?.type === "mountain_range" ||
-      riversMountainsDataMap[d.admin]?.type === "mountain_range";
+    const itemData = countryDataMap[d.admin] || riversMountainsDataMap[d.admin];
+    const isMtn = itemData?.type === "mountain_range" || itemData?.type === "mountain";
     const iconSymbol = d.mode === "rivers_mountains" ? (isMtn ? "🏔️ " : "💧 ") : "";
 
     const displayName = revealAll ? d.country : "???";

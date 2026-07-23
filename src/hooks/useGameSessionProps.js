@@ -92,6 +92,7 @@ export function useGameSessionProps({
         isKeyboardMode,
         selectedCountry,
         globeTheme,
+        learnSubMode,
         learnSearchQuery,
         onLearnSearchChange: setLearnSearchQuery,
         onToggleLearnPanel: () => setShowLearnPanel((v) => !v),
