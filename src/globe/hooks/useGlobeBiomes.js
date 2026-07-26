@@ -34,7 +34,7 @@ export function useGlobeBiomes({
       ) {
         return;
       }
-      const isFound = foundSet.has(k) || mode === "learn" || isHomeScreen;
+      const isFound = foundSet.has(k) || mode === "learn";
       assets.push({
         admin: k,
         lat: data.lat,

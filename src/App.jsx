@@ -48,6 +48,8 @@ function App() {
   const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [homeMode, setHomeMode] = useState("countries");
+  const prevActiveDataMapRef = useRef(null);
 
   const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
@@ -149,7 +151,22 @@ function App() {
     activeDataMap,
     allCountryKeys,
     totalPossible,
-  } = useGeoData({ mode, learnSubMode });
+  } = useGeoData({
+    mode: currentScreen === "home" ? homeMode : mode,
+    learnSubMode:
+      currentScreen === "home" ? (homeMode === "capitals" ? "countries" : homeMode) : learnSubMode,
+  });
+
+  if (currentScreen === "home" && activeDataMap !== prevActiveDataMapRef.current) {
+    prevActiveDataMapRef.current = activeDataMap;
+    if (activeDataMap) {
+      const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
+      if (keys.length > 0) {
+        const index = Math.floor(Math.random() * keys.length);
+        setSelectedCountry(keys[index]);
+      }
+    }
+  }
 
   const {
     foundList,
@@ -242,6 +259,7 @@ function App() {
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
     setMode(DEFAULT_MODE);
+    setHomeMode("countries");
     setShowLearnPanel(false);
     setLearnSearchQuery("");
     setShowInfoModal(false);
@@ -256,26 +274,23 @@ function App() {
   }, [currentScreen]);
 
   useEffect(() => {
-    if (currentScreen !== "home" || !countryDataMap) {
+    if (currentScreen !== "home" || !activeDataMap) {
       return;
     }
 
-    const keys = Object.keys(countryDataMap).filter((k) => countryDataMap[k]?.lat !== undefined);
-    if (keys.length === 0) return;
-
-    let index = Math.floor(Math.random() * keys.length);
-    setSelectedCountry(keys[index]);
-
     const interval = setInterval(() => {
-      index = Math.floor(Math.random() * keys.length);
-      setSelectedCountry(keys[index]);
+      const freshKeys = Object.keys(activeDataMap).filter(
+        (k) => activeDataMap[k]?.lat !== undefined
+      );
+      if (freshKeys.length === 0) return;
+      const nextIndex = Math.floor(Math.random() * freshKeys.length);
+      setSelectedCountry(freshKeys[nextIndex]);
     }, HOME_AUTOROTATE_INTERVAL_MS);
 
     return () => {
       clearInterval(interval);
-      setSelectedCountry(null);
     };
-  }, [currentScreen]);
+  }, [currentScreen, activeDataMap]);
 
   const handleCustomConfirm = (msg, action) => {
     setConfirmState({
@@ -418,6 +433,7 @@ function App() {
     globeFeedbackApplierRef,
     livesLeft,
     isHardcoreRun,
+    homeMode,
   });
 
   const panicActive = isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30;
@@ -453,6 +469,8 @@ function App() {
           localGameHistory={localGameHistory}
           session={session}
           onOpenAuth={() => setShowAuthModal(true)}
+          homeMode={homeMode}
+          setHomeMode={setHomeMode}
         />
       ) : null}
       <GameSessionView

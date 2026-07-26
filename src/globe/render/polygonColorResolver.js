@@ -1,4 +1,5 @@
 import { GLITCH_EFFECT_SETTINGS, normalizeRegion } from "../../config/designSystem";
+import { getFeatureAdmin } from "../../utils/utils";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
 
 export { FOUND_SURFACE_GREEN };
@@ -40,7 +41,7 @@ export function resolveRegionalLandColor(
 }
 
 export function resolveGhostCountryColor(d, countryDataMap, opts) {
-  const admin = d?.properties?.ADMIN || d?.properties?.code || d?.properties?.name;
+  const admin = getFeatureAdmin(d);
   const reg = countryDataMap[admin]?.region || d?.properties?.region || "Americas";
   return resolveRegionalLandColor(reg, opts);
 }

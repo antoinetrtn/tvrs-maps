@@ -186,7 +186,7 @@ export function useGlobeLabels({
       if (selectedCountry) {
         labelsToProcess.push({
           key: selectedCountry,
-          data: countryDataMap[selectedCountry],
+          data: gameDataMap[selectedCountry] || countryDataMap[selectedCountry],
           modeName: mode,
         });
       }

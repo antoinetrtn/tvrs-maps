@@ -80,17 +80,12 @@ export function getPlayVisibleCountryKeys(selectedCountry, foundList = []) {
 }
 
 /** France department polygons (play mode or learn sub-mode). */
-export const isDepartmentView = (
-  mode,
-  { isHomeScreen = false, learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}
-) =>
-  !isHomeScreen && (mode === "departments" || (mode === "learn" && learnSubMode === "departments"));
+export const isDepartmentView = (mode, { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}) =>
+  mode === "departments" || (mode === "learn" && learnSubMode === "departments");
 
 /** US States polygons (play mode or learn sub-mode). */
-export const isUsStatesView = (
-  mode,
-  { isHomeScreen = false, learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}
-) => !isHomeScreen && (mode === "us_states" || (mode === "learn" && learnSubMode === "us_states"));
+export const isUsStatesView = (mode, { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}) =>
+  mode === "us_states" || (mode === "learn" && learnSubMode === "us_states");
 
 /** Rivers & mountains in learn sub-mode. */
 export const isLearnRiversMountainsView = (mode, { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}) =>
