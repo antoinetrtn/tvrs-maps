@@ -7,7 +7,6 @@ import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import HomeScreen from "./components/HomeScreen.jsx";
-import { DEFAULT_GLOBE_THEME, getThemeCssVariables, GLOBE_THEME_IDS } from "./config/designSystem";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
   BREAKPOINTS,
@@ -20,6 +19,7 @@ import {
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
+import { useAppTheme } from "./hooks/useAppTheme";
 import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
 import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
 import { useGameSession } from "./hooks/useGameSession";
@@ -91,38 +91,6 @@ function App() {
     setAchievementQueue((prev) => prev.slice(1));
   }, []);
 
-  const [theme, setTheme] = useState(() => {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
-      if (!cached || cached === "blackout") return "dark";
-    } catch {}
-    if (typeof window !== "undefined" && window.matchMedia) {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    return "dark";
-  });
-
-  const [globeTheme, setGlobeThemeRaw] = useState(() => {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
-      if (cached && GLOBE_THEME_IDS.includes(cached)) return cached;
-    } catch {}
-    return DEFAULT_GLOBE_THEME;
-  });
-
-  const setGlobeTheme = useCallback(
-    (t) => {
-      setGlobeThemeRaw(t);
-      if (t === "blackout") {
-        setTheme("dark");
-      }
-      try {
-        localStorage.setItem(STORAGE_KEYS.globeTheme, t);
-      } catch {}
-    },
-    [setTheme]
-  );
-
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
   const [learnSearchQuery, setLearnSearchQuery] = useState("");
@@ -172,6 +140,8 @@ function App() {
   }, []);
 
   const { viewport, isKeyboardMode } = useViewport();
+  // Theme state + document-level CSS variables (extracted, see useAppTheme).
+  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = useAppTheme(viewport?.width);
   const {
     countriesData,
     departmentsData,
@@ -206,6 +176,7 @@ function App() {
     globeFeedbackRef,
     livesLeft,
     isHardcoreRun,
+    mistakes,
   } = useGameSession({
     mode,
     allCountryKeys,
@@ -229,6 +200,15 @@ function App() {
     globeFeedbackApplierRef,
     hardcoreMode,
   });
+
+  // Transient red flash when a life is lost (wrong answer in game modes)
+  const [lifeLostFlash, setLifeLostFlash] = useState(false);
+  useEffect(() => {
+    if (mistakes === 0) return undefined; // no flash on mount or resetGame
+    setLifeLostFlash(true);
+    const timeoutId = setTimeout(() => setLifeLostFlash(false), 1000);
+    return () => clearTimeout(timeoutId);
+  }, [mistakes]);
 
   const preserveInputFocus = useCallback(() => {
     if (mode === "learn") return;
@@ -327,13 +307,6 @@ function App() {
       polygonCapCurvatureResolution: PERFORMANCE.polygonCapCurvatureResolution[tier],
     };
   }, [viewport.width]);
-
-  const uiScale = (w = BREAKPOINTS.desktop) =>
-    w >= 1800 ? 0.78 : w >= 1400 ? 0.84 : w >= 1100 ? 0.9 : w >= 900 ? 0.95 : w < 520 ? 0.88 : 1;
-  const appStyle = useMemo(
-    () => getThemeCssVariables(theme, globeTheme, { uiScale: uiScale(viewport?.width) }),
-    [theme, globeTheme, viewport?.width]
-  );
 
   const { isMobileViewport, isPanelOpen, panelDataMap, panelMode, closePanel, handlePanelSelect } =
     useGameDataPanelState({
@@ -447,14 +420,16 @@ function App() {
     isHardcoreRun,
   });
 
+  const panicActive = isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30;
+
   return (
     <div
       className={`app-container ${theme} ${isScreenGlitching ? "glitch-active" : ""} ${isPanelOpen ? "data-panel-open" : ""}`}
       data-theme={theme}
       style={appStyle}
     >
-      {isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30 && (
-        <div className="panic-vignette-overlay" />
+      {(panicActive || lifeLostFlash) && (
+        <div className={`panic-vignette-overlay${panicActive ? "" : " life-lost"}`} />
       )}
       {currentScreen === "home" ? (
         <HomeScreen

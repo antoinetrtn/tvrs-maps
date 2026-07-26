@@ -123,7 +123,7 @@
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
-  font-size: 1.15rem;
+  font-size: var(--font-size-lg);
   color: var(--accent);
 }
 
@@ -370,7 +370,7 @@
   background: transparent;
   border: none;
   color: var(--text-main);
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   font-weight: 500;
   padding: 0;
   -webkit-appearance: none;
@@ -440,7 +440,7 @@
   /* Comfortable touch target — a missed tap closes the mobile keyboard. */
   min-height: var(--control-lg);
   color: var(--text-main);
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
   font-weight: 500;
   display: flex;
   justify-content: space-between;
@@ -454,7 +454,7 @@
 
 @media (max-width: 1024px) {
   .suggestion-item {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
   }
 }
 
@@ -615,7 +615,7 @@
   color: var(--text-main);
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
   font-weight: 700;
   box-shadow:
     var(--glass-shadow-strong),

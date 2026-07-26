@@ -4,16 +4,16 @@ import * as THREE from "three";
 import {
   getDeselectGlitchFadeProgress,
   GLITCH_SELECTION_TRANSITION_MS,
-} from "../config/gameConfig";
-import { PERFORMANCE } from "../config/gameConstants";
-import { applyPolygonFeedbackUniforms } from "../utils/applyPolygonFeedbackUniforms";
-import { getFoundGreenThreeColor } from "../utils/foundGreenPalette";
+} from "../../config/gameConfig";
+import { PERFORMANCE } from "../../config/gameConstants";
+import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
+import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
 import {
   getAnimatedPolygonMaterialCount,
   polygonGlitchUniforms,
   unregisterAnimatedPolygonMaterial,
-} from "../utils/polygonGlitchShader";
-import { syncSelectedCountryShaderUniforms } from "../utils/selectionTransitionShader";
+} from "../render/polygonGlitchShader";
+import { syncSelectedCountryShaderUniforms } from "../render/selectionTransitionShader";
 
 const _transitionTargetColor = new THREE.Color();
 

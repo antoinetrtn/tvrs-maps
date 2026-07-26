@@ -1,21 +1,23 @@
+import "./GlobeMap.css";
+
 import React, { useCallback, useMemo, useRef } from "react";
 import Globe from "react-globe.gl";
 
-import SpaceBackground from "./components/SpaceBackground";
+import SpaceBackground from "../components/SpaceBackground";
 import {
   getOpaqueThreeColor,
   GLOBE_STYLE,
   GLOBE_TRANSPARENT_BACKGROUND,
-} from "./config/designSystem";
+} from "../config/designSystem";
 import {
   DEFAULT_LEARN_SUB_MODE,
   GLITCH_SELECTION_TRANSITION_MS,
   isDepartmentView,
   isLearnRiversMountainsView,
   isUsStatesView,
-} from "./config/gameConfig";
-import { useTranslation } from "./config/i18n";
-import { countryDataMap } from "./data/gameData";
+} from "../config/gameConfig";
+import { useTranslation } from "../config/i18n";
+import { countryDataMap } from "../data/gameData";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
@@ -41,7 +43,7 @@ import { useGlobeRenderData } from "./hooks/useGlobeRenderData";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
-import { mountainGlitchUniforms } from "./utils/LowPolyBiomes";
+import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 const GlobeMap = ({
   mode,
   lang,

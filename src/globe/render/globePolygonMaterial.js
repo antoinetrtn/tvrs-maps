@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
@@ -42,9 +42,14 @@ function resolvePolygonEmissiveProps({
       };
     }
     if (!isHighlightedOnGlobe) {
+      // In regional modes (departments, US states) the resting caps ARE the landmass:
+      // they need a lighting-independent emissive floor, otherwise the side of the
+      // globe facing away from the key light drops to ocean brightness and whole
+      // states become invisible (while staying clickable).
+      const isRegionalLandmass = isDepartmentMode && !isGhostCountry && kind === "cap";
       return {
         emissiveHex: color,
-        emissiveIntensity: 0.05,
+        emissiveIntensity: isRegionalLandmass ? 0.6 : 0.05,
         specularHex: new THREE.Color(0, 0, 0),
         shininess: 0,
       };

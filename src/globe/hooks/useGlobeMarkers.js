@@ -6,9 +6,9 @@ import {
   getThemeRegionColor,
   getThemeRegionColorAttenuated,
   GLOBE_STYLE,
-} from "../config/designSystem";
-import { countryDataMap } from "../data/gameData";
-import { getCanonicalPosition, getLngLatDistance, getMobileRenderRadius } from "../utils/utils";
+} from "../../config/designSystem";
+import { countryDataMap } from "../../data/gameData";
+import { getCanonicalPosition, getLngLatDistance, getMobileRenderRadius } from "../../utils/utils";
 
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();

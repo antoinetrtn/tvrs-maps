@@ -5,6 +5,7 @@
   --black: #000000;
   --text-main: #ffffff;
   --text-muted: #888888;
+  --text-inverse: #000000;
 
   /* COLORS - Semantic */
   --accent: #ffffff;
@@ -40,11 +41,14 @@
   /* GLASSMORPHISM */
   --glass-bg: rgba(15, 15, 15, 0.85);
   --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-hover: rgba(255, 255, 255, 0.05);
+  --glass-border-strong: rgba(255, 255, 255, 0.25);
+  --glass-hover: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  --glass-shadow-strong: 0 24px 58px rgba(0, 0, 0, 0.6);
+  --glass-shadow-drag: 0 34px 86px rgba(0, 0, 0, 0.7);
   --glass-blur: blur(24px) saturate(200%);
   --glass-blur-compact: blur(12px) saturate(140%);
-  --overlay-bg: rgba(0, 0, 0, 0.8);
+  --overlay-bg: rgba(0, 0, 0, 0.85);
   --settings-backdrop-bg: rgba(0, 0, 0, 0.45);
   --modal-header-bg: rgba(15, 15, 15, 0.6);
 
@@ -65,6 +69,17 @@
   --font-main: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Display face for headings, scores, timers and large numerals */
   --font-display: "Bitcount Single", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* TYPOGRAPHY SCALE — canonical steps (keep in sync with STYLE_TOKENS.fontSize
+     in designSystem.js). Off-scale sizes still hardcoded in component sheets
+     (0.55/0.65/0.75/0.85/0.95rem…) await a visually-validated rounding pass. */
+  --font-size-2xs: 0.6rem;
+  --font-size-xs: 0.7rem;
+  --font-size-sm: 0.8rem;
+  --font-size-md: 0.9rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.15rem;
+  --font-size-xl: 1.3rem;
 
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -106,6 +121,15 @@
   --xp-success-bg: rgba(0, 240, 255, 0.1);
   --xp-success-border: rgba(0, 240, 255, 0.3);
 
+  /* ELEVATION — themed shadows for floating surfaces.
+     --shadow-card: carousel deck cards (dark keeps the historical opaque black
+     halo that masks the globe behind the stack).
+     --logo-halo: home logo drop-shadows separating it from the globe. */
+  --shadow-card: 0 16px 36px #000000;
+  --logo-halo: drop-shadow(0 0 24px var(--bg-color))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--bg-color) 90%, transparent))
+    drop-shadow(0 4px 16px color-mix(in srgb, var(--bg-color) 85%, transparent));
+
   /* CRT DIAGNOSTIC TERMINAL SETTINGS PANEL VARIABLES */
   --crt-panel-bg: radial-gradient(
     circle at 50% 50%,
@@ -136,25 +160,52 @@
   --crt-close-btn-glow: rgba(0, 240, 255, 0.3);
 }
 
+/* LIGHT THEME — soft near-black ink (#1c2433) on warm paper, ink-tinted
+   low-opacity shadows. KEEP IN SYNC with THEME.light in designSystem.js
+   (the runtime source that injects the same values as inline variables). */
 [data-theme="light"] {
-  --bg-color: #f1f5f9;
-  --text-main: #0f172a;
-  --text-muted: #475569;
+  --bg-color: #f7f6f3;
+  --text-main: #1c2433;
+  --text-muted: #5a6472;
+  --text-inverse: #ffffff;
 
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(15, 23, 42, 0.08);
-  --glass-hover: rgba(15, 23, 42, 0.05);
-  --glass-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
-  --overlay-bg: rgba(241, 245, 249, 0.6);
-  --settings-backdrop-bg: rgba(15, 23, 42, 0.3);
-  --modal-header-bg: rgba(255, 255, 255, 0.4);
-  --subtle-tint-strong: rgba(0, 0, 0, 0.1);
-  --highlight-soft: rgba(0, 0, 0, 0.03);
+  --glass-bg: rgba(253, 252, 250, 0.8);
+  --glass-border: rgba(28, 36, 51, 0.1);
+  --glass-border-strong: rgba(28, 36, 51, 0.2);
+  --glass-hover: rgba(28, 36, 51, 0.05);
+  --glass-shadow: 0 1px 2px rgba(28, 36, 51, 0.05), 0 12px 32px rgba(28, 36, 51, 0.1);
+  --glass-shadow-strong: 0 2px 4px rgba(28, 36, 51, 0.06), 0 18px 44px rgba(28, 36, 51, 0.14);
+  --glass-shadow-drag: 0 4px 8px rgba(28, 36, 51, 0.08), 0 24px 60px rgba(28, 36, 51, 0.18);
+  --overlay-bg: rgba(247, 246, 243, 0.6);
+  --settings-backdrop-bg: rgba(28, 36, 51, 0.25);
+  --modal-header-bg: rgba(253, 252, 250, 0.6);
+  --subtle-tint-strong: rgba(28, 36, 51, 0.1);
+  --highlight-soft: rgba(28, 36, 51, 0.03);
 
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-soft: rgba(37, 99, 235, 0.1);
+  --accent: #1f2937;
+  --accent-hover: #374151;
+  --accent-soft: rgba(31, 41, 55, 0.08);
+  --accent-glow: #1f2937;
   --accent-contrast: #ffffff;
+
+  --success: #1c2433;
+  --success-soft: rgba(28, 36, 51, 0.08);
+  --gold: #5a6472;
+  --gold-soft: rgba(28, 36, 51, 0.06);
+  --warning: #6b7280;
+  --warning-soft: rgba(28, 36, 51, 0.04);
+
+  /* XP & gamification surfaces (dark defaults are near-black/heavy shadows) */
+  --xp-bar-bg: #e7e5e0;
+  --xp-bar-border-light: #c9c6bf;
+  --xp-bar-border-dark: #b3b0a8;
+  --xp-shadow-heavy: rgba(28, 36, 51, 0.22);
+  --xp-shadow-medium: rgba(28, 36, 51, 0.14);
+  --xp-shadow-light: rgba(28, 36, 51, 0.1);
+
+  /* Elevation: light, layered ink shadows instead of opaque black slabs */
+  --shadow-card: 0 2px 6px rgba(28, 36, 51, 0.08), 0 16px 36px rgba(28, 36, 51, 0.14);
+  --logo-halo: drop-shadow(0 2px 8px rgba(28, 36, 51, 0.18));
 
   /* LIGHT THEME GLITCH VARIABLES */
   --glitch-magenta: rgba(219, 39, 119, 0.5);
@@ -345,123 +396,6 @@ body {
   color: var(--accent);
 }
 
-/* Shared primary button — used by EndScreen, ProfilePanel and AuthModal. */
-.btn-primary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition:
-    transform var(--transition-spring),
-    opacity var(--transition-spring);
-  background: var(--glass-border);
-  color: var(--text-main);
-  border: 1px solid var(--glass-border);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2.5px) scale(1.02);
-  box-shadow:
-    0 0 0 1px var(--accent-soft),
-    0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--glass-hover);
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
-}
-
-.btn-primary:active {
-  transform: translateY(0.5px) scale(0.98);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-soft);
-  text-shadow: none;
-  transition:
-    transform var(--transition-instant),
-    background-color var(--transition-instant),
-    box-shadow var(--transition-instant);
-}
-
-/* Shared secondary button — quieter sibling of .btn-primary. */
-.btn-secondary {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--glass-border);
-  transition:
-    transform var(--transition-spring),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-.btn-secondary:hover {
-  transform: translateY(-2.5px) scale(1.02);
-  color: var(--accent);
-  border-color: var(--accent);
-  background: var(--glass-hover);
-}
-
-.btn-secondary:active {
-  transform: translateY(0.5px) scale(0.98);
-  transition: transform var(--transition-instant);
-}
-
-@keyframes modalEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.98) translateY(10px);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: blur(0);
-  }
-}
-
-@keyframes btn-hover-flicker {
-  0% {
-    text-shadow:
-      -1px 0 rgba(255, 0, 127, 0.6),
-      1px 0 rgba(0, 240, 255, 0.6);
-    border-color: var(--accent);
-  }
-  50% {
-    text-shadow:
-      1px 0 rgba(255, 0, 127, 0.6),
-      -1px 0 rgba(0, 240, 255, 0.6);
-    border-color: var(--accent-hover);
-  }
-  100% {
-    text-shadow:
-      -0.5px 0.5px rgba(255, 0, 127, 0.6),
-      0.5px -0.5px rgba(0, 240, 255, 0.6);
-    border-color: var(--accent);
-  }
-}
-
-/* Glitch hover effect - shared utility class */
-.glitch-hover:hover {
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
-}
-
-/* Active/pressed button state - shared utility class */
-.btn-active:active {
-  transform: translateY(0.5px) scale(0.98);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-soft);
-  text-shadow: none;
-  transition: transform var(--transition-instant);
-}
+/* Shared button primitives (.glass-icon-btn triggers, .btn-primary/.btn-secondary,
+   btn-hover-flicker/modalEnter keyframes, .glitch-hover/.btn-active utilities)
+   live in styles/buttons.css, loaded right after this file from main.jsx. */

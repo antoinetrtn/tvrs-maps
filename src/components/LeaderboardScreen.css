@@ -221,7 +221,10 @@
   justify-content: center;
   padding: var(--spacing-sm) var(--spacing-xs);
   text-align: center;
-  background: var(--glass-bg-subtle);
+  /* TODO(design): pointed at --glass-bg-subtle, a token that never existed — the
+     invalid var() suppressed .glass-panel's background, so these cards have always
+     rendered transparent. Kept explicit pending a decision on the intended tint. */
+  background: transparent;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
 }
@@ -263,14 +266,15 @@
   display: flex;
   flex-direction: column;
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--glass-bg-subtle);
+  /* TODO(design): same dead --glass-bg-subtle token as .personal-stat-card above */
+  background: transparent;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 
 .evolution-chart-container .chart-title {
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   font-weight: 700;
   margin-bottom: var(--spacing-sm);
@@ -334,8 +338,11 @@
 .chart-bar-tooltip {
   position: absolute;
   bottom: calc(100% + 4px);
-  background: var(--glass-bg-strong);
-  border: 1px solid var(--glass-borderStrong);
+  /* TODO(design): pointed at --glass-bg-strong / --glass-borderStrong (typo),
+     tokens that never existed — both declarations were invalid so the tooltip has
+     always rendered with no background and no border. Kept identical; likely
+     intended: var(--glass-bg) + 1px solid var(--glass-border-strong). */
+  background: transparent;
   border-radius: var(--radius-sm);
   padding: 4px 6px;
   display: flex;
@@ -359,13 +366,13 @@
 
 .tooltip-score {
   font-family: var(--font-display);
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   color: var(--color-cyan);
 }
 
 .tooltip-time {
-  font-size: 0.6rem;
+  font-size: var(--font-size-2xs);
   color: var(--text-muted);
 }
 
@@ -377,7 +384,7 @@
 
 /* --- HISTORY TABLE & EVOLUTION --- */
 .personal-history-table {
-  font-size: 0.8rem !important;
+  font-size: var(--font-size-sm) !important;
 }
 
 .col-date {
@@ -392,12 +399,12 @@
 
 .evo-bullet {
   color: var(--text-muted);
-  font-size: 0.6rem;
+  font-size: var(--font-size-2xs);
   opacity: 0.5;
 }
 
 .evo-arrow {
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
 }
 
 .evo-up {
@@ -428,7 +435,7 @@
   }
 
   .panel-tab-btn {
-    font-size: 0.7rem;
+    font-size: var(--font-size-xs);
     padding: 4px 6px;
   }
 
@@ -442,7 +449,7 @@
   }
 
   .personal-stat-card .stat-value {
-    font-size: 1rem;
+    font-size: var(--font-size-base);
   }
 
   .evolution-chart {

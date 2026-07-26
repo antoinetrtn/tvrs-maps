@@ -298,11 +298,18 @@ const HomeScreen = ({
                   value: "light",
                   label: t("theme_light"),
                   icon: <CloudSun width={14} height={14} />,
+                  // Blackout globe forces the dark chrome (App.jsx) — surface
+                  // that instead of letting an inert "light" choice through.
+                  disabled: globeTheme === "blackout",
+                  title: globeTheme === "blackout" ? t("theme_light_blackout_hint") : undefined,
                 },
               ]}
               value={theme}
               onChange={(v) => setTheme(v)}
             />
+            {globeTheme === "blackout" && (
+              <p className="settings-hint">{t("theme_light_blackout_hint")}</p>
+            )}
           </div>
 
           {/* Globe Theme Selector */}

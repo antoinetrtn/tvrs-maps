@@ -1,0 +1,95 @@
+/* Globe presentation: shell, labels, content wrapper and studio overlay */
+.globe-map-shell {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: auto;
+}
+
+@keyframes label-appear {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.globe-label-element {
+  animation: label-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.globe-content-wrapper {
+  --globe-layout-x: 0px;
+  --globe-panel-shift: 0px;
+  --globe-nudge-x: 0px;
+  --globe-nudge-y: 0px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  transform: translate3d(
+    calc(var(--globe-layout-x) + var(--globe-panel-shift) + var(--globe-nudge-x)),
+    var(--globe-nudge-y),
+    0
+  );
+  will-change: transform;
+}
+
+.globe-studio-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      var(--highlight) 0%,
+      color-mix(in srgb, var(--accent-glow) 18%, transparent) 30%,
+      color-mix(in srgb, var(--accent-glow) 9%, transparent) 52%,
+      transparent 74%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--accent-glow) 16%, transparent) 0%,
+      color-mix(in srgb, var(--accent-glow) 7%, transparent) 42%,
+      transparent 68%
+    );
+  opacity: 0.68;
+}
+
+.globe-studio-overlay.light {
+  mix-blend-mode: multiply;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      var(--highlight) 0%,
+      var(--highlight-soft) 32%,
+      color-mix(in srgb, var(--accent-glow) 8%, transparent) 54%,
+      transparent 74%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--accent) 5%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 2%, transparent) 44%,
+      transparent 68%
+    );
+  opacity: 0.48;
+}
+
+@media (min-width: 769px) {
+  .globe-map-shell.home-layout .globe-content-wrapper {
+    /* Shift globe into the right pane between the home card and screen edge */
+    --globe-layout-x: clamp(120px, 14vw, 260px);
+  }
+
+  .globe-map-shell.game-layout .globe-content-wrapper {
+    --globe-layout-x: 0px;
+  }
+}

@@ -1,5 +1,6 @@
 import "./index.css";
-import "./panelSystem.css";
+import "./styles/buttons.css";
+import "./styles/panelSystem.css";
 
 import React from "react";
 import ReactDOM from "react-dom/client";

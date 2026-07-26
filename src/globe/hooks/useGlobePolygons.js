@@ -10,10 +10,11 @@ import {
   getThemeRegionColorLabel,
   GLITCH_EFFECT_SETTINGS,
   GLOBE_STYLE,
-} from "../config/designSystem";
-import { GAME_REGIONS, getPolygonAltitudeFor } from "../config/gameConfig";
-import { countryDataMap } from "../data/gameData";
-import { getPolygonMaterialForFeature } from "../utils/globePolygonMaterial";
+} from "../../config/designSystem";
+import { GAME_REGIONS, getPolygonAltitudeFor } from "../../config/gameConfig";
+import { countryDataMap } from "../../data/gameData";
+import { getFeatureAdmin } from "../../utils/utils";
+import { getPolygonMaterialForFeature } from "../render/globePolygonMaterial";
 import {
   FOUND_HIGHLIGHT,
   mutedFoundGreen,
@@ -24,12 +25,11 @@ import {
   resolvePolygonStrokeWidth,
   resolveRegionalLandColor,
   shouldUseRegionalUnfoundLand,
-} from "../utils/polygonColorResolver";
+} from "../render/polygonColorResolver";
 import {
   clearAnimatedPolygonMaterials,
   unregisterAnimatedPolygonMaterial,
-} from "../utils/polygonGlitchShader";
-import { getFeatureAdmin } from "../utils/utils";
+} from "../render/polygonGlitchShader";
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();
@@ -260,6 +260,12 @@ export function useGlobePolygons({
         if (foundSet.has(admin)) {
           if (isPerfectScore) return UI_COLORS.gold;
           return resolveFoundCountryStroke({ isLight, isSelected, UI_COLORS, lerpColor });
+        }
+        // Blackout: regional land sits on the 0.6 emissive floor (~mid gray), so
+        // mapBorder has no contrast left against it — darken the limits instead,
+        // matching the world-mode "gray land, dark borders" look.
+        if (globeTheme === "blackout" && !isLight) {
+          return lerpColor(UI_COLORS.mapBorder, UI_COLORS.mapSea, 0.55);
         }
         return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
       }

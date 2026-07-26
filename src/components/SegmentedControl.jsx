@@ -28,8 +28,10 @@ export default function SegmentedControl({
             key={opt.value}
             type="button"
             className={`segmented-opt ${isActive ? "active" : ""}`}
-            onClick={() => onChange && onChange(opt.value)}
+            onClick={() => !opt.disabled && onChange && onChange(opt.value)}
             aria-pressed={isActive}
+            disabled={opt.disabled || undefined}
+            title={opt.title || undefined}
           >
             {opt.icon}
             <span className="segmented-label">{opt.label}</span>

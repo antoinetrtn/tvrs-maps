@@ -8,57 +8,104 @@
 ## 1. Vue d'ensemble
 
 Application **React 19 + Vite 8** : un quiz géographique sur un **globe 3D**
-(`react-globe.gl` au-dessus de `three`). Pas de backend — les données
-géographiques sont des modules JS statiques + deux GeoJSON servis depuis
-`public/data/`. Pas de routeur : un seul `App` bascule entre deux écrans
-(`home` / `game`) via état local.
+(`react-globe.gl` au-dessus de `three`). Backend optionnel **Supabase**
+(profils, records, leaderboard) — le jeu fonctionne aussi en mode invité 100%
+local. Les données géographiques sont des modules JS statiques + trois GeoJSON
+servis depuis `public/data/`. Pas de routeur : un seul `App` bascule entre deux
+écrans (`home` / `game`) via état local.
 
-Build/serve : `npm run dev:5001` (port 5173 banni), `npm run check` (lint + build).
+Build/serve : `npm run dev:5001` (port 5173 banni), `npm run check`
+(format + lint + tests + build).
 
 ## 2. Carte des fichiers
 
 ```
 src/
-  main.jsx              Point d'entrée React.
-  App.jsx               ~1000 l. Orchestrateur : état global, logique de jeu,
-                        routage d'écran, montage de GlobeMap/GameHUD/écrans.
-  GlobeMap.jsx          ~3300 l. LE rendu 3D. Tout three.js vit ici.
-  GameHUD.jsx           HUD de jeu (input, suggestions, jauges, focus badge).
-  HomeScreen.jsx        Menu d'accueil (choix mode, durée, langue, thème globe).
-  EndScreen.jsx         Écran de fin de partie.
-  ResultsModal.jsx      Tableau des résultats par continent (+ modale info).
-  Logo.jsx              Logo SVG animé.
+  main.jsx                    Entrée React (importe index.css puis styles/panelSystem.css).
+  App.jsx                     ~520 l. Orchestrateur : écran courant, thèmes, langue,
+                              montage des écrans. Délègue la logique aux hooks d'app.
+  App.css                     Coquille app : .app-container, transition d'écran
+                              (screen-soft-in/scanline), vignette panique.
+  index.css                   Tokens CSS bootstrap (:root + [data-theme="light"]) et
+                              composants globaux réutilisables (.btn-primary, glitch…).
+  styles/
+    panelSystem.css           Système unifié panneaux/overlays : sheet-panel,
+                              panel-header, segmented-control, nav-chips, dialogs.
 
-  designSystem.js       SOURCE DE VÉRITÉ couleurs/thèmes/tokens + helpers couleur.
-  gameConfig.js         Règles de jeu PAR MODE (scramble, altitude, reliefs,
-                        régions GAME_REGIONS, abréviations de régions).
-  gameConstants.js      Constantes non-visuelles (durées, breakpoints, timeouts,
-                        URLs data, clés localStorage, paliers de perf).
-  globeShaders.js       GLSL (Fresnel) du halo d'atmosphère du globe.
-  i18n.js               TOUTES les chaînes UI (fr/en) + hook useTranslation.
-  utils.js              Helpers purs : normalisation, géométrie GeoJSON,
-                        getGameStats (stats par continent), getFlagEmoji…
+  globe/                      TOUT le rendu 3D vit ici.
+    GlobeMap.jsx              ~590 l. Compose <Globe> (react-globe.gl) et branche
+                              les hooks ci-dessous. Exporté en React.memo.
+    GlobeMap.css              Shell du globe, labels, wrapper, overlay studio.
+    hooks/                    16 hooks useGlobe* : polygons, camera, labels, lighting,
+                              markers, material, paths, rings, biomes, interactions,
+                              renderData, sceneAnimation + animationLoop (boucle rAF),
+                              selectionTransition, panelShift.
+    render/                   Helpers de rendu purs (pas de React) :
+                              globeShaders.js (GLSL Fresnel du halo), polygonGlitchShader,
+                              selectionTransitionShader, globePolygonMaterial,
+                              polygonColorResolver, foundGreenPalette,
+                              applyPolygonFeedbackUniforms, globeAltitude,
+                              globeLabelBuilder (HTML des labels), LowPolyBiomes
+                              (montagnes 3D low-poly).
 
-  gameData.js           countryDataMap (pays : iso2, noms fr/en, capitale, lat/lng, region).
-  departmentsData.js    departmentsDataMap (départements FR).
-  riversMountainsData.js riversMountainsDataMap (fleuves + reliefs).
-  LowPolyBiomes.js      Génération des objets 3D low-poly (montagnes).
-  buildData.js          Script hors-runtime de génération des datasets.
+  components/                 Écrans & UI (CSS co-localisé par composant) :
+                              HomeScreen (+ HomeScreenCategoryCarousel), GameSessionView
+                              (monte GlobeMap + GameHUD + GameDataPanel + EndScreen),
+                              GameHUD, GameDataPanel (tableau de résultats — remplace
+                              l'ancien ResultsModal), EndScreen, LeaderboardScreen,
+                              ProfilePanel, AuthModal, ConfirmationModal, Logo,
+                              SpaceBackground, PixelFireworks, XpOrbsAnimation…
+
+  hooks/                      Hooks d'app/état (AUCUN rendu globe ici) :
+                              useGameSession (logique de partie : foundList, score,
+                              timer, saisie, cheat codes), useGameSessionProps
+                              (assemble les props de GlobeMap/GameHUD),
+                              useUserProfile (profil/XP/records + sync Supabase),
+                              useGeoData (chargement GeoJSON), useViewport,
+                              useCountrySelectHandler, useHudAnswerHandler,
+                              useGameDataPanelState.
+
+  config/
+    designSystem.js           SOURCE DE VÉRITÉ couleurs/thèmes/tokens + helpers couleur.
+    gameConfig.js             Règles de jeu PAR MODE (scramble, altitude, reliefs,
+                              GAME_REGIONS, abréviations de régions).
+    gameConstants.js          Constantes non-visuelles (durées, breakpoints, timeouts,
+                              URLs data, clés localStorage, paliers de perf).
+    i18n.js                   TOUTES les chaînes UI (fr/en) + hook useTranslation.
+
+  data/                       Datasets statiques (exemptés du ratchet de taille) :
+                              gameData.js (countryDataMap), departmentsData.js,
+                              riversMountainsData.js, usStatesData.js, challenges.js
+                              (définitions des défis/badges).
+
+  utils/                      Helpers purs transverses : utils.js (normalisation,
+                              géométrie GeoJSON, getGameStats, getFlagEmoji,
+                              generateUUID…), gamification.js (XP/niveaux/badges,
+                              evaluateGameRewardsAndBadges), achievementEvaluator.js
+                              (checkChallengesRealTime), recordSuccessfulGuessSideEffects.js.
+
+  services/                   supabaseClient.js (auth, profils, records, leaderboard),
+                              TaskService.js.
+  tests/                      Tests Vitest (purs : shaders, gamification, i18n, config…).
+  types/                      supabase.ts (types générés).
 
 public/data/
-  countries-50m-low.json     GeoJSON polygones pays (basse résolution = runtime).
+  countries-50m-low.json      GeoJSON polygones pays (basse résolution = runtime).
   departements-1000m.geojson  GeoJSON départements FR.
+  us-states.json              GeoJSON états US.
 ```
 
-**Invariants** (détaillés dans `QUALITY.md`) : pas de chaîne UI en dur (→ `i18n.js`),
-pas de magic number en dur (→ `gameConstants.js`), pas de couleur brute hors
-`designSystem.js`/`index.css`/`Logo.jsx`, listes de régions via `GAME_REGIONS`.
-Le lint (`scripts/quality-check.js`) fait respecter une partie de ça
-mécaniquement (couleurs, port 5173, certains termes bannis dans GlobeMap).
+**Invariants** (détaillés dans `QUALITY.md`) : pas de chaîne UI en dur (→ `config/i18n.js`),
+pas de magic number en dur (→ `config/gameConstants.js`), pas de couleur brute hors
+`config/designSystem.js`/`index.css`/`Logo.jsx`, listes de régions via `GAME_REGIONS`.
+Le lint (`scripts/quality-check.js`) fait respecter une partie de ça mécaniquement
+(couleurs, port 5173, certains termes bannis dans `globe/GlobeMap.jsx`, ratchet de
+taille par fichier — **mettre à jour les clés de chemin de `RATCHET_LIMITS`/
+`LEGACY_BASES` quand un fichier est déplacé**).
 
 ## 3. Modes de jeu
 
-5 modes, pilotés par la string `mode` dans `App` :
+6 modes, pilotés par la string `mode` dans `App` :
 
 | `mode`            | Dataset actif (`activeDataMap`) | Particularités |
 | ----------------- | ------------------------------- | -------------- |
@@ -66,29 +113,41 @@ mécaniquement (couleurs, port 5173, certains termes bannis dans GlobeMap).
 | `capitals`        | `countryDataMap`                | On compare la capitale, pas le nom. |
 | `departments`     | `departmentsDataMap`            | Zoom sur la France ; "ghost countries" autour. |
 | `rivers_mountains`| `riversMountainsDataMap`        | Reliefs/fleuves rendus comme paths/objets 3D. |
-| `learn`           | dataset courant + reliefs       | Pas de score/timer ; labels jamais brouillés ; toggles d'affichage. |
+| `us_states`       | `usStatesDataMap`               | États des USA (GeoJSON dédié `us-states.json`). |
+| `learn`           | dataset du sous-mode + reliefs  | Pas de score/timer ; labels jamais brouillés ; sous-modes `learnSubMode` (mêmes clés que PLAY_MODES) + toggles d'affichage. |
 
 `gameConfig.PLAY_MODES` = modes "quiz" (tout sauf `learn`). Les règles communes
 (brouillage du label, altitude d'extrusion, taille des reliefs) sont
-centralisées dans `gameConfig.js` pour que les modes ne divergent pas visuellement.
+centralisées dans `config/gameConfig.js` pour que les modes ne divergent pas
+visuellement. S'ajoute un axe **hardcore/peaceful** (toggle persisté,
+`hardcoreMode` dans `App`) : le hardcore ajoute des vies (`livesLeft`) et marque
+les records/scores leaderboard correspondants.
 
-## 4. Flux de données et état (App.jsx)
+## 4. Flux de données et état
 
-`App` détient ~20 `useState` (jeu + UI). Les plus structurants :
+`App.jsx` (~520 l.) garde l'état "shell" : `currentScreen` (`home`|`game`),
+thèmes, langue, mode, learn toggles. La logique est déléguée :
 
-- **Écran** : `currentScreen` (`home`|`game`), `showEndScreen`, `showResultsTable`, `showInfoModal`.
-- **Jeu** : `mode`, `foundList` (clés trouvées), `score`, `timeLeft`/`gameDuration`,
-  `isPlaying`, `isGameOver`, `selectedCountry` (cible "focus" courante).
-- **Thème** : `theme` (`dark`|`light`, = chrome UI), `globeTheme` (`satellite`|`blackout`, = apparence du globe). Persistés via `localStorage` (`STORAGE_KEYS.globeTheme`). `setGlobeTheme('blackout')` force `theme='dark'`.
+- **`useGameSession`** : état de partie (foundList, score, `timeLeft`/`gameDuration`,
+  `isPlaying`, `isGameOver`, vies hardcore), saisie (`handleInput`, cheat codes
+  `WIN100`/`LOSE100`), popups de feedback, navigation focus.
+- **`useUserProfile`** : profil invité/connecté (XP, niveau, badges), records
+  locaux + historique, sync Supabase. Le calcul pur XP/badges vit dans
+  `utils/gamification.js` (`evaluateGameRewardsAndBadges`).
+- **`useGameSessionProps`** : assemble `globeProps`/`hudProps` — c'est LE point
+  de passage des ~25 props de `GlobeMap` et ~35 props de `GameHUD`
+  (prop drilling assumé — voir dette technique dans QUALITY.md).
+- **`useGeoData`** : fetch des GeoJSON runtime. **`useViewport`** : viewport +
+  détection clavier mobile (comparaison à une baseline `initialWidth/Height`).
+- **Thème** : `theme` (`dark`|`light`, = chrome UI), `globeTheme`
+  (`satellite`|`blackout`, = apparence du globe). Persistés via `localStorage`
+  (`STORAGE_KEYS.globeTheme`). `setGlobeTheme('blackout')` force `theme='dark'`.
 - **Langue** : `lang` (`fr`|`en`).
-- **Learn toggles** : `learnShow{CountryLabels,Capitals,Rivers,Mountains}`.
-- **Viewport/clavier mobile** : `viewport` (via `visualViewport`), détection clavier
-  par comparaison de hauteur à une baseline (`initialWidth/Height`).
 
 **Boucle de saisie** (cœur du gameplay) :
 
 ```
-GameHUD (input) ── onEnter(val) ──▶ App
+GameHUD (input) ── onEnter(val) ──▶ useHudAnswerHandler
    ├─ mode === 'learn'      → handleSearch  (sélectionne sans scorer)
    ├─ selectedCountry set   → specificCountryGuess (compare à la cible focus)
    └─ sinon                 → handleInput   (cherche dans tout activeDataMap)
@@ -100,45 +159,43 @@ Navigation focus (flèches ←/→ ou boutons HUD) : `navigateFocus` maintient u
 "trail" d'historique dans des refs (`navigationTrailRef`) ; quand on sort du
 trail, `getClosestUnfound` choisit le prochain pays (même région prioritaire).
 
-`activeDataMap`, `allCountryKeys`, `perfProfile`, `appStyle` (variables CSS) sont
-mémoïsés. `App` passe ~25 props à `GlobeMap` et ~30 à `GameHUD` (prop drilling
-assumé — voir dette technique dans QUALITY.md).
+## 5. src/globe — le rendu 3D
 
-## 5. GlobeMap.jsx — le rendu 3D
+`GlobeMap.jsx` (~590 l.) est un composeur : il branche `<Globe>` sur 16 hooks
+`globe/hooks/useGlobe*` + les helpers purs de `globe/render/`. Concerns :
 
-Gros fichier, mais structuré en blocs (dans l'ordre) :
-
-1. **Constantes & accessors hoistés** (haut du fichier) — les accessors `path*`
-   du layer paths DOIVENT garder une identité stable (sinon `react-globe.gl`
-   re-tessellise toute la géométrie à chaque render). Shaders → `globeShaders.js`.
-2. **Refs** — `globeEl` (handle react-globe.gl → `.scene()`, `.camera()`),
-   caches de matériaux (`polygonMaterialCacheRef`), refs lues dans la boucle rAF
-   (`selectedCountryRef`, `isErrorRef`, `isSuccessRef`) pour éviter de recréer la
-   boucle à chaque sélection.
-3. **Pointer/touch handlers** — tap-detection, sélection, OrbitControls, suivi
-   POV caméra, "nudge" de drag (écritures DOM coalescées en 1 rAF/frame).
-4. **Palettes de région** — un seul memo produit `REGION_COLORS`,
+1. **Accessors hoistés** (haut de `GlobeMap.jsx`) — les accessors `path*` du
+   layer paths DOIVENT garder une identité stable (sinon `react-globe.gl`
+   re-tessellise toute la géométrie à chaque render). Ils sont exportés par
+   `useGlobePaths` et hoistés au niveau module.
+2. **`useGlobeCamera`** — handle `globeEl` (→ `.scene()`, `.camera()`), suivi
+   POV, clamps d'altitude (`render/globeAltitude.js`), auto-rotation.
+3. **`useGlobeInteractions`** — tap-detection, sélection, OrbitControls,
+   "nudge" de drag (écritures DOM coalescées en 1 rAF/frame).
+4. **Palettes de région** — memo unique produisant `REGION_COLORS`,
    `REGION_COLORS_ATTENUATED`, `REGION_COLORS_LABELS` (mêmes clés `GAME_REGIONS`,
    mêmes deps `[globeTheme, theme]`). `UI_COLORS = getThemeColors(globeTheme, theme)`.
-5. **Logique polygones** — `getPolygonColor/Stroke/SideColor`, `getPolygonMaterial`
-   (compile des ShaderMaterials, mis en cache par clé). Brouillage du label =
-   `shouldScrambleLabel` (gameConfig).
-6. **Labels** — `labelsData` (memo) + `createLabelElement` (construit du HTML brut,
-   avec effet glitch/scramble). Utilise `t()` pour les préfixes (ex. `Dpt`).
-7. **Reliefs & fleuves** — `rivers*PathData`, `mountains*PathData`, objets 3D biomes.
-8. **Matériau du globe & texture** — `globeMaterial` (memo) : `MeshBasicMaterial`
-   sombre en blackout, `MeshPhong` + texture blue-marble en satellite (chargée en
-   async → un seul swap au load).
-9. **Éclairage & halo (`updateGlobeLighting`)** — lights attachées à la caméra +
-   un mesh "inner glow" (sphère BackSide, shader Fresnel). Voir §6 pour le flicker.
-10. **Boucle rAF (`animateScene`)** — lerp du glow vers sa cible, pulse du pays
-    sélectionné, fenêtre bornée de re-styling des graticules. **Se met en pause**
-    quand il n'y a rien à animer (`hasWork`) pour ne pas pomper le CPU à l'accueil ;
-    un effet séparé la relance sur changement de sélection/feedback.
-11. **JSX `<Globe>`** — branche tous les accessors/data. `globeImageUrl={null}`,
-    `globeMaterial={globeMaterial}`, atmosphère intégrée (`showAtmosphere`).
+5. **`useGlobePolygons`** — couleurs/stroke/matériaux des polygones ;
+   ShaderMaterials compilés et cachés (`render/globePolygonMaterial.js`,
+   `render/polygonGlitchShader.js`, résolution des couleurs via
+   `render/polygonColorResolver.js` + `render/foundGreenPalette.js`).
+6. **`useGlobeLabels`** — `labelsData` (memo) + éléments HTML construits par
+   `render/globeLabelBuilder.js` (effet glitch/scramble, préfixes via `t()`).
+7. **`useGlobePaths` / `useGlobeBiomes`** — fleuves (paths) et reliefs
+   (objets 3D `render/LowPolyBiomes.js`).
+8. **`useGlobeMaterial`** — matériau du globe : `MeshBasicMaterial` sombre en
+   blackout, `MeshPhong` + texture blue-marble en satellite (chargée en async →
+   un seul swap au load).
+9. **`useGlobeLighting`** — lights attachées à la caméra + mesh "inner glow"
+   (sphère BackSide, shader Fresnel de `render/globeShaders.js`). Voir §6 pour
+   le flicker.
+10. **`useGlobeSceneAnimation` / `useGlobeAnimationLoop`** — boucle rAF : lerp
+    du glow vers sa cible, pulse du pays sélectionné, fenêtre bornée de
+    re-styling des graticules. **Se met en pause** quand il n'y a rien à animer
+    (`hasWork`) pour ne pas pomper le CPU à l'accueil ; relancée sur changement
+    de sélection/feedback.
 
-Composant exporté en `React.memo`.
+Composant exporté en `React.memo`, monté par `components/GameSessionView.jsx`.
 
 ## 6. Système de thèmes (CRITIQUE)
 
@@ -163,13 +220,13 @@ calculé par mélange programmatique (pas de `color-mix` CSS, indispo dans three
 - Le **inner glow** est *snappé* sur sa couleur cible à la **première** construction
   (`justCreatedLighting` dans `updateGlobeLighting`), au lieu de lerper depuis un
   bleu par défaut → supprime la dérive de couleur lente au chargement. Les
-  changements de thème *ultérieurs* gardent le lerp doux dans `animateScene`.
+  changements de thème *ultérieurs* gardent le lerp doux dans la boucle d'animation.
 - Inner glow **caché en blackout et sur mobile** (intentionnel).
 - L'atmosphère intégrée (`atmosphereColor`) est stable pour un même `theme`.
 
 ## 7. i18n
 
-`i18n.js` exporte `translations.{fr,en}` (objet plat clé→string) et
+`config/i18n.js` exporte `translations.{fr,en}` (objet plat clé→string) et
 `useTranslation(lang)` → `t(key, params)`. Interpolation `{param}`. Fallback :
 `fr|en` demandé → `en` → la clé elle-même. **Toute chaîne visible passe par `t()`.**
 Exceptions assumées : `FR`/`EN` (codes de langue), noms géographiques (datasets).
@@ -191,7 +248,7 @@ Exceptions assumées : `FR`/`EN` (codes de langue), noms géographiques (dataset
 
 ## 9. Comment vérifier un changement
 
-1. `npm run check` (lint + build) — obligatoire avant push.
+1. `npm run check` (format + lint + tests + build) — obligatoire avant push.
 2. Rendu réel : `npm run dev:5001` puis Chrome **avec WebGL logiciel** —
    `--headless=new --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader
    --screenshot=out.png --virtual-time-budget=12000 http://localhost:5001/`.
@@ -204,6 +261,6 @@ Exceptions assumées : `FR`/`EN` (codes de langue), noms géographiques (dataset
 
 ## 10. Dette technique connue
 
-Voir la section "Known tech debt" de `QUALITY.md` (state sprawl d'App,
-prop drilling de GameHUD, extraction des gros blocs de GlobeMap, cheat codes
-`WIN100`/`LOSE100`, etc.).
+Voir la section "Known tech debt" de `QUALITY.md` (prop drilling de GameHUD,
+duplication des tokens designSystem/index.css, cheat codes `WIN100`/`LOSE100`,
+etc.).

@@ -15,12 +15,15 @@
   user-select: none;
 }
 
-/* When user is actively dragging, disable pointer events on click zones to prevent drag traps */
-.cards-deck-wrapper.is-user-dragging .deck-click-zone {
+/* When user is actively dragging, disable the arrow badges to prevent drag traps */
+.cards-deck-wrapper.is-user-dragging .deck-arrow {
   pointer-events: none !important;
 }
 
-/* Split Interactive Click/Tap Zones - 100% INVISIBLE background (NO grey circle tint overlay) */
+/* Prev/Next Zones - layout-only rails for the arrow badges.
+   pointer-events: none so the invisible rectangle never eats clicks aimed at the
+   card buttons underneath; the visible .deck-arrow badge is the actual hit target
+   (its clicks bubble up to the onClick handler attached to this zone). */
 .deck-click-zone {
   position: absolute;
   top: 50%;
@@ -31,7 +34,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  pointer-events: auto;
+  pointer-events: none;
   background: transparent !important;
 }
 
@@ -63,20 +66,22 @@
   transform: scale(0.92);
 }
 
-/* Round Arrow Badge inside the Half-Circle Zone */
+/* Round Arrow Badge inside the Half-Circle Zone - the real click/tap target */
 .deck-arrow {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   border: 1px solid var(--glass-border-strong);
   background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
   color: var(--text-main);
   opacity: 0.55;
   box-shadow: 0 4px 14px color-mix(in srgb, var(--bg-color) 60%, transparent);
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
   transition:
     color var(--transition-spring),
     border-color var(--transition-spring),
@@ -85,7 +90,17 @@
     box-shadow var(--transition-spring);
 }
 
-/* 3D Stack Stage - Strict Preserve 3D for Z-Buffer Depth Sorting */
+/* Enlarged invisible tap target (44x44) around the 28px badge, without growing it visually */
+.deck-arrow::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+/* Card stack stage. Depth is faked in 2D: the JSX converts each card's
+   translateZ preset into an equivalent scale (perspective 1000px math) because
+   Chromium mis-hit-tests preserve-3d content (button hitboxes landed ~20px
+   below the visuals). Stacking order is driven by the zIndex presets. */
 .deck-stage {
   position: relative;
   width: 320px;
@@ -93,8 +108,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 1000px;
-  transform-style: preserve-3d;
   touch-action: none !important;
   cursor: grab;
 }
@@ -111,7 +124,7 @@
   width: 320px;
   height: 250px;
   padding: 1.25rem;
-  border-radius: var(--radius-lg, 18px);
+  border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
   background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
   background-image: none !important;
@@ -119,7 +132,7 @@
   -webkit-backdrop-filter: none !important;
   border: 1px solid var(--glass-border-strong);
   box-shadow:
-    0 16px 36px var(--bg-color),
+    var(--shadow-card),
     inset 0 1px 0 color-mix(in srgb, var(--text-main) 14%, transparent);
   display: flex;
   flex-direction: column;
@@ -128,24 +141,28 @@
   will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
 }
 
 .deck-mode-card[data-mode="countries"] {
   --card-accent: var(--accent);
 }
 
+/* capitals/departments: originally pointed at --info/--purple, tokens that were
+   never defined anywhere — the fallback (--accent) always applied. Made explicit;
+   pick a dedicated tint here once the target colors are validated. */
 .deck-mode-card[data-mode="capitals"] {
-  --card-accent: var(--info, var(--accent));
+  --card-accent: var(--accent);
 }
 
 .deck-mode-card[data-mode="departments"] {
-  --card-accent: var(--purple, var(--accent));
+  --card-accent: var(--accent);
 }
 
-/* US States: Vibrant Amber Gold instead of muted dark grey */
+/* US States: --gold-light is a grayscale leftover (a pale gray with no
+   light-theme override), which made the card read as disabled — use --accent
+   like the other cards until a real amber token exists in the design system. */
 .deck-mode-card[data-mode="us_states"] {
-  --card-accent: color-mix(in srgb, var(--gold-light) 90%, var(--accent));
+  --card-accent: var(--accent);
 }
 
 .deck-mode-card[data-mode="rivers_mountains"] {
@@ -162,7 +179,7 @@
   -webkit-backdrop-filter: none !important;
   border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
   box-shadow:
-    0 16px 36px var(--bg-color),
+    var(--shadow-card),
     0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
 }
@@ -178,7 +195,7 @@
   -webkit-backdrop-filter: none !important;
   border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
   box-shadow:
-    0 16px 36px var(--bg-color),
+    var(--shadow-card),
     0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
   transition:
@@ -258,11 +275,12 @@
 
 .card-badge {
   font-family: var(--font-display, monospace);
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 3px 9px;
-  border-radius: var(--radius-xs, 4px);
+  /* --radius-xs never existed; the 4px fallback always applied, which is --radius-sm */
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--card-accent) 20%, transparent);
   color: var(--card-accent);
   border: 1px solid color-mix(in srgb, var(--card-accent) 35%, transparent);
@@ -313,7 +331,7 @@
   justify-content: center;
   gap: 0.4rem;
   height: 44px;
-  border-radius: var(--radius-sm, 8px);
+  border-radius: var(--radius-sm);
   background: var(--card-accent);
   color: var(--text-inverse);
   font-weight: 700;
@@ -340,7 +358,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-sm, 8px);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border-strong);
   background: var(--glass-bg);
   color: var(--text-main);
@@ -399,21 +417,33 @@
   box-shadow: 0 0 6px var(--accent-soft);
 }
 
-/* Responsive Scaling */
-@media (max-width: 480px) {
+/* Responsive Scaling - breakpoint aligned with HomeScreen.css (768px) */
+@media (max-width: 768px) {
   .cards-deck-wrapper {
     max-width: 100%;
     padding: 0;
   }
 
   .deck-stage {
-    width: 290px;
-    height: 250px;
+    width: 100%;
+    height: 259px; /* top 12 + card 235 + 12 headroom for stacked-card rotation */
   }
 
-  .deck-mode-card {
-    width: 290px;
+  /* Grouped selectors match the specificity of .is-top-card/.is-stacked-card so
+     the mobile height wins by source order (desktop 250px otherwise overrides 235px
+     and the top card overflows the stage onto the dots row) */
+  .deck-mode-card,
+  .deck-mode-card.is-top-card,
+  .deck-mode-card.is-stacked-card {
     height: 235px;
+    top: 12px;
+  }
+
+  /* Fluid width with a 14px gutter per side: absorbs the depth scale of the top
+     card (~1.087, from its translateZ preset converted to 2D scale in the JSX)
+     so the rendered card stays inside the wrapper and clear of the arrow badges */
+  .deck-mode-card {
+    width: min(100% - 28px, 320px);
     padding: 1rem;
   }
 
@@ -425,5 +455,19 @@
   .deck-click-zone.right {
     right: -15px;
     width: 60px;
+  }
+
+  /* Keep the enlarged tap target flush with the badge on the card side so it
+     never overlaps the Play/Learn buttons of the projected top card */
+  .deck-click-zone.left .deck-arrow::after {
+    right: 0;
+  }
+
+  .deck-click-zone.right .deck-arrow::after {
+    left: 0;
+  }
+
+  .deck-dots-row {
+    margin-top: var(--spacing-sm);
   }
 }

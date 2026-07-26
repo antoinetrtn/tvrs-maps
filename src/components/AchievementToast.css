@@ -52,7 +52,7 @@
 }
 
 .achievement-toast-desc {
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   color: var(--text-main);
   line-height: 1.3;
 }

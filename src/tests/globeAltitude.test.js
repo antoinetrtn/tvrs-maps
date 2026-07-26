@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { clampGlobeAltitude, GLOBE_MAX_ALTITUDE, GLOBE_MIN_ALTITUDE } from "../utils/globeAltitude";
+import {
+  clampGlobeAltitude,
+  GLOBE_MAX_ALTITUDE,
+  GLOBE_MIN_ALTITUDE,
+} from "../globe/render/globeAltitude";
 
 describe("globeAltitude", () => {
   it("clamps below the zoom floor", () => {

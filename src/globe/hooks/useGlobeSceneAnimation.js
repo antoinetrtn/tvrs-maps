@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { disposeBiomeCache } from "../utils/LowPolyBiomes";
+import { disposeBiomeCache } from "../render/LowPolyBiomes";
 import { useGlobeAnimationLoop } from "./useGlobeAnimationLoop";
 
 /** Wires globe animation loop + biome cache lifecycle. */
