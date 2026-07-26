@@ -1,5 +1,7 @@
 export const usStatesDataMap = {
   Alabama: {
+    code: "AL",
+    iso2: "us-al",
     name_fr: "Alabama",
     name_en: "Alabama",
     capital: "Montgomery",
@@ -9,6 +11,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Alaska: {
+    code: "AK",
+    iso2: "us-ak",
     name_fr: "Alaska",
     name_en: "Alaska",
     capital: "Juneau",
@@ -18,6 +22,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Arizona: {
+    code: "AZ",
+    iso2: "us-az",
     name_fr: "Arizona",
     name_en: "Arizona",
     capital: "Phoenix",
@@ -27,6 +33,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Arkansas: {
+    code: "AR",
+    iso2: "us-ar",
     name_fr: "Arkansas",
     name_en: "Arkansas",
     capital: "Little Rock",
@@ -36,6 +44,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   California: {
+    code: "CA",
+    iso2: "us-ca",
     name_fr: "Californie",
     name_en: "California",
     capital: "Sacramento",
@@ -45,6 +55,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Colorado: {
+    code: "CO",
+    iso2: "us-co",
     name_fr: "Colorado",
     name_en: "Colorado",
     capital: "Denver",
@@ -54,6 +66,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Connecticut: {
+    code: "CT",
+    iso2: "us-ct",
     name_fr: "Connecticut",
     name_en: "Connecticut",
     capital: "Hartford",
@@ -63,6 +77,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   Delaware: {
+    code: "DE",
+    iso2: "us-de",
     name_fr: "Delaware",
     name_en: "Delaware",
     capital: "Dover",
@@ -72,6 +88,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   Florida: {
+    code: "FL",
+    iso2: "us-fl",
     name_fr: "Floride",
     name_en: "Florida",
     capital: "Tallahassee",
@@ -81,6 +99,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Georgia: {
+    code: "GA",
+    iso2: "us-ga",
     name_fr: "Géorgie",
     name_en: "Georgia",
     capital: "Atlanta",
@@ -90,6 +110,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Hawaii: {
+    code: "HI",
+    iso2: "us-hi",
     name_fr: "Hawaï",
     name_en: "Hawaii",
     capital: "Honolulu",
@@ -99,6 +121,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Idaho: {
+    code: "ID",
+    iso2: "us-id",
     name_fr: "Idaho",
     name_en: "Idaho",
     capital: "Boise",
@@ -108,6 +132,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Illinois: {
+    code: "IL",
+    iso2: "us-il",
     name_fr: "Illinois",
     name_en: "Illinois",
     capital: "Springfield",
@@ -117,6 +143,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Indiana: {
+    code: "IN",
+    iso2: "us-in",
     name_fr: "Indiana",
     name_en: "Indiana",
     capital: "Indianapolis",
@@ -126,6 +154,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Iowa: {
+    code: "IA",
+    iso2: "us-ia",
     name_fr: "Iowa",
     name_en: "Iowa",
     capital: "Des Moines",
@@ -135,6 +165,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Kansas: {
+    code: "KS",
+    iso2: "us-ks",
     name_fr: "Kansas",
     name_en: "Kansas",
     capital: "Topeka",
@@ -144,6 +176,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Kentucky: {
+    code: "KY",
+    iso2: "us-ky",
     name_fr: "Kentucky",
     name_en: "Kentucky",
     capital: "Frankfort",
@@ -153,6 +187,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Louisiana: {
+    code: "LA",
+    iso2: "us-la",
     name_fr: "Louisiane",
     name_en: "Louisiana",
     capital: "Baton Rouge",
@@ -162,6 +198,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Maine: {
+    code: "ME",
+    iso2: "us-me",
     name_fr: "Maine",
     name_en: "Maine",
     capital: "Augusta",
@@ -171,6 +209,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   Maryland: {
+    code: "MD",
+    iso2: "us-md",
     name_fr: "Maryland",
     name_en: "Maryland",
     capital: "Annapolis",
@@ -180,6 +220,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Massachusetts: {
+    code: "MA",
+    iso2: "us-ma",
     name_fr: "Massachusetts",
     name_en: "Massachusetts",
     capital: "Boston",
@@ -189,6 +231,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   Michigan: {
+    code: "MI",
+    iso2: "us-mi",
     name_fr: "Michigan",
     name_en: "Michigan",
     capital: "Lansing",
@@ -198,6 +242,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Minnesota: {
+    code: "MN",
+    iso2: "us-mn",
     name_fr: "Minnesota",
     name_en: "Minnesota",
     capital: "St. Paul",
@@ -207,6 +253,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Mississippi: {
+    code: "MS",
+    iso2: "us-ms",
     name_fr: "Mississippi",
     name_en: "Mississippi",
     capital: "Jackson",
@@ -216,6 +264,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Missouri: {
+    code: "MO",
+    iso2: "us-mo",
     name_fr: "Missouri",
     name_en: "Missouri",
     capital: "Jefferson City",
@@ -225,6 +275,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Montana: {
+    code: "MT",
+    iso2: "us-mt",
     name_fr: "Montana",
     name_en: "Montana",
     capital: "Helena",
@@ -234,6 +286,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Nebraska: {
+    code: "NE",
+    iso2: "us-ne",
     name_fr: "Nebraska",
     name_en: "Nebraska",
     capital: "Lincoln",
@@ -243,6 +297,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Nevada: {
+    code: "NV",
+    iso2: "us-nv",
     name_fr: "Nevada",
     name_en: "Nevada",
     capital: "Carson City",
@@ -318,6 +374,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Ohio: {
+    code: "OH",
+    iso2: "us-oh",
     name_fr: "Ohio",
     name_en: "Ohio",
     capital: "Columbus",
@@ -327,6 +385,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Oklahoma: {
+    code: "OK",
+    iso2: "us-ok",
     name_fr: "Oklahoma",
     name_en: "Oklahoma",
     capital: "Oklahoma City",
@@ -336,6 +396,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Oregon: {
+    code: "OR",
+    iso2: "us-or",
     name_fr: "Oregon",
     name_en: "Oregon",
     capital: "Salem",
@@ -345,6 +407,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Pennsylvania: {
+    code: "PA",
+    iso2: "us-pa",
     name_fr: "Pennsylvanie",
     name_en: "Pennsylvania",
     capital: "Harrisburg",
@@ -387,6 +451,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Tennessee: {
+    code: "TN",
+    iso2: "us-tn",
     name_fr: "Tennessee",
     name_en: "Tennessee",
     capital: "Nashville",
@@ -396,6 +462,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Texas: {
+    code: "TX",
+    iso2: "us-tx",
     name_fr: "Texas",
     name_en: "Texas",
     capital: "Austin",
@@ -405,6 +473,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Utah: {
+    code: "UT",
+    iso2: "us-ut",
     name_fr: "Utah",
     name_en: "Utah",
     capital: "Salt Lake City",
@@ -414,6 +484,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   Vermont: {
+    code: "VT",
+    iso2: "us-vt",
     name_fr: "Vermont",
     name_en: "Vermont",
     capital: "Montpelier",
@@ -423,6 +495,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   Virginia: {
+    code: "VA",
+    iso2: "us-va",
     name_fr: "Virginie",
     name_en: "Virginia",
     capital: "Richmond",
@@ -432,6 +506,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Washington: {
+    code: "WA",
+    iso2: "us-wa",
     name_fr: "Washington",
     name_en: "Washington",
     capital: "Olympia",
@@ -452,6 +528,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   Wisconsin: {
+    code: "WI",
+    iso2: "us-wi",
     name_fr: "Wisconsin",
     name_en: "Wisconsin",
     capital: "Madison",
@@ -461,6 +539,8 @@ export const usStatesDataMap = {
     region: "Midwest",
   },
   Wyoming: {
+    code: "WY",
+    iso2: "us-wy",
     name_fr: "Wyoming",
     name_en: "Wyoming",
     capital: "Cheyenne",
