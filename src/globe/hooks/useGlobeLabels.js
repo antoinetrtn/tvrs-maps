@@ -73,14 +73,14 @@ function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx
   if (zoomLevel > visibilityThreshold) return null;
 
   // GLOBAL SHAPE RULE — resolve once for distance + label position.
-  // In capitals mode the pin must sit on the *capital* (data.lat/lng), not the
-  // country's polygon centroid — otherwise it floats over the geographic middle
-  // of the country instead of the actual city.
-  const isCapitalPin = modeName === "capitals";
+  // Prioritize data.lat/lng (exact capital/city coordinate defined in data map),
+  // falling back to canonical polygon centroid if data.lat is missing.
   const fromMap = ctxCanonical[key];
   const canonical = fromMap || getCanonicalPosition(data, null);
-  const useLat = isCapitalPin ? data.lat : canonical ? canonical.lat : data.lat;
-  const useLng = isCapitalPin ? data.lng : canonical ? canonical.lng : data.lng;
+  const useLat =
+    data && data.lat !== undefined && data.lat !== null ? data.lat : canonical ? canonical.lat : 0;
+  const useLng =
+    data && data.lng !== undefined && data.lng !== null ? data.lng : canonical ? canonical.lng : 0;
 
   let dLng = Math.abs(useLng - pov.lng);
   if (dLng > 180) dLng = 360 - dLng;
@@ -191,11 +191,13 @@ export function useGlobeLabels({
         });
       }
     } else if (isDepartmentMode) {
+      const modeName =
+        mode === "us_states" || learnSubMode === "us_states" ? "us_states" : "departments";
       getLabelSourceKeys().forEach((k) => {
         labelsToProcess.push({
           key: k,
           data: gameDataMap[k],
-          modeName: "departments",
+          modeName,
         });
       });
     } else if (isRiversMountainsMode) {
@@ -207,7 +209,14 @@ export function useGlobeLabels({
         });
       });
     } else if (mode === "learn") {
-      const modeName = learnSubMode === "capitals" ? "capitals" : "countries";
+      const modeName =
+        learnSubMode === "capitals"
+          ? "capitals"
+          : learnSubMode === "us_states"
+            ? "us_states"
+            : learnSubMode === "departments"
+              ? "departments"
+              : "countries";
       getLabelSourceKeys().forEach((k) => {
         labelsToProcess.push({
           key: k,

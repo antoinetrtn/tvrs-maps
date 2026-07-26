@@ -252,6 +252,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   "New Hampshire": {
+    code: "NH",
+    iso2: "us-nh",
     name_fr: "New Hampshire",
     name_en: "New Hampshire",
     capital: "Concord",
@@ -261,6 +263,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   "New Jersey": {
+    code: "NJ",
+    iso2: "us-nj",
     name_fr: "New Jersey",
     name_en: "New Jersey",
     capital: "Trenton",
@@ -270,6 +274,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   "New Mexico": {
+    code: "NM",
+    iso2: "us-nm",
     name_fr: "Nouveau-Mexique",
     name_en: "New Mexico",
     capital: "Santa Fe",
@@ -279,6 +285,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   "New York": {
+    code: "NY",
+    iso2: "us-ny",
     name_fr: "New York",
     name_en: "New York",
     capital: "Albany",
@@ -288,6 +296,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   "North Carolina": {
+    code: "NC",
+    iso2: "us-nc",
     name_fr: "Caroline du Nord",
     name_en: "North Carolina",
     capital: "Raleigh",
@@ -297,6 +307,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   "North Dakota": {
+    code: "ND",
+    iso2: "us-nd",
     name_fr: "Dakota du Nord",
     name_en: "North Dakota",
     capital: "Bismarck",
@@ -342,6 +354,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   "Rhode Island": {
+    code: "RI",
+    iso2: "us-ri",
     name_fr: "Rhode Island",
     name_en: "Rhode Island",
     capital: "Providence",
@@ -351,6 +365,8 @@ export const usStatesDataMap = {
     region: "Northeast",
   },
   "South Carolina": {
+    code: "SC",
+    iso2: "us-sc",
     name_fr: "Caroline du Sud",
     name_en: "South Carolina",
     capital: "Columbia",
@@ -360,6 +376,8 @@ export const usStatesDataMap = {
     region: "South",
   },
   "South Dakota": {
+    code: "SD",
+    iso2: "us-sd",
     name_fr: "Dakota du Sud",
     name_en: "South Dakota",
     capital: "Pierre",
@@ -423,6 +441,8 @@ export const usStatesDataMap = {
     region: "West",
   },
   "West Virginia": {
+    code: "WV",
+    iso2: "us-wv",
     name_fr: "Virginie-Occidentale",
     name_en: "West Virginia",
     capital: "Charleston",
