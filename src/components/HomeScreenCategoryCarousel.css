@@ -97,7 +97,10 @@
   inset: -8px;
 }
 
-/* 3D Stack Stage - Strict Preserve 3D for Z-Buffer Depth Sorting */
+/* Card stack stage. Depth is faked in 2D: the JSX converts each card's
+   translateZ preset into an equivalent scale (perspective 1000px math) because
+   Chromium mis-hit-tests preserve-3d content (button hitboxes landed ~20px
+   below the visuals). Stacking order is driven by the zIndex presets. */
 .deck-stage {
   position: relative;
   width: 320px;
@@ -105,8 +108,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 1000px;
-  transform-style: preserve-3d;
   touch-action: none !important;
   cursor: grab;
 }
@@ -140,7 +141,6 @@
   will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
 }
 
 .deck-mode-card[data-mode="countries"] {
@@ -439,9 +439,9 @@
     top: 12px;
   }
 
-  /* Fluid width with a 14px gutter per side: absorbs the perspective projection
-     (translateZ(80px) scales the top card by ~1.087) so the rendered card stays
-     inside the wrapper and clear of the arrow badges on narrow viewports */
+  /* Fluid width with a 14px gutter per side: absorbs the depth scale of the top
+     card (~1.087, from its translateZ preset converted to 2D scale in the JSX)
+     so the rendered card stays inside the wrapper and clear of the arrow badges */
   .deck-mode-card {
     width: min(100% - 28px, 320px);
     padding: 1rem;

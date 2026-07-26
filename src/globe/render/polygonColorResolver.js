@@ -1,4 +1,4 @@
-import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS, normalizeRegion } from "../../config/designSystem";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
 
 export { FOUND_SURFACE_GREEN };
@@ -23,9 +23,13 @@ export function mutedFoundGreen(_mapBase, _lerpColor) {
 
 /** Unfound land tint — same continental shades in learn and play. */
 export function resolveRegionalLandColor(
-  region,
+  rawRegion,
   { globeTheme, regionColorsLabels, regionColorsAttenuated, fallbackAccent, fallbackRegionColor }
 ) {
+  // The color maps are keyed by GAME_REGIONS; sub-regions (France, US state
+  // regions) must resolve to their continent or they silently fall back to
+  // mapBase and regional modes stop matching each other.
+  const region = normalizeRegion(rawRegion);
   const isSatellite = globeTheme === "satellite";
   return isSatellite
     ? regionColorsLabels[region] ||

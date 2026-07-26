@@ -593,8 +593,13 @@ export const getThemeCssVariables = (
   };
 };
 
-const normalizeRegion = (region) => {
-  return region === "France" ? "Europe" : region || "Unknown";
+/** US state sub-regions resolve to the Americas palette, like France resolves to Europe. */
+const US_STATE_REGIONS = new Set(["Northeast", "Midwest", "South", "West"]);
+
+export const normalizeRegion = (region) => {
+  if (region === "France") return "Europe";
+  if (US_STATE_REGIONS.has(region)) return "Americas";
+  return region || "Unknown";
 };
 
 const resolveThemePalette = (globeTheme) => {

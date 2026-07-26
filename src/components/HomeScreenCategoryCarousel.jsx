@@ -128,7 +128,10 @@ const ModeCard = ({
       data-mode={modeItem.key}
       className={`deck-mode-card ${isTopCard ? "is-top-card" : "is-stacked-card"}`}
       style={{
-        transform: `translate3d(${translateX}px, ${translateY}px, ${translateZ}px) rotateZ(${rotateZ}deg) scale(${scale})`,
+        // translateZ is converted to an equivalent 2D scale (perspective 1000px):
+        // Chromium mis-hit-tests preserve-3d content (~20px vertical offset on the
+        // buttons), while a flat scale keeps hit-testing exact and looks identical.
+        transform: `translate3d(${translateX}px, ${translateY}px, 0) rotateZ(${rotateZ}deg) scale(${scale * (1000 / (1000 - translateZ))})`,
         opacity,
         zIndex,
         transition: isDragging
