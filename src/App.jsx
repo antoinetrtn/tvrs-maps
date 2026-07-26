@@ -49,6 +49,7 @@ function App() {
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [homeMode, setHomeMode] = useState("countries");
+  const prevActiveDataMapRef = useRef(null);
 
   const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
@@ -155,6 +156,17 @@ function App() {
     learnSubMode:
       currentScreen === "home" ? (homeMode === "capitals" ? "countries" : homeMode) : learnSubMode,
   });
+
+  if (currentScreen === "home" && activeDataMap !== prevActiveDataMapRef.current) {
+    prevActiveDataMapRef.current = activeDataMap;
+    if (activeDataMap) {
+      const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
+      if (keys.length > 0) {
+        const index = Math.floor(Math.random() * keys.length);
+        setSelectedCountry(keys[index]);
+      }
+    }
+  }
 
   const {
     foundList,
@@ -266,12 +278,6 @@ function App() {
       return;
     }
 
-    const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
-    if (keys.length === 0) return;
-
-    const index = Math.floor(Math.random() * keys.length);
-    setSelectedCountry(keys[index]);
-
     const interval = setInterval(() => {
       const freshKeys = Object.keys(activeDataMap).filter(
         (k) => activeDataMap[k]?.lat !== undefined
@@ -283,9 +289,8 @@ function App() {
 
     return () => {
       clearInterval(interval);
-      setSelectedCountry(null);
     };
-  }, [currentScreen, activeDataMap, homeMode]);
+  }, [currentScreen, activeDataMap]);
 
   const handleCustomConfirm = (msg, action) => {
     setConfirmState({
