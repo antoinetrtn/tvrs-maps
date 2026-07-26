@@ -1,0 +1,81 @@
+/* Custom Confirmation Modal styles (dialog body rendered inside panelSystem's
+   .dialog-panel / .dialog-card primitives) */
+.dialog-card p {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--text-main);
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition:
+    transform var(--transition-spring),
+    opacity var(--transition-spring);
+}
+
+.modal-btn.confirm {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 4px 12px var(--accent-soft);
+}
+
+.modal-btn.confirm:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2.5px) scale(1.02);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.modal-btn.confirm:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform var(--transition-instant);
+}
+
+.modal-btn.cancel {
+  background: var(--glass-border);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+}
+
+.modal-btn.cancel:hover {
+  background: var(--glass-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2.5px) scale(1.02);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.modal-btn.cancel:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform var(--transition-instant);
+}

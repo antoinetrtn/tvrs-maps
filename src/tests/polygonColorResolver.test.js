@@ -11,7 +11,7 @@ import {
   resolvePolygonShaderMode,
   resolveRegionalLandColor,
   shouldUseRegionalUnfoundLand,
-} from "../utils/polygonColorResolver";
+} from "../globe/render/polygonColorResolver";
 
 const lerpColor = (a, _b, _amount) => a;
 const UI_COLORS = getThemeColors("satellite", "dark");

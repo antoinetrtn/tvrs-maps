@@ -6,10 +6,54 @@
  * lives here so a single mode can't drift visually from the others.
  */
 
-const PLAY_MODES = ["countries", "capitals", "departments", "rivers_mountains"];
-
-export const LEARN_SUB_MODES = ["countries", "capitals", "rivers_mountains", "departments"];
+const PLAY_MODES = ["countries", "capitals", "departments", "rivers_mountains", "us_states"];
+const LEARN_SUB_MODES = ["countries", "capitals", "rivers_mountains", "departments", "us_states"];
 export const DEFAULT_LEARN_SUB_MODE = "countries";
+
+const GAME_MODES_CONFIG = {
+  countries: {
+    key: "countries",
+    hasCustomGeometry: false,
+    ghostExclusions: [],
+    viewPoint: null,
+    targetCheck: "name",
+  },
+  capitals: {
+    key: "capitals",
+    hasCustomGeometry: false,
+    ghostExclusions: [],
+    viewPoint: null,
+    targetCheck: "capital",
+  },
+  departments: {
+    key: "departments",
+    hasCustomGeometry: true,
+    geometryKey: "departmentsData",
+    ghostExclusions: ["France"],
+    viewPoint: { lat: 46.5, lng: 2.6, altitude: { mobile: 0.48, desktop: 0.3 } },
+    targetCheck: "name",
+  },
+  us_states: {
+    key: "us_states",
+    hasCustomGeometry: true,
+    geometryKey: "usStatesData",
+    ghostExclusions: ["United States of America"],
+    viewPoint: { lat: 38.0, lng: -97.0, altitude: { mobile: 0.85, desktop: 0.6 } },
+    targetCheck: "name",
+  },
+  rivers_mountains: {
+    key: "rivers_mountains",
+    hasCustomGeometry: false,
+    ghostExclusions: [],
+    viewPoint: null,
+    targetCheck: "name",
+  },
+};
+
+export function getActiveModeConfig(mode, learnSubMode = DEFAULT_LEARN_SUB_MODE) {
+  const activeMode = mode === "learn" ? learnSubMode : mode;
+  return GAME_MODES_CONFIG[activeMode] || GAME_MODES_CONFIG.countries;
+}
 
 const LEARN_LABEL_LIMITS = { mobile: 6, tablet: 10, desktop: 16 };
 
@@ -36,11 +80,12 @@ export function getPlayVisibleCountryKeys(selectedCountry, foundList = []) {
 }
 
 /** France department polygons (play mode or learn sub-mode). */
-export const isDepartmentView = (
-  mode,
-  { isHomeScreen = false, learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}
-) =>
-  !isHomeScreen && (mode === "departments" || (mode === "learn" && learnSubMode === "departments"));
+export const isDepartmentView = (mode, { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}) =>
+  mode === "departments" || (mode === "learn" && learnSubMode === "departments");
+
+/** US States polygons (play mode or learn sub-mode). */
+export const isUsStatesView = (mode, { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}) =>
+  mode === "us_states" || (mode === "learn" && learnSubMode === "us_states");
 
 /** Rivers & mountains in learn sub-mode. */
 export const isLearnRiversMountainsView = (mode, { learnSubMode = DEFAULT_LEARN_SUB_MODE } = {}) =>
@@ -69,11 +114,11 @@ export const shouldScrambleLabel = (
  * same visual height as a country selected from the world view.
  */
 export const POLYGON_ALTITUDE = {
-  base: 0.0025,
-  selected: 0.008,
-  departmentBase: 0.0025,
-  departmentSelected: 0.0038,
-  ghostCountry: 0.001,
+  base: 0.005,
+  selected: 0.009,
+  departmentBase: 0.005,
+  departmentSelected: 0.007,
+  ghostCountry: 0.003,
 };
 
 export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSelected }) => {
@@ -113,17 +158,6 @@ export const getDeselectGlitchFadeProgress = (
 ) => {
   const t = Math.min(1, Math.max(0, elapsedMs / Math.max(1, durationMs)));
   return t * t * t * (t * (t * 6 - 15) + 10);
-};
-
-export const DEPARTMENT_MODE_GHOST_COUNTRY_EXCLUSIONS = new Set(["France"]);
-
-export const DEPARTMENT_MODE_FRANCE_VIEW = {
-  lat: 46.5,
-  lng: 2.6,
-  altitude: {
-    mobile: 0.48,
-    desktop: 0.3,
-  },
 };
 
 export const GAME_REGIONS = [

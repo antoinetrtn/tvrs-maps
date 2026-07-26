@@ -37,16 +37,8 @@
   box-shadow: 0 0 10px var(--accent-soft);
 }
 
-.avatar-glow::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  border: 1px solid var(--glow-color);
-  opacity: 0.35;
-  filter: blur(4px);
-  pointer-events: none;
-}
+/* (.avatar-glow::after halo removed: it referenced --glow-color, a token that
+   never existed, so the invalid border made the pseudo-element render nothing) */
 
 .avatar-preview-level {
   position: absolute;
@@ -81,7 +73,7 @@
 .form-group input {
   padding: var(--spacing-sm) var(--spacing-md);
   font-family: var(--font-main);
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   color: var(--text-main);
@@ -197,7 +189,9 @@
   height: 32px;
   border-radius: var(--radius-sm);
   border: 2px solid transparent;
-  background-color: var(--option-color);
+  /* --option-color is expected as an inline custom prop on each swatch;
+     transparent fallback keeps the historical no-value rendering */
+  background-color: var(--option-color, transparent);
   cursor: pointer;
   transition:
     background var(--transition-fast),
@@ -215,7 +209,7 @@
 
 .color-option.active {
   border-color: var(--text-main);
-  box-shadow: 0 0 8px var(--option-color);
+  box-shadow: 0 0 8px var(--option-color, transparent);
 }
 
 /* Stats tab */
@@ -309,7 +303,8 @@
   font-weight: 900;
   color: var(--xp-black);
   z-index: 2;
-  text-shadow: 0 1px 1px var(--xp-shadow-soft);
+  /* --xp-shadow-soft never existed (only -light/-medium/-heavy); the invalid
+     var() meant no text-shadow was ever painted, so none is declared */
 }
 
 /* Quick Stats Grid */
@@ -338,7 +333,7 @@
 
 .stat-value {
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
   font-weight: 900;
   color: var(--text-main);
 }
@@ -542,7 +537,10 @@
   align-items: center;
   justify-content: center;
   z-index: 50;
-  background: var(--xp-shadow-trans);
+  /* TODO(design): pointed at --xp-shadow-trans, a token that never existed — the
+     overlay has always rendered without a dimming backdrop. Kept identical;
+     likely intended: a translucent scrim such as var(--overlay-bg). */
+  background: transparent;
   padding: var(--spacing-md);
   box-sizing: border-box;
 }
@@ -585,7 +583,7 @@
   font-family: var(--font-main);
   font-weight: 700;
   padding: 8px var(--spacing-md);
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }

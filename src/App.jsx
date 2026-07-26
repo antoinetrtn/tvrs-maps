@@ -7,7 +7,6 @@ import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import HomeScreen from "./components/HomeScreen.jsx";
-import { DEFAULT_GLOBE_THEME, getThemeCssVariables, GLOBE_THEME_IDS } from "./config/designSystem";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
   BREAKPOINTS,
@@ -20,6 +19,7 @@ import {
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
+import { useAppTheme } from "./hooks/useAppTheme";
 import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
 import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
 import { useGameSession } from "./hooks/useGameSession";
@@ -41,26 +41,42 @@ function App() {
     topExplorers,
     updateGameRecord,
     lastScores,
+    localGameHistory,
   } = useUserProfile();
 
   const [mode, setMode] = useState(DEFAULT_MODE);
   const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
+  const [homeMode, setHomeMode] = useState("countries");
+  const prevActiveDataMapRef = useRef(null);
 
-  const [hardcoreMode, setHardcoreModeRaw] = useState(() => {
+  const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
-      return localStorage.getItem(STORAGE_KEYS.hardcoreMode) === "true";
+      const storedPeaceful = localStorage.getItem(STORAGE_KEYS.peacefulMode);
+      if (storedPeaceful !== null) {
+        return storedPeaceful === "true";
+      }
+      const storedHardcore = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
+      if (storedHardcore !== null) {
+        return storedHardcore === "false";
+      }
+      return false; // Peaceful OFF = Hardcore ON by default!
     } catch {
       return false;
     }
   });
-  const setHardcoreMode = useCallback((value) => {
-    setHardcoreModeRaw(value);
+
+  const setPeacefulMode = useCallback((value) => {
+    setPeacefulModeRaw(value);
     try {
-      localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(value));
+      localStorage.setItem(STORAGE_KEYS.peacefulMode, String(value));
+      localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(!value));
     } catch {}
   }, []);
+
+  const hardcoreMode = !peacefulMode;
+  const setHardcoreMode = useCallback((value) => setPeacefulMode(!value), [setPeacefulMode]);
 
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -76,38 +92,6 @@ function App() {
   const handleCloseAchievement = useCallback(() => {
     setAchievementQueue((prev) => prev.slice(1));
   }, []);
-
-  const [theme, setTheme] = useState(() => {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
-      if (!cached || cached === "blackout") return "dark";
-    } catch {}
-    if (typeof window !== "undefined" && window.matchMedia) {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    return "dark";
-  });
-
-  const [globeTheme, setGlobeThemeRaw] = useState(() => {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
-      if (cached && GLOBE_THEME_IDS.includes(cached)) return cached;
-    } catch {}
-    return DEFAULT_GLOBE_THEME;
-  });
-
-  const setGlobeTheme = useCallback(
-    (t) => {
-      setGlobeThemeRaw(t);
-      if (t === "blackout") {
-        setTheme("dark");
-      }
-      try {
-        localStorage.setItem(STORAGE_KEYS.globeTheme, t);
-      } catch {}
-    },
-    [setTheme]
-  );
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
@@ -158,8 +142,31 @@ function App() {
   }, []);
 
   const { viewport, isKeyboardMode } = useViewport();
-  const { countriesData, departmentsData, activeDataMap, allCountryKeys, totalPossible } =
-    useGeoData({ mode, learnSubMode });
+  // Theme state + document-level CSS variables (extracted, see useAppTheme).
+  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = useAppTheme(viewport?.width);
+  const {
+    countriesData,
+    departmentsData,
+    usStatesData,
+    activeDataMap,
+    allCountryKeys,
+    totalPossible,
+  } = useGeoData({
+    mode: currentScreen === "home" ? homeMode : mode,
+    learnSubMode:
+      currentScreen === "home" ? (homeMode === "capitals" ? "countries" : homeMode) : learnSubMode,
+  });
+
+  if (currentScreen === "home" && activeDataMap !== prevActiveDataMapRef.current) {
+    prevActiveDataMapRef.current = activeDataMap;
+    if (activeDataMap) {
+      const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
+      if (keys.length > 0) {
+        const index = Math.floor(Math.random() * keys.length);
+        setSelectedCountry(keys[index]);
+      }
+    }
+  }
 
   const {
     foundList,
@@ -186,6 +193,7 @@ function App() {
     globeFeedbackRef,
     livesLeft,
     isHardcoreRun,
+    mistakes,
   } = useGameSession({
     mode,
     allCountryKeys,
@@ -210,7 +218,17 @@ function App() {
     hardcoreMode,
   });
 
+  // Transient red flash when a life is lost (wrong answer in game modes)
+  const [lifeLostFlash, setLifeLostFlash] = useState(false);
+  useEffect(() => {
+    if (mistakes === 0) return undefined; // no flash on mount or resetGame
+    setLifeLostFlash(true);
+    const timeoutId = setTimeout(() => setLifeLostFlash(false), 1000);
+    return () => clearTimeout(timeoutId);
+  }, [mistakes]);
+
   const preserveInputFocus = useCallback(() => {
+    if (mode === "learn") return;
     const input = extInputRef.current;
     if (!input) return;
     if (document.activeElement !== input) {
@@ -220,12 +238,15 @@ function App() {
         input.focus();
       }
     }
-  }, []);
+  }, [mode]);
 
   const startGame = useCallback(
-    (selectedMode) => {
+    (selectedMode, subMode) => {
       resetGame(selectedMode);
       setMode(selectedMode);
+      if (selectedMode === "learn" && subMode) {
+        setLearnSubMode(subMode);
+      }
       setLearnSearchQuery("");
       setShowLearnPanel(false);
       setShowInfoModal(false);
@@ -238,6 +259,7 @@ function App() {
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
     setMode(DEFAULT_MODE);
+    setHomeMode("countries");
     setShowLearnPanel(false);
     setLearnSearchQuery("");
     setShowInfoModal(false);
@@ -252,26 +274,23 @@ function App() {
   }, [currentScreen]);
 
   useEffect(() => {
-    if (currentScreen !== "home" || !countryDataMap) {
+    if (currentScreen !== "home" || !activeDataMap) {
       return;
     }
 
-    const keys = Object.keys(countryDataMap).filter((k) => countryDataMap[k]?.lat !== undefined);
-    if (keys.length === 0) return;
-
-    let index = Math.floor(Math.random() * keys.length);
-    setSelectedCountry(keys[index]);
-
     const interval = setInterval(() => {
-      index = Math.floor(Math.random() * keys.length);
-      setSelectedCountry(keys[index]);
+      const freshKeys = Object.keys(activeDataMap).filter(
+        (k) => activeDataMap[k]?.lat !== undefined
+      );
+      if (freshKeys.length === 0) return;
+      const nextIndex = Math.floor(Math.random() * freshKeys.length);
+      setSelectedCountry(freshKeys[nextIndex]);
     }, HOME_AUTOROTATE_INTERVAL_MS);
 
     return () => {
       clearInterval(interval);
-      setSelectedCountry(null);
     };
-  }, [currentScreen]);
+  }, [currentScreen, activeDataMap]);
 
   const handleCustomConfirm = (msg, action) => {
     setConfirmState({
@@ -303,13 +322,6 @@ function App() {
       polygonCapCurvatureResolution: PERFORMANCE.polygonCapCurvatureResolution[tier],
     };
   }, [viewport.width]);
-
-  const uiScale = (w = BREAKPOINTS.desktop) =>
-    w >= 1800 ? 0.78 : w >= 1400 ? 0.84 : w >= 1100 ? 0.9 : w >= 900 ? 0.95 : w < 520 ? 0.88 : 1;
-  const appStyle = useMemo(
-    () => getThemeCssVariables(theme, globeTheme, { uiScale: uiScale(viewport?.width) }),
-    [theme, globeTheme, viewport?.width]
-  );
 
   const { isMobileViewport, isPanelOpen, panelDataMap, panelMode, closePanel, handlePanelSelect } =
     useGameDataPanelState({
@@ -353,6 +365,7 @@ function App() {
     resetNavigationTrail,
     setPopupError,
     extInputRef,
+    isLearnMode: mode === "learn",
     onAfterSelect: (key) => {
       if (mode === "learn" && isMobileViewport && key) {
         setShowLearnPanel(true);
@@ -397,6 +410,7 @@ function App() {
     isMobileViewport,
     countriesData,
     departmentsData,
+    usStatesData,
     handleCountrySelect,
     perfProfile,
     currentScreen,
@@ -419,7 +433,10 @@ function App() {
     globeFeedbackApplierRef,
     livesLeft,
     isHardcoreRun,
+    homeMode,
   });
+
+  const panicActive = isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30;
 
   return (
     <div
@@ -427,8 +444,8 @@ function App() {
       data-theme={theme}
       style={appStyle}
     >
-      {isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30 && (
-        <div className="panic-vignette-overlay" />
+      {(panicActive || lifeLostFlash) && (
+        <div className={`panic-vignette-overlay${panicActive ? "" : " life-lost"}`} />
       )}
       {currentScreen === "home" ? (
         <HomeScreen
@@ -441,14 +458,19 @@ function App() {
           setGameDuration={setGameDuration}
           hardcoreMode={hardcoreMode}
           setHardcoreMode={setHardcoreMode}
+          peacefulMode={peacefulMode}
+          setPeacefulMode={setPeacefulMode}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}
           localRecords={localRecords}
+          localGameHistory={localGameHistory}
           session={session}
           onOpenAuth={() => setShowAuthModal(true)}
+          homeMode={homeMode}
+          setHomeMode={setHomeMode}
         />
       ) : null}
       <GameSessionView

@@ -33,6 +33,9 @@ These rules standardize the retro TV static glitch animation and country polygon
 ## 7. Git Workflow & Branching
 * **No Direct Push to Protected Branches**: Never push directly to `dev` or `main` branches. Even if access credentials bypass repository rules, you must create a dedicated feature or fix branch (e.g., `feature/...` or `fix/...`) and open a Pull Request.
 
+## 8. Card & Container Border-Radius Alignment
+* **Strict Token Conformance**: Cards, modals, HUD containers, and category cards MUST use standard compact border-radius tokens (`var(--radius-md)` or `var(--radius-sm)`, ~8px max). Never use oversized rounded corners (such as 16px-24px or arbitrary large radii) that diverge from the retro-technical UI design system.
+
 ---
 
 *These rules are backed up by the `GLITCH_EFFECT_SETTINGS` exported configuration in [designSystem.js](file:///Users/atrtn/.gemini/antigravity/scratch/tvrs-maps/src/designSystem.js).*

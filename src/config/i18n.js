@@ -12,6 +12,7 @@ export const translations = {
     mode_countries: "Pays",
     mode_capitals: "Capitales",
     mode_departments: "Départements",
+    mode_us_states: "États américains",
     mode_rivers_mountains: "Reliefs & Fleuves",
     mode_learn: "Apprendre",
 
@@ -29,11 +30,17 @@ export const translations = {
     hardcore_desc: "5 erreurs et la partie s'arrête. Les runs hardcore sont badgés au classement.",
     hardcore_lives: "Vies restantes",
     hardcore_game_over: "Plus de vies !",
+    peaceful_mode: "Mode paisible",
+    peaceful_on: "Paisible",
+    peaceful_off: "Hardcore (5 vies)",
+    peaceful_desc: "Activer pour jouer sans limite de vies.",
+    search_placeholder_rivers_mountains: "Rechercher un fleuve ou une montagne...",
     explore_globe: "Explorer le globe",
     back_to_results: "Résultats",
     interface_theme: "Thème interface",
     theme_light: "Clair",
     theme_dark: "Sombre",
+    theme_light_blackout_hint: "Indisponible avec le globe Noir & Blanc",
     interface_scale: "Taille de l'interface",
     scale_auto: "Auto",
 
@@ -71,6 +78,7 @@ export const translations = {
     learn_mode_capitals: "Villes",
     learn_mode_rivers_mountains: "Mont. & riv.",
     learn_mode_departments: "Dépt.",
+    learn_mode_us_states: "États",
 
     // Focus Badge Prompts
     department_prefix: "Département {code}",
@@ -201,6 +209,7 @@ export const translations = {
     mode_countries: "Countries",
     mode_capitals: "Capitals",
     mode_departments: "Departments",
+    mode_us_states: "US States",
     mode_rivers_mountains: "Rivers & Peaks",
     mode_learn: "Learn",
 
@@ -218,11 +227,17 @@ export const translations = {
     hardcore_desc: "5 mistakes and the run ends. Hardcore runs get a badge on the leaderboard.",
     hardcore_lives: "Lives left",
     hardcore_game_over: "Out of lives!",
+    peaceful_mode: "Peaceful mode",
+    peaceful_on: "Peaceful",
+    peaceful_off: "Hardcore (5 lives)",
+    peaceful_desc: "Enable to play with infinite lives.",
+    search_placeholder_rivers_mountains: "Search river or mountain...",
     explore_globe: "Explore the globe",
     back_to_results: "Results",
     interface_theme: "Interface Theme",
     theme_light: "Light",
     theme_dark: "Dark",
+    theme_light_blackout_hint: "Unavailable with the Blacked Out globe",
     interface_scale: "Interface Scale",
     scale_auto: "Auto",
 
@@ -259,6 +274,7 @@ export const translations = {
     learn_mode_capitals: "Cities",
     learn_mode_rivers_mountains: "Peaks & rivers",
     learn_mode_departments: "Depts.",
+    learn_mode_us_states: "States",
     labels_montagnes: "Mountains",
 
     // Focus Badge Prompts

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { CHALLENGES, ISLANDS_LIST } from "../data/challenges";
 import {
   getLeaderboard,
   getProfile,
@@ -11,258 +10,14 @@ import {
   upsertProfile,
   upsertUserRecord,
 } from "../services/supabaseClient";
-import { getLevelAndProgress } from "../utils/gamification";
-
-export function checkChallengesRealTime(currentBadges, localRecords, sessionData) {
-  const newlyUnlocked = [];
-  const addBadge = (id) => {
-    if (!currentBadges.includes(id) && !newlyUnlocked.includes(id)) {
-      newlyUnlocked.push(id);
-    }
-  };
-
-  const totalGames =
-    Object.values(localRecords || {}).reduce((acc, rec) => acc + (rec.gamesPlayed || 0), 0) +
-    (sessionData.isGameOver ? 1 : 0);
-
-  const gameMode = sessionData.mode;
-
-  // Evaluate each challenge
-  CHALLENGES.forEach((ch) => {
-    if (currentBadges.includes(ch.id)) return;
-
-    switch (ch.id) {
-      // General Play Counts
-      case "ch_gen_play_1":
-        if (totalGames >= 1) addBadge(ch.id);
-        break;
-      case "ch_gen_play_5":
-        if (totalGames >= 5) addBadge(ch.id);
-        break;
-      case "ch_gen_play_10":
-        if (totalGames >= 10) addBadge(ch.id);
-        break;
-      case "ch_gen_play_25":
-        if (totalGames >= 25) addBadge(ch.id);
-        break;
-      case "ch_gen_play_50":
-        if (totalGames >= 50) addBadge(ch.id);
-        break;
-
-      // General Levels (checked separately during level calculation, but safe to check here too)
-      case "ch_gen_lvl_2":
-      case "ch_gen_lvl_5":
-      case "ch_gen_lvl_10":
-      case "ch_gen_lvl_15":
-      case "ch_gen_lvl_20":
-        // Evaluated based on active level
-        break;
-
-      // Continents
-      case "ch_cont_europe":
-        if (sessionData.continentsConquered?.includes("Europe")) addBadge(ch.id);
-        break;
-      case "ch_cont_europe_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Europe_")).length +
-            (sessionData.continentsConquered?.includes("Europe") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_africa":
-        if (sessionData.continentsConquered?.includes("Africa")) addBadge(ch.id);
-        break;
-      case "ch_cont_africa_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Africa_")).length +
-            (sessionData.continentsConquered?.includes("Africa") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_asia":
-        if (sessionData.continentsConquered?.includes("Asia")) addBadge(ch.id);
-        break;
-      case "ch_cont_asia_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Asia_")).length +
-            (sessionData.continentsConquered?.includes("Asia") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_americas":
-        if (sessionData.continentsConquered?.includes("Americas")) addBadge(ch.id);
-        break;
-      case "ch_cont_americas_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Americas_")).length +
-            (sessionData.continentsConquered?.includes("Americas") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-      case "ch_cont_oceania":
-        if (sessionData.continentsConquered?.includes("Oceania")) addBadge(ch.id);
-        break;
-      case "ch_cont_oceania_5":
-        {
-          const count =
-            currentBadges.filter((b) => b.startsWith("conquered_Oceania_")).length +
-            (sessionData.continentsConquered?.includes("Oceania") ? 1 : 0);
-          if (count >= 5) addBadge(ch.id);
-        }
-        break;
-
-      // Scores
-      case "ch_score_countries_10":
-        if (gameMode === "countries" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_score_countries_20":
-        if (gameMode === "countries" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_score_countries_50":
-        if (gameMode === "countries" && sessionData.score >= 50) addBadge(ch.id);
-        break;
-      case "ch_score_countries_100":
-        if (gameMode === "countries" && sessionData.score >= 100) addBadge(ch.id);
-        break;
-
-      case "ch_score_capitals_10":
-        if (gameMode === "capitals" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_score_capitals_20":
-        if (gameMode === "capitals" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_score_capitals_50":
-        if (gameMode === "capitals" && sessionData.score >= 50) addBadge(ch.id);
-        break;
-      case "ch_score_capitals_100":
-        if (gameMode === "capitals" && sessionData.score >= 100) addBadge(ch.id);
-        break;
-
-      case "ch_score_departments_10":
-        if (gameMode === "departments" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_score_departments_20":
-        if (gameMode === "departments" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_score_departments_50":
-        if (gameMode === "departments" && sessionData.score >= 50) addBadge(ch.id);
-        break;
-      case "ch_score_departments_100":
-        if (gameMode === "departments" && sessionData.score >= 100) addBadge(ch.id);
-        break;
-
-      // Speed
-      case "ch_speed_fast_guess":
-        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 3)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_10_guesses_30s":
-        if (sessionData.speedGuessCount3s >= 10) addBadge(ch.id);
-        break;
-      case "ch_speed_20_guesses_60s":
-        if (sessionData.speedGuessCount3s >= 20) addBadge(ch.id);
-        break;
-      case "ch_speed_under_2m":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 120 && sessionData.score > 0)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_under_1m":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 60 && sessionData.score > 0)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_under_30s":
-        if (sessionData.isGameOver && sessionData.timeSpent <= 30 && sessionData.score > 0)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_half_time":
-        if (
-          sessionData.isGameOver &&
-          sessionData.gameDuration > 0 &&
-          sessionData.timeSpent <= sessionData.gameDuration / 2 &&
-          sessionData.score > 0
-        ) {
-          addBadge(ch.id);
-        }
-        break;
-      case "ch_speed_blitz":
-        if (sessionData.lastGuessDuration > 0 && sessionData.lastGuessDuration <= 1)
-          addBadge(ch.id);
-        break;
-      case "ch_speed_perfect_100":
-        if (
-          sessionData.isGameOver &&
-          sessionData.perfect &&
-          sessionData.score >= 100 &&
-          sessionData.timeSpent <= 120
-        ) {
-          addBadge(ch.id);
-        }
-        break;
-      case "ch_speed_lightning":
-        if (sessionData.lightningCount >= 1) addBadge(ch.id);
-        break;
-
-      // Relief
-      case "ch_relief_score_10":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 10) addBadge(ch.id);
-        break;
-      case "ch_relief_score_20":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 20) addBadge(ch.id);
-        break;
-      case "ch_relief_score_30":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 30) addBadge(ch.id);
-        break;
-      case "ch_relief_score_40":
-        if (gameMode === "rivers_mountains" && sessionData.score >= 40) addBadge(ch.id);
-        break;
-
-      // Specialties
-      case "ch_special_night":
-        if (sessionData.isNight) addBadge(ch.id);
-        break;
-      case "ch_special_lunch":
-        if (sessionData.isLunch) addBadge(ch.id);
-        break;
-      case "ch_special_perfect":
-        if (sessionData.isGameOver && sessionData.perfect && sessionData.score > 0) addBadge(ch.id);
-        break;
-      case "ch_special_islands":
-        {
-          const islands =
-            sessionData.guessesThisGame?.filter((k) => ISLANDS_LIST.includes(k)).length || 0;
-          if (islands >= 5) addBadge(ch.id);
-        }
-        break;
-    }
-  });
-
-  return newlyUnlocked;
-}
+import { evaluateGameRewardsAndBadges, getLevelAndProgress } from "../utils/gamification";
+import { generateUUID } from "../utils/utils";
 
 export function useUserProfile() {
   const [session, setSession] = useState(null);
 
   // Initialize or load local profile
   const [userProfile, setUserProfile] = useState(() => {
-    const generateUUID = () => {
-      if (typeof crypto !== "undefined" && crypto.randomUUID) {
-        return crypto.randomUUID();
-      }
-      if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-        const bytes = new Uint8Array(16);
-        crypto.getRandomValues(bytes);
-        bytes[6] = (bytes[6] & 0x0f) | 0x40;
-        bytes[8] = (bytes[8] & 0x3f) | 0x80;
-        const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0"));
-        return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
-      }
-      throw new Error("Secure random generator is not available in this environment.");
-    };
-
     const isUUID = (str) => {
       return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
     };
@@ -325,6 +80,7 @@ export function useUserProfile() {
       capitals: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       departments: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
       rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      us_states: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
     };
     try {
       const cached = localStorage.getItem("tvrs-local-records");
@@ -341,6 +97,7 @@ export function useUserProfile() {
       capitals: [],
       departments: [],
       rivers_mountains: [],
+      us_states: [],
     };
     try {
       const cached = localStorage.getItem("tvrs-last-scores");
@@ -349,6 +106,16 @@ export function useUserProfile() {
       }
     } catch {}
     return defaultScores;
+  });
+
+  const [localGameHistory, setLocalGameHistory] = useState(() => {
+    try {
+      const cached = localStorage.getItem("tvrs-local-game-history");
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch {}
+    return [];
   });
 
   const [topExplorers, setTopExplorers] = useState([]);
@@ -551,31 +318,18 @@ export function useUserProfile() {
       const oldXp = userProfile.xp || 0;
       const oldLevel = userProfile.level || 1;
 
-      // Base gameplay XP
-      const foundXp = finalScore * 10;
-      const completionXp = 50;
-      const conquestXp =
-        (Array.isArray(continentsConquered) ? continentsConquered.length : 0) * 100;
-      const perfectXp = finalScore > 0 && finalScore === totalPossible ? 250 : 0;
-      let gainedXp = foundXp + completionXp + conquestXp + perfectXp;
+      const { gainedXp, updatedBadges, totalNewlyUnlocked, xpBreakdown } =
+        evaluateGameRewardsAndBadges({
+          userProfile,
+          localRecords,
+          gameMode,
+          finalScore,
+          timeSpent,
+          totalPossible,
+          gameDuration,
+          continentsConquered,
+        });
 
-      // Intermediate level detection
-      const intermediateXp = oldXp + gainedXp;
-      const { level: intermediateLevel } = getLevelAndProgress(intermediateXp);
-
-      // Check level achievements
-      const currentBadges = userProfile.unlockedBadges || [];
-      const levelBadges = [];
-      for (let lvl = 2; lvl <= intermediateLevel; lvl++) {
-        if ([2, 5, 10, 15, 20].includes(lvl)) {
-          const chId = `ch_gen_lvl_${lvl}`;
-          if (!currentBadges.includes(chId)) {
-            levelBadges.push(chId);
-          }
-        }
-      }
-
-      // Update local records
       const currentRecord = localRecords[gameMode] || {
         maxScore: 0,
         bestTime: null,
@@ -602,7 +356,6 @@ export function useUserProfile() {
         maxScore: nextMaxScore,
         bestTime: nextBestTime,
         gamesPlayed: nextGamesPlayed,
-        // Whether the standing best run was achieved in hardcore.
         hardcore: isNewBestRun ? hardcore : Boolean(currentRecord.hardcore),
       };
 
@@ -610,70 +363,6 @@ export function useUserProfile() {
         ...localRecords,
         [gameMode]: updatedRecord,
       };
-
-      // Add incremental continents markers
-      const continentMarkers = [];
-      if (Array.isArray(continentsConquered) && continentsConquered.length > 0) {
-        continentsConquered.forEach((region) => {
-          const prevCompletions = currentBadges.filter((b) =>
-            b.startsWith(`conquered_${region}_`)
-          ).length;
-          if (prevCompletions < 5) {
-            continentMarkers.push(`conquered_${region}_${prevCompletions + 1}`);
-          }
-        });
-      }
-
-      // Final Game End Session Data
-      const hour = new Date().getHours();
-      const sessionData = {
-        mode: gameMode,
-        score: finalScore,
-        timeSpent,
-        timeLeft: gameDuration - timeSpent,
-        accuracy: totalPossible > 0 ? finalScore / totalPossible : 1,
-        isGameOver: true,
-        perfect: finalScore > 0 && finalScore === totalPossible,
-        continentsConquered,
-        consecutiveCorrect: finalScore,
-        lastGuessDuration: 0,
-        guessesThisGame: [],
-        speedGuessCount3s: 0,
-        speedGuessCount1s: 0,
-        lightningCount: 0,
-        gameDuration,
-        isNight: hour >= 22 || hour < 4,
-        isLunch: hour >= 12 && hour < 14,
-      };
-
-      const baseBadgesPlusMarkers = [...currentBadges, ...levelBadges, ...continentMarkers];
-      const newlyUnlocked = checkChallengesRealTime(
-        baseBadgesPlusMarkers,
-        localRecords,
-        sessionData
-      );
-
-      // Award +100 XP per unlocked achievement
-      const totalNewlyUnlocked = [...levelBadges, ...newlyUnlocked];
-      const achievementXp = totalNewlyUnlocked.length * 100;
-      gainedXp += achievementXp;
-
-      const newXp = oldXp + gainedXp;
-      const { level: newLevel } = getLevelAndProgress(newXp);
-      const updatedBadges = [...baseBadgesPlusMarkers, ...newlyUnlocked];
-
-      // Secondary check: did the achievement XP trigger further level-ups?
-      for (let lvl = intermediateLevel + 1; lvl <= newLevel; lvl++) {
-        if ([2, 5, 10, 15, 20].includes(lvl)) {
-          const chId = `ch_gen_lvl_${lvl}`;
-          if (!updatedBadges.includes(chId)) {
-            updatedBadges.push(chId);
-            // Award an extra 100 XP for this level badge
-            gainedXp += 100;
-            totalNewlyUnlocked.push(chId);
-          }
-        }
-      }
 
       const finalXp = oldXp + gainedXp;
       const { level: finalLevel } = getLevelAndProgress(finalXp);
@@ -699,8 +388,21 @@ export function useUserProfile() {
       setLastScores(nextScores);
       localStorage.setItem("tvrs-last-scores", JSON.stringify(nextScores));
 
+      const newHistoryItem = {
+        id: generateUUID(),
+        profile_id: activeUserId,
+        game_mode: gameMode,
+        score: finalScore,
+        time_spent_seconds: timeSpent,
+        created_at: new Date().toISOString(),
+        hardcore: Boolean(hardcore),
+      };
+      const updatedGameHistory = [newHistoryItem, ...localGameHistory].slice(0, 100);
+      setLocalGameHistory(updatedGameHistory);
+      localStorage.setItem("tvrs-local-game-history", JSON.stringify(updatedGameHistory));
+
       if (isSupabaseConfigured) {
-        const { error: profileErr } = await upsertProfile(
+        const { data: upsertedProfileData, error: profileErr } = await upsertProfile(
           activeUserId,
           updatedProfile.username,
           updatedProfile.avatarId,
@@ -709,7 +411,16 @@ export function useUserProfile() {
           updatedProfile.level,
           updatedProfile.unlockedBadges
         );
-        if (profileErr) console.error("Error syncing profile update to Supabase:", profileErr);
+        if (profileErr) {
+          console.error("Error syncing profile update to Supabase:", profileErr);
+        } else if (
+          upsertedProfileData &&
+          upsertedProfileData.username !== updatedProfile.username
+        ) {
+          updatedProfile.username = upsertedProfileData.username;
+          setUserProfile(updatedProfile);
+          localStorage.setItem("tvrs-user-profile", JSON.stringify(updatedProfile));
+        }
 
         const { error: recordErr } = await upsertUserRecord(
           activeUserId,
@@ -741,17 +452,11 @@ export function useUserProfile() {
         oldXp,
         oldLevel,
         gainedXp,
-        xpBreakdown: {
-          found: foundXp,
-          completion: completionXp,
-          conquest: conquestXp,
-          perfect: perfectXp,
-          achievements: achievementXp,
-        },
+        xpBreakdown,
         newlyUnlockedBadges: totalNewlyUnlocked,
       };
     },
-    [session, userProfile, localRecords, lastScores, fetchTopExplorers]
+    [session, userProfile, localRecords, lastScores, localGameHistory, fetchTopExplorers]
   );
 
   return {
@@ -763,5 +468,6 @@ export function useUserProfile() {
     updateGameRecord,
     fetchTopExplorers,
     lastScores,
+    localGameHistory,
   };
 }

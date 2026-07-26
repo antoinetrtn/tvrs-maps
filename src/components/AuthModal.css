@@ -61,16 +61,14 @@
   color: var(--text-main);
 }
 
-[data-theme="light"] .auth-row-btn.tvrs-btn {
-  background: var(--glass-bg);
-  color: var(--text-main);
-}
-
 .auth-row-btn.tvrs-btn:hover {
   background: var(--glass-hover);
   border-color: var(--text-main);
   transform: translateY(-1px);
 }
+
+/* (former [data-theme="light"] overrides removed: they duplicated the base
+   declarations verbatim — theming now flows from the tokens on <html>) */
 
 /* Google Light/Gray Button */
 .auth-row-btn.google-btn {
@@ -89,11 +87,6 @@
 .auth-row-btn.guest-btn {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  color: var(--text-main);
-}
-
-[data-theme="light"] .auth-row-btn.guest-btn {
-  background: var(--glass-bg);
   color: var(--text-main);
 }
 

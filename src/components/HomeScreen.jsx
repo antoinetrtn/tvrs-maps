@@ -1,28 +1,25 @@
 import "./HomeScreen.css";
 
 import {
-  BookOpen,
   Clock,
   Close,
   CloudSun,
   Earth,
   Globe,
-  Hash,
   Heart,
-  MapPin,
   Minus,
   Moon,
   Plus,
   Settings2,
-  TreePine,
   User,
 } from "pixelarticons/react";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import { THEMES_LIST } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import GlassIconButton from "./GlassIconButton";
+import HomeScreenCategoryCarousel from "./HomeScreenCategoryCarousel";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardScreen from "./LeaderboardScreen";
 import Logo from "./Logo";
@@ -37,25 +34,27 @@ const HomeScreen = ({
   setLang,
   gameDuration,
   setGameDuration,
-  hardcoreMode = false,
+  _hardcoreMode = true,
   setHardcoreMode,
+  peacefulMode = false,
+  setPeacefulMode,
   globeTheme,
   setGlobeTheme,
   topExplorers = [],
   userProfile,
   setUserProfile,
   localRecords = {},
+  localGameHistory = [],
   session = null,
   onOpenAuth,
+  homeMode,
+  setHomeMode,
 }) => {
-  const cardRef = useRef(null);
-  const isDraggingRef = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const t = useTranslation(lang);
 
-  // Stable close handler passed to ProfilePanel (helps with React.memo + click reliability)
   const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
 
   const handleOpenAuth = useCallback(() => {
@@ -81,121 +80,21 @@ const HomeScreen = ({
     });
   }
 
-  const resetCardTilt = () => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    card.style.setProperty("--card-rotate-x", "0deg");
-    card.style.setProperty("--card-rotate-y", "0deg");
-    card.style.setProperty("--card-glow-x", "50%");
-    card.style.setProperty("--card-glow-y", "20%");
-  };
-
-  const handleCardPointerMove = (event) => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    const rect = card.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width - 0.5;
-    const y = (event.clientY - rect.top) / rect.height - 0.5;
-    const dragIntensity = event.pointerType === "touch" ? 1.18 : 1;
-    const intensity = isDraggingRef.current ? dragIntensity : 0.28;
-
-    card.style.setProperty("--card-rotate-x", `${(-y * 16 * intensity).toFixed(2)}deg`);
-    card.style.setProperty("--card-rotate-y", `${(x * 18 * intensity).toFixed(2)}deg`);
-    card.style.setProperty("--card-glow-x", `${((x + 0.5) * 100).toFixed(1)}%`);
-    card.style.setProperty("--card-glow-y", `${((y + 0.5) * 100).toFixed(1)}%`);
-  };
-
-  const handleCardPointerDown = (event) => {
-    const card = cardRef.current;
-    if (!card || event.target.closest("button")) return;
-
-    isDraggingRef.current = true;
-    card.classList.add("is-dragging");
-    card.setPointerCapture(event.pointerId);
-    handleCardPointerMove(event);
-  };
-
-  const handleCardPointerUp = (event) => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    isDraggingRef.current = false;
-    card.classList.remove("is-dragging");
-    if (card.hasPointerCapture(event.pointerId)) {
-      card.releasePointerCapture(event.pointerId);
-    }
-
-    if (event.pointerType === "touch") {
-      resetCardTilt();
-      return;
-    }
-
-    handleCardPointerMove(event);
-  };
-
-  const handleCardPointerLeave = () => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    isDraggingRef.current = false;
-    card.classList.remove("is-dragging");
-    resetCardTilt();
-  };
-
   const adjustDuration = (amount) => {
-    // Increment/decrement by 60 seconds (1 minute)
-    // Min 1 minute, Max 60 minutes
     setGameDuration((prev) => Math.max(60, Math.min(3600, prev + amount)));
   };
 
   return (
     <>
       <div className={`home-screen-overlay ${theme}`}>
-        <div
-          className="home-content glass-panel"
-          ref={cardRef}
-          onPointerMove={handleCardPointerMove}
-          onPointerDown={handleCardPointerDown}
-          onPointerUp={handleCardPointerUp}
-          onPointerCancel={handleCardPointerUp}
-          onPointerLeave={handleCardPointerLeave}
-        >
+        <div className="home-stage-container">
           <Logo size="large" className="home-logo" />
-
-          <div className="home-buttons">
-            <button className="home-btn mode-countries" onClick={() => onStartGame("countries")}>
-              <Globe width={20} height={20} />
-              <span className="btn-title">{t("mode_countries")}</span>
-            </button>
-
-            <button className="home-btn mode-capitals" onClick={() => onStartGame("capitals")}>
-              <MapPin width={20} height={20} />
-              <span className="btn-title">{t("mode_capitals")}</span>
-            </button>
-
-            <button
-              className="home-btn mode-departments"
-              onClick={() => onStartGame("departments")}
-            >
-              <Hash width={18} height={18} className="home-btn-icon hash-icon" />
-              <span className="btn-title">{t("mode_departments")}</span>
-            </button>
-
-            <button
-              className="home-btn mode-rivers-mountains"
-              onClick={() => onStartGame("rivers_mountains")}
-            >
-              <TreePine width={20} height={20} />
-              <span className="btn-title">{t("mode_rivers_mountains")}</span>
-            </button>
-
-            <button className="home-btn mode-learn" onClick={() => onStartGame("learn")}>
-              <BookOpen width={20} height={20} />
-              <span className="btn-title">{t("mode_learn")}</span>
-            </button>
-          </div>
+          <HomeScreenCategoryCarousel
+            onStartGame={onStartGame}
+            lang={lang}
+            homeMode={homeMode}
+            setHomeMode={setHomeMode}
+          />
         </div>
 
         <div className="home-bottom-right">
@@ -353,24 +252,30 @@ const HomeScreen = ({
             </div>
           </div>
 
-          {/* Hardcore Mode Selector */}
+          {/* Peaceful Mode Selector */}
           <div className="settings-card glass-panel">
             <div className="settings-card-header">
-              <span className="section-label">{t("hardcore_mode")}</span>
+              <span className="section-label">{t("peaceful_mode")}</span>
             </div>
             <SegmentedControl
               options={[
-                { value: "normal", label: t("hardcore_off") },
+                { value: "hardcore", label: t("peaceful_off") },
                 {
-                  value: "hardcore",
-                  label: t("hardcore_on"),
+                  value: "peaceful",
+                  label: t("peaceful_on"),
                   icon: <Heart width={14} height={14} />,
                 },
               ]}
-              value={hardcoreMode ? "hardcore" : "normal"}
-              onChange={(v) => setHardcoreMode?.(v === "hardcore")}
+              value={peacefulMode ? "peaceful" : "hardcore"}
+              onChange={(v) => {
+                const isPeaceful = v === "peaceful";
+                setPeacefulMode?.(isPeaceful);
+                if (!setPeacefulMode && setHardcoreMode) {
+                  setHardcoreMode(!isPeaceful);
+                }
+              }}
             />
-            <p className="settings-hint">{t("hardcore_desc")}</p>
+            <p className="settings-hint">{t("peaceful_desc")}</p>
           </div>
 
           {/* Language Selector */}
@@ -400,11 +305,18 @@ const HomeScreen = ({
                   value: "light",
                   label: t("theme_light"),
                   icon: <CloudSun width={14} height={14} />,
+                  // Blackout globe forces the dark chrome (App.jsx) — surface
+                  // that instead of letting an inert "light" choice through.
+                  disabled: globeTheme === "blackout",
+                  title: globeTheme === "blackout" ? t("theme_light_blackout_hint") : undefined,
                 },
               ]}
               value={theme}
               onChange={(v) => setTheme(v)}
             />
+            {globeTheme === "blackout" && (
+              <p className="settings-hint">{t("theme_light_blackout_hint")}</p>
+            )}
           </div>
 
           {/* Globe Theme Selector */}
@@ -445,6 +357,8 @@ const HomeScreen = ({
       <LeaderboardScreen
         userProfile={userProfile}
         localRecords={localRecords}
+        localGameHistory={localGameHistory}
+        session={session}
         onBack={() => setLeaderboardOpen(false)}
         lang={lang}
         theme={theme}

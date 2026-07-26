@@ -1,16 +1,16 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
-import { execSync } from 'node:child_process';
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import { execSync } from "node:child_process";
 
 const root = process.cwd();
 const failures = [];
 
-const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
-const walk = dir => {
+const walk = (dir) => {
   const entries = fs.readdirSync(path.join(root, dir), { withFileTypes: true });
-  return entries.flatMap(entry => {
+  return entries.flatMap((entry) => {
     const rel = path.join(dir, entry.name);
     if (entry.isDirectory()) return walk(rel);
     return rel;
@@ -18,145 +18,168 @@ const walk = dir => {
 };
 
 const fail = (file, line, message) => {
-  failures.push(`${file}${line ? `:${line}` : ''} ${message}`);
+  failures.push(`${file}${line ? `:${line}` : ""} ${message}`);
 };
 
-const sourceFiles = walk('src').filter(file => /\.(css|jsx|js)$/.test(file));
+const sourceFiles = walk("src").filter((file) => /\.(css|jsx|js)$/.test(file));
 
-const packageJson = JSON.parse(read('package.json'));
+const packageJson = JSON.parse(read("package.json"));
 const requiredScripts = {
-  lint: 'node scripts/quality-check.js',
-  quality: 'node scripts/quality-check.js',
-  check: 'npm run format:check && npm run lint && npm run test:run && npm run build',
-  'dev:5001': 'vite --host 0.0.0.0 --port 5001'
+  lint: "node scripts/quality-check.js",
+  quality: "node scripts/quality-check.js",
+  check:
+    "npm run format:check && npm run lint && npm run check:tokens && npm run test:run && npm run build",
+  "check:tokens": "node scripts/check-tokens.mjs",
+  "dev:5001": "vite --host 0.0.0.0 --port 5001",
 };
 
 Object.entries(requiredScripts).forEach(([name, command]) => {
   if (packageJson.scripts?.[name] !== command) {
-    fail('package.json', null, `expected script "${name}" to be "${command}"`);
+    fail("package.json", null, `expected script "${name}" to be "${command}"`);
   }
 });
 
-['package.json', 'README.md', 'vite.config.js', ...sourceFiles].forEach(file => {
+["package.json", "README.md", "vite.config.js", ...sourceFiles].forEach((file) => {
   const text = read(file);
-  if (text.includes('5173')) {
-    fail(file, null, 'port 5173 is banned for this project; use 5001');
+  if (text.includes("5173")) {
+    fail(file, null, "port 5173 is banned for this project; use 5001");
   }
 });
 
 const hardcodedColorPattern = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g;
 const colorAllowListFiles = new Set([
-  'src/config/designSystem.js',
-  'src/index.css',
-  'src/components/Logo.jsx'
+  "src/config/designSystem.js",
+  "src/index.css",
+  "src/components/Logo.jsx",
 ]);
 const colorAllowLinePatterns = [
   /transparent/,
   /currentColor/,
   /color-mix/,
   /CanvasTexture/,
-  /backgroundColor="transparent"/
+  /backgroundColor="transparent"/,
 ];
 
-sourceFiles.forEach(file => {
+sourceFiles.forEach((file) => {
   if (colorAllowListFiles.has(file)) return;
 
-  read(file).split('\n').forEach((lineText, index) => {
-    if (!hardcodedColorPattern.test(lineText)) return;
-    hardcodedColorPattern.lastIndex = 0;
-    if (colorAllowLinePatterns.some(pattern => pattern.test(lineText))) return;
-    fail(file, index + 1, 'hardcoded color found outside designSystem tokens');
-  });
+  read(file)
+    .split("\n")
+    .forEach((lineText, index) => {
+      if (!hardcodedColorPattern.test(lineText)) return;
+      hardcodedColorPattern.lastIndex = 0;
+      if (colorAllowLinePatterns.some((pattern) => pattern.test(lineText))) return;
+      fail(file, index + 1, "hardcoded color found outside designSystem tokens");
+    });
 });
 
-const globeMap = read('src/GlobeMap.jsx');
+const globeMap = read("src/globe/GlobeMap.jsx");
 [
-  ['highResCountriesByAdmin', 'do not swap low/high-res country geometry at selection time'],
-  ['pathsData', 'do not add path overlays for selected country outlines unless they are visually verified'],
-  ['pathStroke', 'do not add path overlays for selected country outlines unless they are visually verified'],
-  ['globe-center-light-overlay', 'do not reintroduce 2D globe light overlays'],
-  ['createRadialGlowTexture', 'do not reintroduce sprite/canvas glow textures']
+  ["highResCountriesByAdmin", "do not swap low/high-res country geometry at selection time"],
+  [
+    "pathsData",
+    "do not add path overlays for selected country outlines unless they are visually verified",
+  ],
+  [
+    "pathStroke",
+    "do not add path overlays for selected country outlines unless they are visually verified",
+  ],
+  ["globe-center-light-overlay", "do not reintroduce 2D globe light overlays"],
+  ["createRadialGlowTexture", "do not reintroduce sprite/canvas glow textures"],
 ].forEach(([needle, message]) => {
-  if (globeMap.includes(needle)) fail('src/GlobeMap.jsx', null, message);
+  if (globeMap.includes(needle)) fail("src/globe/GlobeMap.jsx", null, message);
 });
 
-const app = read('src/App.jsx');
+const app = read("src/App.jsx");
 if (/countries-50m\.json/.test(app)) {
-  fail('src/App.jsx', null, 'high-res map dataset should not load in the runtime app');
+  fail("src/App.jsx", null, "high-res map dataset should not load in the runtime app");
 }
 
-const cssFiles = sourceFiles.filter(file => file.endsWith('.css'));
-cssFiles.forEach(file => {
-  read(file).split('\n').forEach((lineText, index) => {
-    if (/letter-spacing:\s*-/.test(lineText)) {
-      fail(file, index + 1, 'negative letter-spacing is banned');
-    }
-  });
+const cssFiles = sourceFiles.filter((file) => file.endsWith(".css"));
+cssFiles.forEach((file) => {
+  read(file)
+    .split("\n")
+    .forEach((lineText, index) => {
+      if (/letter-spacing:\s*-/.test(lineText)) {
+        fail(file, index + 1, "negative letter-spacing is banned");
+      }
+    });
 });
 
 // Check for banned onPointerDown preventing defaults (which breaks mobile clicks)
-sourceFiles.filter(file => file.endsWith('.jsx')).forEach(file => {
-  const content = read(file);
-  if (/onPointerDown\s*=\s*\{\s*(?:\([^)]*\)|[a-zA-Z0-9_$]+)\s*=>\s*[^}]*preventDefault/i.test(content)) {
-    fail(file, null, 'banned onPointerDown preventing defaults on buttons (breaks mobile clicks; use onMouseDown instead)');
-  }
-});
+sourceFiles
+  .filter((file) => file.endsWith(".jsx"))
+  .forEach((file) => {
+    const content = read(file);
+    if (
+      /onPointerDown\s*=\s*\{\s*(?:\([^)]*\)|[a-zA-Z0-9_$]+)\s*=>\s*[^}]*preventDefault/i.test(
+        content
+      )
+    ) {
+      fail(
+        file,
+        null,
+        "banned onPointerDown preventing defaults on buttons (breaks mobile clicks; use onMouseDown instead)"
+      );
+    }
+  });
 
 // ==========================================
 // New Readability and File Size Checks
 // ==========================================
 
 const RATCHET_LIMITS = {
-  'src/App.jsx': 530,
-  'src/GlobeMap.jsx': 590,
-  'src/components/GameHUD.jsx': 650,
-  'src/hooks/useGameSession.js': 750,
-  'src/hooks/useUserProfile.js': 770,
-  'src/hooks/useGlobePolygons.js': 710,
-  'src/config/designSystem.js': 725,
-  'src/components/GameHUD.css': 1000,
-  'src/components/HomeScreen.css': 840, // expanded by unified panelSystem + responsive segmented + glass primitives + quality tooling
-  'src/components/ProfilePanel.css': 800, // expanded by scroll refactor, sticky footer, avatar grid, blur overlay, charts + quality tooling
-  'src/components/LeaderboardScreen.css': 530,
-  'src/components/EndScreen.css': 600
+  "src/App.jsx": 530,
+  "src/globe/GlobeMap.jsx": 590,
+  "src/components/GameHUD.jsx": 650,
+  "src/hooks/useGameSession.js": 750,
+  "src/hooks/useUserProfile.js": 490,
+  "src/globe/hooks/useGlobePolygons.js": 710,
+  "src/config/designSystem.js": 745, // + typography scale tokens (STYLE_TOKENS.fontSize + getThemeCssVariables)
+  "src/components/GameHUD.css": 1000,
+  "src/index.css": 560, // + typography scale, ghost-token defaults, glass icon button primitive (moved from HomeScreen.css)
+  "src/components/HomeScreen.css": 840, // expanded by unified panelSystem + responsive segmented + glass primitives + quality tooling
+  "src/components/ProfilePanel.css": 800, // expanded by scroll refactor, sticky footer, avatar grid, blur overlay, charts + quality tooling
+  "src/components/LeaderboardScreen.css": 530,
+  "src/components/EndScreen.css": 600,
 };
 
 const LEGACY_BASES = {
-  'src/App.jsx': { maxDepth: 6, maxBlock2: 85, maxBlock3: 35 },
-  'src/GlobeMap.jsx': { maxDepth: 5, maxBlock2: 35, maxBlock3: 20 },
-  'src/components/EndScreen.jsx': { maxDepth: 6, maxBlock2: 40, maxBlock3: 35 },
-  'src/components/GameHUD.jsx': { maxDepth: 8, maxBlock2: 210, maxBlock3: 110 },
-  'src/components/LeaderboardScreen.jsx': { maxDepth: 6, maxBlock2: 90, maxBlock3: 70 },
-  'src/components/Logo.jsx': { maxDepth: 7, maxBlock2: 45, maxBlock3: 25 },
-  'src/components/PixelFireworks.jsx': { maxDepth: 6, maxBlock2: 150, maxBlock3: 40 },
-  'src/components/ProfilePanel.jsx': { maxDepth: 7, maxBlock2: 240, maxBlock3: 50 },
+  "src/App.jsx": { maxDepth: 6, maxBlock2: 85, maxBlock3: 35 },
+  "src/globe/GlobeMap.jsx": { maxDepth: 5, maxBlock2: 35, maxBlock3: 20 },
+  "src/components/EndScreen.jsx": { maxDepth: 6, maxBlock2: 40, maxBlock3: 35 },
+  "src/components/GameHUD.jsx": { maxDepth: 8, maxBlock2: 210, maxBlock3: 110 },
+  "src/components/LeaderboardScreen.jsx": { maxDepth: 6, maxBlock2: 90, maxBlock3: 70 },
+  "src/components/Logo.jsx": { maxDepth: 7, maxBlock2: 45, maxBlock3: 25 },
+  "src/components/PixelFireworks.jsx": { maxDepth: 6, maxBlock2: 150, maxBlock3: 40 },
+  "src/components/ProfilePanel.jsx": { maxDepth: 7, maxBlock2: 240, maxBlock3: 50 },
 
-  'src/components/AuthModal.jsx': { maxDepth: 7, maxBlock2: 100, maxBlock3: 70 },
-  'src/components/SpaceBackground.jsx': { maxDepth: 5, maxBlock2: 190, maxBlock3: 105 },
-  'src/components/XpOrbsAnimation.jsx': { maxDepth: 5, maxBlock2: 155, maxBlock3: 90 },
-  'src/hooks/useGameSession.js': { maxDepth: 7, maxBlock2: 170, maxBlock3: 60 },
-  'src/hooks/useGlobeAnimationLoop.js': { maxDepth: 8, maxBlock2: 320, maxBlock3: 300 },
-  'src/hooks/useGlobeCamera.js': { maxDepth: 10, maxBlock2: 95, maxBlock3: 75 },
-  'src/hooks/useGlobeInteractions.js': { maxDepth: 6, maxBlock2: 85, maxBlock3: 50 },
-  'src/hooks/useGlobeLabels.js': { maxDepth: 7, maxBlock2: 190, maxBlock3: 80 },
-  'src/hooks/useGlobeLighting.js': { maxDepth: 6, maxBlock2: 200, maxBlock3: 80 },
-  'src/hooks/useGlobePolygons.js': { maxDepth: 6, maxBlock2: 180, maxBlock3: 90 },
-  'src/hooks/useUserProfile.js': { maxDepth: 9, maxBlock2: 215, maxBlock3: 210 },
-  'src/utils/LowPolyBiomes.js': { maxDepth: 6, maxBlock2: 75, maxBlock3: 65 },
-  'src/utils/globeLabelBuilder.js': { maxDepth: 5, maxBlock2: 145, maxBlock3: 50 }
+  "src/components/AuthModal.jsx": { maxDepth: 7, maxBlock2: 100, maxBlock3: 70 },
+  "src/components/SpaceBackground.jsx": { maxDepth: 5, maxBlock2: 190, maxBlock3: 105 },
+  "src/components/XpOrbsAnimation.jsx": { maxDepth: 5, maxBlock2: 155, maxBlock3: 90 },
+  "src/hooks/useGameSession.js": { maxDepth: 7, maxBlock2: 170, maxBlock3: 60 },
+  "src/globe/hooks/useGlobeAnimationLoop.js": { maxDepth: 8, maxBlock2: 320, maxBlock3: 300 },
+  "src/globe/hooks/useGlobeCamera.js": { maxDepth: 10, maxBlock2: 95, maxBlock3: 75 },
+  "src/globe/hooks/useGlobeInteractions.js": { maxDepth: 6, maxBlock2: 85, maxBlock3: 50 },
+  "src/globe/hooks/useGlobeLabels.js": { maxDepth: 7, maxBlock2: 190, maxBlock3: 80 },
+  "src/globe/hooks/useGlobeLighting.js": { maxDepth: 6, maxBlock2: 200, maxBlock3: 80 },
+  "src/globe/hooks/useGlobePolygons.js": { maxDepth: 6, maxBlock2: 180, maxBlock3: 90 },
+  "src/hooks/useUserProfile.js": { maxDepth: 9, maxBlock2: 145, maxBlock3: 135 },
+  "src/globe/render/LowPolyBiomes.js": { maxDepth: 6, maxBlock2: 75, maxBlock3: 65 },
+  "src/globe/render/globeLabelBuilder.js": { maxDepth: 5, maxBlock2: 145, maxBlock3: 50 },
 };
 
-sourceFiles.forEach(file => {
+sourceFiles.forEach((file) => {
   const content = read(file);
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const lineCount = lines.length;
 
   // 1. File Size & Ratchet Validation
-  const isDataFile = file.startsWith('src/data/');
+  const isDataFile = file.startsWith("src/data/");
   if (!isDataFile) {
-    const isJs = file.endsWith('.js') || file.endsWith('.jsx');
-    const isCss = file.endsWith('.css');
-    const defaultLimit = isJs ? 500 : (isCss ? 500 : Infinity);
+    const isJs = file.endsWith(".js") || file.endsWith(".jsx");
+    const isCss = file.endsWith(".css");
+    const defaultLimit = isJs ? 500 : isCss ? 500 : Infinity;
 
     const limit = RATCHET_LIMITS[file] || defaultLimit;
     if (lineCount > limit) {
@@ -169,11 +192,9 @@ sourceFiles.forEach(file => {
   }
 
   // 2. Readability & Complexity Validation (JS/JSX files only, excluding config/data/tests)
-  const isJs = file.endsWith('.js') || file.endsWith('.jsx');
+  const isJs = file.endsWith(".js") || file.endsWith(".jsx");
   const isExcludedFromReadability =
-    file.startsWith('src/config/') ||
-    file.startsWith('src/data/') ||
-    file.startsWith('src/tests/');
+    file.startsWith("src/config/") || file.startsWith("src/data/") || file.startsWith("src/tests/");
 
   if (isJs && !isExcludedFromReadability) {
     let braceDepth = 0;
@@ -183,7 +204,7 @@ sourceFiles.forEach(file => {
     let maxBlock3 = 0;
     let insideComment = false;
     let insideString = false;
-    let stringChar = '';
+    let stringChar = "";
 
     for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
       const line = lines[lineIdx];
@@ -193,15 +214,15 @@ sourceFiles.forEach(file => {
       const cleanLine = line.trim();
       if (cleanLine.length > 120) {
         const isBannedPattern =
-          line.includes('import ') ||
-          line.includes('require(') ||
-          line.includes('http://') ||
-          line.includes('https://') ||
-          line.includes('data:image/') ||
-          line.includes('path d=') ||
-          cleanLine.startsWith('//') ||
-          cleanLine.startsWith('*') ||
-          cleanLine.includes('`') ||
+          line.includes("import ") ||
+          line.includes("require(") ||
+          line.includes("http://") ||
+          line.includes("https://") ||
+          line.includes("data:image/") ||
+          line.includes("path d=") ||
+          cleanLine.startsWith("//") ||
+          cleanLine.startsWith("*") ||
+          cleanLine.includes("`") ||
           cleanLine.includes('"') ||
           cleanLine.includes("'");
 
@@ -220,49 +241,49 @@ sourceFiles.forEach(file => {
         const nextChar = line[colIdx + 1];
 
         if (insideComment) {
-          if (char === '*' && nextChar === '/') {
+          if (char === "*" && nextChar === "/") {
             insideComment = false;
             colIdx++;
           }
           continue;
         }
 
-        if (char === '/' && nextChar === '*') {
+        if (char === "/" && nextChar === "*") {
           insideComment = true;
           colIdx++;
           continue;
         }
 
-        if (char === '/' && nextChar === '/') {
+        if (char === "/" && nextChar === "/") {
           break; // Rest of line is comment
         }
 
         if (insideString) {
-          if (char === '\\') {
+          if (char === "\\") {
             colIdx++; // Skip escaped character
             continue;
           }
           if (char === stringChar) {
             insideString = false;
-            stringChar = '';
+            stringChar = "";
           }
           continue;
         }
 
-        if (char === "'" || char === '"' || char === '`') {
+        if (char === "'" || char === '"' || char === "`") {
           insideString = true;
           stringChar = char;
           continue;
         }
 
         // Trace opening and closing braces
-        if (char === '{') {
+        if (char === "{") {
           braceDepth++;
           braceStack.push({ lineNum, depth: braceDepth });
           if (braceDepth > maxDepth) {
             maxDepth = braceDepth;
           }
-        } else if (char === '}') {
+        } else if (char === "}") {
           if (braceDepth > 0) {
             const open = braceStack.pop();
             const blockLength = lineNum - open.lineNum + 1;
@@ -314,51 +335,57 @@ sourceFiles.forEach(file => {
 
 // Ban rogue z-index overrides that break the panel/dialog stacking order
 const zIndexAllowListFiles = new Set([
-  'src/panelSystem.css',
-  'src/index.css',
-  'src/App.css'
+  "src/styles/panelSystem.css",
+  "src/index.css",
+  "src/App.css",
 ]);
-cssFiles.forEach(file => {
+cssFiles.forEach((file) => {
   if (zIndexAllowListFiles.has(file)) return;
-  read(file).split('\n').forEach((lineText, index) => {
-    if (/var\(--z-/.test(lineText)) return;
-    const match = lineText.match(/z-index:\s*(\d+)/);
-    if (!match) return;
-    const value = Number(match[1]);
-    if (value > 6000) {
-      fail(file, index + 1, `z-index ${value} exceeds panel system max; use --z-sheet/--z-dialog tokens`);
-    }
-  });
+  read(file)
+    .split("\n")
+    .forEach((lineText, index) => {
+      if (/var\(--z-/.test(lineText)) return;
+      const match = lineText.match(/z-index:\s*(\d+)/);
+      if (!match) return;
+      const value = Number(match[1]);
+      if (value > 6000) {
+        fail(
+          file,
+          index + 1,
+          `z-index ${value} exceeds panel system max; use --z-sheet/--z-dialog tokens`
+        );
+      }
+    });
 });
 
 // Run ESLint (unused imports, hooks rules, basic correctness)
 try {
-  console.log('Running ESLint...');
-  execSync('npx eslint src', { stdio: 'inherit' });
+  console.log("Running ESLint...");
+  execSync("npx eslint src", { stdio: "inherit" });
 } catch {
-  fail('eslint', null, 'ESLint reported errors or warnings.');
+  fail("eslint", null, "ESLint reported errors or warnings.");
 }
 
 // Run Prettier format check
 try {
-  console.log('Running Prettier format check...');
-  execSync('npx prettier --check "src/**/*.{js,jsx,css,json}"', { stdio: 'inherit' });
+  console.log("Running Prettier format check...");
+  execSync('npx prettier --check "src/**/*.{js,jsx,css,json}"', { stdio: "inherit" });
 } catch {
-  fail('prettier', null, 'Code is not formatted with Prettier. Run `npm run format`.');
+  fail("prettier", null, "Code is not formatted with Prettier. Run `npm run format`.");
 }
 
 // Run knip dead code audit
 try {
-  console.log('Running dead code audit (knip)...');
-  execSync('npx knip', { stdio: 'inherit' });
+  console.log("Running dead code audit (knip)...");
+  execSync("npx knip", { stdio: "inherit" });
 } catch {
-  fail('knip', null, 'Dead code or unused imports/exports detected in the project.');
+  fail("knip", null, "Dead code or unused imports/exports detected in the project.");
 }
 
 if (failures.length) {
-  console.error('Quality check failed:\n');
-  failures.forEach(item => console.error(`- ${item}`));
+  console.error("Quality check failed:\n");
+  failures.forEach((item) => console.error(`- ${item}`));
   process.exit(1);
 }
 
-console.log('Quality check passed.');
+console.log("Quality check passed.");

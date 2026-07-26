@@ -64,9 +64,10 @@ export async function upsertProfile(
 ) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
+    let activeUsername = username;
     const payload = {
       id: profileId,
-      username,
+      username: activeUsername,
       avatar_id: avatarId,
       avatar_color: avatarColor,
       xp,
@@ -75,7 +76,21 @@ export async function upsertProfile(
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await supabase.from("profiles").upsert(payload).select().single();
+    let { data, error } = await supabase.from("profiles").upsert(payload).select().single();
+
+    // If username collision occurs (code 23505), append random suffix and retry
+    if (
+      error &&
+      (error.code === "23505" ||
+        /unique constraint|profiles_username_key/i.test(error.message || ""))
+    ) {
+      const suffix = Math.random().toString(36).substring(2, 6);
+      activeUsername = `${username}_${suffix}`;
+      payload.username = activeUsername;
+      const retryResult = await supabase.from("profiles").upsert(payload).select().single();
+      data = retryResult.data;
+      error = retryResult.error;
+    }
 
     return { data, error };
   } catch (err) {
@@ -163,7 +178,12 @@ export async function getLeaderboard(gameMode, limit = 50) {
           score: row.max_score,
           time_spent_seconds: row.best_time_seconds,
           hardcore: Boolean(row.hardcore),
-          profiles: row.profiles,
+          profiles: row.profiles || {
+            id: row.profile_id,
+            username: "Explorer_Guest",
+            avatar_id: "invader_1",
+            avatar_color: "cyan",
+          },
         }))
       : [];
 

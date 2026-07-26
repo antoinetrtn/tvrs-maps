@@ -77,7 +77,9 @@ export function getDataPanelLayoutWidth(viewportWidth) {
 // --- Persistence -------------------------------------------------------------
 export const STORAGE_KEYS = {
   globeTheme: "tvrs-globe-theme",
+  uiTheme: "tvrs-ui-theme",
   hardcoreMode: "tvrs-hardcore-mode",
+  peacefulMode: "tvrs-peaceful-mode",
 };
 
 // --- Hardcore mode -----------------------------------------------------------

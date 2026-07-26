@@ -1,4 +1,4 @@
-import "../App.css";
+import "./ConfirmationModal.css";
 
 import React from "react";
 import { createPortal } from "react-dom";

@@ -14,19 +14,26 @@ export function useCountrySelectHandler({
   setPopupError,
   extInputRef,
   onAfterSelect,
+  isLearnMode = false,
 }) {
   return useCallback(
     (c) => {
       if (c === selectedCountry && c !== null) {
         setPopupError(false);
-        refocusInput(extInputRef);
+        if (!isLearnMode) {
+          refocusInput(extInputRef);
+        }
         return;
       }
       setSelectedCountry(c);
       resetNavigationTrail(c);
       setPopupError(false);
       if (c) {
-        refocusInput(extInputRef);
+        if (!isLearnMode) {
+          refocusInput(extInputRef);
+        } else if (document.activeElement && typeof document.activeElement.blur === "function") {
+          document.activeElement.blur();
+        }
         onAfterSelect?.(c);
       }
     },
@@ -37,6 +44,7 @@ export function useCountrySelectHandler({
       setPopupError,
       extInputRef,
       onAfterSelect,
+      isLearnMode,
     ]
   );
 }
