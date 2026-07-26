@@ -261,6 +261,12 @@ export function useGlobePolygons({
           if (isPerfectScore) return UI_COLORS.gold;
           return resolveFoundCountryStroke({ isLight, isSelected, UI_COLORS, lerpColor });
         }
+        // Blackout: regional land sits on the 0.6 emissive floor (~mid gray), so
+        // mapBorder has no contrast left against it — darken the limits instead,
+        // matching the world-mode "gray land, dark borders" look.
+        if (globeTheme === "blackout" && !isLight) {
+          return lerpColor(UI_COLORS.mapBorder, UI_COLORS.mapSea, 0.55);
+        }
         return isLight ? UI_COLORS.mapBorderMuted : UI_COLORS.mapBorder;
       }
 
