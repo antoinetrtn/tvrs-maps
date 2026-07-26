@@ -105,15 +105,15 @@ const applyIdleCameraPointOfView = ({
   }
 
   if (isHomeScreen) {
-    if (customPOV) {
-      globeEl.current.pointOfView(customPOV, 1000);
-    } else {
-      const overviewAltitude = viewport.width < 768 ? 2.5 : 1.8;
+    const overviewAltitude = viewport.width < 768 ? 2.5 : 1;
+    if (!wasHomeScreen) {
       const currentPOV = globeEl.current.pointOfView();
       globeEl.current.pointOfView(
-        { lat: 18, lng: currentPOV?.lng ?? 0, altitude: overviewAltitude },
+        { lat: 18, lng: currentPOV?.lng ?? 20, altitude: overviewAltitude },
         1000
       );
+    } else {
+      globeEl.current.pointOfView({ altitude: overviewAltitude }, 1000);
     }
     return;
   }
@@ -191,12 +191,8 @@ export function useGlobeCamera({
         const controls = globeEl.current.controls();
         if (controls) {
           controlsReference = controls;
-          const isRegionalMode =
-            mode === "departments" ||
-            mode === "us_states" ||
-            (mode === "learn" && (learnSubMode === "departments" || learnSubMode === "us_states"));
-          controls.autoRotate = shouldAutoRotate && !isRegionalMode;
-          controls.autoRotateSpeed = isRegionalMode ? 0 : 0.3;
+          controls.autoRotate = shouldAutoRotate;
+          controls.autoRotateSpeed = 0.3;
           controls.enableZoom = true;
           controls.enableDamping = true;
           controls.dampingFactor = perfProfile?.isMobile ? 0.12 : 0.08;
@@ -312,7 +308,7 @@ export function useGlobeCamera({
           lastTargetRef.current = target;
         }
       }
-    } else if ((selectionChanged || isHomeScreen) && globeEl.current) {
+    } else if (selectionChanged && globeEl.current) {
       applyIdleCameraPointOfView({
         globeEl,
         viewport,

@@ -202,7 +202,7 @@ const ModeCard = ({
   );
 };
 
-const HomeScreenCategoryCarousel = ({ onStartGame, lang, onActiveModeChange }) => {
+const HomeScreenCategoryCarousel = ({ onStartGame, lang }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -278,13 +278,6 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, onActiveModeChange }) =
       },
     ];
   }, []);
-
-  useEffect(() => {
-    const modeKey = gameModesCarousel[activeIndex]?.key;
-    if (modeKey) {
-      onActiveModeChange?.(modeKey);
-    }
-  }, [activeIndex, gameModesCarousel, onActiveModeChange]);
 
   const totalModes = gameModesCarousel.length;
 
