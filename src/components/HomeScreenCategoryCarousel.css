@@ -124,7 +124,7 @@
   width: 320px;
   height: 250px;
   padding: 1.25rem;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
   background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
   background-image: none !important;
