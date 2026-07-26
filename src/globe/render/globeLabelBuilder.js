@@ -4,7 +4,7 @@ import { riversMountainsDataMap } from "../../data/riversMountainsData";
 import { scrambleText } from "../../utils/utils";
 
 function buildGlobeLabelFlagHtml(iso2, { compact = false, prominent = false } = {}) {
-  if (!iso2 || iso2.length !== 2) return "";
+  if (!iso2 || iso2.length < 2) return "";
   const w = compact ? 16 : prominent ? 56 : 44;
   const h = compact ? 12 : prominent ? 42 : 33;
   const scaleVar = prominent
