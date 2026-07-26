@@ -131,7 +131,7 @@
   -webkit-backdrop-filter: none !important;
   border: 1px solid var(--glass-border-strong);
   box-shadow:
-    0 16px 36px var(--bg-color),
+    var(--shadow-card),
     inset 0 1px 0 color-mix(in srgb, var(--text-main) 14%, transparent);
   display: flex;
   flex-direction: column;
@@ -158,9 +158,11 @@
   --card-accent: var(--accent);
 }
 
-/* US States: Vibrant Amber Gold instead of muted dark grey */
+/* US States: --gold-light is a grayscale leftover (a pale gray with no
+   light-theme override), which made the card read as disabled — use --accent
+   like the other cards until a real amber token exists in the design system. */
 .deck-mode-card[data-mode="us_states"] {
-  --card-accent: color-mix(in srgb, var(--gold-light) 90%, var(--accent));
+  --card-accent: var(--accent);
 }
 
 .deck-mode-card[data-mode="rivers_mountains"] {
@@ -177,7 +179,7 @@
   -webkit-backdrop-filter: none !important;
   border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
   box-shadow:
-    0 16px 36px var(--bg-color),
+    var(--shadow-card),
     0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
 }
@@ -193,7 +195,7 @@
   -webkit-backdrop-filter: none !important;
   border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
   box-shadow:
-    0 16px 36px var(--bg-color),
+    var(--shadow-card),
     0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
   transition:

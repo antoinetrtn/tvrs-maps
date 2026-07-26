@@ -1,0 +1,176 @@
+/* Shared button primitives — moved out of index.css (file-size ratchet).
+   Loaded from main.jsx right after index.css so the cascade order is
+   unchanged: component sheets still override these base rules. */
+
+/* Glass icon button primitive (shared) — emitted by GlassIconButton.jsx.
+   The trigger aliases keep their historical class names; component sheets add
+   only local deltas (e.g. .profile-trigger-btn layout in HomeScreen.css). */
+.glass-icon-btn,
+.settings-trigger-btn,
+.profile-trigger-btn,
+.leaderboard-trigger-btn {
+  width: var(--control-lg);
+  height: var(--control-lg);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-main);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform var(--transition-spring),
+    box-shadow var(--transition-spring),
+    background var(--transition-spring);
+}
+
+.glass-icon-btn:hover,
+.settings-trigger-btn:hover,
+.profile-trigger-btn:hover,
+.leaderboard-trigger-btn:hover {
+  transform: translateY(-2.5px) scale(1.08);
+  color: var(--accent) !important;
+  background: var(--glass-hover) !important;
+  border-color: var(--accent) !important;
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.glass-icon-btn:active,
+.settings-trigger-btn:active,
+.profile-trigger-btn:active,
+.leaderboard-trigger-btn:active {
+  transform: translateY(0.5px) scale(0.92);
+  background: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform var(--transition-instant);
+}
+
+/* Shared primary button — used by EndScreen, ProfilePanel and AuthModal. */
+.btn-primary {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition:
+    transform var(--transition-spring),
+    opacity var(--transition-spring);
+  background: var(--glass-border);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2.5px) scale(1.02);
+  box-shadow:
+    0 0 0 1px var(--accent-soft),
+    0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--glass-hover);
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.btn-primary:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition:
+    transform var(--transition-instant),
+    background-color var(--transition-instant),
+    box-shadow var(--transition-instant);
+}
+
+/* Shared secondary button — quieter sibling of .btn-primary. */
+.btn-secondary {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
+  transition:
+    transform var(--transition-spring),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2.5px) scale(1.02);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--glass-hover);
+}
+
+.btn-secondary:active {
+  transform: translateY(0.5px) scale(0.98);
+  transition: transform var(--transition-instant);
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* The flicker colors are the same glitch tokens the static :hover shadows use,
+   so the animation stays consistent in both themes. */
+@keyframes btn-hover-flicker {
+  0% {
+    text-shadow:
+      -1px 0 var(--glitch-magenta),
+      1px 0 var(--glitch-cyan);
+    border-color: var(--accent);
+  }
+  50% {
+    text-shadow:
+      1px 0 var(--glitch-magenta),
+      -1px 0 var(--glitch-cyan);
+    border-color: var(--accent-hover);
+  }
+  100% {
+    text-shadow:
+      -0.5px 0.5px var(--glitch-magenta),
+      0.5px -0.5px var(--glitch-cyan);
+    border-color: var(--accent);
+  }
+}
+
+/* Glitch hover effect - shared utility class */
+.glitch-hover:hover {
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+/* Active/pressed button state - shared utility class */
+.btn-active:active {
+  transform: translateY(0.5px) scale(0.98);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform var(--transition-instant);
+}

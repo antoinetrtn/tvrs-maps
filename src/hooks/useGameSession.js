@@ -604,9 +604,27 @@ export function useGameSession({
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      const isArrow = e.key === "ArrowRight" || e.key === "ArrowLeft";
+      if (!isArrow) return;
+
+      const inTextField = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA";
+      const inGameInput = Boolean(extInputRef?.current) && e.target === extInputRef.current;
+
+      // Shift+Arrow mirrors the prev/next arrows around the search bar. It also
+      // fires from the game answer input when it is empty (its dominant state);
+      // with content, native Shift+Arrow text selection keeps priority.
+      if (
+        e.shiftKey &&
+        !e.repeat &&
+        mode !== "learn" &&
+        (!inTextField || (inGameInput && e.target.value === ""))
+      ) {
+        e.preventDefault();
+        navigateFocus(e.key === "ArrowRight" ? "next" : "prev");
         return;
       }
+
+      if (inTextField) return;
       if (isPlaying && selectedCountry) {
         if (e.key === "ArrowRight") navigateFocus("next");
         if (e.key === "ArrowLeft") navigateFocus("prev");
@@ -614,7 +632,7 @@ export function useGameSession({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPlaying, selectedCountry, navigateFocus]);
+  }, [isPlaying, selectedCountry, navigateFocus, mode, extInputRef]);
 
   return {
     foundList,
@@ -650,5 +668,6 @@ export function useGameSession({
     globeFeedbackRef,
     livesLeft,
     isHardcoreRun,
+    mistakes,
   };
 }

@@ -1,4 +1,5 @@
 import "./index.css";
+import "./styles/buttons.css";
 import "./styles/panelSystem.css";
 
 import React from "react";

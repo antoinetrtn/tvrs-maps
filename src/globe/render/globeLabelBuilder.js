@@ -75,6 +75,9 @@ export function createGlobeLabelElement(
   const labelText = UI_COLORS.globeLabelText || UI_COLORS.textMain;
   const labelDot = UI_COLORS.globeLabelDot || UI_COLORS.textMain;
   const labelStalk = UI_COLORS.globeLabelStalk || UI_COLORS.accent;
+  // Themed shadow/halo behind label text: black in dark themes, a soft white
+  // halo in light (a black smear under ink text looked dirty on the day globe).
+  const labelShadow = UI_COLORS.labelShadow || UI_COLORS.black;
 
   // Set root to 0 size so its center is the exact lat/lng
   el.style.width = "0";
@@ -152,7 +155,7 @@ export function createGlobeLabelElement(
           background: ${stalkColor};
           left: -0.6px;
           bottom: 3px;
-          box-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 85%, transparent);
+          box-shadow: 0 1px 3px color-mix(in srgb, ${labelShadow} 85%, transparent);
           opacity: 0.85;
         "></div>
         <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
@@ -168,7 +171,7 @@ export function createGlobeLabelElement(
           font-family: var(--font-display, monospace) !important;
           white-space: nowrap;
           color: ${textColor};
-          text-shadow: 0 1px 2px color-mix(in srgb, ${UI_COLORS.black} 60%, transparent);
+          text-shadow: 0 1px 2px color-mix(in srgb, ${labelShadow} 60%, transparent);
           opacity: 1;
         ">
           <div style="font-weight: 700; font-size: calc(13px * var(--ui-scale, 1)); min-height: calc(15px * var(--ui-scale, 1)); line-height: calc(15px * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: var(--font-display, monospace) !important; ${flagHtml ? labelRowLayout : ""}">
@@ -219,7 +222,7 @@ export function createGlobeLabelElement(
     const deptMainHeight = isDeptMode ? "17px" : "15px";
     const deptSubHeight = isDeptMode ? "15px" : "13px";
     const labelBg = isDeptMode
-      ? `background: color-mix(in srgb, ${UI_COLORS.black} 68%, transparent); padding: 3px 7px; border-radius: 5px; box-shadow: 0 1px 4px color-mix(in srgb, ${UI_COLORS.black} 40%, transparent);`
+      ? `background: color-mix(in srgb, ${labelShadow} 68%, transparent); padding: 3px 7px; border-radius: 5px; box-shadow: 0 1px 4px color-mix(in srgb, ${labelShadow} 40%, transparent);`
       : "";
 
     const getScrambledHtml = (ratio) => {
@@ -245,7 +248,7 @@ export function createGlobeLabelElement(
 
       return `
         <div style="${labelBg} font-weight: 700; font-size: calc(${deptMainSize} * var(--ui-scale, 1)); min-height: calc(${deptMainHeight} * var(--ui-scale, 1)); line-height: calc(${deptMainHeight} * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"};">${scrambledLine1}</div>
-        ${scrambledLine2 ? `<div style="font-weight: ${isDeptMode ? 600 : 500}; font-size: calc(${deptSubSize} * var(--ui-scale, 1)); min-height: calc(${deptSubHeight} * var(--ui-scale, 1)); line-height: calc(${deptSubHeight} * var(--ui-scale, 1)); color: ${isDeptMode ? `color-mix(in srgb, ${UI_COLORS.textMain} 96%, transparent)` : `color-mix(in srgb, ${UI_COLORS.textMain} 88%, transparent)`}; margin-top: ${isDeptMode ? "3px" : "2px"}; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"}; text-shadow: ${isDeptMode ? `0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 70%, transparent)` : "none"};">${scrambledLine2}</div>` : ""}
+        ${scrambledLine2 ? `<div style="font-weight: ${isDeptMode ? 600 : 500}; font-size: calc(${deptSubSize} * var(--ui-scale, 1)); min-height: calc(${deptSubHeight} * var(--ui-scale, 1)); line-height: calc(${deptSubHeight} * var(--ui-scale, 1)); color: ${isDeptMode ? `color-mix(in srgb, ${UI_COLORS.textMain} 96%, transparent)` : `color-mix(in srgb, ${UI_COLORS.textMain} 88%, transparent)`}; margin-top: ${isDeptMode ? "3px" : "2px"}; font-family: ${ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit"}; text-shadow: ${isDeptMode ? `0 1px 3px color-mix(in srgb, ${labelShadow} 70%, transparent)` : "none"};">${scrambledLine2}</div>` : ""}
       `;
     };
 
@@ -271,7 +274,7 @@ export function createGlobeLabelElement(
           background: ${labelStalk};
           left: -0.6px;
           bottom: 3px;
-          box-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 85%, transparent);
+          box-shadow: 0 1px 3px color-mix(in srgb, ${labelShadow} 85%, transparent);
           opacity: 0.85;
         "></div>
         <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
@@ -286,7 +289,7 @@ export function createGlobeLabelElement(
           font-family: var(--font-main);
           white-space: nowrap;
           color: ${labelText};
-          text-shadow: 0 1px 3px color-mix(in srgb, ${UI_COLORS.black} 75%, transparent);
+          text-shadow: 0 1px 3px color-mix(in srgb, ${labelShadow} 75%, transparent);
           opacity: 1;
         ">
           ${getScrambledHtml(1.0)}

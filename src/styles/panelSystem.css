@@ -286,6 +286,16 @@
     color var(--transition-fast);
 }
 
+.segmented-opt:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.segmented-opt:disabled:hover {
+  background: transparent;
+  color: var(--text-muted);
+}
+
 .segmented-label {
   white-space: nowrap;
 }

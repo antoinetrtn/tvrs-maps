@@ -93,40 +93,45 @@ export const GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
 // Blackout is the dark, high-contrast default.
 export const DEFAULT_GLOBE_THEME = "blackout";
 
+// LIGHT PALETTE — soft near-black ink on warm paper. No pure #000 in the UI:
+// pure black reads harsh/dated on light surfaces ("noir trop noir"). Shadows are
+// ink-tinted, low-opacity and multi-layered instead of heavy black blurs.
+// KEEP IN SYNC with [data-theme="light"] in src/index.css (first-paint mirror).
 const THEME = {
   light: {
-    bg: "#ffffff",
-    bgElevated: "#f1f5f9",
-    textMain: "#000000",
-    textMuted: "#666666",
+    bg: "#f7f6f3",
+    bgElevated: "#fdfcfa",
+    textMain: "#1c2433",
+    textMuted: "#5a6472",
     textInverse: "#ffffff",
-    ink: "#000000",
+    ink: "#1c2433",
     paper: "#ffffff",
     black: "#000000",
-    accent: "#000000",
-    accentHover: "#333333",
-    accentSoft: "rgba(0, 0, 0, 0.08)",
-    accentGlow: "#000000",
-    glassBg: "rgba(255, 255, 255, 0.85)",
-    glassBorder: "rgba(0, 0, 0, 0.12)",
-    glassBorderStrong: "rgba(0, 0, 0, 0.24)",
-    glassHover: "rgba(0, 0, 0, 0.04)",
-    glassShadow: "0 20px 50px rgba(0, 0, 0, 0.06)",
-    glassShadowStrong: "0 24px 58px rgba(0, 0, 0, 0.1)",
-    glassShadowDrag: "0 34px 86px rgba(0, 0, 0, 0.14)",
-    overlayBg: "rgba(255, 255, 255, 0.85)",
-    modalHeaderBg: "rgba(255, 255, 255, 0.6)",
-    subtleTint: "rgba(0, 0, 0, 0.05)",
-    highlight: "rgba(0, 0, 0, 0.08)",
-    success: "#000000",
+    labelShadow: "#ffffff",
+    accent: "#1f2937",
+    accentHover: "#374151",
+    accentSoft: "rgba(31, 41, 55, 0.08)",
+    accentGlow: "#1f2937",
+    glassBg: "rgba(253, 252, 250, 0.8)",
+    glassBorder: "rgba(28, 36, 51, 0.1)",
+    glassBorderStrong: "rgba(28, 36, 51, 0.2)",
+    glassHover: "rgba(28, 36, 51, 0.05)",
+    glassShadow: "0 1px 2px rgba(28, 36, 51, 0.05), 0 12px 32px rgba(28, 36, 51, 0.1)",
+    glassShadowStrong: "0 2px 4px rgba(28, 36, 51, 0.06), 0 18px 44px rgba(28, 36, 51, 0.14)",
+    glassShadowDrag: "0 4px 8px rgba(28, 36, 51, 0.08), 0 24px 60px rgba(28, 36, 51, 0.18)",
+    overlayBg: "rgba(247, 246, 243, 0.6)",
+    modalHeaderBg: "rgba(253, 252, 250, 0.6)",
+    subtleTint: "rgba(28, 36, 51, 0.05)",
+    highlight: "rgba(28, 36, 51, 0.08)",
+    success: "#1c2433",
     selectionHighlight: "#2dffa8",
-    gold: "#666666",
+    gold: "#5a6472",
     error: "#ff4500",
     errorDeep: "#e63e00",
     errorDeeper: "#b33000",
     errorMuted: "#ff8a65",
-    warning: "#888888",
-    warningSoft: "rgba(0, 0, 0, 0.04)",
+    warning: "#6b7280",
+    warningSoft: "rgba(28, 36, 51, 0.04)",
     mapBase: "#dedee4",
     mapSea: "#ffffff",
     mapBorder: "#cccccc",
@@ -134,7 +139,7 @@ const THEME = {
     borderFound: "#cccccc",
     borderUnfound: "#e5e5e5",
     mapSurfaceSelected: "#111111",
-    gridDot: "rgba(0, 0, 0, 0.08)",
+    gridDot: "rgba(28, 36, 51, 0.08)",
     graticule: "#666666",
     atmosphere: "#e0e0e0",
     globeEmissive: "#ffffff",
@@ -160,6 +165,7 @@ const THEME = {
     ink: "#ffffff",
     paper: "#000000",
     black: "#000000",
+    labelShadow: "#000000",
     accent: "#ffffff",
     accentHover: "#cccccc",
     accentSoft: "rgba(255, 255, 255, 0.15)",
@@ -333,9 +339,9 @@ const GLOBE_THEMES = {
       isBlackoutTheme: false,
       borderFound: "#ffffff",
       borderUnfound: "#555555",
-      globeLabelText: "#ffffff",
-      globeLabelDot: "#ffffff",
-      globeLabelStalk: "#ffffff",
+      // NOTE: no globeLabelText/Dot/Stalk override here — labels fall back to
+      // textMain/accent, i.e. white in dark and ink in light. Hardcoding white
+      // made labels unreadable on the light (day) satellite globe.
     },
     continents: DEFAULT_CONTINENT_COLORS,
     departments: {
@@ -501,6 +507,7 @@ export const getThemeCssVariables = (
   { uiScale = 1 } = {}
 ) => {
   const theme = getThemeColors(globeTheme, systemTheme);
+  const isLight = systemTheme === "light";
 
   const scale = Math.max(0.72, Math.min(1.05, uiScale || 1));
   const s = (px) => `${Math.round(px * scale)}px`;
@@ -564,21 +571,23 @@ export const getThemeCssVariables = (
     "--control-md": s(parseInt(STYLE_TOKENS.size.controlMd)),
     "--control-lg": s(parseInt(STYLE_TOKENS.size.controlLg)),
     "--island-width": s(parseInt(STYLE_TOKENS.size.islandWidth)),
-    "--color-cyan": "#00f0ff",
-    "--color-magenta": "#ff007f",
-    "--color-cyan-glow": "rgba(0, 240, 255, 0.12)",
-    "--color-magenta-glow": "rgba(255, 0, 127, 0.12)",
-    "--color-gold": "#ffd700",
-    "--color-gold-glow": "rgba(255, 215, 0, 0.25)",
-    "--color-silver": "#c0c0c0",
-    "--color-silver-glow": "rgba(192, 192, 192, 0.25)",
-    "--color-bronze": "#cd7f32",
-    "--color-bronze-glow": "rgba(205, 127, 50, 0.25)",
-    "--shadow-subtle": "rgba(0, 0, 0, 0.15)",
-    "--color-cyan-glow-strong": "rgba(0, 240, 255, 0.4)",
-    "--color-lime": "#a3e635",
-    "--color-lime-glow-strong": "rgba(163, 230, 53, 0.4)",
-    "--color-error-glow-strong": "rgba(255, 69, 0, 0.4)",
+    // Neon accents: full-glow neons are unreadable on light panels, so the
+    // light theme swaps them for deep ink-compatible hues with faint glows.
+    "--color-cyan": isLight ? "#0e7490" : "#00f0ff",
+    "--color-magenta": isLight ? "#be185d" : "#ff007f",
+    "--color-cyan-glow": isLight ? "rgba(14, 116, 144, 0.15)" : "rgba(0, 240, 255, 0.12)",
+    "--color-magenta-glow": isLight ? "rgba(190, 24, 93, 0.15)" : "rgba(255, 0, 127, 0.12)",
+    "--color-gold": isLight ? "#b45309" : "#ffd700",
+    "--color-gold-glow": isLight ? "rgba(180, 83, 9, 0.2)" : "rgba(255, 215, 0, 0.25)",
+    "--color-silver": isLight ? "#64748b" : "#c0c0c0",
+    "--color-silver-glow": isLight ? "rgba(100, 116, 139, 0.2)" : "rgba(192, 192, 192, 0.25)",
+    "--color-bronze": isLight ? "#92400e" : "#cd7f32",
+    "--color-bronze-glow": isLight ? "rgba(146, 64, 14, 0.2)" : "rgba(205, 127, 50, 0.25)",
+    "--shadow-subtle": isLight ? "rgba(28, 36, 51, 0.12)" : "rgba(0, 0, 0, 0.15)",
+    "--color-cyan-glow-strong": isLight ? "rgba(14, 116, 144, 0.25)" : "rgba(0, 240, 255, 0.4)",
+    "--color-lime": isLight ? "#4d7c0f" : "#a3e635",
+    "--color-lime-glow-strong": isLight ? "rgba(77, 124, 15, 0.25)" : "rgba(163, 230, 53, 0.4)",
+    "--color-error-glow-strong": isLight ? "rgba(255, 69, 0, 0.25)" : "rgba(255, 69, 0, 0.4)",
     "--ui-scale": scale, // fluid calc(var(--base-foo) * var(--ui-scale))
     "--globe-flag-scale": Math.max(scale, 1.12),
   };

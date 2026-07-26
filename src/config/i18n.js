@@ -40,6 +40,7 @@ export const translations = {
     interface_theme: "Thème interface",
     theme_light: "Clair",
     theme_dark: "Sombre",
+    theme_light_blackout_hint: "Indisponible avec le globe Noir & Blanc",
     interface_scale: "Taille de l'interface",
     scale_auto: "Auto",
 
@@ -236,6 +237,7 @@ export const translations = {
     interface_theme: "Interface Theme",
     theme_light: "Light",
     theme_dark: "Dark",
+    theme_light_blackout_hint: "Unavailable with the Blacked Out globe",
     interface_scale: "Interface Scale",
     scale_auto: "Auto",
 
