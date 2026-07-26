@@ -89,7 +89,8 @@ export function createGlobeLabelElement(
   const isPlayMode = mode !== "learn" && d.mode !== "learn" && !isHomeScreen && !isEndScreen;
   const revealAll = mode === "learn" || !isPlayMode || d.isFound;
   const isDeptMode = d.mode === "departments";
-  const showLabelFlag = d.iso2 && !isDeptMode && d.mode !== "rivers_mountains";
+  const isUsStatesMode = d.mode === "us_states";
+  const showLabelFlag = d.iso2 && d.mode !== "rivers_mountains";
   const flagProminent = showLabelFlag && isPlayMode && d.isSelected && !isPanelOpen;
   const flagHtml = showLabelFlag
     ? buildGlobeLabelFlagHtml(d.iso2, {
@@ -101,7 +102,7 @@ export function createGlobeLabelElement(
     ? "flex-direction: row; align-items: center; gap: 4px;"
     : "flex-direction: column; align-items: center; gap: 3px;";
 
-  // Uniform scramble across every guessable mode (countries, capitals, departments,
+  // Uniform scramble across every guessable mode (countries, capitals, departments, us_states,
   // rivers/mountains) so no mode leaks its answer as readable text.
   const isGlitchMode = shouldScrambleLabel(d.mode, {
     isFound: d.isFound,
@@ -215,13 +216,12 @@ export function createGlobeLabelElement(
     const displayName = revealAll ? d.country : "???";
     const displayCapital = revealAll ? d.capital : "???";
 
-    const hasCapitalLine =
-      (d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals)) && d.capital;
-    const deptMainSize = isDeptMode ? "14px" : "13px";
-    const deptSubSize = isDeptMode ? "12px" : "11px";
-    const deptMainHeight = isDeptMode ? "17px" : "15px";
-    const deptSubHeight = isDeptMode ? "15px" : "13px";
-    const labelBg = isDeptMode
+    const isRegionalTag = isDeptMode || isUsStatesMode;
+    const deptMainSize = isRegionalTag ? "14px" : "13px";
+    const deptSubSize = isRegionalTag ? "12px" : "11px";
+    const deptMainHeight = isRegionalTag ? "17px" : "15px";
+    const deptSubHeight = isRegionalTag ? "15px" : "13px";
+    const labelBg = isRegionalTag
       ? `background: color-mix(in srgb, ${labelShadow} 68%, transparent); padding: 3px 7px; border-radius: 5px; box-shadow: 0 1px 4px color-mix(in srgb, ${labelShadow} 40%, transparent);`
       : "";
 
@@ -234,16 +234,29 @@ export function createGlobeLabelElement(
         const rawCode = d.code
           ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>`
           : "";
-        scrambledLine1 = `${rawCode}<span>${scramble(displayName)}</span>`;
-        if (d.capital) scrambledLine2 = scramble(displayCapital);
+        const capitalStr = d.capital && revealAll ? ` (${scramble(displayCapital)})` : "";
+        scrambledLine1 = `${rawCode}<span>${scramble(displayName)}${capitalStr}</span>`;
+      } else if (isUsStatesMode) {
+        const rawCode = d.code
+          ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>`
+          : "";
+        const capitalStr = d.capital && revealAll ? ` (${scramble(displayCapital)})` : "";
+        const textSpan = `<span>${rawCode}${scramble(displayName)}${capitalStr}</span>`;
+        scrambledLine1 = flagHtml
+          ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
+          : textSpan;
       } else {
-        const baseLine1Text = hasCapitalLine ? `${d.capital}` : `${d.country}`;
+        const isCapitalsMode = d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals);
+        let baseLine1Text = isCapitalsMode ? `${d.capital}` : `${d.country}`;
+        if (revealAll && d.capital && !isCapitalsMode) {
+          baseLine1Text = `${d.country} (${d.capital})`;
+        }
         const emojiPrefix = d.iso2 ? "" : `${iconSymbol || d.flag || ""}`;
         const textSpan = `<span>${emojiPrefix}${emojiPrefix ? " " : ""}${scramble(baseLine1Text)}</span>`;
         scrambledLine1 = flagHtml
           ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
           : textSpan;
-        if (hasCapitalLine && !d.hideCountryLine) scrambledLine2 = scramble(d.country);
+        if (isCapitalsMode && !d.hideCountryLine) scrambledLine2 = scramble(d.country);
       }
 
       return `
