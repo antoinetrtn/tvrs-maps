@@ -1,7 +1,7 @@
 import { AVATAR_COLORS, getThemeRegionColorLabel } from "../config/designSystem";
 import { CHALLENGES } from "../data/challenges";
-import { checkChallengesRealTime } from "../hooks/useUserProfile";
 import { isSupabaseConfigured, upsertProfile } from "../services/supabaseClient";
+import { checkChallengesRealTime } from "../utils/achievementEvaluator";
 import { getLevelAndProgress } from "../utils/gamification";
 
 const CONTINENT_INVADERS = [

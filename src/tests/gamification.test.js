@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { getProceduralDesign } from "../components/InvaderAvatar";
-import { checkChallengesRealTime } from "../hooks/useUserProfile";
-import { getAvatarUnlockLevel, getLevelAndProgress } from "../utils/gamification";
+import { checkChallengesRealTime } from "../utils/achievementEvaluator";
+import {
+  evaluateGameRewardsAndBadges,
+  getAvatarUnlockLevel,
+  getLevelAndProgress,
+} from "../utils/gamification";
 import { normalizeString } from "../utils/utils";
 
 const updateScoreHistory = (currentHistory, newScore) => {
@@ -80,6 +84,83 @@ describe("Gamification System Logic", () => {
       const designA = getProceduralDesign("challenge_a");
       const designB = getProceduralDesign("challenge_b");
       expect(designA).not.toEqual(designB);
+    });
+  });
+
+  describe("Game Reward Evaluation (evaluateGameRewardsAndBadges)", () => {
+    const baseRecords = {
+      countries: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      capitals: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      departments: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      rivers_mountains: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+      us_states: { maxScore: 0, bestTime: null, gamesPlayed: 0 },
+    };
+
+    const baseArgs = {
+      userProfile: { xp: 0, level: 1, unlockedBadges: [] },
+      localRecords: baseRecords,
+      gameMode: "countries",
+      finalScore: 10,
+      timeSpent: 60,
+      totalPossible: 20,
+      gameDuration: 120,
+      continentsConquered: [],
+    };
+
+    it("should compose XP from found, completion, conquest and perfect parts", () => {
+      const result = evaluateGameRewardsAndBadges({
+        ...baseArgs,
+        finalScore: 10,
+        totalPossible: 10,
+        continentsConquered: ["Europe"],
+      });
+
+      expect(result.xpBreakdown.found).toBe(100); // 10 finds x 10 XP
+      expect(result.xpBreakdown.completion).toBe(50);
+      expect(result.xpBreakdown.conquest).toBe(100); // 1 continent x 100 XP
+      expect(result.xpBreakdown.perfect).toBe(250); // finalScore === totalPossible
+      expect(result.gainedXp).toBeGreaterThanOrEqual(500);
+    });
+
+    it("should not grant perfect XP on an incomplete game", () => {
+      const result = evaluateGameRewardsAndBadges(baseArgs);
+      expect(result.xpBreakdown.perfect).toBe(0);
+      expect(result.xpBreakdown.conquest).toBe(0);
+    });
+
+    it("should unlock the level badge when gained XP crosses a level boundary", () => {
+      // 190 XP + at least 150 gained XP crosses the level 2 boundary (200 XP)
+      const result = evaluateGameRewardsAndBadges({
+        ...baseArgs,
+        userProfile: { xp: 190, level: 1, unlockedBadges: [] },
+      });
+
+      expect(result.totalNewlyUnlocked).toContain("ch_gen_lvl_2");
+      expect(result.updatedBadges).toContain("ch_gen_lvl_2");
+    });
+
+    it("should not re-award an already unlocked level badge", () => {
+      const result = evaluateGameRewardsAndBadges({
+        ...baseArgs,
+        userProfile: { xp: 190, level: 1, unlockedBadges: ["ch_gen_lvl_2"] },
+      });
+
+      expect(result.totalNewlyUnlocked).not.toContain("ch_gen_lvl_2");
+    });
+
+    it("should record continent conquest markers with completion count", () => {
+      const result = evaluateGameRewardsAndBadges({
+        ...baseArgs,
+        continentsConquered: ["Europe"],
+      });
+      expect(result.updatedBadges).toContain("conquered_Europe_1");
+
+      const again = evaluateGameRewardsAndBadges({
+        ...baseArgs,
+        userProfile: { xp: 0, level: 1, unlockedBadges: ["conquered_Europe_1"] },
+        continentsConquered: ["Europe"],
+      });
+      expect(again.updatedBadges).toContain("conquered_Europe_2");
     });
   });
 

@@ -1,8 +1,8 @@
 import { useCallback, useRef } from "react";
 
-import { BREAKPOINTS } from "../config/gameConstants";
-import { clampGlobeAltitude } from "../utils/globeAltitude";
-import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../utils/utils";
+import { BREAKPOINTS } from "../../config/gameConstants";
+import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
+import { clampGlobeAltitude } from "../render/globeAltitude";
 
 export function useGlobeInteractions({
   globeEl,

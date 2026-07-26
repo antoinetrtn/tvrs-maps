@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useRef } from "react";
 
-import { getLearnLabelLimit, getPlayVisibleCountryKeys } from "../config/gameConfig";
-import { countryDataMap } from "../data/gameData";
-import { createGlobeLabelElement } from "../utils/globeLabelBuilder";
-import { getCanonicalPosition, getFlagEmoji, getLabelRenderRadius } from "../utils/utils";
+import { getLearnLabelLimit, getPlayVisibleCountryKeys } from "../../config/gameConfig";
+import { countryDataMap } from "../../data/gameData";
+import { getCanonicalPosition, getFlagEmoji, getLabelRenderRadius } from "../../utils/utils";
+import { createGlobeLabelElement } from "../render/globeLabelBuilder";
 
 function getLabelVisibilityThreshold({
   isDepartmentMode,

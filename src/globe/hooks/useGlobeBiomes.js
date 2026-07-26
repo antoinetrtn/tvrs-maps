@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-import { RELIEF } from "../config/gameConfig";
-import { createMountainFeature } from "../utils/LowPolyBiomes";
+import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
+import { RELIEF } from "../../config/gameConfig";
+import { createMountainFeature } from "../render/LowPolyBiomes";
 
 const BIOME_SCENE_SCALE = 9.2;
 const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;

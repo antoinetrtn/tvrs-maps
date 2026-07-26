@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 
 export const FOUND_SURFACE_GREEN = GLITCH_EFFECT_SETTINGS.foundGreenSurface;
 

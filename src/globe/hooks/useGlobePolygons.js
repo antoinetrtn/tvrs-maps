@@ -10,10 +10,11 @@ import {
   getThemeRegionColorLabel,
   GLITCH_EFFECT_SETTINGS,
   GLOBE_STYLE,
-} from "../config/designSystem";
-import { GAME_REGIONS, getPolygonAltitudeFor } from "../config/gameConfig";
-import { countryDataMap } from "../data/gameData";
-import { getPolygonMaterialForFeature } from "../utils/globePolygonMaterial";
+} from "../../config/designSystem";
+import { GAME_REGIONS, getPolygonAltitudeFor } from "../../config/gameConfig";
+import { countryDataMap } from "../../data/gameData";
+import { getFeatureAdmin } from "../../utils/utils";
+import { getPolygonMaterialForFeature } from "../render/globePolygonMaterial";
 import {
   FOUND_HIGHLIGHT,
   mutedFoundGreen,
@@ -24,12 +25,11 @@ import {
   resolvePolygonStrokeWidth,
   resolveRegionalLandColor,
   shouldUseRegionalUnfoundLand,
-} from "../utils/polygonColorResolver";
+} from "../render/polygonColorResolver";
 import {
   clearAnimatedPolygonMaterials,
   unregisterAnimatedPolygonMaterial,
-} from "../utils/polygonGlitchShader";
-import { getFeatureAdmin } from "../utils/utils";
+} from "../render/polygonGlitchShader";
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();

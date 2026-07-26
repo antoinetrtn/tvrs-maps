@@ -1,4 +1,4 @@
-import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
 
 export { FOUND_SURFACE_GREEN };

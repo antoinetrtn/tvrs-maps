@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
 import * as THREE from "three";
 
-import { getOpaqueThreeColor } from "../config/designSystem";
-import { countryDataMap } from "../data/gameData";
+import { getOpaqueThreeColor } from "../../config/designSystem";
+import { countryDataMap } from "../../data/gameData";
 
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();

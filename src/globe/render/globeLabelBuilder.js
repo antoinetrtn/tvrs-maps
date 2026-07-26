@@ -1,7 +1,7 @@
-import { shouldScrambleLabel } from "../config/gameConfig";
-import { countryDataMap } from "../data/gameData";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
-import { scrambleText } from "./utils";
+import { shouldScrambleLabel } from "../../config/gameConfig";
+import { countryDataMap } from "../../data/gameData";
+import { riversMountainsDataMap } from "../../data/riversMountainsData";
+import { scrambleText } from "../../utils/utils";
 
 function buildGlobeLabelFlagHtml(iso2, { compact = false, prominent = false } = {}) {
   if (!iso2 || iso2.length !== 2) return "";

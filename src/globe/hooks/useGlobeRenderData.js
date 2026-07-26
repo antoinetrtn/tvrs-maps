@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { countryDataMap } from "../data/gameData";
+import { countryDataMap } from "../../data/gameData";
 import {
   getCanonicalPosition,
   getFeatureAdmin,
@@ -9,7 +9,7 @@ import {
   getLngLatDistance,
   getMobileRenderRadius,
   getRenderGeometry,
-} from "../utils/utils";
+} from "../../utils/utils";
 
 export function useGlobeRenderData({
   isDepartmentMode = false,

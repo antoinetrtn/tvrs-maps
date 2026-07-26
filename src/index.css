@@ -5,6 +5,7 @@
   --black: #000000;
   --text-main: #ffffff;
   --text-muted: #888888;
+  --text-inverse: #000000;
 
   /* COLORS - Semantic */
   --accent: #ffffff;
@@ -40,11 +41,14 @@
   /* GLASSMORPHISM */
   --glass-bg: rgba(15, 15, 15, 0.85);
   --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-hover: rgba(255, 255, 255, 0.05);
+  --glass-border-strong: rgba(255, 255, 255, 0.25);
+  --glass-hover: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  --glass-shadow-strong: 0 24px 58px rgba(0, 0, 0, 0.6);
+  --glass-shadow-drag: 0 34px 86px rgba(0, 0, 0, 0.7);
   --glass-blur: blur(24px) saturate(200%);
   --glass-blur-compact: blur(12px) saturate(140%);
-  --overlay-bg: rgba(0, 0, 0, 0.8);
+  --overlay-bg: rgba(0, 0, 0, 0.85);
   --settings-backdrop-bg: rgba(0, 0, 0, 0.45);
   --modal-header-bg: rgba(15, 15, 15, 0.6);
 
@@ -65,6 +69,17 @@
   --font-main: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Display face for headings, scores, timers and large numerals */
   --font-display: "Bitcount Single", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* TYPOGRAPHY SCALE — canonical steps (keep in sync with STYLE_TOKENS.fontSize
+     in designSystem.js). Off-scale sizes still hardcoded in component sheets
+     (0.55/0.65/0.75/0.85/0.95rem…) await a visually-validated rounding pass. */
+  --font-size-2xs: 0.6rem;
+  --font-size-xs: 0.7rem;
+  --font-size-sm: 0.8rem;
+  --font-size-md: 0.9rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.15rem;
+  --font-size-xl: 1.3rem;
 
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -140,11 +155,15 @@
   --bg-color: #f1f5f9;
   --text-main: #0f172a;
   --text-muted: #475569;
+  --text-inverse: #ffffff;
 
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-border-strong: rgba(0, 0, 0, 0.24);
   --glass-hover: rgba(15, 23, 42, 0.05);
   --glass-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
+  --glass-shadow-strong: 0 24px 58px rgba(0, 0, 0, 0.1);
+  --glass-shadow-drag: 0 34px 86px rgba(0, 0, 0, 0.14);
   --overlay-bg: rgba(241, 245, 249, 0.6);
   --settings-backdrop-bg: rgba(15, 23, 42, 0.3);
   --modal-header-bg: rgba(255, 255, 255, 0.4);
@@ -345,12 +364,62 @@ body {
   color: var(--accent);
 }
 
+/* Glass icon button primitive (shared) — emitted by GlassIconButton.jsx.
+   The trigger aliases keep their historical class names; component sheets add
+   only local deltas (e.g. .profile-trigger-btn layout in HomeScreen.css). */
+.glass-icon-btn,
+.settings-trigger-btn,
+.profile-trigger-btn,
+.leaderboard-trigger-btn {
+  width: var(--control-lg);
+  height: var(--control-lg);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-main);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform var(--transition-spring),
+    box-shadow var(--transition-spring),
+    background var(--transition-spring);
+}
+
+.glass-icon-btn:hover,
+.settings-trigger-btn:hover,
+.profile-trigger-btn:hover,
+.leaderboard-trigger-btn:hover {
+  transform: translateY(-2.5px) scale(1.08);
+  color: var(--accent) !important;
+  background: var(--glass-hover) !important;
+  border-color: var(--accent) !important;
+  text-shadow:
+    -1px 0 var(--glitch-magenta),
+    1px 0 var(--glitch-cyan);
+  animation: btn-hover-flicker 0.3s steps(2) infinite;
+}
+
+.glass-icon-btn:active,
+.settings-trigger-btn:active,
+.profile-trigger-btn:active,
+.leaderboard-trigger-btn:active {
+  transform: translateY(0.5px) scale(0.92);
+  background: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+  box-shadow: 0 2px 8px var(--accent-soft);
+  text-shadow: none;
+  transition: transform var(--transition-instant);
+}
+
 /* Shared primary button — used by EndScreen, ProfilePanel and AuthModal. */
 .btn-primary {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-sm);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
   transition:
     transform var(--transition-spring),
@@ -391,7 +460,7 @@ body {
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-sm);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   cursor: pointer;
   background: transparent;
   color: var(--text-muted);

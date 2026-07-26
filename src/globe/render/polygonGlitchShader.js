@@ -1,14 +1,14 @@
 import * as THREE from "three";
 
-import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-import { FEEDBACK_TIMING } from "../config/gameConstants";
+import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
+import { FEEDBACK_TIMING } from "../../config/gameConstants";
+import { getFoundGreenThreeColor } from "./foundGreenPalette";
 import {
   GLITCH_FRAGMENT_BODY,
   GLITCH_FRAGMENT_DECLARATIONS,
   GLITCH_VERTEX_BODY,
   GLITCH_VERTEX_DECLARATIONS,
-} from "../config/globeShaders";
-import { getFoundGreenThreeColor } from "./foundGreenPalette";
+} from "./globeShaders";
 
 /** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
 export const polygonGlitchUniforms = {

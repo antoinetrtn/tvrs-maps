@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
-import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-import { getActiveModeConfig } from "../config/gameConfig";
+import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
+import { getActiveModeConfig } from "../../config/gameConfig";
 import {
   BREAKPOINTS,
   GAME_START_VIEW_JITTER_DEG,
   GAME_START_VIEWPOINTS,
   getDataPanelLayoutWidth,
-} from "../config/gameConstants";
-import { countryDataMap } from "../data/gameData";
-import { riversMountainsDataMap } from "../data/riversMountainsData";
-import { readClampedGlobePov, syncGlobeCameraAndZoomLimits } from "../utils/globeAltitude";
-import { polygonGlitchUniforms } from "../utils/polygonGlitchShader";
-import { getCanonicalPosition } from "../utils/utils";
+} from "../../config/gameConstants";
+import { countryDataMap } from "../../data/gameData";
+import { riversMountainsDataMap } from "../../data/riversMountainsData";
+import { getCanonicalPosition } from "../../utils/utils";
+import { readClampedGlobePov, syncGlobeCameraAndZoomLimits } from "../render/globeAltitude";
+import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.03;
 

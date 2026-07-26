@@ -333,7 +333,7 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang }) => {
       const dx = currentX - startXRef.current;
       currentDxRef.current = dx;
 
-      if (Math.abs(dx) > 4) {
+      if (Math.abs(dx) > 8) {
         wasDraggingRef.current = true;
       }
       setDragOffset(dx);

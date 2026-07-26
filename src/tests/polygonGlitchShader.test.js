@@ -6,7 +6,7 @@ import {
   polygonGlitchUniforms,
   registerAnimatedPolygonMaterial,
   unregisterAnimatedPolygonMaterial,
-} from "../utils/polygonGlitchShader";
+} from "../globe/render/polygonGlitchShader";
 
 describe("polygonGlitchShader shared uniforms", () => {
   it("exposes a single shared uTime uniform object", () => {

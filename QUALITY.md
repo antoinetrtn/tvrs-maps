@@ -12,14 +12,14 @@ Use `npm run dev:5001`. Port `5173` is intentionally banned for this project.
 
 ## Design system
 
-`src/designSystem.js` is the source of truth for:
+`src/config/designSystem.js` is the source of truth for:
 
 - theme colors;
 - map/globe colors;
 - glass, overlay, tint and shadow values;
 - radii, spacing, transition, blur and control-size tokens.
 
-Components and CSS files should consume CSS variables or imported design tokens. Do not add raw hex/rgb/hsl colors outside `designSystem.js` or the bootstrapping defaults in `src/index.css`.
+Components and CSS files should consume CSS variables or imported design tokens. Do not add raw hex/rgb/hsl colors outside `src/config/designSystem.js` or the bootstrapping defaults in `src/index.css`.
 
 ## Globe rendering
 
@@ -52,17 +52,22 @@ Keep each concern in its dedicated module — do not re-inline data/constants in
 
 | Concern | File |
 | --- | --- |
-| UI/theme color tokens, globe-theme overrides, color helpers | `src/designSystem.js` |
-| Per-mode gameplay rules (scramble, altitude, relief, regions, region abbreviations) | `src/gameConfig.js` |
-| Tunable non-visual constants (durations, breakpoints, timeouts, data URLs, storage keys, perf tiers) | `src/gameConstants.js` |
-| GLSL shaders for the globe atmosphere glow | `src/globeShaders.js` |
-| All user-facing strings (FR/EN) + `useTranslation` | `src/i18n.js` |
-| Geographic datasets | `src/gameData.js`, `src/departmentsData.js`, `src/riversMountainsData.js` |
+| UI/theme color tokens, globe-theme overrides, color helpers | `src/config/designSystem.js` |
+| Per-mode gameplay rules (scramble, altitude, relief, regions, region abbreviations) | `src/config/gameConfig.js` |
+| Tunable non-visual constants (durations, breakpoints, timeouts, data URLs, storage keys, perf tiers) | `src/config/gameConstants.js` |
+| All user-facing strings (FR/EN) + `useTranslation` | `src/config/i18n.js` |
+| Geographic datasets + challenge definitions | `src/data/` (`gameData.js`, `departmentsData.js`, `riversMountainsData.js`, `usStatesData.js`, `challenges.js`) |
+| 3D globe rendering (component, useGlobe* hooks, shaders/materials/labels) | `src/globe/` (`GlobeMap.jsx`, `hooks/`, `render/` — GLSL in `render/globeShaders.js`) |
+| App/state hooks (game session, profile, geo data, viewport…) | `src/hooks/` |
+| Pure cross-cutting helpers (normalization, geometry, gamification/XP, achievements) | `src/utils/` |
+| Supabase client and services | `src/services/` |
+| Shared panel/overlay CSS system | `src/styles/panelSystem.css` |
 
 Rules:
-- **No hardcoded UI strings** in components — add a key to `src/i18n.js` and use `t("key")`. The language toggle labels (`FR`/`EN`) are language codes, not copy, and stay literal.
-- **No magic numbers** (durations, breakpoints, timeouts) inline — add them to `src/gameConstants.js`.
+- **No hardcoded UI strings** in components — add a key to `src/config/i18n.js` and use `t("key")`. The language toggle labels (`FR`/`EN`) are language codes, not copy, and stay literal.
+- **No magic numbers** (durations, breakpoints, timeouts) inline — add them to `src/config/gameConstants.js`.
 - **No duplicated lists** — region keys come from `GAME_REGIONS` (`gameConfig`); region gauge abbreviations from `getRegionAbbr`.
+- **Moving a file?** Update its path keys in `RATCHET_LIMITS`/`LEGACY_BASES` (and any allowlists) in `scripts/quality-check.js`, otherwise the moved file silently falls back to the default 500-line limit.
 
 ## Theme model (satellite vs blackout)
 
@@ -74,12 +79,17 @@ The custom inner-glow halo (Fresnel shader) is **snapped** to its theme target c
 
 ## Known tech debt (future work, not yet addressed)
 
-Surfaced during the 2026-06 maintainability pass — safe-but-larger refactors left for a dedicated effort:
+Refreshed during the 2026-07 structure pass. Done since the last pass: GlobeMap
+decomposed into `src/globe/` (component + 16 hooks + pure render helpers),
+App.jsx slimmed to ~520 lines behind app hooks, pure XP/badge math extracted to
+`src/utils/gamification.js`, `App.css`/`panelSystem.css` orphans dissolved.
+Still open:
 
-- **App.jsx state sprawl**: ~20 `useState` mixing game state, UI/popup state and learn toggles. Candidate for a `useReducer` or split contexts. `globeLightingEnabled` is effectively a constant (setter never called).
-- **GameHUD prop drilling**: ~30 props (incl. 4 learn-toggle pairs). Consider grouping learn toggles into one object/context.
-- **GlobeMap.jsx size (~3.3k lines)**: shaders/constants are now extracted; the label builder (`createLabelElement`), polygon material logic and rivers/mountains path builders are the next safe extraction targets (they are large but state-coupled — extract carefully, verify visually).
-- **Cheat codes** `WIN100`/`LOSE100` in `App.handleInput` ship in production unconditionally — gate behind a debug flag.
+- **GameHUD prop drilling**: ~35 props (incl. learn-toggle pairs and session meta). Consider grouping into cohesive objects assembled in `useGameSessionProps` (memoized per group).
+- **Design token duplication**: the `:root` defaults in `src/index.css` and `getThemeCssVariables()` in `src/config/designSystem.js` are two hand-synced lists — drift-prone. Candidate: generate the CSS defaults from the JS source (plus a staleness check in `scripts/quality-check.js`).
+- **No typography scale**: font sizes are hardcoded per CSS file (~30 distinct values); add `--font-size-*` tokens and migrate opportunistically.
+- **GameHUD.css size**: near its 1000-line ratchet; split along its existing section banners before the next HUD feature.
+- **Cheat codes** `WIN100`/`LOSE100` in `useGameSession.handleInput` ship in production unconditionally — gate behind a debug flag.
 - **Mobile/desktop learn-toggle i18n keys differ** (`show_*` vs `labels_*`) — intentional (long vs short) but worth documenting per-call.
 - **Material cache growth**: per-country cap/side materials in `sharedMaterialsRef` are disposed on theme/mode change, not per selection — monitor if memory grows over very long sessions.
 

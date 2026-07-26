@@ -69,6 +69,15 @@ const STYLE_TOKENS = {
     controlLg: "44px",
     islandWidth: "500px",
   },
+  fontSize: {
+    "2xs": "0.6rem",
+    xs: "0.7rem",
+    sm: "0.8rem",
+    md: "0.9rem",
+    base: "1rem",
+    lg: "1.15rem",
+    xl: "1.3rem",
+  },
 };
 
 // ==========================================
@@ -537,6 +546,13 @@ export const getThemeCssVariables = (
     "--spacing-md": STYLE_TOKENS.spacing.md,
     "--spacing-lg": STYLE_TOKENS.spacing.lg,
     "--spacing-xl": STYLE_TOKENS.spacing.xl,
+    "--font-size-2xs": STYLE_TOKENS.fontSize["2xs"],
+    "--font-size-xs": STYLE_TOKENS.fontSize.xs,
+    "--font-size-sm": STYLE_TOKENS.fontSize.sm,
+    "--font-size-md": STYLE_TOKENS.fontSize.md,
+    "--font-size-base": STYLE_TOKENS.fontSize.base,
+    "--font-size-lg": STYLE_TOKENS.fontSize.lg,
+    "--font-size-xl": STYLE_TOKENS.fontSize.xl,
     "--transition-fast": STYLE_TOKENS.transition.fast,
     "--transition-normal": STYLE_TOKENS.transition.normal,
     "--transition-emphasized": STYLE_TOKENS.transition.emphasized,
