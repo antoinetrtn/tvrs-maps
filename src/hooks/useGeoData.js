@@ -8,6 +8,22 @@ import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
 import { getRenderGeometry } from "../utils/utils";
 
+function mergeGeometries(geomA, geomB) {
+  const getPolygons = (geom) => {
+    if (!geom) return [];
+    if (geom.type === "Polygon") {
+      return [geom.coordinates];
+    } else if (geom.type === "MultiPolygon") {
+      return geom.coordinates;
+    }
+    return [];
+  };
+  return {
+    type: "MultiPolygon",
+    coordinates: [...getPolygons(geomA), ...getPolygons(geomB)],
+  };
+}
+
 export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
   const [countriesData, setCountriesData] = useState([]);
   const [departmentsData, setDepartmentsData] = useState([]);
@@ -19,7 +35,17 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data && data.features) {
-          const mapped = data.features.map((feature) => ({
+          const features = [...data.features];
+          const somaliaIdx = features.findIndex((f) => f.properties?.ADMIN === "Somalia");
+          const somalilandIdx = features.findIndex((f) => f.properties?.ADMIN === "Somaliland");
+          if (somaliaIdx !== -1 && somalilandIdx !== -1) {
+            const somalia = features[somaliaIdx];
+            const somaliland = features[somalilandIdx];
+            somalia.geometry = mergeGeometries(somalia.geometry, somaliland.geometry);
+            features.splice(somalilandIdx, 1);
+          }
+
+          const mapped = features.map((feature) => ({
             ...feature,
             renderGeometry: getRenderGeometry(feature),
           }));
