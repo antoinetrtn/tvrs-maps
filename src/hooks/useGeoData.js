@@ -6,6 +6,7 @@ import { departmentsDataMap } from "../data/departmentsData";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
+import { getRenderGeometry } from "../utils/utils";
 
 export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
   const [countriesData, setCountriesData] = useState([]);
@@ -18,7 +19,11 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data && data.features) {
-          setCountriesData(data.features);
+          const mapped = data.features.map((feature) => ({
+            ...feature,
+            renderGeometry: getRenderGeometry(feature),
+          }));
+          setCountriesData(mapped);
         }
         return;
       })
@@ -34,7 +39,11 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data && data.features) {
-          setDepartmentsData(data.features);
+          const mapped = data.features.map((feature) => ({
+            ...feature,
+            renderGeometry: getRenderGeometry(feature),
+          }));
+          setDepartmentsData(mapped);
         }
         return;
       })
@@ -50,7 +59,11 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data && data.features) {
-          setUsStatesData(data.features);
+          const mapped = data.features.map((feature) => ({
+            ...feature,
+            renderGeometry: getRenderGeometry(feature),
+          }));
+          setUsStatesData(mapped);
         }
         return;
       })

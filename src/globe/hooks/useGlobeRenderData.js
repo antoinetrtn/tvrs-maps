@@ -36,7 +36,7 @@ export function useGlobeRenderData({
   const baseRenderCountriesData = useMemo(() => {
     return selectableCountriesData.map((feature) => ({
       ...feature,
-      renderGeometry: getRenderGeometry(feature),
+      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
     }));
   }, [selectableCountriesData]);
 
@@ -51,7 +51,7 @@ export function useGlobeRenderData({
       .map((feature) => ({
         ...feature,
         isGhostCountry: true,
-        renderGeometry: getRenderGeometry(feature),
+        renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
       }));
 
     return [
