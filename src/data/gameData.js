@@ -2225,9 +2225,9 @@ export const countryDataMap = {
   Vatican: {
     iso2: "VA",
     name_en: "Vatican City",
-    name_fr: "Cité du Vatican",
+    name_fr: "Vatican",
     capital: "Vatican City",
-    capital_fr: "Vatican",
+    capital_fr: "Cité du Vatican",
     lat: 41.9,
     lng: 12.45,
     region: "Europe",
