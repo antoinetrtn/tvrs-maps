@@ -45,7 +45,7 @@ export function createGlobeLabelElement(
     isHomeScreen,
     isEndScreen,
     _isLight,
-    _gameDataMap,
+    gameDataMap,
     _globeTheme,
     mode,
     t,
@@ -209,7 +209,10 @@ export function createGlobeLabelElement(
       });
     }, 150);
   } else {
-    const itemData = countryDataMap[d.admin] || riversMountainsDataMap[d.admin];
+    const itemData =
+      (gameDataMap && gameDataMap[d.admin]) ||
+      countryDataMap[d.admin] ||
+      riversMountainsDataMap[d.admin];
     const isMtn = itemData?.type === "mountain_range" || itemData?.type === "mountain";
     const iconSymbol = d.mode === "rivers_mountains" ? (isMtn ? "🏔️ " : "💧 ") : "";
 

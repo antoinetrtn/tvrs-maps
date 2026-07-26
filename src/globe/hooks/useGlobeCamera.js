@@ -57,14 +57,8 @@ const buildSelectedCountryCameraTarget = ({
   const isMobile = viewport.width < BREAKPOINTS.mobile;
   const customModeAltitude = customPOV ? customPOV.altitude : null;
   const fallbackAltitude = isHomeScreen
-    ? isMobile
-      ? 2.0
-      : 1.25
-    : customPOV
-      ? customModeAltitude
-      : isMobile
-        ? 1.8
-        : 0.68;
+    ? (customModeAltitude ?? (isMobile ? 2.0 : 1.25))
+    : (customModeAltitude ?? (isMobile ? 1.8 : 0.68));
   const preservedAltitude =
     currentPOV && Number.isFinite(currentPOV.altitude) ? currentPOV.altitude : fallbackAltitude;
   const isKeyboardOpen = isMobile && isKeyboardMode;

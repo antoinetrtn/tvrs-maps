@@ -202,8 +202,7 @@ const ModeCard = ({
   );
 };
 
-const HomeScreenCategoryCarousel = ({ onStartGame, lang }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }) => {
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [animatingDirection, setAnimatingDirection] = useState(null);
@@ -279,6 +278,11 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang }) => {
     ];
   }, []);
 
+  const activeIndex = useMemo(() => {
+    const idx = gameModesCarousel.findIndex((item) => item.key === homeMode);
+    return idx === -1 ? 0 : idx;
+  }, [homeMode, gameModesCarousel]);
+
   const totalModes = gameModesCarousel.length;
 
   const triggerAnimatedChange = useCallback(
@@ -288,17 +292,18 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang }) => {
       setAnimatingDirection(direction);
 
       setTimeout(() => {
-        setActiveIndex((prev) => {
+        const nextIdx = (() => {
           if (targetIdxOverride !== null) return targetIdxOverride;
           return direction === "leftSwipe"
-            ? (prev + 1) % totalModes
-            : (prev - 1 + totalModes) % totalModes;
-        });
+            ? (activeIndex + 1) % totalModes
+            : (activeIndex - 1 + totalModes) % totalModes;
+        })();
+        setHomeMode(gameModesCarousel[nextIdx].key);
         setAnimatingDirection(null);
         isAnimatingRef.current = false;
       }, 200);
     },
-    [totalModes]
+    [totalModes, activeIndex, gameModesCarousel, setHomeMode]
   );
 
   const triggerRightSwipe = useCallback(() => {
@@ -357,9 +362,9 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang }) => {
 
       if (Math.abs(dx) > 20 || (velocity > 0.15 && Math.abs(dx) > 6)) {
         if (dx < 0) {
-          setActiveIndex((prev) => (prev + 1) % totalModes);
+          setHomeMode(gameModesCarousel[(activeIndex + 1) % totalModes].key);
         } else {
-          setActiveIndex((prev) => (prev - 1 + totalModes) % totalModes);
+          setHomeMode(gameModesCarousel[(activeIndex - 1 + totalModes) % totalModes].key);
         }
       }
       setDragOffset(0);

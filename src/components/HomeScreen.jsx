@@ -47,6 +47,8 @@ const HomeScreen = ({
   localGameHistory = [],
   session = null,
   onOpenAuth,
+  homeMode,
+  setHomeMode,
 }) => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -87,7 +89,12 @@ const HomeScreen = ({
       <div className={`home-screen-overlay ${theme}`}>
         <div className="home-stage-container">
           <Logo size="large" className="home-logo" />
-          <HomeScreenCategoryCarousel onStartGame={onStartGame} lang={lang} />
+          <HomeScreenCategoryCarousel
+            onStartGame={onStartGame}
+            lang={lang}
+            homeMode={homeMode}
+            setHomeMode={setHomeMode}
+          />
         </div>
 
         <div className="home-bottom-right">
