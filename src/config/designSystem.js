@@ -263,22 +263,22 @@ const DEFAULT_CONTINENT_COLORS = {
   },
   attenuated: {
     light: {
-      Europe: "#eaf0f6",
-      Americas: "#f6ecea",
-      Asia: "#f6f0ea",
-      Africa: "#eaf6ee",
-      Oceania: "#f0eaf6",
-      Antarctic: "#f1f4f6",
-      Unknown: "#e2e8f0",
+      Europe: "#4c5d6e",
+      Americas: "#7c5953",
+      Asia: "#7c6d53",
+      Africa: "#537c62",
+      Oceania: "#6b537c",
+      Antarctic: "#6f7a84",
+      Unknown: "#64748b",
     },
     dark: {
-      Europe: "#142332",
-      Americas: "#321411",
-      Asia: "#322711",
-      Africa: "#11321c",
-      Oceania: "#271132",
-      Antarctic: "#151e26",
-      Unknown: "#334155",
+      Europe: "#182634",
+      Americas: "#381d19",
+      Asia: "#382e19",
+      Africa: "#193822",
+      Oceania: "#2d1938",
+      Antarctic: "#19232d",
+      Unknown: "#263238",
     },
   },
 };
@@ -632,17 +632,11 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
     const r = parseInt(baseColor.substring(1, 3), 16);
     const g = parseInt(baseColor.substring(3, 5), 16);
     const b = parseInt(baseColor.substring(5, 7), 16);
-    if (sysTheme === "light") {
-      const mr = Math.round(r * 0.5 + 255 * 0.5);
-      const mg = Math.round(g * 0.5 + 255 * 0.5);
-      const mb = Math.round(b * 0.5 + 255 * 0.5);
-      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
-    } else {
-      const mr = Math.round(r * 0.4);
-      const mg = Math.round(g * 0.4);
-      const mb = Math.round(b * 0.4);
-      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
-    }
+    const factor = sysTheme === "light" ? 0.6 : 0.4;
+    const mr = Math.round(r * factor);
+    const mg = Math.round(g * factor);
+    const mb = Math.round(b * factor);
+    return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
   }
   return baseColor;
 };
