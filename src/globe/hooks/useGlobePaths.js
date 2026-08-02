@@ -42,7 +42,7 @@ export function useGlobePaths({
     Object.keys(dataMap).forEach((k) => {
       const data = dataMap[k];
       if (!data || data.type !== "river" || !data.path) return;
-      const isFound = foundSet.has(k) || mode === "learn" || isHomeScreen;
+      const isFound = foundSet.has(k) || mode === "learn";
       paths.push({
         admin: k,
         coords: getSmoothedRiverPath(k, data.path),
@@ -54,7 +54,7 @@ export function useGlobePaths({
       });
     });
     return paths;
-  }, [gameDataMap, foundSet, mode, isHomeScreen, UI_COLORS, isRiversMountainsMode]);
+  }, [gameDataMap, foundSet, mode, UI_COLORS, isRiversMountainsMode]);
 
   const riversSelectedPathData = useMemo(() => {
     if (!isRiversMountainsMode || !selectedCountry) return [];

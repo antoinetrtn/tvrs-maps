@@ -248,7 +248,7 @@ const GlobeMap = (props) => {
   });
 
   const {
-    visibleMarkersData,
+    visibleMarkersData: _visibleMarkersData,
     markersData,
     getPointColorWrapped,
     getPointRadius,
@@ -524,11 +524,7 @@ const GlobeMap = (props) => {
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
             polygonsTransitionDuration={GLITCH_SELECTION_TRANSITION_MS}
-            pointsData={
-              perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
-                ? visibleMarkersData
-                : markersData
-            }
+            pointsData={markersData}
             pointLat="lat"
             pointLng="lng"
             pointColor={getPointColorWrapped}

@@ -41,10 +41,8 @@ export function useGlobeRenderPipeline({
 
   canonicalRef.current = canonicalPositions;
 
-  const polygonsData =
-    perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
-      ? visibleRenderCountriesData
-      : renderCountriesData;
+  // Keep polygonsData reference stable across screen transitions to prevent 3D mesh destruction/flashing
+  const polygonsData = renderCountriesData;
 
   return {
     selectableFeatureIndex,
