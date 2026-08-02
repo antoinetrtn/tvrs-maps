@@ -48,7 +48,7 @@ export function useGlobeRenderData({
   }, [selectableCountriesData]);
 
   const renderCountriesData = useMemo(() => {
-    if (isHomeScreen) return worldCountriesRenderData;
+    if (isHomeScreen && !isDepartmentMode && !isUsStatesMode) return worldCountriesRenderData;
     if (!isDepartmentMode && !isUsStatesMode) return baseRenderCountriesData;
 
     const exclusions = isDepartmentMode ? ["France"] : ["United States of America"];
