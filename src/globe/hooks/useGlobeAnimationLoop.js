@@ -6,6 +6,7 @@ import {
   GLITCH_SELECTION_TRANSITION_MS,
 } from "../../config/gameConfig";
 import { PERFORMANCE } from "../../config/gameConstants";
+import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
 import {
@@ -130,7 +131,13 @@ export function useGlobeAnimationLoop({
           return;
         }
       }
+      const frameDelta = lastAnimFrameTimeRef.current ? time - lastAnimFrameTimeRef.current : 16.67;
       lastAnimFrameTimeRef.current = time;
+
+      const renderer = globeEl.current?.renderer?.();
+      const drawCalls = renderer?.info?.render?.calls ?? 0;
+      const triangles = renderer?.info?.render?.triangles ?? 0;
+      perfTracker.recordFrame(frameDelta, drawCalls, triangles);
 
       const timeSec = time / 1000;
       const needsMountainFeedback = mountainGlitchActive && (currentIsError || currentIsSuccess);
@@ -340,18 +347,14 @@ export function useGlobeAnimationLoop({
         transitionColorsPrimedRef.current = null;
       }
 
-      const hasWork =
+      const _hasWork =
         needsSharedTime ||
         needsSelectedShaderSync ||
         transitioningPreviousCountryRef?.current ||
         !glowSettled ||
         needsGraticuleStyleRef.current;
 
-      if (hasWork) {
-        scheduleFrame();
-      } else {
-        clearScheduledFrame();
-      }
+      scheduleFrame();
     };
 
     animateSceneRef.current = animateScene;

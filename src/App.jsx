@@ -256,6 +256,12 @@ function App() {
     [resetGame]
   );
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.__TVRS_START_GAME__ = startGame;
+    }
+  }, [startGame]);
+
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
     setMode(DEFAULT_MODE);

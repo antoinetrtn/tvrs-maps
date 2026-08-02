@@ -9,20 +9,14 @@ import {
   GLOBE_STYLE,
   GLOBE_TRANSPARENT_BACKGROUND,
 } from "../config/designSystem";
-import {
-  DEFAULT_LEARN_SUB_MODE,
-  GLITCH_SELECTION_TRANSITION_MS,
-  isDepartmentView,
-  isLearnRiversMountainsView,
-  isUsStatesView,
-} from "../config/gameConfig";
+import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
-import { countryDataMap } from "../data/gameData";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLabels } from "./hooks/useGlobeLabels";
 import { useGlobeLighting } from "./hooks/useGlobeLighting";
+import { useGlobeMapData } from "./hooks/useGlobeMapData";
 import { useGlobeMarkers } from "./hooks/useGlobeMarkers";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { useGlobePanelShift } from "./hooks/useGlobePanelShift";
@@ -39,40 +33,47 @@ import {
   useGlobePaths,
 } from "./hooks/useGlobePaths";
 import { useGlobePolygons } from "./hooks/useGlobePolygons";
-import { useGlobeRenderData } from "./hooks/useGlobeRenderData";
+import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
+import {
+  BatchedGlobeEngine,
+  buildBatchedGlobeGeometry,
+  createBatchedGlobeMaterial,
+} from "./render/globePolygonMaterial";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
-const GlobeMap = ({
-  mode,
-  lang,
-  countriesData,
-  departmentsData = [],
-  usStatesData = [],
-  foundList,
-  onCountrySelect,
-  shouldAutoRotate,
-  selectedCountry,
-  theme,
-  viewport,
-  isError,
-  isSuccess,
-  _hasActiveFeedback,
-  perfProfile,
-  isHomeScreen,
-  isKeyboardMode,
-  isEndScreen,
-  isPerfectScore,
-  onPreserveInputFocus,
-  globeLightingEnabled = true,
-  activeDataMap,
-  globeTheme = "satellite",
-  learnSubMode = DEFAULT_LEARN_SUB_MODE,
-  isPanelOpen = false,
-  globeFeedbackRef,
-  globeFeedbackApplierRef,
-}) => {
+
+const GlobeMap = (props) => {
+  const {
+    mode,
+    lang,
+    countriesData,
+    departmentsData = [],
+    usStatesData = [],
+    foundList,
+    onCountrySelect,
+    shouldAutoRotate,
+    selectedCountry,
+    theme,
+    viewport,
+    isError,
+    isSuccess,
+    _hasActiveFeedback,
+    perfProfile,
+    isHomeScreen,
+    isKeyboardMode,
+    isEndScreen,
+    isPerfectScore,
+    onPreserveInputFocus,
+    globeLightingEnabled = true,
+    activeDataMap,
+    globeTheme = "satellite",
+    learnSubMode = DEFAULT_LEARN_SUB_MODE,
+    isPanelOpen = false,
+    globeFeedbackRef,
+    globeFeedbackApplierRef,
+  } = props;
   const t = useTranslation(lang);
 
   const globeEl = useRef();
@@ -81,29 +82,28 @@ const GlobeMap = ({
   const lastZoomRef = useRef(2.5);
   const canonicalRef = useRef({});
 
+  const _batchedEngineRef = useRef({
+    Engine: BatchedGlobeEngine,
+    buildGeometry: buildBatchedGlobeGeometry,
+    createMaterial: createBatchedGlobeMaterial,
+  });
   const selectionTransition = useGlobeSelectionTransition();
 
-  const isDepartmentMode = isDepartmentView(mode, {
+  const {
+    isDepartmentMode,
+    isUsStatesMode,
+    isRiversMountainsMode,
+    gameDataMap,
+    foundSet,
+    globeRendererConfig,
+  } = useGlobeMapData({
+    mode,
     isHomeScreen,
     learnSubMode,
+    activeDataMap,
+    foundList,
+    perfProfile,
   });
-  const isUsStatesMode = isUsStatesView(mode, {
-    isHomeScreen,
-    learnSubMode,
-  });
-  const isRiversMountainsMode =
-    mode === "rivers_mountains" || isLearnRiversMountainsView(mode, { learnSubMode });
-  const gameDataMap =
-    isDepartmentMode || isRiversMountainsMode || isUsStatesMode
-      ? activeDataMap || {}
-      : countryDataMap;
-
-  const foundSet = useMemo(() => {
-    if (isHomeScreen) {
-      return new Set();
-    }
-    return new Set(foundList);
-  }, [foundList, isHomeScreen]);
 
   const isLight = theme === "light";
 
@@ -161,8 +161,15 @@ const GlobeMap = ({
     safeColor: (c) => getOpaqueThreeColor(c),
   });
 
-  // renderData first (using ref for last POV) so we can give camera fresh canonicals.
-  const renderDataResult = useGlobeRenderData({
+  const {
+    selectableFeatureIndex,
+    countrySizes,
+    _renderCountriesData,
+    _visibleRenderCountriesData,
+    countriesWithGeometry,
+    canonicalPositions,
+    polygonsData,
+  } = useGlobeRenderPipeline({
     isDepartmentMode,
     isUsStatesMode,
     isHomeScreen,
@@ -172,26 +179,11 @@ const GlobeMap = ({
     usStatesData,
     gameDataMap,
     selectedCountry,
-    cameraPOV: lastCameraPOVRef.current,
-    zoomLevel: lastZoomRef.current,
+    lastCameraPOVRef,
+    lastZoomRef,
     perfProfile,
+    canonicalRef,
   });
-
-  const {
-    selectableFeatureIndex,
-    countrySizes,
-    renderCountriesData,
-    visibleRenderCountriesData,
-    countriesWithGeometry,
-    canonicalPositions = {},
-  } = renderDataResult;
-
-  canonicalRef.current = canonicalPositions;
-
-  const polygonsData =
-    perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
-      ? visibleRenderCountriesData
-      : renderCountriesData;
 
   const { zoomLevel, cameraPOV, globeRenderWidth, globeHeight, homeGlobeOffset, globePanelShift } =
     useGlobeCamera({
@@ -394,7 +386,18 @@ const GlobeMap = ({
   const handleGlobeReady = useCallback(() => {
     styleGlobeGraticules();
     updateGlobeLighting();
-  }, [styleGlobeGraticules, updateGlobeLighting]);
+    if (typeof window !== "undefined") {
+      window.__TVRS_GLOBE_EL__ = globeEl.current;
+      window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
+    }
+  }, [styleGlobeGraticules, updateGlobeLighting, sharedMaterialsRef]);
+
+  if (typeof window !== "undefined") {
+    window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
+    if (globeEl.current) {
+      window.__TVRS_GLOBE_EL__ = globeEl.current;
+    }
+  }
 
   const activeAtmosphereColor = useMemo(
     () => getOpaqueThreeColor(UI_COLORS.atmosphere),
@@ -506,11 +509,7 @@ const GlobeMap = ({
             backgroundColor={GLOBE_TRANSPARENT_BACKGROUND}
             lineHoverPrecision={0}
             showGraticules={true}
-            rendererConfig={{
-              antialias: perfProfile?.antialias !== false,
-              logarithmicDepthBuffer: false,
-              powerPreference: "high-performance",
-            }}
+            rendererConfig={globeRendererConfig}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
             polygonsData={polygonsData}

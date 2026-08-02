@@ -1,7 +1,11 @@
 import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { BatchedGlobeEngine, createBatchedGlobeMaterial } from "./BatchedGlobeEngine";
+import { buildBatchedGlobeGeometry } from "./batchedGlobeGeometryBuilder";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
+
+export { BatchedGlobeEngine, buildBatchedGlobeGeometry, createBatchedGlobeMaterial };
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
 
@@ -222,7 +226,7 @@ export function getPolygonMaterialForFeature({
         material.opacity = 1.0;
       } else if (showFoundOnGlobe) {
         material.transparent = false;
-        material.wireframe = false;
+        material.wireframe = true;
         material.opacity = 1.0;
       } else {
         material.transparent = true;
