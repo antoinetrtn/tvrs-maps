@@ -20,7 +20,7 @@ export function useGlobeBiomes({
   const biomeObjectsCacheRef = useRef(new Map());
 
   const getBiomeAssetsData = useMemo(() => {
-    if (!isRiversMountainsMode) return [];
+    if (!isRiversMountainsMode || _isHomeScreen) return [];
     const assets = [];
     const dataMap = gameDataMap;
 

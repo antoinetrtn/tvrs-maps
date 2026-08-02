@@ -36,7 +36,7 @@ export function useGlobePaths({
   isError,
 }) {
   const riversBasePathsData = useMemo(() => {
-    if (!isRiversMountainsMode) return [];
+    if (!isRiversMountainsMode || isHomeScreen) return [];
     const paths = [];
     const dataMap = gameDataMap;
     Object.keys(dataMap).forEach((k) => {

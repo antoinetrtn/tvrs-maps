@@ -33,6 +33,13 @@ export function useGlobeRenderData({
     return countriesData.filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
   }, [countriesData, departmentsData, usStatesData, gameDataMap, isDepartmentMode, isUsStatesMode]);
 
+  const worldCountriesRenderData = useMemo(() => {
+    return countriesData.map((feature) => ({
+      ...feature,
+      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+    }));
+  }, [countriesData]);
+
   const baseRenderCountriesData = useMemo(() => {
     return selectableCountriesData.map((feature) => ({
       ...feature,
@@ -41,6 +48,7 @@ export function useGlobeRenderData({
   }, [selectableCountriesData]);
 
   const renderCountriesData = useMemo(() => {
+    if (isHomeScreen) return worldCountriesRenderData;
     if (!isDepartmentMode && !isUsStatesMode) return baseRenderCountriesData;
 
     const exclusions = isDepartmentMode ? ["France"] : ["United States of America"];
@@ -61,7 +69,14 @@ export function useGlobeRenderData({
         isDepartmentFeature: true,
       })),
     ];
-  }, [baseRenderCountriesData, countriesData, isDepartmentMode, isUsStatesMode]);
+  }, [
+    isHomeScreen,
+    worldCountriesRenderData,
+    baseRenderCountriesData,
+    countriesData,
+    isDepartmentMode,
+    isUsStatesMode,
+  ]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData
