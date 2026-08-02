@@ -99,33 +99,33 @@ const applyIdleCameraPointOfView = ({
   }
 
   if (isHomeScreen) {
-    const overviewAltitude = viewport.width < 768 ? 2.5 : 1;
+    const overviewAltitude = viewport.width < 768 ? 2.5 : 1.25;
     if (!wasHomeScreen) {
-      const currentPOV = globeEl.current.pointOfView();
-      globeEl.current.pointOfView(
+      const currentPOV = globeEl.current?.pointOfView ? globeEl.current.pointOfView() : null;
+      globeEl.current?.pointOfView?.(
         { lat: 18, lng: currentPOV?.lng ?? 20, altitude: overviewAltitude },
-        1000
+        650
       );
     } else {
-      globeEl.current.pointOfView({ altitude: overviewAltitude }, 1000);
+      globeEl.current?.pointOfView?.({ altitude: overviewAltitude }, 650);
     }
     return;
   }
 
   if (customPOV) {
-    globeEl.current.pointOfView(customPOV, wasHomeScreen ? 1100 : 700);
+    globeEl.current?.pointOfView?.(customPOV, wasHomeScreen ? 650 : 500);
     return;
   }
 
   if (wasHomeScreen) {
     const startView = getRandomGameStartView();
-    globeEl.current.pointOfView(
+    globeEl.current?.pointOfView?.(
       {
         lat: startView.lat,
         lng: startView.lng,
         altitude: viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35,
       },
-      700
+      650
     );
   }
 };
@@ -302,7 +302,7 @@ export function useGlobeCamera({
           lastTargetRef.current = target;
         }
       }
-    } else if (selectionChanged && globeEl.current) {
+    } else if ((selectionChanged || isHomeScreen !== wasHomeScreenRef.current) && globeEl.current) {
       applyIdleCameraPointOfView({
         globeEl,
         viewport,

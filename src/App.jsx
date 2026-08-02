@@ -113,16 +113,12 @@ function App() {
   const prevScreenRef = useRef(currentScreen);
 
   useEffect(() => {
-    const isGoingHome = currentScreen === "home" && prevScreenRef.current !== "home";
-    prevScreenRef.current = currentScreen;
-
-    if (isGoingHome) {
-      return;
+    if (prevScreenRef.current !== currentScreen) {
+      prevScreenRef.current = currentScreen;
+      setIsScreenGlitching(true);
+      const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
+      return () => clearTimeout(timer);
     }
-
-    setIsScreenGlitching(true);
-    const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
-    return () => clearTimeout(timer);
   }, [currentScreen, showResultsTable]);
 
   useEffect(() => {
