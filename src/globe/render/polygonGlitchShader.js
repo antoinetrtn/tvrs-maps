@@ -52,6 +52,7 @@ export function syncPolygonShaderUniforms(
     kind,
     getBaseColorForCountryAndKind,
     isIsolated,
+    isSatellite,
   }
 ) {
   if (!shader) return;
@@ -64,6 +65,9 @@ export function syncPolygonShaderUniforms(
   }
   if (shader.uniforms.uIsFound) {
     shader.uniforms.uIsFound.value = isFound || isLearnSelected ? 1.0 : 0.0;
+  }
+  if (shader.uniforms.uIsSatellite) {
+    shader.uniforms.uIsSatellite.value = isSatellite ? 1.0 : 0.0;
   }
   if (shader.uniforms.uFadeProgress && isSelected) {
     shader.uniforms.uFadeProgress.value = 0.0;
@@ -91,6 +95,7 @@ export function attachPolygonGlitchShader(
     isIncomingTransitioning,
     getBaseColorForCountryAndKind,
     isIsolated,
+    isSatellite,
   }
 ) {
   const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
@@ -119,6 +124,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uTheme = { value: isBlackoutTheme ? 1.0 : 0.0 };
     shader.uniforms.uIsSide = { value: kind === "side" ? 1.0 : 0.0 };
     shader.uniforms.uIsFound = { value: isFound ? 1.0 : 0.0 };
+    shader.uniforms.uIsSatellite = { value: isSatellite ? 1.0 : 0.0 };
     shader.uniforms.uSelectInTransition = {
       value: isIncomingTransitioning ? 1.0 : 0.0,
     };

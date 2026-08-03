@@ -247,7 +247,7 @@ export function getPolygonMaterialForFeature({
     if (isShaderCap) {
       if (kind === "cap") {
         material.toneMapped = false;
-        if (isFound || isLearnSelected || isIsolated) {
+        if (isFound || isLearnSelected || isIsolated || (!isSatellite && isPrevTransitioning)) {
           material.transparent = false;
           material.opacity = 1.0;
         } else {
@@ -276,6 +276,7 @@ export function getPolygonMaterialForFeature({
         isIncomingTransitioning,
         getBaseColorForCountryAndKind,
         isIsolated,
+        isSatellite,
       });
     }
 
@@ -314,7 +315,7 @@ export function getPolygonMaterialForFeature({
     if (isShaderCap) {
       if (kind === "cap") {
         material.toneMapped = false;
-        if (isFound || isLearnSelected || isIsolated) {
+        if (isFound || isLearnSelected || isIsolated || (!isSatellite && isPrevTransitioning)) {
           material.transparent = false;
           material.opacity = 1.0;
         } else {
@@ -347,6 +348,7 @@ export function getPolygonMaterialForFeature({
       kind,
       getBaseColorForCountryAndKind,
       isIsolated,
+      isSatellite,
     });
   }
 
