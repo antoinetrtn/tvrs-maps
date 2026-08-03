@@ -37,11 +37,6 @@ import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
-import {
-  BatchedGlobeEngine,
-  buildBatchedGlobeGeometry,
-  createBatchedGlobeMaterial,
-} from "./render/globePolygonMaterial";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 
 const GlobeMap = (props) => {
@@ -82,11 +77,6 @@ const GlobeMap = (props) => {
   const lastZoomRef = useRef(2.5);
   const canonicalRef = useRef({});
 
-  const _batchedEngineRef = useRef({
-    Engine: BatchedGlobeEngine,
-    buildGeometry: buildBatchedGlobeGeometry,
-    createMaterial: createBatchedGlobeMaterial,
-  });
   const selectionTransition = useGlobeSelectionTransition();
 
   const {
@@ -106,6 +96,31 @@ const GlobeMap = (props) => {
   });
 
   const isLight = theme === "light";
+
+  const {
+    selectableFeatureIndex,
+    countrySizes,
+    _renderCountriesData,
+    _visibleRenderCountriesData,
+    countriesWithGeometry,
+    canonicalPositions,
+    polygonsData,
+    modeTransitionRef,
+  } = useGlobeRenderPipeline({
+    isDepartmentMode,
+    isUsStatesMode,
+    isHomeScreen,
+    isEndScreen,
+    countriesData,
+    departmentsData,
+    usStatesData,
+    gameDataMap,
+    selectedCountry,
+    lastCameraPOVRef,
+    lastZoomRef,
+    perfProfile,
+    canonicalRef,
+  });
 
   const {
     getPolygonCapMaterial,
@@ -142,6 +157,7 @@ const GlobeMap = (props) => {
     isSuccess,
     selectionTransition,
     gameDataMap,
+    modeTransitionRef,
   });
 
   const {
@@ -159,30 +175,6 @@ const GlobeMap = (props) => {
     perfProfile,
     globeTheme,
     safeColor: (c) => getOpaqueThreeColor(c),
-  });
-
-  const {
-    selectableFeatureIndex,
-    countrySizes,
-    _renderCountriesData,
-    _visibleRenderCountriesData,
-    countriesWithGeometry,
-    canonicalPositions,
-    polygonsData,
-  } = useGlobeRenderPipeline({
-    isDepartmentMode,
-    isUsStatesMode,
-    isHomeScreen,
-    isEndScreen,
-    countriesData,
-    departmentsData,
-    usStatesData,
-    gameDataMap,
-    selectedCountry,
-    lastCameraPOVRef,
-    lastZoomRef,
-    perfProfile,
-    canonicalRef,
   });
 
   const { zoomLevel, cameraPOV, globeRenderWidth, globeHeight, homeGlobeOffset, globePanelShift } =
@@ -372,6 +364,7 @@ const GlobeMap = (props) => {
     departmentsData,
     globeFeedbackRef,
     globeFeedbackApplierRef,
+    modeTransitionRef,
   });
 
   const getPolygonCurvatureResolutionWrapped = useCallback(

@@ -1,11 +1,7 @@
 import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
-import { BatchedGlobeEngine, createBatchedGlobeMaterial } from "./BatchedGlobeEngine";
-import { buildBatchedGlobeGeometry } from "./batchedGlobeGeometryBuilder";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
-
-export { BatchedGlobeEngine, buildBatchedGlobeGeometry, createBatchedGlobeMaterial };
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
 
@@ -53,7 +49,7 @@ function resolvePolygonEmissiveProps({
       const isRegionalLandmass = isDepartmentMode && !isGhostCountry && kind === "cap";
       return {
         emissiveHex: color,
-        emissiveIntensity: isRegionalLandmass ? 0.6 : 0.05,
+        emissiveIntensity: isRegionalLandmass ? (isLight ? 0.08 : 0.12) : 0.05,
         specularHex: new THREE.Color(0, 0, 0),
         shininess: 0,
       };
@@ -140,7 +136,11 @@ export function getPolygonMaterialForFeature({
   lerpColor: _lerpColor,
   restingColor,
 }) {
-  const isIsolated = admin === selectedCountry;
+  const isIsolated =
+    admin === selectedCountry ||
+    (selectedCountry === "France" && (admin === "FRA" || admin === "France")) ||
+    (selectedCountry === "United States of America" &&
+      (admin === "USA" || admin === "United States of America"));
   const isPrevTransitioning = admin === transitioningPreviousCountryState;
   const isIncomingTransitioning = admin === transitioningIncomingCountryState;
   const shaderMode = resolvePolygonShaderMode({
@@ -234,18 +234,21 @@ export function getPolygonMaterialForFeature({
       }
     }
 
-    if (isShaderCap && kind === "cap") {
-      material.toneMapped = false;
-    }
-
     if (isShaderCap) {
-      if (kind === "side") {
+      if (kind === "cap") {
+        material.toneMapped = false;
+        if (isFound || isLearnSelected) {
+          material.transparent = false;
+          material.opacity = 1.0;
+        } else {
+          material.transparent = true;
+          material.opacity = 1.0;
+        }
+      } else if (kind === "side") {
         if (isSuccess || isFound || isLearnSelected) {
           material.transparent = false;
           material.opacity = 1.0;
         } else {
-          // Transparent flag kept so the shader's dissolve alpha applies on
-          // deselection; the wall itself renders the full cap effect.
           material.transparent = true;
           material.opacity = GLITCH_EFFECT_SETTINGS.sideWallOpacity;
         }

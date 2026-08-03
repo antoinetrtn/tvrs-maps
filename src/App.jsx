@@ -248,8 +248,23 @@ function App() {
       setShowInfoModal(false);
       setShowResultsTable(false);
       setCurrentScreen("game");
+
+      const refocus = () => {
+        const input = extInputRef.current;
+        if (input && document.activeElement !== input) {
+          try {
+            input.focus({ preventScroll: true });
+          } catch {
+            input.focus();
+          }
+        }
+      };
+      refocus();
+      setTimeout(refocus, 50);
+      setTimeout(refocus, 150);
+      setTimeout(refocus, 300);
     },
-    [resetGame]
+    [resetGame, extInputRef]
   );
 
   useEffect(() => {
@@ -260,6 +275,7 @@ function App() {
 
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
+    setSelectedCountry(null);
     setMode(DEFAULT_MODE);
     setHomeMode("countries");
     setShowLearnPanel(false);
@@ -267,7 +283,7 @@ function App() {
     setShowInfoModal(false);
     setShowResultsTable(false);
     setCurrentScreen("home");
-  }, [resetGame]);
+  }, [resetGame, setSelectedCountry]);
 
   useEffect(() => {
     if (currentScreen === "home") {

@@ -99,16 +99,11 @@ const applyIdleCameraPointOfView = ({
   }
 
   if (isHomeScreen) {
-    const overviewAltitude = viewport.width < 768 ? 2.5 : 1.25;
-    if (!wasHomeScreen) {
-      const currentPOV = globeEl.current?.pointOfView ? globeEl.current.pointOfView() : null;
-      globeEl.current?.pointOfView?.(
-        { lat: 18, lng: currentPOV?.lng ?? 20, altitude: overviewAltitude },
-        650
-      );
-    } else {
-      globeEl.current?.pointOfView?.({ altitude: overviewAltitude }, 650);
-    }
+    const isMobile = viewport.width < BREAKPOINTS.mobile;
+    const targetPov = isMobile
+      ? { lat: 18, lng: 20, altitude: 2.2 }
+      : { lat: 16, lng: 28, altitude: 1.1 };
+    globeEl.current?.pointOfView?.(targetPov, 850);
     return;
   }
 
@@ -290,7 +285,7 @@ export function useGlobeCamera({
           // offset doesn't snap the globe. Real selection changes keep their
           // snappier timing.
           const duration = isHomeScreen
-            ? 1800
+            ? 650
             : onlyViewportNudge
               ? perfProfile?.isMobile
                 ? 340
@@ -372,17 +367,6 @@ export function useGlobeCamera({
       ? Math.round(maxWindowWidthRef.current * 0.14)
       : 0;
   const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
-
-  // Ensure reliable home overview camera + right-side positioning (for left UI card) when returning to accueil on desktop.
-  // This recovers the movement animation and visual composition if the main selected effect didn't trigger it.
-  // Desktop/tablet only: the lat:16/lng:28 bias pairs the globe with the left-padded
-  // UI card. On phones there is no left card, so this bias only fought the centered
-  // overview from applyIdleCameraPointOfView and produced a double-animation lurch.
-  useEffect(() => {
-    if (isHomeScreen && globeEl.current && viewport.width >= BREAKPOINTS.mobile) {
-      globeEl.current.pointOfView({ lat: 16, lng: 28, altitude: 1.1 }, 950);
-    }
-  }, [isHomeScreen, globeEl, viewport.width]);
 
   return {
     zoomLevel,

@@ -12,7 +12,6 @@ import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
 import {
   getAnimatedPolygonMaterialCount,
   polygonGlitchUniforms,
-  unregisterAnimatedPolygonMaterial,
 } from "../render/polygonGlitchShader";
 import { syncSelectedCountryShaderUniforms } from "../render/selectionTransitionShader";
 
@@ -56,6 +55,7 @@ export function useGlobeAnimationLoop({
   departmentsData,
   globeFeedbackRef,
   globeFeedbackApplierRef,
+  modeTransitionRef,
 }) {
   const animFrameIdRef = useRef(null);
   const animateSceneRef = useRef(null);
@@ -118,7 +118,10 @@ export function useGlobeAnimationLoop({
       const currentIsEndScreen = isEndScreenRef.current;
 
       const isUrgentAnim =
-        currentIsError || currentIsSuccess || Boolean(transitioningPreviousCountryRef?.current);
+        currentIsError ||
+        currentIsSuccess ||
+        Boolean(transitioningPreviousCountryRef?.current) ||
+        Boolean(modeTransitionRef?.current?.active);
       const minFrameMs = isUrgentAnim
         ? 0
         : perfProfile?.isMobile
@@ -256,10 +259,9 @@ export function useGlobeAnimationLoop({
         prevSelectedCountryRef.current = currentSelectedCountry;
       }
 
-      const needsSelectedShaderSync =
-        Boolean(currentSelectedCountry) && (currentIsError || currentIsSuccess);
+      const hasSelectedCountry = Boolean(currentSelectedCountry);
 
-      if (needsSelectedShaderSync) {
+      if (hasSelectedCountry) {
         [capMat, sideMat].forEach((mat, matIndex) => {
           if (!mat || mat.userData.admin !== currentSelectedCountry) return;
           mat.userData.kind = matIndex === 0 ? "cap" : "side";
@@ -296,18 +298,6 @@ export function useGlobeAnimationLoop({
                 shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : 1.0;
               }
             }
-          });
-
-          const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
-          ["cap", "side"].forEach((kind) => {
-            const key = `shader-${prevCountry}-${kind}-${isMobileStr}-${globeTheme}`;
-            const mat = sharedMaterialsRef.current.get(key);
-            if (mat) {
-              unregisterAnimatedPolygonMaterial(mat);
-              mat.dispose();
-              sharedMaterialsRef.current.delete(key);
-            }
-            polygonMaterialCacheRef.current[kind]?.delete(prevCountry);
           });
         } else {
           const fadeProgress = Math.min(
@@ -349,7 +339,7 @@ export function useGlobeAnimationLoop({
 
       const _hasWork =
         needsSharedTime ||
-        needsSelectedShaderSync ||
+        hasSelectedCountry ||
         transitioningPreviousCountryRef?.current ||
         !glowSettled ||
         needsGraticuleStyleRef.current;

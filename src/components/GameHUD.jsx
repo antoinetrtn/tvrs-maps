@@ -76,6 +76,31 @@ const GameHUD = ({
     return undefined;
   }, [livesLeft]);
 
+  // Guarantee text input focus on game launch, restart, or mode change
+  useEffect(() => {
+    const focusInput = () => {
+      const el = extInputRef?.current;
+      if (el && document.activeElement !== el) {
+        try {
+          el.focus({ preventScroll: true });
+        } catch {
+          el.focus();
+        }
+      }
+    };
+
+    focusInput();
+    const t1 = setTimeout(focusInput, 40);
+    const t2 = setTimeout(focusInput, 120);
+    const t3 = setTimeout(focusInput, 300);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [extInputRef, mode, isPlaying]);
+
   const t = useTranslation(lang);
 
   const preNormalizedData = useMemo(() => {

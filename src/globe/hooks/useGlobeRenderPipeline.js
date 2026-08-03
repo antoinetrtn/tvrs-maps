@@ -37,6 +37,7 @@ export function useGlobeRenderPipeline({
     visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions = {},
+    modeTransitionRef,
   } = renderDataResult;
 
   canonicalRef.current = canonicalPositions;
@@ -52,5 +53,6 @@ export function useGlobeRenderPipeline({
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,
+    modeTransitionRef,
   };
 }

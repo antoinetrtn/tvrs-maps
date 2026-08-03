@@ -284,7 +284,21 @@ export function useGameSession({
       setIsPlaying(false);
       setIsGameOver(false);
       setShowEndScreen(false);
-      setSelectedCountry(null);
+      if (activeDataMap) {
+        const keys = Object.keys(activeDataMap).filter(
+          (k) =>
+            activeDataMap[k]?.lat !== undefined ||
+            (Array.isArray(activeDataMap[k]?.path) && activeDataMap[k].path.length > 0)
+        );
+        if (keys.length > 0) {
+          const randomIndex = Math.floor(Math.random() * keys.length);
+          setSelectedCountry(keys[randomIndex]);
+        } else {
+          setSelectedCountry(null);
+        }
+      } else {
+        setSelectedCountry(null);
+      }
       resetNavigationTrail(null);
       setIsNewPB(false);
       setXpResult(null);
@@ -298,7 +312,7 @@ export function useGameSession({
       successPendingRef.current.clear();
       setMistakes(0);
     },
-    [resetNavigationTrail, gameDuration, setSelectedCountry]
+    [activeDataMap, resetNavigationTrail, gameDuration, setSelectedCountry]
   );
 
   const handleSuccessfulGuess = useCallback(

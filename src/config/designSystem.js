@@ -84,10 +84,11 @@ const STYLE_TOKENS = {
 // 2. CORE THEMES
 // ==========================================
 
-export const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
-
-// Valid globe-theme ids, derived from THEMES_LIST so the list lives in one place.
-export const GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
+const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
+const _GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
+export function isValidGlobeTheme(id) {
+  return THEMES_LIST.some((entry) => entry.id === id);
+}
 
 // The theme used on a fresh install (before any localStorage preference exists).
 // Blackout is the dark, high-contrast default.
@@ -272,13 +273,13 @@ const DEFAULT_CONTINENT_COLORS = {
       Unknown: "#64748b",
     },
     dark: {
-      Europe: "#182634",
-      Americas: "#381d19",
-      Asia: "#382e19",
-      Africa: "#193822",
-      Oceania: "#2d1938",
-      Antarctic: "#19232d",
-      Unknown: "#263238",
+      Europe: "#141414",
+      Americas: "#1a1a1a",
+      Asia: "#202020",
+      Africa: "#262626",
+      Oceania: "#2c2c2c",
+      Antarctic: "#303030",
+      Unknown: "#1a1a1a",
     },
   },
 };
@@ -380,14 +381,14 @@ const GLOBE_THEMES = {
           Unknown: "#888888",
         },
         dark: {
-          Europe: "#eeeeee",
-          Americas: "#d4d4d4",
-          Asia: "#bbbbbb",
-          Africa: "#a1a1a1",
-          Oceania: "#888888",
-          Antarctic: "#6e6e6e",
-          France: "#eeeeee",
-          Unknown: "#cccccc",
+          Europe: "#2a2a2a",
+          Americas: "#333333",
+          Asia: "#3d3d3d",
+          Africa: "#474747",
+          Oceania: "#525252",
+          Antarctic: "#5c5c5c",
+          France: "#2a2a2a",
+          Unknown: "#333333",
         },
       },
     },
@@ -596,7 +597,7 @@ export const getThemeCssVariables = (
 /** US state sub-regions resolve to the Americas palette, like France resolves to Europe. */
 const US_STATE_REGIONS = new Set(["Northeast", "Midwest", "South", "West"]);
 
-export const normalizeRegion = (region) => {
+const normalizeRegion = (region) => {
   if (region === "France") return "Europe";
   if (US_STATE_REGIONS.has(region)) return "Americas";
   return region || "Unknown";

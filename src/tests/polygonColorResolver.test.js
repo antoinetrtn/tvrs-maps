@@ -43,7 +43,7 @@ describe("polygonColorResolver", () => {
     );
   });
 
-  it("uses regional shades for unfound non-selected land", () => {
+  it("uses neutral land surface for unfound non-selected land", () => {
     expect(
       shouldUseRegionalUnfoundLand({
         isEndScreen: false,
@@ -59,7 +59,7 @@ describe("polygonColorResolver", () => {
         fallbackAccent: UI_COLORS.accent,
         fallbackRegionColor: UI_COLORS.mapBase,
       })
-    ).toBe(UI_COLORS.accent);
+    ).toBe(UI_COLORS.mapBase);
   });
 
   it("returns green for learn selection", () => {
