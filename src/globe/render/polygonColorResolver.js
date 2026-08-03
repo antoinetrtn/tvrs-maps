@@ -1,9 +1,20 @@
 import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
 
 export { FOUND_SURFACE_GREEN };
 export const FOUND_HIGHLIGHT = GLITCH_EFFECT_SETTINGS.selectionHighlight;
+
+export const isSameAdmin = (a, b, dataMap = countryDataMap) => {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const bData = dataMap?.[b] || countryDataMap[b];
+  if (bData && (bData.admin === a || bData.name_en === a || bData.name_fr === a)) return true;
+  const aData = dataMap?.[a] || countryDataMap[a];
+  if (aData && (aData.admin === b || aData.name_en === b || aData.name_fr === b)) return true;
+  return false;
+};
 
 /** Found country cap — exact DS green, no mapBase lerp. */
 export function resolveFoundCountryColor() {
@@ -48,8 +59,8 @@ export function resolveRegionalLandColor(
   return fallbackRegionColor || GLOBE_STYLE.base.mapBase;
 }
 
-export function resolveGhostCountryColor(d, countryDataMap, opts) {
-  return opts.fallbackRegionColor || GLOBE_STYLE.base.mapBase;
+export function resolveGhostCountryColor(d, countryDataMapOpts, opts) {
+  return opts?.fallbackRegionColor || GLOBE_STYLE.base.mapBase;
 }
 
 export function resolvePolygonStrokeWidth({
@@ -65,7 +76,7 @@ export function resolvePolygonStrokeWidth({
   UI_COLORS,
 }) {
   const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
-  const isSelected = admin === selectedCountry;
+  const isSelected = isSameAdmin(admin, selectedCountry);
   if (isRegionalMode && isGhostCountry) return 0.15 * strokeScale;
   if (isSelected) {
     const isGreenFill = foundSet.has(admin) || mode === "learn";
@@ -104,7 +115,7 @@ export function resolveCountryCapColor({
   mapBase,
 }) {
   const isFound = foundSet.has(admin);
-  const isSelected = admin === selectedCountry;
+  const isSelected = isSameAdmin(admin, selectedCountry);
 
   if (isEndScreen) {
     if (isFound) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;

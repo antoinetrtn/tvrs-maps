@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { RELIEF } from "../../config/gameConfig";
 import { createMountainFeature } from "../render/LowPolyBiomes";
+import { isSameAdmin } from "../render/polygonColorResolver";
 
 const BIOME_SCENE_SCALE = 9.2;
 const BIOME_SURFACE_ALIGNMENT_RADIANS = Math.PI / 2;
@@ -20,7 +21,7 @@ export function useGlobeBiomes({
   const biomeObjectsCacheRef = useRef(new Map());
 
   const getBiomeAssetsData = useMemo(() => {
-    if (!isRiversMountainsMode || _isHomeScreen) return [];
+    if (!isRiversMountainsMode) return [];
     const assets = [];
     const dataMap = gameDataMap;
 
@@ -57,17 +58,18 @@ export function useGlobeBiomes({
   const getBiomeAltitude = useCallback(
     (d) => {
       const admin = d.admin;
+      const isSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
       if (isRiversMountainsMode) {
-        return admin === selectedCountry ? 0.003 : 0.0015;
+        return isSelected ? 0.003 : 0.0015;
       }
-      return admin === selectedCountry ? 0.0025 : 0.0015;
+      return isSelected ? 0.0025 : 0.0015;
     },
-    [selectedCountry, isRiversMountainsMode]
+    [selectedCountry, isRiversMountainsMode, gameDataMap]
   );
 
   const createBiomeThreeObject = useCallback(
     (d) => {
-      const isSelected = d.admin === selectedCountry;
+      const isSelected = isSameAdmin(d.admin, selectedCountry, gameDataMap);
       const key = `${d.admin || "unknown"}_${d.isFound ? "found" : "unfound"}_selected_${isSelected}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
 
       if (biomeObjectsCacheRef.current.has(key)) {
@@ -106,7 +108,7 @@ export function useGlobeBiomes({
       biomeObjectsCacheRef.current.set(key, alignedAsset);
       return alignedAsset;
     },
-    [globeTheme, selectedCountry, isRiversMountainsMode]
+    [globeTheme, selectedCountry, isRiversMountainsMode, gameDataMap]
   );
 
   useEffect(() => {

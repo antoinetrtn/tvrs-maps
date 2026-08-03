@@ -12,6 +12,7 @@ import {
   getMobileRenderRadius,
   getRenderGeometry,
 } from "../../utils/utils";
+import { isSameAdmin } from "../render/polygonColorResolver";
 
 function buildTransitionRenderData(trans, countriesData, departmentsData, usStatesData) {
   const activeDept = trans.toDept || trans.fromDept;
@@ -159,7 +160,7 @@ export function useGlobeRenderData({
       trans.active = false;
     }
 
-    if (trans.active && !isHomeScreen) {
+    if (trans.active) {
       return buildTransitionRenderData(trans, countriesData, departmentsData, usStatesData);
     }
 
@@ -228,7 +229,7 @@ export function useGlobeRenderData({
       if (feature.isGhostCountry) return true;
       const admin = getFeatureAdmin(feature);
       if (!admin) return false;
-      if (admin === selectedCountry) return true;
+      if (isSameAdmin(admin, selectedCountry, gameDataMap)) return true;
 
       const data = countryDataMap[admin];
       if (!data || data.lat === undefined || data.lng === undefined) return true;
@@ -248,6 +249,7 @@ export function useGlobeRenderData({
     renderCountriesData,
     selectedCountry,
     zoomLevel,
+    gameDataMap,
   ]);
 
   const countriesWithGeometry = useMemo(() => {

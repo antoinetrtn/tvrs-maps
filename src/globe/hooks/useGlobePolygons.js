@@ -19,6 +19,7 @@ import {
   FOUND_HIGHLIGHT,
   getFeatureMonochromeShade,
   getTransitionState,
+  isSameAdmin,
   mutedFoundGreen,
   resolveCountryCapColor,
   resolveFoundCountryColor,
@@ -73,10 +74,8 @@ export function useGlobePolygons({
   const lerpColor = useCallback(
     (a, b, amount) => {
       try {
-        const colorA = safeColor(a);
-        const colorB = safeColor(b);
-        _lerpColor1.set(colorA);
-        _lerpColor2.set(colorB);
+        _lerpColor1.set(safeColor(a));
+        _lerpColor2.set(safeColor(b));
         _lerpColor1.lerp(_lerpColor2, Math.max(0, Math.min(1, amount)));
         return `#${_lerpColor1.getHexString()}`;
       } catch {
@@ -102,16 +101,9 @@ export function useGlobePolygons({
     };
   }, [globeTheme, theme]);
 
-  const UI_COLORS = useMemo(() => {
-    return getThemeColors(globeTheme, theme);
-  }, [theme, globeTheme]);
+  const UI_COLORS = useMemo(() => getThemeColors(globeTheme, theme), [theme, globeTheme]);
 
-  const getRegionSurfaceColor = useCallback(
-    (_region) => {
-      return UI_COLORS.mapBase;
-    },
-    [UI_COLORS.mapBase]
-  );
+  const getRegionSurfaceColor = useCallback((_region) => UI_COLORS.mapBase, [UI_COLORS.mapBase]);
 
   const getRegionalLandColor = useCallback(
     (regionCode) =>
@@ -160,7 +152,7 @@ export function useGlobePolygons({
         if (isEndScreen && !foundSet.has(admin)) return UI_COLORS.error;
 
         const isDeptFound = foundSet.has(admin);
-        const isDeptSelected = admin === selectedCountry;
+        const isDeptSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
 
         if (mode === "learn") {
           if (isDeptSelected) {
@@ -220,7 +212,7 @@ export function useGlobePolygons({
         shouldUseRegionalUnfoundLand({
           isEndScreen,
           isFound: foundSet.has(admin),
-          isSelected: admin === selectedCountry,
+          isSelected: isSameAdmin(admin, selectedCountry, gameDataMap),
         })
       ) {
         return resolveRegionalLandColor(region, {
@@ -275,7 +267,7 @@ export function useGlobePolygons({
       }
 
       const admin = getFeatureAdmin(d);
-      const isSelected = admin === selectedCountry;
+      const isSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
 
       if (isSelected) {
         if (isError) return UI_COLORS.error;
@@ -356,66 +348,31 @@ export function useGlobePolygons({
       }
 
       const admin = getFeatureAdmin(d);
-      const region = countryDataMap[admin]?.region || "Unknown";
-
-      if (foundSet.has(admin) && !isEndScreen) {
-        return resolveFoundCountryColor();
-      }
-
-      let baseColor;
-      if (isEndScreen) {
-        if (foundSet.has(admin)) {
-          baseColor = isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-        } else {
-          baseColor = UI_COLORS.error;
-        }
-      } else {
-        baseColor = resolveCountryCapColor({
-          admin,
-          region,
-          mode,
-          foundSet,
-          selectedCountry,
-          isError,
-          isSuccess,
-          isEndScreen,
-          isPerfectScore,
-          isLearn: mode === "learn",
-          isLight,
-          UI_COLORS,
-          lerpColor,
-          mapBase: UI_COLORS.mapBase,
-        });
-      }
-
-      const darken =
-        admin === selectedCountry
+      const isSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
+      const darken = isSelected
+        ? isLight
+          ? GLOBE_STYLE.lighting.sideDarken.selectedLight
+          : GLOBE_STYLE.lighting.sideDarken.selectedDark
+        : foundSet.has(admin) || (mode === "learn" && isSelected)
           ? isLight
-            ? GLOBE_STYLE.lighting.sideDarken.selectedLight
-            : GLOBE_STYLE.lighting.sideDarken.selectedDark
-          : foundSet.has(admin) || (mode === "learn" && admin === selectedCountry)
-            ? isLight
-              ? GLOBE_STYLE.lighting.sideDarken.foundLight
-              : GLOBE_STYLE.lighting.sideDarken.foundDark
-            : isLight
-              ? GLOBE_STYLE.lighting.sideDarken.baseLight
-              : GLOBE_STYLE.lighting.sideDarken.baseDark;
+            ? GLOBE_STYLE.lighting.sideDarken.foundLight
+            : GLOBE_STYLE.lighting.sideDarken.foundDark
+          : isLight
+            ? GLOBE_STYLE.lighting.sideDarken.baseLight
+            : GLOBE_STYLE.lighting.sideDarken.baseDark;
 
-      return lerpColor(baseColor, UI_COLORS.black, darken);
+      return lerpColor(getPolygonColor(d), UI_COLORS.black, darken);
     },
     [
-      foundSet,
+      getPolygonColor,
+      isLight,
       UI_COLORS,
       selectedCountry,
-      isError,
-      isSuccess,
-      isLight,
-      isEndScreen,
-      isPerfectScore,
+      gameDataMap,
+      foundSet,
       mode,
       isRegionalMode,
       lerpColor,
-      getPolygonColor,
     ]
   );
 
@@ -434,7 +391,7 @@ export function useGlobePolygons({
         shouldUseRegionalUnfoundLand({
           isEndScreen,
           isFound,
-          isSelected: admin === selectedCountry,
+          isSelected: isSameAdmin(admin, selectedCountry, gameDataMap),
         })
       ) {
         return getRegionalLandColor(region);
@@ -484,6 +441,7 @@ export function useGlobePolygons({
       isEndScreen,
       isPerfectScore,
       getRegionalLandColor,
+      gameDataMap,
     ]
   );
 
@@ -586,9 +544,20 @@ export function useGlobePolygons({
   );
 
   const getPolygonSideMaterial = useCallback(
-    (d) =>
-      getFeatureAdmin(d) === selectedCountry ? getPolygonMaterial(d, "side") : invisibleMaterial,
-    [selectedCountry, getPolygonMaterial]
+    (d) => {
+      const admin = getFeatureAdmin(d);
+      const isSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
+      const isPrev = isSameAdmin(admin, transitioningPreviousCountryState, gameDataMap);
+      const isIncoming = isSameAdmin(admin, transitioningIncomingCountryState, gameDataMap);
+      return isSelected || isPrev || isIncoming ? getPolygonMaterial(d, "side") : invisibleMaterial;
+    },
+    [
+      selectedCountry,
+      transitioningPreviousCountryState,
+      transitioningIncomingCountryState,
+      getPolygonMaterial,
+      gameDataMap,
+    ]
   );
 
   useEffect(() => {
@@ -604,19 +573,29 @@ export function useGlobePolygons({
       sharedPool.clear();
       clearAnimatedPolygonMaterials();
     };
-  }, [isLight, globeTheme, globeLightingEnabled, mode, isDepartmentMode, isUsStatesMode]);
+  }, [isLight, globeTheme, globeLightingEnabled]);
 
   const getPolygonAltitude = useCallback(
     (d) => {
       const admin = getFeatureAdmin(d);
-      const isSelected = admin === selectedCountry;
+      const isSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
+      const isPrev = isSameAdmin(admin, transitioningPreviousCountryState, gameDataMap);
+      const isIncoming = isSameAdmin(admin, transitioningIncomingCountryState, gameDataMap);
       return getPolygonAltitudeFor({
         isDepartmentMode: isRegionalMode,
         isGhostCountry: Boolean(isRegionalMode && d.isGhostCountry),
-        isSelected,
+        isSelected: isSelected || isPrev || isIncoming,
+        globeTheme,
       });
     },
-    [isRegionalMode, selectedCountry]
+    [
+      isRegionalMode,
+      selectedCountry,
+      transitioningPreviousCountryState,
+      transitioningIncomingCountryState,
+      globeTheme,
+      gameDataMap,
+    ]
   );
 
   const getPolygonStrokeWidth = useCallback(
@@ -631,7 +610,6 @@ export function useGlobePolygons({
         });
         if (transWidth !== null) return transWidth;
       }
-
       return resolvePolygonStrokeWidth({
         admin: getFeatureAdmin(d),
         isGhostCountry: d.isGhostCountry,
