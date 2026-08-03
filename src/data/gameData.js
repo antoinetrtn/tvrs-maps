@@ -114,6 +114,8 @@ export const countryDataMap = {
     iso2: "AQ",
     name_en: "Antarctica",
     name_fr: "Antarctique",
+    lat: -82.86,
+    lng: 135.0,
     region: "Antarctic",
   },
   "French Southern and Antarctic Lands": {
@@ -890,6 +892,8 @@ export const countryDataMap = {
     iso2: "HM",
     name_en: "Heard Island and McDonald Islands",
     name_fr: "Îles Heard-et-MacDonald",
+    lat: -53.08,
+    lng: 73.5,
     region: "Antarctic",
   },
   Honduras: {
