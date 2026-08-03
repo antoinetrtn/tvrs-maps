@@ -3,14 +3,42 @@ import * as THREE from "three";
 
 export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
   const customGlobeTexture = useMemo(() => {
-    if (UI_COLORS.globeTextureUrl) {
-      const loader = new THREE.TextureLoader();
-      const texture = loader.load(UI_COLORS.globeTextureUrl);
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.ClampToEdgeWrapping;
-      return texture;
+    if (!UI_COLORS.globeTextureUrl) return null;
+
+    const primaryUrl = UI_COLORS.globeTextureUrl;
+    const fallbackUrl = primaryUrl.includes("night")
+      ? "https://unpkg.com/three-globe/example/img/earth-night.jpg"
+      : "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
+
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load(
+      primaryUrl,
+      (loadedTex) => {
+        loadedTex.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        if (primaryUrl !== fallbackUrl) {
+          loader.load(fallbackUrl, (fbTex) => {
+            texture.image = fbTex.image;
+            texture.needsUpdate = true;
+          });
+        }
+      }
+    );
+
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    if (typeof window !== "undefined" && window.__TVRS_GLOBE_EL__?.renderer?.()) {
+      const maxAnisotropy =
+        window.__TVRS_GLOBE_EL__.renderer().capabilities?.getMaxAnisotropy() || 8;
+      texture.anisotropy = Math.min(16, maxAnisotropy);
     }
-    return null;
+    return texture;
   }, [UI_COLORS.globeTextureUrl]);
 
   useEffect(() => {
@@ -36,19 +64,11 @@ export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
     }
 
     if (UI_COLORS.globeTextureUrl) {
-      const isNight = UI_COLORS.globeTextureUrl.includes("earth-night");
-      if (isNight) {
-        return new THREE.MeshBasicMaterial({
-          map: customGlobeTexture,
-          color: 0xffffff,
-        });
-      }
-      return new THREE.MeshPhongMaterial({
+      return new THREE.MeshStandardMaterial({
         map: customGlobeTexture,
         color: 0xffffff,
-        specular: 0x333333,
-        shininess: 15,
-        flatShading: false,
+        roughness: 0.95,
+        metalness: 0.0,
       });
     }
 

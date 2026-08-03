@@ -138,16 +138,9 @@ export function useGlobeCamera({
   perfProfile,
   isPanelOpen = false,
   mode = "countries",
-  selectionTransition,
+  selectionTransition: _selectionTransition,
   canonicalPositions = {},
 }) {
-  const {
-    transitioningPreviousCountryRef,
-    transitioningIncomingCountryRef,
-    selectionTransitionStartRef,
-  } = selectionTransition.refs;
-  const { setTransitioningPreviousCountryState, setTransitioningIncomingCountryState } =
-    selectionTransition.setters;
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
 
@@ -247,8 +240,19 @@ export function useGlobeCamera({
   useEffect(() => {
     const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
     const customPOV = getCustomModePointOfView(mode, learnSubMode, viewport.width);
+    const isEnteringHomeFromGame = isHomeScreen && !wasHomeScreenRef.current;
 
-    if (selectedCountry && globeEl.current) {
+    if (isEnteringHomeFromGame && globeEl.current) {
+      applyIdleCameraPointOfView({
+        globeEl,
+        viewport,
+        isEndScreen,
+        isHomeScreen,
+        customPOV,
+        wasHomeScreen: false,
+      });
+      lastTargetRef.current = null;
+    } else if (selectedCountry && globeEl.current) {
       const data =
         gameDataMap[selectedCountry] ||
         countryDataMap[selectedCountry] ||
@@ -309,19 +313,6 @@ export function useGlobeCamera({
       lastTargetRef.current = null;
     }
 
-    if (selectionChanged) {
-      if (mode !== "learn") {
-        transitioningPreviousCountryRef.current = previousSelectedCountryRef.current;
-        setTransitioningPreviousCountryState(previousSelectedCountryRef.current);
-      } else {
-        transitioningPreviousCountryRef.current = null;
-        setTransitioningPreviousCountryState(null);
-      }
-      transitioningIncomingCountryRef.current = null;
-      setTransitioningIncomingCountryState(null);
-      selectionTransitionStartRef.current = performance.now();
-    }
-
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
   }, [
@@ -340,8 +331,6 @@ export function useGlobeCamera({
     mode,
     learnSubMode,
     globeEl,
-    setTransitioningPreviousCountryState,
-    setTransitioningIncomingCountryState,
   ]);
 
   const isMobileSize = viewport.width < BREAKPOINTS.desktop;

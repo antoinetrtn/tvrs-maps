@@ -322,7 +322,7 @@ const DEFAULT_DEPARTMENT_COLORS = {
 const GLOBE_THEMES = {
   satellite: {
     globeSettings: {
-      globeTextureUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+      globeTextureUrl: "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
       globeMaterialType: "phong",
       globeMaterialColor: "#ffffff",
       globeSpecular: "#333333",
@@ -469,27 +469,16 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
   const globeOverrides = { ...themeCfg.globeSettings };
 
   if (globeTheme === "satellite") {
-    if (systemTheme === "dark") {
-      globeOverrides.globeTextureUrl = "//unpkg.com/three-globe/example/img/earth-night.jpg";
-      // Night mode: very dim ambient and fill lighting, so the land/ocean stay dark and city lights stand out naturally
-      globeOverrides.lightingRim = "#222233";
-      globeOverrides.lightingFill = "#050508";
-      globeOverrides.lightingGround = "#000000";
-      globeOverrides.lightingStudio = "#030305";
-      globeOverrides.lightingLeft = "#020203";
-      globeOverrides.lightingRight = "#020203";
-      globeOverrides.glowColorHexDark = 0x1d4ed8; // Deep royal blue rim
-    } else {
-      globeOverrides.globeTextureUrl = "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
-      // Day mode: bright, crisp daylight illumination
-      globeOverrides.lightingRim = "#ffffff";
-      globeOverrides.lightingFill = "#ffffff";
-      globeOverrides.lightingGround = "#ffffff";
-      globeOverrides.lightingStudio = "#ffffff";
-      globeOverrides.lightingLeft = "#aaaaaa";
-      globeOverrides.lightingRight = "#aaaaaa";
-      globeOverrides.glowColorHexLight = 0x3a76f0; // Bright sky blue rim
-    }
+    globeOverrides.globeTextureUrl =
+      "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
+    globeOverrides.lightingRim = "#ffffff";
+    globeOverrides.lightingFill = "#ffffff";
+    globeOverrides.lightingGround = "#eeeeee";
+    globeOverrides.lightingStudio = "#ffffff";
+    globeOverrides.lightingLeft = "#cccccc";
+    globeOverrides.lightingRight = "#cccccc";
+    globeOverrides.glowColorHexDark = 0x3a76f0;
+    globeOverrides.glowColorHexLight = 0x3a76f0;
   }
 
   if (globeTheme === "blackout" && systemTheme === "light") {
@@ -669,17 +658,20 @@ export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fal
   return colors[regionCode] || fallbackColor;
 };
 
-// Global RGB configurations for SpaceBackground to comply with linter rules
 export const SPACE_RGB_COMPONENTS = {
   light: {
     normal: [15, 23, 42],
     cyan: [15, 23, 42],
     magenta: [15, 23, 42],
+    glitchRed: [255, 80, 80],
+    glitchCyan: [80, 255, 255],
   },
   dark: {
     normal: [255, 255, 255],
     cyan: [0, 240, 255],
     magenta: [255, 0, 127],
+    glitchRed: [255, 0, 110],
+    glitchCyan: [0, 255, 255],
   },
 };
 // Standardized retro TV glitch shader effect parameters and state rules

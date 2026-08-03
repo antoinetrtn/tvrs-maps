@@ -114,19 +114,19 @@ function App() {
 
   useEffect(() => {
     if (prevScreenRef.current !== currentScreen) {
+      const isEnteringGame = currentScreen === "game" && prevScreenRef.current === "home";
       prevScreenRef.current = currentScreen;
-      setIsScreenGlitching(true);
-      const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
-      return () => clearTimeout(timer);
+      if (isEnteringGame) {
+        setIsScreenGlitching(true);
+        const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
+        return () => clearTimeout(timer);
+      }
     }
   }, [currentScreen, showResultsTable]);
 
   useEffect(() => {
     if (isSupabaseConfigured && session === null) {
-      const isGuest = localStorage.getItem("tvrs-guest-mode") === "true";
-      if (!isGuest) {
-        setShowAuthModal(true);
-      }
+      if (localStorage.getItem("tvrs-guest-mode") !== "true") setShowAuthModal(true);
     } else if (session) {
       setShowAuthModal(false);
     }
@@ -260,9 +260,7 @@ function App() {
         }
       };
       refocus();
-      setTimeout(refocus, 50);
-      setTimeout(refocus, 150);
-      setTimeout(refocus, 300);
+      [50, 150, 300].forEach((ms) => setTimeout(refocus, ms));
     },
     [resetGame, extInputRef]
   );

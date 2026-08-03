@@ -114,18 +114,25 @@ export const shouldScrambleLabel = (
  * same visual height as a country selected from the world view.
  */
 export const POLYGON_ALTITUDE = {
-  base: 0.005,
-  selected: 0.009,
-  departmentBase: 0.005,
-  departmentSelected: 0.007,
-  ghostCountry: 0.003,
+  base: 0.0012,
+  satelliteBase: 0.001,
+  selected: 0.008,
+  departmentBase: 0.0012,
+  departmentSelected: 0.006,
+  ghostCountry: 0.0006,
 };
 
-export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSelected }) => {
+export const getPolygonAltitudeFor = ({
+  isDepartmentMode,
+  isGhostCountry,
+  isSelected,
+  globeTheme,
+}) => {
   if (isDepartmentMode && isGhostCountry) return POLYGON_ALTITUDE.ghostCountry;
   if (isSelected)
     return isDepartmentMode ? POLYGON_ALTITUDE.departmentSelected : POLYGON_ALTITUDE.selected;
-  return POLYGON_ALTITUDE.base;
+  if (globeTheme === "satellite") return POLYGON_ALTITUDE.satelliteBase;
+  return isDepartmentMode ? POLYGON_ALTITUDE.departmentBase : POLYGON_ALTITUDE.base;
 };
 
 /**

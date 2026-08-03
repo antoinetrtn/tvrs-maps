@@ -6,9 +6,11 @@ import {
   GLITCH_SELECTION_TRANSITION_MS,
 } from "../../config/gameConfig";
 import { PERFORMANCE } from "../../config/gameConstants";
+import { countryDataMap } from "../../data/gameData";
 import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
+import { isSameAdmin } from "../render/polygonColorResolver";
 import {
   getAnimatedPolygonMaterialCount,
   polygonGlitchUniforms,
@@ -16,6 +18,18 @@ import {
 import { syncSelectedCountryShaderUniforms } from "../render/selectionTransitionShader";
 
 const _transitionTargetColor = new THREE.Color();
+
+const getCachedMaterial = (cacheMap, adminKey, gameDataMap = countryDataMap) => {
+  if (!adminKey) return null;
+  const mat = cacheMap.get(adminKey);
+  if (mat) return mat;
+  for (const [key, val] of cacheMap.entries()) {
+    if (isSameAdmin(key, adminKey, gameDataMap)) {
+      return val;
+    }
+  }
+  return null;
+};
 
 export function useGlobeAnimationLoop({
   globeEl,
@@ -56,6 +70,7 @@ export function useGlobeAnimationLoop({
   globeFeedbackRef,
   globeFeedbackApplierRef,
   modeTransitionRef,
+  gameDataMap,
 }) {
   const animFrameIdRef = useRef(null);
   const animateSceneRef = useRef(null);
@@ -152,10 +167,18 @@ export function useGlobeAnimationLoop({
       }
 
       const capMat = currentSelectedCountry
-        ? polygonMaterialCacheRef.current.cap.get(currentSelectedCountry)
+        ? getCachedMaterial(
+            polygonMaterialCacheRef.current.cap,
+            currentSelectedCountry,
+            gameDataMap
+          )
         : null;
       const sideMat = currentSelectedCountry
-        ? polygonMaterialCacheRef.current.side.get(currentSelectedCountry)
+        ? getCachedMaterial(
+            polygonMaterialCacheRef.current.side,
+            currentSelectedCountry,
+            gameDataMap
+          )
         : null;
       const selectedHasShader =
         Boolean(currentSelectedCountry) &&
@@ -225,8 +248,16 @@ export function useGlobeAnimationLoop({
       if (prevSelectedCountryRef.current !== currentSelectedCountry) {
         const oldAdmin = prevSelectedCountryRef.current;
         if (oldAdmin) {
-          const oldCapMat = polygonMaterialCacheRef.current.cap.get(oldAdmin);
-          const oldSideMat = polygonMaterialCacheRef.current.side.get(oldAdmin);
+          const oldCapMat = getCachedMaterial(
+            polygonMaterialCacheRef.current.cap,
+            oldAdmin,
+            gameDataMap
+          );
+          const oldSideMat = getCachedMaterial(
+            polygonMaterialCacheRef.current.side,
+            oldAdmin,
+            gameDataMap
+          );
 
           [oldCapMat, oldSideMat].forEach((mat) => {
             if (mat && mat.userData.shader) {
@@ -281,8 +312,16 @@ export function useGlobeAnimationLoop({
         const elapsed = time - selectionTransitionStartRef.current;
         const TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
 
-        const prevCapMat = polygonMaterialCacheRef.current.cap.get(prevCountry);
-        const prevSideMat = polygonMaterialCacheRef.current.side.get(prevCountry);
+        const prevCapMat = getCachedMaterial(
+          polygonMaterialCacheRef.current.cap,
+          prevCountry,
+          gameDataMap
+        );
+        const prevSideMat = getCachedMaterial(
+          polygonMaterialCacheRef.current.side,
+          prevCountry,
+          gameDataMap
+        );
         if (elapsed >= TRANSITION_DURATION) {
           if (transitioningPreviousCountryRef) {
             transitioningPreviousCountryRef.current = null;

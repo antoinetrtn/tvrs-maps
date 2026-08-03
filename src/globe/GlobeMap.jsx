@@ -66,8 +66,6 @@ const GlobeMap = (props) => {
     globeTheme = "satellite",
     learnSubMode = DEFAULT_LEARN_SUB_MODE,
     isPanelOpen = false,
-    globeFeedbackRef,
-    globeFeedbackApplierRef,
   } = props;
   const t = useTranslation(lang);
 
@@ -77,7 +75,7 @@ const GlobeMap = (props) => {
   const lastZoomRef = useRef(2.5);
   const canonicalRef = useRef({});
 
-  const selectionTransition = useGlobeSelectionTransition();
+  const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode);
 
   const {
     isDepartmentMode,
@@ -264,6 +262,7 @@ const GlobeMap = (props) => {
     globeTheme,
     theme,
     canonicalPositions,
+    gameDataMap,
   });
 
   const { labelsData, createLabelElement, getHtmlAltitude } = useGlobeLabels({
@@ -331,40 +330,35 @@ const GlobeMap = (props) => {
     isLight,
   });
 
-  useGlobeSceneAnimation({
-    foundList,
-    globeEl,
-    isLight,
-    UI_COLORS,
-    globeTheme,
-    globeLightingEnabled,
-    perfProfile,
+  const lightingGlowConfig = {
     globeLightingRef,
     targetGlowColorRef,
     targetGlowPowerRef,
     targetGlowCoefRef,
-    styleGlobeGraticules,
-    updateGlobeLighting,
+  };
+  const stylesAndHelpersConfig = {
+    GLOBE_STYLE,
+    UI_COLORS,
+    lerpColor,
+    getBaseColorForCountryAndKind,
+  };
+  useGlobeSceneAnimation({
+    ...props,
+    ...lightingGlowConfig,
+    ...stylesAndHelpersConfig,
+    globeEl,
+    isLight,
     polygonMaterialCacheRef,
     sharedMaterialsRef,
-    mode,
-    selectedCountry,
-    isError,
-    isSuccess,
-    isEndScreen,
     selectionTransition,
     foundSet,
-    getBaseColorForCountryAndKind,
-    lerpColor,
     globeMaterial,
     mountainGlitchUniforms,
     mountainGlitchActive: isRiversMountainsMode,
-    GLOBE_STYLE,
-    countriesData,
-    departmentsData,
-    globeFeedbackRef,
-    globeFeedbackApplierRef,
     modeTransitionRef,
+    gameDataMap,
+    styleGlobeGraticules,
+    updateGlobeLighting,
   });
 
   const getPolygonCurvatureResolutionWrapped = useCallback(

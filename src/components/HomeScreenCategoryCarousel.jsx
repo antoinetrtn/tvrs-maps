@@ -291,14 +291,15 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       isAnimatingRef.current = true;
       setAnimatingDirection(direction);
 
+      const nextIdx = (() => {
+        if (targetIdxOverride !== null) return targetIdxOverride;
+        return direction === "leftSwipe"
+          ? (activeIndex + 1) % totalModes
+          : (activeIndex - 1 + totalModes) % totalModes;
+      })();
+      setHomeMode(gameModesCarousel[nextIdx].key);
+
       setTimeout(() => {
-        const nextIdx = (() => {
-          if (targetIdxOverride !== null) return targetIdxOverride;
-          return direction === "leftSwipe"
-            ? (activeIndex + 1) % totalModes
-            : (activeIndex - 1 + totalModes) % totalModes;
-        })();
-        setHomeMode(gameModesCarousel[nextIdx].key);
         setAnimatingDirection(null);
         isAnimatingRef.current = false;
       }, 200);

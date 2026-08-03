@@ -86,15 +86,30 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
   vec3 computeErrorEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 worldPos) {
-    float pulse = sin(time * 18.0) * 0.35 + 0.65;
-    float sweep = step(fract(worldPos.y * 0.12 - time * 4.0), 0.35) * 0.40;
-    float errorNoise = hash(noiseUv + sin(time * 45.0));
-    float noisyIntensity = (pulse + sweep) * mix(0.7, 1.3, errorNoise);
-    vec3 errorRed = vec3(1.0, 0.27, 0.0);
+    float pulse = sin(time * 24.0) * 0.4 + 0.6;
+    float sweep = step(fract(worldPos.y * 0.24 - time * 6.0), 0.2) * 0.5;
+    float errorNoise = hash(noiseUv + sin(time * 60.0));
+    float noisyIntensity = (pulse + sweep) * mix(0.6, 1.4, errorNoise);
+    vec3 errorRed = vec3(1.0, 0.05, 0.01) * (noisyIntensity + 0.3);
+
+    // Ultra-strong red-cyan chromatic split on fail
+    float chroma = (errorNoise - 0.5) * 0.62;
+    vec3 splitColor;
+    splitColor.r = clamp(errorRed.r + chroma * 0.5, 0.0, 1.0);
+    splitColor.g = clamp(errorRed.g - abs(chroma) * 0.6, 0.0, 1.0);
+    splitColor.b = clamp(errorRed.b - chroma * 0.5, 0.0, 1.0);
+
+    // Neon stroboscopic dropouts
+    if (errorNoise > 0.85) {
+      splitColor = mix(splitColor, vec3(0.0, 1.0, 1.0), 0.75); // Cyan flash
+    } else if (errorNoise < 0.15) {
+      splitColor = mix(splitColor, vec3(1.0, 0.0, 1.0), 0.75); // Magenta flash
+    }
+
     if (theme > 0.9 && theme < 1.1) {
-      return errorRed * noisyIntensity;
+      return splitColor;
     } else {
-      return mix(finalColor, errorRed * (noisyIntensity + 0.4), 0.85);
+      return mix(finalColor, splitColor, 0.95);
     }
   }
   vec3 computeSuccessEffect(vec3 finalColor, float time, float theme, vec2 blockUv, vec3 worldPos) {
@@ -104,13 +119,23 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     float blockNoise = hash(blockUv * 0.5 + 17.0);
     float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
     // White-hot flicker on the blocks still resolving.
-    float flick = mix(0.8, 1.25, hash(blockUv + floor(time * 60.0)));
-    vec3 hot = mix(vec3(1.0), uFoundGreen, 0.35) * flick;
+    float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
+    vec3 hot = mix(vec3(1.0), uFoundGreen, 0.2) * flick;
     // Single fast scanline sweep down the country during the burst.
-    float sweep = step(fract(worldPos.y * 0.12 - p * 2.4), 0.16)
-      * (1.0 - smoothstep(0.35, 0.75, p)) * 0.6;
+    float sweep = step(fract(worldPos.y * 0.18 - p * 2.8), 0.22)
+      * (1.0 - smoothstep(0.3, 0.8, p)) * 0.7;
     // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
-    return mix(hot, uFoundGreen, resolved) + uFoundGreen * sweep;
+    vec3 baseGreen = mix(hot, uFoundGreen, resolved) + uFoundGreen * sweep;
+
+    // Extremely strong lime-cyan-magenta chromatic split during the resolve phase
+    if (p < 0.85) {
+      float burstChroma = (1.0 - p) * 0.55 * (hash(blockUv + time * 12.0) - 0.5);
+      baseGreen.r = clamp(baseGreen.r + burstChroma * 0.6, 0.0, 1.0);
+      baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.3, 0.0, 1.0);
+      baseGreen.b = clamp(baseGreen.b - burstChroma * 0.8, 0.0, 1.0);
+    }
+
+    return baseGreen;
   }
   vec3 computeSelectionEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 worldPos) {
     float pulse = sin(time * 5.5) * 0.18 + 0.82;
@@ -189,9 +214,7 @@ export const GLITCH_FRAGMENT_BODY = `
     }
   }
 
-  float glitchFade = step(transitionNoise, glitchThreshold);
-  float mixBias = transitionActive > 0.5 ? mix(0.06, 0.18, uFadeProgress) : 0.12;
-  float finalProgress = mix(glitchFade, uFadeProgress, mixBias);
+  float finalProgress = clamp(uFadeProgress, 0.0, 1.0);
 
   vec3 glitchColor = finalColor;
   bool isFoundSurface = (uIsFound > 0.5);
@@ -201,18 +224,20 @@ export const GLITCH_FRAGMENT_BODY = `
     (uIsError < 0.5) &&
     (uIsSuccess < 0.5);
 
-  if (transitionActive > 0.5 && !isFoundSurface && !isSoftSelectIn) {
-    // Subtle chroma split + gentle tear tinting. The full white/black strobe
-    // flashes here used to read as a harsh, ugly deselect — softened well down
-    // so the dissolve stays digital without jarring the eye.
-    float chroma = (transitionNoise - 0.5) * 0.11 * glitchAmp;
+  if (transitionActive > 0.5 && !isFoundSurface) {
+    // Retro TV chroma aberration & vertical dropouts
+    float chroma = (transitionNoise - 0.5) * 0.28 * glitchAmp;
     glitchColor.r = clamp(finalColor.r + chroma, 0.0, 1.0);
+    glitchColor.g = clamp(finalColor.g * (1.0 - glitchAmp * 0.15), 0.0, 1.0);
     glitchColor.b = clamp(finalColor.b - chroma, 0.0, 1.0);
+    
+    // Horizontal scanline/tear overlay with neon color aberrations
     if (horizontalTear > 0.5) {
-      glitchColor = mix(glitchColor, vec3(1.0), 0.13 * glitchAmp);
+      vec3 tearColor = mix(vec3(0.0, 0.8, 1.0), vec3(1.0, 0.0, 0.8), hash(blockUv + floor(uTime * 30.0)));
+      glitchColor = mix(glitchColor, tearColor, 0.42 * glitchAmp);
     }
     if (verticalGlitch > 0.5) {
-      glitchColor = mix(glitchColor, vec3(0.0), 0.08 * glitchAmp);
+      glitchColor = mix(glitchColor, vec3(0.0), 0.25 * glitchAmp);
     }
   }
 
@@ -223,6 +248,8 @@ export const GLITCH_FRAGMENT_BODY = `
     gl_FragColor.rgb = glitchColor;
   } else if (isFoundSurface) {
     gl_FragColor.rgb = uFoundGreen * sideShade;
+  } else if (transitionActive > 0.5) {
+    gl_FragColor.rgb = glitchColor;
   } else if (isSoftSelectIn && transitionActive > 0.5) {
     float reveal = 1.0 - uFadeProgress;
     float grain = smoothstep(0.1, 0.6, reveal);
@@ -230,12 +257,27 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (isSoftSelectIn) {
     gl_FragColor.rgb = staticVec * sideShade;
   } else {
-    gl_FragColor.rgb = mix(glitchColor, settleColor, finalProgress);
+    gl_FragColor.rgb = staticVec * sideShade;
   }
 
   if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {
     gl_FragColor.a = 1.0;
   } else {
-    gl_FragColor.a = 1.0 - finalProgress;
+    if (transitionActive > 0.5) {
+      // Chunk-based digital block breakup
+      float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
+      if (blockVal < uFadeProgress) {
+        gl_FragColor.a = 0.0;
+      } else {
+        if (blockVal < uFadeProgress + 0.12) {
+          // Cyber neon glow on the breaking edges
+          vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow * 1.6, 0.65);
+        }
+        gl_FragColor.a = 1.0 - uFadeProgress * uFadeProgress;
+      }
+    } else {
+      gl_FragColor.a = 1.0 - finalProgress;
+    }
   }
 `;

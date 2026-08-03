@@ -9,6 +9,7 @@ import {
 } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
 import { getCanonicalPosition, getLngLatDistance, getMobileRenderRadius } from "../../utils/utils";
+import { isSameAdmin } from "../render/polygonColorResolver";
 
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();
@@ -32,6 +33,7 @@ export function useGlobeMarkers({
   globeTheme,
   theme,
   canonicalPositions = {},
+  gameDataMap,
 }) {
   const lerpColor = useCallback((a, b, amount) => {
     try {
@@ -81,7 +83,7 @@ export function useGlobeMarkers({
     const renderRadius = getMobileRenderRadius(zoomLevel);
 
     return markersData.filter((marker) => {
-      if (marker.admin === selectedCountry) return true;
+      if (isSameAdmin(marker.admin, selectedCountry, gameDataMap)) return true;
       const distToCenter = getLngLatDistance(marker.lng, marker.lat, pov.lng, pov.lat);
       return distToCenter <= renderRadius + 12;
     });
@@ -93,19 +95,20 @@ export function useGlobeMarkers({
     perfProfile?.cullOffscreenCountries,
     selectedCountry,
     zoomLevel,
+    gameDataMap,
   ]);
 
   const getPointColor = useCallback(
     (d) => {
+      const isSelected = isSameAdmin(d.admin, selectedCountry, gameDataMap);
       if (isDepartmentMode) {
         if (isEndScreen && !foundSet.has(d.admin)) return UI_COLORS.error;
         if (foundSet.has(d.admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-        if (d.admin === selectedCountry) return isError ? UI_COLORS.error : UI_COLORS.accent;
+        if (isSelected) return isError ? UI_COLORS.error : UI_COLORS.accent;
         return UI_COLORS.mapBorderMuted;
       }
 
       const isFound = foundSet.has(d.admin) || mode === "learn";
-      const isSelected = d.admin === selectedCountry;
       const region = d.region || "Unknown";
 
       if (isEndScreen) {
@@ -156,23 +159,19 @@ export function useGlobeMarkers({
   );
 
   const getPointRadius = useCallback(
-    (d) =>
-      isDepartmentMode
-        ? d.admin === selectedCountry
-          ? 0.12
-          : 0.055
-        : d.admin === selectedCountry
-          ? 0.22
-          : 0.12,
-    [isDepartmentMode, selectedCountry]
+    (d) => {
+      const isSelected = isSameAdmin(d.admin, selectedCountry, gameDataMap);
+      return isDepartmentMode ? (isSelected ? 0.12 : 0.055) : isSelected ? 0.22 : 0.12;
+    },
+    [isDepartmentMode, selectedCountry, gameDataMap]
   );
 
   const getPointAltitude = useCallback(
     (d) => {
-      if (selectedCountry && d.admin === selectedCountry) return 0.01;
+      if (selectedCountry && isSameAdmin(d.admin, selectedCountry, gameDataMap)) return 0.01;
       return 0.0015;
     },
-    [selectedCountry]
+    [selectedCountry, gameDataMap]
   );
 
   const getPointColorWrapped = useCallback(
