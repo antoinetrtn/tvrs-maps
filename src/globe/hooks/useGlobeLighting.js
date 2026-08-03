@@ -138,16 +138,16 @@ export function useGlobeLighting({
     }
 
     if (UI_COLORS.isBlackoutTheme) {
-      // Blackout theme: original tuned values for visible country polygons on a flat dark globe
-      keyLight.intensity = (isLight ? 0.12 : 0.16) * lightScale;
+      // Blackout theme: brighter uniform ambient to make country polygons visible on flat dark globe
+      keyLight.intensity = (isLight ? 0.2 : 0.28) * lightScale;
       keyLight.position.set(-3.5, 2.4, 4.2);
-      rimLight.intensity = (isLight ? 0.14 : 0.24) * lightScale;
+      rimLight.intensity = (isLight ? 0.18 : 0.28) * lightScale;
       rimLight.position.set(3.8, 1.3, -3.6);
-      fillLight.intensity = (isLight ? 0.72 : 0.68) * lightScale;
-      studioLight.intensity = (isLight ? 0.54 : 0.48) * lightScale;
-      studioLeft.intensity = (isLight ? 0.08 : 0.1) * lightScale;
+      fillLight.intensity = (isLight ? 1.0 : 0.92) * lightScale;
+      studioLight.intensity = (isLight ? 0.72 : 0.62) * lightScale;
+      studioLeft.intensity = (isLight ? 0.12 : 0.15) * lightScale;
       studioLeft.position.set(-4.5, 2.5, 3.5);
-      studioRight.intensity = (isLight ? 0.08 : 0.1) * lightScale;
+      studioRight.intensity = (isLight ? 0.12 : 0.15) * lightScale;
       studioRight.position.set(4.5, -1.2, 2.8);
     } else {
       const isSatellite = globeTheme === "satellite";
