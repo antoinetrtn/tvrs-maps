@@ -16,6 +16,18 @@ export const isSameAdmin = (a, b, dataMap = countryDataMap) => {
   return false;
 };
 
+export const getCachedMaterial = (cacheMap, adminKey, gameDataMap = countryDataMap) => {
+  if (!adminKey) return null;
+  const mat = cacheMap.get(adminKey);
+  if (mat) return mat;
+  for (const [key, val] of cacheMap.entries()) {
+    if (isSameAdmin(key, adminKey, gameDataMap)) {
+      return val;
+    }
+  }
+  return null;
+};
+
 /** Found country cap — exact DS green, no mapBase lerp. */
 export function resolveFoundCountryColor() {
   return FOUND_SURFACE_GREEN;
@@ -187,18 +199,23 @@ export function getTransitionState(modeTransitionRef) {
   }
   const tRaw = Math.min(1, Math.max(0, elapsed / trans.duration));
   const progress = tRaw * tRaw * (3 - 2 * tRaw);
-  const isEnteringRegional = trans.toDept || trans.toUs;
+  const isEnteringRegional = (trans.toDept || trans.toUs) && !(trans.fromDept || trans.fromUs);
+  const isExitingRegional = (trans.fromDept || trans.fromUs) && !(trans.toDept || trans.toUs);
   return {
     progress,
     isEnteringRegional,
-    isExitingRegional: !isEnteringRegional,
+    isExitingRegional,
+    fromDept: trans.fromDept,
+    fromUs: trans.fromUs,
+    toDept: trans.toDept,
+    toUs: trans.toUs,
   };
 }
 
 export function resolveModeTransitionColor({
   d,
   transState,
-  countryDataMap: _cdm,
+  countryDataMap: cdm = countryDataMap,
   gameDataMap,
   globeTheme: _gt,
   theme: _th,
@@ -206,35 +223,46 @@ export function resolveModeTransitionColor({
   REGION_COLORS_ATTENUATED: _r2,
   UI_COLORS,
   getRegionSurfaceColor,
+  getRegionSurfaceColorDimmed,
   getFeatureMonochromeShade,
   lerpColor,
 }) {
-  const { progress, isExitingRegional } = transState;
+  const { progress, isExitingRegional, fromDept, fromUs, toDept, toUs } = transState;
   const admin = getFeatureAdmin(d);
 
   if (d.isGhostCountry) {
-    const ghostColor = UI_COLORS.mapBase;
-    const worldColor = UI_COLORS.mapBase;
-    const lerpFactor = isExitingRegional ? progress : 1 - progress;
-    return lerpColor(ghostColor, worldColor, lerpFactor);
+    const region = cdm?.[admin]?.region || d.properties?.region || "Americas";
+    const worldColor = getRegionSurfaceColor ? getRegionSurfaceColor(region) : UI_COLORS.mapBase;
+    const ghostColor = getRegionSurfaceColorDimmed
+      ? getRegionSurfaceColorDimmed(region)
+      : worldColor;
+
+    const isRegionalToRegional = (fromDept || fromUs) && (toDept || toUs);
+    if (isRegionalToRegional) return ghostColor;
+
+    const lerpFactor = isExitingRegional ? 1 - progress : progress;
+    return lerpColor(worldColor, ghostColor, lerpFactor);
   }
 
   if (d.isParentCountryFeature) {
-    const worldColor = UI_COLORS.mapBase;
+    const region = cdm?.[admin]?.region || d.properties?.region || "Europe";
+    const parentColor = getRegionSurfaceColor ? getRegionSurfaceColor(region) : UI_COLORS.mapBase;
     const lerpFactor = isExitingRegional ? progress : 1 - progress;
-    return lerpColor(UI_COLORS.mapSea, worldColor, lerpFactor);
+    return lerpColor(UI_COLORS.mapSea, parentColor, lerpFactor);
   }
 
   if (d.isEnteringDepartmentFeature) {
     const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
-    const baseColor = getRegionSurfaceColor(regionCode);
+    const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
+    const baseColor = getDimmed(regionCode);
     const deptColor = getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
     return lerpColor(UI_COLORS.mapSea, deptColor, progress);
   }
 
   if (d.isExitingDepartmentFeature) {
     const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
-    const baseColor = getRegionSurfaceColor(regionCode);
+    const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
+    const baseColor = getDimmed(regionCode);
     const deptColor = getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
     return lerpColor(UI_COLORS.mapSea, deptColor, 1 - progress);
   }
@@ -330,7 +358,14 @@ export function resolveRestingColorForFeature({
     return lerpColor(base, UI_COLORS.black, darken);
   }
 
-  const base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
+  let base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
+  if (_isRegionalMode && !isFound && _grlc) {
+    const regionCode =
+      _cdm?.[_admin]?.region || _gdm?.[_admin]?.region || _d?.properties?.region || "Americas";
+    const regColor = _grlc(regionCode);
+    base = _gfms(_admin, regColor, lerpColor, UI_COLORS);
+  }
+
   if (kind === "cap") {
     return base;
   }

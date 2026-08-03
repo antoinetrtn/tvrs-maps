@@ -6,11 +6,10 @@ import {
   GLITCH_SELECTION_TRANSITION_MS,
 } from "../../config/gameConfig";
 import { PERFORMANCE } from "../../config/gameConstants";
-import { countryDataMap } from "../../data/gameData";
 import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
-import { isSameAdmin } from "../render/polygonColorResolver";
+import { getCachedMaterial } from "../render/polygonColorResolver";
 import {
   getAnimatedPolygonMaterialCount,
   polygonGlitchUniforms,
@@ -18,18 +17,6 @@ import {
 import { syncSelectedCountryShaderUniforms } from "../render/selectionTransitionShader";
 
 const _transitionTargetColor = new THREE.Color();
-
-const getCachedMaterial = (cacheMap, adminKey, gameDataMap = countryDataMap) => {
-  if (!adminKey) return null;
-  const mat = cacheMap.get(adminKey);
-  if (mat) return mat;
-  for (const [key, val] of cacheMap.entries()) {
-    if (isSameAdmin(key, adminKey, gameDataMap)) {
-      return val;
-    }
-  }
-  return null;
-};
 
 export function useGlobeAnimationLoop({
   globeEl,

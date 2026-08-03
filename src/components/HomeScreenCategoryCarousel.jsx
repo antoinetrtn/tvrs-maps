@@ -121,8 +121,6 @@ const ModeCard = ({
     }
   }
 
-  const badgeText = lang === "fr" ? modeItem.badgeFr : modeItem.badgeEn;
-
   return (
     <div
       data-mode={modeItem.key}
@@ -155,11 +153,10 @@ const ModeCard = ({
 
       <div className="card-content">
         <div className="card-header-row">
-          <span className="card-badge">{badgeText}</span>
+          <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
           <span className="card-mode-icon">{modeItem.icon}</span>
         </div>
 
-        <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
         <p className="card-desc">{lang === "fr" ? modeItem.descFr : modeItem.descEn}</p>
       </div>
 
