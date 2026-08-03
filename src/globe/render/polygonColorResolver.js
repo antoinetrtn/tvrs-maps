@@ -16,6 +16,18 @@ export const isSameAdmin = (a, b, dataMap = countryDataMap) => {
   return false;
 };
 
+export const getCachedMaterial = (cacheMap, adminKey, gameDataMap = countryDataMap) => {
+  if (!adminKey) return null;
+  const mat = cacheMap.get(adminKey);
+  if (mat) return mat;
+  for (const [key, val] of cacheMap.entries()) {
+    if (isSameAdmin(key, adminKey, gameDataMap)) {
+      return val;
+    }
+  }
+  return null;
+};
+
 /** Found country cap — exact DS green, no mapBase lerp. */
 export function resolveFoundCountryColor() {
   return FOUND_SURFACE_GREEN;
