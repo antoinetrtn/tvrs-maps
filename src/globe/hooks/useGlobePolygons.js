@@ -103,7 +103,10 @@ export function useGlobePolygons({
 
   const UI_COLORS = useMemo(() => getThemeColors(globeTheme, theme), [theme, globeTheme]);
 
-  const getRegionSurfaceColor = useCallback((_region) => UI_COLORS.mapBase, [UI_COLORS.mapBase]);
+  const getRegionSurfaceColor = useCallback(
+    (region) => getThemeRegionColor(globeTheme, theme, region),
+    [globeTheme, theme]
+  );
 
   const getRegionalLandColor = useCallback(
     (regionCode) =>
