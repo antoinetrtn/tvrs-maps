@@ -340,6 +340,8 @@ const GLOBE_THEMES = {
       isBlackoutTheme: false,
       borderFound: "#ffffff",
       borderUnfound: "#555555",
+      mapBorder: "#777777",
+      mapBorderMuted: "#555555",
       // NOTE: no globeLabelText/Dot/Stalk override here — labels fall back to
       // textMain/accent, i.e. white in dark and ink in light. Hardcoding white
       // made labels unreadable on the light (day) satellite globe.
@@ -381,14 +383,14 @@ const GLOBE_THEMES = {
           Unknown: "#888888",
         },
         dark: {
-          Europe: "#2a2a2a",
-          Americas: "#333333",
-          Asia: "#3d3d3d",
-          Africa: "#474747",
-          Oceania: "#525252",
-          Antarctic: "#5c5c5c",
-          France: "#2a2a2a",
-          Unknown: "#333333",
+          Europe: "#323238",
+          Americas: "#3c3c44",
+          Asia: "#46464f",
+          Africa: "#50505a",
+          Oceania: "#5b5b66",
+          Antarctic: "#666672",
+          France: "#323238",
+          Unknown: "#3c3c44",
         },
       },
     },
@@ -622,7 +624,7 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
     const r = parseInt(baseColor.substring(1, 3), 16);
     const g = parseInt(baseColor.substring(3, 5), 16);
     const b = parseInt(baseColor.substring(5, 7), 16);
-    const factor = sysTheme === "light" ? 0.6 : 0.4;
+    const factor = sysTheme === "light" ? 0.6 : 0.72;
     const mr = Math.round(r * factor);
     const mg = Math.round(g * factor);
     const mb = Math.round(b * factor);

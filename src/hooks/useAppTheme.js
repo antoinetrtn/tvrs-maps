@@ -24,7 +24,7 @@ export function useAppTheme(viewportWidth) {
   });
 
   const [theme, setThemeRaw] = useState(() => {
-    return globeTheme === "satellite" ? "light" : "dark";
+    return "dark";
   });
 
   const setTheme = useCallback((t) => {
@@ -37,7 +37,7 @@ export function useAppTheme(viewportWidth) {
   const setGlobeTheme = useCallback((t) => {
     const validTheme = t === "satellite" ? "satellite" : "blackout";
     setGlobeThemeRaw(validTheme);
-    const targetUiTheme = validTheme === "satellite" ? "light" : "dark";
+    const targetUiTheme = "dark";
     setThemeRaw(targetUiTheme);
     try {
       localStorage.setItem(STORAGE_KEYS.globeTheme, validTheme);

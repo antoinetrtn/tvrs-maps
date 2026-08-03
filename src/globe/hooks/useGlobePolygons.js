@@ -103,7 +103,15 @@ export function useGlobePolygons({
 
   const UI_COLORS = useMemo(() => getThemeColors(globeTheme, theme), [theme, globeTheme]);
 
-  const getRegionSurfaceColor = useCallback((_region) => UI_COLORS.mapBase, [UI_COLORS.mapBase]);
+  const getRegionSurfaceColor = useCallback(
+    (region) => getThemeRegionColor(globeTheme, theme, region),
+    [globeTheme, theme]
+  );
+
+  const getRegionSurfaceColorDimmed = useCallback(
+    (region) => getThemeRegionColorAttenuated(globeTheme, theme, region),
+    [globeTheme, theme]
+  );
 
   const getRegionalLandColor = useCallback(
     (regionCode) =>
@@ -132,6 +140,7 @@ export function useGlobePolygons({
           REGION_COLORS_ATTENUATED,
           UI_COLORS,
           getRegionSurfaceColor,
+          getRegionSurfaceColorDimmed,
           getFeatureMonochromeShade,
           lerpColor,
         });
@@ -147,7 +156,9 @@ export function useGlobePolygons({
             regionColorsLabels: REGION_COLORS_LABELS,
             regionColorsAttenuated: REGION_COLORS_ATTENUATED,
             fallbackAccent: UI_COLORS.accent,
-            fallbackRegionColor: getRegionSurfaceColor(countryDataMap[admin]?.region || "Americas"),
+            fallbackRegionColor: getRegionSurfaceColorDimmed(
+              countryDataMap[admin]?.region || "Americas"
+            ),
           });
         if (isEndScreen && !foundSet.has(admin)) return UI_COLORS.error;
 
@@ -160,7 +171,7 @@ export function useGlobePolygons({
             return FOUND_HIGHLIGHT;
           }
           const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
-          const baseColor = getRegionSurfaceColor(regionCode);
+          const baseColor = getRegionSurfaceColorDimmed(regionCode);
           return getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
         }
 
@@ -185,7 +196,7 @@ export function useGlobePolygons({
         }
 
         const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
-        const baseColor = getRegionSurfaceColor(regionCode);
+        const baseColor = getRegionSurfaceColorDimmed(regionCode);
         return getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
       }
 
@@ -244,6 +255,7 @@ export function useGlobePolygons({
       lerpColor,
       modeTransitionRef,
       getRegionSurfaceColor,
+      getRegionSurfaceColorDimmed,
       REGION_COLORS_ATTENUATED,
       REGION_COLORS_LABELS,
     ]
@@ -573,7 +585,7 @@ export function useGlobePolygons({
       sharedPool.clear();
       clearAnimatedPolygonMaterials();
     };
-  }, [isLight, globeTheme, globeLightingEnabled]);
+  }, [isLight, globeTheme, globeLightingEnabled, mode, isRegionalMode]);
 
   const getPolygonAltitude = useCallback(
     (d) => {
