@@ -138,22 +138,23 @@ export function useGlobeLighting({
     }
 
     if (UI_COLORS.isBlackoutTheme) {
-      keyLight.intensity = (isLight ? 0.28 : 0.44) * lightScale;
-      keyLight.position.set(-3.5, 2.4, 4.2);
+      // Blackout theme: front-offset headlight with low ambient for dramatic shadows
+      keyLight.intensity = (isLight ? 0.35 : 1.3) * lightScale;
+      keyLight.position.set(3.5, 2.0, 5.5);
       rimLight.intensity = 0;
-      fillLight.intensity = (isLight ? 0.44 : 0.32) * lightScale;
-      studioLight.intensity = (isLight ? 0.3 : 0.18) * lightScale;
+      fillLight.intensity = (isLight ? 0.22 : 0.15) * lightScale;
+      studioLight.intensity = (isLight ? 0.15 : 0.08) * lightScale;
       studioLeft.intensity = 0;
       studioLeft.position.set(-4.5, 2.5, 3.5);
       studioRight.intensity = 0;
       studioRight.position.set(4.5, -1.2, 2.8);
     } else {
       const isSatellite = globeTheme === "satellite";
-      // Sun headlight effect: strong directional light placed front-right-top relative to the camera
+      // Satellite theme: strong sun headlight placed front-right-top relative to the camera
       keyLight.intensity = (isSatellite ? 1.8 : isLight ? 0.12 : 0.16) * lightScale;
       keyLight.position.set(
-        isSatellite ? 2.2 : -3.5,
-        isSatellite ? 1.8 : 2.4,
+        isSatellite ? 3.5 : -3.5,
+        isSatellite ? 2.0 : 2.4,
         isSatellite ? 5.5 : 4.2
       );
 

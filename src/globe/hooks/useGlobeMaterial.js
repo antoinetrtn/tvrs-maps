@@ -64,12 +64,42 @@ export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
     }
 
     if (UI_COLORS.globeTextureUrl) {
-      return new THREE.MeshStandardMaterial({
+      const mat = new THREE.MeshStandardMaterial({
         map: customGlobeTexture,
         color: 0xffffff,
         roughness: 0.95,
         metalness: 0.0,
       });
+      mat.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          "#include <map_fragment>",
+          `
+          #ifdef USE_MAP
+            vec4 sampledDiffuseColor = texture2D( map, vMapUv );
+            
+            // Calculate a fine geographic sensor grid (16384 x 8192 cells)
+            vec2 gridUv = vMapUv * vec2(16384.0, 8192.0);
+            vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5);
+            // Infinitely sharp grid lines at any zoom:
+            float gridLine = smoothstep(0.0, 0.08, min(gridFract.x, gridFract.y));
+            
+            // Add a tiny bit of procedural sensor noise
+            vec2 blockId = floor(gridUv);
+            float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
+            
+            // Apply grid lines (darken slightly)
+            sampledDiffuseColor.rgb *= (0.91 + 0.09 * gridLine);
+            
+            // Add micro-sensor noise (intensity 0.035) over land/clouds to give high-res texture
+            float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
+            sampledDiffuseColor.rgb += (noise - 0.5) * 0.035 * isLand;
+            
+            diffuseColor *= sampledDiffuseColor;
+          #endif
+          `
+        );
+      };
+      return mat;
     }
 
     return new THREE.MeshPhongMaterial({
