@@ -330,7 +330,13 @@ export function resolveRestingColorForFeature({
     return lerpColor(base, UI_COLORS.black, darken);
   }
 
-  const base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
+  let base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
+  if (_isRegionalMode && !isFound && _grlc) {
+    const regionCode = _gdm[_admin]?.region || _d?.properties?.region || "Americas";
+    const regColor = _grlc(regionCode);
+    base = _gfms(_admin, regColor, lerpColor, UI_COLORS);
+  }
+
   if (kind === "cap") {
     return base;
   }

@@ -584,7 +584,7 @@ export function useGlobePolygons({
       sharedPool.clear();
       clearAnimatedPolygonMaterials();
     };
-  }, [isLight, globeTheme, globeLightingEnabled]);
+  }, [isLight, globeTheme, globeLightingEnabled, mode, isRegionalMode]);
 
   const getPolygonAltitude = useCallback(
     (d) => {
