@@ -50,21 +50,16 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [homeMode, setHomeMode] = useState("countries");
   const prevActiveDataMapRef = useRef(null);
+  const prevHomeModeRef = useRef(homeMode);
 
   const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
-      const storedPeaceful = localStorage.getItem(STORAGE_KEYS.peacefulMode);
-      if (storedPeaceful !== null) {
-        return storedPeaceful === "true";
-      }
-      const storedHardcore = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
-      if (storedHardcore !== null) {
-        return storedHardcore === "false";
-      }
-      return false; // Peaceful OFF = Hardcore ON by default!
-    } catch {
-      return false;
-    }
+      const p = localStorage.getItem(STORAGE_KEYS.peacefulMode);
+      if (p !== null) return p === "true";
+      const h = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
+      if (h !== null) return h === "false";
+    } catch {}
+    return false;
   });
 
   const setPeacefulMode = useCallback((value) => {
@@ -86,12 +81,11 @@ function App() {
 
   const [achievementQueue, setAchievementQueue] = useState([]);
   const activeAchievement = achievementQueue[0] || null;
-  const addAchievementToQueue = useCallback((achievement) => {
-    setAchievementQueue((prev) => [...prev, achievement]);
-  }, []);
-  const handleCloseAchievement = useCallback(() => {
-    setAchievementQueue((prev) => prev.slice(1));
-  }, []);
+  const addAchievementToQueue = useCallback((a) => setAchievementQueue((prev) => [...prev, a]), []);
+  const handleCloseAchievement = useCallback(
+    () => setAchievementQueue((prev) => prev.slice(1)),
+    []
+  );
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
@@ -153,8 +147,12 @@ function App() {
       currentScreen === "home" ? (homeMode === "capitals" ? "countries" : homeMode) : learnSubMode,
   });
 
-  if (currentScreen === "home" && activeDataMap !== prevActiveDataMapRef.current) {
+  if (
+    currentScreen === "home" &&
+    (activeDataMap !== prevActiveDataMapRef.current || homeMode !== prevHomeModeRef.current)
+  ) {
     prevActiveDataMapRef.current = activeDataMap;
+    prevHomeModeRef.current = homeMode;
     if (activeDataMap) {
       const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
       if (keys.length > 0) {
@@ -306,17 +304,16 @@ function App() {
     return () => {
       clearInterval(interval);
     };
-  }, [currentScreen, activeDataMap]);
+  }, [currentScreen, activeDataMap, homeMode]);
 
-  const handleCustomConfirm = (msg, action) => {
+  const handleCustomConfirm = (message, action) =>
     setConfirmState({
-      message: msg,
+      message,
       onConfirm: () => {
         action();
         setConfirmState(null);
       },
     });
-  };
 
   const perfProfile = useMemo(() => {
     const isMobile = viewport.width < BREAKPOINTS.mobile;
