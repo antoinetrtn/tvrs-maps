@@ -14,7 +14,7 @@ import { getCanonicalPosition } from "../../utils/utils";
 import { readClampedGlobePov, syncGlobeCameraAndZoomLimits } from "../render/globeAltitude";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 
-const ORBIT_POLE_GUARD_ANGLE = 0.03;
+const ORBIT_POLE_GUARD_ANGLE = 0.005;
 
 // A new run lands on a random region anchor (jittered) instead of always the
 // same Europe-facing view.
@@ -69,14 +69,24 @@ const buildSelectedCountryCameraTarget = ({
   const visibleHeightDegrees = 36 * preservedAltitude;
   const latOffset = isHomeScreen ? 0 : -visibleHeightDegrees * (occlusionRatio * 0.7);
 
+  // Antarctica special handling: place target over South Pole cap with wider altitude
+  const isAntarctica =
+    data?.iso2 === "AQ" || data?.admin === "Antarctica" || (useLat && useLat <= -80);
+  const targetLat = isAntarctica ? -85 : (useLat ?? 0) + latOffset;
+  const targetLng =
+    isAntarctica && currentPOV && Number.isFinite(currentPOV.lng) ? currentPOV.lng : (useLng ?? 0);
+  const antarcticaAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.5) : isMobile ? 1.7 : 1.35;
+
   return {
-    lat: (useLat ?? 0) + latOffset,
-    lng: useLng ?? 0,
-    altitude: hasPreviousSelection
-      ? isHomeScreen
-        ? fallbackAltitude
-        : preservedAltitude
-      : Math.min(preservedAltitude, fallbackAltitude),
+    lat: targetLat,
+    lng: targetLng,
+    altitude: isAntarctica
+      ? antarcticaAltitude
+      : hasPreviousSelection
+        ? isHomeScreen
+          ? fallbackAltitude
+          : preservedAltitude
+        : Math.min(preservedAltitude, fallbackAltitude),
   };
 };
 

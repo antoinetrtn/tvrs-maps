@@ -91,6 +91,13 @@ export function useGlobeInteractions({
         return;
       }
 
+      // Special polar region handling: everything south of 60°S (without a matched island) is Antarctica
+      if (lat <= -60.0 && gameDataMap["Antarctica"]) {
+        selectCountry("Antarctica");
+        recordLatency();
+        return;
+      }
+
       let best = null;
       Object.entries(gameDataMap).forEach(([admin, data]) => {
         if (!data || data.lat === undefined || data.lng === undefined) return;
