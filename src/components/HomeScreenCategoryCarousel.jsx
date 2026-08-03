@@ -166,7 +166,7 @@ const ModeCard = ({
       <div className="card-actions">
         <button
           type="button"
-          className="card-play-btn"
+          className={`card-play-btn mode-${modeItem.key}`}
           onClick={(e) => {
             if (wasDraggingRef.current) {
               e.preventDefault();

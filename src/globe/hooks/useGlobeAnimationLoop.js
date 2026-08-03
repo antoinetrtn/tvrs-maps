@@ -6,12 +6,12 @@ import {
   GLITCH_SELECTION_TRANSITION_MS,
 } from "../../config/gameConfig";
 import { PERFORMANCE } from "../../config/gameConstants";
+import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
 import {
   getAnimatedPolygonMaterialCount,
   polygonGlitchUniforms,
-  unregisterAnimatedPolygonMaterial,
 } from "../render/polygonGlitchShader";
 import { syncSelectedCountryShaderUniforms } from "../render/selectionTransitionShader";
 
@@ -55,6 +55,7 @@ export function useGlobeAnimationLoop({
   departmentsData,
   globeFeedbackRef,
   globeFeedbackApplierRef,
+  modeTransitionRef,
 }) {
   const animFrameIdRef = useRef(null);
   const animateSceneRef = useRef(null);
@@ -117,7 +118,10 @@ export function useGlobeAnimationLoop({
       const currentIsEndScreen = isEndScreenRef.current;
 
       const isUrgentAnim =
-        currentIsError || currentIsSuccess || Boolean(transitioningPreviousCountryRef?.current);
+        currentIsError ||
+        currentIsSuccess ||
+        Boolean(transitioningPreviousCountryRef?.current) ||
+        Boolean(modeTransitionRef?.current?.active);
       const minFrameMs = isUrgentAnim
         ? 0
         : perfProfile?.isMobile
@@ -130,7 +134,13 @@ export function useGlobeAnimationLoop({
           return;
         }
       }
+      const frameDelta = lastAnimFrameTimeRef.current ? time - lastAnimFrameTimeRef.current : 16.67;
       lastAnimFrameTimeRef.current = time;
+
+      const renderer = globeEl.current?.renderer?.();
+      const drawCalls = renderer?.info?.render?.calls ?? 0;
+      const triangles = renderer?.info?.render?.triangles ?? 0;
+      perfTracker.recordFrame(frameDelta, drawCalls, triangles);
 
       const timeSec = time / 1000;
       const needsMountainFeedback = mountainGlitchActive && (currentIsError || currentIsSuccess);
@@ -249,10 +259,9 @@ export function useGlobeAnimationLoop({
         prevSelectedCountryRef.current = currentSelectedCountry;
       }
 
-      const needsSelectedShaderSync =
-        Boolean(currentSelectedCountry) && (currentIsError || currentIsSuccess);
+      const hasSelectedCountry = Boolean(currentSelectedCountry);
 
-      if (needsSelectedShaderSync) {
+      if (hasSelectedCountry) {
         [capMat, sideMat].forEach((mat, matIndex) => {
           if (!mat || mat.userData.admin !== currentSelectedCountry) return;
           mat.userData.kind = matIndex === 0 ? "cap" : "side";
@@ -289,18 +298,6 @@ export function useGlobeAnimationLoop({
                 shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : 1.0;
               }
             }
-          });
-
-          const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
-          ["cap", "side"].forEach((kind) => {
-            const key = `shader-${prevCountry}-${kind}-${isMobileStr}-${globeTheme}`;
-            const mat = sharedMaterialsRef.current.get(key);
-            if (mat) {
-              unregisterAnimatedPolygonMaterial(mat);
-              mat.dispose();
-              sharedMaterialsRef.current.delete(key);
-            }
-            polygonMaterialCacheRef.current[kind]?.delete(prevCountry);
           });
         } else {
           const fadeProgress = Math.min(
@@ -340,18 +337,14 @@ export function useGlobeAnimationLoop({
         transitionColorsPrimedRef.current = null;
       }
 
-      const hasWork =
+      const _hasWork =
         needsSharedTime ||
-        needsSelectedShaderSync ||
+        hasSelectedCountry ||
         transitioningPreviousCountryRef?.current ||
         !glowSettled ||
         needsGraticuleStyleRef.current;
 
-      if (hasWork) {
-        scheduleFrame();
-      } else {
-        clearScheduledFrame();
-      }
+      scheduleFrame();
     };
 
     animateSceneRef.current = animateScene;

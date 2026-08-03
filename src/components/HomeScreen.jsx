@@ -3,19 +3,16 @@ import "./HomeScreen.css";
 import {
   Clock,
   Close,
-  CloudSun,
   Earth,
   Globe,
   Heart,
   Minus,
-  Moon,
   Plus,
   Settings2,
   User,
 } from "pixelarticons/react";
 import React, { useCallback, useState } from "react";
 
-import { THEMES_LIST } from "../config/designSystem";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import GlassIconButton from "./GlassIconButton";
@@ -29,7 +26,7 @@ import SegmentedControl from "./SegmentedControl";
 const HomeScreen = ({
   onStartGame,
   theme,
-  setTheme,
+  _setTheme,
   lang,
   setLang,
   gameDuration,
@@ -293,48 +290,24 @@ const HomeScreen = ({
             />
           </div>
 
-          {/* Interface Theme Selector */}
-          <div className="settings-card glass-panel">
-            <div className="settings-card-header">
-              <span className="section-label">{t("interface_theme")}</span>
-            </div>
-            <SegmentedControl
-              options={[
-                { value: "dark", label: t("theme_dark"), icon: <Moon width={14} height={14} /> },
-                {
-                  value: "light",
-                  label: t("theme_light"),
-                  icon: <CloudSun width={14} height={14} />,
-                  // Blackout globe forces the dark chrome (App.jsx) — surface
-                  // that instead of letting an inert "light" choice through.
-                  disabled: globeTheme === "blackout",
-                  title: globeTheme === "blackout" ? t("theme_light_blackout_hint") : undefined,
-                },
-              ]}
-              value={theme}
-              onChange={(v) => setTheme(v)}
-            />
-            {globeTheme === "blackout" && (
-              <p className="settings-hint">{t("theme_light_blackout_hint")}</p>
-            )}
-          </div>
-
-          {/* Globe Theme Selector */}
+          {/* Globe & Interface Theme Selector */}
           <div className="settings-card glass-panel">
             <div className="settings-card-header">
               <span className="section-label">{t("globe_theme")}</span>
             </div>
             <SegmentedControl
-              options={THEMES_LIST.map((tObj) => ({
-                value: tObj.id,
-                label: t(`theme_${tObj.id}`),
-                icon:
-                  tObj.id === "satellite" ? (
-                    <Earth width={14} height={14} />
-                  ) : (
-                    <Globe width={14} height={14} />
-                  ),
-              }))}
+              options={[
+                {
+                  value: "blackout",
+                  label: t("theme_blackout"),
+                  icon: <Globe width={14} height={14} />,
+                },
+                {
+                  value: "satellite",
+                  label: t("theme_satellite"),
+                  icon: <Earth width={14} height={14} />,
+                },
+              ]}
               value={globeTheme}
               onChange={(v) => setGlobeTheme(v)}
             />

@@ -7,6 +7,7 @@
     "test:run": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:show": "playwright test --ui",
+    "benchmark": "playwright test tests/benchmark.spec.js",
     "dev": "vite",
     "dev:5001": "vite --host 0.0.0.0 --port 5001",
     "download-flags": "node scripts/download-flags.js",

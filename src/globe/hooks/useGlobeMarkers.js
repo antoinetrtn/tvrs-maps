@@ -54,7 +54,7 @@ export function useGlobeMarkers({
   );
 
   const markersData = useMemo(() => {
-    if (isDepartmentMode || isRiversMountainsMode) return [];
+    if (isDepartmentMode || isRiversMountainsMode || isHomeScreen) return [];
 
     return Object.entries(countryDataMap)
       .filter(([admin, data]) => {

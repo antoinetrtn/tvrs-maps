@@ -84,10 +84,11 @@ const STYLE_TOKENS = {
 // 2. CORE THEMES
 // ==========================================
 
-export const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
-
-// Valid globe-theme ids, derived from THEMES_LIST so the list lives in one place.
-export const GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
+const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
+const _GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
+export function isValidGlobeTheme(id) {
+  return THEMES_LIST.some((entry) => entry.id === id);
+}
 
 // The theme used on a fresh install (before any localStorage preference exists).
 // Blackout is the dark, high-contrast default.
@@ -263,22 +264,22 @@ const DEFAULT_CONTINENT_COLORS = {
   },
   attenuated: {
     light: {
-      Europe: "#eaf0f6",
-      Americas: "#f6ecea",
-      Asia: "#f6f0ea",
-      Africa: "#eaf6ee",
-      Oceania: "#f0eaf6",
-      Antarctic: "#f1f4f6",
-      Unknown: "#e2e8f0",
+      Europe: "#4c5d6e",
+      Americas: "#7c5953",
+      Asia: "#7c6d53",
+      Africa: "#537c62",
+      Oceania: "#6b537c",
+      Antarctic: "#6f7a84",
+      Unknown: "#64748b",
     },
     dark: {
-      Europe: "#142332",
-      Americas: "#321411",
-      Asia: "#322711",
-      Africa: "#11321c",
-      Oceania: "#271132",
-      Antarctic: "#151e26",
-      Unknown: "#334155",
+      Europe: "#141414",
+      Americas: "#1a1a1a",
+      Asia: "#202020",
+      Africa: "#262626",
+      Oceania: "#2c2c2c",
+      Antarctic: "#303030",
+      Unknown: "#1a1a1a",
     },
   },
 };
@@ -380,14 +381,14 @@ const GLOBE_THEMES = {
           Unknown: "#888888",
         },
         dark: {
-          Europe: "#eeeeee",
-          Americas: "#d4d4d4",
-          Asia: "#bbbbbb",
-          Africa: "#a1a1a1",
-          Oceania: "#888888",
-          Antarctic: "#6e6e6e",
-          France: "#eeeeee",
-          Unknown: "#cccccc",
+          Europe: "#2a2a2a",
+          Americas: "#333333",
+          Asia: "#3d3d3d",
+          Africa: "#474747",
+          Oceania: "#525252",
+          Antarctic: "#5c5c5c",
+          France: "#2a2a2a",
+          Unknown: "#333333",
         },
       },
     },
@@ -596,7 +597,7 @@ export const getThemeCssVariables = (
 /** US state sub-regions resolve to the Americas palette, like France resolves to Europe. */
 const US_STATE_REGIONS = new Set(["Northeast", "Midwest", "South", "West"]);
 
-export const normalizeRegion = (region) => {
+const normalizeRegion = (region) => {
   if (region === "France") return "Europe";
   if (US_STATE_REGIONS.has(region)) return "Americas";
   return region || "Unknown";
@@ -632,17 +633,11 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
     const r = parseInt(baseColor.substring(1, 3), 16);
     const g = parseInt(baseColor.substring(3, 5), 16);
     const b = parseInt(baseColor.substring(5, 7), 16);
-    if (sysTheme === "light") {
-      const mr = Math.round(r * 0.5 + 255 * 0.5);
-      const mg = Math.round(g * 0.5 + 255 * 0.5);
-      const mb = Math.round(b * 0.5 + 255 * 0.5);
-      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
-    } else {
-      const mr = Math.round(r * 0.4);
-      const mg = Math.round(g * 0.4);
-      const mb = Math.round(b * 0.4);
-      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
-    }
+    const factor = sysTheme === "light" ? 0.6 : 0.4;
+    const mr = Math.round(r * factor);
+    const mg = Math.round(g * factor);
+    const mb = Math.round(b * factor);
+    return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
   }
   return baseColor;
 };

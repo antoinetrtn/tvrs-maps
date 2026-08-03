@@ -14,13 +14,13 @@ export function useGlobeBiomes({
   gameDataMap,
   selectedCountry,
   foundSet,
-  isHomeScreen,
+  _isHomeScreen,
   globeTheme,
 }) {
   const biomeObjectsCacheRef = useRef(new Map());
 
   const getBiomeAssetsData = useMemo(() => {
-    if (!isRiversMountainsMode) return [];
+    if (!isRiversMountainsMode || _isHomeScreen) return [];
     const assets = [];
     const dataMap = gameDataMap;
 
@@ -52,7 +52,7 @@ export function useGlobeBiomes({
     });
 
     return assets;
-  }, [gameDataMap, foundSet, isHomeScreen, isRiversMountainsMode]);
+  }, [gameDataMap, foundSet, isRiversMountainsMode]);
 
   const getBiomeAltitude = useCallback(
     (d) => {

@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "timestamp": "2026-08-02T15:30:53.110Z",
+    "engine": "legacy-react-globe.gl",
+    "version": "1.0.0",
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126.0.0.0",
+      "devicePixelRatio": 2,
+      "gpuRenderer": "ANGLE (Apple, Apple M1 Max, OpenGL 4.1)",
+      "platform": "MacIntel"
+    },
+    "benchmarkConfig": {
+      "warmupMs": 1500,
+      "sampleDurationMs": 2500,
+      "pickingSamplesCount": 5
+    }
+  },
+  "summary": {
+    "totalModesTested": 4,
+    "passKpiTargets": false,
+    "globalAverages": {
+      "avgFps": 0,
+      "avgFrameTimeMs": 0,
+      "avgDrawCalls": 0,
+      "avgPickingLatencyMs": 0,
+      "peakMemoryMb": 0
+    },
+    "kpiCompliance": {
+      "fps60Target": false,
+      "drawCallsUnder15Target": true,
+      "pickingUnder1msTarget": true
+    }
+  },
+  "benchmarks": {
+    "countries": {},
+    "departments": {},
+    "us_states": {},
+    "rivers_mountains": {}
+  }
+}

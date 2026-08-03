@@ -63,6 +63,9 @@ export function syncPolygonShaderUniforms(
   if (shader.uniforms.uIsFound) {
     shader.uniforms.uIsFound.value = isFound || isLearnSelected ? 1.0 : 0.0;
   }
+  if (shader.uniforms.uFadeProgress && admin === selectedCountry) {
+    shader.uniforms.uFadeProgress.value = 0.0;
+  }
   if (shader.uniforms.uTargetColor) {
     shader.uniforms.uTargetColor.value.set(getBaseColorForCountryAndKind(admin, kind));
   }
