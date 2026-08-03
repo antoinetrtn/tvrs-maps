@@ -41,7 +41,7 @@ export default [
       prettier: prettierPlugin,
     },
     settings: {
-      react: { version: "detect" },
+      react: { version: "19.0" },
     },
     rules: {
       // React
