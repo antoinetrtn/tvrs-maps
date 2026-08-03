@@ -354,7 +354,7 @@ const GLOBE_THEMES = {
   },
   blackout: {
     globeSettings: {
-      globeMaterialType: "basic",
+      globeMaterialType: "phong",
       globeMaterialColor: "#0b0b0e",
       isBlackoutTheme: true,
       polyMatMatte: true,
