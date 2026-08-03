@@ -82,6 +82,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSideShade;
   uniform float uSuccessStart;
   uniform float uSuccessDuration;
+  uniform float uIsSatellite;
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
@@ -244,12 +245,27 @@ export const GLITCH_FRAGMENT_BODY = `
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
   vec3 settleColor = mix(litRestingColor, uFoundGreen * sideShade, step(0.5, uIsFound));
 
+  float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
+
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
   } else if (isFoundSurface) {
     gl_FragColor.rgb = uFoundGreen * sideShade;
   } else if (transitionActive > 0.5) {
-    gl_FragColor.rgb = glitchColor;
+    if (uIsSatellite > 0.5) {
+      gl_FragColor.rgb = glitchColor;
+    } else {
+      if (blockVal < glitchThreshold) {
+        gl_FragColor.rgb = settleColor;
+      } else {
+        if (blockVal < glitchThreshold + 0.12) {
+          vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
+          gl_FragColor.rgb = mix(glitchColor, edgeGlow * 1.6, 0.65);
+        } else {
+          gl_FragColor.rgb = glitchColor;
+        }
+      }
+    }
   } else if (isSoftSelectIn && transitionActive > 0.5) {
     float reveal = 1.0 - uFadeProgress;
     float grain = smoothstep(0.1, 0.6, reveal);
@@ -264,20 +280,21 @@ export const GLITCH_FRAGMENT_BODY = `
     gl_FragColor.a = 1.0;
   } else {
     if (transitionActive > 0.5) {
-      // Chunk-based digital block breakup
-      float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
-      if (blockVal < uFadeProgress) {
-        gl_FragColor.a = 0.0;
-      } else {
-        if (blockVal < uFadeProgress + 0.12) {
-          // Cyber neon glow on the breaking edges
-          vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
-          gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow * 1.6, 0.65);
+      if (uIsSatellite > 0.5) {
+        if (blockVal < uFadeProgress) {
+          gl_FragColor.a = 0.0;
+        } else {
+          if (blockVal < uFadeProgress + 0.12) {
+            vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow * 1.6, 0.65);
+          }
+          gl_FragColor.a = 1.0 - uFadeProgress * uFadeProgress;
         }
-        gl_FragColor.a = 1.0 - uFadeProgress * uFadeProgress;
+      } else {
+        gl_FragColor.a = 1.0;
       }
     } else {
-      gl_FragColor.a = 1.0 - finalProgress;
+      gl_FragColor.a = (uIsSatellite > 0.5) ? (1.0 - finalProgress) : 1.0;
     }
   }
 `;
