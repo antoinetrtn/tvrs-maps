@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { countryDataMap } from "../../data/gameData";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
@@ -8,8 +9,7 @@ import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonG
 function resolvePolygonEmissiveProps({
   color,
   kind,
-  admin,
-  selectedCountry,
+  isIsolated,
   showFoundOnGlobe,
   isHighlightedOnGlobe,
   isDepartmentMode,
@@ -49,7 +49,7 @@ function resolvePolygonEmissiveProps({
       const isRegionalLandmass = isDepartmentMode && !isGhostCountry && kind === "cap";
       return {
         emissiveHex: color,
-        emissiveIntensity: isRegionalLandmass ? 0.6 : 0.05,
+        emissiveIntensity: isRegionalLandmass ? (isLight ? 0.08 : 0.12) : 0.05,
         specularHex: new THREE.Color(0, 0, 0),
         shininess: 0,
       };
@@ -95,10 +95,10 @@ function resolvePolygonEmissiveProps({
       emissiveIntensity:
         baseEmissiveIntensity +
         emissiveBoost +
-        (admin === selectedCountry ? 0.1 : 0) +
-        (showFoundOnGlobe && admin !== selectedCountry ? 0.14 : 0),
-      specularHex: admin === selectedCountry ? UI_COLORS.paper : UI_COLORS.mapBorder,
-      shininess: baseShininess + (admin === selectedCountry ? 30 : isLight ? 0 : 25),
+        (isIsolated ? 0.1 : 0) +
+        (showFoundOnGlobe && !isIsolated ? 0.14 : 0),
+      specularHex: isIsolated ? UI_COLORS.paper : UI_COLORS.mapBorder,
+      shininess: baseShininess + (isIsolated ? 30 : isLight ? 0 : 25),
     };
   }
 
@@ -136,9 +136,18 @@ export function getPolygonMaterialForFeature({
   lerpColor: _lerpColor,
   restingColor,
 }) {
-  const isIsolated = admin === selectedCountry;
-  const isPrevTransitioning = admin === transitioningPreviousCountryState;
-  const isIncomingTransitioning = admin === transitioningIncomingCountryState;
+  const isSameAdmin = (a, b) => {
+    if (!a || !b) return false;
+    if (a === b) return true;
+    const cData = countryDataMap[b];
+    if (cData && (cData.admin === a || cData.name_en === a || cData.name_fr === a)) return true;
+    const aData = countryDataMap[a];
+    if (aData && (aData.admin === b || aData.name_en === b || aData.name_fr === b)) return true;
+    return false;
+  };
+  const isIsolated = isSameAdmin(admin, selectedCountry);
+  const isPrevTransitioning = isSameAdmin(admin, transitioningPreviousCountryState);
+  const isIncomingTransitioning = isSameAdmin(admin, transitioningIncomingCountryState);
   const shaderMode = resolvePolygonShaderMode({
     admin,
     kind,
@@ -157,15 +166,13 @@ export function getPolygonMaterialForFeature({
   const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
 
   const colorToUse = isShaderCap ? restingColor : color;
-  const selectedCountryToUse = isShaderCap ? null : selectedCountry;
   const showFoundOnGlobeToUse = isShaderCap ? isFound || isLearnSelected : showFoundOnGlobe;
   const isHighlightedOnGlobeToUse = isShaderCap ? isFound || isLearnSelected : isHighlightedOnGlobe;
 
   const { emissiveHex, emissiveIntensity, specularHex, shininess } = resolvePolygonEmissiveProps({
     color: colorToUse,
     kind,
-    admin,
-    selectedCountry: selectedCountryToUse,
+    isIsolated,
     showFoundOnGlobe: showFoundOnGlobeToUse,
     isHighlightedOnGlobe: isHighlightedOnGlobeToUse,
     isDepartmentMode,
@@ -213,16 +220,23 @@ export function getPolygonMaterialForFeature({
 
     const isSatellite = globeTheme === "satellite";
     const shaderNeedsOpaque =
-      isShaderCap && (isSuccess || isFound || isLearnSelected || admin === selectedCountry);
+      isShaderCap && (isSuccess || isFound || isLearnSelected || isIsolated);
 
     if (isSatellite) {
       if (shaderNeedsOpaque || isLearnSelected) {
         material.transparent = false;
         material.wireframe = false;
+        material.visible = true;
         material.opacity = 1.0;
       } else if (showFoundOnGlobe) {
         material.transparent = false;
+        material.wireframe = true;
+        material.visible = true;
+        material.opacity = 1.0;
+      } else if (isPrevTransitioning || isIncomingTransitioning) {
+        material.transparent = true;
         material.wireframe = false;
+        material.visible = true;
         material.opacity = 1.0;
       } else {
         material.transparent = true;
@@ -230,18 +244,21 @@ export function getPolygonMaterialForFeature({
       }
     }
 
-    if (isShaderCap && kind === "cap") {
-      material.toneMapped = false;
-    }
-
     if (isShaderCap) {
-      if (kind === "side") {
+      if (kind === "cap") {
+        material.toneMapped = false;
+        if (isFound || isLearnSelected || isIsolated || (!isSatellite && isPrevTransitioning)) {
+          material.transparent = false;
+          material.opacity = 1.0;
+        } else {
+          material.transparent = true;
+          material.opacity = 1.0;
+        }
+      } else if (kind === "side") {
         if (isSuccess || isFound || isLearnSelected) {
           material.transparent = false;
           material.opacity = 1.0;
         } else {
-          // Transparent flag kept so the shader's dissolve alpha applies on
-          // deselection; the wall itself renders the full cap effect.
           material.transparent = true;
           material.opacity = GLITCH_EFFECT_SETTINGS.sideWallOpacity;
         }
@@ -258,6 +275,8 @@ export function getPolygonMaterialForFeature({
         isFound: isFound || isLearnSelected,
         isIncomingTransitioning,
         getBaseColorForCountryAndKind,
+        isIsolated,
+        isSatellite,
       });
     }
 
@@ -266,6 +285,58 @@ export function getPolygonMaterialForFeature({
     material.userData.admin = admin;
     sharedMaterialsRef.current.set(cacheKey, material);
   } else if (isShaderCap) {
+    const isSatellite = globeTheme === "satellite";
+    const shaderNeedsOpaque =
+      isShaderCap && (isSuccess || isFound || isLearnSelected || isIsolated);
+    const oldTransparent = material.transparent;
+
+    if (isSatellite) {
+      if (shaderNeedsOpaque || isLearnSelected) {
+        material.transparent = false;
+        material.wireframe = false;
+        material.visible = true;
+        material.opacity = 1.0;
+      } else if (showFoundOnGlobe) {
+        material.transparent = false;
+        material.wireframe = true;
+        material.visible = true;
+        material.opacity = 1.0;
+      } else if (isPrevTransitioning || isIncomingTransitioning) {
+        material.transparent = true;
+        material.wireframe = false;
+        material.visible = true;
+        material.opacity = 1.0;
+      } else {
+        material.transparent = true;
+        material.visible = false;
+      }
+    }
+
+    if (isShaderCap) {
+      if (kind === "cap") {
+        material.toneMapped = false;
+        if (isFound || isLearnSelected || isIsolated || (!isSatellite && isPrevTransitioning)) {
+          material.transparent = false;
+          material.opacity = 1.0;
+        } else {
+          material.transparent = true;
+          material.opacity = 1.0;
+        }
+      } else if (kind === "side") {
+        if (isSuccess || isFound || isLearnSelected) {
+          material.transparent = false;
+          material.opacity = 1.0;
+        } else {
+          material.transparent = true;
+          material.opacity = GLITCH_EFFECT_SETTINGS.sideWallOpacity;
+        }
+      }
+    }
+
+    if (material.transparent !== oldTransparent) {
+      material.needsUpdate = true;
+    }
+
     syncPolygonShaderUniforms(material.userData.shader, {
       admin,
       selectedCountry,
@@ -276,6 +347,8 @@ export function getPolygonMaterialForFeature({
       isIncomingTransitioning,
       kind,
       getBaseColorForCountryAndKind,
+      isIsolated,
+      isSatellite,
     });
   }
 

@@ -121,8 +121,6 @@ const ModeCard = ({
     }
   }
 
-  const badgeText = lang === "fr" ? modeItem.badgeFr : modeItem.badgeEn;
-
   return (
     <div
       data-mode={modeItem.key}
@@ -155,18 +153,17 @@ const ModeCard = ({
 
       <div className="card-content">
         <div className="card-header-row">
-          <span className="card-badge">{badgeText}</span>
+          <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
           <span className="card-mode-icon">{modeItem.icon}</span>
         </div>
 
-        <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
         <p className="card-desc">{lang === "fr" ? modeItem.descFr : modeItem.descEn}</p>
       </div>
 
       <div className="card-actions">
         <button
           type="button"
-          className="card-play-btn"
+          className={`card-play-btn mode-${modeItem.key}`}
           onClick={(e) => {
             if (wasDraggingRef.current) {
               e.preventDefault();
@@ -291,14 +288,15 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       isAnimatingRef.current = true;
       setAnimatingDirection(direction);
 
+      const nextIdx = (() => {
+        if (targetIdxOverride !== null) return targetIdxOverride;
+        return direction === "leftSwipe"
+          ? (activeIndex + 1) % totalModes
+          : (activeIndex - 1 + totalModes) % totalModes;
+      })();
+      setHomeMode(gameModesCarousel[nextIdx].key);
+
       setTimeout(() => {
-        const nextIdx = (() => {
-          if (targetIdxOverride !== null) return targetIdxOverride;
-          return direction === "leftSwipe"
-            ? (activeIndex + 1) % totalModes
-            : (activeIndex - 1 + totalModes) % totalModes;
-        })();
-        setHomeMode(gameModesCarousel[nextIdx].key);
         setAnimatingDirection(null);
         isAnimatingRef.current = false;
       }, 200);

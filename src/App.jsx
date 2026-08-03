@@ -50,21 +50,16 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [homeMode, setHomeMode] = useState("countries");
   const prevActiveDataMapRef = useRef(null);
+  const prevHomeModeRef = useRef(homeMode);
 
   const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
-      const storedPeaceful = localStorage.getItem(STORAGE_KEYS.peacefulMode);
-      if (storedPeaceful !== null) {
-        return storedPeaceful === "true";
-      }
-      const storedHardcore = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
-      if (storedHardcore !== null) {
-        return storedHardcore === "false";
-      }
-      return false; // Peaceful OFF = Hardcore ON by default!
-    } catch {
-      return false;
-    }
+      const p = localStorage.getItem(STORAGE_KEYS.peacefulMode);
+      if (p !== null) return p === "true";
+      const h = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
+      if (h !== null) return h === "false";
+    } catch {}
+    return false;
   });
 
   const setPeacefulMode = useCallback((value) => {
@@ -86,12 +81,11 @@ function App() {
 
   const [achievementQueue, setAchievementQueue] = useState([]);
   const activeAchievement = achievementQueue[0] || null;
-  const addAchievementToQueue = useCallback((achievement) => {
-    setAchievementQueue((prev) => [...prev, achievement]);
-  }, []);
-  const handleCloseAchievement = useCallback(() => {
-    setAchievementQueue((prev) => prev.slice(1));
-  }, []);
+  const addAchievementToQueue = useCallback((a) => setAchievementQueue((prev) => [...prev, a]), []);
+  const handleCloseAchievement = useCallback(
+    () => setAchievementQueue((prev) => prev.slice(1)),
+    []
+  );
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
@@ -113,24 +107,20 @@ function App() {
   const prevScreenRef = useRef(currentScreen);
 
   useEffect(() => {
-    const isGoingHome = currentScreen === "home" && prevScreenRef.current !== "home";
-    prevScreenRef.current = currentScreen;
-
-    if (isGoingHome) {
-      return;
+    if (prevScreenRef.current !== currentScreen) {
+      const isEnteringGame = currentScreen === "game" && prevScreenRef.current === "home";
+      prevScreenRef.current = currentScreen;
+      if (isEnteringGame) {
+        setIsScreenGlitching(true);
+        const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
+        return () => clearTimeout(timer);
+      }
     }
-
-    setIsScreenGlitching(true);
-    const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
-    return () => clearTimeout(timer);
   }, [currentScreen, showResultsTable]);
 
   useEffect(() => {
     if (isSupabaseConfigured && session === null) {
-      const isGuest = localStorage.getItem("tvrs-guest-mode") === "true";
-      if (!isGuest) {
-        setShowAuthModal(true);
-      }
+      if (localStorage.getItem("tvrs-guest-mode") !== "true") setShowAuthModal(true);
     } else if (session) {
       setShowAuthModal(false);
     }
@@ -157,8 +147,12 @@ function App() {
       currentScreen === "home" ? (homeMode === "capitals" ? "countries" : homeMode) : learnSubMode,
   });
 
-  if (currentScreen === "home" && activeDataMap !== prevActiveDataMapRef.current) {
+  if (
+    currentScreen === "home" &&
+    (activeDataMap !== prevActiveDataMapRef.current || homeMode !== prevHomeModeRef.current)
+  ) {
     prevActiveDataMapRef.current = activeDataMap;
+    prevHomeModeRef.current = homeMode;
     if (activeDataMap) {
       const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
       if (keys.length > 0) {
@@ -252,12 +246,32 @@ function App() {
       setShowInfoModal(false);
       setShowResultsTable(false);
       setCurrentScreen("game");
+
+      const refocus = () => {
+        const input = extInputRef.current;
+        if (input && document.activeElement !== input) {
+          try {
+            input.focus({ preventScroll: true });
+          } catch {
+            input.focus();
+          }
+        }
+      };
+      refocus();
+      [50, 150, 300].forEach((ms) => setTimeout(refocus, ms));
     },
-    [resetGame]
+    [resetGame, extInputRef]
   );
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.__TVRS_START_GAME__ = startGame;
+    }
+  }, [startGame]);
 
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
+    setSelectedCountry(null);
     setMode(DEFAULT_MODE);
     setHomeMode("countries");
     setShowLearnPanel(false);
@@ -265,7 +279,7 @@ function App() {
     setShowInfoModal(false);
     setShowResultsTable(false);
     setCurrentScreen("home");
-  }, [resetGame]);
+  }, [resetGame, setSelectedCountry]);
 
   useEffect(() => {
     if (currentScreen === "home") {
@@ -290,17 +304,16 @@ function App() {
     return () => {
       clearInterval(interval);
     };
-  }, [currentScreen, activeDataMap]);
+  }, [currentScreen, activeDataMap, homeMode]);
 
-  const handleCustomConfirm = (msg, action) => {
+  const handleCustomConfirm = (message, action) =>
     setConfirmState({
-      message: msg,
+      message,
       onConfirm: () => {
         action();
         setConfirmState(null);
       },
     });
-  };
 
   const perfProfile = useMemo(() => {
     const isMobile = viewport.width < BREAKPOINTS.mobile;

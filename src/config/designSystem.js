@@ -84,10 +84,11 @@ const STYLE_TOKENS = {
 // 2. CORE THEMES
 // ==========================================
 
-export const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
-
-// Valid globe-theme ids, derived from THEMES_LIST so the list lives in one place.
-export const GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
+const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
+const _GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
+export function isValidGlobeTheme(id) {
+  return THEMES_LIST.some((entry) => entry.id === id);
+}
 
 // The theme used on a fresh install (before any localStorage preference exists).
 // Blackout is the dark, high-contrast default.
@@ -263,22 +264,22 @@ const DEFAULT_CONTINENT_COLORS = {
   },
   attenuated: {
     light: {
-      Europe: "#eaf0f6",
-      Americas: "#f6ecea",
-      Asia: "#f6f0ea",
-      Africa: "#eaf6ee",
-      Oceania: "#f0eaf6",
-      Antarctic: "#f1f4f6",
-      Unknown: "#e2e8f0",
+      Europe: "#4c5d6e",
+      Americas: "#7c5953",
+      Asia: "#7c6d53",
+      Africa: "#537c62",
+      Oceania: "#6b537c",
+      Antarctic: "#6f7a84",
+      Unknown: "#64748b",
     },
     dark: {
-      Europe: "#142332",
-      Americas: "#321411",
-      Asia: "#322711",
-      Africa: "#11321c",
-      Oceania: "#271132",
-      Antarctic: "#151e26",
-      Unknown: "#334155",
+      Europe: "#141414",
+      Americas: "#1a1a1a",
+      Asia: "#202020",
+      Africa: "#262626",
+      Oceania: "#2c2c2c",
+      Antarctic: "#303030",
+      Unknown: "#1a1a1a",
     },
   },
 };
@@ -321,7 +322,7 @@ const DEFAULT_DEPARTMENT_COLORS = {
 const GLOBE_THEMES = {
   satellite: {
     globeSettings: {
-      globeTextureUrl: "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+      globeTextureUrl: "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
       globeMaterialType: "phong",
       globeMaterialColor: "#ffffff",
       globeSpecular: "#333333",
@@ -339,6 +340,8 @@ const GLOBE_THEMES = {
       isBlackoutTheme: false,
       borderFound: "#ffffff",
       borderUnfound: "#555555",
+      mapBorder: "#777777",
+      mapBorderMuted: "#555555",
       // NOTE: no globeLabelText/Dot/Stalk override here — labels fall back to
       // textMain/accent, i.e. white in dark and ink in light. Hardcoding white
       // made labels unreadable on the light (day) satellite globe.
@@ -370,24 +373,24 @@ const GLOBE_THEMES = {
     continents: {
       surface: {
         light: {
-          Europe: "#4a4a4a",
-          Americas: "#636363",
-          Asia: "#7c7c7c",
-          Africa: "#969696",
-          Oceania: "#b0b0b0",
-          Antarctic: "#c9c9c9",
-          France: "#4a4a4a",
-          Unknown: "#888888",
+          Europe: "#424242",
+          Americas: "#505050",
+          Africa: "#5c5c5c",
+          Oceania: "#686868",
+          Asia: "#767676",
+          Antarctic: "#848484",
+          France: "#424242",
+          Unknown: "#5a5a5a",
         },
         dark: {
-          Europe: "#eeeeee",
-          Americas: "#d4d4d4",
-          Asia: "#bbbbbb",
-          Africa: "#a1a1a1",
-          Oceania: "#888888",
-          Antarctic: "#6e6e6e",
-          France: "#eeeeee",
-          Unknown: "#cccccc",
+          Europe: "#2b2b30",
+          Americas: "#303036",
+          Africa: "#35353d",
+          Oceania: "#3a3a42",
+          Asia: "#3f3f47",
+          Antarctic: "#464650",
+          France: "#2b2b30",
+          Unknown: "#303036",
         },
       },
     },
@@ -468,27 +471,16 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
   const globeOverrides = { ...themeCfg.globeSettings };
 
   if (globeTheme === "satellite") {
-    if (systemTheme === "dark") {
-      globeOverrides.globeTextureUrl = "//unpkg.com/three-globe/example/img/earth-night.jpg";
-      // Night mode: very dim ambient and fill lighting, so the land/ocean stay dark and city lights stand out naturally
-      globeOverrides.lightingRim = "#222233";
-      globeOverrides.lightingFill = "#050508";
-      globeOverrides.lightingGround = "#000000";
-      globeOverrides.lightingStudio = "#030305";
-      globeOverrides.lightingLeft = "#020203";
-      globeOverrides.lightingRight = "#020203";
-      globeOverrides.glowColorHexDark = 0x1d4ed8; // Deep royal blue rim
-    } else {
-      globeOverrides.globeTextureUrl = "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
-      // Day mode: bright, crisp daylight illumination
-      globeOverrides.lightingRim = "#ffffff";
-      globeOverrides.lightingFill = "#ffffff";
-      globeOverrides.lightingGround = "#ffffff";
-      globeOverrides.lightingStudio = "#ffffff";
-      globeOverrides.lightingLeft = "#aaaaaa";
-      globeOverrides.lightingRight = "#aaaaaa";
-      globeOverrides.glowColorHexLight = 0x3a76f0; // Bright sky blue rim
-    }
+    globeOverrides.globeTextureUrl =
+      "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
+    globeOverrides.lightingRim = "#ffffff";
+    globeOverrides.lightingFill = "#ffffff";
+    globeOverrides.lightingGround = "#eeeeee";
+    globeOverrides.lightingStudio = "#ffffff";
+    globeOverrides.lightingLeft = "#cccccc";
+    globeOverrides.lightingRight = "#cccccc";
+    globeOverrides.glowColorHexDark = 0x3a76f0;
+    globeOverrides.glowColorHexLight = 0x3a76f0;
   }
 
   if (globeTheme === "blackout" && systemTheme === "light") {
@@ -596,7 +588,7 @@ export const getThemeCssVariables = (
 /** US state sub-regions resolve to the Americas palette, like France resolves to Europe. */
 const US_STATE_REGIONS = new Set(["Northeast", "Midwest", "South", "West"]);
 
-export const normalizeRegion = (region) => {
+const normalizeRegion = (region) => {
   if (region === "France") return "Europe";
   if (US_STATE_REGIONS.has(region)) return "Americas";
   return region || "Unknown";
@@ -632,17 +624,11 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
     const r = parseInt(baseColor.substring(1, 3), 16);
     const g = parseInt(baseColor.substring(3, 5), 16);
     const b = parseInt(baseColor.substring(5, 7), 16);
-    if (sysTheme === "light") {
-      const mr = Math.round(r * 0.5 + 255 * 0.5);
-      const mg = Math.round(g * 0.5 + 255 * 0.5);
-      const mb = Math.round(b * 0.5 + 255 * 0.5);
-      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
-    } else {
-      const mr = Math.round(r * 0.4);
-      const mg = Math.round(g * 0.4);
-      const mb = Math.round(b * 0.4);
-      return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
-    }
+    const factor = sysTheme === "light" ? 0.6 : 0.72;
+    const mr = Math.round(r * factor);
+    const mg = Math.round(g * factor);
+    const mb = Math.round(b * factor);
+    return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
   }
   return baseColor;
 };
@@ -674,17 +660,20 @@ export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fal
   return colors[regionCode] || fallbackColor;
 };
 
-// Global RGB configurations for SpaceBackground to comply with linter rules
 export const SPACE_RGB_COMPONENTS = {
   light: {
     normal: [15, 23, 42],
     cyan: [15, 23, 42],
     magenta: [15, 23, 42],
+    glitchRed: [255, 80, 80],
+    glitchCyan: [80, 255, 255],
   },
   dark: {
     normal: [255, 255, 255],
     cyan: [0, 240, 255],
     magenta: [255, 0, 127],
+    glitchRed: [255, 0, 110],
+    glitchCyan: [0, 255, 255],
   },
 };
 // Standardized retro TV glitch shader effect parameters and state rules

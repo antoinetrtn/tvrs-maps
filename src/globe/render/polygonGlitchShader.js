@@ -51,17 +51,26 @@ export function syncPolygonShaderUniforms(
     isIncomingTransitioning,
     kind,
     getBaseColorForCountryAndKind,
+    isIsolated,
+    isSatellite,
   }
 ) {
   if (!shader) return;
+  const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
   if (shader.uniforms.uIsError) {
-    shader.uniforms.uIsError.value = admin === selectedCountry && isError ? 1.0 : 0.0;
+    shader.uniforms.uIsError.value = isSelected && isError ? 1.0 : 0.0;
   }
   if (shader.uniforms.uIsSuccess) {
-    shader.uniforms.uIsSuccess.value = admin === selectedCountry && isSuccess ? 1.0 : 0.0;
+    shader.uniforms.uIsSuccess.value = isSelected && isSuccess ? 1.0 : 0.0;
   }
   if (shader.uniforms.uIsFound) {
     shader.uniforms.uIsFound.value = isFound || isLearnSelected ? 1.0 : 0.0;
+  }
+  if (shader.uniforms.uIsSatellite) {
+    shader.uniforms.uIsSatellite.value = isSatellite ? 1.0 : 0.0;
+  }
+  if (shader.uniforms.uFadeProgress && isSelected) {
+    shader.uniforms.uFadeProgress.value = 0.0;
   }
   if (shader.uniforms.uTargetColor) {
     shader.uniforms.uTargetColor.value.set(getBaseColorForCountryAndKind(admin, kind));
@@ -85,8 +94,11 @@ export function attachPolygonGlitchShader(
     isFound,
     isIncomingTransitioning,
     getBaseColorForCountryAndKind,
+    isIsolated,
+    isSatellite,
   }
 ) {
+  const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
   material.customProgramCacheKey = () => `shader-cap-glitch-v9-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
@@ -100,18 +112,19 @@ export function attachPolygonGlitchShader(
     };
     shader.uniforms.uFoundGreen = polygonGlitchUniforms.uFoundGreen;
     shader.uniforms.uIsError = {
-      value: admin === selectedCountry && isError ? 1.0 : 0.0,
+      value: isSelected && isError ? 1.0 : 0.0,
     };
     shader.uniforms.uIsSuccess = {
-      value: admin === selectedCountry && isSuccess ? 1.0 : 0.0,
+      value: isSelected && isSuccess ? 1.0 : 0.0,
     };
     shader.uniforms.uIsSelection = {
-      value: admin === selectedCountry && isSelectionHighlight ? 1.0 : 0.0,
+      value: isSelected && isSelectionHighlight ? 1.0 : 0.0,
     };
     shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
     shader.uniforms.uTheme = { value: isBlackoutTheme ? 1.0 : 0.0 };
     shader.uniforms.uIsSide = { value: kind === "side" ? 1.0 : 0.0 };
     shader.uniforms.uIsFound = { value: isFound ? 1.0 : 0.0 };
+    shader.uniforms.uIsSatellite = { value: isSatellite ? 1.0 : 0.0 };
     shader.uniforms.uSelectInTransition = {
       value: isIncomingTransitioning ? 1.0 : 0.0,
     };
@@ -123,6 +136,14 @@ export function attachPolygonGlitchShader(
       `#include <begin_vertex>`,
       `#include <begin_vertex>
       ${GLITCH_VERTEX_BODY}
+    `
+    );
+    shader.vertexShader = shader.vertexShader.replace(
+      `#include <project_vertex>`,
+      `#include <project_vertex>
+      if (length(position) < 10.0) {
+        gl_Position = vec4(9999.0, 9999.0, 9999.0, 1.0);
+      }
     `
     );
 

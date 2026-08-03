@@ -1,6 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
+import { departmentsDataMap } from "../../data/departmentsData";
 import { countryDataMap } from "../../data/gameData";
+import { usStatesDataMap } from "../../data/usStatesData";
 import {
   getCanonicalPosition,
   getFeatureAdmin,
@@ -10,6 +12,82 @@ import {
   getMobileRenderRadius,
   getRenderGeometry,
 } from "../../utils/utils";
+import { isSameAdmin } from "../render/polygonColorResolver";
+
+function buildTransitionRenderData(trans, countriesData, departmentsData, usStatesData) {
+  const activeDept = trans.toDept || trans.fromDept;
+  const activeUs = trans.toUs || trans.fromUs;
+
+  const exclusions = [];
+  if (activeDept) exclusions.push("France");
+  if (activeUs) exclusions.push("United States of America");
+  const exclusionSet = new Set(exclusions);
+
+  const ghostWorld = countriesData
+    .filter((feature) => !exclusionSet.has(getFeatureAdmin(feature)))
+    .map((feature) => ({
+      ...feature,
+      isGhostCountry: true,
+      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+    }));
+
+  const parentFeatures = countriesData
+    .filter((feature) => exclusionSet.has(getFeatureAdmin(feature)))
+    .map((feature) => ({
+      ...feature,
+      isParentCountryFeature: true,
+      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+    }));
+
+  const exitingRegionalData = [];
+  const enteringRegionalData = [];
+
+  if (trans.fromDept) {
+    exitingRegionalData.push(
+      ...departmentsData
+        .filter((feature) => departmentsDataMap[getFeatureAdmin(feature)])
+        .map((feature) => ({
+          ...feature,
+          isExitingDepartmentFeature: true,
+          renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+        }))
+    );
+  } else if (trans.toDept) {
+    enteringRegionalData.push(
+      ...departmentsData
+        .filter((feature) => departmentsDataMap[getFeatureAdmin(feature)])
+        .map((feature) => ({
+          ...feature,
+          isEnteringDepartmentFeature: true,
+          renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+        }))
+    );
+  }
+
+  if (trans.fromUs) {
+    exitingRegionalData.push(
+      ...usStatesData
+        .filter((feature) => usStatesDataMap[getFeatureAdmin(feature)])
+        .map((feature) => ({
+          ...feature,
+          isExitingDepartmentFeature: true,
+          renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+        }))
+    );
+  } else if (trans.toUs) {
+    enteringRegionalData.push(
+      ...usStatesData
+        .filter((feature) => usStatesDataMap[getFeatureAdmin(feature)])
+        .map((feature) => ({
+          ...feature,
+          isEnteringDepartmentFeature: true,
+          renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+        }))
+    );
+  }
+
+  return [...ghostWorld, ...parentFeatures, ...exitingRegionalData, ...enteringRegionalData];
+}
 
 export function useGlobeRenderData({
   isDepartmentMode = false,
@@ -25,13 +103,48 @@ export function useGlobeRenderData({
   zoomLevel,
   perfProfile,
 }) {
+  const modeTransitionRef = useRef({
+    active: false,
+    fromDept: false,
+    fromUs: false,
+    toDept: false,
+    toUs: false,
+    startTime: 0,
+    duration: 500,
+  });
+
+  const prevModeRef = useRef({ isDepartmentMode, isUsStatesMode });
+
+  useEffect(() => {
+    const prev = prevModeRef.current;
+    if (prev.isDepartmentMode !== isDepartmentMode || prev.isUsStatesMode !== isUsStatesMode) {
+      modeTransitionRef.current = {
+        active: true,
+        fromDept: prev.isDepartmentMode,
+        fromUs: prev.isUsStatesMode,
+        toDept: isDepartmentMode,
+        toUs: isUsStatesMode,
+        startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+        duration: 500,
+      };
+      prevModeRef.current = { isDepartmentMode, isUsStatesMode };
+    }
+  }, [isDepartmentMode, isUsStatesMode]);
+
   const selectableCountriesData = useMemo(() => {
     if (isDepartmentMode)
-      return departmentsData.filter((feature) => gameDataMap[getFeatureAdmin(feature)]);
+      return departmentsData.filter((feature) => departmentsDataMap[getFeatureAdmin(feature)]);
     if (isUsStatesMode)
-      return usStatesData.filter((feature) => gameDataMap[getFeatureAdmin(feature)]);
+      return usStatesData.filter((feature) => usStatesDataMap[getFeatureAdmin(feature)]);
     return countriesData.filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
-  }, [countriesData, departmentsData, usStatesData, gameDataMap, isDepartmentMode, isUsStatesMode]);
+  }, [countriesData, departmentsData, usStatesData, isDepartmentMode, isUsStatesMode]);
+
+  const worldCountriesRenderData = useMemo(() => {
+    return countriesData.map((feature) => ({
+      ...feature,
+      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
+    }));
+  }, [countriesData]);
 
   const baseRenderCountriesData = useMemo(() => {
     return selectableCountriesData.map((feature) => ({
@@ -41,7 +154,17 @@ export function useGlobeRenderData({
   }, [selectableCountriesData]);
 
   const renderCountriesData = useMemo(() => {
-    if (!isDepartmentMode && !isUsStatesMode) return baseRenderCountriesData;
+    const trans = modeTransitionRef.current;
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    if (trans.active && now - trans.startTime >= trans.duration) {
+      trans.active = false;
+    }
+
+    if (trans.active) {
+      return buildTransitionRenderData(trans, countriesData, departmentsData, usStatesData);
+    }
+
+    if (!isDepartmentMode && !isUsStatesMode) return worldCountriesRenderData;
 
     const exclusions = isDepartmentMode ? ["France"] : ["United States of America"];
     const exclusionSet = new Set(exclusions);
@@ -61,7 +184,16 @@ export function useGlobeRenderData({
         isDepartmentFeature: true,
       })),
     ];
-  }, [baseRenderCountriesData, countriesData, isDepartmentMode, isUsStatesMode]);
+  }, [
+    worldCountriesRenderData,
+    baseRenderCountriesData,
+    countriesData,
+    departmentsData,
+    usStatesData,
+    isDepartmentMode,
+    isUsStatesMode,
+    isHomeScreen,
+  ]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData
@@ -97,7 +229,7 @@ export function useGlobeRenderData({
       if (feature.isGhostCountry) return true;
       const admin = getFeatureAdmin(feature);
       if (!admin) return false;
-      if (admin === selectedCountry) return true;
+      if (isSameAdmin(admin, selectedCountry, gameDataMap)) return true;
 
       const data = countryDataMap[admin];
       if (!data || data.lat === undefined || data.lng === undefined) return true;
@@ -110,8 +242,6 @@ export function useGlobeRenderData({
     });
   }, [
     cameraPOV,
-    cameraPOV?.lat,
-    cameraPOV?.lng,
     countrySizes,
     isEndScreen,
     isHomeScreen,
@@ -119,6 +249,7 @@ export function useGlobeRenderData({
     renderCountriesData,
     selectedCountry,
     zoomLevel,
+    gameDataMap,
   ]);
 
   const countriesWithGeometry = useMemo(() => {
@@ -131,10 +262,6 @@ export function useGlobeRenderData({
     return set;
   }, [countriesData, departmentsData, usStatesData, isDepartmentMode, isUsStatesMode]);
 
-  // GLOBAL SHAPE-BASED POSITIONS: for every feature that has geometry,
-  // compute the true centroid from the rendered polygons.
-  // Also for rivers/mountains: derive from their path shape.
-  // This rule ensures points/labels/camera always target the exact visual shape.
   const canonicalPositions = useMemo(() => {
     const map = {};
     selectableFeatureIndex.forEach((entry) => {
@@ -144,7 +271,6 @@ export function useGlobeRenderData({
         map[entry.admin] = pos;
       }
     });
-    // Path-based (rivers, mountain ranges) — use midpoint of the shape path
     Object.keys(gameDataMap || {}).forEach((k) => {
       if (!map[k]) {
         const d = gameDataMap[k];
@@ -167,5 +293,6 @@ export function useGlobeRenderData({
     visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
+    modeTransitionRef,
   };
 }

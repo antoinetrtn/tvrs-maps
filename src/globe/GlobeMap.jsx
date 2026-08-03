@@ -9,20 +9,14 @@ import {
   GLOBE_STYLE,
   GLOBE_TRANSPARENT_BACKGROUND,
 } from "../config/designSystem";
-import {
-  DEFAULT_LEARN_SUB_MODE,
-  GLITCH_SELECTION_TRANSITION_MS,
-  isDepartmentView,
-  isLearnRiversMountainsView,
-  isUsStatesView,
-} from "../config/gameConfig";
+import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
-import { countryDataMap } from "../data/gameData";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLabels } from "./hooks/useGlobeLabels";
 import { useGlobeLighting } from "./hooks/useGlobeLighting";
+import { useGlobeMapData } from "./hooks/useGlobeMapData";
 import { useGlobeMarkers } from "./hooks/useGlobeMarkers";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { useGlobePanelShift } from "./hooks/useGlobePanelShift";
@@ -39,40 +33,40 @@ import {
   useGlobePaths,
 } from "./hooks/useGlobePaths";
 import { useGlobePolygons } from "./hooks/useGlobePolygons";
-import { useGlobeRenderData } from "./hooks/useGlobeRenderData";
+import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
-const GlobeMap = ({
-  mode,
-  lang,
-  countriesData,
-  departmentsData = [],
-  usStatesData = [],
-  foundList,
-  onCountrySelect,
-  shouldAutoRotate,
-  selectedCountry,
-  theme,
-  viewport,
-  isError,
-  isSuccess,
-  _hasActiveFeedback,
-  perfProfile,
-  isHomeScreen,
-  isKeyboardMode,
-  isEndScreen,
-  isPerfectScore,
-  onPreserveInputFocus,
-  globeLightingEnabled = true,
-  activeDataMap,
-  globeTheme = "satellite",
-  learnSubMode = DEFAULT_LEARN_SUB_MODE,
-  isPanelOpen = false,
-  globeFeedbackRef,
-  globeFeedbackApplierRef,
-}) => {
+
+const GlobeMap = (props) => {
+  const {
+    mode,
+    lang,
+    countriesData,
+    departmentsData = [],
+    usStatesData = [],
+    foundList,
+    onCountrySelect,
+    shouldAutoRotate,
+    selectedCountry,
+    theme,
+    viewport,
+    isError,
+    isSuccess,
+    _hasActiveFeedback,
+    perfProfile,
+    isHomeScreen,
+    isKeyboardMode,
+    isEndScreen,
+    isPerfectScore,
+    onPreserveInputFocus,
+    globeLightingEnabled = true,
+    activeDataMap,
+    globeTheme = "satellite",
+    learnSubMode = DEFAULT_LEARN_SUB_MODE,
+    isPanelOpen = false,
+  } = props;
   const t = useTranslation(lang);
 
   const globeEl = useRef();
@@ -81,31 +75,50 @@ const GlobeMap = ({
   const lastZoomRef = useRef(2.5);
   const canonicalRef = useRef({});
 
-  const selectionTransition = useGlobeSelectionTransition();
+  const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode);
 
-  const isDepartmentMode = isDepartmentView(mode, {
+  const {
+    isDepartmentMode,
+    isUsStatesMode,
+    isRiversMountainsMode,
+    gameDataMap,
+    foundSet,
+    globeRendererConfig,
+  } = useGlobeMapData({
+    mode,
     isHomeScreen,
     learnSubMode,
+    activeDataMap,
+    foundList,
+    perfProfile,
   });
-  const isUsStatesMode = isUsStatesView(mode, {
-    isHomeScreen,
-    learnSubMode,
-  });
-  const isRiversMountainsMode =
-    mode === "rivers_mountains" || isLearnRiversMountainsView(mode, { learnSubMode });
-  const gameDataMap =
-    isDepartmentMode || isRiversMountainsMode || isUsStatesMode
-      ? activeDataMap || {}
-      : countryDataMap;
-
-  const foundSet = useMemo(() => {
-    if (isHomeScreen) {
-      return new Set();
-    }
-    return new Set(foundList);
-  }, [foundList, isHomeScreen]);
 
   const isLight = theme === "light";
+
+  const {
+    selectableFeatureIndex,
+    countrySizes,
+    _renderCountriesData,
+    _visibleRenderCountriesData,
+    countriesWithGeometry,
+    canonicalPositions,
+    polygonsData,
+    modeTransitionRef,
+  } = useGlobeRenderPipeline({
+    isDepartmentMode,
+    isUsStatesMode,
+    isHomeScreen,
+    isEndScreen,
+    countriesData,
+    departmentsData,
+    usStatesData,
+    gameDataMap,
+    selectedCountry,
+    lastCameraPOVRef,
+    lastZoomRef,
+    perfProfile,
+    canonicalRef,
+  });
 
   const {
     getPolygonCapMaterial,
@@ -142,6 +155,7 @@ const GlobeMap = ({
     isSuccess,
     selectionTransition,
     gameDataMap,
+    modeTransitionRef,
   });
 
   const {
@@ -160,38 +174,6 @@ const GlobeMap = ({
     globeTheme,
     safeColor: (c) => getOpaqueThreeColor(c),
   });
-
-  // renderData first (using ref for last POV) so we can give camera fresh canonicals.
-  const renderDataResult = useGlobeRenderData({
-    isDepartmentMode,
-    isUsStatesMode,
-    isHomeScreen,
-    isEndScreen,
-    countriesData,
-    departmentsData,
-    usStatesData,
-    gameDataMap,
-    selectedCountry,
-    cameraPOV: lastCameraPOVRef.current,
-    zoomLevel: lastZoomRef.current,
-    perfProfile,
-  });
-
-  const {
-    selectableFeatureIndex,
-    countrySizes,
-    renderCountriesData,
-    visibleRenderCountriesData,
-    countriesWithGeometry,
-    canonicalPositions = {},
-  } = renderDataResult;
-
-  canonicalRef.current = canonicalPositions;
-
-  const polygonsData =
-    perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
-      ? visibleRenderCountriesData
-      : renderCountriesData;
 
   const { zoomLevel, cameraPOV, globeRenderWidth, globeHeight, homeGlobeOffset, globePanelShift } =
     useGlobeCamera({
@@ -256,7 +238,7 @@ const GlobeMap = ({
   });
 
   const {
-    visibleMarkersData,
+    visibleMarkersData: _visibleMarkersData,
     markersData,
     getPointColorWrapped,
     getPointRadius,
@@ -280,6 +262,7 @@ const GlobeMap = ({
     globeTheme,
     theme,
     canonicalPositions,
+    gameDataMap,
   });
 
   const { labelsData, createLabelElement, getHtmlAltitude } = useGlobeLabels({
@@ -347,39 +330,35 @@ const GlobeMap = ({
     isLight,
   });
 
-  useGlobeSceneAnimation({
-    foundList,
-    globeEl,
-    isLight,
-    UI_COLORS,
-    globeTheme,
-    globeLightingEnabled,
-    perfProfile,
+  const lightingGlowConfig = {
     globeLightingRef,
     targetGlowColorRef,
     targetGlowPowerRef,
     targetGlowCoefRef,
-    styleGlobeGraticules,
-    updateGlobeLighting,
+  };
+  const stylesAndHelpersConfig = {
+    GLOBE_STYLE,
+    UI_COLORS,
+    lerpColor,
+    getBaseColorForCountryAndKind,
+  };
+  useGlobeSceneAnimation({
+    ...props,
+    ...lightingGlowConfig,
+    ...stylesAndHelpersConfig,
+    globeEl,
+    isLight,
     polygonMaterialCacheRef,
     sharedMaterialsRef,
-    mode,
-    selectedCountry,
-    isError,
-    isSuccess,
-    isEndScreen,
     selectionTransition,
     foundSet,
-    getBaseColorForCountryAndKind,
-    lerpColor,
     globeMaterial,
     mountainGlitchUniforms,
     mountainGlitchActive: isRiversMountainsMode,
-    GLOBE_STYLE,
-    countriesData,
-    departmentsData,
-    globeFeedbackRef,
-    globeFeedbackApplierRef,
+    modeTransitionRef,
+    gameDataMap,
+    styleGlobeGraticules,
+    updateGlobeLighting,
   });
 
   const getPolygonCurvatureResolutionWrapped = useCallback(
@@ -394,7 +373,18 @@ const GlobeMap = ({
   const handleGlobeReady = useCallback(() => {
     styleGlobeGraticules();
     updateGlobeLighting();
-  }, [styleGlobeGraticules, updateGlobeLighting]);
+    if (typeof window !== "undefined") {
+      window.__TVRS_GLOBE_EL__ = globeEl.current;
+      window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
+    }
+  }, [styleGlobeGraticules, updateGlobeLighting, sharedMaterialsRef]);
+
+  if (typeof window !== "undefined") {
+    window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
+    if (globeEl.current) {
+      window.__TVRS_GLOBE_EL__ = globeEl.current;
+    }
+  }
 
   const activeAtmosphereColor = useMemo(
     () => getOpaqueThreeColor(UI_COLORS.atmosphere),
@@ -506,11 +496,7 @@ const GlobeMap = ({
             backgroundColor={GLOBE_TRANSPARENT_BACKGROUND}
             lineHoverPrecision={0}
             showGraticules={true}
-            rendererConfig={{
-              antialias: perfProfile?.antialias !== false,
-              logarithmicDepthBuffer: false,
-              powerPreference: "high-performance",
-            }}
+            rendererConfig={globeRendererConfig}
             animateIn={false}
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
             polygonsData={polygonsData}
@@ -525,11 +511,7 @@ const GlobeMap = ({
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
             polygonsTransitionDuration={GLITCH_SELECTION_TRANSITION_MS}
-            pointsData={
-              perfProfile?.cullOffscreenCountries && !isHomeScreen && !isEndScreen
-                ? visibleMarkersData
-                : markersData
-            }
+            pointsData={markersData}
             pointLat="lat"
             pointLng="lng"
             pointColor={getPointColorWrapped}

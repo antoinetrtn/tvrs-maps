@@ -1,9 +1,32 @@
-import { GLITCH_EFFECT_SETTINGS, normalizeRegion } from "../../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
 
 export { FOUND_SURFACE_GREEN };
 export const FOUND_HIGHLIGHT = GLITCH_EFFECT_SETTINGS.selectionHighlight;
+
+export const isSameAdmin = (a, b, dataMap = countryDataMap) => {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const bData = dataMap?.[b] || countryDataMap[b];
+  if (bData && (bData.admin === a || bData.name_en === a || bData.name_fr === a)) return true;
+  const aData = dataMap?.[a] || countryDataMap[a];
+  if (aData && (aData.admin === b || aData.name_en === b || aData.name_fr === b)) return true;
+  return false;
+};
+
+export const getCachedMaterial = (cacheMap, adminKey, gameDataMap = countryDataMap) => {
+  if (!adminKey) return null;
+  const mat = cacheMap.get(adminKey);
+  if (mat) return mat;
+  for (const [key, val] of cacheMap.entries()) {
+    if (isSameAdmin(key, adminKey, gameDataMap)) {
+      return val;
+    }
+  }
+  return null;
+};
 
 /** Found country cap — exact DS green, no mapBase lerp. */
 export function resolveFoundCountryColor() {
@@ -22,28 +45,34 @@ export function mutedFoundGreen(_mapBase, _lerpColor) {
   return resolveFoundCountryColor();
 }
 
-/** Unfound land tint — same continental shades in learn and play. */
-export function resolveRegionalLandColor(
-  rawRegion,
-  { globeTheme, regionColorsLabels, regionColorsAttenuated, fallbackAccent, fallbackRegionColor }
-) {
-  // The color maps are keyed by GAME_REGIONS; sub-regions (France, US state
-  // regions) must resolve to their continent or they silently fall back to
-  // mapBase and regional modes stop matching each other.
-  const region = normalizeRegion(rawRegion);
-  const isSatellite = globeTheme === "satellite";
-  return isSatellite
-    ? regionColorsLabels[region] ||
-        regionColorsAttenuated[region] ||
-        fallbackRegionColor ||
-        fallbackAccent
-    : regionColorsAttenuated[region] || fallbackRegionColor;
+export function getFeatureMonochromeShade(adminKey, baseHex, lerpColorFn, UI_COLORS_REF) {
+  if (!adminKey || typeof adminKey !== "string") return baseHex;
+  let hash = 0;
+  for (let i = 0; i < adminKey.length; i++) {
+    hash = (hash * 37 + adminKey.charCodeAt(i)) & 0x7fffffff;
+  }
+  const factor = (hash % 19) / 100 - 0.09;
+  if (factor > 0) {
+    return lerpColorFn(baseHex, UI_COLORS_REF.paper, factor * 0.85);
+  }
+  return lerpColorFn(baseHex, UI_COLORS_REF.black, Math.abs(factor) * 0.85);
 }
 
-export function resolveGhostCountryColor(d, countryDataMap, opts) {
-  const admin = getFeatureAdmin(d);
-  const reg = countryDataMap[admin]?.region || d?.properties?.region || "Americas";
-  return resolveRegionalLandColor(reg, opts);
+export function resolveRegionalLandColor(
+  rawRegion,
+  {
+    globeTheme: _globeTheme,
+    regionColorsLabels: _r1,
+    regionColorsAttenuated: _r2,
+    fallbackAccent: _f1,
+    fallbackRegionColor,
+  }
+) {
+  return fallbackRegionColor || GLOBE_STYLE.base.mapBase;
+}
+
+export function resolveGhostCountryColor(d, countryDataMapOpts, opts) {
+  return opts?.fallbackRegionColor || GLOBE_STYLE.base.mapBase;
 }
 
 export function resolvePolygonStrokeWidth({
@@ -59,7 +88,7 @@ export function resolvePolygonStrokeWidth({
   UI_COLORS,
 }) {
   const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
-  const isSelected = admin === selectedCountry;
+  const isSelected = isSameAdmin(admin, selectedCountry);
   if (isRegionalMode && isGhostCountry) return 0.15 * strokeScale;
   if (isSelected) {
     const isGreenFill = foundSet.has(admin) || mode === "learn";
@@ -98,7 +127,7 @@ export function resolveCountryCapColor({
   mapBase,
 }) {
   const isFound = foundSet.has(admin);
-  const isSelected = admin === selectedCountry;
+  const isSelected = isSameAdmin(admin, selectedCountry);
 
   if (isEndScreen) {
     if (isFound) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
@@ -157,4 +186,188 @@ export function resolvePolygonShaderMode({
     useShader,
     isSelectionHighlight: false,
   };
+}
+
+export function getTransitionState(modeTransitionRef) {
+  if (!modeTransitionRef?.current?.active) return null;
+  const trans = modeTransitionRef.current;
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const elapsed = now - trans.startTime;
+  if (elapsed >= trans.duration) {
+    trans.active = false;
+    return null;
+  }
+  const tRaw = Math.min(1, Math.max(0, elapsed / trans.duration));
+  const progress = tRaw * tRaw * (3 - 2 * tRaw);
+  const isEnteringRegional = (trans.toDept || trans.toUs) && !(trans.fromDept || trans.fromUs);
+  const isExitingRegional = (trans.fromDept || trans.fromUs) && !(trans.toDept || trans.toUs);
+  return {
+    progress,
+    isEnteringRegional,
+    isExitingRegional,
+    fromDept: trans.fromDept,
+    fromUs: trans.fromUs,
+    toDept: trans.toDept,
+    toUs: trans.toUs,
+  };
+}
+
+export function resolveModeTransitionColor({
+  d,
+  transState,
+  countryDataMap: cdm = countryDataMap,
+  gameDataMap,
+  globeTheme: _gt,
+  theme: _th,
+  REGION_COLORS_LABELS: _r1,
+  REGION_COLORS_ATTENUATED: _r2,
+  UI_COLORS,
+  getRegionSurfaceColor,
+  getRegionSurfaceColorDimmed,
+  getFeatureMonochromeShade,
+  lerpColor,
+}) {
+  const { progress, isExitingRegional, fromDept, fromUs, toDept, toUs } = transState;
+  const admin = getFeatureAdmin(d);
+
+  if (d.isGhostCountry) {
+    const region = cdm?.[admin]?.region || d.properties?.region || "Americas";
+    const worldColor = getRegionSurfaceColor ? getRegionSurfaceColor(region) : UI_COLORS.mapBase;
+    const ghostColor = getRegionSurfaceColorDimmed
+      ? getRegionSurfaceColorDimmed(region)
+      : worldColor;
+
+    const isRegionalToRegional = (fromDept || fromUs) && (toDept || toUs);
+    if (isRegionalToRegional) return ghostColor;
+
+    const lerpFactor = isExitingRegional ? 1 - progress : progress;
+    return lerpColor(worldColor, ghostColor, lerpFactor);
+  }
+
+  if (d.isParentCountryFeature) {
+    const region = cdm?.[admin]?.region || d.properties?.region || "Europe";
+    const parentColor = getRegionSurfaceColor ? getRegionSurfaceColor(region) : UI_COLORS.mapBase;
+    const lerpFactor = isExitingRegional ? progress : 1 - progress;
+    return lerpColor(UI_COLORS.mapSea, parentColor, lerpFactor);
+  }
+
+  if (d.isEnteringDepartmentFeature) {
+    const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
+    const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
+    const baseColor = getDimmed(regionCode);
+    const deptColor = getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
+    return lerpColor(UI_COLORS.mapSea, deptColor, progress);
+  }
+
+  if (d.isExitingDepartmentFeature) {
+    const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
+    const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
+    const baseColor = getDimmed(regionCode);
+    const deptColor = getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
+    return lerpColor(UI_COLORS.mapSea, deptColor, 1 - progress);
+  }
+
+  return null;
+}
+
+export function resolveModeTransitionStroke({
+  d,
+  transState,
+  gameDataMap: _gdm,
+  globeTheme,
+  REGION_COLORS_LABELS: _r1,
+  UI_COLORS,
+  isLight: _isLight,
+  lerpColor,
+}) {
+  const { progress, isExitingRegional } = transState;
+  const _admin = getFeatureAdmin(d);
+
+  if (d.isEnteringDepartmentFeature) {
+    const baseStroke =
+      globeTheme === "satellite" ? UI_COLORS.mapBorder : UI_COLORS.accent || UI_COLORS.paper;
+    return lerpColor(UI_COLORS.mapSea, baseStroke, progress);
+  }
+
+  if (d.isExitingDepartmentFeature) {
+    const baseStroke =
+      globeTheme === "satellite" ? UI_COLORS.mapBorder : UI_COLORS.accent || UI_COLORS.paper;
+    return lerpColor(UI_COLORS.mapSea, baseStroke, 1 - progress);
+  }
+
+  if (d.isParentCountryFeature) {
+    const baseStroke = UI_COLORS.mapBorder;
+    const fadeFactor = isExitingRegional ? progress : 1 - progress;
+    return lerpColor(UI_COLORS.mapSea, baseStroke, fadeFactor);
+  }
+
+  return null;
+}
+
+export function resolveModeTransitionStrokeWidth({ d, transState, perfProfile, UI_COLORS }) {
+  const { progress, isExitingRegional } = transState;
+
+  if (d.isEnteringDepartmentFeature) {
+    const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
+    const baseWidth = 1.1 * strokeScale;
+    return baseWidth * progress;
+  }
+
+  if (d.isExitingDepartmentFeature) {
+    const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
+    const baseWidth = 1.1 * strokeScale;
+    return baseWidth * (1 - progress);
+  }
+
+  if (d.isParentCountryFeature) {
+    const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
+    const baseWidth = (Number(UI_COLORS.strokeWidthDesktop) || 0.75) * strokeScale;
+    const factor = isExitingRegional ? progress : 1 - progress;
+    return baseWidth * factor;
+  }
+
+  return null;
+}
+
+export function resolveRestingColorForFeature({
+  d: _d,
+  kind,
+  admin: _admin,
+  isFound,
+  isEndScreen,
+  isPerfectScore,
+  isRegionalMode: _isRegionalMode,
+  globeTheme: _globeTheme,
+  isLight,
+  UI_COLORS,
+  REGION_COLORS_LABELS: _r1,
+  REGION_COLORS_ATTENUATED: _r2,
+  countryDataMap: _cdm,
+  gameDataMap: _gdm,
+  getRegionalLandColor: _grlc,
+  getFeatureMonochromeShade: _gfms,
+  lerpColor,
+}) {
+  if (isEndScreen) {
+    const base = isFound ? (isPerfectScore ? UI_COLORS.gold : UI_COLORS.success) : UI_COLORS.error;
+    if (kind === "cap") {
+      return base;
+    }
+    const sideDarken = GLOBE_STYLE.lighting.sideDarken;
+    const darken = isLight ? sideDarken.baseLight : sideDarken.baseDark;
+    return lerpColor(base, UI_COLORS.black, darken);
+  }
+
+  let base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
+  if (_isRegionalMode && !isFound && _grlc) {
+    const regionCode =
+      _cdm?.[_admin]?.region || _gdm?.[_admin]?.region || _d?.properties?.region || "Americas";
+    const regColor = _grlc(regionCode);
+    base = _gfms(_admin, regColor, lerpColor, UI_COLORS);
+  }
+
+  if (kind === "cap") {
+    return base;
+  }
+  return lerpColor(base, UI_COLORS.black, isLight ? 0.04 : 0.08);
 }

@@ -138,25 +138,39 @@ export function useGlobeLighting({
     }
 
     if (UI_COLORS.isBlackoutTheme) {
-      keyLight.intensity = (isLight ? 0.28 : 0.44) * lightScale;
+      // Blackout theme: brighter uniform ambient to make country polygons visible on flat dark globe
+      keyLight.intensity = (isLight ? 0.2 : 0.28) * lightScale;
       keyLight.position.set(-3.5, 2.4, 4.2);
-      rimLight.intensity = 0;
-      fillLight.intensity = (isLight ? 0.44 : 0.32) * lightScale;
-      studioLight.intensity = (isLight ? 0.3 : 0.18) * lightScale;
-      studioLeft.intensity = 0;
+      rimLight.intensity = (isLight ? 0.18 : 0.28) * lightScale;
+      rimLight.position.set(3.8, 1.3, -3.6);
+      fillLight.intensity = (isLight ? 1.0 : 0.92) * lightScale;
+      studioLight.intensity = (isLight ? 0.72 : 0.62) * lightScale;
+      studioLeft.intensity = (isLight ? 0.12 : 0.15) * lightScale;
       studioLeft.position.set(-4.5, 2.5, 3.5);
-      studioRight.intensity = 0;
+      studioRight.intensity = (isLight ? 0.12 : 0.15) * lightScale;
       studioRight.position.set(4.5, -1.2, 2.8);
     } else {
-      keyLight.intensity = (isLight ? 0.12 : 0.16) * lightScale;
-      keyLight.position.set(-3.5, 2.4, 4.2);
-      rimLight.intensity = (isLight ? 0.14 : 0.24) * lightScale;
+      const isSatellite = globeTheme === "satellite";
+      // Satellite theme: strong sun headlight placed front-right-top relative to the camera
+      keyLight.intensity = (isSatellite ? 1.8 : isLight ? 0.12 : 0.16) * lightScale;
+      keyLight.position.set(
+        isSatellite ? 3.5 : -3.5,
+        isSatellite ? 2.0 : 2.4,
+        isSatellite ? 5.5 : 4.2
+      );
+
+      // Outline halo for atmospheric glow
+      rimLight.intensity = (isSatellite ? 0.35 : isLight ? 0.14 : 0.24) * lightScale;
       rimLight.position.set(3.8, 1.3, -3.6);
-      fillLight.intensity = (isLight ? 0.72 : 0.68) * lightScale;
-      studioLight.intensity = (isLight ? 0.54 : 0.48) * lightScale;
-      studioLeft.intensity = (isLight ? 0.08 : 0.1) * lightScale;
+
+      // Low ambient/fill light to keep the dark side realistic (not completely black, but dark)
+      fillLight.intensity = (isSatellite ? 0.18 : isLight ? 0.72 : 0.68) * lightScale;
+      studioLight.intensity = (isSatellite ? 0.08 : isLight ? 0.54 : 0.48) * lightScale;
+
+      // Disable side lights in satellite mode to avoid washing out shadows
+      studioLeft.intensity = (isSatellite ? 0.0 : isLight ? 0.08 : 0.1) * lightScale;
       studioLeft.position.set(-4.5, 2.5, 3.5);
-      studioRight.intensity = (isLight ? 0.08 : 0.1) * lightScale;
+      studioRight.intensity = (isSatellite ? 0.0 : isLight ? 0.08 : 0.1) * lightScale;
       studioRight.position.set(4.5, -1.2, 2.8);
     }
 

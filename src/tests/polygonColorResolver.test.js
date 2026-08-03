@@ -8,6 +8,7 @@ import {
   resolveCountryCapColor,
   resolveFoundCountryColor,
   resolveFoundCountryStroke,
+  resolveModeTransitionColor,
   resolvePolygonShaderMode,
   resolveRegionalLandColor,
   shouldUseRegionalUnfoundLand,
@@ -43,7 +44,7 @@ describe("polygonColorResolver", () => {
     );
   });
 
-  it("uses regional shades for unfound non-selected land", () => {
+  it("uses neutral land surface for unfound non-selected land", () => {
     expect(
       shouldUseRegionalUnfoundLand({
         isEndScreen: false,
@@ -59,7 +60,7 @@ describe("polygonColorResolver", () => {
         fallbackAccent: UI_COLORS.accent,
         fallbackRegionColor: UI_COLORS.mapBase,
       })
-    ).toBe(UI_COLORS.accent);
+    ).toBe(UI_COLORS.mapBase);
   });
 
   it("returns green for learn selection", () => {
@@ -217,5 +218,38 @@ describe("polygonColorResolver", () => {
         isHomeScreen: true,
       })
     ).toEqual({ useShader: true, isSelectionHighlight: false });
+  });
+
+  it("smoothly transitions ghost country colors during mode transitions without grey mapBase", () => {
+    const transState = {
+      progress: 0.5,
+      isEnteringRegional: true,
+      isExitingRegional: false,
+      fromDept: false,
+      fromUs: false,
+      toDept: true,
+      toUs: false,
+    };
+
+    const dGhost = { properties: { ADMIN: "Spain" }, isGhostCountry: true };
+    const getRegionSurfaceColor = (r) => (r === "Europe" ? UI_COLORS.accent : UI_COLORS.paper);
+    const getRegionSurfaceColorDimmed = (r) =>
+      r === "Europe" ? UI_COLORS.mapBorder : UI_COLORS.mapSea;
+    const blend = (a, _b, _amount) => a;
+
+    const color = resolveModeTransitionColor({
+      d: dGhost,
+      transState,
+      countryDataMap: { Spain: { region: "Europe" } },
+      gameDataMap: {},
+      globeTheme: "satellite",
+      UI_COLORS,
+      getRegionSurfaceColor,
+      getRegionSurfaceColorDimmed,
+      lerpColor: blend,
+    });
+
+    expect(color).toBe(UI_COLORS.accent);
+    expect(color).not.toBe(UI_COLORS.mapBase);
   });
 });

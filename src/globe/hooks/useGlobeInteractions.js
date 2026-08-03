@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 
 import { BREAKPOINTS } from "../../config/gameConstants";
+import { perfTracker } from "../../utils/perfTracker";
 import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
 import { clampGlobeAltitude } from "../render/globeAltitude";
 
@@ -41,6 +42,12 @@ export function useGlobeInteractions({
 
   const selectCountryAtLngLat = useCallback(
     (lng, lat) => {
+      const t0 = performance.now();
+      const recordLatency = () => {
+        const t1 = performance.now();
+        perfTracker.recordSelect(t1 - t0);
+      };
+
       if (isRiversMountainsMode) {
         let best = null;
         Object.entries(gameDataMap).forEach(([admin, data]) => {
@@ -65,11 +72,13 @@ export function useGlobeInteractions({
           const threshold = bestData.type === "river" ? 5.5 : 6.0;
           if (best.dist < threshold) {
             selectCountry(best.admin);
+            recordLatency();
             return;
           }
         }
         if (mode !== "learn") {
           selectCountry(null);
+          recordLatency();
           return;
         }
       }
@@ -78,6 +87,14 @@ export function useGlobeInteractions({
       const match = selectableFeatureIndex.find((entry) => featureContainsLngLat(entry, lng, lat));
       if (match) {
         selectCountry(match.admin);
+        recordLatency();
+        return;
+      }
+
+      // Special polar region handling: everything south of 60°S (without a matched island) is Antarctica
+      if (lat <= -60.0 && gameDataMap["Antarctica"]) {
+        selectCountry("Antarctica");
+        recordLatency();
         return;
       }
 
@@ -94,6 +111,7 @@ export function useGlobeInteractions({
       } else if (mode !== "learn") {
         selectCountry(null);
       }
+      recordLatency();
     },
     [
       gameDataMap,
@@ -190,6 +208,24 @@ export function useGlobeInteractions({
 
   const handlePointerMove = useCallback(
     (event) => {
+      const t0 = performance.now();
+      let clientX = event.clientX;
+      let clientY = event.clientY;
+      if (window.visualViewport) {
+        clientX += window.visualViewport.offsetLeft || 0;
+        clientY += window.visualViewport.offsetTop || 0;
+      }
+
+      if (globeEl.current?.toGlobeCoords) {
+        const coords = clientToGlobeCoords(globeEl, clientX, clientY);
+        if (coords && selectableFeatureIndex && selectableFeatureIndex.length > 0) {
+          selectableFeatureIndex.find((entry) =>
+            featureContainsLngLat(entry, coords.lng, coords.lat)
+          );
+        }
+      }
+      perfTracker.recordHover(performance.now() - t0);
+
       const tap = tapRef.current;
       const wrapper = globeContentWrapperRef.current;
       if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen) return;
@@ -212,7 +248,7 @@ export function useGlobeInteractions({
         });
       }
     },
-    [isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
+    [globeEl, selectableFeatureIndex, isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
   );
 
   const handlePointerUp = useCallback(

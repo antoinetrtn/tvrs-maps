@@ -37,6 +37,8 @@ export function useGlobeSceneAnimation({
   departmentsData,
   globeFeedbackRef,
   globeFeedbackApplierRef,
+  modeTransitionRef,
+  gameDataMap,
 }) {
   const {
     transitioningPreviousCountryRef,
@@ -86,6 +88,8 @@ export function useGlobeSceneAnimation({
     departmentsData,
     globeFeedbackRef,
     globeFeedbackApplierRef,
+    modeTransitionRef,
+    gameDataMap,
   });
 
   useEffect(() => {
