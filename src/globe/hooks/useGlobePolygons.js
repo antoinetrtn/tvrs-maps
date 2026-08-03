@@ -139,7 +139,8 @@ export function useGlobePolygons({
           REGION_COLORS_LABELS,
           REGION_COLORS_ATTENUATED,
           UI_COLORS,
-          getRegionSurfaceColor: getRegionSurfaceColorDimmed,
+          getRegionSurfaceColor,
+          getRegionSurfaceColorDimmed,
           getFeatureMonochromeShade,
           lerpColor,
         });
