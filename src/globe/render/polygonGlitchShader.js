@@ -132,6 +132,14 @@ export function attachPolygonGlitchShader(
       ${GLITCH_VERTEX_BODY}
     `
     );
+    shader.vertexShader = shader.vertexShader.replace(
+      `#include <project_vertex>`,
+      `#include <project_vertex>
+      if (length(position) < 10.0) {
+        gl_Position = vec4(9999.0, 9999.0, 9999.0, 1.0);
+      }
+    `
+    );
 
     shader.fragmentShader = GLITCH_FRAGMENT_DECLARATIONS + shader.fragmentShader;
     shader.fragmentShader = shader.fragmentShader.replace(

@@ -75,7 +75,7 @@ export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
           "#include <map_fragment>",
           `
           #ifdef USE_MAP
-            vec4 mapTexel = texture2D( map, vMapUv );
+            vec4 sampledDiffuseColor = texture2D( map, vMapUv );
             
             // Calculate a fine geographic sensor grid (16384 x 8192 cells)
             vec2 gridUv = vMapUv * vec2(16384.0, 8192.0);
@@ -85,17 +85,17 @@ export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
             
             // Apply grid lines: blend in a faint cyan color
             vec3 gridColor = vec3(0.0, 0.5, 0.95);
-            mapTexel.rgb = mix(gridColor, mapTexel.rgb, 0.94 + 0.06 * gridLine);
+            sampledDiffuseColor.rgb = mix(gridColor, sampledDiffuseColor.rgb, 0.94 + 0.06 * gridLine);
             
             // Add a tiny bit of procedural sensor noise
             vec2 blockId = floor(gridUv);
             float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
             
             // Add micro-sensor noise (intensity 0.03) over land/clouds to give high-res texture
-            float isLand = step(0.18, length(mapTexel.rg - mapTexel.b));
-            mapTexel.rgb += (noise - 0.5) * 0.03 * isLand;
+            float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
+            sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand;
             
-            diffuseColor *= mapTexelToLinear( mapTexel );
+            diffuseColor *= sampledDiffuseColor;
           #endif
           `
         );
