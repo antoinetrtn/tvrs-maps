@@ -340,6 +340,8 @@ const GLOBE_THEMES = {
       isBlackoutTheme: false,
       borderFound: "#ffffff",
       borderUnfound: "#555555",
+      mapBorder: "#777777",
+      mapBorderMuted: "#555555",
       // NOTE: no globeLabelText/Dot/Stalk override here — labels fall back to
       // textMain/accent, i.e. white in dark and ink in light. Hardcoding white
       // made labels unreadable on the light (day) satellite globe.
