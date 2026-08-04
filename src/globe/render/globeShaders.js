@@ -132,48 +132,62 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     vec3 normCap = length(capitalPos) > 0.001 ? normalize(capitalPos) : vec3(0.0, 1.0, 0.0);
     float distFromCap = length(normLocal - normCap);
 
-    // 1. Glowing Capital Radar Beacon Dot
-    float capitalDot = smoothstep(0.05, 0.005, distFromCap) * (1.0 - smoothstep(0.7, 1.0, p));
-    float capitalFlash = capitalDot * (sin(time * 24.0) * 0.35 + 1.35);
+    // 1. Glowing Capital Radar Beacon Dot (bright white-hot point at capital)
+    float capitalDot = smoothstep(0.05, 0.005, distFromCap) * (1.0 - smoothstep(0.8, 1.0, p));
+    float capitalFlash = capitalDot * (sin(time * 26.0) * 0.3 + 1.4);
 
-    // 2. Bold, Vibrant Expanding Concentric Radar Waves
-    float waveProgress1 = fract(p * 1.5);
-    float waveProgress2 = fract(p * 1.5 + 0.45);
+    // 2. Bold Expanding Concentric Radar Waves
+    float waveProgress1 = fract(p * 1.6);
+    float waveProgress2 = fract(p * 1.6 + 0.45);
 
-    float ringFront1 = waveProgress1 * 0.45;
-    float ringFront2 = waveProgress2 * 0.45;
+    float ringFront1 = waveProgress1 * 0.5;
+    float ringFront2 = waveProgress2 * 0.5;
 
-    float ringWidth = 0.055;
+    float ringWidth = 0.045;
     float radarRing1 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront1)) * (1.0 - waveProgress1);
     float radarRing2 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront2)) * (1.0 - waveProgress2);
 
     float radarWaves = max(radarRing1, radarRing2) * (1.0 - smoothstep(0.8, 1.0, p));
 
     // 3. Dynamic Sonar Ripples radiating outward
-    float radarRipples = sin(distFromCap * 65.0 - p * 24.0) * 0.5 + 0.5;
-    float rippleMask = smoothstep(0.5, 0.0, distFromCap) * (1.0 - smoothstep(0.7, 1.0, p));
-    radarRipples = pow(radarRipples, 2.2) * rippleMask * 0.6;
+    float radarRipples = sin(distFromCap * 70.0 - p * 24.0) * 0.5 + 0.5;
+    float rippleMask = smoothstep(0.55, 0.0, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
+    radarRipples = pow(radarRipples, 2.5) * rippleMask * 0.5;
 
     // 4. Rotating Radar Beam Sweep around Capital
     float atanAngle = atan(normLocal.x - normCap.x, normLocal.z - normCap.z);
     float beamSweep = sin(atanAngle * 2.0 + time * 10.0) * 0.5 + 0.5;
-    beamSweep = pow(beamSweep, 3.5) * smoothstep(0.45, 0.0, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
+    beamSweep = pow(beamSweep, 3.5) * smoothstep(0.5, 0.0, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
 
     // Chunky pixel blocks lock onto the found green
     float blockNoise = hash(blockUv * 0.5 + 17.0);
-    float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
+    float resolved = step(blockNoise, smoothstep(0.15, 0.88, p));
 
-    // White-hot radar glow on expanding ring fronts and capital beacon
-    float flick = mix(0.85, 1.3, hash(blockUv + floor(time * 60.0)));
-    vec3 radarGlowColor = mix(vec3(0.2, 1.0, 0.45), vec3(0.9, 1.0, 0.9), radarWaves * 0.7 + capitalFlash * 0.8) * flick;
+    // High-contrast CRT Radar Colors:
+    // Dark CRT green background during radar sweep phase so bright rings POP with high contrast
+    vec3 radarBackground = mix(vec3(0.04, 0.22, 0.08), uFoundGreen * 0.45, p * 0.5);
+    vec3 brightRadarLine = vec3(0.75, 1.0, 0.88); // White-cyan glowing radar line
+    vec3 whiteCapitalBeacon = vec3(1.0, 1.0, 0.95); // White-hot capital dot
 
-    // Base green with bold radar rings and beacon glow
-    vec3 baseGreen = mix(radarGlowColor, uFoundGreen, resolved);
-    baseGreen += uFoundGreen * (radarWaves * 1.8 + capitalFlash * 1.8 + radarRipples * 0.5 + beamSweep * 0.4);
+    // Composite radar pattern on dark background
+    vec3 activeRadarPattern = radarBackground;
+    activeRadarPattern = mix(
+      activeRadarPattern,
+      brightRadarLine,
+      clamp(radarWaves * 1.5 + radarRipples * 0.6 + beamSweep * 0.5, 0.0, 1.0)
+    );
+    activeRadarPattern = mix(
+      activeRadarPattern,
+      whiteCapitalBeacon,
+      clamp(capitalFlash * 1.6, 0.0, 1.0)
+    );
 
-    // Mild chromatic split during initial radar ping phase (p < 0.5)
-    if (p < 0.5) {
-      float burstChroma = (0.5 - p) * 0.35 * (hash(blockUv + time * 12.0) - 0.5);
+    // Smooth resolve from active radar pattern into final solid uFoundGreen
+    vec3 baseGreen = mix(activeRadarPattern, uFoundGreen, resolved);
+
+    // Mild chromatic split during initial radar ping phase (p < 0.4)
+    if (p < 0.4) {
+      float burstChroma = (0.4 - p) * 0.35 * (hash(blockUv + time * 12.0) - 0.5);
       baseGreen.r = clamp(baseGreen.r + burstChroma * 0.5, 0.0, 1.0);
       baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.2, 0.0, 1.0);
       baseGreen.b = clamp(baseGreen.b - burstChroma * 0.6, 0.0, 1.0);
