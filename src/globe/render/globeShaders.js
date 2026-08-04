@@ -56,18 +56,18 @@ export const FRESNEL_FRAGMENT_SHADER = `
 // World-space and local-space coordinates are required for country effects and capital radar.
 export const GLITCH_VERTEX_DECLARATIONS = `
   varying vec3 vWorldPosition;
-  varying vec3 vLocalPosition;
+  varying vec3 vWorldCapitalPos;
 `;
 
 export const GLITCH_VERTEX_BODY = `
   vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
-  vLocalPosition = position;
+  vWorldCapitalPos = (modelMatrix * vec4(uCapitalPos, 0.0)).xyz;
 `;
 
 // Uniforms declarations for country polygon shader
 export const GLITCH_FRAGMENT_DECLARATIONS = `
   varying vec3 vWorldPosition;
-  varying vec3 vLocalPosition;
+  varying vec3 vWorldCapitalPos;
   uniform float uTime;
   uniform float uFadeProgress;
   uniform vec3 uTargetColor;
@@ -122,15 +122,15 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     }
   }
   vec3 computeSuccessEffect(
-    vec3 finalColor, float time, float theme, vec2 blockUv, vec3 worldPos, vec3 localPos, vec3 capitalPos
+    vec3 finalColor, float time, float theme, vec2 blockUv, vec3 worldPos, vec3 worldCapPos
   ) {
     // Progress 0 -> 1 over the success flash (uSuccessStart is stamped on the guess).
     float p = clamp((time - uSuccessStart) / uSuccessDuration, 0.0, 1.0);
 
-    // 3D Spherical Distance from Capital City
-    vec3 normLocal = length(localPos) > 0.001 ? normalize(localPos) : vec3(0.0, 1.0, 0.0);
-    vec3 normCap = length(capitalPos) > 0.001 ? normalize(capitalPos) : vec3(0.0, 1.0, 0.0);
-    float distFromCap = length(normLocal - normCap);
+    // 3D Spherical Distance from Capital City in World Space
+    vec3 normWorld = length(worldPos) > 0.001 ? normalize(worldPos) : vec3(0.0, 1.0, 0.0);
+    vec3 normCap = length(worldCapPos) > 0.001 ? normalize(worldCapPos) : vec3(0.0, 1.0, 0.0);
+    float distFromCap = length(normWorld - normCap);
 
     // 1. Capital Beacon Pulse (bright white-hot dot directly at capital city)
     float capitalDot = smoothstep(0.06, 0.005, distFromCap) * (1.0 - smoothstep(0.8, 1.0, p));
@@ -150,7 +150,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     float radarWaves = max(ring1, ring2);
 
     // 3. Rotating Sonar Beam Sweep around Capital
-    float atanAngle = atan(normLocal.x - normCap.x, normLocal.z - normCap.z);
+    float atanAngle = atan(normWorld.x - normCap.x, normWorld.z - normCap.z);
     float beamSweep = sin(atanAngle * 2.0 + time * 12.0) * 0.5 + 0.5;
     beamSweep = pow(beamSweep, 3.5) * smoothstep(ringRadius1 + 0.05, 0.0, distFromCap) * (1.0 - smoothstep(0.8, 1.0, p));
 
@@ -226,7 +226,7 @@ export const GLITCH_FRAGMENT_BODY = `
     finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
   } else if (uIsSuccess > 0.5) {
     finalColor = computeSuccessEffect(
-      gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition, vLocalPosition, uCapitalPos
+      gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition, vWorldCapitalPos
     );
   } else if (uIsSelection > 0.5) {
     finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
