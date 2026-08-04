@@ -174,7 +174,7 @@ const ModeCard = ({
             onStartGame(modeItem.key);
           }}
         >
-          <Play width={18} height={18} />
+          <Play width={22} height={22} />
           <span>{t("play")}</span>
         </button>
 
@@ -224,9 +224,9 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
     return [
       {
         key: "countries",
-        icon: <Globe width={36} height={36} />,
-        titleFr: "Pays du Monde",
-        titleEn: "World Countries",
+        icon: <Globe width={44} height={44} />,
+        titleFr: "Pays du\nMonde",
+        titleEn: "World\nCountries",
         descFr: `${countriesCount} pays et territoires à localiser sur le globe 3D interactif.`,
         descEn: `${countriesCount} countries and territories to locate on the interactive 3D globe.`,
         badgeFr: `${countriesCount} PAYS`,
@@ -234,9 +234,9 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       },
       {
         key: "capitals",
-        icon: <MapPin width={36} height={36} />,
-        titleFr: "Capitales du Monde",
-        titleEn: "World Capitals",
+        icon: <MapPin width={44} height={44} />,
+        titleFr: "Capitales du\nMonde",
+        titleEn: "World\nCapitals",
         descFr: `Retrouvez la capitale de chaque pays et territoire (${capitalsCount} au total).`,
         descEn: `Find the capital of every country and territory (${capitalsCount} total).`,
         badgeFr: `${capitalsCount} CAPITALES`,
@@ -244,9 +244,9 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       },
       {
         key: "departments",
-        icon: <Hash width={32} height={32} />,
-        titleFr: "Départements Français",
-        titleEn: "French Departments",
+        icon: <Hash width={44} height={44} />,
+        titleFr: "Départements\nFrançais",
+        titleEn: "French\nDepartments",
         descFr: `Placement des ${departmentsCount} départements et collectivités d'Outre-mer.`,
         descEn: `Locate all ${departmentsCount} French departments across mainland & overseas.`,
         badgeFr: `${departmentsCount} DÉPARTEMENTS`,
@@ -254,9 +254,9 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       },
       {
         key: "us_states",
-        icon: <Earth width={36} height={36} />,
-        titleFr: "États Américains",
-        titleEn: "US States",
+        icon: <Earth width={44} height={44} />,
+        titleFr: "États\nAméricains",
+        titleEn: "US\nStates",
         descFr: `Testez vos connaissances sur les ${usStatesCount} États américains.`,
         descEn: `Test your knowledge on all ${usStatesCount} US States.`,
         badgeFr: `${usStatesCount} ÉTATS`,
@@ -264,9 +264,9 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       },
       {
         key: "rivers_mountains",
-        icon: <Waves width={36} height={36} />,
-        titleFr: "Montagnes & Fleuves",
-        titleEn: "Rivers & Mountains",
+        icon: <Waves width={44} height={44} />,
+        titleFr: "Montagnes &\nFleuves",
+        titleEn: "Rivers &\nMountains",
         descFr: `${riversMountainsCount} reliefs majeurs : chaînes de montagnes et grands fleuves du monde.`,
         descEn: `${riversMountainsCount} major reliefs: mountain ranges and famous rivers.`,
         badgeFr: `${riversMountainsCount} RELIEFS & FLEUVES`,

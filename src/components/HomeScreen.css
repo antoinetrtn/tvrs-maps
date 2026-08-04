@@ -34,16 +34,7 @@
   margin-bottom: var(--spacing-sm);
   padding: 0;
   background: none !important;
-  /* Themed halo token (index.css): opaque bg-tinted glow in dark, one light
-     ink shadow in light — the triple bg-color halo bled white on light mode. */
-  filter: var(--logo-halo);
-}
-
-/* (dead .home-content card rules removed — the old home card markup was
-   replaced by the 3D category carousel; see HomeScreenCategoryCarousel.css) */
-
-.home-logo {
-  margin-bottom: var(--spacing-sm);
+  filter: drop-shadow(0 2px 14px color-mix(in srgb, var(--bg-color) 85%, transparent));
   transform: translateZ(34px);
 }
 

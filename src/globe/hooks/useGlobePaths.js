@@ -48,9 +48,9 @@ export function useGlobePaths({
         coords: getSmoothedRiverPath(k, data.path),
         color: isFound ? UI_COLORS.riverActive : UI_COLORS.riverInactive,
         width: isFound ? 3.8 : 2.2,
-        dashLength: isFound ? 1 : 0.06,
-        dashGap: isFound ? 0 : 0.04,
-        dashAnimateTime: isFound ? 2000 : 6000,
+        dashLength: 1,
+        dashGap: 0,
+        dashAnimateTime: 0,
       });
     });
     return paths;

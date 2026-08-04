@@ -105,6 +105,17 @@ function resolvePolygonEmissiveProps({
   return { emissiveHex, emissiveIntensity, specularHex, shininess };
 }
 
+function applyCountrySurfaceGrainShader(shader) {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <dithering_fragment>",
+    `#include <dithering_fragment>
+    vec2 fragPx = gl_FragCoord.xy;
+    float grain = (fract(sin(dot(fragPx, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.08;
+    gl_FragColor.rgb += vec3(grain);
+    `
+  );
+}
+
 export function getPolygonMaterialForFeature({
   d,
   kind,
@@ -278,6 +289,8 @@ export function getPolygonMaterialForFeature({
         isIsolated,
         isSatellite,
       });
+    } else {
+      material.onBeforeCompile = applyCountrySurfaceGrainShader;
     }
 
     material.userData.isIsolated = isIsolated;

@@ -1,9 +1,99 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 
-export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
-  const customGlobeTexture = useMemo(() => {
-    if (!UI_COLORS.globeTextureUrl) return null;
+import { getThemeColors } from "../../config/designSystem";
+import { useAppTheme } from "../../hooks/useAppTheme";
+
+const applyBlackoutOceanShader = (shader) => {
+  shader.vertexShader = `
+    varying vec3 vWorldNormal;
+    varying vec3 vWorldPos;
+    varying vec2 vUv;
+    ${shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+      vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+      vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+      vUv = uv;
+      `
+    )}
+  `;
+  shader.fragmentShader = `
+    varying vec3 vWorldNormal;
+    varying vec3 vWorldPos;
+    varying vec2 vUv;
+
+    ${shader.fragmentShader.replace(
+      "#include <dithering_fragment>",
+      `#include <dithering_fragment>
+      // 1. Grille géographique haute fréquence identique au mode satellite (crée le moirage de diffraction)
+      vec2 gridUv = vUv * vec2(16384.0, 8192.0);
+      vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5);
+      float gridLine = smoothstep(0.0, 0.08, min(gridFract.x, gridFract.y));
+
+      // 2. Bruit de capteur par bloc
+      vec2 blockId = floor(gridUv);
+      float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
+
+      // 3. Éclairage neutre monochrome & réactivité à la rotation
+      vec3 viewDir = normalize(cameraPosition - vWorldPos);
+      float viewIncidence = clamp(dot(vWorldNormal, viewDir), 0.0, 1.0);
+      float lightFacing = max(0.0, dot(vWorldNormal, normalize(vec3(1.0, 1.5, 2.0))));
+      float rimLight = pow(1.0 - viewIncidence, 3.5);
+
+      // Superposition du moirage de grille très adouci + bruit neutre + halo gris acier
+      vec3 moireGrid = vec3(0.88, 0.92, 0.96) * (1.0 - gridLine) * 0.055 * (0.6 + 0.5 * lightFacing);
+      vec3 sensorNoise = vec3((noise - 0.5) * 0.025);
+      vec3 neutralRim = vec3(0.85, 0.88, 0.92) * rimLight * 0.07;
+
+      gl_FragColor.rgb += moireGrid + sensorNoise + neutralRim;
+      `
+    )}
+  `;
+};
+
+const applySatelliteSensorShader = (shader) => {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <map_fragment>",
+    `
+    #ifdef USE_MAP
+      vec4 sampledDiffuseColor = texture2D( map, vMapUv );
+      
+      vec2 gridUv = vMapUv * vec2(16384.0, 8192.0);
+      vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5);
+      float gridLine = smoothstep(0.0, 0.08, min(gridFract.x, gridFract.y));
+      
+      vec3 gridColor = vec3(0.0, 0.5, 0.95);
+      sampledDiffuseColor.rgb = mix(gridColor, sampledDiffuseColor.rgb, 0.94 + 0.06 * gridLine);
+      
+      vec2 blockId = floor(gridUv);
+      float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
+      
+      float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
+      sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand;
+      
+      diffuseColor *= sampledDiffuseColor;
+    #endif
+    `
+  );
+};
+
+export function useGlobeMaterial(options = {}) {
+  const { UI_COLORS: themeColors, isLight: isThemeLight } = useAppTheme();
+
+  const isObjectCall =
+    options && typeof options === "object" && !options.isVector3 && !options.isTexture;
+
+  const UI_COLORS =
+    (isObjectCall ? options.UI_COLORS : null) || themeColors || getThemeColors("satellite", "dark");
+  const isLight = isObjectCall && options.isLight !== undefined ? options.isLight : isThemeLight;
+  const globeLightingEnabled =
+    isObjectCall && options.globeLightingEnabled !== undefined
+      ? options.globeLightingEnabled
+      : true;
+
+  const loadedTexture = useMemo(() => {
+    if (!UI_COLORS?.globeTextureUrl) return null;
 
     const primaryUrl = UI_COLORS.globeTextureUrl;
     const fallbackUrl = primaryUrl.includes("night")
@@ -39,15 +129,19 @@ export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
       texture.anisotropy = Math.min(16, maxAnisotropy);
     }
     return texture;
-  }, [UI_COLORS.globeTextureUrl]);
+  }, [UI_COLORS?.globeTextureUrl]);
 
   useEffect(() => {
     return () => {
-      if (customGlobeTexture) {
-        customGlobeTexture.dispose();
+      if (loadedTexture) {
+        loadedTexture.dispose();
       }
     };
-  }, [customGlobeTexture]);
+  }, [loadedTexture]);
+
+  const customGlobeTexture =
+    (isObjectCall ? options.customGlobeTexture : options?.isTexture ? options : null) ||
+    loadedTexture;
 
   const globeMaterial = useMemo(() => {
     const matType = UI_COLORS.globeMaterialType || "phong";
@@ -58,9 +152,13 @@ export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
           ? UI_COLORS.globeMaterialColor
           : UI_COLORS[UI_COLORS.globeMaterialColor] || UI_COLORS.mapSea
         : UI_COLORS.mapSea;
-      return new THREE.MeshBasicMaterial({
-        color: baseColor,
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(baseColor),
+        roughness: 0.88,
+        metalness: 0.05,
       });
+      mat.onBeforeCompile = applyBlackoutOceanShader;
+      return mat;
     }
 
     if (UI_COLORS.globeTextureUrl) {
@@ -70,36 +168,7 @@ export function useGlobeMaterial({ UI_COLORS, globeLightingEnabled, isLight }) {
         roughness: 0.95,
         metalness: 0.0,
       });
-      mat.onBeforeCompile = (shader) => {
-        shader.fragmentShader = shader.fragmentShader.replace(
-          "#include <map_fragment>",
-          `
-          #ifdef USE_MAP
-            vec4 sampledDiffuseColor = texture2D( map, vMapUv );
-            
-            // Calculate a fine geographic sensor grid (16384 x 8192 cells)
-            vec2 gridUv = vMapUv * vec2(16384.0, 8192.0);
-            vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5);
-            // Infinitely sharp grid lines at any zoom:
-            float gridLine = smoothstep(0.0, 0.08, min(gridFract.x, gridFract.y));
-            
-            // Apply grid lines: blend in a faint cyan color
-            vec3 gridColor = vec3(0.0, 0.5, 0.95);
-            sampledDiffuseColor.rgb = mix(gridColor, sampledDiffuseColor.rgb, 0.94 + 0.06 * gridLine);
-            
-            // Add a tiny bit of procedural sensor noise
-            vec2 blockId = floor(gridUv);
-            float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
-            
-            // Add micro-sensor noise (intensity 0.03) over land/clouds to give high-res texture
-            float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
-            sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand;
-            
-            diffuseColor *= sampledDiffuseColor;
-          #endif
-          `
-        );
-      };
+      mat.onBeforeCompile = applySatelliteSensorShader;
       return mat;
     }
 
