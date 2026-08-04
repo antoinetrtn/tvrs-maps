@@ -132,52 +132,48 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     vec3 normCap = length(capitalPos) > 0.001 ? normalize(capitalPos) : vec3(0.0, 1.0, 0.0);
     float distFromCap = length(normLocal - normCap);
 
-    // 1. Compact Capital Beacon Dot (sharp, glowing radar point at capital)
-    float capitalDot = smoothstep(0.022, 0.003, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
-    float capitalFlash = capitalDot * (sin(time * 28.0) * 0.25 + 1.25);
+    // 1. Glowing Capital Radar Beacon Dot
+    float capitalDot = smoothstep(0.05, 0.005, distFromCap) * (1.0 - smoothstep(0.7, 1.0, p));
+    float capitalFlash = capitalDot * (sin(time * 24.0) * 0.35 + 1.35);
 
-    // 2. Fine Concentric Radar Rings (compact max radius 0.16, fine line thickness 0.016)
-    float maxRadarRadius = 0.16;
-    float waveProgress1 = fract(p * 2.2);
-    float waveProgress2 = fract(p * 2.2 + 0.33);
-    float waveProgress3 = fract(p * 2.2 + 0.66);
+    // 2. Bold, Vibrant Expanding Concentric Radar Waves
+    float waveProgress1 = fract(p * 1.5);
+    float waveProgress2 = fract(p * 1.5 + 0.45);
 
-    float ringFront1 = waveProgress1 * maxRadarRadius;
-    float ringFront2 = waveProgress2 * maxRadarRadius;
-    float ringFront3 = waveProgress3 * maxRadarRadius;
+    float ringFront1 = waveProgress1 * 0.45;
+    float ringFront2 = waveProgress2 * 0.45;
 
-    float ringWidth = 0.016;
+    float ringWidth = 0.055;
     float radarRing1 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront1)) * (1.0 - waveProgress1);
     float radarRing2 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront2)) * (1.0 - waveProgress2);
-    float radarRing3 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront3)) * (1.0 - waveProgress3);
 
-    float radarWaves = max(max(radarRing1, radarRing2), radarRing3) * (1.0 - smoothstep(0.82, 1.0, p));
+    float radarWaves = max(radarRing1, radarRing2) * (1.0 - smoothstep(0.8, 1.0, p));
 
-    // 3. Fine Radar Sonar Ripples
-    float radarRipples = sin(distFromCap * 180.0 - p * 32.0) * 0.5 + 0.5;
-    float rippleMask = smoothstep(maxRadarRadius + 0.02, 0.0, distFromCap) * (1.0 - smoothstep(0.7, 1.0, p));
-    radarRipples = pow(radarRipples, 3.5) * rippleMask * 0.4;
+    // 3. Dynamic Sonar Ripples radiating outward
+    float radarRipples = sin(distFromCap * 65.0 - p * 24.0) * 0.5 + 0.5;
+    float rippleMask = smoothstep(0.5, 0.0, distFromCap) * (1.0 - smoothstep(0.7, 1.0, p));
+    radarRipples = pow(radarRipples, 2.2) * rippleMask * 0.6;
 
-    // 4. Compact Rotating Radar Beam Line around Capital
+    // 4. Rotating Radar Beam Sweep around Capital
     float atanAngle = atan(normLocal.x - normCap.x, normLocal.z - normCap.z);
-    float beamSweep = sin(atanAngle * 2.0 + time * 12.0) * 0.5 + 0.5;
-    beamSweep = pow(beamSweep, 4.5) * smoothstep(maxRadarRadius, 0.0, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
+    float beamSweep = sin(atanAngle * 2.0 + time * 10.0) * 0.5 + 0.5;
+    beamSweep = pow(beamSweep, 3.5) * smoothstep(0.45, 0.0, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
 
     // Chunky pixel blocks lock onto the found green
     float blockNoise = hash(blockUv * 0.5 + 17.0);
     float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
 
     // White-hot radar glow on expanding ring fronts and capital beacon
-    float flick = mix(0.82, 1.25, hash(blockUv + floor(time * 60.0)));
-    vec3 radarGlowColor = mix(vec3(0.3, 1.0, 0.5), vec3(0.95, 1.0, 0.95), radarWaves * 0.7 + capitalFlash * 0.8) * flick;
+    float flick = mix(0.85, 1.3, hash(blockUv + floor(time * 60.0)));
+    vec3 radarGlowColor = mix(vec3(0.2, 1.0, 0.45), vec3(0.9, 1.0, 0.9), radarWaves * 0.7 + capitalFlash * 0.8) * flick;
 
-    // Ends exactly on uFoundGreen so the handoff to the found state is seamless
+    // Base green with bold radar rings and beacon glow
     vec3 baseGreen = mix(radarGlowColor, uFoundGreen, resolved);
-    baseGreen += uFoundGreen * (radarWaves * 1.4 + capitalFlash * 1.6 + radarRipples * 0.4 + beamSweep * 0.35);
+    baseGreen += uFoundGreen * (radarWaves * 1.8 + capitalFlash * 1.8 + radarRipples * 0.5 + beamSweep * 0.4);
 
-    // Mild chromatic split during initial radar ping phase (p < 0.45)
-    if (p < 0.45) {
-      float burstChroma = (0.45 - p) * 0.3 * (hash(blockUv + time * 12.0) - 0.5);
+    // Mild chromatic split during initial radar ping phase (p < 0.5)
+    if (p < 0.5) {
+      float burstChroma = (0.5 - p) * 0.35 * (hash(blockUv + time * 12.0) - 0.5);
       baseGreen.r = clamp(baseGreen.r + burstChroma * 0.5, 0.0, 1.0);
       baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.2, 0.0, 1.0);
       baseGreen.b = clamp(baseGreen.b - burstChroma * 0.6, 0.0, 1.0);
