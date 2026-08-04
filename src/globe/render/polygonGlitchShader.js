@@ -2,7 +2,9 @@ import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { FEEDBACK_TIMING } from "../../config/gameConstants";
+import { departmentsDataMap } from "../../data/departmentsData";
 import { countryDataMap } from "../../data/gameData";
+import { usStatesDataMap } from "../../data/usStatesData";
 import { getFoundGreenThreeColor } from "./foundGreenPalette";
 import {
   GLITCH_FRAGMENT_BODY,
@@ -13,12 +15,12 @@ import {
 
 const capitalVectorCache = new Map();
 
-function getCapitalVector3(admin) {
+export function getCapitalVector3(admin) {
   if (!admin) return new THREE.Vector3(0, 1, 0);
   if (capitalVectorCache.has(admin)) {
     return capitalVectorCache.get(admin);
   }
-  const data = countryDataMap[admin];
+  const data = countryDataMap[admin] || departmentsDataMap[admin] || usStatesDataMap[admin];
   const vec = new THREE.Vector3(0, 1, 0);
   if (data && typeof data.lat === "number" && typeof data.lng === "number") {
     const radLat = data.lat * (Math.PI / 180);
