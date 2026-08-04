@@ -266,23 +266,28 @@ export const GLITCH_FRAGMENT_BODY = `
   settleColor += vec3(countrySurfaceNoise * 0.7);
 
   float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
+  float isDeselecting = step(0.006, uFadeProgress);
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
   } else if (isFoundSurface) {
     gl_FragColor.rgb = uFoundGreen * sideShade;
-  } else if (transitionActive > 0.5) {
+  } else if (isDeselecting > 0.5) {
     if (uIsSatellite > 0.5) {
       gl_FragColor.rgb = glitchColor;
     } else {
       // Smooth blend between glitch texture and resting color as uFadeProgress goes 0 -> 1
-      float blendFactor = smoothstep(0.0, 0.9, uFadeProgress);
+      float blendFactor = smoothstep(0.0, 0.95, uFadeProgress);
       vec3 blendedTransition = mix(glitchColor, settleColor, blendFactor);
-      
-      // Soft dither edge highlight that smoothly fades away
-      if (blockVal >= uFadeProgress && blockVal < uFadeProgress + 0.08) {
-        vec3 softEdge = mix(vec3(0.0, 0.85, 0.8), vec3(0.85, 0.0, 0.7), hash(blockUv + floor(uTime * 12.0)));
-        blendedTransition = mix(blendedTransition, softEdge, (1.0 - blendFactor) * 0.35);
+
+      // Soft dither edge highlight that smoothly fades away during early transition
+      if (blockVal >= uFadeProgress && blockVal < uFadeProgress + 0.08 && uFadeProgress < 0.85) {
+        vec3 softEdge = mix(
+          vec3(0.0, 0.85, 0.8),
+          vec3(0.85, 0.0, 0.7),
+          hash(blockUv + floor(uTime * 15.0))
+        );
+        blendedTransition = mix(blendedTransition, softEdge, (1.0 - blendFactor) * 0.3);
       }
       gl_FragColor.rgb = blendedTransition;
     }
@@ -300,17 +305,15 @@ export const GLITCH_FRAGMENT_BODY = `
 
   if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {
     gl_FragColor.a = 1.0;
-  } else {
-    if (transitionActive > 0.5) {
-      if (uIsSatellite > 0.5) {
-        // Smooth opacity fade out in satellite mode
-        float satAlpha = clamp(1.0 - dissolveFade, 0.0, 1.0);
-        gl_FragColor.a = satAlpha;
-      } else {
-        gl_FragColor.a = 1.0;
-      }
+  } else if (isDeselecting > 0.5) {
+    if (uIsSatellite > 0.5) {
+      // Smooth opacity fade out in satellite mode
+      float satAlpha = clamp(1.0 - dissolveFade, 0.0, 1.0);
+      gl_FragColor.a = satAlpha;
     } else {
-      gl_FragColor.a = (uIsSatellite > 0.5) ? (1.0 - finalProgress) : 1.0;
+      gl_FragColor.a = 1.0;
     }
+  } else {
+    gl_FragColor.a = (uIsSatellite > 0.5) ? (1.0 - finalProgress) : 1.0;
   }
 `;
