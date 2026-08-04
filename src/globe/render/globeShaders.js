@@ -53,19 +53,21 @@ export const FRESNEL_FRAGMENT_SHADER = `
 `;
 
 // Vertices coordinate definitions for custom polygon effects.
-// World-space is required: mesh-local bounds vary wildly per country (Algeria vs
-// Luxembourg) and low-frequency local UVs produced globe-sized static bands.
+// World-space and local-space coordinates are required for country effects and capital radar.
 export const GLITCH_VERTEX_DECLARATIONS = `
   varying vec3 vWorldPosition;
+  varying vec3 vLocalPosition;
 `;
 
 export const GLITCH_VERTEX_BODY = `
   vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
+  vLocalPosition = position;
 `;
 
 // Uniforms declarations for country polygon shader
 export const GLITCH_FRAGMENT_DECLARATIONS = `
   varying vec3 vWorldPosition;
+  varying vec3 vLocalPosition;
   uniform float uTime;
   uniform float uFadeProgress;
   uniform vec3 uTargetColor;
@@ -78,6 +80,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsFound;
   uniform float uSelectInTransition;
   uniform vec3 uFoundGreen;
+  uniform vec3 uCapitalPos;
   uniform float uPixelScale;
   uniform float uSideShade;
   uniform float uSuccessStart;
@@ -87,53 +90,81 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
   vec3 computeErrorEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 worldPos) {
-    float pulse = sin(time * 24.0) * 0.4 + 0.6;
-    float sweep = step(fract(worldPos.y * 0.24 - time * 6.0), 0.2) * 0.5;
+    // Horizontal TV signal breakdown / bad reception CRT distortion
+    float pulse = sin(time * 24.0) * 0.35 + 0.65;
+    
+    // Jittering horizontal scanline sync distortion
+    float scanJitter = sin(worldPos.y * 36.0 + sin(time * 48.0) * 8.0) * 0.5 + 0.5;
+    float tearBar = step(0.72, sin(worldPos.y * 70.0 + time * 32.0)) * 0.6;
+    
     float errorNoise = hash(noiseUv + sin(time * 60.0));
-    float noisyIntensity = (pulse + sweep) * mix(0.6, 1.4, errorNoise);
-    vec3 errorRed = vec3(1.0, 0.05, 0.01) * (noisyIntensity + 0.3);
+    float noisyIntensity = (pulse + scanJitter * 0.5 + tearBar) * mix(0.7, 1.3, errorNoise);
+    vec3 errorRed = vec3(1.0, 0.06, 0.02) * (noisyIntensity + 0.25);
 
-    // Ultra-strong red-cyan chromatic split on fail
-    float chroma = (errorNoise - 0.5) * 0.62;
+    // Intense RGB CRT color split on bad reception
+    float chroma = (errorNoise - 0.5) * 0.55;
     vec3 splitColor;
-    splitColor.r = clamp(errorRed.r + chroma * 0.5, 0.0, 1.0);
-    splitColor.g = clamp(errorRed.g - abs(chroma) * 0.6, 0.0, 1.0);
-    splitColor.b = clamp(errorRed.b - chroma * 0.5, 0.0, 1.0);
+    splitColor.r = clamp(errorRed.r + chroma * 0.6, 0.0, 1.0);
+    splitColor.g = clamp(errorRed.g - abs(chroma) * 0.7, 0.0, 1.0);
+    splitColor.b = clamp(errorRed.b - chroma * 0.6, 0.0, 1.0);
 
-    // Neon stroboscopic dropouts
-    if (errorNoise > 0.85) {
-      splitColor = mix(splitColor, vec3(0.0, 1.0, 1.0), 0.75); // Cyan flash
-    } else if (errorNoise < 0.15) {
-      splitColor = mix(splitColor, vec3(1.0, 0.0, 1.0), 0.75); // Magenta flash
+    // Stroboscopic signal dropouts
+    if (errorNoise > 0.86) {
+      splitColor = mix(splitColor, vec3(0.0, 0.95, 1.0), 0.7); // Cyan glitch flash
+    } else if (errorNoise < 0.14) {
+      splitColor = mix(splitColor, vec3(1.0, 0.0, 0.9), 0.7); // Magenta glitch flash
     }
 
     if (theme > 0.9 && theme < 1.1) {
       return splitColor;
     } else {
-      return mix(finalColor, splitColor, 0.95);
+      return mix(finalColor, splitColor, 0.92);
     }
   }
-  vec3 computeSuccessEffect(vec3 finalColor, float time, float theme, vec2 blockUv, vec3 worldPos) {
+  vec3 computeSuccessEffect(
+    vec3 finalColor, float time, float theme, vec2 blockUv, vec3 worldPos, vec3 localPos, vec3 capitalPos
+  ) {
     // Progress 0 -> 1 over the success flash (uSuccessStart is stamped on the guess).
     float p = clamp((time - uSuccessStart) / uSuccessDuration, 0.0, 1.0);
+
+    // Capital-centered 3D distance on unit sphere
+    vec3 normLocal = length(localPos) > 0.001 ? normalize(localPos) : vec3(0.0, 1.0, 0.0);
+    vec3 normCap = length(capitalPos) > 0.001 ? normalize(capitalPos) : vec3(0.0, 1.0, 0.0);
+    float distFromCap = length(normLocal - normCap);
+
+    // Expanding radar pulse circle originating from the capital
+    float pulseSpeed = 1.35;
+    float ringFront = p * pulseSpeed;
+    float ringWidth = 0.13;
+    float radarRing = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront)) * (1.0 - smoothstep(0.75, 1.0, p));
+
+    // Concentric radar wave ripples radiating outward from capital
+    float radarRipples = sin(distFromCap * 40.0 - p * 24.0) * 0.5 + 0.5;
+    radarRipples = pow(radarRipples, 2.2) * (1.0 - smoothstep(0.65, 1.0, p));
+
+    // Rotating radar beam line effect around capital
+    float atanAngle = atan(normLocal.x - normCap.x, normLocal.z - normCap.z);
+    float beamSweep = sin(atanAngle * 3.0 + time * 12.0) * 0.5 + 0.5;
+    beamSweep = pow(beamSweep, 3.5) * (1.0 - clamp(distFromCap * 1.2, 0.0, 1.0));
+
     // Chunky pixel blocks lock onto the found green, noisiest blocks resolving last.
     float blockNoise = hash(blockUv * 0.5 + 17.0);
     float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
-    // White-hot flicker on the blocks still resolving.
-    float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
-    vec3 hot = mix(vec3(1.0), uFoundGreen, 0.2) * flick;
-    // Single fast scanline sweep down the country during the burst.
-    float sweep = step(fract(worldPos.y * 0.18 - p * 2.8), 0.22)
-      * (1.0 - smoothstep(0.3, 0.8, p)) * 0.7;
-    // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
-    vec3 baseGreen = mix(hot, uFoundGreen, resolved) + uFoundGreen * sweep;
 
-    // Extremely strong lime-cyan-magenta chromatic split during the resolve phase
-    if (p < 0.85) {
-      float burstChroma = (1.0 - p) * 0.55 * (hash(blockUv + time * 12.0) - 0.5);
-      baseGreen.r = clamp(baseGreen.r + burstChroma * 0.6, 0.0, 1.0);
-      baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.3, 0.0, 1.0);
-      baseGreen.b = clamp(baseGreen.b - burstChroma * 0.8, 0.0, 1.0);
+    // White-hot radar glow on expanding ring front and ripples
+    float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
+    vec3 radarGlow = mix(vec3(0.4, 1.0, 0.55), vec3(0.9, 1.0, 0.9), radarRing + beamSweep * 0.4) * flick;
+
+    // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
+    vec3 baseGreen = mix(radarGlow, uFoundGreen, resolved);
+    baseGreen += uFoundGreen * (radarRing * 1.1 + radarRipples * 0.35 + beamSweep * 0.25);
+
+    // Mild chromatic split during initial radar ping phase (p < 0.6)
+    if (p < 0.6) {
+      float burstChroma = (0.6 - p) * 0.35 * (hash(blockUv + time * 12.0) - 0.5);
+      baseGreen.r = clamp(baseGreen.r + burstChroma * 0.5, 0.0, 1.0);
+      baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.2, 0.0, 1.0);
+      baseGreen.b = clamp(baseGreen.b - burstChroma * 0.6, 0.0, 1.0);
     }
 
     return baseGreen;
@@ -182,7 +213,9 @@ export const GLITCH_FRAGMENT_BODY = `
   if (uIsError > 0.5) {
     finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
   } else if (uIsSuccess > 0.5) {
-    finalColor = computeSuccessEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
+    finalColor = computeSuccessEffect(
+      gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition, vLocalPosition, uCapitalPos
+    );
   } else if (uIsSelection > 0.5) {
     finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
   } else if (uIsFound > 0.5) {
@@ -192,28 +225,13 @@ export const GLITCH_FRAGMENT_BODY = `
   }
   finalColor *= mix(1.0, uSideShade, step(0.5, uIsSide));
 
-  // Deselection dissolve: noisy digital dither + tears + chroma split
-  vec2 dissolveBlock = floor(fragPx * 0.21)
-    + vec2(sin(uTime * 58.0), cos(uTime * 41.0)) * glitchAmp * 3.5;
-  float transitionNoise = hash(dissolveBlock);
-  float transitionNoise2 = hash(dissolveBlock * 1.9 + uTime * 3.7);
-  transitionNoise = mix(transitionNoise, transitionNoise2, 0.55 * max(glitchAmp, 0.35));
+  // Deselection dissolve: smooth cross-fade with organic digital dither
+  float dissolveFade = smoothstep(0.0, 1.0, uFadeProgress);
+  float glitchFadeFactor = 1.0 - dissolveFade;
 
-  float horizontalTear = step(0.78, sin(fragPx.y * 0.038 + uTime * (48.0 + glitchAmp * 95.0)));
-  float verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x * 0.07), floor(uTime * 24.0))));
-
-  float glitchThreshold = uFadeProgress;
-  if (transitionActive > 0.5) {
-    // Softer threshold noise + gentler tears → the dissolve edge breaks up
-    // evenly instead of ripping the country apart in big chunks.
-    glitchThreshold += (transitionNoise - 0.5) * (0.46 + glitchAmp * 0.30);
-    if (horizontalTear > 0.5) {
-      glitchThreshold = clamp(glitchThreshold - 0.16, 0.0, 1.0);
-    }
-    if (verticalGlitch > 0.5) {
-      glitchThreshold = clamp(glitchThreshold + 0.12, 0.0, 1.0);
-    }
-  }
+  // Toned-down tears & edge glow during deselection fade
+  float horizontalTear = step(0.86, sin(fragPx.y * 0.038 + uTime * (32.0 + glitchAmp * 40.0))) * glitchFadeFactor;
+  float verticalGlitch = step(0.92, hash(vec2(floor(fragPx.x * 0.07), floor(uTime * 18.0)))) * glitchFadeFactor;
 
   float finalProgress = clamp(uFadeProgress, 0.0, 1.0);
 
@@ -226,19 +244,16 @@ export const GLITCH_FRAGMENT_BODY = `
     (uIsSuccess < 0.5);
 
   if (transitionActive > 0.5 && !isFoundSurface) {
-    // Retro TV chroma aberration & vertical dropouts
-    float chroma = (transitionNoise - 0.5) * 0.28 * glitchAmp;
+    // Retro TV chroma aberration decaying smoothly during deselection
+    float chroma = (hash(floor(fragPx * 0.21)) - 0.5) * 0.16 * glitchFadeFactor;
     glitchColor.r = clamp(finalColor.r + chroma, 0.0, 1.0);
-    glitchColor.g = clamp(finalColor.g * (1.0 - glitchAmp * 0.15), 0.0, 1.0);
+    glitchColor.g = clamp(finalColor.g * (1.0 - glitchFadeFactor * 0.1), 0.0, 1.0);
     glitchColor.b = clamp(finalColor.b - chroma, 0.0, 1.0);
     
-    // Horizontal scanline/tear overlay with neon color aberrations
+    // Subtile horizontal tear accent
     if (horizontalTear > 0.5) {
-      vec3 tearColor = mix(vec3(0.0, 0.8, 1.0), vec3(1.0, 0.0, 0.8), hash(blockUv + floor(uTime * 30.0)));
-      glitchColor = mix(glitchColor, tearColor, 0.42 * glitchAmp);
-    }
-    if (verticalGlitch > 0.5) {
-      glitchColor = mix(glitchColor, vec3(0.0), 0.25 * glitchAmp);
+      vec3 tearColor = mix(vec3(0.0, 0.7, 0.9), vec3(0.9, 0.0, 0.7), hash(blockUv + floor(uTime * 20.0)));
+      glitchColor = mix(glitchColor, tearColor, 0.22 * glitchFadeFactor);
     }
   }
 
@@ -260,16 +275,16 @@ export const GLITCH_FRAGMENT_BODY = `
     if (uIsSatellite > 0.5) {
       gl_FragColor.rgb = glitchColor;
     } else {
-      if (blockVal < glitchThreshold) {
-        gl_FragColor.rgb = settleColor;
-      } else {
-        if (blockVal < glitchThreshold + 0.12) {
-          vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
-          gl_FragColor.rgb = mix(glitchColor, edgeGlow * 1.6, 0.65);
-        } else {
-          gl_FragColor.rgb = glitchColor;
-        }
+      // Smooth blend between glitch texture and resting color as uFadeProgress goes 0 -> 1
+      float blendFactor = smoothstep(0.0, 0.9, uFadeProgress);
+      vec3 blendedTransition = mix(glitchColor, settleColor, blendFactor);
+      
+      // Soft dither edge highlight that smoothly fades away
+      if (blockVal >= uFadeProgress && blockVal < uFadeProgress + 0.08) {
+        vec3 softEdge = mix(vec3(0.0, 0.85, 0.8), vec3(0.85, 0.0, 0.7), hash(blockUv + floor(uTime * 12.0)));
+        blendedTransition = mix(blendedTransition, softEdge, (1.0 - blendFactor) * 0.35);
       }
+      gl_FragColor.rgb = blendedTransition;
     }
   } else if (isSoftSelectIn && transitionActive > 0.5) {
     float reveal = 1.0 - uFadeProgress;
@@ -288,15 +303,9 @@ export const GLITCH_FRAGMENT_BODY = `
   } else {
     if (transitionActive > 0.5) {
       if (uIsSatellite > 0.5) {
-        if (blockVal < uFadeProgress) {
-          gl_FragColor.a = 0.0;
-        } else {
-          if (blockVal < uFadeProgress + 0.12) {
-            vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow * 1.6, 0.65);
-          }
-          gl_FragColor.a = 1.0 - uFadeProgress * uFadeProgress;
-        }
+        // Smooth opacity fade out in satellite mode
+        float satAlpha = clamp(1.0 - dissolveFade, 0.0, 1.0);
+        gl_FragColor.a = satAlpha;
       } else {
         gl_FragColor.a = 1.0;
       }

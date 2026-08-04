@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { FEEDBACK_TIMING } from "../../config/gameConstants";
+import { countryDataMap } from "../../data/gameData";
 import { getFoundGreenThreeColor } from "./foundGreenPalette";
 import {
   GLITCH_FRAGMENT_BODY,
@@ -9,6 +10,26 @@ import {
   GLITCH_VERTEX_BODY,
   GLITCH_VERTEX_DECLARATIONS,
 } from "./globeShaders";
+
+const capitalVectorCache = new Map();
+
+function getCapitalVector3(admin) {
+  if (!admin) return new THREE.Vector3(0, 1, 0);
+  if (capitalVectorCache.has(admin)) {
+    return capitalVectorCache.get(admin);
+  }
+  const data = countryDataMap[admin];
+  const vec = new THREE.Vector3(0, 1, 0);
+  if (data && typeof data.lat === "number" && typeof data.lng === "number") {
+    const phi = (90 - data.lat) * (Math.PI / 180);
+    const theta = (180 - data.lng) * (Math.PI / 180);
+    vec
+      .set(Math.sin(phi) * Math.cos(theta), Math.cos(phi), Math.sin(phi) * Math.sin(theta))
+      .normalize();
+  }
+  capitalVectorCache.set(admin, vec);
+  return vec;
+}
 
 /** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
 export const polygonGlitchUniforms = {
@@ -72,6 +93,9 @@ export function syncPolygonShaderUniforms(
   if (shader.uniforms.uFadeProgress && isSelected) {
     shader.uniforms.uFadeProgress.value = 0.0;
   }
+  if (shader.uniforms.uCapitalPos) {
+    shader.uniforms.uCapitalPos.value.copy(getCapitalVector3(admin));
+  }
   if (shader.uniforms.uTargetColor) {
     shader.uniforms.uTargetColor.value.set(getBaseColorForCountryAndKind(admin, kind));
   }
@@ -99,7 +123,7 @@ export function attachPolygonGlitchShader(
   }
 ) {
   const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
-  material.customProgramCacheKey = () => `shader-cap-glitch-v9-${kind}`;
+  material.customProgramCacheKey = () => `shader-cap-glitch-v10-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
@@ -107,6 +131,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
     shader.uniforms.uFadeProgress = { value: 0.0 };
+    shader.uniforms.uCapitalPos = { value: getCapitalVector3(admin).clone() };
     shader.uniforms.uTargetColor = {
       value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
     };
