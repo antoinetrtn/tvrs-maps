@@ -132,36 +132,45 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     vec3 normCap = length(capitalPos) > 0.001 ? normalize(capitalPos) : vec3(0.0, 1.0, 0.0);
     float distFromCap = length(normLocal - normCap);
 
-    // Expanding radar pulse circle originating from the capital
-    float pulseSpeed = 1.35;
-    float ringFront = p * pulseSpeed;
-    float ringWidth = 0.13;
-    float radarRing = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront)) * (1.0 - smoothstep(0.75, 1.0, p));
+    // 1. Capital Beacon Pulse (glowing point right at the capital)
+    float capitalDot = smoothstep(0.04, 0.005, distFromCap) * (1.0 - smoothstep(0.7, 1.0, p));
+    float capitalFlash = capitalDot * (sin(time * 30.0) * 0.3 + 1.2);
 
-    // Concentric radar wave ripples radiating outward from capital
-    float radarRipples = sin(distFromCap * 40.0 - p * 24.0) * 0.5 + 0.5;
-    radarRipples = pow(radarRipples, 2.2) * (1.0 - smoothstep(0.65, 1.0, p));
+    // 2. Expanding Concentric Radar Waves (2 wave pulses expanding outward from capital)
+    float waveProgress1 = fract(p * 1.8);
+    float waveProgress2 = fract(p * 1.8 + 0.45);
+    float ringFront1 = waveProgress1 * 0.38;
+    float ringFront2 = waveProgress2 * 0.38;
+    
+    float ringWidth = 0.035;
+    float radarRing1 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront1)) * (1.0 - waveProgress1);
+    float radarRing2 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringFront2)) * (1.0 - waveProgress2);
+    float radarWaves = max(radarRing1, radarRing2) * (1.0 - smoothstep(0.8, 1.0, p));
 
-    // Rotating radar beam line effect around capital
+    // 3. Fine Radar Ripple Texture
+    float radarRipples = sin(distFromCap * 110.0 - p * 28.0) * 0.5 + 0.5;
+    radarRipples = pow(radarRipples, 3.0) * (1.0 - smoothstep(0.7, 1.0, p)) * 0.5;
+
+    // 4. Rotating Radar Beam Sweep
     float atanAngle = atan(normLocal.x - normCap.x, normLocal.z - normCap.z);
-    float beamSweep = sin(atanAngle * 3.0 + time * 12.0) * 0.5 + 0.5;
-    beamSweep = pow(beamSweep, 3.5) * (1.0 - clamp(distFromCap * 1.2, 0.0, 1.0));
+    float beamSweep = sin(atanAngle * 2.0 + time * 10.0) * 0.5 + 0.5;
+    beamSweep = pow(beamSweep, 4.0) * smoothstep(0.45, 0.0, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
 
-    // Chunky pixel blocks lock onto the found green, noisiest blocks resolving last.
+    // Chunky pixel blocks lock onto the found green
     float blockNoise = hash(blockUv * 0.5 + 17.0);
     float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
 
-    // White-hot radar glow on expanding ring front and ripples
-    float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
-    vec3 radarGlow = mix(vec3(0.4, 1.0, 0.55), vec3(0.9, 1.0, 0.9), radarRing + beamSweep * 0.4) * flick;
+    // White-hot radar glow on expanding ring fronts and capital beacon
+    float flick = mix(0.8, 1.3, hash(blockUv + floor(time * 60.0)));
+    vec3 radarGlowColor = mix(vec3(0.3, 1.0, 0.5), vec3(0.95, 1.0, 0.95), radarWaves * 0.7 + capitalFlash * 0.8) * flick;
 
-    // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
-    vec3 baseGreen = mix(radarGlow, uFoundGreen, resolved);
-    baseGreen += uFoundGreen * (radarRing * 1.1 + radarRipples * 0.35 + beamSweep * 0.25);
+    // Ends exactly on uFoundGreen so the handoff to the found state is seamless
+    vec3 baseGreen = mix(radarGlowColor, uFoundGreen, resolved);
+    baseGreen += uFoundGreen * (radarWaves * 1.3 + capitalFlash * 1.5 + radarRipples * 0.5 + beamSweep * 0.4);
 
-    // Mild chromatic split during initial radar ping phase (p < 0.6)
-    if (p < 0.6) {
-      float burstChroma = (0.6 - p) * 0.35 * (hash(blockUv + time * 12.0) - 0.5);
+    // Mild chromatic split during initial radar ping phase (p < 0.5)
+    if (p < 0.5) {
+      float burstChroma = (0.5 - p) * 0.3 * (hash(blockUv + time * 12.0) - 0.5);
       baseGreen.r = clamp(baseGreen.r + burstChroma * 0.5, 0.0, 1.0);
       baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.2, 0.0, 1.0);
       baseGreen.b = clamp(baseGreen.b - burstChroma * 0.6, 0.0, 1.0);
