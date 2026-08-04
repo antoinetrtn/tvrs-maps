@@ -15,7 +15,7 @@ import {
 
 const capitalVectorCache = new Map();
 
-export function getCapitalVector3(admin) {
+function getCapitalVector3(admin) {
   if (!admin) return new THREE.Vector3(0, 1, 0);
   if (capitalVectorCache.has(admin)) {
     return capitalVectorCache.get(admin);
@@ -23,14 +23,10 @@ export function getCapitalVector3(admin) {
   const data = countryDataMap[admin] || departmentsDataMap[admin] || usStatesDataMap[admin];
   const vec = new THREE.Vector3(0, 1, 0);
   if (data && typeof data.lat === "number" && typeof data.lng === "number") {
-    const radLat = data.lat * (Math.PI / 180);
-    const radLng = data.lng * (Math.PI / 180);
+    const phi = (90 - data.lat) * (Math.PI / 180);
+    const theta = (180 - data.lng) * (Math.PI / 180);
     vec
-      .set(
-        -Math.cos(radLat) * Math.cos(radLng),
-        Math.sin(radLat),
-        Math.cos(radLat) * Math.sin(radLng)
-      )
+      .set(Math.sin(phi) * Math.cos(theta), Math.cos(phi), Math.sin(phi) * Math.sin(theta))
       .normalize();
   }
   capitalVectorCache.set(admin, vec);
