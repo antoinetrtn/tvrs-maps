@@ -127,56 +127,45 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     // Progress 0 -> 1 over the success flash (uSuccessStart is stamped on the guess).
     float p = clamp((time - uSuccessStart) / uSuccessDuration, 0.0, 1.0);
 
+    // Chunky pixel blocks lock onto the found green, noisiest blocks resolving last.
+    float blockNoise = hash(blockUv * 0.5 + 17.0);
+    float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
+
+    // White-hot flicker on the blocks still resolving.
+    float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
+    vec3 hot = mix(vec3(1.0), uFoundGreen, 0.2) * flick;
+
+    // Single fast scanline sweep down the country during the burst.
+    float sweep = step(fract(worldPos.y * 0.18 - p * 2.8), 0.22) * (1.0 - smoothstep(0.3, 0.8, p)) * 0.7;
+
+    // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
+    vec3 baseGreen = mix(hot, uFoundGreen, resolved) + uFoundGreen * sweep;
+
+    // --- Capital Radar Circle Overlay ---
     // 3D Spherical Distance from Capital City in World Space
     vec3 normWorld = length(worldPos) > 0.001 ? normalize(worldPos) : vec3(0.0, 1.0, 0.0);
     vec3 normCap = length(worldCapPos) > 0.001 ? normalize(worldCapPos) : vec3(0.0, 1.0, 0.0);
     float distFromCap = length(normWorld - normCap);
 
-    // 1. Capital Beacon Pulse (bright white-hot dot directly at capital city)
-    float capitalDot = smoothstep(0.06, 0.005, distFromCap) * (1.0 - smoothstep(0.8, 1.0, p));
-    float capitalFlash = capitalDot * (sin(time * 28.0) * 0.35 + 1.45);
+    // Capital Beacon Point (bright white dot directly at capital city)
+    float capitalDot = smoothstep(0.05, 0.005, distFromCap) * (1.0 - smoothstep(0.75, 1.0, p));
+    float capitalFlash = capitalDot * (sin(time * 26.0) * 0.4 + 1.4);
 
-    // 2. Smooth Expanding Radar Rings starting DIRECTLY at Capital (distFromCap = 0 at p = 0)
-    float ringRadius1 = p * 0.65;
-    float ringRadius2 = max(0.0, p - 0.28) * 0.75;
+    // Expanding Radar Circle originating directly from Capital
+    float ringRadius = p * 0.65;
+    float ringWidth = 0.045;
+    float radarRing = smoothstep(ringWidth, 0.0, abs(distFromCap - ringRadius)) * (1.0 - smoothstep(0.8, 1.0, p));
 
-    float ringWidth = 0.048;
-    float ring1 = smoothstep(ringWidth, 0.0, abs(distFromCap - ringRadius1)) * (1.0 - smoothstep(0.85, 1.0, p));
-    float ring2 =
-      (p > 0.28)
-        ? smoothstep(ringWidth, 0.0, abs(distFromCap - ringRadius2)) * (1.0 - smoothstep(0.9, 1.0, p))
-        : 0.0;
+    // Add bright white/cyan radar ring and capital dot over the original TV glitch base!
+    vec3 radarOverlay = vec3(0.3, 1.0, 0.8) * radarRing * 1.5 + vec3(1.0, 1.0, 1.0) * capitalFlash * 1.6;
+    baseGreen += radarOverlay;
 
-    float radarWaves = max(ring1, ring2);
-
-    // 3. Rotating Sonar Beam Sweep around Capital
-    float atanAngle = atan(normWorld.x - normCap.x, normWorld.z - normCap.z);
-    float beamSweep = sin(atanAngle * 2.0 + time * 12.0) * 0.5 + 0.5;
-    beamSweep = pow(beamSweep, 3.5) * smoothstep(ringRadius1 + 0.05, 0.0, distFromCap) * (1.0 - smoothstep(0.8, 1.0, p));
-
-    // Chunky pixel block resolve glitch
-    float blockNoise = hash(blockUv * 0.5 + 17.0);
-    float resolved = step(blockNoise, smoothstep(0.12, 0.85, p));
-
-    // TV static green background during radar scan
-    float flick = mix(0.75, 1.25, hash(blockUv + floor(time * 60.0)));
-    vec3 baseStaticGreen = mix(vec3(0.04, 0.30, 0.12), uFoundGreen, resolved) * flick;
-
-    // High-contrast Radar Elements:
-    // Bright white-cyan expanding radar ring & pure white capital beacon
-    vec3 brightRadarLine = vec3(0.8, 1.0, 0.95);
-    vec3 whiteCapitalBeacon = vec3(1.0, 1.0, 1.0);
-
-    vec3 baseGreen = baseStaticGreen;
-    baseGreen = mix(baseGreen, brightRadarLine, clamp(radarWaves * 1.7 + beamSweep * 0.5, 0.0, 1.0));
-    baseGreen = mix(baseGreen, whiteCapitalBeacon, clamp(capitalFlash * 1.6, 0.0, 1.0));
-
-    // Mild chromatic split during initial radar ping phase (p < 0.45)
-    if (p < 0.45) {
-      float burstChroma = (0.45 - p) * 0.4 * (hash(blockUv + time * 12.0) - 0.5);
+    // Extremely strong lime-cyan-magenta chromatic split during the resolve phase
+    if (p < 0.85) {
+      float burstChroma = (1.0 - p) * 0.55 * (hash(blockUv + time * 12.0) - 0.5);
       baseGreen.r = clamp(baseGreen.r + burstChroma * 0.6, 0.0, 1.0);
       baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.3, 0.0, 1.0);
-      baseGreen.b = clamp(baseGreen.b - burstChroma * 0.7, 0.0, 1.0);
+      baseGreen.b = clamp(baseGreen.b - burstChroma * 0.8, 0.0, 1.0);
     }
 
     return baseGreen;
