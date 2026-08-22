@@ -1,4 +1,4 @@
-import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE, THEME } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
@@ -68,11 +68,11 @@ export function resolveRegionalLandColor(
     fallbackRegionColor,
   }
 ) {
-  return fallbackRegionColor || GLOBE_STYLE.base.mapBase;
+  return fallbackRegionColor || THEME.dark.mapBase;
 }
 
 export function resolveGhostCountryColor(d, countryDataMapOpts, opts) {
-  return opts?.fallbackRegionColor || GLOBE_STYLE.base.mapBase;
+  return opts?.fallbackRegionColor || THEME.dark.mapBase;
 }
 
 export function resolvePolygonStrokeWidth({

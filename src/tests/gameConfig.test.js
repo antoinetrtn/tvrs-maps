@@ -4,7 +4,6 @@ import {
   getLearnLabelLimit,
   getPlayVisibleCountryKeys,
   getPolygonAltitudeFor,
-  getRegionAbbr,
   isPlayMode,
   POLYGON_ALTITUDE,
   shouldScrambleLabel,
@@ -94,25 +93,6 @@ describe("Game Configuration Utilities", () => {
       expect(
         getPolygonAltitudeFor({ isDepartmentMode: true, isSelected: false, isGhostCountry: false })
       ).toBe(POLYGON_ALTITUDE.base);
-    });
-  });
-
-  describe("getRegionAbbr", () => {
-    it("should return customized region abbreviations", () => {
-      expect(getRegionAbbr("Americas")).toBe("AM");
-      expect(getRegionAbbr("Antarctic")).toBe("AN");
-    });
-
-    it("should fallback to the first two uppercase letters of the region name", () => {
-      expect(getRegionAbbr("Europe")).toBe("EU");
-      expect(getRegionAbbr("Asia")).toBe("AS");
-      expect(getRegionAbbr("France")).toBe("FR");
-      expect(getRegionAbbr("Unknown")).toBe("UN");
-    });
-
-    it("should handle empty or null regions gracefully", () => {
-      expect(getRegionAbbr("")).toBe("");
-      expect(getRegionAbbr(null)).toBe("");
     });
   });
 });

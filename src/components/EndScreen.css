@@ -236,7 +236,7 @@
   width: 7px;
   height: 7px;
   border-radius: var(--radius-sm);
-  background: var(--continent-color);
+  background: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -277,7 +277,7 @@
 .progress-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  background: var(--continent-color);
+  background: var(--accent);
   transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 

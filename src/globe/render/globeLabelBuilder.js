@@ -10,7 +10,7 @@ function buildGlobeLabelFlagHtml(iso2, { compact = false, prominent = false } = 
   const scaleVar = prominent
     ? "var(--globe-flag-scale, 1.15)"
     : "var(--globe-flag-scale, var(--ui-scale, 1))";
-  return `<img src="/flags/${iso2.toLowerCase()}.svg" alt="" class="globe-label-flag${compact ? " compact" : prominent ? " prominent" : ""}" width="${w}" height="${h}" style="width:calc(${w}px * ${scaleVar});height:calc(${h}px * ${scaleVar});object-fit:cover;border-radius:3px;border:1px solid color-mix(in srgb, var(--text-main) 22%, transparent);box-shadow:0 2px 6px color-mix(in srgb, var(--bg-color) 55%, transparent);flex-shrink:0;display:block;" />`;
+  return `<img src="/flags/${iso2.toLowerCase()}.svg" alt="" class="globe-label-flag${compact ? " compact" : prominent ? " prominent" : ""}" width="${w}" height="${h}" style="width:calc(${w}px * ${scaleVar});height:calc(${h}px * ${scaleVar});object-fit:cover;border-radius:var(--radius-sm);border:1px solid color-mix(in srgb, var(--text-main) 22%, transparent);box-shadow:0 2px 6px color-mix(in srgb, var(--bg-color) 55%, transparent);flex-shrink:0;display:block;" />`;
 }
 
 /**

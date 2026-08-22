@@ -1,10 +1,11 @@
 import { getFoundGreenThreeColor } from "./foundGreenPalette";
-import { polygonGlitchUniforms } from "./polygonGlitchShader";
+import { getCapitalVector3, polygonGlitchUniforms } from "./polygonGlitchShader";
 
 /** Push success/error flags to cached polygon shaders without waiting for React. */
 export function applyPolygonFeedbackUniforms({
   polygonMaterialCacheRef,
   admin,
+  canonicalPositions,
   isError = false,
   isSuccess = false,
   mountainGlitchUniforms,
@@ -21,10 +22,15 @@ export function applyPolygonFeedbackUniforms({
     polygonGlitchUniforms.uSuccessStart.value = time;
   }
 
+  const capVec = getCapitalVector3(admin, canonicalPositions);
+
   ["cap", "side"].forEach((kind) => {
     const mat = polygonMaterialCacheRef.current[kind]?.get(admin);
     const shader = mat?.userData?.shader;
     if (!shader?.uniforms) return;
+    if (shader.uniforms.uCapitalPos) {
+      shader.uniforms.uCapitalPos.value.copy(capVec);
+    }
     if (shader.uniforms.uIsError) {
       shader.uniforms.uIsError.value = isError ? 1.0 : 0.0;
     }

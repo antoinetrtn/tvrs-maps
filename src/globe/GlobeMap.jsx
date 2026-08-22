@@ -231,10 +231,9 @@ const GlobeMap = (props) => {
     isRiversMountainsMode,
     gameDataMap,
     foundSet,
-    isHomeScreen,
-    UI_COLORS,
     selectedCountry,
     isError,
+    isSuccess,
   });
 
   const {
@@ -554,8 +553,9 @@ const GlobeMap = (props) => {
               pathDashAnimateTime: pathDashAnimateTimeAccessor,
               pathTransitionDuration: 0,
               onPathClick: (obj) => {
-                if (!isHomeScreen) {
-                  selectCountry(obj.admin);
+                if (!isHomeScreen && obj?.admin) {
+                  const rawAdmin = obj.admin.replace(/_core$/, "");
+                  selectCountry(rawAdmin);
                 }
               },
             }}

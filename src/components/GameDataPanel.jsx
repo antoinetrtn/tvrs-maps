@@ -3,8 +3,6 @@ import "./GameDataPanel.css";
 import { Close, Home } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColor } from "../config/designSystem";
-import { GAME_REGIONS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { getPanelData, normalizeString } from "../utils/utils";
 import GameDataPanelRow from "./GameDataPanelRow";
@@ -20,7 +18,7 @@ const GameDataPanel = ({
   mode,
   theme = "dark",
   lang = "fr",
-  globeTheme = "satellite",
+  globeTheme: _globeTheme = "satellite",
   isGameOver = false,
   revealAll = false,
   variant = "side",
@@ -40,14 +38,6 @@ const GameDataPanel = ({
   const [localSearch, setLocalSearch] = useState("");
   const searchQuery = controlledSearch ?? localSearch;
   const setSearchQuery = onSearchChange ?? setLocalSearch;
-
-  const colors = useMemo(() => {
-    const res = {};
-    GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColor(globeTheme, theme, r);
-    });
-    return res;
-  }, [globeTheme, theme]);
 
   const { rowsByRegion, CONTINENT_ORDER } = useMemo(
     () =>
@@ -156,15 +146,10 @@ const GameDataPanel = ({
             if (!rows || rows.length === 0) return null;
 
             const regionLabel = t(`region_${region}`) || region;
-            const color = colors[region] || "var(--accent)";
             const foundInRegion = rows.filter((r) => r.found).length;
 
             return (
-              <section
-                key={region}
-                className="data-panel-region"
-                style={{ "--region-color": color }}
-              >
+              <section key={region} className="data-panel-region">
                 <header className="data-panel-region-head">
                   <span className="data-panel-region-dot" />
                   <h3 className="data-panel-region-name">{regionLabel}</h3>

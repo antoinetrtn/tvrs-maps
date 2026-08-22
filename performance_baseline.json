@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-08-02T15:30:53.110Z",
+    "timestamp": "2026-08-22T11:23:22.881Z",
     "engine": "legacy-react-globe.gl",
     "version": "1.0.0",
     "environment": {
@@ -19,20 +19,57 @@
     "totalModesTested": 4,
     "passKpiTargets": false,
     "globalAverages": {
-      "avgFps": 0,
-      "avgFrameTimeMs": 0,
-      "avgDrawCalls": 0,
+      "avgFps": 8.02,
+      "avgFrameTimeMs": 298.19,
+      "avgDrawCalls": 668,
       "avgPickingLatencyMs": 0,
-      "peakMemoryMb": 0
+      "peakMemoryMb": 57.51
     },
     "kpiCompliance": {
       "fps60Target": false,
-      "drawCallsUnder15Target": true,
+      "drawCallsUnder15Target": false,
       "pickingUnder1msTarget": true
     }
   },
   "benchmarks": {
-    "countries": {},
+    "countries": {
+      "desktop": {
+        "viewport": {
+          "width": 1920,
+          "height": 1080
+        },
+        "fps": {
+          "min": 1.87,
+          "max": 59.99,
+          "mean": 8.02,
+          "p95": 59.99
+        },
+        "frameTimeMs": {
+          "min": 16.67,
+          "max": 534.3,
+          "mean": 298.19,
+          "p95": 534.3
+        },
+        "drawCalls": {
+          "baseline": 668,
+          "peakDuringInteraction": 890,
+          "meshCount": 668
+        },
+        "pickingLatencyMs": {
+          "hoverMean": 5.05,
+          "hoverP95": 9.4,
+          "hoverMax": 9.4,
+          "selectMean": 0,
+          "selectP95": 0,
+          "selectMax": 0
+        },
+        "memoryMb": {
+          "initialHeap": 57.51,
+          "peakHeap": 57.51,
+          "heapDelta": 0
+        }
+      }
+    },
     "departments": {},
     "us_states": {},
     "rivers_mountains": {}

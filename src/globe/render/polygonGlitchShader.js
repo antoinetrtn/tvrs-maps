@@ -14,17 +14,22 @@ import {
 } from "./globeShaders";
 
 const capitalVectorCache = new Map();
-
-function getCapitalVector3(admin) {
+export function getCapitalVector3(admin, canonicalPositions) {
   if (!admin) return new THREE.Vector3(0, 1, 0);
-  if (capitalVectorCache.has(admin)) {
-    return capitalVectorCache.get(admin);
+  const cacheKey = `${admin}`;
+  if (capitalVectorCache.has(cacheKey)) {
+    return capitalVectorCache.get(cacheKey);
   }
+  const canonical = canonicalPositions?.[admin];
   const data = countryDataMap[admin] || departmentsDataMap[admin] || usStatesDataMap[admin];
+
+  const useLat = canonical && typeof canonical.lat === "number" ? canonical.lat : data?.lat;
+  const useLng = canonical && typeof canonical.lng === "number" ? canonical.lng : data?.lng;
+
   const vec = new THREE.Vector3(0, 1, 0);
-  if (data && typeof data.lat === "number" && typeof data.lng === "number") {
-    const radLat = data.lat * (Math.PI / 180);
-    const radLng = data.lng * (Math.PI / 180);
+  if (typeof useLat === "number" && typeof useLng === "number") {
+    const radLat = useLat * (Math.PI / 180);
+    const radLng = useLng * (Math.PI / 180);
     vec
       .set(
         -Math.cos(radLat) * Math.cos(radLng),
@@ -33,7 +38,7 @@ function getCapitalVector3(admin) {
       )
       .normalize();
   }
-  capitalVectorCache.set(admin, vec);
+  capitalVectorCache.set(cacheKey, vec);
   return vec;
 }
 

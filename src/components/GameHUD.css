@@ -45,16 +45,6 @@
   min-width: 0;
 }
 
-/* New row for gauges that spans the whole width */
-.hud-top-gauges {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--spacing-ms);
-  pointer-events: auto;
-}
-
 /* ==========================================================================
    CENTRAL ISLAND PANEL (The Pill)
    ========================================================================== */
@@ -177,8 +167,8 @@
 }
 
 /* ==========================================================================
-   GAUGES & BUTTONS
-   ========================================================================= */
+   BOTTOM RIGHT CONTROLS
+   ========================================================================== */
 .hud-bottom-right {
   position: fixed;
   bottom: calc(var(--spacing-lg) + var(--safe-bottom));
@@ -240,76 +230,6 @@
   box-shadow: 0 2px 8px var(--accent-soft);
   text-shadow: none;
   transition: transform var(--transition-instant);
-}
-
-.island-sub-gauges {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  pointer-events: auto;
-}
-
-.circular-gauge {
-  width: var(--control-sm);
-  height: var(--control-sm);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: conic-gradient(var(--color) var(--pct), var(--glass-border) 0);
-  position: relative;
-}
-
-.circular-gauge::after {
-  content: "";
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  background: var(--glass-bg);
-  border-radius: var(--radius-full);
-}
-
-.gauge-val {
-  font-size: 0.65rem;
-  font-weight: 800;
-  z-index: 1;
-  color: var(--text-main);
-  letter-spacing: 0;
-}
-
-.gauge-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  transition:
-    background var(--transition-normal),
-    color var(--transition-normal),
-    border-color var(--transition-normal);
-}
-
-.gauge-item.faded {
-  opacity: 0.1;
-  transform: scale(0.8);
-  pointer-events: none;
-}
-
-.gauge-item.highlight .circular-gauge {
-  box-shadow: 0 0 20px var(--color);
-  animation: aura-pulse 1.5s infinite ease-in-out;
-  transform: scale(1.15);
-}
-
-@keyframes aura-pulse {
-  0% {
-    box-shadow: 0 0 10px var(--color);
-  }
-  50% {
-    box-shadow: 0 0 25px var(--color);
-  }
-  100% {
-    box-shadow: 0 0 10px var(--color);
-  }
 }
 
 /* ==========================================================================
@@ -388,16 +308,6 @@
 .input-island:focus-within {
   border-color: var(--glass-border-strong);
   box-shadow: 0 0 20px var(--accent-soft);
-}
-
-.input-island.has-continent {
-  border-color: var(--continent-color);
-  box-shadow: 0 0 12px var(--continent-color);
-}
-
-.input-island.has-continent:focus-within {
-  border-color: var(--continent-color);
-  box-shadow: 0 0 20px var(--continent-color);
 }
 
 .input-island.success {
@@ -515,19 +425,6 @@
     transform: translateX(-50%) translateY(-2px);
   }
 
-  .top-hud-bar.keyboard-mode .hud-top-gauges {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.94);
-    pointer-events: none;
-  }
-
-  .hud-top-gauges {
-    transition:
-      opacity 160ms ease,
-      transform var(--transition-layout);
-    will-change: opacity, transform;
-  }
-
   .hud-top-center {
     width: 100%;
   }
@@ -555,15 +452,6 @@
   .island-progress-wrap {
     flex: 1;
     min-width: 30px;
-  }
-
-  .hud-top-gauges {
-    gap: var(--spacing-sm);
-  }
-
-  .gauge-item.highlight .circular-gauge {
-    animation: none;
-    box-shadow: 0 0 10px var(--color);
   }
 
   .hud-bottom-right {
