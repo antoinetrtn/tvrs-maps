@@ -122,6 +122,12 @@ export const POLYGON_ALTITUDE = {
   ghostCountry: 0.0006,
 };
 
+export const RIVER_ALTITUDE = {
+  base: 0.006,
+  selectedOuter: 0.007,
+  selectedCore: 0.008,
+};
+
 export const getPolygonAltitudeFor = ({
   isDepartmentMode,
   isGhostCountry,
@@ -146,7 +152,6 @@ export const getPolygonAltitudeFor = ({
  */
 export const RELIEF = {
   mountainScale: 0.62, // found: stable, geographically-representative size
-  targetHintScale: 0.5, // unfound: neutral, still clearly visible/clickable
 };
 
 /** Shader dissolve when deselecting a country (ms). Kept in sync with polygon altitude tween. */
@@ -177,17 +182,3 @@ export const GAME_REGIONS = [
   "France",
   "Unknown",
 ];
-
-/**
- * Two-letter symbolic codes shown inside the small region gauges (HUD).
- * These are abbreviations of the canonical English region keys, not translated
- * copy — they stay identical across languages. Anything not listed falls back to
- * the first two letters of the region name (see getRegionAbbr).
- */
-const REGION_ABBR = {
-  Americas: "AM",
-  Antarctic: "AN",
-};
-
-export const getRegionAbbr = (region) =>
-  REGION_ABBR[region] || (region || "").substring(0, 2).toUpperCase();

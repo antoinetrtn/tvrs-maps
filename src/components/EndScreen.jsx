@@ -3,8 +3,6 @@ import "./EndScreen.css";
 import { ChevronDown, ChevronUp, InfoBox, Trophy } from "pixelarticons/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColor } from "../config/designSystem";
-import { GAME_REGIONS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import { getGameStats } from "../utils/utils";
@@ -20,7 +18,7 @@ const EndScreen = ({
   onViewTable,
   theme = "dark",
   lang = "fr",
-  globeTheme = "satellite",
+  globeTheme: _globeTheme = "satellite",
   lastScores = [],
   maxScore = 0,
   isNewPB = false,
@@ -43,14 +41,6 @@ const EndScreen = ({
     () => getGameStats(foundList, dataMap, lang),
     [foundList, dataMap, lang]
   );
-
-  const colors = useMemo(() => {
-    const res = {};
-    GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColor(globeTheme, theme, r);
-    });
-    return res;
-  }, [globeTheme, theme]);
 
   const isPerfectScore = foundList.length === totalCountries;
 
@@ -163,15 +153,10 @@ const EndScreen = ({
               (region) => {
                 const data = stats[region];
                 const pct = Math.round((data.found / data.total) * 100);
-                const color = colors[region] || "var(--accent)";
                 const label = t(`region_${region}`) || region;
 
                 return (
-                  <div
-                    key={region}
-                    className="progress-item"
-                    style={{ "--continent-color": color }}
-                  >
+                  <div key={region} className="progress-item">
                     <div className="progress-info">
                       <div className="progress-title">
                         <span className="progress-dot" />

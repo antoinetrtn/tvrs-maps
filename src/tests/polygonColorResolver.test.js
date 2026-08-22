@@ -8,6 +8,7 @@ import {
   resolveCountryCapColor,
   resolveFoundCountryColor,
   resolveFoundCountryStroke,
+  resolveGhostCountryColor,
   resolveModeTransitionColor,
   resolvePolygonShaderMode,
   resolveRegionalLandColor,
@@ -251,5 +252,27 @@ describe("polygonColorResolver", () => {
 
     expect(color).toBe(UI_COLORS.accent);
     expect(color).not.toBe(UI_COLORS.mapBase);
+  });
+
+  describe("Fallback mapBase resolution (M3 Audit)", () => {
+    it("returns THEME.dark.mapBase when fallbackRegionColor is undefined in resolveRegionalLandColor", () => {
+      const color = resolveRegionalLandColor("Europe", {});
+      expect(color).toBe(UI_COLORS.mapBase);
+    });
+
+    it("returns THEME.dark.mapBase when opts.fallbackRegionColor is undefined in resolveGhostCountryColor", () => {
+      const color = resolveGhostCountryColor({}, {}, {});
+      expect(color).toBe(UI_COLORS.mapBase);
+    });
+
+    it("prefers explicit fallbackRegionColor when provided", () => {
+      const customFallback = UI_COLORS.accent;
+      expect(resolveRegionalLandColor("Europe", { fallbackRegionColor: customFallback })).toBe(
+        customFallback
+      );
+      expect(resolveGhostCountryColor({}, {}, { fallbackRegionColor: customFallback })).toBe(
+        customFallback
+      );
+    });
   });
 });

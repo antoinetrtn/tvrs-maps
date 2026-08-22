@@ -2,10 +2,8 @@ import "./GameHUD.css";
 import "./GameHUDLives.css";
 
 import { ChevronLeft, ChevronRight, Home, InfoBox, Play, Square } from "pixelarticons/react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColor } from "../config/designSystem";
-import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
 import { normalizeString } from "../utils/utils";
@@ -33,11 +31,11 @@ const GameHUD = ({
   extInputRef,
   foundList,
   countryDataMap,
-  theme,
+  theme: _theme,
   viewport,
   isKeyboardMode,
-  selectedCountry,
-  globeTheme,
+  selectedCountry: _selectedCountry,
+  globeTheme: _globeTheme,
   learnSubMode,
   learnSearchQuery = "",
   onLearnSearchChange,
@@ -247,32 +245,7 @@ const GameHUD = ({
     }
   };
 
-  const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
-  const REGION_COLORS = useMemo(() => {
-    return GAME_REGIONS.reduce(
-      (acc, r) => ({ ...acc, [r]: getThemeRegionColor(globeTheme, theme, r) }),
-      {}
-    );
-  }, [globeTheme, theme]);
-  const regionStats = useMemo(() => {
-    if (!countryDataMap) return {};
-    const stats = {};
-    CONTINENT_ORDER.forEach((r) => (stats[r] = { total: 0, found: 0 }));
-    Object.keys(countryDataMap).forEach((k) => {
-      const reg = countryDataMap[k]?.region;
-      if (reg && !stats[reg]) stats[reg] = { total: 0, found: 0 };
-      if (reg && stats[reg]) stats[reg].total++;
-    });
-    if (foundList)
-      foundList.forEach((k) => {
-        const reg = countryDataMap[k]?.region;
-        if (reg && stats[reg]) stats[reg].found++;
-      });
-    return stats;
-  }, [foundList, countryDataMap]);
-
   const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
-  const isDepartmentsMode = mode === "departments";
 
   const placeholderText = useMemo(() => {
     if (mode === "learn") {
@@ -285,20 +258,6 @@ const GameHUD = ({
     }
     return t("answer_placeholder");
   }, [mode, learnSubMode, t]);
-
-  // Determine which continent to highlight
-  const activeContinent = useMemo(
-    () => (selectedCountry && countryDataMap ? countryDataMap[selectedCountry]?.region : null),
-    [selectedCountry, countryDataMap]
-  );
-
-  const gaugeRegions = isDepartmentsMode
-    ? ["France"]
-    : CONTINENT_ORDER.filter((region) => region !== "France");
-  const getRegionColor = useCallback(
-    (region) => REGION_COLORS[region] || (isDepartmentsMode ? "var(--accent)" : "var(--warning)"),
-    [REGION_COLORS, isDepartmentsMode]
-  );
 
   const isMobile = viewport.width < BREAKPOINTS.desktop;
 
@@ -487,34 +446,17 @@ const GameHUD = ({
         )}
       </div>
 
-      {/* Desktop Only Gauges in Bottom Right */}
+      {/* Desktop Only Info Button in Bottom Right */}
       {!isMobile && mode !== "learn" && (
-        <div className="hud-bottom-right">
-          <div className="island-sub-gauges animation-fade-in">
-            {gaugeRegions.map((reg) => {
-              const isActive = activeContinent === reg;
-              const isFaded = activeContinent && activeContinent !== reg;
-
-              return (
-                <div
-                  key={reg}
-                  className={`gauge-item ${isActive ? "highlight" : ""} ${isFaded ? "faded" : ""}`}
-                  title={t(`region_${reg}`)}
-                >
-                  <div
-                    className="circular-gauge"
-                    style={{
-                      "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`,
-                      "--color": getRegionColor(reg),
-                    }}
-                  >
-                    <span className="gauge-val">{getRegionAbbr(reg)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <button className="hud-btn-circular" onClick={onInfo} title={t("information")}>
+        <div className={`hud-bottom-right ${isKeyboardMode ? "keyboard-mode" : ""}`}>
+          <button
+            type="button"
+            className="hud-btn-circular"
+            onClick={onInfo}
+            onMouseDown={(e) => e.preventDefault()}
+            title={t("information")}
+            aria-label={t("information") || "Information"}
+          >
             <InfoBox width={18} height={18} />
           </button>
         </div>

@@ -229,8 +229,8 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
         titleEn: "World\nCountries",
         descFr: `${countriesCount} pays et territoires à localiser sur le globe 3D interactif.`,
         descEn: `${countriesCount} countries and territories to locate on the interactive 3D globe.`,
-        badgeFr: `${countriesCount} PAYS`,
-        badgeEn: `${countriesCount} COUNTRIES`,
+        badgeFr: `${countriesCount} pays`,
+        badgeEn: `${countriesCount} countries`,
       },
       {
         key: "capitals",
@@ -239,8 +239,8 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
         titleEn: "World\nCapitals",
         descFr: `Retrouvez la capitale de chaque pays et territoire (${capitalsCount} au total).`,
         descEn: `Find the capital of every country and territory (${capitalsCount} total).`,
-        badgeFr: `${capitalsCount} CAPITALES`,
-        badgeEn: `${capitalsCount} CAPITALS`,
+        badgeFr: `${capitalsCount} capitales`,
+        badgeEn: `${capitalsCount} capitals`,
       },
       {
         key: "departments",
@@ -249,8 +249,8 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
         titleEn: "French\nDepartments",
         descFr: `Placement des ${departmentsCount} départements et collectivités d'Outre-mer.`,
         descEn: `Locate all ${departmentsCount} French departments across mainland & overseas.`,
-        badgeFr: `${departmentsCount} DÉPARTEMENTS`,
-        badgeEn: `${departmentsCount} DEPARTMENTS`,
+        badgeFr: `${departmentsCount} départements`,
+        badgeEn: `${departmentsCount} departments`,
       },
       {
         key: "us_states",
@@ -259,8 +259,8 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
         titleEn: "US\nStates",
         descFr: `Testez vos connaissances sur les ${usStatesCount} États américains.`,
         descEn: `Test your knowledge on all ${usStatesCount} US States.`,
-        badgeFr: `${usStatesCount} ÉTATS`,
-        badgeEn: `${usStatesCount} STATES`,
+        badgeFr: `${usStatesCount} états`,
+        badgeEn: `${usStatesCount} states`,
       },
       {
         key: "rivers_mountains",
@@ -269,8 +269,8 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
         titleEn: "Rivers &\nMountains",
         descFr: `${riversMountainsCount} reliefs majeurs : chaînes de montagnes et grands fleuves du monde.`,
         descEn: `${riversMountainsCount} major reliefs: mountain ranges and famous rivers.`,
-        badgeFr: `${riversMountainsCount} RELIEFS & FLEUVES`,
-        badgeEn: `${riversMountainsCount} RELIEFS & RIVERS`,
+        badgeFr: `${riversMountainsCount} reliefs & fleuves`,
+        badgeEn: `${riversMountainsCount} reliefs & rivers`,
       },
     ];
   }, []);

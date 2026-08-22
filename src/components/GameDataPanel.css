@@ -233,7 +233,7 @@
   width: 7px;
   height: 7px;
   border-radius: var(--radius-sm);
-  background: var(--region-color);
+  background: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -344,14 +344,14 @@
   width: 6px;
   height: 6px;
   border-radius: var(--radius-full);
-  background: var(--region-color);
+  background: var(--text-muted);
 }
 
 .data-panel-row-flag {
   width: 28px;
   height: 21px;
   object-fit: cover;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   flex-shrink: 0;

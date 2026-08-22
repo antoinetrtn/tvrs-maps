@@ -100,7 +100,7 @@ export const DEFAULT_GLOBE_THEME = "blackout";
 // pure black reads harsh/dated on light surfaces ("noir trop noir"). Shadows are
 // ink-tinted, low-opacity and multi-layered instead of heavy black blurs.
 // KEEP IN SYNC with [data-theme="light"] in src/index.css (first-paint mirror).
-const THEME = {
+export const THEME = {
   dark: {
     bg: "#000000",
     bgElevated: "#0f0f0f",
@@ -616,4 +616,37 @@ export const GAME_XP_COLORS = {
   greenOuter: "#00aa00",
   yellowInner: "#ffff55",
   yellowOuter: "#7f7f00",
+};
+
+export const RIVER_CONFIG = {
+  colors: {
+    active: "#1d4ed8",
+    inactive: "#0284c7",
+    selectedFound: "#2563eb",
+    selectedUnfound: "#38bdf8",
+    core: "#ffffff", // Bright white/cyan highlight, replacing dark paper
+    error: "#ff4500",
+    errorGlow: "#e63e00",
+    success: "#2dffa8",
+  },
+  widths: {
+    baseUnfound: 2.2,
+    baseFound: 3.8,
+    selectedUnfound: 4.5,
+    selectedFound: 5.5,
+    coreUnfound: 1.4,
+    coreFound: 1.8,
+  },
+  dash: {
+    baseLength: 1,
+    baseGap: 0,
+    baseAnimateTime: 0,
+    selectedOuterLength: 1,
+    selectedOuterGap: 0,
+    selectedOuterAnimateTime: 0,
+    coreLength: 0.25,
+    coreGap: 0.15,
+    coreAnimateTime: 800,
+  },
+  smoothingPoints: 60,
 };

@@ -28,7 +28,7 @@ TVRS Maps utilizes a **100% requirement-driven, opaque-box E2E testing methodolo
 | | Auto-Suggestions | `.suggestions-list`, `.suggestion-item` | Triggers at 4+ input chars, tap submits suggestion |
 | | HUD Counter & Timer | `.score-pill`, `.timer-pill`, `.island-font` | Score increment flash, formatted countdown M:SS |
 | | Hardcore Lives | `.hud-hearts`, `.heart-full`, `.heart-lost` | 3 lives in hardcore mode, lost heart shake & red flash |
-| | Regional Gauges | `.hud-bottom-right .gauge-item` | Desktop regional progress percentages (EU, AM, AS, AF, OC, AN) |
+| | Info Button | `.hud-bottom-right .hud-btn-circular` | Desktop bottom-right info trigger |
 | | Focus Navigation | `.prev-btn`, `.next-btn` | Cycle active focus between unfound targets |
 | **AGENTS.md Compliance** | Selected Country Glitch | Glitch shader GLSL (`GLITCH_FRAGMENT_BODY`) | Solid opaque cap, speed `28.0`, dark range `[0.12, 0.68]`, light range `[0.65, 0.98]` |
 | | Satellite Wireframe | Satellite mode found countries | `wireframe: true` using bright regional label colors (`REGION_COLORS_LABELS`) |
