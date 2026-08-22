@@ -1,7 +1,3 @@
-/* ==========================================================================
-   HOMEPAGE 3D CARD DECK (Jeu de cartes empilées en éventail "en bazar")
-   ========================================================================== */
-
 @keyframes retroDeckGlitchIn {
   0% {
     opacity: 0;
@@ -47,12 +43,10 @@
   animation: retroDeckGlitchIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* When user is actively dragging, disable the arrow badges to prevent drag traps */
 .cards-deck-wrapper.is-user-dragging .deck-arrow {
   pointer-events: none !important;
 }
 
-/* Prev/Next Zones - click targets for arrow badges */
 .deck-click-zone {
   position: absolute;
   top: 50%;
@@ -95,7 +89,6 @@
   transform: scale(0.92);
 }
 
-/* Round Arrow Badge inside the Half-Circle Zone - the real click/tap target */
 .deck-arrow {
   position: relative;
   display: flex;
@@ -119,14 +112,12 @@
     box-shadow var(--transition-spring);
 }
 
-/* Enlarged invisible tap target (44x44) around the 28px badge, without growing it visually */
 .deck-arrow::after {
   content: "";
   position: absolute;
   inset: -8px;
 }
 
-/* Card stack stage */
 .deck-stage {
   position: relative;
   width: 320px;
@@ -143,23 +134,20 @@
 }
 
 /* Individual Stacked Card Base - 100% SOLID PURE OPAQUE BACKGROUND (ALPHA = 1.0) */
+/* Individual Stacked Card Base - Mysterious Dark Technical Card */
 .deck-mode-card {
-  --card-accent: var(--accent);
   position: absolute;
   top: 20px;
   width: 320px;
   height: 250px;
   padding: 1.25rem;
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
-  background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
-  background-image: none !important;
+  background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
+  background-color: var(--bg-color) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border: 1px solid var(--glass-border-strong);
-  box-shadow:
-    var(--shadow-card),
-    inset 0 1px 0 color-mix(in srgb, var(--text-main) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--bg-color) 70%, transparent);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -169,61 +157,19 @@
   -webkit-backface-visibility: hidden;
 }
 
-.deck-mode-card[data-mode="countries"] {
-  --card-accent: var(--accent);
-}
-
-/* capitals/departments: originally pointed at --info/--purple, tokens that were
-   never defined anywhere — the fallback (--accent) always applied. Made explicit;
-   pick a dedicated tint here once the target colors are validated. */
-.deck-mode-card[data-mode="capitals"] {
-  --card-accent: var(--accent);
-}
-
-.deck-mode-card[data-mode="departments"] {
-  --card-accent: var(--accent);
-}
-
-/* US States: --gold-light is a grayscale leftover (a pale gray with no
-   light-theme override), which made the card read as disabled — use --accent
-   like the other cards until a real amber token exists in the design system. */
-.deck-mode-card[data-mode="us_states"] {
-  --card-accent: var(--accent);
-}
-
-.deck-mode-card[data-mode="rivers_mountains"] {
-  --card-accent: var(--success, var(--accent));
-}
-
-/* Top Active Card: 100% Solid Opaque Pitch Dark, vibrant accent border glow */
 .deck-mode-card.is-top-card {
   height: 250px;
-  background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
-  background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
-  background-image: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
+  border-color: color-mix(in srgb, var(--text-main) 22%, transparent);
   box-shadow:
-    var(--shadow-card),
-    0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
+    0 14px 40px color-mix(in srgb, var(--bg-color) 85%, transparent),
+    0 0 1px color-mix(in srgb, var(--text-main) 30%, transparent);
 }
 
-/* Stacked cards behind: 100% Solid Opaque Pitch Dark with mode border */
 .deck-mode-card.is-stacked-card {
   cursor: pointer;
   height: 250px;
-  background: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
-  background-color: color-mix(in srgb, var(--bg-color) 98%, var(--text-main)) !important;
-  background-image: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border-color: color-mix(in srgb, var(--card-accent) 65%, var(--glass-border-strong));
-  box-shadow:
-    var(--shadow-card),
-    0 0 20px color-mix(in srgb, var(--card-accent) 22%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--text-main) 18%, transparent);
+  border-color: color-mix(in srgb, var(--text-main) 14%, transparent);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--bg-color) 50%, transparent);
   transition:
     transform 160ms cubic-bezier(0.1, 0.9, 0.2, 1),
     border-color 160ms ease,
@@ -233,7 +179,7 @@
 
 .deck-mode-card.is-stacked-card:hover {
   filter: brightness(1.2);
-  border-color: var(--card-accent);
+  border-color: color-mix(in srgb, var(--text-main) 25%, transparent);
 }
 
 .deck-mode-card.is-stacked-card .card-actions {
@@ -256,7 +202,6 @@
   z-index: 1;
 }
 
-/* Parallax Background Artwork */
 .card-parallax-bg {
   position: absolute;
   inset: 0;
@@ -275,19 +220,18 @@
   height: 140%;
   background: radial-gradient(
     circle at 50% 30%,
-    color-mix(in srgb, var(--card-accent) 18%, transparent) 0%,
+    color-mix(in srgb, var(--text-main) 6%, transparent) 0%,
     transparent 70%
   );
   pointer-events: none;
 }
 
-/* Card Header & Content */
 .card-content {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
   transition: transform 400ms cubic-bezier(0.18, 0.9, 0.26, 1.15);
   text-align: left;
 }
@@ -296,51 +240,50 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.15rem;
-}
-
-.card-badge {
-  font-family: var(--font-display, monospace);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 3px 9px;
-  /* --radius-xs never existed; the 4px fallback always applied, which is --radius-sm */
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--card-accent) 20%, transparent);
-  color: var(--card-accent);
-  border: 1px solid color-mix(in srgb, var(--card-accent) 35%, transparent);
+  gap: 0.75rem;
+  width: 100%;
+  margin-bottom: 0.4rem;
 }
 
 .card-mode-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--card-accent);
+  color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
+  opacity: 1;
+  flex-shrink: 0;
 }
 
 .card-title {
-  font-family: var(--font-main);
-  font-size: 1.25rem;
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
   font-weight: 700;
-  color: var(--text-main);
+  color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.3;
+  white-space: pre-line;
+  letter-spacing: 0.03em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-transform: none;
+  text-shadow: 0 2px 6px color-mix(in srgb, var(--bg-color) 70%, transparent);
 }
 
 .card-desc {
   font-family: var(--font-main);
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.35;
+  font-size: var(--font-size-base);
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--text-main));
+  margin: 0.25rem 0 0 0;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Actions Footer */
 .card-actions {
   position: relative;
   z-index: 5;
@@ -355,23 +298,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  height: 44px;
+  gap: 0.6rem;
+  height: 48px;
   border-radius: var(--radius-sm);
-  background: var(--card-accent);
-  color: var(--text-inverse);
-  font-weight: 700;
-  font-size: 0.95rem;
-  border: none;
+  background: color-mix(in srgb, var(--text-main) 14%, var(--bg-color));
+  color: var(--text-main);
+  font-family: var(--font-display) !important;
+  font-size: var(--font-size-base);
+  font-weight: 800;
+  border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
   cursor: pointer;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--card-accent) 40%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--bg-color) 60%, transparent);
   transition: all var(--transition-spring);
 }
 
+.card-play-btn span {
+  font-family: var(--font-display) !important;
+}
+
 .card-play-btn:hover {
+  background: color-mix(in srgb, var(--text-main) 22%, var(--bg-color));
+  border-color: color-mix(in srgb, var(--text-main) 50%, transparent);
   transform: translateY(-2px);
-  filter: brightness(1.1);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--card-accent) 60%, transparent);
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--bg-color) 80%, transparent);
 }
 
 .card-play-btn:active {
@@ -382,21 +331,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  flex-shrink: 0;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border-strong);
-  background: var(--glass-bg);
-  color: var(--text-main);
+  border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
+  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+  color: var(--text-muted);
   cursor: pointer;
   transition: all var(--transition-spring);
 }
 
 .card-learn-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--glass-hover);
-  box-shadow: 0 0 12px var(--accent-soft);
+  border-color: color-mix(in srgb, var(--text-main) 38%, transparent);
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--text-main) 12%, var(--bg-color));
   transform: translateY(-2px);
 }
 
@@ -443,7 +393,6 @@
   box-shadow: 0 0 6px var(--accent-soft);
 }
 
-/* Responsive Scaling - breakpoint aligned with HomeScreen.css (768px) */
 @media (max-width: 768px) {
   .cards-deck-wrapper {
     max-width: 100%;
@@ -452,12 +401,9 @@
 
   .deck-stage {
     width: 100%;
-    height: 259px; /* top 12 + card 235 + 12 headroom for stacked-card rotation */
+    height: 259px;
   }
 
-  /* Grouped selectors match the specificity of .is-top-card/.is-stacked-card so
-     the mobile height wins by source order (desktop 250px otherwise overrides 235px
-     and the top card overflows the stage onto the dots row) */
   .deck-mode-card,
   .deck-mode-card.is-top-card,
   .deck-mode-card.is-stacked-card {
@@ -465,9 +411,6 @@
     top: 12px;
   }
 
-  /* Fluid width with a 14px gutter per side: absorbs the depth scale of the top
-     card (~1.087, from its translateZ preset converted to 2D scale in the JSX)
-     so the rendered card stays inside the wrapper and clear of the arrow badges */
   .deck-mode-card {
     width: min(100% - 28px, 320px);
     padding: 1rem;
@@ -483,8 +426,6 @@
     width: 60px;
   }
 
-  /* Keep the enlarged tap target flush with the badge on the card side so it
-     never overlaps the Play/Learn buttons of the projected top card */
   .deck-click-zone.left .deck-arrow::after {
     right: 0;
   }

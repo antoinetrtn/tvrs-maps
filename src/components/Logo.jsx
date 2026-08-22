@@ -2,8 +2,6 @@ import "./Logo.css";
 
 import React from "react";
 
-import { GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
-
 const ASCII_ART = `                                                           „±                 $     ®
                                                            dÀ»                #Y   cMÆ4Y
                                                          ×¾ÆÆ$×º              ÆÆ     rÆ…
@@ -48,92 +46,218 @@ const ASCII_ART = `                                                           �
                                    …     Ü      >¹         ™µ
                                                ûÅŽ×        o¢`;
 
-const Logo = React.memo(({ size = "medium", className = "", variant = "full" }) => {
-  const containerRef = React.useRef(null);
-  const [scale, setScale] = React.useState(0.35);
-  const [glitchedArt, setGlitchedArt] = React.useState(ASCII_ART);
-  const [isHovered, setIsHovered] = React.useState(false);
+function createAsciiParticles() {
+  const lines = ASCII_ART.split("\n");
+  const charWidth = 7.5;
+  const lineHeight = 13.0;
 
-  React.useEffect(() => {
-    if (variant !== "full") return;
-    const updateScale = () => {
-      if (containerRef.current) {
-        const width = containerRef.current.offsetWidth;
-        setScale(width / 864);
+  let minCol = Infinity;
+  let maxCol = -Infinity;
+  let minRow = Infinity;
+  let maxRow = -Infinity;
+
+  for (let r = 0; r < lines.length; r++) {
+    const line = lines[r];
+    for (let c = 0; c < line.length; c++) {
+      const char = line[c];
+      if (char !== " " && char !== "\r" && char !== "\n") {
+        if (c < minCol) minCol = c;
+        if (c > maxCol) maxCol = c;
+        if (r < minRow) minRow = r;
+        if (r > maxRow) maxRow = r;
       }
-    };
-
-    updateScale();
-
-    const observer = new ResizeObserver(() => {
-      updateScale();
-    });
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
     }
+  }
 
-    window.addEventListener("resize", updateScale);
+  const contentW = (maxCol - minCol + 1) * charWidth;
+  const contentH = (maxRow - minRow + 1) * lineHeight;
 
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateScale);
-    };
-  }, [variant]);
+  const offsetX = (1000 - contentW) / 2 - minCol * charWidth;
+  const offsetY = (750 - contentH) / 2 - minRow * lineHeight;
+
+  const newParticles = [];
+  for (let r = 0; r < lines.length; r++) {
+    const line = lines[r];
+    for (let c = 0; c < line.length; c++) {
+      const char = line[c];
+      if (char !== " " && char !== "\r" && char !== "\n") {
+        const homeX = offsetX + c * charWidth;
+        const homeY = offsetY + r * lineHeight;
+        newParticles.push({
+          char,
+          homeX,
+          homeY,
+          x: homeX,
+          y: homeY,
+          vx: 0,
+          vy: 0,
+          rot: 0,
+          vRot: 0,
+        });
+      }
+    }
+  }
+  return newParticles;
+}
+
+function updateParticlePhysics(p, mouseGridX, mouseGridY, isHovering) {
+  if (isHovering && mouseGridX !== null && mouseGridY !== null) {
+    const dx = p.x - mouseGridX;
+    const dy = p.y - mouseGridY;
+    const dist = Math.hypot(dx, dy);
+    const maxDist = 90;
+
+    if (dist < maxDist && dist > 0.001) {
+      const force = Math.pow(1 - dist / maxDist, 1.6) * 14;
+      const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.3;
+      p.vx += Math.cos(angle) * force;
+      p.vy += Math.sin(angle) * force;
+      p.vRot += (Math.random() - 0.5) * 0.25;
+    }
+  }
+
+  const spring = 0.085;
+  const damping = 0.81;
+
+  const fx = (p.homeX - p.x) * spring;
+  const fy = (p.homeY - p.y) * spring;
+  p.vx = (p.vx + fx) * damping;
+  p.vy = (p.vy + fy) * damping;
+  p.x += p.vx;
+  p.y += p.vy;
+
+  p.vRot = (p.vRot + (0 - p.rot) * 0.12) * 0.82;
+  p.rot += p.vRot;
+}
+
+function renderParticle(ctx, p, scaleX, scaleY) {
+  const screenX = p.x * scaleX;
+  const screenY = p.y * scaleY;
+
+  ctx.save();
+  ctx.translate(screenX, screenY);
+  if (Math.abs(p.rot) > 0.01) {
+    ctx.rotate(p.rot);
+  }
+
+  const distFromHome = Math.hypot(p.x - p.homeX, p.y - p.homeY);
+  if (distFromHome > 4) {
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
+    ctx.shadowBlur = Math.min(6, distFromHome * 0.5);
+  } else {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.fillText(p.char, 0, 0);
+  ctx.restore();
+}
+
+function renderAsciiFrame(canvas, ctx, mouseRef, particlesRef) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvas.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+
+  if (width === 0 || height === 0) return;
+
+  if (canvas.width !== Math.floor(width * dpr) || canvas.height !== Math.floor(height * dpr)) {
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+  }
+
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, width, height);
+
+  const scaleX = width / 1000;
+  const scaleY = height / 750;
+
+  const mouse = mouseRef.current;
+  const mouseGridX = mouse.isHovering && mouse.x !== null ? mouse.x / scaleX : null;
+  const mouseGridY = mouse.isHovering && mouse.y !== null ? mouse.y / scaleY : null;
+
+  const particles = particlesRef.current;
+
+  ctx.font = '7.2px ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    updateParticlePhysics(p, mouseGridX, mouseGridY, mouse.isHovering);
+    renderParticle(ctx, p, scaleX, scaleY);
+  }
+
+  ctx.restore();
+}
+
+const InteractiveAsciiLogo = React.memo(({ size, className }) => {
+  const containerRef = React.useRef(null);
+  const canvasRef = React.useRef(null);
+  const mouseRef = React.useRef({ x: null, y: null, isHovering: false });
+  const particlesRef = React.useRef([]);
+  const animFrameRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (variant !== "full") return;
+    particlesRef.current = createAsciiParticles();
+  }, []);
 
-    let lastTime = 0;
-    let frameId;
-    const cfg = GLITCH_EFFECT_SETTINGS.asciiScramble || {
-      glyphs: "░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ",
-      idleProbability: 0.015,
-      hoverProbability: 0.08,
-      updateIntervalMs: 80,
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    let active = true;
+
+    const render = () => {
+      if (!active) return;
+      renderAsciiFrame(canvas, ctx, mouseRef, particlesRef);
+      animFrameRef.current = requestAnimationFrame(render);
     };
 
-    const animate = (timestamp) => {
-      if (!lastTime) lastTime = timestamp;
-      const elapsed = timestamp - lastTime;
-
-      if (elapsed > cfg.updateIntervalMs) {
-        lastTime = timestamp;
-        const prob = isHovered ? cfg.hoverProbability : cfg.idleProbability;
-        const glyphs = cfg.glyphs;
-
-        const chars = ASCII_ART.split("");
-        for (let i = 0; i < chars.length; i++) {
-          const char = chars[i];
-          if (char !== " " && char !== "\n" && char !== "\r") {
-            if (Math.random() < prob) {
-              const randIndex = Math.floor(Math.random() * glyphs.length);
-              chars[i] = glyphs[randIndex];
-            }
-          }
-        }
-        setGlitchedArt(chars.join(""));
-      }
-      frameId = requestAnimationFrame(animate);
+    animFrameRef.current = requestAnimationFrame(render);
+    return () => {
+      active = false;
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
+  }, []);
 
-    frameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frameId);
-  }, [variant, isHovered]);
+  const handlePointerMove = (e) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    mouseRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      isHovering: true,
+    };
+  };
 
-  if (variant === "full") {
-    return (
-      <div
-        ref={containerRef}
-        className={`logo-container ${size} ${className} variant-${variant}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="logo-wrapper ascii-logo-container" style={{ "--ascii-scale": scale }}>
-          <pre className="ascii-logo-pre">{glitchedArt}</pre>
-        </div>
+  const handlePointerLeave = () => {
+    mouseRef.current.isHovering = false;
+    mouseRef.current.x = null;
+    mouseRef.current.y = null;
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={`logo-container ${size} ${className} variant-full`}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
+      <div className="logo-wrapper ascii-logo-container">
+        <canvas ref={canvasRef} className="ascii-logo-canvas" />
       </div>
-    );
+    </div>
+  );
+});
+
+const Logo = React.memo(({ size = "medium", className = "", variant = "full" }) => {
+  if (variant === "full") {
+    return <InteractiveAsciiLogo size={size} className={className} />;
   }
 
   return (

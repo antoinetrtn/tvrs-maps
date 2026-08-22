@@ -1,5 +1,5 @@
 .game-data-panel {
-  --selection-green: var(--selection-highlight, var(--crt-neon-green));
+  --selection-green: var(--selection-highlight, var(--accent));
   --selection-green-soft: color-mix(in srgb, var(--selection-green) 16%, transparent);
   display: flex;
   flex-direction: column;

@@ -245,6 +245,11 @@ export const GLITCH_FRAGMENT_BODY = `
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
   vec3 settleColor = mix(litRestingColor, uFoundGreen * sideShade, step(0.5, uIsFound));
 
+  // Micro-grain noise sur la surface de tous les pays
+  float countrySurfaceNoise = (hash(fragPx * 0.42 + vec2(0.12, 0.45)) - 0.5) * 0.06;
+  staticVec += vec3(countrySurfaceNoise);
+  settleColor += vec3(countrySurfaceNoise * 0.7);
+
   float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
@@ -270,11 +275,13 @@ export const GLITCH_FRAGMENT_BODY = `
     float reveal = 1.0 - uFadeProgress;
     float grain = smoothstep(0.1, 0.6, reveal);
     gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, grain * 0.5);
-  } else if (isSoftSelectIn) {
-    gl_FragColor.rgb = staticVec * sideShade;
   } else {
     gl_FragColor.rgb = staticVec * sideShade;
   }
+
+  // Grain TV tactile micro-subtil sur l'intégralité des faces des pays
+  float surfaceGrain = (hash(fragPx * 0.38 + vec2(0.4, 0.7)) - 0.5) * 0.055;
+  gl_FragColor.rgb += vec3(surfaceGrain);
 
   if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {
     gl_FragColor.a = 1.0;

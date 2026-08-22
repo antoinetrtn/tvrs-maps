@@ -77,6 +77,8 @@ const STYLE_TOKENS = {
     base: "1rem",
     lg: "1.15rem",
     xl: "1.3rem",
+    "2xl": "1.45rem",
+    "3xl": "2.2rem",
   },
 };
 
@@ -99,64 +101,6 @@ export const DEFAULT_GLOBE_THEME = "blackout";
 // ink-tinted, low-opacity and multi-layered instead of heavy black blurs.
 // KEEP IN SYNC with [data-theme="light"] in src/index.css (first-paint mirror).
 const THEME = {
-  light: {
-    bg: "#f7f6f3",
-    bgElevated: "#fdfcfa",
-    textMain: "#1c2433",
-    textMuted: "#5a6472",
-    textInverse: "#ffffff",
-    ink: "#1c2433",
-    paper: "#ffffff",
-    black: "#000000",
-    labelShadow: "#ffffff",
-    accent: "#1f2937",
-    accentHover: "#374151",
-    accentSoft: "rgba(31, 41, 55, 0.08)",
-    accentGlow: "#1f2937",
-    glassBg: "rgba(253, 252, 250, 0.8)",
-    glassBorder: "rgba(28, 36, 51, 0.1)",
-    glassBorderStrong: "rgba(28, 36, 51, 0.2)",
-    glassHover: "rgba(28, 36, 51, 0.05)",
-    glassShadow: "0 1px 2px rgba(28, 36, 51, 0.05), 0 12px 32px rgba(28, 36, 51, 0.1)",
-    glassShadowStrong: "0 2px 4px rgba(28, 36, 51, 0.06), 0 18px 44px rgba(28, 36, 51, 0.14)",
-    glassShadowDrag: "0 4px 8px rgba(28, 36, 51, 0.08), 0 24px 60px rgba(28, 36, 51, 0.18)",
-    overlayBg: "rgba(247, 246, 243, 0.6)",
-    modalHeaderBg: "rgba(253, 252, 250, 0.6)",
-    subtleTint: "rgba(28, 36, 51, 0.05)",
-    highlight: "rgba(28, 36, 51, 0.08)",
-    success: "#1c2433",
-    selectionHighlight: "#2dffa8",
-    gold: "#5a6472",
-    error: "#ff4500",
-    errorDeep: "#e63e00",
-    errorDeeper: "#b33000",
-    errorMuted: "#ff8a65",
-    warning: "#6b7280",
-    warningSoft: "rgba(28, 36, 51, 0.04)",
-    mapBase: "#dedee4",
-    mapSea: "#ffffff",
-    mapBorder: "#cccccc",
-    mapBorderMuted: "#e5e5e5",
-    borderFound: "#cccccc",
-    borderUnfound: "#e5e5e5",
-    mapSurfaceSelected: "#111111",
-    gridDot: "rgba(28, 36, 51, 0.08)",
-    graticule: "#666666",
-    atmosphere: "#e0e0e0",
-    globeEmissive: "#ffffff",
-    globeSpecular: "#ffffff",
-    globeInnerGlow: "#e2e8f0",
-    lightingRim: "#dddddd",
-    lightingFill: "#ffffff",
-    lightingGround: "#ffffff",
-    lightingStudio: "#ffffff",
-    lightingLeft: "#ffffff",
-    lightingRight: "#ffffff",
-    riverActive: "#0284c7",
-    riverInactive: "#7dd3fc",
-    riverSelectedFound: "#0284c7",
-    riverSelectedUnfound: "#38bdf8",
-  },
   dark: {
     bg: "#000000",
     bgElevated: "#0f0f0f",
@@ -210,10 +154,10 @@ const THEME = {
     lightingStudio: "#000000",
     lightingLeft: "#000000",
     lightingRight: "#000000",
-    riverActive: "#00f0ff",
-    riverInactive: "#0e7490",
-    riverSelectedFound: "#00f0ff",
-    riverSelectedUnfound: "#38bdf8",
+    riverActive: "#1d4ed8",
+    riverInactive: "#0284c7",
+    riverSelectedFound: "#1d4ed8",
+    riverSelectedUnfound: "#0284c7",
   },
 };
 
@@ -223,15 +167,6 @@ const THEME = {
 
 const DEFAULT_CONTINENT_COLORS = {
   surface: {
-    light: {
-      Europe: "#849bb3",
-      Americas: "#cfa29b",
-      Asia: "#cfba9b",
-      Africa: "#9bcfaf",
-      Oceania: "#b89bcf",
-      Antarctic: "#cbd4db",
-      Unknown: "#cbd5e1",
-    },
     dark: {
       Europe: "#38526c",
       Americas: "#854d45",
@@ -243,15 +178,6 @@ const DEFAULT_CONTINENT_COLORS = {
     },
   },
   label: {
-    light: {
-      Europe: "#1f344a",
-      Americas: "#54251e",
-      Asia: "#54411e",
-      Africa: "#1e542d",
-      Oceania: "#411e54",
-      Antarctic: "#233240",
-      Unknown: "#1e293b",
-    },
     dark: {
       Europe: "#bcd0e8",
       Americas: "#e8beb7",
@@ -263,15 +189,6 @@ const DEFAULT_CONTINENT_COLORS = {
     },
   },
   attenuated: {
-    light: {
-      Europe: "#4c5d6e",
-      Americas: "#7c5953",
-      Asia: "#7c6d53",
-      Africa: "#537c62",
-      Oceania: "#6b537c",
-      Antarctic: "#6f7a84",
-      Unknown: "#64748b",
-    },
     dark: {
       Europe: "#141414",
       Americas: "#1a1a1a",
@@ -307,18 +224,6 @@ const DEFAULT_DEPARTMENT_COLORS = {
   "06": "#6366f1", // Mayotte
 };
 
-/**
- * GLOBE THEMES — per-globe-theme overrides.
- *
- * IMPORTANT (theme model): the UI chrome (panels, text, accents, glass…) comes
- * entirely from the base `THEME[light|dark]` above and is SHARED by every globe
- * theme. A globe theme (satellite / blackout) must only override GLOBE-scene
- * concerns — globe material, atmosphere glow, graticules, stroke widths, label
- * colour mode, continent/department palettes. That is what keeps "switching the
- * globe theme changes the globe, not the interface" true. `getThemeColors()`
- * below merges `globeSettings` on top of the base theme, so anything NOT listed
- * here automatically stays identical across globe themes.
- */
 const GLOBE_THEMES = {
   satellite: {
     globeSettings: {
@@ -342,9 +247,6 @@ const GLOBE_THEMES = {
       borderUnfound: "#555555",
       mapBorder: "#777777",
       mapBorderMuted: "#555555",
-      // NOTE: no globeLabelText/Dot/Stalk override here — labels fall back to
-      // textMain/accent, i.e. white in dark and ink in light. Hardcoding white
-      // made labels unreadable on the light (day) satellite globe.
     },
     continents: DEFAULT_CONTINENT_COLORS,
     departments: {
@@ -372,16 +274,6 @@ const GLOBE_THEMES = {
     },
     continents: {
       surface: {
-        light: {
-          Europe: "#424242",
-          Americas: "#505050",
-          Africa: "#5c5c5c",
-          Oceania: "#686868",
-          Asia: "#767676",
-          Antarctic: "#848484",
-          France: "#424242",
-          Unknown: "#5a5a5a",
-        },
         dark: {
           Europe: "#2b2b30",
           Americas: "#303036",
@@ -499,7 +391,6 @@ export const getThemeCssVariables = (
   { uiScale = 1 } = {}
 ) => {
   const theme = getThemeColors(globeTheme, systemTheme);
-  const isLight = systemTheme === "light";
 
   const scale = Math.max(0.72, Math.min(1.05, uiScale || 1));
   const s = (px) => `${Math.round(px * scale)}px`;
@@ -552,6 +443,8 @@ export const getThemeCssVariables = (
     "--font-size-base": STYLE_TOKENS.fontSize.base,
     "--font-size-lg": STYLE_TOKENS.fontSize.lg,
     "--font-size-xl": STYLE_TOKENS.fontSize.xl,
+    "--font-size-2xl": STYLE_TOKENS.fontSize["2xl"],
+    "--font-size-3xl": STYLE_TOKENS.fontSize["3xl"],
     "--transition-fast": STYLE_TOKENS.transition.fast,
     "--transition-normal": STYLE_TOKENS.transition.normal,
     "--transition-emphasized": STYLE_TOKENS.transition.emphasized,
@@ -565,21 +458,21 @@ export const getThemeCssVariables = (
     "--island-width": s(parseInt(STYLE_TOKENS.size.islandWidth)),
     // Neon accents: full-glow neons are unreadable on light panels, so the
     // light theme swaps them for deep ink-compatible hues with faint glows.
-    "--color-cyan": isLight ? "#0e7490" : "#00f0ff",
-    "--color-magenta": isLight ? "#be185d" : "#ff007f",
-    "--color-cyan-glow": isLight ? "rgba(14, 116, 144, 0.15)" : "rgba(0, 240, 255, 0.12)",
-    "--color-magenta-glow": isLight ? "rgba(190, 24, 93, 0.15)" : "rgba(255, 0, 127, 0.12)",
-    "--color-gold": isLight ? "#b45309" : "#ffd700",
-    "--color-gold-glow": isLight ? "rgba(180, 83, 9, 0.2)" : "rgba(255, 215, 0, 0.25)",
-    "--color-silver": isLight ? "#64748b" : "#c0c0c0",
-    "--color-silver-glow": isLight ? "rgba(100, 116, 139, 0.2)" : "rgba(192, 192, 192, 0.25)",
-    "--color-bronze": isLight ? "#92400e" : "#cd7f32",
-    "--color-bronze-glow": isLight ? "rgba(146, 64, 14, 0.2)" : "rgba(205, 127, 50, 0.25)",
-    "--shadow-subtle": isLight ? "rgba(28, 36, 51, 0.12)" : "rgba(0, 0, 0, 0.15)",
-    "--color-cyan-glow-strong": isLight ? "rgba(14, 116, 144, 0.25)" : "rgba(0, 240, 255, 0.4)",
-    "--color-lime": isLight ? "#4d7c0f" : "#a3e635",
-    "--color-lime-glow-strong": isLight ? "rgba(77, 124, 15, 0.25)" : "rgba(163, 230, 53, 0.4)",
-    "--color-error-glow-strong": isLight ? "rgba(255, 69, 0, 0.25)" : "rgba(255, 69, 0, 0.4)",
+    "--color-cyan": "#00f0ff",
+    "--color-magenta": "#ff007f",
+    "--color-cyan-glow": "rgba(0, 240, 255, 0.12)",
+    "--color-magenta-glow": "rgba(255, 0, 127, 0.12)",
+    "--color-gold": "#ffd700",
+    "--color-gold-glow": "rgba(255, 215, 0, 0.25)",
+    "--color-silver": "#c0c0c0",
+    "--color-silver-glow": "rgba(192, 192, 192, 0.25)",
+    "--color-bronze": "#cd7f32",
+    "--color-bronze-glow": "rgba(205, 127, 50, 0.25)",
+    "--shadow-subtle": "rgba(0, 0, 0, 0.15)",
+    "--color-cyan-glow-strong": "rgba(0, 240, 255, 0.4)",
+    "--color-lime": "#a3e635",
+    "--color-lime-glow-strong": "rgba(163, 230, 53, 0.4)",
+    "--color-error-glow-strong": "rgba(255, 69, 0, 0.4)",
     "--ui-scale": scale, // fluid calc(var(--base-foo) * var(--ui-scale))
     "--globe-flag-scale": Math.max(scale, 1.12),
   };
@@ -600,31 +493,29 @@ const resolveThemePalette = (globeTheme) => {
   return { themeCfg, palette };
 };
 
-export const getThemeRegionColor = (globeTheme, systemTheme, region) => {
+export const getThemeRegionColor = (globeTheme, _systemTheme, region) => {
   const normRegion = normalizeRegion(region);
   const { palette } = resolveThemePalette(globeTheme);
-  const sysTheme = systemTheme || "dark";
-  const colors = palette.surface[sysTheme];
+  const colors = palette.surface.dark;
   return colors[normRegion] || colors.Unknown || "#888888";
 };
 
-export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) => {
+export const getThemeRegionColorAttenuated = (globeTheme, _systemTheme, region) => {
   const normRegion = normalizeRegion(region);
   const { palette } = resolveThemePalette(globeTheme);
-  const sysTheme = systemTheme || "dark";
 
   if (palette.attenuated) {
-    const colors = palette.attenuated[sysTheme];
+    const colors = palette.attenuated.dark;
     return colors[normRegion] || colors.Unknown;
   }
 
   // Blackout fallbacks: programmatically blend colors to avoid browser-only CSS color-mix in ThreeJS
-  const baseColor = getThemeRegionColor(globeTheme, systemTheme, normRegion);
+  const baseColor = getThemeRegionColor(globeTheme, "dark", normRegion);
   if (baseColor.startsWith("#")) {
     const r = parseInt(baseColor.substring(1, 3), 16);
     const g = parseInt(baseColor.substring(3, 5), 16);
     const b = parseInt(baseColor.substring(5, 7), 16);
-    const factor = sysTheme === "light" ? 0.6 : 0.72;
+    const factor = 0.72;
     const mr = Math.round(r * factor);
     const mg = Math.round(g * factor);
     const mb = Math.round(b * factor);
@@ -633,18 +524,17 @@ export const getThemeRegionColorAttenuated = (globeTheme, systemTheme, region) =
   return baseColor;
 };
 
-export const getThemeRegionColorLabel = (globeTheme, systemTheme, region) => {
+export const getThemeRegionColorLabel = (globeTheme, _systemTheme, region) => {
   const normRegion = normalizeRegion(region);
   const { palette } = resolveThemePalette(globeTheme);
-  const sysTheme = systemTheme || "dark";
 
   if (palette.label) {
-    const colors = palette.label[sysTheme];
+    const colors = palette.label.dark;
     return colors[normRegion] || colors.Unknown;
   }
 
   // Blackout fallback: use base surface color shade directly
-  return getThemeRegionColor(globeTheme, systemTheme, normRegion);
+  return getThemeRegionColor(globeTheme, "dark", normRegion);
 };
 
 export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fallbackColor) => {
