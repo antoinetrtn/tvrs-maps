@@ -3,7 +3,27 @@ import * as THREE from "three";
 
 import { getOpaqueThreeColor, GLOBE_STYLE } from "../../config/designSystem";
 import { PERFORMANCE } from "../../config/gameConstants";
+import { createFresnelGlowNodeMaterial } from "../render/globeNodeMaterials";
+import { isGlobeWebGPU } from "../render/globeRendererFlag";
 import { FRESNEL_FRAGMENT_SHADER, FRESNEL_VERTEX_SHADER } from "../render/globeShaders";
+
+// The WebGPU renderer (experimental flag) needs the TSL port of the glow.
+function createGlowMaterial() {
+  if (isGlobeWebGPU()) return createFresnelGlowNodeMaterial();
+  return new THREE.ShaderMaterial({
+    vertexShader: FRESNEL_VERTEX_SHADER,
+    fragmentShader: FRESNEL_FRAGMENT_SHADER,
+    uniforms: {
+      glowColor: { value: new THREE.Color(0x64b5f6) },
+      coef: { value: 1.0 },
+      power: { value: 1.2 },
+    },
+    transparent: true,
+    blending: THREE.NormalBlending,
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
+}
 
 export function useGlobeLighting({
   globeEl,
@@ -82,19 +102,7 @@ export function useGlobeLighting({
         : PERFORMANCE.innerGlowSegments.desktop;
       const innerGlow = new THREE.Mesh(
         new THREE.SphereGeometry(114.0, glowSegments, glowSegments),
-        new THREE.ShaderMaterial({
-          vertexShader: FRESNEL_VERTEX_SHADER,
-          fragmentShader: FRESNEL_FRAGMENT_SHADER,
-          uniforms: {
-            glowColor: { value: new THREE.Color(0x64b5f6) },
-            coef: { value: 1.0 },
-            power: { value: 1.2 },
-          },
-          transparent: true,
-          blending: THREE.NormalBlending,
-          side: THREE.BackSide,
-          depthWrite: false,
-        })
+        createGlowMaterial()
       );
       innerGlow.name = "globe-inner-glow";
       innerGlow.position.set(0, 0, 0);
