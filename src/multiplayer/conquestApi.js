@@ -9,6 +9,12 @@ export async function ensureConquestUser() {
   return anon.user.id;
 }
 
+/** Current auth user id without creating an anonymous account (resume path). */
+export async function getExistingConquestUser() {
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.user?.id || null;
+}
+
 async function rpc(name, params) {
   const { data, error } = await supabase.rpc(name, params);
   if (error) throw error;
@@ -41,13 +47,24 @@ export const requestStealChallenge = (matchId, countryId) =>
 export const stealConquestCountry = (matchId, answer) =>
   rpc("steal_country", { p_match_id: matchId, p_answer: answer });
 
+export const cancelStealChallenge = (matchId) =>
+  rpc("conquest_cancel_steal", { p_match_id: matchId });
+
+export const leaveConquestMatch = (matchId) => rpc("conquest_leave_match", { p_match_id: matchId });
+
+/** Latest lobby/live match of the current user, or null. */
+export async function getMyActiveConquestMatch() {
+  const match = await rpc("conquest_my_active_match", {});
+  return match?.id ? match : null;
+}
+
 export const getConquestState = (matchId) => rpc("conquest_get_state", { p_match_id: matchId });
 
 /**
  * Realtime room: Presence for the lobby (who is connected) and Broadcast to
  * tell the other players to resync after any validated server write.
  */
-export function openConquestChannel(code, userId, { onSync, onPresence }) {
+export function openConquestChannel(code, userId, { onSync, onPresence, onStatus }) {
   const channel = supabase.channel(`conquest:${code}`, {
     config: { presence: { key: userId }, broadcast: { self: false } },
   });
@@ -55,6 +72,7 @@ export function openConquestChannel(code, userId, { onSync, onPresence }) {
     .on("broadcast", { event: "sync" }, (message) => onSync(message?.payload || {}))
     .on("presence", { event: "sync" }, () => onPresence(Object.keys(channel.presenceState())))
     .subscribe((status) => {
+      onStatus?.(status);
       if (status === "SUBSCRIBED") channel.track({ online_at: new Date().toISOString() });
     });
   return {

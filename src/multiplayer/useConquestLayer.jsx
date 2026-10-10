@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { isConquestEnabled } from "./conquestConfig";
 import ConquestScreen from "./ConquestScreen.jsx";
-import { useConquestMatch } from "./useConquestMatch";
+import { hasStoredConquestMatch, useConquestMatch } from "./useConquestMatch";
 
 const EMPTY_FOUND = [];
 const FOCUS_HOLD_MS = 2500;
@@ -36,6 +36,17 @@ export function useConquestLayer({
   });
 
   const open = useCallback(() => setCurrentScreen("conquest"), [setCurrentScreen]);
+
+  // Reload / killed tab: reopen the match the player was in.
+  const { resume } = conquest;
+  const resumedRef = useRef(false);
+  useEffect(() => {
+    if (resumedRef.current || !enabled || !hasStoredConquestMatch()) return;
+    resumedRef.current = true;
+    resume()
+      .then((ok) => ok && open())
+      .catch(() => {});
+  }, [enabled, resume, open]);
   const exit = useCallback(() => {
     setOverlay(null);
     setFocusCountry(null);

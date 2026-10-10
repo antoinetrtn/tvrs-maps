@@ -12,7 +12,9 @@ import {
   formatClock,
   formatFeedEvent,
   getPaletteEntry,
+  isStaleState,
   normalizeRoomCode,
+  pickClockOffset,
   remainingMs,
   resolveCountryClick,
   shieldedCountryIds,
@@ -151,5 +153,37 @@ describe("conquestLogic", () => {
     );
     expect(describeRpcError({ message: "match_full" }, "en")).toBe("Room is full");
     expect(describeRpcError(new Error("boom"))).toBe("Connexion au serveur impossible");
+  });
+
+  it("keeps the clock offset of the fastest sample", () => {
+    expect(pickClockOffset([])).toBe(0);
+    expect(
+      pickClockOffset([
+        { offset: 900, latency: 400 },
+        { offset: 120, latency: 20 },
+        { offset: 300, latency: 90 },
+      ])
+    ).toBe(120);
+  });
+
+  it("detects out-of-order states of the same match only", () => {
+    const cur = { match: { id: "m" }, version: 5 };
+    expect(isStaleState(cur, { match: { id: "m" }, version: 4 })).toBe(true);
+    expect(isStaleState(cur, { match: { id: "m" }, version: 5 })).toBe(false);
+    expect(isStaleState(cur, { match: { id: "other" }, version: 1 })).toBe(false);
+  });
+
+  it("prefers the stored server result for the winner (forfeit)", () => {
+    const players = [
+      { user_id: "a", display_name: "A", score: 90, joined_at: "1" },
+      { user_id: "b", display_name: "B", score: 10, joined_at: "2" },
+    ];
+    expect(computeWinner(players, [], [], { winner: "b", forfeit_by: "a" }).user_id).toBe("b");
+    expect(computeWinner(players, [], [], { winner: null })).toBeNull();
+  });
+
+  it("describes the new refusal reasons", () => {
+    expect(describeClaimRefusal({ reason: "rate_limited" }, {})).toMatch(/rapide/);
+    expect(describeClaimRefusal({ reason: "abandoned" }, {})).toMatch(/échec/);
   });
 });

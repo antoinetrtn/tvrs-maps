@@ -13,6 +13,13 @@ import {
 import { evaluateGameRewardsAndBadges, getLevelAndProgress } from "../utils/gamification";
 import { generateUUID } from "../utils/utils";
 
+/**
+ * Session that owns the profile. The anonymous account created for Conquête
+ * multiplayer must not take over the guest's local profile, XP and records,
+ * so it is treated as "no session" here.
+ */
+export const profileSession = (session) => (session?.user?.is_anonymous ? null : session);
+
 export function useUserProfile() {
   const [session, setSession] = useState(null);
 
@@ -145,7 +152,7 @@ export function useUserProfile() {
     supabase.auth
       .getSession()
       .then(({ data: { session: activeSession } }) => {
-        setSession(activeSession);
+        setSession(profileSession(activeSession));
         return;
       })
       .catch(() => {});
@@ -153,7 +160,7 @@ export function useUserProfile() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, activeSession) => {
-      setSession(activeSession);
+      setSession(profileSession(activeSession));
     });
 
     return () => {
