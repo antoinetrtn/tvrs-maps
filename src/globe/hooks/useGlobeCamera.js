@@ -180,6 +180,9 @@ export function useGlobeCamera({
           const pixelRatio = Math.min(perfProfile?.pixelRatio || 1, MAX_GLOBE_PIXEL_RATIO);
           if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
           renderer.sortObjects = true;
+          // Shader error checking calls getProgramInfoLog synchronously after
+          // every link, stalling the main thread on each new material variant.
+          if (import.meta.env.PROD) renderer.debug.checkShaderErrors = false;
           // Keep the screen-space glitch grain the same visual size regardless
           // of the device's capped pixel ratio.
           polygonGlitchUniforms.uPixelScale.value =
@@ -375,8 +378,11 @@ export function useGlobeCamera({
   const globePanelShift = panelLayoutWidth > 0 ? -panelLayoutWidth / 2 : 0;
   const globeWidth = Math.max(320, maxWindowWidthRef.current);
   const globeHeight = maxWindowHeightRef.current;
+  // Same canvas size on home and in game: the extra width is symmetric (the
+  // wrapper is shifted by -offset), so the globe stays centered either way,
+  // and starting a game no longer reallocates the WebGL drawing buffer.
   const homeGlobeOffset =
-    isHomeScreen && !isKeyboardMode && maxWindowWidthRef.current >= 769
+    !isKeyboardMode && maxWindowWidthRef.current >= 769
       ? Math.round(maxWindowWidthRef.current * 0.14)
       : 0;
   const globeRenderWidth = globeWidth + homeGlobeOffset * 2;
