@@ -98,11 +98,11 @@ export function buildConquestOverlay(claims = [], players = [], shieldedIds = []
  * What a click on a country means for `userId`: "free" (type it to capture),
  * "mine", "shielded" (owned by an opponent, shield up) or "steal".
  */
-export function resolveCountryClick(countryId, claims = [], userId, clientNowMs, offsetMs = 0) {
-  const claim = claims.find((c) => c.country_id === countryId);
+export function resolveCountryClick(countryId, claims, userId, clientNowMs, offsetMs) {
+  const claim = (claims || []).find((c) => c.country_id === countryId);
   if (!claim) return "free";
   if (claim.owner_id === userId) return "mine";
-  if (claim.shield_until && remainingMs(claim.shield_until, clientNowMs, offsetMs) > 0) {
+  if (claim.shield_until && remainingMs(claim.shield_until, clientNowMs, offsetMs || 0) > 0) {
     return "shielded";
   }
   return "steal";

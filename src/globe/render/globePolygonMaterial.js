@@ -195,13 +195,12 @@ export function getPolygonMaterialForFeature({
   });
 
   const isFoundCapMaterial = showFoundOnGlobe && kind === "cap" && !isShaderCap;
-  const cacheKey = isShaderCap
-    ? `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}`
-    : isFoundCapMaterial
-      ? `found-cap-${isMobileStr}-${globeTheme}`
-      : isDepartmentMode || isIsolated
-        ? `${isDepartmentMode ? "dept" : "iso"}-${admin}-${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`
-        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}${ownerTint ? "-owner" : ""}`;
+  const look = `${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`;
+  let cacheKey = `${kind}-${look}${ownerTint ? "-owner" : ""}`;
+  if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}`;
+  else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}-${globeTheme}`;
+  else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}`;
+  else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}`;
 
   let material = sharedMaterialsRef.current.get(cacheKey);
 
