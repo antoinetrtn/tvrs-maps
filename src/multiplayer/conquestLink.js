@@ -1,3 +1,4 @@
+import { isConquestEnabled } from "./conquestConfig";
 import { normalizeRoomCode } from "./conquestLogic";
 
 /** Query parameter carried by Conquête invite links: https://<host>/?conquest=CODE */
@@ -27,3 +28,16 @@ export function clearConquestParam(loc = globalThis.location, hist = globalThis.
   url.searchParams.delete(CONQUEST_LINK_PARAM);
   hist.replaceState(hist.state, "", `${url.pathname}${url.search}${url.hash}`);
 }
+
+/** App launched from a valid invite link (flag on): skip the auth modal, the join signs in anonymously. */
+const isOpenedFromInvite = () => isConquestEnabled() && Boolean(readConquestCode());
+
+/** No auth prompt for explicit guests nor for invitees (the join signs them in anonymously). */
+export const isGuestLaunch = () => {
+  try {
+    if (globalThis.localStorage?.getItem("tvrs-guest-mode") === "true") return true;
+  } catch {
+    /* storage unavailable */
+  }
+  return isOpenedFromInvite();
+};
