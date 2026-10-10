@@ -39,13 +39,23 @@ const SettingsPanel = ({
   };
 
   return (
+    // Sheet container: stops clicks/pointers reaching the globe layer behind and
+    // closes on Escape. It is a dialog surface, not a control.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
+      role="dialog"
+      aria-labelledby="settings-panel-title"
       className={`sheet-panel settings-panel glass-panel ${open ? "open" : ""} ${theme}`}
       onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") onClose?.(e);
+      }}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="panel-header">
-        <h2 className="panel-title">{t("settings")}</h2>
+        <h2 className="panel-title" id="settings-panel-title">
+          {t("settings")}
+        </h2>
         <button className="panel-close-btn" onClick={onClose} title={t("close")}>
           <Close width={20} height={20} />
         </button>

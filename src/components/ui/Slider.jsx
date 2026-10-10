@@ -15,7 +15,7 @@ const Slider = ({
   max = 100,
   step = 1,
   label,
-  formatValue = (v) => String(v),
+  formatValue = String,
   decrementLabel = "−",
   incrementLabel = "+",
   showSteppers = true,
