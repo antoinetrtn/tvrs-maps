@@ -7,12 +7,16 @@ import { conquestText } from "./conquestText";
 
 const ConquestEnd = ({ lang, conquest, onExit }) => {
   const t = conquestText(lang);
-  const { players, claims, bonuses, userId } = conquest;
+  const { players, claims, bonuses, userId, match } = conquest;
+  const result = match?.result || null;
   const standings = useMemo(
     () => computeStandings(players, claims, bonuses),
     [players, claims, bonuses]
   );
-  const winner = useMemo(() => computeWinner(players, claims, bonuses), [players, claims, bonuses]);
+  const winner = useMemo(
+    () => computeWinner(players, claims, bonuses, result),
+    [players, claims, bonuses, result]
+  );
   let headline = t.draw;
   if (winner)
     headline = winner.user_id === userId ? t.youWin : `${t.winner} ${winner.display_name}`;
@@ -21,6 +25,7 @@ const ConquestEnd = ({ lang, conquest, onExit }) => {
     <div className="conquest-panel conquest-surface conquest-end">
       <header className="conquest-header">
         <h2 className="conquest-title">{headline}</h2>
+        {result?.forfeit_by && <p className="conquest-subtitle">{t.forfeitNote}</p>}
       </header>
       <SettingsSection title={t.finalBoard}>
         {standings.map((player, index) => (

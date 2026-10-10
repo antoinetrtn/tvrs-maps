@@ -97,6 +97,8 @@ const PAIRS = {
   players: ["Joueurs", "Players"],
   readyLabel: ["Prêt", "Ready"],
   flagOption: ["Drapeau", "Flag"],
+  forfeitNote: ["Partie terminée par abandon", "Match ended by forfeit"],
+  resuming: ["Reprise de ta partie…", "Resuming your match…"],
 };
 
 const withPairs = (base, index) =>

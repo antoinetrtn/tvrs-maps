@@ -93,6 +93,14 @@ const ConquestHud = ({
       else if (result) setToast({ ok: false, text: refusal(result) });
     });
 
+  // Abandoning counts as a failed attempt on the server (no free reroll).
+  const cancelSteal = () =>
+    guarded(async () => {
+      const result = await conquest.cancelSteal();
+      setChallenge(null);
+      if (result) setToast({ ok: false, text: refusal(result) });
+    });
+
   // Globe click: centre the country, then steal / prompt / inform.
   const handleCountryClick = (countryId) => {
     if (phase !== "live" || challenge) return;
@@ -170,7 +178,7 @@ const ConquestHud = ({
             challenge={challenge}
             countryName={countryName}
             onAnswer={answerSteal}
-            onCancel={() => setChallenge(null)}
+            onCancel={cancelSteal}
           />
         ) : (
           <form onSubmit={submit}>

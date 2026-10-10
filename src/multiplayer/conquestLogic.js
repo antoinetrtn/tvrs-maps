@@ -39,6 +39,21 @@ export function computeClockOffset(serverNowIso, clientNowMs) {
   return serverMs - clientNowMs;
 }
 
+/**
+ * Keeps the offset measured with the lowest latency among the last samples
+ * ({ offset, latency }), so one slow response does not make the timer jump.
+ */
+export function pickClockOffset(samples = []) {
+  if (samples.length === 0) return 0;
+  return samples.reduce((best, sample) => (sample.latency < best.latency ? sample : best)).offset;
+}
+
+/** True when `next` state is older than what is already shown (out-of-order reply). */
+export function isStaleState(current, next) {
+  if (!current?.match || !next?.match || current.match.id !== next.match.id) return false;
+  return (next.version ?? 0) < (current.version ?? 0);
+}
+
 /** Remaining ms before `isoTarget` using the server clock offset; never negative. */
 export function remainingMs(isoTarget, clientNowMs, offsetMs = 0) {
   const target = Date.parse(isoTarget);
@@ -141,7 +156,11 @@ export function computeStandings(players = [], claims = [], bonuses = []) {
 }
 
 /** Winner of a finished match, or null on a perfect tie (same total, countries and steals). */
-export function computeWinner(players = [], claims = [], bonuses = []) {
+export function computeWinner(players = [], claims = [], bonuses = [], result = null) {
+  // Server result (stored at close / forfeit) wins over the local recomputation.
+  if (result && "winner" in result) {
+    return players.find((player) => player.user_id === result.winner) || null;
+  }
   const standings = computeStandings(players, claims, bonuses);
   if (standings.length === 0) return null;
   const [first, second] = standings;
@@ -191,6 +210,10 @@ export function formatFeedEvent(event, { players = [], countryName = (id) => id,
       return fr ? "La partie commence !" : "The match begins!";
     case "finish":
       return fr ? "Fin de la partie" : "Match over";
+    case "leave":
+      return fr ? `${who} a quitté le salon` : `${who} left the room`;
+    case "forfeit":
+      return fr ? `${who} a abandonné la partie` : `${who} forfeited`;
     default:
       return null;
   }
@@ -218,11 +241,13 @@ export function describeClaimRefusal(
     case "cooldown":
       return fr ? `Attends avant de re-voler ${name}` : `Wait before stealing ${name} again`;
     case "penalty":
-      return fr ? "Pénalité : 3 s sans saisie" : "Penalty: 3 s lockout";
+      return fr ? "Pénalité en cours, patiente un instant" : "Penalty: wait a moment";
     case "wrong":
-      return fr
-        ? `Vol raté sur ${name} (3 s de pénalité)`
-        : `Steal failed on ${name} (3 s penalty)`;
+      return fr ? `Vol raté sur ${name} (pénalité)` : `Steal failed on ${name} (penalty)`;
+    case "abandoned":
+      return fr ? "Vol abandonné : compte comme un échec" : "Steal abandoned: counts as a failure";
+    case "rate_limited":
+      return fr ? "Trop rapide, réessaie" : "Too fast, try again";
     case "expired":
       return fr ? "Défi expiré" : "Challenge expired";
     case "free":
