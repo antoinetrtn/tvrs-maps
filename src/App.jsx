@@ -131,10 +131,9 @@ function App() {
     localStorage.setItem("tvrs-guest-mode", "true");
     setShowAuthModal(false);
   }, []);
-
   const { viewport, isKeyboardMode } = useViewport();
-  // Theme state + document-level CSS variables (extracted, see useAppTheme).
-  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = useAppTheme(viewport?.width);
+  const appTheme = useAppTheme(viewport?.width); // theme + accent + document CSS vars
+  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = appTheme;
   const {
     countriesData,
     departmentsData,
@@ -477,6 +476,7 @@ function App() {
           setPeacefulMode={setPeacefulMode}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
+          {...appTheme.accentProps}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}

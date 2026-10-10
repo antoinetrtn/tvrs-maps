@@ -1,0 +1,54 @@
+/* Accent picker — pixel swatches in the settings sheet. */
+.accent-swatches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+}
+
+.accent-swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: var(--control-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.accent-swatch:hover {
+  border-color: var(--glass-border-strong);
+  color: var(--text-main);
+}
+
+.accent-swatch.active {
+  border-color: var(--swatch);
+  color: var(--text-main);
+}
+
+/* Square pixel chip with a hard offset shadow, no glow */
+.accent-swatch-chip {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  background: var(--swatch);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--swatch) 35%, transparent);
+}
+
+.accent-swatch.active .accent-swatch-chip {
+  outline: 1px solid var(--text-main);
+  outline-offset: 2px;
+}
+
+.accent-swatch-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -32,6 +32,8 @@
 // padding so the rule  inner + padding ≈ outer  holds.
 // ==========================================
 
+import { getAccentOverrides } from "./accentPresets.js";
+
 const STYLE_TOKENS = {
   radius: {
     sm: "4px",
@@ -382,6 +384,8 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
   return {
     ...baseTheme,
     ...globeOverrides,
+    // User-selected accent (Settings) wins over the theme's default accent.
+    ...getAccentOverrides(),
   };
 };
 
@@ -405,6 +409,9 @@ export const getThemeCssVariables = (
     "--accent-hover": theme.accentHover,
     "--accent-soft": theme.accentSoft,
     "--accent-glow": theme.accentGlow,
+    "--accent-contrast": theme.accentContrast,
+    "--xp-yellow-inner": theme.accent,
+    "--xp-yellow-outer": theme.accentGrid,
     "--success": theme.success,
     "--selection-highlight": theme.selectionHighlight,
     "--gold": theme.gold,

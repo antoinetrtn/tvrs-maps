@@ -92,6 +92,7 @@ export const translations = {
     // End Screen
     incredible: "Incroyable !",
     well_done: "Bravo !",
+    accent_color: "Couleur d'accent",
     travel_journal: "Carnet de voyage",
     stamp_explored: "Explorés",
     achievement_continent_conquered: "Continent Conquis !",
@@ -291,6 +292,7 @@ export const translations = {
     // End Screen
     incredible: "Incredible !",
     well_done: "Well done!",
+    accent_color: "Accent color",
     travel_journal: "Travel journal",
     stamp_explored: "Explored",
     achievement_continent_conquered: "Continent Conquered!",

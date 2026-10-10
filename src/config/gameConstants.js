@@ -80,6 +80,7 @@ export const STORAGE_KEYS = {
   uiTheme: "tvrs-ui-theme",
   hardcoreMode: "tvrs-hardcore-mode",
   peacefulMode: "tvrs-peaceful-mode",
+  accent: "tvrs-accent",
 };
 
 // --- Hardcore mode -----------------------------------------------------------
