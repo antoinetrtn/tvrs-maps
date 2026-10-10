@@ -28,6 +28,8 @@ import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
+import { isConquestEnabled } from "./multiplayer/conquestConfig";
+import { readConquestCode } from "./multiplayer/conquestLink";
 import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import { isSupabaseConfigured } from "./services/supabaseClient";
 
@@ -79,6 +81,7 @@ function App() {
   const [confirmState, setConfirmState] = useState(null);
   const [isScreenGlitching, setIsScreenGlitching] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [openedFromInvite] = useState(() => isConquestEnabled() && Boolean(readConquestCode()));
 
   const [achievementQueue, setAchievementQueue] = useState([]);
   const activeAchievement = achievementQueue[0] || null;
@@ -121,11 +124,13 @@ function App() {
 
   useEffect(() => {
     if (isSupabaseConfigured && session === null) {
-      if (localStorage.getItem("tvrs-guest-mode") !== "true") setShowAuthModal(true);
+      // Invite links join as an anonymous guest: don't block the lobby with the auth modal.
+      const guest = localStorage.getItem("tvrs-guest-mode") === "true" || openedFromInvite;
+      if (!guest) setShowAuthModal(true);
     } else if (session) {
       setShowAuthModal(false);
     }
-  }, [session]);
+  }, [session, openedFromInvite]);
 
   const handleGuest = useCallback(() => {
     localStorage.setItem("tvrs-guest-mode", "true");
