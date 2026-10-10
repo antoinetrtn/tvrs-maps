@@ -207,16 +207,10 @@
   box-shadow: 0 0 0 1px var(--accent-soft) inset;
 }
 
-.nav-chip .chip-icon {
-  width: 14px;
-  height: 14px;
-}
-
 /* ──── TAB TRIGGERS (structural tabs like Profile / Stats) ──── */
 /* Unified SegmentedControl styles — used by SegmentedControl.jsx + legacy fallbacks.
    Single definition prevents the previous drift between settings / leaderboard / profile tabs. */
 .segmented-control,
-.panel-tabs,
 .settings-segmented-switch,
 .panel-tabs-header {
   display: flex;
@@ -229,9 +223,7 @@
 }
 
 .segmented-opt,
-.panel-tab,
-.settings-switch-opt,
-.panel-tab-btn {
+.panel-tab {
   flex: 1;
   display: flex;
   align-items: center;
@@ -259,16 +251,13 @@
 }
 
 .segmented-opt .tab-icon,
-.panel-tab .tab-icon,
-.settings-switch-opt svg {
+.panel-tab .tab-icon {
   width: 14px;
   height: 14px;
 }
 
 .segmented-opt.active,
-.panel-tab.active,
-.settings-switch-opt.active,
-.panel-tab-btn.active {
+.panel-tab.active {
   background: var(--bg-color);
   color: var(--text-main);
   box-shadow: var(--glass-shadow);
@@ -276,9 +265,7 @@
 }
 
 .segmented-opt:hover:not(.active),
-.panel-tab:hover:not(.active),
-.settings-switch-opt:hover:not(.active),
-.panel-tab-btn:hover:not(.active) {
+.panel-tab:hover:not(.active) {
   background: var(--glass-hover);
   color: var(--text-main);
   transition:
@@ -301,8 +288,7 @@
 }
 
 /* Size variant for compact header toggles */
-.segmented-control.segmented-sm .segmented-opt,
-.segmented-control.segmented-sm .panel-tab-btn {
+.segmented-control.segmented-sm .segmented-opt {
   min-height: 32px;
   font-size: var(--font-size-xs);
   padding: 0 6px;
@@ -388,24 +374,6 @@
 }
 
 /* ──── FULLPAGE PANEL (always fullscreen) ──── */
-.fullpage-panel {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-color);
-  background: color-mix(in srgb, var(--bg-color) 82%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: var(--z-fullpage);
-  display: flex;
-  flex-direction: column;
-  padding: clamp(28px, 1vh, 64px) clamp(20px, 4vw, 40px) clamp(20px, 1vh, 36px);
-  overflow: hidden;
-  animation: modalEnter var(--transition-emphasized);
-}
-
-.fullpage-panel .panel-header {
-  margin-bottom: var(--spacing-xl);
-}
 
 /* ──── DIALOG PANEL (centered card, never fullscreen) ──── */
 .dialog-panel {
@@ -449,18 +417,26 @@
 }
 
 /* ──── SCROLLBAR STYLED ──── */
-.panel-body::-webkit-scrollbar,
-.panel-scroll::-webkit-scrollbar {
+.panel-body::-webkit-scrollbar {
   width: 4px;
 }
 
-.panel-body::-webkit-scrollbar-track,
-.panel-scroll::-webkit-scrollbar-track {
+.panel-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.panel-body::-webkit-scrollbar-thumb,
-.panel-scroll::-webkit-scrollbar-thumb {
+.panel-body::-webkit-scrollbar-thumb {
   background: var(--glass-border);
   border-radius: 2px;
+}
+
+/* Shared plain fade-in (was duplicated as ui-fade-in / ui-fade-in). */
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }

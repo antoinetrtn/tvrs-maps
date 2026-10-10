@@ -55,11 +55,6 @@
   }
 }
 
-.logo-container.huge {
-  width: 440px;
-  height: 330px;
-}
-
 /* Effects */
 .logo-container:hover .main-logo-svg {
   filter: brightness(1.1);

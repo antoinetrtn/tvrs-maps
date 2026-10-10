@@ -9,17 +9,6 @@
   font-family: var(--font-main);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 @keyframes float {
   from {
     transform: translateX(0);
@@ -51,9 +40,7 @@
 .app-container.glitch-active .top-hud-bar,
 .app-container.glitch-active .hud-bottom-right,
 .app-container.glitch-active .bottom-hud-container,
-.app-container.glitch-active .end-screen-overlay,
-.app-container.glitch-active .modal-overlay,
-.app-container.glitch-active .custom-modal-overlay {
+.app-container.glitch-active .end-screen-overlay {
   animation: screen-soft-in 0.26s ease-out both;
 }
 

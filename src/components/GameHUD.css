@@ -46,14 +46,6 @@
 }
 
 /* New row for gauges that spans the whole width */
-.hud-top-gauges {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--spacing-ms);
-  pointer-events: auto;
-}
 
 /* ==========================================================================
    CENTRAL ISLAND PANEL (The Pill)
@@ -106,14 +98,6 @@
 }
 
 /* Fixed, identical widths for timer and score to keep the center... central */
-.island-timer,
-.island-score {
-  width: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center; /* PERFECT HORIZONTAL CENTERING WITHIN SLOT */
-  flex-shrink: 0;
-}
 
 .island-font {
   font-family: var(--font-display);
@@ -370,16 +354,6 @@
   box-shadow: 0 0 0 1px var(--accent-soft);
 }
 
-.input-island.has-continent {
-  border-color: var(--continent-color);
-  box-shadow: none;
-}
-
-.input-island.has-continent:focus-within {
-  border-color: var(--continent-color);
-  box-shadow: 0 0 0 1px var(--continent-color);
-}
-
 .input-island.success {
   border-color: var(--success);
   box-shadow: inset 3px 0 0 var(--success);
@@ -459,21 +433,8 @@
 /* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
-.desktop-only {
-  display: flex !important;
-}
-.mobile-only {
-  display: none !important;
-}
 
 @media (max-width: 1024px) {
-  .desktop-only {
-    display: none !important;
-  }
-  .mobile-only {
-    display: flex !important;
-  }
-
   .top-hud-bar {
     top: var(--spacing-lg); /* Match bottom spacing (24px) */
     left: 50%;
@@ -491,19 +452,6 @@
     transform: translateX(-50%) translateY(-2px);
   }
 
-  .top-hud-bar.keyboard-mode .hud-top-gauges {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.94);
-    pointer-events: none;
-  }
-
-  .hud-top-gauges {
-    transition:
-      opacity 160ms ease,
-      transform var(--transition-layout);
-    will-change: opacity, transform;
-  }
-
   .hud-top-center {
     width: 100%;
   }
@@ -517,12 +465,6 @@
     justify-content: space-between; /* Ensure elements inside stretch */
   }
 
-  .island-timer,
-  .island-score {
-    font-size: var(--font-size-md);
-    width: 55px; /* Symmetrical slots on mobile */
-  }
-
   .island-divider {
     margin: 0 var(--spacing-xs);
     height: var(--spacing-ms);
@@ -531,10 +473,6 @@
   .island-progress-wrap {
     flex: 1;
     min-width: 30px;
-  }
-
-  .hud-top-gauges {
-    gap: var(--spacing-sm);
   }
 
   .gauge-item.highlight .circular-gauge {
@@ -554,61 +492,9 @@
 }
 
 /* Focus Badge (HUD Badge for selected/focused country) */
-.top-hud-container {
-  position: fixed;
-  z-index: 1001;
-  pointer-events: none;
-  display: flex;
-  justify-content: center;
-  width: auto;
-}
-
-.top-hud-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  pointer-events: none;
-  gap: var(--spacing-ms);
-}
-
-.focus-info-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  animation: fadeInSimple 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-  pointer-events: none;
-  width: auto;
-}
-
-.focus-label {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background: var(--glass-bg);
-  border: 1px solid var(--accent);
-  color: var(--text-main);
-  padding: var(--spacing-sm) var(--spacing-ms);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  box-shadow: var(--glass-shadow-strong);
-  pointer-events: auto;
-}
-
-.focus-label-text {
-  font-family: var(--font-main);
-  color: var(--text-main);
-}
-
-.focus-icon {
-  color: var(--accent);
-}
 
 /* Uniform formatting and display font for score/countries found counters in HUD and Focus pill */
-.score-pill,
-.focus-mini-pill {
+.score-pill {
   font-family: var(--font-display) !important;
   font-variant-numeric: tabular-nums;
   font-weight: 500 !important;
@@ -617,32 +503,15 @@
 }
 
 .score-pill .mini-pill-val,
-.score-pill .mini-pill-sub,
-.focus-mini-pill .focus-mini-val,
-.focus-mini-pill .focus-mini-sub {
+.score-pill .mini-pill-sub {
   font-family: inherit !important;
   font-size: inherit !important;
   font-weight: inherit !important;
   color: inherit !important;
 }
 
-.score-pill .mini-pill-sub,
-.focus-mini-pill .focus-mini-sub {
+.score-pill .mini-pill-sub {
   opacity: 0.7 !important;
-}
-
-.focus-mini-pill {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--spacing-sm);
-  height: 40px;
-  box-shadow: var(--glass-shadow);
-  color: var(--text-main);
-  pointer-events: auto;
 }
 
 /* Prevents transition lag when mobile keyboard opens/resizes visual viewport */
@@ -729,133 +598,8 @@
 }
 
 /* Learn Toggles */
-.learn-toggles-group {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  display: flex;
-  pointer-events: auto;
-  border-radius: var(--radius-sm);
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xxs);
-}
-
-.learn-toggle-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    background var(--transition-spring),
-    transform var(--transition-spring),
-    border-color var(--transition-spring);
-}
-
-.learn-toggle-btn:hover {
-  color: var(--accent) !important;
-  background: var(--glass-hover) !important;
-  transform: scale(1.08);
-}
-
-.learn-toggle-btn:active {
-  transform: scale(0.92);
-  transition: transform var(--transition-instant);
-}
-
-.learn-toggle-btn.active {
-  color: var(--accent-contrast);
-  background: var(--accent);
-  box-shadow: none;
-}
-
-.learn-toggle-btn.active:hover {
-  background: var(--accent-hover) !important;
-  color: var(--accent-contrast) !important;
-  transform: scale(1.08);
-  text-shadow: none;
-  animation: none;
-}
 
 /* Mobile dropdown popover styling */
-.mobile-dropdown-menu {
-  background: var(--glass-bg) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--glass-shadow-strong) !important;
-  border-radius: var(--radius-sm);
-  transform-origin: top right;
-  position: absolute;
-  top: 52px;
-  right: 0;
-  width: 280px;
-  padding: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-ms);
-  z-index: 1005;
-  pointer-events: auto;
-}
-
-.dropdown-action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  height: 44px;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  border: none;
-  transition:
-    background var(--transition-spring),
-    transform var(--transition-spring),
-    border-color var(--transition-spring);
-}
-
-.dropdown-action-btn.stop {
-  border: 1px solid var(--error);
-  background: transparent;
-  color: var(--error);
-}
-
-.dropdown-action-btn.stop:hover {
-  background: var(--error-soft) !important;
-  filter: brightness(1.08);
-}
-
-.dropdown-action-btn.play {
-  background: var(--success);
-  color: var(--accent-contrast);
-}
-
-.dropdown-action-btn.play:hover {
-  filter: brightness(1.08);
-}
-
-.dropdown-action-btn.info {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dropdown-action-btn.info:hover {
-  background: var(--glass-hover) !important;
-  color: var(--accent);
-  border-color: var(--accent);
-}
 
 .timer-pill {
   cursor: pointer;
@@ -905,33 +649,6 @@
 }
 
 /* Focus Card close button styling */
-.focus-close-btn {
-  background: transparent;
-  border: 1px solid var(--glass-border);
-  color: var(--text-muted);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  transition:
-    transform var(--transition-spring),
-    background var(--transition-spring);
-}
-
-.focus-close-btn:hover {
-  background: var(--glass-hover);
-  color: var(--accent);
-  border-color: var(--accent);
-  transform: scale(1.12);
-}
-
-.focus-close-btn:active {
-  transform: scale(0.88);
-  transition: transform var(--transition-instant);
-}
 
 /* Place names in the autocomplete list: readable grotesk (Space Grotesk) */
 .suggestion-item .sug-text {

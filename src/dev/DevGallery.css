@@ -1,0 +1,76 @@
+/* Dev-only gallery layout. */
+.dg-root {
+  box-sizing: border-box;
+  width: 100vw;
+  min-height: 100vh;
+  padding: var(--spacing-lg);
+  overflow: auto;
+  background: var(--bg-color);
+  color: var(--text-main);
+  font-family: var(--font-main);
+}
+
+.dg-header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.dg-header p {
+  color: var(--text-muted);
+}
+
+.dg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.dg-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.dg-column-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  color: var(--accent);
+}
+
+.dg-block-title {
+  margin: 0 0 var(--spacing-xs);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.dg-block-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.dg-block-body > .lb-list,
+.dg-block-body > .ui-settings-section,
+.dg-block-body > .ui-slider,
+.dg-block-body > .ui-options,
+.dg-block-body > .lb-notice {
+  flex-basis: 100%;
+}
+
+/* The game locks the page (fixed, overflow hidden); the gallery must scroll. */
+html:has(.dg-root),
+body:has(.dg-root),
+#root:has(> .dg-root) {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  overflow: auto !important;
+}
