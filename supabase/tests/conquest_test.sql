@@ -49,35 +49,35 @@ SET test.uid = :'A';
 SELECT pg_temp.eq('resume finds live match', (SELECT id FROM conquest_my_active_match())::text, :'mid');
 SELECT pg_temp.eq('A claims France', claim_country(:'mid', 'France')->>'ok', 'true');
 SELECT pg_temp.eq('second action within 400 ms is rate limited', claim_country(:'mid', 'Italie')->>'reason', 'rate_limited');
-RESET ROLE; UPDATE match_players SET last_action_at = NULL; SET ROLE authenticated;
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT pg_temp.eq('unknown #1', claim_country(:'mid', 'zzz')->>'reason', 'unknown');
-RESET ROLE; UPDATE match_players SET last_action_at = NULL; SET ROLE authenticated;
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT pg_temp.eq('unknown #2', claim_country(:'mid', 'zzz')->>'reason', 'unknown');
-RESET ROLE; UPDATE match_players SET last_action_at = NULL; SET ROLE authenticated;
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT pg_temp.eq('unknown #3 → penalty', claim_country(:'mid', 'zzz')->>'penalty_until' IS NOT NULL, true);
 SELECT pg_temp.eq('penalised claim refused', claim_country(:'mid', 'Italie')->>'reason', 'penalty');
-RESET ROLE; UPDATE match_players SET last_action_at = NULL, penalty_until = NULL; SET ROLE authenticated;
+RESET ROLE; UPDATE match_players SET last_action_at = NULL, penalty_until = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 
 -- Simultaneous capture: second one is refused (first commit wins).
 SET test.uid = :'B';
 SELECT pg_temp.eq('B cannot claim owned France', claim_country(:'mid', 'France')->>'reason', 'already_owned');
 
 -- ------------------------------------------------------------ steals ----
-RESET ROLE; UPDATE match_claims SET shield_until = now() - interval '1 second'; UPDATE match_players SET last_action_at = NULL; SET ROLE authenticated;
+RESET ROLE; UPDATE match_claims SET shield_until = now() - interval '1 second' WHERE match_id IS NOT NULL; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT challenge AS c1 FROM (SELECT conquest_steal_challenge(:'mid', 'France') AS challenge) x \gset
 SELECT pg_temp.eq('challenge opened', (:'c1'::jsonb)->>'ok', 'true');
-RESET ROLE; UPDATE match_players SET last_action_at = NULL; SET ROLE authenticated;
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT pg_temp.eq('re-request returns the SAME challenge (no reroll)',
   conquest_steal_challenge(:'mid', 'France') - 'expires_at', (:'c1'::jsonb) - 'expires_at');
 SELECT pg_temp.eq('flag challenge has 6 options or capital', CASE WHEN (:'c1'::jsonb)->>'kind' = 'flag'
   THEN jsonb_array_length((:'c1'::jsonb)->'options') ELSE 6 END, 6);
 SELECT pg_temp.eq('cancel counts as a failure', conquest_cancel_steal(:'mid')->>'reason', 'abandoned');
 SELECT pg_temp.eq('penalty after abandon', claim_country(:'mid', 'Italie')->>'reason', 'penalty');
-RESET ROLE; UPDATE match_players SET last_action_at = NULL, penalty_until = NULL; SET ROLE authenticated;
+RESET ROLE; UPDATE match_players SET last_action_at = NULL, penalty_until = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT pg_temp.eq('20 s per-country cooldown after failure', conquest_steal_challenge(:'mid', 'France')->>'reason', 'cooldown');
 RESET ROLE;
 UPDATE match_events SET created_at = now() - interval '30 seconds' WHERE kind = 'steal_fail';
-UPDATE match_players SET last_action_at = NULL;
+UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
 INSERT INTO match_steal_challenges VALUES (:'mid', :'B', 'France', 'capital', '{}', now() + interval '20 seconds');
 SET ROLE authenticated;
 SELECT pg_temp.eq('wrong answer', steal_country(:'mid', 'Lyon')->>'reason', 'wrong');
@@ -85,7 +85,7 @@ SELECT pg_temp.eq('escalating penalty (2nd failure = 6 s)',
   (SELECT round(extract(epoch FROM penalty_until - now())) FROM match_players WHERE user_id = :'B')::int, 6);
 RESET ROLE;
 UPDATE match_events SET created_at = now() - interval '30 seconds' WHERE kind = 'steal_fail';
-UPDATE match_players SET penalty_until = NULL, last_action_at = NULL;
+UPDATE match_players SET penalty_until = NULL, last_action_at = NULL WHERE match_id IS NOT NULL;
 INSERT INTO match_steal_challenges VALUES (:'mid', :'B', 'France', 'capital', '{}', now() + interval '20 seconds');
 SET ROLE authenticated;
 SELECT pg_temp.eq('right answer steals', steal_country(:'mid', 'paris')->>'ok', 'true');

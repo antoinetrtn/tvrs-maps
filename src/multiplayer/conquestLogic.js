@@ -45,7 +45,10 @@ export function computeClockOffset(serverNowIso, clientNowMs) {
  */
 export function pickClockOffset(samples = []) {
   if (samples.length === 0) return 0;
-  return samples.reduce((best, sample) => (sample.latency < best.latency ? sample : best)).offset;
+  return samples.reduce(
+    (best, sample) => (sample.latency < best.latency ? sample : best),
+    samples[0]
+  ).offset;
 }
 
 /** True when `next` state is older than what is already shown (out-of-order reply). */
