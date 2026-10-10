@@ -7,8 +7,7 @@
    only local deltas (e.g. .profile-trigger-btn layout in HomeScreen.css). */
 .glass-icon-btn,
 .settings-trigger-btn,
-.profile-trigger-btn,
-.leaderboard-trigger-btn {
+.profile-trigger-btn {
   width: var(--control-lg);
   height: var(--control-lg);
   border-radius: var(--radius-sm);
@@ -28,8 +27,7 @@
 
 .glass-icon-btn:hover,
 .settings-trigger-btn:hover,
-.profile-trigger-btn:hover,
-.leaderboard-trigger-btn:hover {
+.profile-trigger-btn:hover {
   transform: translateY(-1px);
   color: var(--accent) !important;
   background: var(--glass-hover) !important;
@@ -38,8 +36,7 @@
 
 .glass-icon-btn:active,
 .settings-trigger-btn:active,
-.profile-trigger-btn:active,
-.leaderboard-trigger-btn:active {
+.profile-trigger-btn:active {
   transform: translateY(0.5px) scale(0.92);
   background: var(--accent) !important;
   color: var(--accent-contrast) !important;
@@ -118,52 +115,9 @@
   transition: transform var(--transition-instant);
 }
 
-@keyframes modalEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.98) translateY(10px);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: blur(0);
-  }
-}
-
 /* The flicker colors are the same glitch tokens the static :hover shadows use,
    so the animation stays consistent in both themes. */
-@keyframes btn-hover-flicker {
-  0% {
-    text-shadow:
-      -1px 0 var(--glitch-magenta),
-      1px 0 var(--glitch-cyan);
-    border-color: var(--accent);
-  }
-  50% {
-    text-shadow:
-      1px 0 var(--glitch-magenta),
-      -1px 0 var(--glitch-cyan);
-    border-color: var(--accent-hover);
-  }
-  100% {
-    text-shadow:
-      -0.5px 0.5px var(--glitch-magenta),
-      0.5px -0.5px var(--glitch-cyan);
-    border-color: var(--accent);
-  }
-}
 
 /* Glitch hover effect - shared utility class */
-.glitch-hover:hover {
-}
 
 /* Active/pressed button state - shared utility class */
-.btn-active:active {
-  transform: translateY(0.5px) scale(0.98);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-soft);
-  text-shadow: none;
-  transition: transform var(--transition-instant);
-}

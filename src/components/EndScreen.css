@@ -204,18 +204,8 @@
   }
 }
 
-@keyframes fadeInSimple {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
 .end-screen-header {
-  animation: fadeInSimple 0.8s ease both;
+  animation: ui-fade-in 0.8s ease both;
 }
 
 /* No background band here — the buttons carry their own glass surface. */
@@ -225,7 +215,7 @@
   margin: 0 auto var(--spacing-md);
   display: flex;
   justify-content: center;
-  animation: fadeInSimple 0.8s ease both;
+  animation: ui-fade-in 0.8s ease both;
   animation-delay: 0.4s;
   position: sticky;
   bottom: 0;

@@ -21,38 +21,9 @@
 }
 
 /* Avatar Preview Level Tag */
-.avatar-preview-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: var(--spacing-sm);
-}
-
-.avatar-glow {
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  background: var(--subtle-tint);
-  border: 1px solid var(--glass-border);
-  display: flex;
-  position: relative;
-  box-shadow: 0 0 10px var(--accent-soft);
-}
 
 /* (.avatar-glow::after halo removed: it referenced --glow-color, a token that
    never existed, so the invalid border made the pseudo-element render nothing) */
-
-.avatar-preview-level {
-  position: absolute;
-  bottom: -8px;
-  background: var(--text-main);
-  color: var(--bg-color);
-  font-family: var(--font-display);
-  font-size: var(--font-size-xs);
-  font-weight: 900;
-  padding: var(--spacing-xxs) 6px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--bg-color);
-  box-shadow: 0 2px 4px var(--shadow-subtle);
-}
 
 /* Form layouts */
 .form-group {
@@ -118,11 +89,6 @@
   height: auto;
 }
 
-.color-form-group {
-  flex-shrink: 0;
-  margin-top: auto;
-}
-
 .avatar-option {
   width: 100%;
   aspect-ratio: 1;
@@ -176,42 +142,6 @@
   font-family: var(--font-display);
 }
 
-.color-selector-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-  width: 100%;
-}
-
-.color-option {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  border: 2px solid transparent;
-  /* --option-color is expected as an inline custom prop on each swatch;
-     transparent fallback keeps the historical no-value rendering */
-  background-color: var(--option-color, transparent);
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-  padding: 0;
-  box-shadow: 0 0 4px var(--shadow-subtle);
-  flex-shrink: 0;
-}
-
-.color-option:hover {
-  transform: scale(1.08);
-}
-
-.color-option.active {
-  border-color: var(--text-main);
-  box-shadow: 0 0 8px var(--option-color, transparent);
-}
-
 /* Stats tab */
 .stats-tab-content {
   display: flex;
@@ -220,14 +150,6 @@
   min-height: 0;
   height: auto;
   overflow: hidden;
-}
-
-.stats-sticky-header {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
 }
 
 /* XP progress card */
@@ -295,16 +217,6 @@
     var(--xp-green-fill-bottom) 100%
   );
   transition: width 0.4s ease-out;
-}
-
-.minecraft-xp-bar-text {
-  font-family: var(--font-display);
-  font-size: var(--font-size-xs);
-  font-weight: 900;
-  color: var(--xp-black);
-  z-index: 2;
-  /* --xp-shadow-soft never existed (only -light/-medium/-heavy); the invalid
-     var() meant no text-shadow was ever painted, so none is declared */
 }
 
 /* Quick Stats Grid */
@@ -557,18 +469,7 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   box-shadow: 0 10px 30px var(--xp-shadow-heavy);
-  animation: blur-zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes blur-zoom-in {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  animation: panel-zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .profile-blur-text {
@@ -671,14 +572,6 @@
   }
 
   /* Increase color options touch targets on mobile */
-  .color-option {
-    width: 38px !important;
-    height: 38px !important;
-  }
-
-  .color-selector-grid {
-    gap: var(--spacing-md) !important;
-  }
 }
 
 /* Profile form structure - Flex layouts */

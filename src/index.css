@@ -265,32 +265,6 @@ body {
     color var(--transition-normal);
 }
 
-.btn-icon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.btn-icon:hover {
-  background: var(--glass-border);
-  color: var(--text-main);
-}
-
-.btn-icon.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
 /* Shared button primitives (.glass-icon-btn triggers, .btn-primary/.btn-secondary,
    btn-hover-flicker/modalEnter keyframes, .glitch-hover/.btn-active utilities)
    live in styles/buttons.css, loaded right after this file from main.jsx. */
