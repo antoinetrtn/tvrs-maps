@@ -1,6 +1,6 @@
 import "./HomeScreen.css";
 
-import { Settings2, User } from "pixelarticons/react";
+import { Chess, Settings2, User } from "pixelarticons/react";
 import React, { useCallback, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
@@ -82,12 +82,12 @@ const HomeScreen = ({
             setHomeMode={setHomeMode}
           />
           {onOpenConquest && (
-            <button
-              type="button"
-              className="btn-secondary conquest-home-entry"
-              onClick={onOpenConquest}
-            >
-              {lang === "fr" ? "Conquête 1v1" : "Conquest 1v1"}
+            <button type="button" className="conquest-home-entry" onClick={onOpenConquest}>
+              <Chess width={18} height={18} className="conquest-home-icon" aria-hidden="true" />
+              <span className="conquest-home-label">
+                {lang === "fr" ? "Conquête 1v1" : "Conquest 1v1"}
+              </span>
+              <span className="conquest-home-badge">{lang === "fr" ? "Nouveau" : "New"}</span>
             </button>
           )}
         </div>

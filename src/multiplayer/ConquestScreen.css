@@ -128,8 +128,73 @@
 
 .conquest-room-code {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--spacing-ms);
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.conquest-room-code .conquest-code {
+  flex: 1;
+  min-width: 0;
+}
+
+.conquest-icon-btn,
+.conquest-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  min-height: var(--control-lg);
+}
+
+.conquest-icon-btn {
+  width: var(--control-lg);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.conquest-icon-btn:hover {
+  border-color: var(--accent);
+}
+
+.conquest-share-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.conquest-copy-toast {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--success);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.conquest-copy-toast.is-visible {
+  opacity: 1;
+}
+
+.conquest-ready-label {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.conquest-ready-label.is-ready {
+  color: var(--success);
+}
+
+.conquest-player-chip > .conquest-ready-label + .ui-switch {
+  margin-left: 0;
 }
 
 .conquest-code {
@@ -167,6 +232,7 @@
 }
 
 .conquest-player-tag {
+  white-space: nowrap;
   font-size: var(--font-size-xs);
   font-weight: 400;
   color: var(--text-muted);
@@ -336,12 +402,57 @@
   object-fit: cover;
 }
 
+/* Home entry: solid secondary CTA under the category deck */
 .conquest-home-entry {
   align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: min(320px, 100%);
+  min-height: var(--control-lg);
   margin-top: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  color: var(--text-main);
   font-family: var(--font-display);
+  font-size: var(--font-size-md);
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    border-color var(--transition-fast),
+    transform var(--transition-instant);
+}
+
+.conquest-home-entry:hover {
+  border-color: var(--accent);
+}
+
+.conquest-home-entry:active {
+  transform: translate(1px, 1px);
+}
+
+.conquest-home-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.conquest-home-label {
+  flex: 1;
+  text-align: left;
+}
+
+.conquest-home-badge {
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.08em;
 }
 
 @media (max-width: 640px) {

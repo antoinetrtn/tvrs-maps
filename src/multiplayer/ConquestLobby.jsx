@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { Copy, ExternalLink } from "pixelarticons/react";
+import React, { useEffect, useState } from "react";
 
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
 import Switch from "../components/ui/Switch.jsx";
@@ -43,25 +44,65 @@ const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
   );
 };
 
-const RoomShare = ({ t, code }) => {
-  const [copied, setCopied] = useState(false);
-  const share = async () => {
+/** Copy the code; resolves true on success. Exported for tests. */
+export const copyRoomCode = async (code, nav = globalThis.navigator) => {
+  if (!nav?.clipboard) return false;
+  try {
+    await nav.clipboard.writeText(code);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** Native share sheet when available, clipboard otherwise. Returns "shared" | "copied" | null. */
+export const shareRoomCode = async (code, nav = globalThis.navigator) => {
+  if (nav?.share) {
     try {
-      if (navigator.share) await navigator.share({ title: "Tvrs Maps", text: code });
-      else await navigator.clipboard?.writeText(code);
-      setCopied(true);
+      await nav.share({ title: "Tvrs Maps", text: code });
+      return "shared";
     } catch {
-      /* user cancelled */
+      return null; // user cancelled the share sheet
     }
+  }
+  return (await copyRoomCode(code, nav)) ? "copied" : null;
+};
+
+const RoomShare = ({ t, code }) => {
+  const [toast, setToast] = useState(null);
+  useEffect(() => {
+    if (!toast) return undefined;
+    const id = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(id);
+  }, [toast]);
+
+  const onCopy = async () => setToast((await copyRoomCode(code)) ? t.copied : null);
+  const onShare = async () => {
+    const result = await shareRoomCode(code);
+    if (result === "copied") setToast(t.copied);
   };
+
   return (
-    <SettingsRow label={t.roomCode}>
+    <SettingsRow label={t.roomCode} layout="stacked">
       <div className="conquest-room-code">
         <span className="conquest-code">{code}</span>
-        <button type="button" className="btn-secondary" onClick={share}>
-          {copied ? t.copied : t.share}
+        <button
+          type="button"
+          className="conquest-icon-btn"
+          onClick={onCopy}
+          aria-label={t.copyCode}
+          title={t.copyCode}
+        >
+          <Copy width={18} height={18} />
+        </button>
+        <button type="button" className="btn-secondary conquest-share-btn" onClick={onShare}>
+          <ExternalLink width={16} height={16} aria-hidden="true" />
+          <span>{t.share}</span>
         </button>
       </div>
+      <p className={`conquest-copy-toast ${toast ? "is-visible" : ""}`} role="status">
+        {toast || ""}
+      </p>
     </SettingsRow>
   );
 };
@@ -101,6 +142,9 @@ const ConquestLobby = ({ lang, conquest, onBack }) => {
                   player={player}
                   tag={playerTags(t, player, match, userId, online)}
                 >
+                  <span className={`conquest-ready-label ${player.ready ? "is-ready" : ""}`}>
+                    {player.ready ? t.ready : t.notReady}
+                  </span>
                   <Switch
                     checked={Boolean(player.ready)}
                     label={`${t.readyLabel} — ${player.display_name}`}

@@ -90,13 +90,20 @@
   font-weight: 600;
   font-size: var(--font-size-base);
   cursor: pointer;
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--glass-border);
+  /* Solid surface so it stays readable over the satellite globe */
+  background: var(--glass-bg);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border-strong);
   transition:
     transform var(--transition-spring),
     color var(--transition-fast),
     border-color var(--transition-fast);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-secondary:hover {
