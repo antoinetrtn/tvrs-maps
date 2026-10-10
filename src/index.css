@@ -68,8 +68,6 @@
 
   --font-main: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Display face for headings, scores, timers and large numerals */
-  /* Serif reserved for country names only (see .data-panel-row-name / .sug-text) */
-  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
   --font-display:
     "Bitcount Single", "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
@@ -297,8 +295,8 @@ body {
    live in styles/buttons.css, loaded right after this file from main.jsx. */
 
 /* Pixel identity: Bitcount carries titles, stamps, plates and HUD.
-   The serif survives only on country names (long proper nouns need it to stay
-   legible at list sizes, where the pixel face turns into mush). */
+   Long proper nouns (country names in lists) use Space Grotesk (--font-main)
+   to stay legible at list sizes, where the pixel face turns into mush. */
 .data-panel-title,
 .data-panel-region-name,
 .history-title {
@@ -308,6 +306,6 @@ body {
 }
 
 .data-panel-row-name {
-  font-family: var(--font-serif);
+  font-family: var(--font-main);
   font-weight: 500;
 }
