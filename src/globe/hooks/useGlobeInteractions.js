@@ -208,24 +208,9 @@ export function useGlobeInteractions({
 
   const handlePointerMove = useCallback(
     (event) => {
-      const t0 = performance.now();
-      let clientX = event.clientX;
-      let clientY = event.clientY;
-      if (window.visualViewport) {
-        clientX += window.visualViewport.offsetLeft || 0;
-        clientY += window.visualViewport.offsetTop || 0;
-      }
-
-      if (globeEl.current?.toGlobeCoords) {
-        const coords = clientToGlobeCoords(globeEl, clientX, clientY);
-        if (coords && selectableFeatureIndex && selectableFeatureIndex.length > 0) {
-          selectableFeatureIndex.find((entry) =>
-            featureContainsLngLat(entry, coords.lng, coords.lat)
-          );
-        }
-      }
-      perfTracker.recordHover(performance.now() - t0);
-
+      // No per-move globe hit-test: its result was never used (selection is
+      // resolved on pointerup), and it cost a raycast + point-in-polygon scan
+      // on every move event during drags.
       const tap = tapRef.current;
       const wrapper = globeContentWrapperRef.current;
       if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen) return;
@@ -248,7 +233,7 @@ export function useGlobeInteractions({
         });
       }
     },
-    [globeEl, selectableFeatureIndex, isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
+    [isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
   );
 
   const handlePointerUp = useCallback(

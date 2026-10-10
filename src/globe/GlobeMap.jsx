@@ -15,6 +15,11 @@ import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLabels } from "./hooks/useGlobeLabels";
+import {
+  useGlobeContextLoss,
+  useGlobeNativeTouch,
+  useGlobeVisibilityPause,
+} from "./hooks/useGlobeLifecycle";
 import { useGlobeLighting } from "./hooks/useGlobeLighting";
 import { useGlobeMapData } from "./hooks/useGlobeMapData";
 import { useGlobeMarkers } from "./hooks/useGlobeMarkers";
@@ -70,6 +75,7 @@ const GlobeMap = (props) => {
   const t = useTranslation(lang);
 
   const globeEl = useRef();
+  const globeContainerRef = useRef(null);
   const globeContentWrapperRef = useRef(null);
   const lastCameraPOVRef = useRef({ lat: 0, lng: 0 });
   const lastZoomRef = useRef(2.5);
@@ -99,7 +105,6 @@ const GlobeMap = (props) => {
     selectableFeatureIndex,
     countrySizes,
     _renderCountriesData,
-    _visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,
@@ -225,6 +230,9 @@ const GlobeMap = (props) => {
     isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
   });
+
+  useGlobeNativeTouch(globeContainerRef, { handleTouchStart, handleTouchMove, handleTouchEnd });
+  useGlobeVisibilityPause(globeEl);
 
   const { globePathsData } = useGlobePaths({
     mode,
@@ -370,14 +378,17 @@ const GlobeMap = (props) => {
   const getLatWrapped = useCallback((d) => d.lat, []);
   const getLngWrapped = useCallback((d) => d.lng, []);
 
+  const attachContextLossHandlers = useGlobeContextLoss(globeEl);
+
   const handleGlobeReady = useCallback(() => {
+    attachContextLossHandlers();
     styleGlobeGraticules();
     updateGlobeLighting();
     if (typeof window !== "undefined") {
       window.__TVRS_GLOBE_EL__ = globeEl.current;
       window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
     }
-  }, [styleGlobeGraticules, updateGlobeLighting, sharedMaterialsRef]);
+  }, [attachContextLossHandlers, styleGlobeGraticules, updateGlobeLighting, sharedMaterialsRef]);
 
   if (typeof window !== "undefined") {
     window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
@@ -397,10 +408,8 @@ const GlobeMap = (props) => {
     >
       <div
         className={`globe-container ${theme}`}
+        ref={globeContainerRef}
         style={{ width: "100%", height: "100%", position: "relative" }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

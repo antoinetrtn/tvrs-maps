@@ -10,8 +10,8 @@ export function useGlobeRenderPipeline({
   usStatesData,
   gameDataMap,
   selectedCountry,
-  lastCameraPOVRef,
-  lastZoomRef,
+  lastCameraPOVRef: _lastCameraPOVRef,
+  lastZoomRef: _lastZoomRef,
   perfProfile,
   canonicalRef,
 }) {
@@ -25,8 +25,6 @@ export function useGlobeRenderPipeline({
     usStatesData,
     gameDataMap,
     selectedCountry,
-    cameraPOV: lastCameraPOVRef.current,
-    zoomLevel: lastZoomRef.current,
     perfProfile,
   });
 
@@ -34,7 +32,6 @@ export function useGlobeRenderPipeline({
     selectableFeatureIndex,
     countrySizes,
     renderCountriesData,
-    visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions = {},
     modeTransitionRef,
@@ -49,7 +46,6 @@ export function useGlobeRenderPipeline({
     selectableFeatureIndex,
     countrySizes,
     renderCountriesData,
-    visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,

@@ -8,11 +8,8 @@ import {
   getFeatureAdmin,
   getFeaturePolygons,
   getLngLatBounds,
-  getLngLatDistance,
-  getMobileRenderRadius,
   getRenderGeometry,
 } from "../../utils/utils";
-import { isSameAdmin } from "../render/polygonColorResolver";
 
 function buildTransitionRenderData(trans, countriesData, departmentsData, usStatesData) {
   const activeDept = trans.toDept || trans.fromDept;
@@ -93,15 +90,13 @@ export function useGlobeRenderData({
   isDepartmentMode = false,
   isUsStatesMode = false,
   isHomeScreen,
-  isEndScreen,
+  isEndScreen: _isEndScreen,
   countriesData,
   departmentsData,
   usStatesData = [],
   gameDataMap,
-  selectedCountry,
-  cameraPOV,
-  zoomLevel,
-  perfProfile,
+  selectedCountry: _selectedCountry,
+  perfProfile: _perfProfile,
 }) {
   const modeTransitionRef = useRef({
     active: false,
@@ -217,41 +212,6 @@ export function useGlobeRenderData({
     return sizes;
   }, [selectableFeatureIndex]);
 
-  const visibleRenderCountriesData = useMemo(() => {
-    if (!perfProfile?.cullOffscreenCountries || isHomeScreen || isEndScreen) {
-      return renderCountriesData;
-    }
-
-    const pov = cameraPOV;
-    const renderRadius = getMobileRenderRadius(zoomLevel);
-
-    return renderCountriesData.filter((feature) => {
-      if (feature.isGhostCountry) return true;
-      const admin = getFeatureAdmin(feature);
-      if (!admin) return false;
-      if (isSameAdmin(admin, selectedCountry, gameDataMap)) return true;
-
-      const data = countryDataMap[admin];
-      if (!data || data.lat === undefined || data.lng === undefined) return true;
-
-      const size = countrySizes[admin] || 1;
-      const sizeBuffer = Math.min(70, Math.max(8, size * 0.75));
-      const distToCenter = getLngLatDistance(data.lng, data.lat, pov.lng, pov.lat);
-
-      return distToCenter <= renderRadius + sizeBuffer;
-    });
-  }, [
-    cameraPOV,
-    countrySizes,
-    isEndScreen,
-    isHomeScreen,
-    perfProfile?.cullOffscreenCountries,
-    renderCountriesData,
-    selectedCountry,
-    zoomLevel,
-    gameDataMap,
-  ]);
-
   const countriesWithGeometry = useMemo(() => {
     const set = new Set();
     const list = isDepartmentMode ? departmentsData : isUsStatesMode ? usStatesData : countriesData;
@@ -290,7 +250,6 @@ export function useGlobeRenderData({
     renderCountriesData,
     selectableFeatureIndex,
     countrySizes,
-    visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     modeTransitionRef,

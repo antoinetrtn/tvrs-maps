@@ -15,6 +15,12 @@ import { readClampedGlobePov, syncGlobeCameraAndZoomLimits } from "../render/glo
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.005;
+// Hard ceiling on the WebGL backing-store density (fill-rate on DPR-3 phones).
+const MAX_GLOBE_PIXEL_RATIO = 2;
+// iOS Safari's collapsing toolbar changes innerHeight by roughly 50-110px while
+// scrolling/gesturing; resizing the WebGL canvas for that causes a visible
+// flash. Height shrinks below this are ignored unless the width also changed.
+const TOOLBAR_HEIGHT_TOLERANCE_PX = 140;
 
 // A new run lands on a random region anchor (jittered) instead of always the
 // same Europe-facing view.
@@ -171,8 +177,8 @@ export function useGlobeCamera({
       try {
         const renderer = globeEl.current.renderer();
         if (renderer) {
-          const pixelRatio = perfProfile?.pixelRatio || 1;
-          renderer.setPixelRatio(pixelRatio);
+          const pixelRatio = Math.min(perfProfile?.pixelRatio || 1, MAX_GLOBE_PIXEL_RATIO);
+          if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
           renderer.sortObjects = true;
           // Keep the screen-space glitch grain the same visual size regardless
           // of the device's capped pixel ratio.
@@ -224,7 +230,11 @@ export function useGlobeCamera({
             const pov = readClampedGlobePov(globeEl.current);
             if (!pov) return;
             setZoomLevel(pov.altitude);
-            setCameraPOV({ lat: pov.lat, lng: pov.lng });
+            // Keep the previous object when nothing moved, so a tap without a
+            // drag doesn't re-render the whole globe tree.
+            setCameraPOV((prev) =>
+              prev.lat === pov.lat && prev.lng === pov.lng ? prev : { lat: pov.lat, lng: pov.lng }
+            );
           };
 
           controls.addEventListener("change", changeHandler);
@@ -350,8 +360,12 @@ export function useGlobeCamera({
     window.innerWidth === maxWindowWidthRef.current;
 
   if (!isKeyboardLikelyOpening) {
+    const widthChanged = window.innerWidth !== maxWindowWidthRef.current;
+    const heightDrop = maxWindowHeightRef.current - window.innerHeight;
     maxWindowWidthRef.current = window.innerWidth;
-    maxWindowHeightRef.current = window.innerHeight;
+    if (widthChanged || heightDrop < 0 || heightDrop > TOOLBAR_HEIGHT_TOLERANCE_PX) {
+      maxWindowHeightRef.current = window.innerHeight;
+    }
   }
 
   const panelLayoutWidth =
