@@ -109,7 +109,7 @@
 .conquest-input:focus-visible {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 2px 2px 0 var(--text-main);
+  box-shadow: 2px 2px 0 var(--ui-ink, var(--bg-color));
 }
 
 .conquest-code-input,

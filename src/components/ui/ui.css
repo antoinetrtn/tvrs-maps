@@ -1,3 +1,9 @@
+/* Control inks: dark well + hard pixel shadow derived from the theme bg (no bright borders). */
+:root {
+  --ui-ink: color-mix(in srgb, var(--bg-color) 45%, black);
+  --ui-well: color-mix(in srgb, var(--bg-color) 75%, black);
+}
+
 /* ==========================================================================
    UI kit — pixel/glitch primitives (Slider, Switch, OptionGroup, Settings*).
    Square-ish (radius-sm), 1px ink borders, hard 2px offset shadows, accent
@@ -139,73 +145,104 @@
   -webkit-appearance: none;
 }
 
-/* Track: square 6px bar, accent fill up to --fill */
+/* Track: recessed ink well with a subtle panel line; accent fill up to --fill */
 .ui-slider-input::-webkit-slider-runnable-track {
-  height: 6px;
+  height: 8px;
+  border: 1px solid var(--glass-border);
   background: linear-gradient(
     to right,
     var(--accent) 0 var(--fill),
-    var(--glass-border-strong) var(--fill) 100%
+    var(--ui-well) var(--fill) 100%
   );
+  box-shadow: inset 1px 1px 0 var(--ui-ink);
 }
 
 .ui-slider-input::-moz-range-track {
-  height: 6px;
-  background: var(--glass-border-strong);
+  height: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--ui-well);
+  box-shadow: inset 1px 1px 0 var(--ui-ink);
 }
 
 .ui-slider-input::-moz-range-progress {
-  height: 6px;
+  height: 8px;
   background: var(--accent);
 }
 
-/* Thumb: pixel square with hard offset shadow */
+/* Thumb: accent pixel block, ink outline + hard ink shadow (no bright border) */
 .ui-slider-input::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  margin-top: -6px;
-  border: 2px solid var(--bg-color);
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border: 2px solid var(--ui-ink);
   border-radius: 0;
   background: var(--accent);
-  box-shadow: 2px 2px 0 var(--text-main);
+  box-shadow: 2px 2px 0 var(--ui-ink);
   transition: transform var(--transition-instant);
 }
 
 .ui-slider-input::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border: 2px solid var(--bg-color);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--ui-ink);
   border-radius: 0;
   background: var(--accent);
-  box-shadow: 2px 2px 0 var(--text-main);
+  box-shadow: 2px 2px 0 var(--ui-ink);
+}
+
+.ui-slider-input:hover::-webkit-slider-thumb {
+  background: var(--accent-hover);
 }
 
 .ui-slider-input:active::-webkit-slider-thumb {
   transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--text-main);
+  box-shadow: 1px 1px 0 var(--ui-ink);
+}
+
+/* Focus ring moves to the thumb (global :focus-visible uses !important) */
+.ui-slider-input:focus-visible {
+  outline-color: transparent !important;
+}
+
+.ui-slider-input:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.ui-slider-input:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* ---- Switch ---- */
 .ui-switch {
   position: relative;
   flex-shrink: 0;
-  width: 48px;
-  height: 26px;
+  width: 52px;
+  height: 28px;
   padding: 0;
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-sm);
-  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 0;
+  background: var(--ui-well);
+  box-shadow: inset 2px 2px 0 var(--ui-ink);
   cursor: pointer;
   transition:
     border-color var(--transition-fast),
     background-color var(--transition-fast);
 }
 
+/* Invisible 44px hit area around the compact visual */
+.ui-switch::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--control-lg) - 28px) / -2) -4px;
+}
+
 .ui-switch-knob {
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 4px;
+  left: 4px;
   width: 18px;
   height: 18px;
   background: var(--text-muted);
@@ -214,19 +251,28 @@
     background-color var(--transition-fast);
 }
 
+.ui-switch:hover:not(:disabled) {
+  border-color: var(--glass-border-strong);
+}
+
 .ui-switch.is-on {
   border-color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--accent);
+  box-shadow: 2px 2px 0 var(--ui-ink);
 }
 
 .ui-switch.is-on .ui-switch-knob {
-  transform: translateX(22px);
-  background: var(--accent);
-  box-shadow: 2px 2px 0 var(--text-main);
+  transform: translateX(24px);
+  background: var(--accent-contrast);
+}
+
+.ui-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .ui-switch:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -272,7 +318,8 @@
   flex-shrink: 0;
   width: 8px;
   height: 8px;
-  border: 1px solid var(--glass-border-strong);
+  border: 1px solid var(--glass-border);
+  background: var(--ui-well);
 }
 
 .ui-option.active .ui-option-mark {

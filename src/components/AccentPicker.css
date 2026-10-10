@@ -43,7 +43,7 @@
 }
 
 .accent-swatch.active .accent-swatch-chip {
-  outline: 1px solid var(--text-main);
+  outline: 1px solid var(--swatch);
   outline-offset: 2px;
 }
 
