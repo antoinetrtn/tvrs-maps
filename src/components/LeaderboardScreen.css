@@ -168,39 +168,7 @@
   text-shadow: 0 0 8px var(--color-magenta-glow);
 }
 
-/* Loading & Empty States */
-.leaderboard-empty-state,
-.leaderboard-loading-state,
-.leaderboard-error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl) 0;
-  color: var(--text-muted);
-  font-family: var(--font-main);
-  font-weight: 600;
-}
-
-.leaderboard-error-state {
-  color: var(--error);
-}
-
-.pixel-spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid var(--glass-border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: var(--spacing-sm);
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* Loading / empty / error states live in AtlasState.css. */
 
 /* Tabs now use unified .segmented-control from panelSystem.css.
    Width is controlled via .panel-header .segmented-control { flex: 1 } */
@@ -233,7 +201,7 @@
   font-size: var(--font-size-xs);
   color: var(--text-muted);
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xs);
   text-transform: none; /* natural casing */
 }
 
@@ -289,7 +257,7 @@
   padding-top: var(--spacing-md);
   border-bottom: 1px solid var(--glass-border);
   position: relative;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .chart-bar-wrapper {
@@ -331,7 +299,7 @@
   font-family: var(--font-display);
   font-size: var(--font-size-2xs);
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: var(--spacing-xs);
 }
 
 /* Tooltip on hover */
@@ -344,7 +312,7 @@
      intended: var(--glass-bg) + 1px solid var(--glass-border-strong). */
   background: transparent;
   border-radius: var(--radius-sm);
-  padding: 4px 6px;
+  padding: var(--spacing-xs) 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -436,7 +404,7 @@
 
   .panel-tab-btn {
     font-size: var(--font-size-xs);
-    padding: 4px 6px;
+    padding: var(--spacing-xs) 6px;
   }
 
   .personal-stats-grid {
@@ -445,7 +413,7 @@
   }
 
   .personal-stat-card {
-    padding: var(--spacing-xs) 2px;
+    padding: var(--spacing-xs) var(--spacing-xxs);
   }
 
   .personal-stat-card .stat-value {

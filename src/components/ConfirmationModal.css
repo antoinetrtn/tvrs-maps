@@ -16,7 +16,7 @@
 
 .modal-btn {
   flex: 1;
-  padding: 12px 24px;
+  padding: var(--spacing-ms) var(--spacing-lg);
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   font-weight: 700;

@@ -8,18 +8,18 @@
   --text-inverse: #0e1116;
 
   /* COLORS - Semantic */
-  --accent: #f2b33d;
-  --accent-hover: #f6c769;
-  --accent-soft: rgba(242, 179, 61, 0.16);
+  --accent: #52b5aa;
+  --accent-hover: #7cc8bf;
+  --accent-soft: rgba(82, 181, 170, 0.16);
   --accent-contrast: #0e1116;
-  --accent-glow: #f2b33d;
+  --accent-glow: #52b5aa;
 
   --success: #7fa36b;
   --success-soft: rgba(127, 163, 107, 0.14);
 
-  --gold: #f2b33d;
-  --gold-soft: rgba(242, 179, 61, 0.12);
-  --gold-light: #f6c769;
+  --gold: #52b5aa;
+  --gold-soft: rgba(82, 181, 170, 0.12);
+  --gold-light: #7cc8bf;
 
   --warning: #e08a3c;
   --warning-soft: rgba(224, 138, 60, 0.12);
@@ -104,8 +104,8 @@
   /* GAMIFICATION & XP COLORS */
   --xp-green-inner: #9cc285;
   --xp-green-outer: #5f7f4f;
-  --xp-yellow-inner: #f2b33d;
-  --xp-yellow-outer: #9c6f1c;
+  --xp-yellow-inner: #52b5aa;
+  --xp-yellow-outer: #2f6f68;
 
   --xp-black: #000000;
   --xp-bar-bg: #161b22;

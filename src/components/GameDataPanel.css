@@ -225,7 +225,7 @@
   top: var(--data-panel-search-offset);
   background: var(--bg-color);
   z-index: 4;
-  margin-bottom: 2px;
+  margin-bottom: var(--spacing-xxs);
   box-shadow: 0 1px 0 var(--glass-border);
 }
 
@@ -255,7 +255,7 @@
 .data-panel-table {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .data-panel-row {

@@ -2,9 +2,7 @@ import "./PixelFireworks.css";
 
 import React, { useEffect, useRef } from "react";
 
-import { AVATAR_COLORS } from "../config/designSystem";
-
-const RETRO_COLORS = Object.values(AVATAR_COLORS);
+import { getFireworkColors } from "../config/designSystem";
 
 const PixelFireworks = ({ duration = 6000 }) => {
   const canvasRef = useRef(null);
@@ -15,6 +13,8 @@ const PixelFireworks = ({ duration = 6000 }) => {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const RETRO_COLORS = getFireworkColors();
 
     let animationFrameId;
     let isActive = true;

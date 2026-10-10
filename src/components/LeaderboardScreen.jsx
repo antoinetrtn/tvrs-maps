@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../config/i18n";
 import { getLeaderboard, getUserHistory, isSupabaseConfigured } from "../services/supabaseClient";
 import { formatTime } from "../utils/utils";
+import AtlasState from "./AtlasState";
 import InvaderAvatar from "./InvaderAvatar";
 import SegmentedControl from "./SegmentedControl";
 
@@ -282,40 +283,27 @@ const LeaderboardScreen = ({
   const renderHistoryContent = () => {
     if (!isSupabaseConfigured) {
       return (
-        <div className="leaderboard-empty-state">
-          <p>{t("not_connected")}</p>
-          <p style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "8px" }}>
-            {lang === "fr"
+        <AtlasState
+          title={t("not_connected")}
+          hint={
+            lang === "fr"
               ? "Connectez-vous pour voir l'historique complet de vos parties."
-              : "Sign in to see your complete game history."}
-          </p>
-        </div>
+              : "Sign in to see your complete game history."
+          }
+        />
       );
     }
 
     if (historyLoading) {
-      return (
-        <div className="leaderboard-loading-state">
-          <div className="pixel-spinner" />
-          <p>{t("connecting")}</p>
-        </div>
-      );
+      return <AtlasState variant="loading" title={t("connecting")} />;
     }
 
     if (historyError) {
-      return (
-        <div className="leaderboard-error-state">
-          <p>Erreur: {historyError}</p>
-        </div>
-      );
+      return <AtlasState variant="error" title={historyError} />;
     }
 
     if (historyData.length === 0) {
-      return (
-        <div className="leaderboard-empty-state">
-          <p>{t("no_records_yet")}</p>
-        </div>
-      );
+      return <AtlasState title={t("no_records_yet")} />;
     }
 
     return (
@@ -413,22 +401,13 @@ const LeaderboardScreen = ({
           {activeTab === "global" ? (
             <div className="leaderboard-table-container scrollbar-styled">
               {!isSupabaseConfigured ? (
-                <div className="leaderboard-empty-state">
-                  <p>{t("not_connected")}</p>
-                </div>
+                <AtlasState title={t("not_connected")} />
               ) : loading ? (
-                <div className="leaderboard-loading-state">
-                  <div className="pixel-spinner" />
-                  <p>{t("connecting")}</p>
-                </div>
+                <AtlasState variant="loading" title={t("connecting")} />
               ) : error ? (
-                <div className="leaderboard-error-state">
-                  <p>Erreur: {error}</p>
-                </div>
+                <AtlasState variant="error" title={error} />
               ) : scoresData.length === 0 ? (
-                <div className="leaderboard-empty-state">
-                  <p>{t("empty_leaderboard")}</p>
-                </div>
+                <AtlasState title={t("empty_leaderboard")} />
               ) : (
                 <table className="leaderboard-table">
                   <thead>
