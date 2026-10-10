@@ -57,6 +57,23 @@ export function isStaleState(current, next) {
   return (next.version ?? 0) < (current.version ?? 0);
 }
 
+/**
+ * Elo change of `userId` stored in the server result, or null when the match
+ * was not rated (guest, forfeit during the countdown…).
+ */
+export function eloChange(result, userId) {
+  const entry = result?.elo?.[userId];
+  if (!entry) return null;
+  return { delta: entry.delta, after: entry.after };
+}
+
+/** "+16" / "-8" / "±0". */
+export function formatEloDelta(delta) {
+  if (delta > 0) return `+${delta}`;
+  if (delta < 0) return `${delta}`;
+  return "±0";
+}
+
 /** Remaining ms before `isoTarget` using the server clock offset; never negative. */
 export function remainingMs(isoTarget, clientNowMs, offsetMs = 0) {
   const target = Date.parse(isoTarget);

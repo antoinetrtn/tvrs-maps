@@ -9,7 +9,9 @@ import {
   deriveMatchPhase,
   describeClaimRefusal,
   describeRpcError,
+  eloChange,
   formatClock,
+  formatEloDelta,
   formatFeedEvent,
   getPaletteEntry,
   isStaleState,
@@ -185,5 +187,13 @@ describe("conquestLogic", () => {
   it("describes the new refusal reasons", () => {
     expect(describeClaimRefusal({ reason: "rate_limited" }, {})).toMatch(/rapide/);
     expect(describeClaimRefusal({ reason: "abandoned" }, {})).toMatch(/échec/);
+  });
+
+  it("reads the Elo change from the server result", () => {
+    const result = { elo: { a: { before: 1000, after: 1016, delta: 16 } } };
+    expect(eloChange(result, "a")).toEqual({ delta: 16, after: 1016 });
+    expect(eloChange(result, "b")).toBeNull();
+    expect(eloChange(null, "a")).toBeNull();
+    expect([16, -8, 0].map(formatEloDelta)).toEqual(["+16", "-8", "±0"]);
   });
 });

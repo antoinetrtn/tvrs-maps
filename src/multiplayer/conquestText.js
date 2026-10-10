@@ -97,6 +97,16 @@ const PAIRS = {
   players: ["Joueurs", "Players"],
   readyLabel: ["Prêt", "Ready"],
   flagOption: ["Drapeau", "Flag"],
+  elo: ["Elo", "Elo"],
+  unrated: [
+    "Partie non classée (les invités ne comptent pas pour l'Elo)",
+    "Unrated match (guests do not count for Elo)",
+  ],
+  boardTitle: ["Classement Conquête", "Conquest ranking"],
+  boardEmpty: ["Aucune partie classée pour l'instant", "No rated match yet"],
+  boardYou: ["Ta place", "Your rank"],
+  boardRecord: ["V / D / N", "W / L / D"],
+  boardGuest: ["Connecte-toi pour être classé", "Sign in to get ranked"],
   forfeitNote: ["Partie terminée par abandon", "Match ended by forfeit"],
   resuming: ["Reprise de ta partie…", "Resuming your match…"],
 };

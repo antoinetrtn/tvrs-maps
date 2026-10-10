@@ -133,3 +133,78 @@ DO $$ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  forged leaderboard insert refused';
 END $$;
 RESET ROLE;
+
+-- ================================================================ Elo ====
+SELECT pg_temp.eq('elo delta even match win', conquest_elo_delta(1000, 1000, 1, 0), 16);
+SELECT pg_temp.eq('elo delta draw vs stronger', conquest_elo_delta(1000, 1200, 0.5, 0), 8);
+SELECT pg_temp.eq('elo K halves after 30 games', conquest_elo_delta(1000, 1000, 1, 30), 8);
+
+-- Helper: play a match between two users and finish it by timer.
+CREATE OR REPLACE FUNCTION pg_temp.play(a uuid, b uuid, a_claims text[], b_claims text[])
+RETURNS uuid LANGUAGE plpgsql AS $$
+DECLARE m uuid; c text;
+BEGIN
+  INSERT INTO matches (code, host_id, status, started_at, ends_at)
+  VALUES (substr(md5(random()::text), 1, 6), a, 'live', now() - interval '11 minutes', now() + interval '1 hour')
+  RETURNING id INTO m;
+  INSERT INTO match_players (match_id, user_id, display_name, color, pattern, joined_at)
+  VALUES (m, a, 'A', 'teal', 'solid', now() - interval '1 minute'), (m, b, 'B', 'amber', 'dots', now());
+  FOREACH c IN ARRAY a_claims LOOP INSERT INTO match_claims (match_id, country_id, owner_id) VALUES (m, c, a); END LOOP;
+  FOREACH c IN ARRAY b_claims LOOP INSERT INTO match_claims (match_id, country_id, owner_id) VALUES (m, c, b); END LOOP;
+  UPDATE match_players SET score = 10 * coalesce(array_length(a_claims, 1), 0) WHERE match_id = m AND user_id = a;
+  UPDATE match_players SET score = 10 * coalesce(array_length(b_claims, 1), 0) WHERE match_id = m AND user_id = b;
+  UPDATE matches SET ends_at = now() - interval '1 second' WHERE id = m;
+  RETURN m;
+END $$;
+
+\set E1 'aaaaaaaa-0000-0000-0000-000000000001'
+\set E2 'aaaaaaaa-0000-0000-0000-000000000002'
+\set G1 'aaaaaaaa-0000-0000-0000-000000000003'
+INSERT INTO auth.users (id, is_anonymous) VALUES (:'E1', false), (:'E2', false), (:'G1', true);
+
+SELECT pg_temp.play(:'E1', :'E2', ARRAY['France','Spain'], ARRAY['Peru']) AS em1 \gset
+SELECT conquest_close_if_expired(:'em1');
+SELECT pg_temp.eq('winner +16', (SELECT elo FROM conquest_ratings WHERE user_id = :'E1'), 1016);
+SELECT pg_temp.eq('loser -16', (SELECT elo FROM conquest_ratings WHERE user_id = :'E2'), 984);
+SELECT pg_temp.eq('W/L counted', (SELECT wins || '/' || losses FROM conquest_ratings WHERE user_id = :'E1'), '1/0');
+SELECT pg_temp.eq('countries counted', (SELECT countries_captured FROM conquest_ratings WHERE user_id = :'E1'), 2);
+SELECT pg_temp.eq('delta stored in result', (SELECT (result->'elo'->:'E1'->>'delta')::int FROM matches WHERE id = :'em1'), 16);
+SELECT conquest_close_if_expired(:'em1');
+SELECT pg_temp.eq('rated only once', conquest_apply_ratings(:'em1') IS NULL, true);
+SELECT pg_temp.eq('still one game', (SELECT games FROM conquest_ratings WHERE user_id = :'E1'), 1);
+
+SELECT pg_temp.play(:'E1', :'E2', ARRAY['Chile'], ARRAY['Peru']) AS em2 \gset
+SELECT conquest_close_if_expired(:'em2');
+SELECT pg_temp.eq('draw counted', (SELECT draws FROM conquest_ratings WHERE user_id = :'E2'), 1);
+
+SELECT pg_temp.play(:'E1', :'G1', ARRAY['Chile'], ARRAY[]::text[]) AS em3 \gset
+SELECT conquest_close_if_expired(:'em3');
+SELECT pg_temp.eq('anonymous guest → unrated', (SELECT count(*) FROM conquest_ratings WHERE user_id = :'G1')::int, 0);
+SELECT pg_temp.eq('registered player untouched by unrated match', (SELECT games FROM conquest_ratings WHERE user_id = :'E1'), 2);
+
+-- Forfeit during the countdown is not rated.
+SELECT pg_temp.play(:'E1', :'E2', ARRAY[]::text[], ARRAY[]::text[]) AS em4 \gset
+UPDATE matches SET started_at = now() + interval '2 seconds', ends_at = now() + interval '10 minutes' WHERE id = :'em4';
+SET ROLE authenticated; SET test.uid = :'E2';
+SELECT pg_temp.eq('countdown forfeit', conquest_leave_match(:'em4')->>'status', 'forfeit');
+RESET ROLE;
+SELECT pg_temp.eq('countdown forfeit unrated', (SELECT games FROM conquest_ratings WHERE user_id = :'E2'), 2);
+
+-- Live forfeit is a loss for the leaver.
+SELECT pg_temp.play(:'E1', :'E2', ARRAY[]::text[], ARRAY['Peru','Chile']) AS em5 \gset
+UPDATE matches SET ends_at = now() + interval '5 minutes' WHERE id = :'em5';
+SET ROLE authenticated; SET test.uid = :'E2';
+SELECT 1 FROM (SELECT conquest_leave_match(:'em5')) x;
+SELECT pg_temp.eq('ratings rows (earlier A/B forfeit + E1/E2)', (SELECT count(*) FROM conquest_ratings)::int, 4);
+SELECT pg_temp.eq('leaderboard top + me', (conquest_leaderboard(10)->'me'->>'losses')::int, 2);
+RESET ROLE;
+SELECT pg_temp.eq('leaver lost', (SELECT losses FROM conquest_ratings WHERE user_id = :'E2'), 2);
+SET ROLE anon; SET test.uid = '';
+SELECT pg_temp.eq('anon reads the board', jsonb_array_length(conquest_leaderboard(10)->'top'), 4);
+DO $$ BEGIN
+  UPDATE conquest_ratings SET elo = 9999 WHERE user_id IS NOT NULL;
+  IF EXISTS (SELECT 1 FROM conquest_ratings WHERE elo = 9999) THEN RAISE EXCEPTION 'FAIL anon wrote ratings'; END IF;
+  RAISE NOTICE 'ok  anon cannot write ratings';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  anon cannot write ratings';
+END $$;
+RESET ROLE;
