@@ -166,10 +166,9 @@
   position: relative;
   z-index: 1;
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-glow));
+  background: var(--accent);
   border-radius: var(--radius-sm);
-  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 0 10px var(--accent);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ==========================================================================
@@ -287,21 +286,10 @@
 }
 
 .gauge-item.highlight .circular-gauge {
-  box-shadow: 0 0 20px var(--color);
-  animation: aura-pulse 1.5s infinite ease-in-out;
-  transform: scale(1.15);
-}
-
-@keyframes aura-pulse {
-  0% {
-    box-shadow: 0 0 10px var(--color);
-  }
-  50% {
-    box-shadow: 0 0 25px var(--color);
-  }
-  100% {
-    box-shadow: 0 0 10px var(--color);
-  }
+  box-shadow:
+    0 0 0 2px var(--bg-color),
+    0 0 0 3px var(--color);
+  transform: scale(1.1);
 }
 
 /* ==========================================================================
@@ -378,35 +366,35 @@
 }
 
 .input-island:focus-within {
-  border-color: var(--glass-border-strong);
-  box-shadow: 0 0 20px var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
 }
 
 .input-island.has-continent {
   border-color: var(--continent-color);
-  box-shadow: 0 0 12px var(--continent-color);
+  box-shadow: none;
 }
 
 .input-island.has-continent:focus-within {
   border-color: var(--continent-color);
-  box-shadow: 0 0 20px var(--continent-color);
+  box-shadow: 0 0 0 1px var(--continent-color);
 }
 
 .input-island.success {
   border-color: var(--success);
-  box-shadow: 0 0 20px var(--success-soft);
+  box-shadow: inset 3px 0 0 var(--success);
   background: var(--success-soft);
 }
 
 .input-island.error {
   border-color: var(--error);
-  box-shadow: 0 0 20px var(--error-soft);
+  box-shadow: inset 3px 0 0 var(--error);
   background: var(--error-soft);
 }
 
 .input-island.warning {
   border-color: var(--warning);
-  box-shadow: 0 0 20px var(--warning-soft);
+  box-shadow: inset 3px 0 0 var(--warning);
   background: var(--warning-soft);
 }
 
@@ -605,9 +593,7 @@
   border-radius: var(--radius-sm);
   font-size: var(--font-size-md);
   font-weight: 700;
-  box-shadow:
-    var(--glass-shadow-strong),
-    0 0 10px var(--accent-glow);
+  box-shadow: var(--glass-shadow-strong);
   pointer-events: auto;
 }
 
@@ -785,7 +771,7 @@
 .learn-toggle-btn.active {
   color: var(--accent-contrast);
   background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow);
+  box-shadow: none;
 }
 
 .learn-toggle-btn.active:hover {
@@ -882,65 +868,39 @@
 
 .timer-pill.active {
   border-color: var(--accent) !important;
-  box-shadow: 0 0 10px var(--accent-glow) !important;
+  box-shadow: 0 0 0 1px var(--accent-soft) !important;
 }
 
 /* Timer Low Warning alarm styling */
 .timer-low {
   color: var(--error) !important;
-  text-shadow:
-    0 0 10px var(--error-soft),
-    -1px 0 var(--glitch-magenta-soft),
-    1px 0 var(--glitch-cyan-soft);
-  animation: timer-alarm 0.5s infinite steps(2) alternate;
+  animation: timer-alarm 1s infinite ease-in-out alternate;
 }
 
 @keyframes timer-alarm {
   0% {
-    opacity: 0.5;
-    transform: scale(0.98);
+    opacity: 0.6;
   }
   100% {
     opacity: 1;
-    transform: scale(1.02);
   }
 }
 
-/* Score increase glitch-flash effect */
+/* Score increase: a short ink-stamp "tick" — one bump, no glitch */
 .score-increased-flash {
-  animation: score-glitch-active 0.4s steps(2) infinite;
+  animation: score-tick 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   color: var(--success) !important;
-  text-shadow: 0 0 12px var(--success-soft);
 }
 
-@keyframes score-glitch-active {
+@keyframes score-tick {
   0% {
-    text-shadow:
-      -2px 0 var(--error),
-      2px 0 var(--accent);
-    transform: skewX(-4deg) scale(1.1);
+    transform: scale(1);
   }
-  25% {
-    text-shadow:
-      2px 0 var(--error),
-      -2px 0 var(--accent);
-    transform: skewX(4deg) scale(1.15);
-  }
-  50% {
-    text-shadow:
-      -1px 2px var(--accent),
-      1px -2px var(--error);
-    transform: skewX(-2deg) scale(1.08);
-  }
-  75% {
-    text-shadow:
-      1px -1px var(--error),
-      -1px 1px var(--accent);
-    transform: skewX(2deg) scale(1.12);
+  40% {
+    transform: scale(1.12);
   }
   100% {
-    text-shadow: none;
-    transform: skewX(0) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -971,4 +931,17 @@
 .focus-close-btn:active {
   transform: scale(0.88);
   transition: transform var(--transition-instant);
+}
+
+/* Atlas lettering for place names in the autocomplete list */
+.suggestion-item .sug-text {
+  font-family: var(--font-serif);
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-low,
+  .score-increased-flash {
+    animation: none;
+  }
 }

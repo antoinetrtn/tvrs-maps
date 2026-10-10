@@ -92,6 +92,8 @@ export const translations = {
     // End Screen
     incredible: "Incroyable !",
     well_done: "Bravo !",
+    travel_journal: "Carnet de voyage",
+    stamp_explored: "Explorés",
     achievement_continent_conquered: "Continent Conquis !",
     achievement_continent_desc:
       "Félicitations ! Tu as trouvé tous les pays de la région {region} !",
@@ -289,6 +291,8 @@ export const translations = {
     // End Screen
     incredible: "Incredible !",
     well_done: "Well done!",
+    travel_journal: "Travel journal",
+    stamp_explored: "Explored",
     achievement_continent_conquered: "Continent Conquered!",
     achievement_continent_desc: "Congratulations! You found all countries in {region}!",
     last_scores: "Last Scores",

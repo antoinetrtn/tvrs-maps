@@ -1,4 +1,5 @@
 import "./EndScreen.css";
+import "./PassportStamp.css";
 
 import { ChevronDown, ChevronUp, InfoBox, Trophy } from "pixelarticons/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -126,17 +127,36 @@ const EndScreen = ({
       )}
 
       {/* Retro fireworks on Level Up or Personal Best */}
-      {(isNewPB || showLevelUp) && <PixelFireworks duration={8000} />}
+      {isPerfectScore && <PixelFireworks duration={8000} />}
 
       <div className="end-screen-content scrollbar-styled">
-        <div className="end-screen-header">
+        <div className="end-screen-header journal-header">
+          <p className="journal-kicker">
+            {t("travel_journal")} ·{" "}
+            {new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
           <h1>{getTitle()}</h1>
-          {isNewPB && (
-            <div className="new-pb-badge">
-              <Trophy width={14} height={14} />
-              <span>{t("new_pb")}</span>
+          <div className="journal-stamps">
+            <div className="passport-stamp score-stamp" aria-label={t("stamp_explored")}>
+              <span className="stamp-caption">{t("stamp_explored")}</span>
+              <span className="stamp-value">
+                {totalCountries > 0 ? Math.round((foundList.length / totalCountries) * 100) : 0}%
+              </span>
+              <span className="stamp-caption">
+                {foundList.length}/{totalCountries}
+              </span>
             </div>
-          )}
+            {isNewPB && (
+              <div className="passport-stamp new-pb-badge">
+                <Trophy width={14} height={14} />
+                <span>{t("new_pb")}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="end-screen-spacer">

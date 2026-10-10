@@ -1,0 +1,94 @@
+/* Passport stamps — travel-journal rewards on the end screen. */
+
+/* Passport stamp — inked double ring, slightly rotated, lands with a thump */
+.passport-stamp {
+  --stamp-ink: var(--accent);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--stamp-ink);
+  border: 2px solid var(--stamp-ink);
+  outline: 1px solid color-mix(in srgb, var(--stamp-ink) 60%, transparent);
+  outline-offset: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  transform: rotate(-6deg);
+  opacity: 0.92;
+  animation: stamp-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both;
+  pointer-events: auto;
+}
+
+.score-stamp {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-full);
+  outline-offset: 4px;
+  gap: var(--spacing-xxs);
+}
+
+.perfect-game .score-stamp {
+  --stamp-ink: var(--success);
+}
+
+.stamp-caption {
+  font-size: var(--font-size-2xs);
+}
+
+.stamp-value {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: rotate(-6deg) scale(1.6);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-6deg) scale(0.94);
+  }
+  100% {
+    opacity: 0.92;
+    transform: rotate(-6deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .passport-stamp {
+    animation: none;
+  }
+}
+
+/* Personal Best — rectangular passport stamp */
+.new-pb-badge {
+  flex-direction: row;
+  gap: var(--spacing-xs);
+  white-space: nowrap;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  transform: rotate(4deg);
+  animation-name: stamp-in-pb;
+  animation-delay: 0.6s;
+}
+
+@keyframes stamp-in-pb {
+  0% {
+    opacity: 0;
+    transform: rotate(4deg) scale(1.6);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(4deg) scale(0.94);
+  }
+  100% {
+    opacity: 0.92;
+    transform: rotate(4deg) scale(1);
+  }
+}

@@ -145,13 +145,15 @@ const ModeCard = ({
         if (!isTopCard) onSelectSideCard(stackPos);
       }}
     >
-      <div className="card-scanline-layer" aria-hidden="true" />
-
-      <div className="card-parallax-bg">
-        <div className="card-ambient-glow" />
-      </div>
+      <div className="card-plate-pattern" aria-hidden="true" />
 
       <div className="card-content">
+        <div className="card-plate-meta">
+          <span className="card-plate-number">PL. {String(idx + 1).padStart(2, "0")}</span>
+          <span className="card-plate-count">
+            {lang === "fr" ? modeItem.badgeFr : modeItem.badgeEn}
+          </span>
+        </div>
         <div className="card-header-row">
           <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
           <span className="card-mode-icon">{modeItem.icon}</span>
