@@ -89,15 +89,25 @@ export function useGlobeShaderWarmup(globeEl, warmKey) {
       // Without the extension compile() cannot report progress without
       // blocking, so the warm-up would only add work: leave rendering as is.
       if (!renderer.getContext?.()?.getExtension?.("KHR_parallel_shader_compile")) return;
-      const originalRender = renderer.render;
       const state = stateRef.current;
-      renderer.render = function warmRender(scene, camera, ...rest) {
-        const now = performance.now();
-        if (shouldHoldForWarmup(renderer, scene, camera, state, now)) return undefined;
-        return originalRender.call(this, scene, camera, ...rest);
+      // globe.gl draws through an EffectComposer whose RenderPass calls
+      // renderer.clear() right *before* renderer.render(). Holding only
+      // render() therefore presented a cleared, undrawn buffer: a black frame
+      // on learn-mode clicks and on return home. Hold the whole composer
+      // frame instead so the previous image really stays on screen.
+      const composer = globe.postProcessingComposer?.();
+      const target = typeof composer?.render === "function" ? composer : renderer;
+      const originalRender = target.render;
+      target.render = function warmRender(...args) {
+        const scene = target === renderer ? args[0] : globe.scene?.();
+        const camera = target === renderer ? args[1] : globe.camera?.();
+        if (shouldHoldForWarmup(renderer, scene, camera, state, performance.now())) {
+          return undefined;
+        }
+        return originalRender.apply(this, args);
       };
       restore = () => {
-        renderer.render = originalRender;
+        target.render = originalRender;
       };
     };
     install();
