@@ -44,16 +44,17 @@
 }
 
 .end-screen-header h1 {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-size: var(--font-size-3xl);
   margin: 0;
   color: var(--text-main);
-  font-weight: 600;
-  letter-spacing: 0;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 /* --- Travel journal header --- */
 .journal-kicker {
+  font-family: var(--font-display);
   margin: 0 0 var(--spacing-xs);
   font-size: var(--font-size-xs);
   letter-spacing: 0.18em;
