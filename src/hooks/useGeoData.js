@@ -103,10 +103,44 @@ function mergeGeometries(geomA, geomB) {
 // (and stamps a random one otherwise). Every render-data wrapper spreads the
 // source feature, so the id survives mode switches and the existing meshes,
 // triangulated geometries and strokes are reused instead of rebuilt.
+const REGIONAL_PREFETCH_DELAY_MS = 6000;
+
+/** True once the page has been idle for `delayMs` after mount. */
+function useIdleAfter(delayMs) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let idleId = null;
+    const timer = setTimeout(() => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(() => setReady(true), { timeout: 4000 });
+      } else {
+        setReady(true);
+      }
+    }, delayMs);
+    return () => {
+      clearTimeout(timer);
+      if (idleId != null) window.cancelIdleCallback?.(idleId);
+    };
+  }, [delayMs]);
+  return ready;
+}
+
 export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
   const [countriesData, setCountriesData] = useState([]);
   const [departmentsData, setDepartmentsData] = useState([]);
   const [usStatesData, setUsStatesData] = useState([]);
+  const isLearn = mode === "learn";
+  const isDepartmentsMode = mode === "departments" || (isLearn && learnSubMode === "departments");
+  const isRiversMountainsMode =
+    mode === "rivers_mountains" || (isLearn && learnSubMode === "rivers_mountains");
+  const isUsStatesMode = mode === "us_states" || (isLearn && learnSubMode === "us_states");
+
+  // Regional maps (≈1 MB of GeoJSON, parsed and triangulated on the main
+  // thread) are no longer loaded at startup: they load when their mode opens,
+  // or once the browser is idle a few seconds after start, whichever comes first.
+  const idleRegional = useIdleAfter(REGIONAL_PREFETCH_DELAY_MS);
+  const wantDepartments = isDepartmentsMode || idleRegional;
+  const wantUsStates = isUsStatesMode || idleRegional;
 
   useEffect(() => {
     let cancelled = false;
@@ -140,6 +174,7 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
   }, []);
 
   useEffect(() => {
+    if (!wantDepartments) return undefined;
     let cancelled = false;
     fetch(DATA_URLS.departmentsGeoJson)
       .then((res) => res.json())
@@ -158,9 +193,10 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [wantDepartments]);
 
   useEffect(() => {
+    if (!wantUsStates) return undefined;
     let cancelled = false;
     fetch("/data/us-states.json")
       .then((res) => res.json())
@@ -179,13 +215,7 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  const isLearn = mode === "learn";
-  const isDepartmentsMode = mode === "departments" || (isLearn && learnSubMode === "departments");
-  const isRiversMountainsMode =
-    mode === "rivers_mountains" || (isLearn && learnSubMode === "rivers_mountains");
-  const isUsStatesMode = mode === "us_states" || (isLearn && learnSubMode === "us_states");
+  }, [wantUsStates]);
 
   const activeDataMap = useMemo(() => {
     if (isRiversMountainsMode) return riversMountainsDataMap;
