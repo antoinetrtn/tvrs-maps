@@ -2,7 +2,7 @@ import "./XpOrbsAnimation.css";
 
 import React, { useEffect, useRef } from "react";
 
-import { GAME_XP_COLORS } from "../config/designSystem";
+import { getXpOrbColors } from "../config/designSystem";
 
 const XpOrbsAnimation = ({
   sourceRef,
@@ -22,6 +22,8 @@ const XpOrbsAnimation = ({
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const orbColors = getXpOrbColors(); // live --xp-* tokens
 
     let animationFrameId;
     const particles = [];
@@ -66,12 +68,12 @@ const XpOrbsAnimation = ({
         this.size = Math.random() * 3 + 7; // 7 to 10px pixels
         this.collected = false;
 
-        // Green-Yellow retro pixel look
-        this.colorInner = GAME_XP_COLORS.greenInner;
-        this.colorOuter = GAME_XP_COLORS.greenOuter;
+        // Relief-green orbs with a few accent (teal ink) ones
+        this.colorInner = orbColors.greenInner;
+        this.colorOuter = orbColors.greenOuter;
         if (Math.random() > 0.6) {
-          this.colorInner = GAME_XP_COLORS.yellowInner;
-          this.colorOuter = GAME_XP_COLORS.yellowOuter;
+          this.colorInner = orbColors.accentInner;
+          this.colorOuter = orbColors.accentOuter;
         }
       }
 

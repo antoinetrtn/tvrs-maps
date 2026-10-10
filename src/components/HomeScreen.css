@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: clamp(32px, 8vw, 128px);
+  padding-left: clamp(var(--spacing-xl), 8vw, 128px);
   gap: var(--spacing-xl);
   pointer-events: none;
   background: transparent;
@@ -23,7 +23,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm, 0.5rem);
+  gap: var(--spacing-sm, var(--spacing-sm));
   width: clamp(320px, 88vw, 440px);
   z-index: 10;
   animation: home-card-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -320,7 +320,7 @@
 
   .home-stage-container {
     width: min(100%, 440px);
-    gap: clamp(4px, 1.5svh, 12px);
+    gap: clamp(var(--spacing-xs), 1.5svh, var(--spacing-ms));
   }
 
   /* Scale the logo with viewport height instead of the fixed 360x270 desktop
@@ -330,7 +330,7 @@
     max-width: min(85vw, 340px);
     height: clamp(120px, 26svh, 270px);
     aspect-ratio: 4 / 3;
-    margin: 0 0 2px;
+    margin: 0 0 var(--spacing-xxs);
     transform: none !important;
   }
 
@@ -530,7 +530,7 @@
   font-family: var(--font-display);
   font-size: calc(0.62rem * var(--ui-scale, 1));
   font-weight: 900;
-  padding: 1px 4px;
+  padding: 1px var(--spacing-xs);
   border-radius: var(--radius-sm);
   border: 1px solid var(--xp-black);
   box-shadow: 0 2px 4px var(--xp-shadow-medium);

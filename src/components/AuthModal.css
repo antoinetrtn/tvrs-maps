@@ -105,7 +105,7 @@
 .auth-modal-submit-btn {
   font-family: var(--font-main);
   font-weight: 700;
-  padding: 12px var(--spacing-sm);
+  padding: var(--spacing-ms) var(--spacing-sm);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
 }

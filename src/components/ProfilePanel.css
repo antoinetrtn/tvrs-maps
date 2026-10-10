@@ -48,7 +48,7 @@
   font-family: var(--font-display);
   font-size: var(--font-size-xs);
   font-weight: 900;
-  padding: 2px 6px;
+  padding: var(--spacing-xxs) 6px;
   border-radius: var(--radius-full);
   border: 1px solid var(--bg-color);
   box-shadow: 0 2px 4px var(--shadow-subtle);
@@ -256,7 +256,7 @@
 .xp-level-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .xp-level-title {
@@ -322,7 +322,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .stat-label {
@@ -441,7 +441,7 @@
 .badge-detail-title-block {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .badge-detail-name {
@@ -478,7 +478,7 @@
   box-sizing: border-box;
   font-family: var(--font-main);
   font-weight: 700;
-  padding: 12px 24px;
+  padding: var(--spacing-ms) var(--spacing-lg);
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
@@ -582,7 +582,7 @@
 .profile-blur-btn {
   font-family: var(--font-main);
   font-weight: 700;
-  padding: 8px var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: var(--font-size-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;

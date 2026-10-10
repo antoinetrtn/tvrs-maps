@@ -111,10 +111,10 @@ const THEME = {
     paper: "#0e1116",
     black: "#0e1116",
     labelShadow: "#0e1116",
-    accent: "#f2b33d",
-    accentHover: "#f6c769",
-    accentSoft: "rgba(242, 179, 61, 0.16)",
-    accentGlow: "#f2b33d",
+    accent: "#52b5aa",
+    accentHover: "#7cc8bf",
+    accentSoft: "rgba(82, 181, 170, 0.16)",
+    accentGlow: "#52b5aa",
     glassBg: "rgba(22, 27, 34, 0.94)",
     glassBorder: "rgba(237, 230, 214, 0.14)",
     glassBorderStrong: "rgba(237, 230, 214, 0.26)",
@@ -127,8 +127,8 @@ const THEME = {
     subtleTint: "rgba(237, 230, 214, 0.08)",
     highlight: "rgba(237, 230, 214, 0.15)",
     success: "#7fa36b",
-    selectionHighlight: "#f2b33d",
-    gold: "#f2b33d",
+    selectionHighlight: "#52b5aa",
+    gold: "#52b5aa",
     error: "#d9543b",
     errorDeep: "#c2462f",
     errorDeeper: "#9c3623",
@@ -141,9 +141,9 @@ const THEME = {
     mapBorderMuted: "#2c3a37",
     borderFound: "#ede6d6",
     borderUnfound: "#56635c",
-    mapSurfaceSelected: "#f2b33d",
-    gridDot: "rgba(242, 179, 61, 0.14)",
-    graticule: "#8a7a55",
+    mapSurfaceSelected: "#52b5aa",
+    gridDot: "rgba(82, 181, 170, 0.14)",
+    graticule: "#4d7a76",
     atmosphere: "rgba(120, 170, 180, 0.15)",
     globeEmissive: "#000000",
     globeSpecular: "#000000",
@@ -270,7 +270,7 @@ const GLOBE_THEMES = {
       labelColorType: "paper",
       strokeWidthMobile: 1.1,
       strokeWidthDesktop: 1.6,
-      selectionRingColor: "#f2b33d",
+      selectionRingColor: "#52b5aa",
     },
     continents: {
       surface: {
@@ -462,12 +462,12 @@ export const getThemeCssVariables = (
     "--color-magenta": "#ff007f",
     "--color-cyan-glow": "rgba(0, 240, 255, 0.12)",
     "--color-magenta-glow": "rgba(255, 0, 127, 0.12)",
-    "--color-gold": "#f2b33d",
-    "--color-gold-glow": "rgba(242, 179, 61, 0.25)",
+    "--color-gold": "#c9a86a",
+    "--color-gold-glow": "transparent",
     "--color-silver": "#c0c0c0",
-    "--color-silver-glow": "rgba(192, 192, 192, 0.25)",
+    "--color-silver-glow": "transparent",
     "--color-bronze": "#cd7f32",
-    "--color-bronze-glow": "rgba(205, 127, 50, 0.25)",
+    "--color-bronze-glow": "transparent",
     "--shadow-subtle": "rgba(0, 0, 0, 0.15)",
     "--color-cyan-glow-strong": "rgba(0, 240, 255, 0.4)",
     "--color-lime": "#a3e635",
@@ -611,9 +611,33 @@ export const AVATAR_COLORS = {
   amber: "#fbbf24",
 };
 
-export const GAME_XP_COLORS = {
-  greenInner: "#55ff55",
-  greenOuter: "#00aa00",
-  yellowInner: "#ffff55",
-  yellowOuter: "#7f7f00",
+const GAME_XP_COLORS = {
+  // Fallbacks only — the live values come from the --xp-* CSS tokens.
+  greenInner: "#9cc285",
+  greenOuter: "#5f7f4f",
+  yellowInner: "#52b5aa",
+  yellowOuter: "#2f6f68",
 };
+
+// Canvas FX (fireworks, XP orbs) read the live CSS tokens so they follow the
+// theme; the hex values are first-paint / test fallbacks only.
+const resolveTokenColor = (name, fallback) => {
+  if (typeof document === "undefined") return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+};
+
+export const getFireworkColors = () =>
+  [
+    ["--accent", "#52b5aa"],
+    ["--accent-hover", "#7cc8bf"],
+    ["--success", "#7fa36b"],
+    ["--text-main", "#ede6d6"],
+    ["--error", "#d9543b"],
+  ].map(([name, fallback]) => resolveTokenColor(name, fallback));
+
+export const getXpOrbColors = () => ({
+  greenInner: resolveTokenColor("--xp-green-inner", GAME_XP_COLORS.greenInner),
+  greenOuter: resolveTokenColor("--xp-green-outer", GAME_XP_COLORS.greenOuter),
+  accentInner: resolveTokenColor("--xp-yellow-inner", GAME_XP_COLORS.yellowInner),
+  accentOuter: resolveTokenColor("--xp-yellow-outer", GAME_XP_COLORS.yellowOuter),
+});
