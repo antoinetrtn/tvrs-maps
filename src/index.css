@@ -8,18 +8,19 @@
   --text-inverse: #0e1116;
 
   /* COLORS - Semantic */
-  --accent: #52b5aa;
-  --accent-hover: #7cc8bf;
-  --accent-soft: rgba(82, 181, 170, 0.16);
+  /* Default accent = ACCENT_PRESETS.magenta (src/config/accentPresets.js) */
+  --accent: #ff5fa8;
+  --accent-hover: #ff8cc1;
+  --accent-soft: rgba(255, 95, 168, 0.16);
   --accent-contrast: #0e1116;
-  --accent-glow: #52b5aa;
+  --accent-glow: #ff5fa8;
 
   --success: #7fa36b;
   --success-soft: rgba(127, 163, 107, 0.14);
 
-  --gold: #52b5aa;
-  --gold-soft: rgba(82, 181, 170, 0.12);
-  --gold-light: #7cc8bf;
+  --gold: #ff5fa8;
+  --gold-soft: rgba(255, 95, 168, 0.12);
+  --gold-light: #ff8cc1;
 
   --warning: #e08a3c;
   --warning-soft: rgba(224, 138, 60, 0.12);
@@ -102,8 +103,8 @@
   /* GAMIFICATION & XP COLORS */
   --xp-green-inner: #9cc285;
   --xp-green-outer: #5f7f4f;
-  --xp-yellow-inner: #52b5aa;
-  --xp-yellow-outer: #2f6f68;
+  --xp-yellow-inner: #ff5fa8;
+  --xp-yellow-outer: #7a3a5a;
 
   --xp-black: #000000;
   --xp-bar-bg: #161b22;

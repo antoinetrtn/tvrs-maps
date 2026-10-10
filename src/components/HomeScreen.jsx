@@ -15,6 +15,7 @@ import React, { useCallback, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
+import AccentPicker from "./AccentPicker";
 import GlassIconButton from "./GlassIconButton";
 import HomeScreenCategoryCarousel from "./HomeScreenCategoryCarousel";
 import InvaderAvatar from "./InvaderAvatar";
@@ -38,6 +39,8 @@ const HomeScreen = ({
   setPeacefulMode,
   globeTheme,
   setGlobeTheme,
+  accent,
+  setAccent,
   topExplorers = [],
   userProfile,
   setUserProfile,
@@ -322,6 +325,13 @@ const HomeScreen = ({
               onChange={(v) => setGlobeTheme(v)}
             />
           </div>
+
+          <AccentPicker
+            lang={lang}
+            accent={accent}
+            setAccent={setAccent}
+            label={t("accent_color")}
+          />
         </div>
       </div>
 

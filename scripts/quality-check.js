@@ -49,6 +49,7 @@ Object.entries(requiredScripts).forEach(([name, command]) => {
 const hardcodedColorPattern = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g;
 const colorAllowListFiles = new Set([
   "src/config/designSystem.js",
+  "src/config/accentPresets.js", // curated accent palette = design tokens
   "src/index.css",
   "src/components/Logo.jsx",
 ]);

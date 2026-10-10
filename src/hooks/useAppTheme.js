@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  ACCENT_PRESETS,
+  persistAccent,
+  readStoredAccent,
+  setActiveAccent,
+} from "../config/accentPresets";
+import {
   DEFAULT_GLOBE_THEME,
   getThemeCssVariables,
   isValidGlobeTheme,
@@ -22,6 +28,16 @@ export function useAppTheme(viewportWidth) {
     } catch {}
     return DEFAULT_GLOBE_THEME;
   });
+
+  // Accent preset: read once, pushed into designSystem before the first paint.
+  const [accent, setAccentRaw] = useState(() =>
+    setActiveAccent(readStoredAccent(globalThis.localStorage, STORAGE_KEYS.accent))
+  );
+
+  const setAccent = useCallback((id) => {
+    if (!ACCENT_PRESETS[id]) return;
+    setAccentRaw(setActiveAccent(persistAccent(globalThis.localStorage, STORAGE_KEYS.accent, id)));
+  }, []);
 
   const [theme, setThemeRaw] = useState(() => {
     return "dark";
@@ -46,8 +62,10 @@ export function useAppTheme(viewportWidth) {
   }, []);
 
   const appStyle = useMemo(
+    // accent is a dependency: getThemeColors reads the active accent preset.
+
     () => getThemeCssVariables(theme, globeTheme, { uiScale: uiScale(viewportWidth) }),
-    [theme, globeTheme, viewportWidth]
+    [theme, globeTheme, viewportWidth, accent]
   );
 
   // Theme the whole document, not just .app-container: portals mounted on
@@ -61,5 +79,7 @@ export function useAppTheme(viewportWidth) {
     });
   }, [theme, appStyle]);
 
-  return { theme, setTheme, globeTheme, setGlobeTheme, appStyle };
+  const accentProps = useMemo(() => ({ accent, setAccent }), [accent, setAccent]);
+
+  return { theme, setTheme, globeTheme, setGlobeTheme, accentProps, appStyle };
 }
