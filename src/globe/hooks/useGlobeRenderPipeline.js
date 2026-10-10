@@ -1,3 +1,4 @@
+import { useGlobeIdlePrewarm } from "./useGlobeIdlePrewarm";
 import { useGlobeRenderData } from "./useGlobeRenderData";
 
 export function useGlobeRenderPipeline({
@@ -15,6 +16,13 @@ export function useGlobeRenderPipeline({
   perfProfile,
   canonicalRef,
 }) {
+  useGlobeIdlePrewarm({
+    countriesData,
+    departmentsData,
+    usStatesData,
+    resolution: perfProfile?.polygonCapCurvatureResolution ?? 1.5,
+  });
+
   const renderDataResult = useGlobeRenderData({
     isDepartmentMode,
     isUsStatesMode,

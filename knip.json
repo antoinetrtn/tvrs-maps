@@ -1,7 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "ignore": [
-    "src/types/supabase.ts",
-    "scripts/setup-hooks.js"
-  ]
+  "ignore": ["src/types/supabase.ts", "scripts/setup-hooks.js"],
+  "ignoreDependencies": ["three-conic-polygon-geometry-original"]
 }
