@@ -45,6 +45,11 @@ import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 
+// Module-level so its identity is stable: an inline arrow here changed
+// updateGlobeLighting on every render, which tore down and rebuilt the whole
+// lighting rig (lights + inner-glow shader, recompiled each time).
+const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
+
 const GlobeMap = (props) => {
   const {
     mode,
@@ -178,7 +183,7 @@ const GlobeMap = (props) => {
     UI_COLORS,
     perfProfile,
     globeTheme,
-    safeColor: (c) => getOpaqueThreeColor(c),
+    safeColor: safeOpaqueColor,
   });
 
   const { zoomLevel, cameraPOV, globeRenderWidth, globeHeight, homeGlobeOffset, globePanelShift } =
