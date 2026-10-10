@@ -30,14 +30,10 @@
 .settings-trigger-btn:hover,
 .profile-trigger-btn:hover,
 .leaderboard-trigger-btn:hover {
-  transform: translateY(-2.5px) scale(1.08);
+  transform: translateY(-1px);
   color: var(--accent) !important;
   background: var(--glass-hover) !important;
   border-color: var(--accent) !important;
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
 }
 
 .glass-icon-btn:active,
@@ -62,23 +58,17 @@
   transition:
     transform var(--transition-spring),
     opacity var(--transition-spring);
-  background: var(--glass-border);
-  color: var(--text-main);
-  border: 1px solid var(--glass-border);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: 1px solid var(--accent);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2.5px) scale(1.02);
-  box-shadow:
-    0 0 0 1px var(--accent-soft),
-    0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--glass-hover);
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 var(--text-main);
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+  color: var(--accent-contrast);
 }
 
 .btn-primary:active {
@@ -110,7 +100,7 @@
 }
 
 .btn-secondary:hover {
-  transform: translateY(-2.5px) scale(1.02);
+  transform: translateY(-1px);
   color: var(--accent);
   border-color: var(--accent);
   background: var(--glass-hover);
@@ -159,10 +149,6 @@
 
 /* Glitch hover effect - shared utility class */
 .glitch-hover:hover {
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
 }
 
 /* Active/pressed button state - shared utility class */

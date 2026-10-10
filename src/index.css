@@ -1,31 +1,31 @@
 :root {
   /* COLORS - Core (Blackout dark is the default — keep these in sync with
      THEME_OVERRIDES.blackout.dark so first paint matches before React mounts) */
-  --bg-color: #000000;
-  --black: #000000;
-  --text-main: #ffffff;
-  --text-muted: #888888;
-  --text-inverse: #000000;
+  --bg-color: #0e1116;
+  --black: #0e1116;
+  --text-main: #ede6d6;
+  --text-muted: #8f948f;
+  --text-inverse: #0e1116;
 
   /* COLORS - Semantic */
-  --accent: #ffffff;
-  --accent-hover: #cccccc;
-  --accent-soft: rgba(255, 255, 255, 0.15);
-  --accent-contrast: #000000;
-  --accent-glow: #ffffff;
+  --accent: #f2b33d;
+  --accent-hover: #f6c769;
+  --accent-soft: rgba(242, 179, 61, 0.16);
+  --accent-contrast: #0e1116;
+  --accent-glow: #f2b33d;
 
-  --success: #ffffff;
-  --success-soft: rgba(255, 255, 255, 0.12);
+  --success: #7fa36b;
+  --success-soft: rgba(127, 163, 107, 0.14);
 
-  --gold: #cccccc;
-  --gold-soft: rgba(255, 255, 255, 0.08);
-  --gold-light: #eeeeee;
+  --gold: #f2b33d;
+  --gold-soft: rgba(242, 179, 61, 0.12);
+  --gold-light: #f6c769;
 
-  --warning: #888888;
-  --warning-soft: rgba(255, 255, 255, 0.08);
+  --warning: #e08a3c;
+  --warning-soft: rgba(224, 138, 60, 0.12);
 
-  --error: #ff4500;
-  --error-soft: rgba(255, 69, 0, 0.08);
+  --error: #d9543b;
+  --error-soft: rgba(217, 84, 59, 0.1);
   --highlight-soft: rgba(255, 255, 255, 0.06);
   --subtle-tint-strong: rgba(255, 255, 255, 0.16);
 
@@ -35,22 +35,22 @@
   --glitch-cyan: rgba(0, 240, 255, 0.6);
   --glitch-cyan-soft: rgba(0, 240, 255, 0.5);
   --scanline-color: rgba(255, 255, 255, 0.05);
-  --home-card-bg: rgba(10, 10, 10, 0.94);
+  --home-card-bg: rgba(22, 27, 34, 0.96);
   --home-scanline: rgba(0, 0, 0, 0.22);
 
   /* GLASSMORPHISM */
-  --glass-bg: rgba(15, 15, 15, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-border-strong: rgba(255, 255, 255, 0.25);
-  --glass-hover: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-  --glass-shadow-strong: 0 24px 58px rgba(0, 0, 0, 0.6);
-  --glass-shadow-drag: 0 34px 86px rgba(0, 0, 0, 0.7);
-  --glass-blur: blur(24px) saturate(200%);
-  --glass-blur-compact: blur(12px) saturate(140%);
-  --overlay-bg: rgba(0, 0, 0, 0.85);
+  --glass-bg: rgba(22, 27, 34, 0.94);
+  --glass-border: rgba(237, 230, 214, 0.14);
+  --glass-border-strong: rgba(237, 230, 214, 0.26);
+  --glass-hover: rgba(237, 230, 214, 0.07);
+  --glass-shadow: 0 8px 24px rgba(5, 7, 10, 0.55);
+  --glass-shadow-strong: 0 12px 32px rgba(5, 7, 10, 0.55);
+  --glass-shadow-drag: 0 20px 48px rgba(5, 7, 10, 0.6);
+  --glass-blur: blur(10px);
+  --glass-blur-compact: blur(8px);
+  --overlay-bg: rgba(14, 17, 22, 0.85);
   --settings-backdrop-bg: rgba(0, 0, 0, 0.45);
-  --modal-header-bg: rgba(15, 15, 15, 0.6);
+  --modal-header-bg: rgba(22, 27, 34, 0.92);
 
   /* DESIGN SYSTEM TOKENS */
   --radius-sm: 4px;
@@ -66,9 +66,12 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
 
-  --font-main: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-main: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Display face for headings, scores, timers and large numerals */
-  --font-display: "Bitcount Single", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Map-style serif for place / country names (atlas lettering) */
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-display:
+    "Bitcount Single", "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* TYPOGRAPHY SCALE — canonical steps (keep in sync with STYLE_TOKENS.fontSize
      in designSystem.js). Off-scale sizes still hardcoded in component sheets
@@ -127,8 +130,18 @@
      --shadow-card: carousel deck cards (dark keeps the historical opaque black
      halo that masks the globe behind the stack).
      --logo-halo: home logo drop-shadows separating it from the globe. */
-  --shadow-card: 0 16px 36px #000000;
+  --shadow-card: 0 12px 28px rgba(5, 7, 10, 0.7);
   --logo-halo: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.45));
+}
+
+/* Visible keyboard focus (mouse/touch clicks keep a clean look via :focus-visible) */
+:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 * {
@@ -137,7 +150,6 @@
   box-sizing: border-box;
   font-family: var(--font-main);
   -webkit-tap-highlight-color: transparent;
-  outline: none !important;
 }
 
 input,
@@ -145,7 +157,6 @@ button,
 textarea,
 select {
   -webkit-tap-highlight-color: transparent;
-  outline: none !important;
 }
 
 /* Explicitly target the quiz input by its ID to kill the browser default */
@@ -284,3 +295,14 @@ body {
 /* Shared button primitives (.glass-icon-btn triggers, .btn-primary/.btn-secondary,
    btn-hover-flicker/modalEnter keyframes, .glitch-hover/.btn-active utilities)
    live in styles/buttons.css, loaded right after this file from main.jsx. */
+
+/* Atlas lettering — map-style serif for country / region / place names.
+   Numbers (scores, timers) stay on --font-display (Bitcount). */
+.data-panel-title,
+.data-panel-region-name,
+.data-panel-row-name,
+.history-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}

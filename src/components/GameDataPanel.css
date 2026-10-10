@@ -239,7 +239,7 @@
 
 .data-panel-region-name {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   margin: 0;
   flex: 1;
@@ -270,7 +270,7 @@
   background: transparent;
   color: var(--text-main);
   font-family: var(--font-main);
-  font-size: 0.82rem;
+  font-size: var(--font-size-sm);
   text-align: left;
   cursor: pointer;
   transition:
@@ -296,7 +296,7 @@
   background: var(--selection-green-soft);
   border-color: color-mix(in srgb, var(--selection-green) 45%, var(--glass-border));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--selection-green) 12%, transparent);
-  font-size: 0.92rem;
+  font-size: var(--font-size-md);
 }
 
 .data-panel-row.learn-selected.has-flag {
@@ -380,7 +380,7 @@
 
 .data-panel-row-sub {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   white-space: nowrap;
   flex-shrink: 0;
 }

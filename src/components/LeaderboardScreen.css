@@ -62,7 +62,7 @@
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-main);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   text-align: left;
 }
 
@@ -116,7 +116,7 @@
   height: 22px;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   padding: var(--spacing-xxs) var(--spacing-sm);
   border-radius: var(--radius-sm);
   background: var(--subtle-tint);
@@ -230,7 +230,7 @@
 }
 
 .personal-stat-card .stat-label {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   font-weight: 600;
   margin-bottom: 4px;
@@ -239,7 +239,7 @@
 
 .personal-stat-card .stat-value {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   font-weight: 900;
 }
 
@@ -329,7 +329,7 @@
 
 .chart-bar-label {
   font-family: var(--font-display);
-  font-size: 0.55rem;
+  font-size: var(--font-size-2xs);
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -377,7 +377,7 @@
 }
 
 .tooltip-date {
-  font-size: 0.55rem;
+  font-size: var(--font-size-2xs);
   color: var(--text-muted);
   opacity: 0.7;
 }

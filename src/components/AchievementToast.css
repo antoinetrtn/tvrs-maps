@@ -46,7 +46,7 @@
 
 .achievement-toast-title {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--font-size-md);
   color: var(--toast-color);
   letter-spacing: 0px; /* Banned negative letter-spacing */
 }

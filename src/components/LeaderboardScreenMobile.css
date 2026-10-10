@@ -41,7 +41,7 @@
     display: block;
     padding: 0 !important;
     border-bottom: none;
-    font-size: 0.85rem;
+    font-size: var(--font-size-sm);
   }
 
   .col-rank {
@@ -65,7 +65,7 @@
     grid-area: time;
     width: auto !important;
     text-align: right;
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
   }
 
   .score-cell {
