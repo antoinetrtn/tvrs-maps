@@ -4,6 +4,9 @@ import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
+
+// Opacity of found-country caps over the satellite texture.
+const SATELLITE_FOUND_OPACITY = 0.5;
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
 
 function resolvePolygonEmissiveProps({
@@ -240,10 +243,12 @@ export function getPolygonMaterialForFeature({
         material.visible = true;
         material.opacity = 1.0;
       } else if (showFoundOnGlobe) {
-        material.transparent = false;
-        material.wireframe = true;
+        // Found countries: soft glitch tint over the imagery instead of the
+        // raw triangulation wireframe (which read as a noisy mesh).
+        material.transparent = true;
+        material.wireframe = false;
         material.visible = true;
-        material.opacity = 1.0;
+        material.opacity = SATELLITE_FOUND_OPACITY;
       } else if (isPrevTransitioning || isIncomingTransitioning) {
         material.transparent = true;
         material.wireframe = false;
@@ -316,10 +321,12 @@ export function getPolygonMaterialForFeature({
         material.visible = true;
         material.opacity = 1.0;
       } else if (showFoundOnGlobe) {
-        material.transparent = false;
-        material.wireframe = true;
+        // Found countries: soft glitch tint over the imagery instead of the
+        // raw triangulation wireframe (which read as a noisy mesh).
+        material.transparent = true;
+        material.wireframe = false;
         material.visible = true;
-        material.opacity = 1.0;
+        material.opacity = SATELLITE_FOUND_OPACITY;
       } else if (isPrevTransitioning || isIncomingTransitioning) {
         material.transparent = true;
         material.wireframe = false;

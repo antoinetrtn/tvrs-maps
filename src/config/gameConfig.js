@@ -31,6 +31,8 @@ const GAME_MODES_CONFIG = {
     geometryKey: "departmentsData",
     ghostExclusions: ["France"],
     viewPoint: { lat: 46.5, lng: 2.6, altitude: { mobile: 0.48, desktop: 0.3 } },
+    // Metropolitan France incl. Corsica; used to auto-frame any viewport.
+    bounds: { latMin: 41.3, latMax: 51.1, lngMin: -5.2, lngMax: 9.6 },
     targetCheck: "name",
   },
   us_states: {
@@ -39,6 +41,8 @@ const GAME_MODES_CONFIG = {
     geometryKey: "usStatesData",
     ghostExclusions: ["United States of America"],
     viewPoint: { lat: 38.0, lng: -97.0, altitude: { mobile: 0.85, desktop: 0.6 } },
+    // Contiguous United States (Alaska/Hawaii are reached by panning).
+    bounds: { latMin: 24.5, latMax: 49.4, lngMin: -124.8, lngMax: -66.9 },
     targetCheck: "name",
   },
   rivers_mountains: {
@@ -117,9 +121,12 @@ export const POLYGON_ALTITUDE = {
   base: 0.0012,
   satelliteBase: 0.001,
   selected: 0.008,
-  departmentBase: 0.0012,
-  departmentSelected: 0.006,
-  ghostCountry: 0.0006,
+  // Regional maps are seen from very close: a department is only ~1° wide, so
+  // the world-scale lift turned small areas into pillars and made the whole
+  // map look embossed. Keep the regional relief flat and subtle.
+  departmentBase: 0.0003,
+  departmentSelected: 0.0016,
+  ghostCountry: 0.0001,
 };
 
 export const getPolygonAltitudeFor = ({

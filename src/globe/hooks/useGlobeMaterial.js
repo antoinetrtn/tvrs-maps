@@ -59,19 +59,26 @@ const applySatelliteSensorShader = (shader) => {
     #ifdef USE_MAP
       vec4 sampledDiffuseColor = texture2D( map, vMapUv );
       
+      // Sensor grid, anti-aliased in screen space. At world zoom a cell is far
+      // smaller than a pixel: the raw grid aliased into moiré stripes. The
+      // grid (and its per-cell noise) now fades in only once cells span a
+      // few pixels, with 1px-wide lines whatever the zoom.
       vec2 gridUv = vMapUv * vec2(16384.0, 8192.0);
-      vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5);
-      float gridLine = smoothstep(0.0, 0.08, min(gridFract.x, gridFract.y));
-      
+      vec2 cellPx = max(fwidth(gridUv), vec2(1e-4));
+      float gridVis = 1.0 - smoothstep(0.18, 0.4, max(cellPx.x, cellPx.y));
+      vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5) / cellPx;
+      float gridLine = clamp(min(gridFract.x, gridFract.y), 0.0, 1.0);
+
       vec3 gridColor = vec3(0.0, 0.5, 0.95);
-      sampledDiffuseColor.rgb = mix(gridColor, sampledDiffuseColor.rgb, 0.94 + 0.06 * gridLine);
-      
+      float gridMix = (1.0 - gridLine) * 0.1 * gridVis;
+      sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, gridColor, gridMix);
+
       vec2 blockId = floor(gridUv);
       float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
-      
+
       float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
-      sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand;
-      
+      sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand * gridVis;
+
       diffuseColor *= sampledDiffuseColor;
     #endif
     `
@@ -123,13 +130,28 @@ export function useGlobeMaterial(options = {}) {
     texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.magFilter = THREE.LinearFilter;
     texture.colorSpace = THREE.SRGBColorSpace;
-    if (typeof window !== "undefined" && window.__TVRS_GLOBE_EL__?.renderer?.()) {
-      const maxAnisotropy =
-        window.__TVRS_GLOBE_EL__.renderer().capabilities?.getMaxAnisotropy() || 8;
-      texture.anisotropy = Math.min(16, maxAnisotropy);
-    }
     return texture;
   }, [UI_COLORS?.globeTextureUrl]);
+
+  // Anisotropic filtering keeps the texture sharp near the limb (grazing
+  // angles). The renderer may not exist yet when the texture is created.
+  useEffect(() => {
+    if (!loadedTexture) return undefined;
+    let timer = null;
+    const apply = () => {
+      const renderer =
+        typeof window === "undefined" ? null : window.__TVRS_GLOBE_EL__?.renderer?.();
+      if (!renderer) {
+        timer = setTimeout(apply, 200);
+        return;
+      }
+      const max = renderer.capabilities?.getMaxAnisotropy?.() || 1;
+      loadedTexture.anisotropy = Math.min(8, max);
+      loadedTexture.needsUpdate = true;
+    };
+    apply();
+    return () => clearTimeout(timer);
+  }, [loadedTexture]);
 
   useEffect(() => {
     return () => {

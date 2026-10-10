@@ -34,6 +34,16 @@
 
 import { getAccentOverrides } from "./accentPresets.js";
 
+/**
+ * NASA Blue Marble (topo + bathy, public domain), self-hosted as WebP with
+ * mipmaps generated on upload. 4096×2048 by default, 2048×1024 on
+ * low-memory devices.
+ */
+const SATELLITE_TEXTURE_URL =
+  typeof navigator !== "undefined" && navigator.deviceMemory && navigator.deviceMemory <= 2
+    ? "/textures/earth-2048.webp"
+    : "/textures/earth-4096.webp";
+
 const STYLE_TOKENS = {
   radius: {
     sm: "4px",
@@ -229,7 +239,7 @@ const DEFAULT_DEPARTMENT_COLORS = {
 const GLOBE_THEMES = {
   satellite: {
     globeSettings: {
-      globeTextureUrl: "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
+      globeTextureUrl: SATELLITE_TEXTURE_URL,
       globeMaterialType: "phong",
       globeMaterialColor: "#ffffff",
       globeSpecular: "#333333",
@@ -365,8 +375,7 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
   const globeOverrides = { ...themeCfg.globeSettings };
 
   if (globeTheme === "satellite") {
-    globeOverrides.globeTextureUrl =
-      "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
+    globeOverrides.globeTextureUrl = SATELLITE_TEXTURE_URL;
     globeOverrides.lightingRim = "#ffffff";
     globeOverrides.lightingFill = "#ffffff";
     globeOverrides.lightingGround = "#eeeeee";

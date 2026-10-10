@@ -84,16 +84,28 @@
   padding-right: 6px;
 }
 
-.deck-click-zone:hover {
-  background: transparent !important;
+/* Hover only on real pointers: on touch screens :hover sticks after a tap
+   (big accent ring that never resets). Keyboard users get :focus-visible. */
+@media (hover: hover) and (pointer: fine) {
+  .deck-click-zone:hover .deck-arrow {
+    opacity: 1;
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.15);
+    box-shadow: 0 0 12px var(--accent-soft);
+  }
 }
 
-.deck-click-zone:hover .deck-arrow {
+.deck-click-zone:focus {
+  outline: none;
+}
+
+.deck-click-zone:focus-visible .deck-arrow {
   opacity: 1;
   color: var(--accent);
   border-color: var(--accent);
-  transform: scale(1.15);
-  box-shadow: 0 0 12px var(--accent-soft);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .deck-click-zone:active .deck-arrow {
