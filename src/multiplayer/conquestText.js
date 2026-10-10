@@ -85,4 +85,24 @@ const TEXT = {
   },
 };
 
-export const conquestText = (lang) => TEXT[lang] || TEXT.fr;
+// Lobby / globe-click strings as [fr, en] pairs.
+const PAIRS = {
+  clickFree: [
+    "Pays libre : tape son nom pour le capturer",
+    "Free country: type its name to capture it",
+  ],
+  room: ["Salon", "Room"],
+  players: ["Joueurs", "Players"],
+  readyLabel: ["Prêt", "Ready"],
+  flagOption: ["Drapeau", "Flag"],
+};
+
+const withPairs = (base, index) =>
+  Object.fromEntries([
+    ...Object.entries(base),
+    ...Object.entries(PAIRS).map(([key, pair]) => [key, pair[index]]),
+  ]);
+
+const BY_LANG = { fr: withPairs(TEXT.fr, 0), en: withPairs(TEXT.en, 1) };
+
+export const conquestText = (lang) => BY_LANG[lang] || BY_LANG.fr;

@@ -84,7 +84,7 @@ const HomeScreen = ({
           {onOpenConquest && (
             <button
               type="button"
-              className="conquest-btn conquest-home-entry"
+              className="btn-secondary conquest-home-entry"
               onClick={onOpenConquest}
             >
               {lang === "fr" ? "Conquête 1v1" : "Conquest 1v1"}

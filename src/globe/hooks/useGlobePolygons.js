@@ -522,12 +522,14 @@ export function useGlobePolygons({
         mapBase: UI_COLORS.mapBase,
         lerpColor,
         restingColor,
+        ownerTint: kind === "cap" && Boolean(conquestOverlay?.colors?.[admin]),
       });
 
       cache.set(admin, material);
       return material;
     },
     [
+      conquestOverlay,
       getPolygonColor,
       getPolygonSideColor,
       isLight,
