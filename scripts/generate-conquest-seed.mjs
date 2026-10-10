@@ -48,3 +48,43 @@ ON CONFLICT DO NOTHING;
 
 writeFileSync(OUT, sql);
 console.log(`Wrote ${OUT} (${countries.length} countries, ${aliases.length} aliases)`);
+
+// Phase 2 : codes ISO (défis drapeau) et capitales (défis capitale).
+const OUT_PHASE2 = fileURLToPath(
+  new URL("../supabase/migrations/20261010220100_conquest_seed_capitals.sql", import.meta.url)
+);
+const meta = [];
+const capitals = [];
+for (const [countryId, data] of Object.entries(countryDataMap).sort(([a], [b]) =>
+  a.localeCompare(b)
+)) {
+  meta.push(
+    `  (${q(countryId)}, ${q(data.iso2 || "")}, ${q(data.capital || "")}, ${q(data.capital_fr || data.capital || "")})`
+  );
+  for (const capital of new Set([data.capital, data.capital_fr].filter(Boolean))) {
+    capitals.push(`  (${q(capital)}, ${q(countryId)})`);
+  }
+}
+
+const sqlPhase2 = `-- Généré par scripts/generate-conquest-seed.mjs — ne pas éditer à la main.
+-- Seed phase 2 du mode Conquête : ISO2 + capitales (${capitals.length} alias bruts).
+
+UPDATE public.conquest_countries AS c
+   SET iso2 = nullif(v.iso2, ''), capital_en = nullif(v.capital_en, ''),
+       capital_fr = nullif(v.capital_fr, '')
+  FROM (VALUES
+${meta.join(",\n")}
+  ) AS v (country_id, iso2, capital_en, capital_fr)
+ WHERE c.country_id = v.country_id;
+
+INSERT INTO public.conquest_capital_aliases (alias_norm, country_id)
+SELECT DISTINCT public.conquest_normalize(raw), country_id
+  FROM (VALUES
+${capitals.join(",\n")}
+  ) AS v (raw, country_id)
+ WHERE public.conquest_normalize(raw) <> ''
+ON CONFLICT DO NOTHING;
+`;
+
+writeFileSync(OUT_PHASE2, sqlPhase2);
+console.log(`Wrote ${OUT_PHASE2} (${capitals.length} capital aliases)`);

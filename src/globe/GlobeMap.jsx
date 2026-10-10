@@ -45,9 +45,8 @@ import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 
-// Module-level so its identity is stable: an inline arrow here changed
-// updateGlobeLighting on every render, which tore down and rebuilt the whole
-// lighting rig (lights + inner-glow shader, recompiled each time).
+// Module-level so its identity is stable: an inline arrow here rebuilt the
+// whole lighting rig (lights + inner-glow shader) on every render.
 const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
 
 const GlobeMap = (props) => {
@@ -157,7 +156,7 @@ const GlobeMap = (props) => {
     selectedCountry,
     foundSet,
     foundList,
-    ownershipColors: props.ownershipColors,
+    conquestOverlay: props.conquestOverlay,
     isHomeScreen,
     isEndScreen,
     isDepartmentMode,
@@ -319,6 +318,7 @@ const GlobeMap = (props) => {
     getRingRepeatWrapped,
     getSelectionEffectAltitude,
   } = useGlobeRings({
+    extraRings: props.conquestOverlay?.rings,
     mode,
     isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,

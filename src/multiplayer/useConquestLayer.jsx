@@ -1,6 +1,6 @@
 import "./ConquestScreen.css";
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { isConquestEnabled } from "./conquestConfig";
 import ConquestScreen from "./ConquestScreen.jsx";
@@ -8,6 +8,7 @@ import { useConquestMatch } from "./useConquestMatch";
 
 const noop = () => {};
 const EMPTY_FOUND = [];
+const FOCUS_HOLD_MS = 2500;
 
 /**
  * Wires the « Conquête » mode into App: entry callback (null while the flag is
@@ -22,7 +23,8 @@ export function useConquestLayer({
 }) {
   const enabled = isConquestEnabled();
   const active = enabled && currentScreen === "conquest";
-  const [ownershipColors, setOwnershipColors] = useState(null);
+  const [overlay, setOverlay] = useState(null);
+  const [focusCountry, setFocusCountry] = useState(null);
   const conquest = useConquestMatch({
     lang,
     displayName: (userProfile?.username || "Explorer").slice(0, 30),
@@ -30,9 +32,18 @@ export function useConquestLayer({
 
   const open = useCallback(() => setCurrentScreen("conquest"), [setCurrentScreen]);
   const exit = useCallback(() => {
-    setOwnershipColors(null);
+    setOverlay(null);
+    setFocusCountry(null);
     setCurrentScreen("home");
   }, [setCurrentScreen]);
+
+  // Feed click / capture: briefly select the country so the camera centres it,
+  // then release the selection so the owner colour shows again.
+  useEffect(() => {
+    if (!focusCountry) return undefined;
+    const id = setTimeout(() => setFocusCountry(null), FOCUS_HOLD_MS);
+    return () => clearTimeout(id);
+  }, [focusCountry]);
 
   const view = useMemo(() => {
     if (!active) return sessionView;
@@ -45,21 +56,22 @@ export function useConquestLayer({
         ...sessionView.globeProps,
         mode: "countries",
         foundList: EMPTY_FOUND,
-        selectedCountry: null,
+        selectedCountry: focusCountry,
         onCountrySelect: noop,
         isHomeScreen: false,
         isEndScreen: false,
-        ownershipColors,
+        conquestOverlay: overlay,
       },
     };
-  }, [active, sessionView, ownershipColors]);
+  }, [active, sessionView, overlay, focusCountry]);
 
   const screen = active ? (
     <ConquestScreen
       lang={lang}
       conquest={conquest}
       onExit={exit}
-      onOwnershipChange={setOwnershipColors}
+      onOverlayChange={setOverlay}
+      onFocusCountry={setFocusCountry}
     />
   ) : null;
 

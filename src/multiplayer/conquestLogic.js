@@ -1,4 +1,5 @@
 import { CONQUEST_PLAYER_COLORS } from "../config/designSystem";
+import { countryDataMap } from "../data/gameData";
 
 /**
  * Pure helpers for the « Conquête » multiplayer mode (no React, no Supabase).
@@ -53,40 +54,89 @@ export function formatClock(ms) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** Map countryId -> hex colour of its owner, for globe painting. */
-export function buildOwnershipColors(claims = [], players = []) {
-  const colorByUser = {};
-  for (const player of players) colorByUser[player.user_id] = getPaletteEntry(player.color).hex;
-  const colors = {};
-  for (const claim of claims) {
-    const hex = colorByUser[claim.owner_id];
-    if (hex) colors[claim.country_id] = hex;
-  }
-  return colors;
+/** Ids of countries whose shield is still up (sorted, stable for memo keys). */
+export function shieldedCountryIds(claims = [], clientNowMs = Date.now(), offsetMs = 0) {
+  return claims
+    .filter(
+      (claim) => claim.shield_until && remainingMs(claim.shield_until, clientNowMs, offsetMs) > 0
+    )
+    .map((claim) => claim.country_id)
+    .sort();
 }
 
-/** Standings: score desc, then countries held desc, then earliest joiner. */
-export function computeStandings(players = [], claims = []) {
+/**
+ * Globe overlay: owner colour per country, an ink outline for patterned
+ * players (colour-blind cue) and a slow ring on shielded countries.
+ */
+export function buildConquestOverlay(claims = [], players = [], shieldedIds = []) {
+  const byUser = {};
+  for (const player of players) byUser[player.user_id] = getPaletteEntry(player.color);
+  const colors = {};
+  const strokes = {};
+  for (const claim of claims) {
+    const entry = byUser[claim.owner_id];
+    if (!entry) continue;
+    colors[claim.country_id] = entry.hex;
+    if (entry.pattern !== "solid") strokes[claim.country_id] = CONQUEST_PLAYER_COLORS.ink;
+  }
+  const owners = Object.fromEntries(claims.map((claim) => [claim.country_id, claim.owner_id]));
+  const rings = shieldedIds
+    .map((id) => ({ id, data: countryDataMap[id], entry: byUser[owners[id]] }))
+    .filter(({ data, entry }) => entry && Number.isFinite(data?.lat) && Number.isFinite(data?.lng))
+    .map(({ data, entry }) => ({
+      lat: data.lat,
+      lng: data.lng,
+      color: entry.hex,
+      maxRadius: 2.4,
+      speed: 1.2,
+      repeat: 1400,
+    }));
+  return { colors, strokes, rings };
+}
+
+/** Sum of continent bonuses per user from the server `bonuses` rows. */
+function sumBonuses(bonuses = []) {
+  const total = {};
+  for (const row of bonuses) total[row.user_id] = (total[row.user_id] || 0) + (row.bonus || 0);
+  return total;
+}
+
+/** Standings: total (score + continent bonus) desc, then countries, then steals, then join order. */
+export function computeStandings(players = [], claims = [], bonuses = []) {
   const held = {};
   for (const claim of claims) held[claim.owner_id] = (held[claim.owner_id] || 0) + 1;
+  const bonusByUser = sumBonuses(bonuses);
   return players
-    .map((player, joinOrder) => ({
-      ...player,
-      countries: held[player.user_id] || 0,
-      joinOrder,
-    }))
+    .map((player, joinOrder) => {
+      const bonus = bonusByUser[player.user_id] || 0;
+      return {
+        ...player,
+        bonus,
+        total: (player.score || 0) + bonus,
+        countries: held[player.user_id] || 0,
+        joinOrder,
+      };
+    })
     .sort(
       (a, b) =>
-        (b.score || 0) - (a.score || 0) || b.countries - a.countries || a.joinOrder - b.joinOrder
+        b.total - a.total ||
+        b.countries - a.countries ||
+        (b.steals || 0) - (a.steals || 0) ||
+        a.joinOrder - b.joinOrder
     );
 }
 
-/** Winner of a finished match, or null on a perfect tie (same score and countries). */
-export function computeWinner(players = [], claims = []) {
-  const standings = computeStandings(players, claims);
+/** Winner of a finished match, or null on a perfect tie (same total, countries and steals). */
+export function computeWinner(players = [], claims = [], bonuses = []) {
+  const standings = computeStandings(players, claims, bonuses);
   if (standings.length === 0) return null;
   const [first, second] = standings;
-  if (second && first.score === second.score && first.countries === second.countries) return null;
+  const tied =
+    second &&
+    first.total === second.total &&
+    first.countries === second.countries &&
+    (first.steals || 0) === (second.steals || 0);
+  if (tied) return null;
   return first;
 }
 
@@ -110,6 +160,17 @@ export function formatFeedEvent(event, { players = [], countryName = (id) => id,
       return fr
         ? `${who} a capturé ${countryName(event.country_id)}`
         : `${who} captured ${countryName(event.country_id)}`;
+    case "steal": {
+      const victim = players.find((player) => player.user_id === event.payload?.victim);
+      const from = victim?.display_name || "?";
+      return fr
+        ? `${who} a volé ${countryName(event.country_id)} à ${from}`
+        : `${who} stole ${countryName(event.country_id)} from ${from}`;
+    }
+    case "steal_fail":
+      return fr
+        ? `${who} a raté le vol de ${countryName(event.country_id)}`
+        : `${who} failed to steal ${countryName(event.country_id)}`;
     case "join":
       return fr ? `${who} a rejoint le salon` : `${who} joined the room`;
     case "start":
@@ -138,6 +199,24 @@ export function describeClaimRefusal(
     }
     case "unknown":
       return fr ? "Pays inconnu" : "Unknown country";
+    case "shielded":
+      return fr ? `${name} est sous bouclier` : `${name} is shielded`;
+    case "cooldown":
+      return fr ? `Attends avant de re-voler ${name}` : `Wait before stealing ${name} again`;
+    case "penalty":
+      return fr ? "Pénalité : 3 s sans saisie" : "Penalty: 3 s lockout";
+    case "wrong":
+      return fr
+        ? `Vol raté sur ${name} (3 s de pénalité)`
+        : `Steal failed on ${name} (3 s penalty)`;
+    case "expired":
+      return fr ? "Défi expiré" : "Challenge expired";
+    case "free":
+    case "changed":
+    case "no_challenge":
+      return fr
+        ? `${name || "Ce pays"} a changé de mains`
+        : `${name || "This country"} changed hands`;
     case "not_live":
       return fr ? "La partie n'a pas commencé" : "The match has not started";
     case "finished":
