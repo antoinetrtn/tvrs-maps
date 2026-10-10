@@ -61,7 +61,7 @@ export function shieldedCountryIds(claims = [], clientNowMs = Date.now(), offset
       (claim) => claim.shield_until && remainingMs(claim.shield_until, clientNowMs, offsetMs) > 0
     )
     .map((claim) => claim.country_id)
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 }
 
 /**

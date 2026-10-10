@@ -55,7 +55,7 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
     e.preventDefault();
     const value = answer.trim();
     if (!value) return;
-    guarded(async () => {
+    void guarded(async () => {
       const result = await conquest.claim(value);
       if (!result) return;
       setStealTarget(result.reason === "already_owned" ? result.country_id : null);
@@ -70,7 +70,7 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
   };
 
   const startSteal = () =>
-    guarded(async () => {
+    void guarded(async () => {
       const result = await conquest.requestSteal(stealTarget);
       setStealTarget(null);
       if (result?.ok) {
@@ -80,7 +80,7 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
     });
 
   const answerSteal = (value) =>
-    guarded(async () => {
+    void guarded(async () => {
       const result = await conquest.steal(value);
       setChallenge(null);
       if (result?.ok) setToast({ ok: true, text: `${countryName(result.country_id)} ${t.stole}` });
