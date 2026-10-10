@@ -1,4 +1,10 @@
 /* Globe presentation: shell, labels, content wrapper and studio overlay */
+.globe-container,
+.globe-container canvas {
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
 .globe-map-shell {
   position: absolute;
   inset: 0;

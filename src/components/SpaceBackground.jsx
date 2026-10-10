@@ -259,7 +259,18 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
 
     animationFrameId = requestAnimationFrame(draw);
 
+    // Stop drawing entirely while the tab is hidden (battery/thermal).
+    const handleVisibilityChange = () => {
+      cancelAnimationFrame(animationFrameId);
+      if (!document.hidden) {
+        lastFrameTime = 0;
+        animationFrameId = requestAnimationFrame(draw);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(animationFrameId);
