@@ -404,7 +404,11 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       {/* Left Half-Circle Tap Zone -> Left Swipe Equivalent */}
       <div
         className="deck-click-zone left"
-        onClick={triggerLeftSwipe}
+        onClick={(e) => {
+          // Drop focus after a tap so no "active" state lingers on touch.
+          e.currentTarget.blur();
+          triggerLeftSwipe();
+        }}
         title={t("previous")}
         aria-label={t("previous")}
         role="button"
@@ -438,7 +442,11 @@ const HomeScreenCategoryCarousel = ({ onStartGame, lang, homeMode, setHomeMode }
       {/* Right Half-Circle Tap Zone -> Right Swipe Equivalent */}
       <div
         className="deck-click-zone right"
-        onClick={triggerRightSwipe}
+        onClick={(e) => {
+          // Drop focus after a tap so no "active" state lingers on touch.
+          e.currentTarget.blur();
+          triggerRightSwipe();
+        }}
         title={t("next")}
         aria-label={t("next")}
         role="button"

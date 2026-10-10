@@ -11,7 +11,15 @@ import {
 import { countryDataMap } from "../../data/gameData";
 import { riversMountainsDataMap } from "../../data/riversMountainsData";
 import { getCanonicalPosition } from "../../utils/utils";
-import { readClampedGlobePov, syncGlobeCameraAndZoomLimits } from "../render/globeAltitude";
+import {
+  clampGlobeAltitude,
+  frameBoundsAltitude,
+  GLOBE_MIN_ALTITUDE,
+  readClampedGlobePov,
+  REGIONAL_MIN_ALTITUDE,
+  setGlobeMinAltitude,
+  syncGlobeCameraAndZoomLimits,
+} from "../render/globeAltitude";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.005;
@@ -22,6 +30,9 @@ const MAX_GLOBE_PIXEL_RATIO = 2;
 // flash. Height shrinks below this are ignored unless the width also changed.
 const TOOLBAR_HEIGHT_TOLERANCE_PX = 140;
 
+// Selecting a department zooms to this fraction of the region framing.
+const REGIONAL_PICK_ZOOM = 0.6;
+
 // A new run lands on a random region anchor (jittered) instead of always the
 // same Europe-facing view.
 const getRandomGameStartView = () => {
@@ -30,17 +41,28 @@ const getRandomGameStartView = () => {
   return { lat: base.lat + jitter(), lng: base.lng + jitter() };
 };
 
-const getCustomModePointOfView = (mode, learnSubMode, width) => {
+const getCustomModePointOfView = (mode, learnSubMode, viewport, isPanelOpen) => {
   const config = getActiveModeConfig(mode, learnSubMode);
-  if (config && config.viewPoint) {
-    const isMobile = width < BREAKPOINTS.mobile;
+  if (!config?.viewPoint) return null;
+  const isMobile = viewport.width < BREAKPOINTS.mobile;
+  if (config.bounds && viewport.width > 0 && viewport.height > 0) {
+    // Fit the region to the visible area: the side panel eats ~30% of the
+    // width on desktop, the bottom HUD ~20% of the height on mobile.
+    const panelFactor = isPanelOpen && viewport.width >= BREAKPOINTS.desktop ? 0.7 : 1;
+    const aspect = (viewport.width * panelFactor) / viewport.height;
+    const visibleHeight = isMobile ? 0.8 : 1;
+    const { latMin, latMax, lngMin, lngMax } = config.bounds;
     return {
-      lat: config.viewPoint.lat,
-      lng: config.viewPoint.lng,
-      altitude: isMobile ? config.viewPoint.altitude.mobile : config.viewPoint.altitude.desktop,
+      lat: (latMin + latMax) / 2 - (isMobile ? (latMax - latMin) * 0.12 : 0),
+      lng: (lngMin + lngMax) / 2,
+      altitude: frameBoundsAltitude(config.bounds, aspect, visibleHeight),
     };
   }
-  return null;
+  return {
+    lat: config.viewPoint.lat,
+    lng: config.viewPoint.lng,
+    altitude: isMobile ? config.viewPoint.altitude.mobile : config.viewPoint.altitude.desktop,
+  };
 };
 
 const buildSelectedCountryCameraTarget = ({
@@ -82,6 +104,21 @@ const buildSelectedCountryCameraTarget = ({
   const targetLng =
     isAntarctica && currentPOV && Number.isFinite(currentPOV.lng) ? currentPOV.lng : (useLng ?? 0);
   const antarcticaAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.5) : isMobile ? 1.7 : 1.35;
+
+  // Regional maps: the first selection keeps the whole-region framing; later
+  // picks glide in towards the department/state (never back out).
+  if (customPOV && !isHomeScreen && !isAntarctica) {
+    return {
+      lat: targetLat,
+      lng: targetLng,
+      altitude: clampGlobeAltitude(
+        Math.min(
+          preservedAltitude,
+          customPOV.altitude * (hasPreviousSelection ? REGIONAL_PICK_ZOOM : 1)
+        )
+      ),
+    };
+  }
 
   return {
     lat: targetLat,
@@ -166,6 +203,21 @@ export function useGlobeCamera({
   const maxWindowWidthRef = useRef(window.innerWidth);
   const maxWindowHeightRef = useRef(window.innerHeight);
   const previousSelectedCountryRef = useRef(null);
+  const previousModeKeyRef = useRef(null);
+  const isRegionalMapRef = useRef(false);
+  const isRegionalMap = Boolean(getActiveModeConfig(mode, learnSubMode)?.bounds);
+  isRegionalMapRef.current = isRegionalMap;
+
+  // Regional maps: allow a closer zoom floor and zoom towards the pointer, so
+  // small departments are easy to reach with the wheel or a pinch.
+  useEffect(() => {
+    setGlobeMinAltitude(isRegionalMap ? REGIONAL_MIN_ALTITUDE : GLOBE_MIN_ALTITUDE);
+    const controls = globeEl.current?.controls?.();
+    if (!controls) return;
+    controls.zoomToCursor = isRegionalMap;
+    syncGlobeCameraAndZoomLimits(globeEl.current, controls);
+    if (!isRegionalMap) readClampedGlobePov(globeEl.current);
+  }, [isRegionalMap, globeEl]);
 
   useEffect(() => {
     let controlsReference = null;
@@ -199,7 +251,7 @@ export function useGlobeCamera({
           controls.dampingFactor = perfProfile?.isMobile ? 0.12 : 0.08;
           controls.rotateSpeed = perfProfile?.isMobile ? 0.75 : 0.9;
           controls.zoomSpeed = perfProfile?.isMobile ? 0.75 : 1;
-          controls.zoomToCursor = false;
+          controls.zoomToCursor = isRegionalMapRef.current;
           controls.minPolarAngle = ORBIT_POLE_GUARD_ANGLE;
           controls.maxPolarAngle = Math.PI - ORBIT_POLE_GUARD_ANGLE;
           syncGlobeCameraAndZoomLimits(globeEl.current, controls);
@@ -262,7 +314,10 @@ export function useGlobeCamera({
 
   useEffect(() => {
     const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
-    const customPOV = getCustomModePointOfView(mode, learnSubMode, viewport.width);
+    const customPOV = getCustomModePointOfView(mode, learnSubMode, viewport, isPanelOpen);
+    const modeKey = `${mode}|${learnSubMode}`;
+    const modeChanged = previousModeKeyRef.current !== modeKey;
+    previousModeKeyRef.current = modeKey;
     const isEnteringHomeFromGame = isHomeScreen && !wasHomeScreenRef.current;
 
     if (isEnteringHomeFromGame && globeEl.current) {
@@ -324,7 +379,10 @@ export function useGlobeCamera({
           lastTargetRef.current = target;
         }
       }
-    } else if ((selectionChanged || isHomeScreen !== wasHomeScreenRef.current) && globeEl.current) {
+    } else if (
+      (selectionChanged || modeChanged || isHomeScreen !== wasHomeScreenRef.current) &&
+      globeEl.current
+    ) {
       applyIdleCameraPointOfView({
         globeEl,
         viewport,
@@ -353,6 +411,7 @@ export function useGlobeCamera({
     gameDataMap,
     mode,
     learnSubMode,
+    isPanelOpen,
     globeEl,
   ]);
 
