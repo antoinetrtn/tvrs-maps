@@ -1,0 +1,299 @@
+/* ==========================================================================
+   UI kit — pixel/glitch primitives (Slider, Switch, OptionGroup, Settings*).
+   Square-ish (radius-sm), 1px ink borders, hard 2px offset shadows, accent
+   from the user-selected preset. No glows, no fills behind whole groups.
+   ========================================================================== */
+
+/* ---- Settings section / row ---- */
+.ui-settings-section {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-ms);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+}
+
+.ui-settings-title {
+  margin: 0 0 var(--spacing-ms);
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ui-settings-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.ui-settings-row--inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.ui-settings-row--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.ui-settings-text {
+  min-width: 0;
+}
+
+.ui-settings-label {
+  display: block;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.ui-settings-desc {
+  margin: var(--spacing-xxs) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.ui-settings-control {
+  flex-shrink: 0;
+}
+
+.ui-settings-row--stacked .ui-settings-control {
+  width: 100%;
+}
+
+/* ---- Icon stepper button (−/+) ---- */
+.ui-icon-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--control-lg);
+  height: var(--control-lg);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-main);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-instant);
+}
+
+.ui-icon-step:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ui-icon-step:active:not(:disabled) {
+  transform: translate(1px, 1px);
+}
+
+.ui-icon-step:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---- Slider ---- */
+.ui-slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.ui-slider-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.ui-slider-value {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.ui-slider-body {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.ui-slider-input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-lg); /* generous touch target */
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Track: square 6px bar, accent fill up to --fill */
+.ui-slider-input::-webkit-slider-runnable-track {
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0 var(--fill),
+    var(--glass-border-strong) var(--fill) 100%
+  );
+}
+
+.ui-slider-input::-moz-range-track {
+  height: 6px;
+  background: var(--glass-border-strong);
+}
+
+.ui-slider-input::-moz-range-progress {
+  height: 6px;
+  background: var(--accent);
+}
+
+/* Thumb: pixel square with hard offset shadow */
+.ui-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border: 2px solid var(--bg-color);
+  border-radius: 0;
+  background: var(--accent);
+  box-shadow: 2px 2px 0 var(--text-main);
+  transition: transform var(--transition-instant);
+}
+
+.ui-slider-input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--bg-color);
+  border-radius: 0;
+  background: var(--accent);
+  box-shadow: 2px 2px 0 var(--text-main);
+}
+
+.ui-slider-input:active::-webkit-slider-thumb {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--text-main);
+}
+
+/* ---- Switch ---- */
+.ui-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.ui-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--text-muted);
+  transition:
+    transform var(--transition-spring),
+    background-color var(--transition-fast);
+}
+
+.ui-switch.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ui-switch.is-on .ui-switch-knob {
+  transform: translateX(22px);
+  background: var(--accent);
+  box-shadow: 2px 2px 0 var(--text-main);
+}
+
+.ui-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- OptionGroup (matches the accent swatches) ---- */
+.ui-options {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--spacing-xs);
+}
+
+.ui-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  min-height: var(--control-lg);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.ui-option:hover:not(.active) {
+  border-color: var(--glass-border-strong);
+  color: var(--text-main);
+}
+
+.ui-option.active {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+
+/* Square marker: hollow when off, accent pixel when on */
+.ui-option-mark {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--glass-border-strong);
+}
+
+.ui-option.active .ui-option-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.ui-option svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ui-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-switch-knob,
+  .ui-icon-step {
+    transition: none;
+  }
+}

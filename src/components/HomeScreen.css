@@ -549,88 +549,6 @@
   }
 }
 
-.settings-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  transition: border-color var(--transition-fast);
-}
-
-.settings-hint {
-  margin: var(--spacing-sm) 0 0;
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
-}
-
-.settings-card:hover {
-  border-color: var(--accent-soft);
-}
-
-.settings-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-
-/* Stepper dial & details */
-.settings-duration-display {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  background: var(--accent-soft);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
-  margin-bottom: var(--spacing-sm);
-  font-family: var(--font-display, monospace);
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.settings-duration-display .duration-icon {
-  color: var(--accent);
-}
-
-.settings-stepper-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
-}
-
-.settings-btn-stepper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  height: 40px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
-}
-
-.settings-btn-stepper:hover {
-  background: var(--glass-hover);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.settings-btn-stepper:active {
-  transform: scale(0.97);
-}
-
 /* Mobile settings layout — fullscreen positioning comes from the shared
    .sheet-panel rules in panelSystem.css; only settings-specific tweaks here. */
 @media (max-width: 1024px) {
@@ -643,9 +561,5 @@
     flex: 1 !important;
     overflow-y: auto !important;
     padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
-  }
-
-  .settings-btn-stepper {
-    height: 44px;
   }
 }

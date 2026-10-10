@@ -221,7 +221,7 @@
 .panel-tabs-header {
   display: flex;
   gap: var(--spacing-xxs);
-  background: var(--accent-soft);
+  background: transparent; /* no tinted fill behind the whole group */
   padding: 3px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
@@ -306,11 +306,6 @@
   min-height: 32px;
   font-size: var(--font-size-xs);
   padding: 0 6px;
-}
-
-/* Segmented inside settings cards should fill the card width (like the old switches) */
-.settings-card .segmented-control {
-  width: 100%;
 }
 
 /* ──── SHEET PANEL (popup on desktop, fullscreen on mobile) ──── */
