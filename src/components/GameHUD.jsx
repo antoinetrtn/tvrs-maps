@@ -8,6 +8,7 @@ import { getThemeRegionColor } from "../config/designSystem";
 import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
+import { ANSWER_INPUT_PROPS } from "../utils/answerField";
 import { normalizeString } from "../utils/utils";
 import Logo from "./Logo";
 import { PixelHeart } from "./PixelHeart";
@@ -577,11 +578,8 @@ const GameHUD = ({
             >
               <input
                 ref={extInputRef}
-                type="search"
-                name="q-resp"
+                {...ANSWER_INPUT_PROPS}
                 id="q-resp-field"
-                inputMode="text"
-                enterKeyHint="done"
                 placeholder={placeholderText}
                 className="input-field"
                 value={
@@ -589,13 +587,6 @@ const GameHUD = ({
                 }
                 onChange={handleTextChange}
                 onKeyDown={handleKeyDown}
-                autoComplete="one-time-code"
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck="false"
-                data-lpignore="true"
-                data-1p-ignore="true"
-                data-form-type="other"
                 aria-label={t("quiz_answer")}
               />
             </div>
