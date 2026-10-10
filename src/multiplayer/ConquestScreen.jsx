@@ -6,15 +6,20 @@ import { countryDataMap } from "../data/gameData";
 import ConquestEnd from "./ConquestEnd.jsx";
 import ConquestHud from "./ConquestHud.jsx";
 import ConquestLobby from "./ConquestLobby.jsx";
-import { buildOwnershipColors, deriveMatchPhase, remainingMs } from "./conquestLogic";
+import {
+  buildConquestOverlay,
+  deriveMatchPhase,
+  remainingMs,
+  shieldedCountryIds,
+} from "./conquestLogic";
 
 const TICK_MS = 250;
 
 /**
  * « Conquête » 1v1 overlay. Owns no globe: it reports owner colours through
- * `onOwnershipChange` so App can paint the shared globe.
+ * `onOverlayChange` so App can paint the shared globe.
  */
-const ConquestScreen = ({ lang, conquest, onExit, onOwnershipChange }) => {
+const ConquestScreen = ({ lang, conquest, onExit, onOverlayChange, onFocusCountry }) => {
   const [now, setNow] = useState(() => Date.now());
   const { match, players, claims, clockOffset } = conquest;
   const phase = deriveMatchPhase(match, now, clockOffset);
@@ -31,10 +36,16 @@ const ConquestScreen = ({ lang, conquest, onExit, onOwnershipChange }) => {
     if (phase === "finished" && match?.status === "live") refresh();
   }, [phase, match?.status, refresh]);
 
-  const ownershipColors = useMemo(() => buildOwnershipColors(claims, players), [claims, players]);
+  // String key: the overlay (and thus globe recolouring) only changes when the
+  // set of shielded countries changes, not on every clock tick.
+  const shieldKey = shieldedCountryIds(claims, now, clockOffset).join("|");
+  const overlay = useMemo(
+    () => buildConquestOverlay(claims, players, shieldKey ? shieldKey.split("|") : []),
+    [claims, players, shieldKey]
+  );
   useEffect(() => {
-    onOwnershipChange(ownershipColors);
-  }, [ownershipColors, onOwnershipChange]);
+    onOverlayChange(overlay);
+  }, [overlay, onOverlayChange]);
 
   const countryName = useCallback(
     (id) => {
@@ -65,6 +76,7 @@ const ConquestScreen = ({ lang, conquest, onExit, onOwnershipChange }) => {
           phase={phase}
           clockMs={clockMs}
           countryName={countryName}
+          onFocusCountry={onFocusCountry}
         />
       )}
       {phase === "finished" && <ConquestEnd lang={lang} conquest={conquest} onExit={exit} />}

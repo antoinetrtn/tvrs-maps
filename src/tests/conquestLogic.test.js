@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { CONQUEST_PLAYER_COLORS } from "../config/designSystem";
 import {
-  buildOwnershipColors,
+  buildConquestOverlay,
   computeClockOffset,
   computeStandings,
   computeWinner,
@@ -14,6 +14,7 @@ import {
   getPaletteEntry,
   normalizeRoomCode,
   remainingMs,
+  shieldedCountryIds,
 } from "../multiplayer/conquestLogic";
 
 const A = { user_id: "a", display_name: "Antoine", color: "teal", score: 0 };
@@ -62,16 +63,22 @@ describe("conquestLogic", () => {
     expect(deriveMatchPhase({ ...live, status: "finished" }, T0)).toBe("finished");
   });
 
-  it("paints owned countries with the owner colour", () => {
+  it("builds the globe overlay: owner colours, ink outline for patterns, shield rings", () => {
     const claims = [
-      { country_id: "France", owner_id: "a" },
-      { country_id: "Italy", owner_id: "b" },
+      { country_id: "France", owner_id: "a", shield_until: iso(T0 + 5000) },
+      { country_id: "Italy", owner_id: "b", shield_until: iso(T0 - 1) },
       { country_id: "Spain", owner_id: "ghost" },
     ];
-    expect(buildOwnershipColors(claims, [A, B])).toEqual({
+    const shielded = shieldedCountryIds(claims, T0, 0);
+    expect(shielded).toEqual(["France"]);
+    const overlay = buildConquestOverlay(claims, [A, B], shielded);
+    expect(overlay.colors).toEqual({
       France: CONQUEST_PLAYER_COLORS.teal,
       Italy: CONQUEST_PLAYER_COLORS.amber,
     });
+    expect(overlay.strokes).toEqual({ Italy: CONQUEST_PLAYER_COLORS.ink });
+    expect(overlay.rings).toHaveLength(1);
+    expect(overlay.rings[0].color).toBe(CONQUEST_PLAYER_COLORS.teal);
   });
 
   it("ranks by score, then countries held, then join order", () => {
@@ -92,6 +99,12 @@ describe("conquestLogic", () => {
     expect(computeWinner([{ ...A, score: 30 }, B], []).user_id).toBe("a");
     expect(computeWinner([A, B], [])).toBeNull(); // perfect draw
     expect(computeWinner([], [])).toBeNull();
+    // Continent bonus counts towards the total and can flip the winner.
+    const bonuses = [{ user_id: "b", region: "Oceania", bonus: 50 }];
+    const withBonus = computeStandings([{ ...A, score: 40 }, B], [], bonuses);
+    expect(withBonus[0]).toMatchObject({ user_id: "b", total: 50, bonus: 50 });
+    // Steals break a tie on total and countries.
+    expect(computeWinner([A, { ...B, steals: 2 }], []).user_id).toBe("b");
   });
 
   it("formats feed lines and refusal messages", () => {
@@ -107,6 +120,21 @@ describe("conquestLogic", () => {
       describeClaimRefusal({ reason: "already_owned", country_id: "France", owner_id: "a" }, ctx)
     ).toBe("«France» est déjà pris par Antoine");
     expect(describeClaimRefusal({ reason: "unknown" }, ctx)).toBe("Pays inconnu");
+    expect(describeClaimRefusal({ reason: "shielded", country_id: "Italy" }, ctx)).toBe(
+      "«Italy» est sous bouclier"
+    );
+    expect(describeClaimRefusal({ reason: "cooldown", country_id: "Italy" }, ctx)).toMatch(
+      /re-voler/
+    );
+    expect(
+      formatFeedEvent(
+        { kind: "steal", actor_id: "b", country_id: "Italy", payload: { victim: "a" } },
+        ctx
+      )
+    ).toBe("Léa a volé «Italy» à Antoine");
+    expect(formatFeedEvent({ kind: "steal_fail", actor_id: "a", country_id: "Italy" }, ctx)).toBe(
+      "Antoine a raté le vol de «Italy»"
+    );
     expect(describeRpcError({ message: "match_full" }, "en")).toBe("Room is full");
     expect(describeRpcError(new Error("boom"))).toBe("Connexion au serveur impossible");
   });

@@ -297,3 +297,48 @@
   font-family: var(--font-display);
   letter-spacing: 0.08em;
 }
+
+.conquest-feed-line {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.conquest-feed-line:hover {
+  color: var(--accent);
+}
+
+.conquest-steal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.conquest-flag-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.conquest-flag-option {
+  padding: var(--spacing-xs);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--highlight-soft);
+  cursor: pointer;
+}
+
+.conquest-flag-option:hover {
+  border-color: var(--accent);
+}
+
+.conquest-flag-option img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}

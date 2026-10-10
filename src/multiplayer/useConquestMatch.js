@@ -7,13 +7,15 @@ import {
   getConquestState,
   joinConquestMatch,
   openConquestChannel,
+  requestStealChallenge,
   setConquestReady,
   startConquestMatch,
+  stealConquestCountry,
 } from "./conquestApi";
 import { computeClockOffset, describeRpcError, normalizeRoomCode } from "./conquestLogic";
 
 const RESYNC_INTERVAL_MS = 5000;
-const EMPTY_STATE = { match: null, players: [], claims: [], events: [] };
+const EMPTY_STATE = { match: null, players: [], claims: [], events: [], bonuses: [] };
 
 /** Lobby + live match state for the « Conquête » mode (server authoritative). */
 export function useConquestMatch({ lang, displayName }) {
@@ -40,6 +42,7 @@ export function useConquestMatch({ lang, displayName }) {
         players: next.players || [],
         claims: next.claims || [],
         events: next.events || [],
+        bonuses: next.bonuses || [],
       });
     } catch (err) {
       setError(describeRpcError(err, lang));
@@ -127,14 +130,15 @@ export function useConquestMatch({ lang, displayName }) {
     [run, notifyAndRefresh]
   );
 
-  /** Sends an answer; resolves to the server verdict ({ ok, reason, country_id, ... }). */
-  const claim = useCallback(
-    async (answer) => {
+  /** Runs a game RPC; resolves to the server verdict ({ ok, reason, country_id, ... }). */
+  const callGame = useCallback(
+    async (rpcCall, kind) => {
       if (!matchIdRef.current) return null;
       try {
-        const result = await claimConquestCountry(matchIdRef.current, answer);
-        if (result?.ok) await notifyAndRefresh("capture");
-        else if (result?.reason === "finished") await refresh();
+        const result = await rpcCall(matchIdRef.current);
+        if (result?.ok && kind) await notifyAndRefresh(kind);
+        else if (result?.reason === "wrong") await notifyAndRefresh("steal_fail");
+        else if (result && !result.ok) await refresh();
         return result;
       } catch (err) {
         setError(describeRpcError(err, lang));
@@ -142,6 +146,19 @@ export function useConquestMatch({ lang, displayName }) {
       }
     },
     [lang, notifyAndRefresh, refresh]
+  );
+
+  const claim = useCallback(
+    (answer) => callGame((id) => claimConquestCountry(id, answer), "capture"),
+    [callGame]
+  );
+  const requestSteal = useCallback(
+    (countryId) => callGame((id) => requestStealChallenge(id, countryId), null),
+    [callGame]
+  );
+  const steal = useCallback(
+    (answer) => callGame((id) => stealConquestCountry(id, answer), "steal"),
+    [callGame]
   );
 
   const leave = useCallback(() => {
@@ -175,6 +192,8 @@ export function useConquestMatch({ lang, displayName }) {
     setReady,
     start,
     claim,
+    requestSteal,
+    steal,
     leave,
     refresh,
   };

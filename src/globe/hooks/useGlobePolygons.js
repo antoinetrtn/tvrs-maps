@@ -52,7 +52,7 @@ export function useGlobePolygons({
   selectedCountry,
   foundSet,
   _foundList,
-  ownershipColors = null, // Conquête: countryId -> owner colour
+  conquestOverlay = null, // Conquête: { colors, strokes } by countryId
   isHomeScreen,
   isEndScreen,
   gameDataMap = countryDataMap,
@@ -147,7 +147,7 @@ export function useGlobePolygons({
         });
         if (transColor) return transColor;
       }
-      const ownerColor = ownershipColors?.[getFeatureAdmin(d)];
+      const ownerColor = conquestOverlay?.colors?.[getFeatureAdmin(d)];
       if (ownerColor) return ownerColor;
 
       if (isRegionalMode) {
@@ -241,7 +241,7 @@ export function useGlobePolygons({
       return resolved;
     },
     [
-      ownershipColors,
+      conquestOverlay,
       selectedCountry,
       mode,
       foundSet,
@@ -283,6 +283,7 @@ export function useGlobePolygons({
       }
 
       const admin = getFeatureAdmin(d);
+      if (conquestOverlay?.strokes?.[admin]) return conquestOverlay.strokes[admin];
       const isSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
 
       if (isSelected) {
@@ -338,6 +339,7 @@ export function useGlobePolygons({
       return lerpColor(UI_COLORS.borderUnfound, UI_COLORS.paper, isLight ? 0.35 : 0.28);
     },
     [
+      conquestOverlay,
       selectedCountry,
       UI_COLORS,
       isError,
@@ -585,9 +587,8 @@ export function useGlobePolygons({
     };
   }, [isLight, globeTheme, globeLightingEnabled, mode, isRegionalMode]);
 
-  // The shared material pool owns compiled GPU programs. Disposing it on every
-  // game-mode switch forced a full shader recompile (the main mode-switch
-  // stall); only a visual theme/lighting change actually invalidates it.
+  // The shared material pool owns compiled GPU programs: disposing it on mode
+  // switches forced shader recompiles; only theme/lighting invalidates it.
   useEffect(() => {
     const sharedPool = sharedMaterialsRef.current;
     return () => {

@@ -35,3 +35,20 @@
 
 ## Phase 2 (non livré)
 Vols (défi plus dur), bouclier visible, cooldown 60 s, bonus continent, pénalité d'erreur.
+
+## Phase 2 (vols, boucliers, bonus)
+Migrations : `20261010220000_conquest_phase2_steal.sql` + `20261010220100_conquest_seed_capitals.sql`
+(générée par `npm run generate:conquest-seed`). **Non appliquées** : elles partiront avec le prochain
+merge `dev` → `main` (workflow `supabase-deploy`, approbation Antoine dans l'environnement Production).
+Ne pas activer le flag sur un déploiement dont la base n'a pas ces migrations : le vol renverrait
+« Connexion au serveur impossible » (la capture simple reste fonctionnelle).
+
+- Vol : `conquest_steal_challenge(match, pays)` tire un défi (capitale ou drapeau parmi 4, 20 s) ;
+  `steal_country(match, réponse)` verrouille la ligne du pays (`FOR UPDATE`), premier commit gagnant.
+- Bouclier 30 s (20 s si le joueur devient leader strict), anneau sur le globe.
+- Cooldown 60 s pour re-voler le même pays ; erreur de vol = 3 s de pénalité (captures et vols bloqués).
+- Points : capture 10, vol 15 (+5 si le voleur n'est pas leader — aide au comeback).
+- Bonus continent : +50 tant qu'on détient au moins la moitié des pays d'un continent (compté dans le total).
+- Classement : total, puis pays détenus, puis vols.
+- Daltonisme : les joueurs à motif (points, hachures) ont un contour encre sur le globe.
+- Fil cliquable : centre le globe sur le pays (désactivé pendant un défi de vol).

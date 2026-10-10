@@ -655,4 +655,6 @@ export const CONQUEST_PLAYER_COLORS = {
   amber: THEME.dark.warning,
   red: THEME.dark.error,
   green: THEME.dark.success,
+  /** Globe outline marking patterned (non-solid) players for colour-blind play. */
+  ink: THEME.dark.textMain,
 };

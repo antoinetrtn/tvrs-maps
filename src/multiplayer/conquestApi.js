@@ -35,6 +35,12 @@ export const startConquestMatch = (matchId) => rpc("conquest_start_match", { p_m
 export const claimConquestCountry = (matchId, answer) =>
   rpc("claim_country", { p_match_id: matchId, p_answer: answer });
 
+export const requestStealChallenge = (matchId, countryId) =>
+  rpc("conquest_steal_challenge", { p_match_id: matchId, p_country_id: countryId });
+
+export const stealConquestCountry = (matchId, answer) =>
+  rpc("steal_country", { p_match_id: matchId, p_answer: answer });
+
 export const getConquestState = (matchId) => rpc("conquest_get_state", { p_match_id: matchId });
 
 /**

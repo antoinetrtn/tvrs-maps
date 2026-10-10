@@ -6,9 +6,12 @@ import { conquestText } from "./conquestText";
 
 const ConquestEnd = ({ lang, conquest, onExit }) => {
   const t = conquestText(lang);
-  const { players, claims, userId } = conquest;
-  const standings = useMemo(() => computeStandings(players, claims), [players, claims]);
-  const winner = useMemo(() => computeWinner(players, claims), [players, claims]);
+  const { players, claims, bonuses, userId } = conquest;
+  const standings = useMemo(
+    () => computeStandings(players, claims, bonuses),
+    [players, claims, bonuses]
+  );
+  const winner = useMemo(() => computeWinner(players, claims, bonuses), [players, claims, bonuses]);
   let headline = t.draw;
   if (winner)
     headline = winner.user_id === userId ? t.youWin : `${t.winner} ${winner.display_name}`;
@@ -23,7 +26,9 @@ const ConquestEnd = ({ lang, conquest, onExit }) => {
             <span className="conquest-rank">{index + 1}</span>
             <ConquestPlayerChip player={player} tag={player.user_id === userId ? t.you : null}>
               <span className="conquest-score">
-                {player.score} {t.pts} · {player.countries} {t.countries}
+                {player.total} {t.pts} · {player.countries} {t.countries} · {player.steals || 0}{" "}
+                {t.steals}
+                {player.bonus ? ` · +${player.bonus} ${t.bonus}` : ""}
               </span>
             </ConquestPlayerChip>
           </li>
