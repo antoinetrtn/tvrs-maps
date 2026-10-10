@@ -312,13 +312,23 @@ export async function signInWithEmail(email, password) {
   }
 }
 
+/**
+ * OAuth return URL: the current deployment (origin + path, no query/hash), so
+ * dev, previews and localhost come back to themselves. Supabase only honours
+ * it if it matches the Auth "Redirect URLs" allowlist; otherwise it falls back
+ * to the Site URL (production).
+ */
+export function getAuthRedirectUrl(location = window.location) {
+  return `${location.origin}${location.pathname || "/"}`;
+}
+
 export async function signInWithGoogle() {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Supabase non configuré") };
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: getAuthRedirectUrl(),
       },
     });
     return { data, error };
