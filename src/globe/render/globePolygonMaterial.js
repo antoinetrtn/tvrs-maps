@@ -7,6 +7,24 @@ import { resolvePolygonShaderMode } from "./polygonColorResolver";
 
 // Opacity of found-country caps over the satellite texture.
 const SATELLITE_FOUND_OPACITY = 0.5;
+// Conquête owner tint over the satellite texture (caps are hidden otherwise).
+const SATELLITE_OWNER_OPACITY = 0.62;
+
+/**
+ * Satellite theme: caps are hidden over the imagery unless they carry
+ * meaning. Found countries get a soft glitch tint instead of the raw
+ * triangulation wireframe (which read as a noisy mesh).
+ */
+function applySatelliteVisibility(material, { opaque, found, transitioning, ownerTint }) {
+  material.wireframe = false;
+  material.visible = true;
+  material.transparent = !opaque;
+  if (opaque) material.opacity = 1.0;
+  else if (found) material.opacity = SATELLITE_FOUND_OPACITY;
+  else if (transitioning) material.opacity = 1.0;
+  else if (ownerTint) material.opacity = SATELLITE_OWNER_OPACITY;
+  else material.visible = false;
+}
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
 
 function resolvePolygonEmissiveProps({
@@ -237,33 +255,12 @@ export function getPolygonMaterialForFeature({
       isShaderCap && (isSuccess || isFound || isLearnSelected || isIsolated);
 
     if (isSatellite) {
-      if (shaderNeedsOpaque || isLearnSelected) {
-        material.transparent = false;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else if (showFoundOnGlobe) {
-        // Found countries: soft glitch tint over the imagery instead of the
-        // raw triangulation wireframe (which read as a noisy mesh).
-        material.transparent = true;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = SATELLITE_FOUND_OPACITY;
-      } else if (isPrevTransitioning || isIncomingTransitioning) {
-        material.transparent = true;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else if (ownerTint) {
-        // Owner tint over the satellite texture (caps are hidden otherwise).
-        material.transparent = true;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 0.62;
-      } else {
-        material.transparent = true;
-        material.visible = false;
-      }
+      applySatelliteVisibility(material, {
+        opaque: shaderNeedsOpaque || isLearnSelected,
+        found: showFoundOnGlobe,
+        transitioning: isPrevTransitioning || isIncomingTransitioning,
+        ownerTint,
+      });
     }
 
     if (isShaderCap) {
@@ -315,27 +312,12 @@ export function getPolygonMaterialForFeature({
     const oldTransparent = material.transparent;
 
     if (isSatellite) {
-      if (shaderNeedsOpaque || isLearnSelected) {
-        material.transparent = false;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else if (showFoundOnGlobe) {
-        // Found countries: soft glitch tint over the imagery instead of the
-        // raw triangulation wireframe (which read as a noisy mesh).
-        material.transparent = true;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = SATELLITE_FOUND_OPACITY;
-      } else if (isPrevTransitioning || isIncomingTransitioning) {
-        material.transparent = true;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else {
-        material.transparent = true;
-        material.visible = false;
-      }
+      applySatelliteVisibility(material, {
+        opaque: shaderNeedsOpaque || isLearnSelected,
+        found: showFoundOnGlobe,
+        transitioning: isPrevTransitioning || isIncomingTransitioning,
+        ownerTint: false,
+      });
     }
 
     if (isShaderCap) {
