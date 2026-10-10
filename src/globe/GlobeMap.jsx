@@ -157,6 +157,7 @@ const GlobeMap = (props) => {
     selectedCountry,
     foundSet,
     foundList,
+    ownershipColors: props.ownershipColors,
     isHomeScreen,
     isEndScreen,
     isDepartmentMode,

@@ -641,3 +641,11 @@ export const getXpOrbColors = () => ({
   accentInner: resolveTokenColor("--xp-yellow-inner", GAME_XP_COLORS.yellowInner),
   accentOuter: resolveTokenColor("--xp-yellow-outer", GAME_XP_COLORS.yellowOuter),
 });
+
+/** « Conquête » player colours (atlas tones), paired with patterns in conquestLogic. */
+export const CONQUEST_PLAYER_COLORS = {
+  teal: THEME.dark.accent,
+  amber: THEME.dark.warning,
+  red: THEME.dark.error,
+  green: THEME.dark.success,
+};

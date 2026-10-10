@@ -1,0 +1,113 @@
+import { describe, expect, it } from "vitest";
+
+import { CONQUEST_PLAYER_COLORS } from "../config/designSystem";
+import {
+  buildOwnershipColors,
+  computeClockOffset,
+  computeStandings,
+  computeWinner,
+  deriveMatchPhase,
+  describeClaimRefusal,
+  describeRpcError,
+  formatClock,
+  formatFeedEvent,
+  getPaletteEntry,
+  normalizeRoomCode,
+  remainingMs,
+} from "../multiplayer/conquestLogic";
+
+const A = { user_id: "a", display_name: "Antoine", color: "teal", score: 0 };
+const B = { user_id: "b", display_name: "Léa", color: "amber", score: 0 };
+const T0 = Date.parse("2026-10-10T18:00:00Z");
+const iso = (ms) => new Date(ms).toISOString();
+
+describe("conquestLogic", () => {
+  it("normalizes room codes and rejects implausible ones", () => {
+    expect(normalizeRoomCode(" ab-c2 34 ")).toBe("ABC234");
+    expect(normalizeRoomCode("ABC12")).toBe("");
+    expect(normalizeRoomCode("ABCD0O")).toBe(""); // 0/O excluded (ambiguous)
+    expect(normalizeRoomCode(null)).toBe("");
+  });
+
+  it("pairs every colour with a pattern and falls back to the first", () => {
+    expect(getPaletteEntry("amber")).toMatchObject({
+      hex: CONQUEST_PLAYER_COLORS.amber,
+      pattern: "dots",
+    });
+    expect(getPaletteEntry("unknown").id).toBe("teal");
+  });
+
+  it("formats the clock rounding up and never negative", () => {
+    expect(formatClock(600000)).toBe("10:00");
+    expect(formatClock(61001)).toBe("1:02");
+    expect(formatClock(1)).toBe("0:01");
+    expect(formatClock(-5)).toBe("0:00");
+  });
+
+  it("uses the server clock offset for remaining time", () => {
+    const offset = computeClockOffset(iso(T0 + 2000), T0);
+    expect(offset).toBe(2000);
+    expect(remainingMs(iso(T0 + 10000), T0, offset)).toBe(8000);
+    expect(remainingMs(iso(T0 - 1), T0, 0)).toBe(0);
+    expect(computeClockOffset("garbage", T0)).toBe(0);
+  });
+
+  it("derives the match phase from status and server time", () => {
+    const live = { status: "live", started_at: iso(T0), ends_at: iso(T0 + 600000) };
+    expect(deriveMatchPhase(null, T0)).toBe("idle");
+    expect(deriveMatchPhase({ status: "lobby" }, T0)).toBe("lobby");
+    expect(deriveMatchPhase(live, T0 - 1500)).toBe("countdown");
+    expect(deriveMatchPhase(live, T0 + 1000)).toBe("live");
+    expect(deriveMatchPhase(live, T0 + 600001)).toBe("finished");
+    expect(deriveMatchPhase({ ...live, status: "finished" }, T0)).toBe("finished");
+  });
+
+  it("paints owned countries with the owner colour", () => {
+    const claims = [
+      { country_id: "France", owner_id: "a" },
+      { country_id: "Italy", owner_id: "b" },
+      { country_id: "Spain", owner_id: "ghost" },
+    ];
+    expect(buildOwnershipColors(claims, [A, B])).toEqual({
+      France: CONQUEST_PLAYER_COLORS.teal,
+      Italy: CONQUEST_PLAYER_COLORS.amber,
+    });
+  });
+
+  it("ranks by score, then countries held, then join order", () => {
+    const claims = [
+      { country_id: "France", owner_id: "b" },
+      { country_id: "Italy", owner_id: "b" },
+      { country_id: "Spain", owner_id: "a" },
+    ];
+    const standings = computeStandings(
+      [
+        { ...A, score: 20 },
+        { ...B, score: 20 },
+      ],
+      claims
+    );
+    expect(standings.map((p) => p.user_id)).toEqual(["b", "a"]);
+    expect(standings[0].countries).toBe(2);
+    expect(computeWinner([{ ...A, score: 30 }, B], []).user_id).toBe("a");
+    expect(computeWinner([A, B], [])).toBeNull(); // perfect draw
+    expect(computeWinner([], [])).toBeNull();
+  });
+
+  it("formats feed lines and refusal messages", () => {
+    const ctx = { players: [A, B], countryName: (id) => `«${id}»`, lang: "fr" };
+    expect(formatFeedEvent({ kind: "capture", actor_id: "b", country_id: "Italy" }, ctx)).toBe(
+      "Léa a capturé «Italy»"
+    );
+    expect(formatFeedEvent({ kind: "fail", actor_id: "a" }, ctx)).toBeNull();
+    expect(formatFeedEvent({ kind: "join", actor_id: "zz" }, { ...ctx, lang: "en" })).toBe(
+      "A player joined the room"
+    );
+    expect(
+      describeClaimRefusal({ reason: "already_owned", country_id: "France", owner_id: "a" }, ctx)
+    ).toBe("«France» est déjà pris par Antoine");
+    expect(describeClaimRefusal({ reason: "unknown" }, ctx)).toBe("Pays inconnu");
+    expect(describeRpcError({ message: "match_full" }, "en")).toBe("Room is full");
+    expect(describeRpcError(new Error("boom"))).toBe("Connexion au serveur impossible");
+  });
+});

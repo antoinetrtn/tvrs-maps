@@ -25,6 +25,7 @@ import SegmentedControl from "./SegmentedControl";
 
 const HomeScreen = ({
   onStartGame,
+  onOpenConquest = null,
   theme,
   _setTheme,
   lang,
@@ -92,6 +93,15 @@ const HomeScreen = ({
             homeMode={homeMode}
             setHomeMode={setHomeMode}
           />
+          {onOpenConquest && (
+            <button
+              type="button"
+              className="conquest-btn conquest-home-entry"
+              onClick={onOpenConquest}
+            >
+              {lang === "fr" ? "Conquête 1v1" : "Conquest 1v1"}
+            </button>
+          )}
         </div>
 
         <div className="home-bottom-right">

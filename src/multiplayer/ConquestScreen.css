@@ -1,0 +1,299 @@
+/* « Conquête » 1v1 overlay — atlas tokens only (no new design tokens). */
+
+.conquest-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-family: var(--font-main);
+  color: var(--text-main);
+}
+
+.conquest-overlay > * {
+  pointer-events: auto;
+}
+
+.conquest-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-ms);
+  width: min(420px, calc(100vw - var(--spacing-xl)));
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+}
+
+.conquest-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+}
+
+.conquest-subtitle,
+.conquest-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.conquest-label {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.conquest-error {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--font-size-sm);
+}
+
+.conquest-lobby-entry,
+.conquest-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.conquest-join-form {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.conquest-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--glass-hover);
+  color: var(--text-main);
+  font: inherit;
+  font-size: var(--font-size-md);
+  cursor: pointer;
+}
+
+.conquest-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.conquest-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.conquest-btn.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.conquest-btn.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.conquest-btn.small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+}
+
+.conquest-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--spacing-sm) var(--spacing-ms);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--highlight-soft);
+  color: var(--text-main);
+  font: inherit;
+  font-size: var(--font-size-base);
+}
+
+.conquest-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.conquest-code-input,
+.conquest-code,
+.conquest-timer,
+.conquest-rank {
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+}
+
+.conquest-room-code {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.conquest-code {
+  flex: 1;
+  font-size: var(--font-size-lg);
+  color: var(--accent);
+}
+
+.conquest-player-list,
+.conquest-scoreboard,
+.conquest-feed ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conquest-player-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.conquest-player-chip {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-md);
+}
+
+.conquest-player-tag,
+.conquest-ready,
+.conquest-score {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.conquest-ready,
+.conquest-score {
+  margin-left: auto;
+}
+
+.conquest-ready.is-ready {
+  color: var(--success);
+}
+
+/* Colour + pattern swatch (colour-blind friendly). */
+.conquest-swatch {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--player-color, var(--accent));
+}
+
+.conquest-swatch.pattern-dots {
+  background-image: radial-gradient(var(--black) 1.5px, transparent 1.6px);
+  background-size: 5px 5px;
+}
+
+.conquest-swatch.pattern-hatch {
+  background-image: repeating-linear-gradient(45deg, var(--black) 0 1.5px, transparent 1.5px 4px);
+}
+
+.conquest-swatch.pattern-cross {
+  background-image:
+    repeating-linear-gradient(0deg, var(--black) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, var(--black) 0 1px, transparent 1px 4px);
+}
+
+/* In-match HUD */
+.conquest-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.conquest-hud > * {
+  position: absolute;
+  pointer-events: auto;
+  padding: var(--spacing-ms);
+  border-radius: var(--radius-lg);
+}
+
+.conquest-hud-top {
+  top: var(--spacing-md);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  transform: translateX(-50%);
+}
+
+.conquest-timer {
+  font-size: var(--font-size-lg);
+  color: var(--accent);
+}
+
+.conquest-timer.is-urgent {
+  color: var(--warning);
+}
+
+.conquest-feed {
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: min(260px, 40vw);
+  font-size: var(--font-size-sm);
+}
+
+.conquest-answer {
+  bottom: var(--spacing-xl);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: min(420px, calc(100vw - var(--spacing-xl)));
+  transform: translateX(-50%);
+}
+
+.conquest-toast {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.conquest-toast.is-ok {
+  color: var(--success);
+}
+
+.conquest-toast.is-ko {
+  color: var(--warning);
+}
+
+.conquest-end {
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .conquest-hud-top {
+    gap: var(--spacing-sm);
+    width: calc(100vw - var(--spacing-md));
+    justify-content: space-between;
+  }
+
+  .conquest-feed {
+    top: auto;
+    right: 50%;
+    bottom: calc(var(--spacing-xl) + 72px);
+    width: min(420px, calc(100vw - var(--spacing-xl)));
+    transform: translateX(50%);
+  }
+
+  .conquest-feed li:not(:first-child) {
+    display: none;
+  }
+}
+
+.conquest-home-entry {
+  align-self: center;
+  margin-top: var(--spacing-md);
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+}

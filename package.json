@@ -11,6 +11,7 @@
     "dev": "vite",
     "dev:5001": "vite --host 0.0.0.0 --port 5001",
     "download-flags": "node scripts/download-flags.js",
+    "generate:conquest-seed": "node scripts/generate-conquest-seed.mjs",
     "lint": "node scripts/quality-check.js",
     "check:tokens": "node scripts/check-tokens.mjs",
     "lint:eslint": "eslint src",
