@@ -14,6 +14,7 @@ import {
   getPaletteEntry,
   normalizeRoomCode,
   remainingMs,
+  resolveCountryClick,
   shieldedCountryIds,
 } from "../multiplayer/conquestLogic";
 
@@ -105,6 +106,19 @@ describe("conquestLogic", () => {
     expect(withBonus[0]).toMatchObject({ user_id: "b", total: 50, bonus: 50 });
     // Steals break a tie on total and countries.
     expect(computeWinner([A, { ...B, steals: 2 }], []).user_id).toBe("b");
+  });
+
+  it("maps a globe click to steal / free / mine / shielded", () => {
+    const claims = [
+      { country_id: "France", owner_id: "a" },
+      { country_id: "Italy", owner_id: "b", shield_until: iso(T0 + 5000) },
+      { country_id: "Spain", owner_id: "b", shield_until: iso(T0 - 1) },
+    ];
+    expect(resolveCountryClick("Peru", claims, "a", T0)).toBe("free");
+    expect(resolveCountryClick("France", claims, "a", T0)).toBe("mine");
+    expect(resolveCountryClick("Italy", claims, "a", T0)).toBe("shielded");
+    expect(resolveCountryClick("Italy", claims, "a", T0, 6000)).toBe("steal");
+    expect(resolveCountryClick("Spain", claims, "a", T0)).toBe("steal");
   });
 
   it("formats feed lines and refusal messages", () => {

@@ -1,4 +1,8 @@
-/* « Conquête » 1v1 overlay — atlas tokens only (no new design tokens). */
+/* « Conquête » 1v1 — aligned on the UI kit (src/components/ui/ui.css):
+   radius-sm, 1px borders, hard offset shadows, Bitcount titles/numbers,
+   Space Grotesk text, user accent. Buttons are the shared .btn-primary /
+   .btn-secondary; groups are SettingsSection; ready is a Switch; flag
+   choices are an OptionGroup. Only layout lives here. */
 
 .conquest-overlay {
   position: fixed;
@@ -16,19 +20,41 @@
   pointer-events: auto;
 }
 
+/* Shared surface: same language as the settings sheet. */
+.conquest-surface {
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  box-shadow: 4px 4px 0 var(--black);
+}
+
 .conquest-panel {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-ms);
-  width: min(420px, calc(100vw - var(--spacing-xl)));
+  width: min(440px, calc(100vw - var(--spacing-xl)));
+  max-height: calc(100dvh - var(--spacing-xl));
+  overflow-y: auto;
   padding: var(--spacing-lg);
-  border-radius: var(--radius-lg);
+}
+
+.conquest-panel .ui-settings-section {
+  margin-bottom: 0;
+}
+
+.conquest-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
 }
 
 .conquest-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .conquest-subtitle,
@@ -39,10 +65,11 @@
 }
 
 .conquest-label {
-  color: var(--text-muted);
+  font-family: var(--font-display);
   font-size: var(--font-size-xs);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .conquest-error {
@@ -51,93 +78,66 @@
   font-size: var(--font-size-sm);
 }
 
-.conquest-lobby-entry,
-.conquest-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+.conquest-block {
+  width: 100%;
 }
 
-.conquest-join-form {
+.conquest-join-form,
+.conquest-actions-row {
   display: flex;
   gap: var(--spacing-sm);
 }
 
-.conquest-btn {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--glass-hover);
-  color: var(--text-main);
-  font: inherit;
-  font-size: var(--font-size-md);
-  cursor: pointer;
-}
-
-.conquest-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-}
-
-.conquest-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.conquest-btn.primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-contrast);
-}
-
-.conquest-btn.ghost {
-  border-color: transparent;
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.conquest-btn.small {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-xs);
+.conquest-actions-row > * {
+  flex: 1;
 }
 
 .conquest-input {
   flex: 1;
+  width: 100%;
   min-width: 0;
-  padding: var(--spacing-sm) var(--spacing-ms);
+  height: var(--control-lg);
+  padding: 0 var(--spacing-ms);
   border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--highlight-soft);
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-main);
   font: inherit;
   font-size: var(--font-size-base);
 }
 
-.conquest-input:focus {
+.conquest-input:focus-visible {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 2px 2px 0 var(--text-main);
 }
 
 .conquest-code-input,
 .conquest-code,
 .conquest-timer,
-.conquest-rank {
+.conquest-rank,
+.conquest-total,
+.conquest-score {
   font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.conquest-code-input {
   letter-spacing: 0.12em;
 }
 
 .conquest-room-code {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-ms);
 }
 
 .conquest-code {
-  flex: 1;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
+  letter-spacing: 0.12em;
   color: var(--accent);
 }
 
-.conquest-player-list,
 .conquest-scoreboard,
 .conquest-feed ul {
   display: flex;
@@ -148,42 +148,47 @@
   list-style: none;
 }
 
-.conquest-player-list li {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
 .conquest-player-chip {
   display: flex;
   flex: 1;
   align-items: center;
   gap: var(--spacing-sm);
+  min-width: 0;
   font-size: var(--font-size-md);
+  font-weight: 600;
 }
 
-.conquest-player-tag,
-.conquest-ready,
-.conquest-score {
-  color: var(--text-muted);
+.conquest-player-name {
+  flex-shrink: 0;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conquest-player-tag {
   font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
-.conquest-ready,
+.conquest-player-chip > .ui-switch,
 .conquest-score {
   margin-left: auto;
 }
 
-.conquest-ready.is-ready {
-  color: var(--success);
+.conquest-score {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
-/* Colour + pattern swatch (colour-blind friendly). */
+/* Colour + pattern swatch (colour-blind friendly), square like the kit. */
 .conquest-swatch {
   width: 14px;
   height: 14px;
   flex: none;
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--black);
   background-color: var(--player-color, var(--accent));
 }
 
@@ -202,6 +207,23 @@
     repeating-linear-gradient(90deg, var(--black) 0 1px, transparent 1px 4px);
 }
 
+/* End screen rows */
+.conquest-end-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.conquest-rank {
+  width: 1.5em;
+  color: var(--accent);
+}
+
+.conquest-total {
+  margin-left: var(--spacing-sm);
+  color: var(--accent);
+}
+
 /* In-match HUD */
 .conquest-hud {
   position: absolute;
@@ -213,7 +235,6 @@
   position: absolute;
   pointer-events: auto;
   padding: var(--spacing-ms);
-  border-radius: var(--radius-lg);
 }
 
 .conquest-hud-top {
@@ -226,7 +247,7 @@
 }
 
 .conquest-timer {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   color: var(--accent);
 }
 
@@ -240,62 +261,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
-  width: min(260px, 40vw);
+  width: min(280px, 40vw);
   font-size: var(--font-size-sm);
-}
-
-.conquest-answer {
-  bottom: var(--spacing-xl);
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  width: min(420px, calc(100vw - var(--spacing-xl)));
-  transform: translateX(-50%);
-}
-
-.conquest-toast {
-  margin: 0;
-  font-size: var(--font-size-sm);
-}
-
-.conquest-toast.is-ok {
-  color: var(--success);
-}
-
-.conquest-toast.is-ko {
-  color: var(--warning);
-}
-
-.conquest-end {
-  text-align: left;
-}
-
-@media (max-width: 640px) {
-  .conquest-hud-top {
-    gap: var(--spacing-sm);
-    width: calc(100vw - var(--spacing-md));
-    justify-content: space-between;
-  }
-
-  .conquest-feed {
-    top: auto;
-    right: 50%;
-    bottom: calc(var(--spacing-xl) + 72px);
-    width: min(420px, calc(100vw - var(--spacing-xl)));
-    transform: translateX(50%);
-  }
-
-  .conquest-feed li:not(:first-child) {
-    display: none;
-  }
-}
-
-.conquest-home-entry {
-  align-self: center;
-  margin-top: var(--spacing-md);
-  font-family: var(--font-display);
-  letter-spacing: 0.08em;
 }
 
 .conquest-feed-line {
@@ -308,8 +275,37 @@
   cursor: pointer;
 }
 
-.conquest-feed-line:hover {
+.conquest-feed-line:hover,
+.conquest-feed-line:focus-visible {
   color: var(--accent);
+  text-decoration: underline;
+}
+
+.conquest-answer {
+  bottom: var(--spacing-xl);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: min(440px, calc(100vw - var(--spacing-xl)));
+  transform: translateX(-50%);
+}
+
+.conquest-toast {
+  align-self: flex-start;
+  margin: 0;
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border: 1px solid currentcolor;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.conquest-toast.is-ok {
+  color: var(--success);
+}
+
+.conquest-toast.is-ko {
+  color: var(--warning);
 }
 
 .conquest-steal {
@@ -318,27 +314,62 @@
   gap: var(--spacing-sm);
 }
 
-.conquest-flag-options {
+.conquest-flag-options.ui-options {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-sm);
 }
 
-.conquest-flag-option {
+.conquest-flag-options .ui-option {
+  justify-content: center;
   padding: var(--spacing-xs);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--highlight-soft);
-  cursor: pointer;
 }
 
-.conquest-flag-option:hover {
-  border-color: var(--accent);
+.conquest-flag-options .ui-option-mark,
+.conquest-flag-options .ui-option-label {
+  display: none;
 }
 
-.conquest-flag-option img {
+.conquest-flag {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+}
+
+.conquest-home-entry {
+  align-self: center;
+  margin-top: var(--spacing-md);
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .conquest-hud-top {
+    gap: var(--spacing-sm);
+    width: calc(100vw - var(--spacing-md));
+    justify-content: space-between;
+  }
+
+  .conquest-feed {
+    top: auto;
+    right: 50%;
+    bottom: calc(var(--spacing-xl) + 88px);
+    width: min(440px, calc(100vw - var(--spacing-xl)));
+    transform: translateX(50%);
+  }
+
+  .conquest-feed li:not(:first-child) {
+    display: none;
+  }
+}
+
+/* SettingsRow without a label: let the player chip span the whole row. */
+.conquest-panel .ui-settings-row--inline .ui-settings-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.conquest-end-row .conquest-player-chip {
+  flex: 1;
 }

@@ -1,10 +1,11 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   computeStandings,
   describeClaimRefusal,
   formatClock,
   formatFeedEvent,
+  resolveCountryClick,
 } from "./conquestLogic";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import ConquestStealPanel from "./ConquestStealPanel.jsx";
@@ -12,14 +13,23 @@ import { conquestText } from "./conquestText";
 
 const FEED_SIZE = 6;
 
-const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCountry }) => {
+const ConquestHud = ({
+  lang,
+  conquest,
+  phase,
+  clockMs,
+  countryName,
+  onFocusCountry,
+  countryClickRef,
+}) => {
   const t = conquestText(lang);
-  const { players, claims, events, bonuses, userId } = conquest;
+  const { players, claims, events, bonuses, userId, clockOffset } = conquest;
   const [answer, setAnswer] = useState("");
   const [toast, setToast] = useState(null);
   const [stealTarget, setStealTarget] = useState(null);
   const [challenge, setChallenge] = useState(null);
   const pendingRef = useRef(false);
+  const inputRef = useRef(null);
   const standings = useMemo(
     () => computeStandings(players, claims, bonuses),
     [players, claims, bonuses]
@@ -40,7 +50,7 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
   );
   const refusal = (result) => describeClaimRefusal(result, { players, countryName, lang });
 
-  // Serialises RPCs so a double Enter never sends two attempts.
+  // Serialises RPCs so a double Enter / double click never sends two attempts.
   const guarded = async (fn) => {
     if (pendingRef.current || phase !== "live") return;
     pendingRef.current = true;
@@ -50,6 +60,14 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
       pendingRef.current = false;
     }
   };
+
+  const openSteal = (countryId) =>
+    guarded(async () => {
+      const result = await conquest.requestSteal(countryId);
+      setStealTarget(null);
+      if (result?.ok) setChallenge(result);
+      else if (result) setToast({ ok: false, text: refusal(result) });
+    });
 
   const submit = (e) => {
     e.preventDefault();
@@ -63,33 +81,43 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
       if (result.ok)
         setToast({ ok: true, text: `${countryName(result.country_id)} ${t.captured}` });
       else setToast({ ok: false, text: refusal(result) });
-      // Only centre on success: a selected country shows its flag/capital label,
-      // which would leak the answer of the steal challenge.
-      if (result.ok) onFocusCountry(result.country_id);
+      if (result.country_id) onFocusCountry(result.country_id);
     });
   };
 
-  const startSteal = () =>
-    void guarded(async () => {
-      const result = await conquest.requestSteal(stealTarget);
-      setStealTarget(null);
-      if (result?.ok) {
-        onFocusCountry(null);
-        setChallenge(result);
-      } else if (result) setToast({ ok: false, text: refusal(result) });
-    });
-
   const answerSteal = (value) =>
-    void guarded(async () => {
+    guarded(async () => {
       const result = await conquest.steal(value);
       setChallenge(null);
       if (result?.ok) setToast({ ok: true, text: `${countryName(result.country_id)} ${t.stole}` });
       else if (result) setToast({ ok: false, text: refusal(result) });
     });
 
+  // Globe click: centre the country, then steal / prompt / inform.
+  const handleCountryClick = (countryId) => {
+    if (phase !== "live" || challenge) return;
+    onFocusCountry(countryId);
+    const action = resolveCountryClick(countryId, claims, userId, Date.now(), clockOffset);
+    if (action === "steal") {
+      void openSteal(countryId);
+    } else if (action === "free") {
+      setToast({ ok: true, text: t.clickFree });
+      inputRef.current?.focus();
+    } else {
+      const reason = action === "mine" ? "already_yours" : "shielded";
+      setToast({ ok: false, text: refusal({ reason, country_id: countryId }) });
+    }
+  };
+  useEffect(() => {
+    countryClickRef.current = handleCountryClick;
+    return () => {
+      countryClickRef.current = null;
+    };
+  });
+
   return (
     <div className="conquest-hud">
-      <div className="conquest-hud-top glass-panel">
+      <div className="conquest-hud-top conquest-surface">
         <span className={`conquest-timer ${clockMs <= 120000 ? "is-urgent" : ""}`}>
           {phase === "countdown"
             ? `${t.countdown} ${Math.ceil(clockMs / 1000)}`
@@ -108,7 +136,7 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
           ))}
         </ol>
       </div>
-      <aside className="conquest-feed glass-panel" aria-live="polite">
+      <aside className="conquest-feed conquest-surface" aria-live="polite">
         <span className="conquest-label">{t.feed}</span>
         <ul>
           {feed.map((line) => (
@@ -117,7 +145,6 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
                 <button
                   type="button"
                   className="conquest-feed-line"
-                  disabled={Boolean(challenge || stealTarget)}
                   onClick={() => onFocusCountry(line.countryId)}
                 >
                   {line.text}
@@ -129,10 +156,10 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
           ))}
         </ul>
       </aside>
-      <div className="conquest-answer glass-panel">
+      <div className="conquest-answer conquest-surface">
         {toast && <p className={`conquest-toast ${toast.ok ? "is-ok" : "is-ko"}`}>{toast.text}</p>}
         {stealTarget && !challenge && (
-          <button type="button" className="conquest-btn primary small" onClick={startSteal}>
+          <button type="button" className="btn-primary" onClick={() => openSteal(stealTarget)}>
             {t.stealOffer} {countryName(stealTarget)}
           </button>
         )}
@@ -148,6 +175,7 @@ const ConquestHud = ({ lang, conquest, phase, clockMs, countryName, onFocusCount
         ) : (
           <form onSubmit={submit}>
             <input
+              ref={inputRef}
               className="conquest-input"
               value={answer}
               disabled={phase !== "live"}

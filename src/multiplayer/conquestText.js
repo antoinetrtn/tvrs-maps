@@ -40,6 +40,13 @@ const TEXT = {
     bonus: "bonus continent",
     steals: "vols",
     shield: "Bouclier",
+    clickFree: "Pays libre : tape son nom pour le capturer",
+    clickMine: "Ce pays est à toi",
+    room: "Salon",
+    players: "Joueurs",
+    readyLabel: "Prêt",
+    timer: "Temps",
+    flagOption: "Drapeau",
   },
   en: {
     title: "Conquest",
@@ -82,6 +89,13 @@ const TEXT = {
     bonus: "continent bonus",
     steals: "steals",
     shield: "Shield",
+    clickFree: "Free country: type its name to capture it",
+    clickMine: "This country is yours",
+    room: "Room",
+    players: "Players",
+    readyLabel: "Ready",
+    timer: "Time",
+    flagOption: "Flag",
   },
 };
 

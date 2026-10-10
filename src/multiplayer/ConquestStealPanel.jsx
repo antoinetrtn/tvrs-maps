@@ -1,54 +1,64 @@
 import React, { useState } from "react";
 
+import OptionGroup from "../components/ui/OptionGroup.jsx";
+
 /** Harder steal challenge: type the capital, or pick the right flag among four. */
 const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) => {
   const [value, setValue] = useState("");
   const name = countryName(challenge.country_id);
   const isFlag = challenge.kind === "flag";
+  // alt = position only: naming the flag would give the answer away.
+  const flagOptions = (challenge.options || []).map((iso, index) => ({
+    value: iso,
+    label: "",
+    icon: (
+      <img
+        className="conquest-flag"
+        src={`/flags/${iso.toLowerCase()}.svg`}
+        alt={`${t.flagOption} ${index + 1}`}
+      />
+    ),
+  }));
+
   return (
-    <div className="conquest-steal">
+    <form
+      className="conquest-steal"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (value.trim()) onAnswer(value.trim());
+      }}
+    >
       <span className="conquest-label">
         {isFlag ? t.stealFlag : t.stealCapital} {name} ?
       </span>
       {isFlag ? (
-        <div className="conquest-flag-options">
-          {challenge.options.map((iso) => (
-            <button
-              key={iso}
-              type="button"
-              className="conquest-flag-option"
-              onClick={() => onAnswer(iso)}
-            >
-              <img src={`/flags/${iso.toLowerCase()}.svg`} alt="" loading="eager" />
-            </button>
-          ))}
-        </div>
+        <OptionGroup
+          className="conquest-flag-options"
+          options={flagOptions}
+          value={value}
+          onChange={setValue}
+          label={`${t.stealFlag} ${name}`}
+        />
       ) : (
-        <form
-          className="conquest-join-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (value.trim()) onAnswer(value.trim());
-          }}
-        >
-          <input
-            className="conquest-input"
-            value={value}
-            placeholder={t.stealPlaceholder}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            onChange={(e) => setValue(e.target.value)}
-          />
-          <button type="submit" className="conquest-btn primary">
-            {t.stealOffer}
-          </button>
-        </form>
+        <input
+          className="conquest-input"
+          value={value}
+          placeholder={t.stealPlaceholder}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          onChange={(e) => setValue(e.target.value)}
+        />
       )}
-      <button type="button" className="conquest-btn ghost small" onClick={onCancel}>
-        {t.stealCancel}
-      </button>
-    </div>
+      <div className="conquest-actions-row">
+        <button type="button" className="btn-secondary" onClick={onCancel}>
+          {t.stealCancel}
+        </button>
+        <button type="submit" className="btn-primary" disabled={!value.trim()}>
+          {t.stealOffer}
+        </button>
+      </div>
+    </form>
   );
 };
 

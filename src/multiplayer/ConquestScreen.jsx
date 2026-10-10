@@ -19,7 +19,14 @@ const TICK_MS = 250;
  * « Conquête » 1v1 overlay. Owns no globe: it reports owner colours through
  * `onOverlayChange` so App can paint the shared globe.
  */
-const ConquestScreen = ({ lang, conquest, onExit, onOverlayChange, onFocusCountry }) => {
+const ConquestScreen = ({
+  lang,
+  conquest,
+  onExit,
+  onOverlayChange,
+  onFocusCountry,
+  countryClickRef,
+}) => {
   const [now, setNow] = useState(() => Date.now());
   const { match, players, claims, clockOffset } = conquest;
   const phase = deriveMatchPhase(match, now, clockOffset);
@@ -77,6 +84,7 @@ const ConquestScreen = ({ lang, conquest, onExit, onOverlayChange, onFocusCountr
           clockMs={clockMs}
           countryName={countryName}
           onFocusCountry={onFocusCountry}
+          countryClickRef={countryClickRef}
         />
       )}
       {phase === "finished" && <ConquestEnd lang={lang} conquest={conquest} onExit={exit} />}

@@ -146,6 +146,7 @@ export function getPolygonMaterialForFeature({
   mapBase: _mapBase,
   lerpColor: _lerpColor,
   restingColor,
+  ownerTint = false, // Conquête: owned country must stay visible over textures
 }) {
   const isSameAdmin = (a, b) => {
     if (!a || !b) return false;
@@ -200,7 +201,7 @@ export function getPolygonMaterialForFeature({
       ? `found-cap-${isMobileStr}-${globeTheme}`
       : isDepartmentMode || isIsolated
         ? `${isDepartmentMode ? "dept" : "iso"}-${admin}-${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`
-        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`;
+        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}${ownerTint ? "-owner" : ""}`;
 
   let material = sharedMaterialsRef.current.get(cacheKey);
 
@@ -249,6 +250,12 @@ export function getPolygonMaterialForFeature({
         material.wireframe = false;
         material.visible = true;
         material.opacity = 1.0;
+      } else if (ownerTint) {
+        // Owner tint over the satellite texture (caps are hidden otherwise).
+        material.transparent = true;
+        material.wireframe = false;
+        material.visible = true;
+        material.opacity = 0.62;
       } else {
         material.transparent = true;
         material.visible = false;

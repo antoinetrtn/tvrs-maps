@@ -1,12 +1,12 @@
+import "../components/ui/ui.css";
 import "./ConquestScreen.css";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { isConquestEnabled } from "./conquestConfig";
 import ConquestScreen from "./ConquestScreen.jsx";
 import { useConquestMatch } from "./useConquestMatch";
 
-const noop = () => {};
 const EMPTY_FOUND = [];
 const FOCUS_HOLD_MS = 2500;
 
@@ -25,6 +25,11 @@ export function useConquestLayer({
   const active = enabled && currentScreen === "conquest";
   const [overlay, setOverlay] = useState(null);
   const [focusCountry, setFocusCountry] = useState(null);
+  // The HUD registers what a globe click does (steal / focus the input).
+  const countryClickRef = useRef(null);
+  const handleCountryClick = useCallback((admin) => {
+    if (admin) countryClickRef.current?.(admin);
+  }, []);
   const conquest = useConquestMatch({
     lang,
     displayName: (userProfile?.username || "Explorer").slice(0, 30),
@@ -45,6 +50,11 @@ export function useConquestLayer({
     return () => clearTimeout(id);
   }, [focusCountry]);
 
+  const basePerf = sessionView.globeProps.perfProfile;
+  // No country labels during a match: a label shows the flag/capital, which
+  // would leak the answer of a steal challenge.
+  const perfProfile = useMemo(() => ({ ...basePerf, maxLabels: 0 }), [basePerf]);
+
   const view = useMemo(() => {
     if (!active) return sessionView;
     return {
@@ -57,13 +67,14 @@ export function useConquestLayer({
         mode: "countries",
         foundList: EMPTY_FOUND,
         selectedCountry: focusCountry,
-        onCountrySelect: noop,
+        onCountrySelect: handleCountryClick,
+        perfProfile,
         isHomeScreen: false,
         isEndScreen: false,
         conquestOverlay: overlay,
       },
     };
-  }, [active, sessionView, overlay, focusCountry]);
+  }, [active, sessionView, overlay, focusCountry, handleCountryClick, perfProfile]);
 
   const screen = active ? (
     <ConquestScreen
@@ -72,6 +83,7 @@ export function useConquestLayer({
       onExit={exit}
       onOverlayChange={setOverlay}
       onFocusCountry={setFocusCountry}
+      countryClickRef={countryClickRef}
     />
   ) : null;
 
