@@ -572,12 +572,21 @@ export function useGlobePolygons({
     ]
   );
 
+  // Per-country lookup is cheap to rebuild: reset it on every mode switch.
   useEffect(() => {
     const materialCache = polygonMaterialCacheRef.current;
-    const sharedPool = sharedMaterialsRef.current;
     return () => {
       materialCache.cap.clear();
       materialCache.side.clear();
+    };
+  }, [isLight, globeTheme, globeLightingEnabled, mode, isRegionalMode]);
+
+  // The shared material pool owns compiled GPU programs. Disposing it on every
+  // game-mode switch forced a full shader recompile (the main mode-switch
+  // stall); only a visual theme/lighting change actually invalidates it.
+  useEffect(() => {
+    const sharedPool = sharedMaterialsRef.current;
+    return () => {
       sharedPool.forEach((material) => {
         unregisterAnimatedPolygonMaterial(material);
         material.dispose();
@@ -585,7 +594,7 @@ export function useGlobePolygons({
       sharedPool.clear();
       clearAnimatedPolygonMaterials();
     };
-  }, [isLight, globeTheme, globeLightingEnabled, mode, isRegionalMode]);
+  }, [isLight, globeTheme, globeLightingEnabled]);
 
   const getPolygonAltitude = useCallback(
     (d) => {

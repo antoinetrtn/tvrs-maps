@@ -99,6 +99,10 @@ function mergeGeometries(geomA, geomB) {
   };
 }
 
+// Stable `__id` stamps: three-globe keys its polygon meshes by `polygon.__id`
+// (and stamps a random one otherwise). Every render-data wrapper spreads the
+// source feature, so the id survives mode switches and the existing meshes,
+// triangulated geometries and strokes are reused instead of rebuilt.
 export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
   const [countriesData, setCountriesData] = useState([]);
   const [departmentsData, setDepartmentsData] = useState([]);
@@ -120,8 +124,9 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
             features.splice(somalilandIdx, 1);
           }
 
-          const mapped = features.map((feature) => ({
+          const mapped = features.map((feature, idx) => ({
             ...feature,
+            __id: `c${idx}`,
             renderGeometry: getRenderGeometry(feature),
           }));
           setCountriesData(mapped);
@@ -140,8 +145,9 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data && data.features) {
-          const mapped = data.features.map((feature) => ({
+          const mapped = data.features.map((feature, idx) => ({
             ...feature,
+            __id: `d${idx}`,
             renderGeometry: getRenderGeometry(feature),
           }));
           setDepartmentsData(mapped);
@@ -160,8 +166,9 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled && data && data.features) {
-          const mapped = data.features.map((feature) => ({
+          const mapped = data.features.map((feature, idx) => ({
             ...feature,
+            __id: `u${idx}`,
             renderGeometry: getRenderGeometry(feature),
           }));
           setUsStatesData(mapped);

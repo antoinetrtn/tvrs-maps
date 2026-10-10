@@ -42,6 +42,7 @@ import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
+import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 
 const GlobeMap = (props) => {
@@ -233,6 +234,10 @@ const GlobeMap = (props) => {
 
   useGlobeNativeTouch(globeContainerRef, { handleTouchStart, handleTouchMove, handleTouchEnd });
   useGlobeVisibilityPause(globeEl);
+  useGlobeShaderWarmup(
+    globeEl,
+    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}|${globeTheme}|${theme}`
+  );
 
   const { globePathsData } = useGlobePaths({
     mode,
