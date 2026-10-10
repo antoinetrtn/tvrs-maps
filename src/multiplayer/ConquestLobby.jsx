@@ -1,8 +1,10 @@
 import { Copy, ExternalLink } from "pixelarticons/react";
 import React, { useEffect, useState } from "react";
 
+import AtlasState from "../components/AtlasState";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
 import Switch from "../components/ui/Switch.jsx";
+import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import { conquestText } from "./conquestText";
 
@@ -56,16 +58,17 @@ export const copyRoomCode = async (code, nav = globalThis.navigator) => {
 };
 
 /** Native share sheet when available, clipboard otherwise. Returns "shared" | "copied" | null. */
-export const shareRoomCode = async (code, nav = globalThis.navigator) => {
+export const shareRoomCode = async (code, nav = globalThis.navigator, text = "") => {
+  const url = buildConquestLink(code);
   if (nav?.share) {
     try {
-      await nav.share({ title: "Tvrs Maps", text: code });
+      await nav.share({ title: "Tvrs Maps — Conquête", text: text || code, url });
       return "shared";
     } catch {
       return null; // user cancelled the share sheet
     }
   }
-  return (await copyRoomCode(code, nav)) ? "copied" : null;
+  return (await copyRoomCode(url, nav)) ? "copied" : null;
 };
 
 const RoomShare = ({ t, code }) => {
@@ -76,10 +79,11 @@ const RoomShare = ({ t, code }) => {
     return () => clearTimeout(id);
   }, [toast]);
 
-  const onCopy = async () => setToast((await copyRoomCode(code)) ? t.copied : null);
+  const onCopy = async () =>
+    setToast((await copyRoomCode(buildConquestLink(code))) ? t.linkCopied : null);
   const onShare = async () => {
-    const result = await shareRoomCode(code);
-    if (result === "copied") setToast(t.copied);
+    const result = await shareRoomCode(code, globalThis.navigator, t.shareText(code));
+    if (result === "copied") setToast(t.linkCopied);
   };
 
   return (
@@ -90,8 +94,8 @@ const RoomShare = ({ t, code }) => {
           type="button"
           className="conquest-icon-btn"
           onClick={onCopy}
-          aria-label={t.copyCode}
-          title={t.copyCode}
+          aria-label={t.copyLink}
+          title={t.copyLink}
         >
           <Copy width={18} height={18} />
         </button>
@@ -170,7 +174,12 @@ const ConquestLobby = ({ lang, conquest, onBack }) => {
           )}
         </>
       )}
-      {error && <p className="conquest-error">{error}</p>}
+      {error &&
+        (match ? (
+          <p className="conquest-error">{error}</p>
+        ) : (
+          <AtlasState variant="error" title={error} hint={t.joinErrorHint} />
+        ))}
       <button type="button" className="btn-secondary conquest-block" onClick={onBack}>
         {match ? t.leave : t.back}
       </button>

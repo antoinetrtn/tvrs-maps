@@ -291,6 +291,8 @@ export function describeRpcError(error, lang = "fr") {
   const message = String(error?.message || error || "");
   if (message.includes("match_not_found")) return fr ? "Salon introuvable" : "Room not found";
   if (message.includes("match_full")) return fr ? "Salon complet" : "Room is full";
+  if (message.includes("match_expired") || message.includes("match_finished"))
+    return fr ? "Ce salon a expiré" : "This room has expired";
   if (message.includes("match_already_started"))
     return fr ? "La partie a déjà commencé" : "The match already started";
   if (message.includes("players_not_ready"))

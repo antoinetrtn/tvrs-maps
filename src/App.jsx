@@ -28,6 +28,7 @@ import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
+import { isGuestLaunch } from "./multiplayer/conquestLink";
 import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import { isSupabaseConfigured } from "./services/supabaseClient";
 
@@ -121,7 +122,7 @@ function App() {
 
   useEffect(() => {
     if (isSupabaseConfigured && session === null) {
-      if (localStorage.getItem("tvrs-guest-mode") !== "true") setShowAuthModal(true);
+      if (!isGuestLaunch()) setShowAuthModal(true); // guest mode or Conquête invite link
     } else if (session) {
       setShowAuthModal(false);
     }

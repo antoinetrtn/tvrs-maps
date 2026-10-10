@@ -4,6 +4,7 @@ import "./ConquestScreen.css";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { isConquestEnabled } from "./conquestConfig";
+import { clearConquestParam, readConquestCode } from "./conquestLink";
 import ConquestScreen from "./ConquestScreen.jsx";
 import { hasStoredConquestMatch, useConquestMatch } from "./useConquestMatch";
 
@@ -37,9 +38,26 @@ export function useConquestLayer({
 
   const open = useCallback(() => setCurrentScreen("conquest"), [setCurrentScreen]);
 
-  // Reload / killed tab: reopen the match the player was in.
-  const { resume } = conquest;
+  // Invite link (?conquest=CODE): open the lobby and auto-join, then clean the URL.
+  // With the flag off the parameter is simply dropped.
+  const { resume, join } = conquest;
   const resumedRef = useRef(false);
+  useEffect(() => {
+    if (resumedRef.current) return;
+    const code = readConquestCode();
+    if (!code) return;
+    resumedRef.current = true;
+    if (!enabled) {
+      clearConquestParam();
+      return;
+    }
+    open();
+    join(code)
+      .catch(() => {})
+      .finally(() => clearConquestParam());
+  }, [enabled, join, open]);
+
+  // Reload / killed tab: reopen the match the player was in.
   useEffect(() => {
     if (resumedRef.current || !enabled || !hasStoredConquestMatch()) return;
     resumedRef.current = true;
