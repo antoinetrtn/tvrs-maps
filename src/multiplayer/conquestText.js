@@ -106,6 +106,7 @@ const PAIRS = {
   boardEmpty: ["Aucune partie classée pour l'instant", "No rated match yet"],
   boardYou: ["Ta place", "Your rank"],
   boardRecord: ["V / D / N", "W / L / D"],
+  loading: ["Chargement…", "Loading…"],
   boardGuest: ["Connecte-toi pour être classé", "Sign in to get ranked"],
   forfeitNote: ["Partie terminée par abandon", "Match ended by forfeit"],
   resuming: ["Reprise de ta partie…", "Resuming your match…"],

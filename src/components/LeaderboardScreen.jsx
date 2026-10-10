@@ -1,4 +1,5 @@
 import "./LeaderboardScreen.css";
+import "./ui/ui.css";
 import "./LeaderboardScreenMobile.css";
 
 import { Close, Globe, Hash, Heart, MapPin, TreePine } from "pixelarticons/react";
@@ -11,7 +12,8 @@ import { getLeaderboard, getUserHistory, isSupabaseConfigured } from "../service
 import { formatTime } from "../utils/utils";
 import AtlasState from "./AtlasState";
 import InvaderAvatar from "./InvaderAvatar";
-import SegmentedControl from "./SegmentedControl";
+import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./LeaderboardRow";
+import OptionGroup from "./ui/OptionGroup";
 
 const MODE_ICONS = {
   countries: <Globe width={16} height={16} />,
@@ -44,70 +46,58 @@ const ScoreCell = ({ value, hardcore, hardcoreLabel }) => (
   </span>
 );
 
-const RANK_LABELS = ["1st", "2nd", "3rd"];
-
 /** One row of the global leaderboard (user_records shape). */
-const GlobalScoreRow = ({ row, index, hardcoreLabel }) => {
+const GlobalScoreRow = ({ row, index, hardcoreLabel, isMe, youLabel }) => {
   const prof = row.profiles || {
     username: "Anonyme",
     avatar_id: "invader_1",
     avatar_color: "cyan",
   };
-  const isTop3 = index < 3;
-  const rankColorClass = isTop3 ? `rank-${index + 1}` : "";
-
   return (
-    <tr>
-      <td className="col-rank">
-        <span className={`rank-badge ${rankColorClass}`}>
-          {isTop3 ? RANK_LABELS[index] : index + 1}
-        </span>
-      </td>
-      <td className="col-player">
-        <div className="player-cell">
-          <InvaderAvatar invaderId={prof.avatar_id} color={prof.avatar_color} size={20} />
-          <span className="player-username">{prof.username}</span>
-        </div>
-      </td>
-      <td className="col-score highlight-cyan">
-        <ScoreCell value={row.score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />
-      </td>
-      <td className="col-time highlight-magenta">{formatTime(row.time_spent_seconds)}</td>
-    </tr>
+    <LeaderboardRow
+      rank={index + 1}
+      podium={index < 3}
+      avatar={<InvaderAvatar invaderId={prof.avatar_id} color={prof.avatar_color} size={20} />}
+      name={prof.username}
+      stat={<ScoreCell value={row.score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />}
+      meta={formatTime(row.time_spent_seconds)}
+      isMe={isMe}
+      youLabel={youLabel}
+    />
   );
+};
+
+const trendOf = (row, previousRow) => {
+  if (!previousRow || row.score === previousRow.score) return ["evo-equal", "●"];
+  return row.score > previousRow.score ? ["evo-up", "▲"] : ["evo-down", "▼"];
 };
 
 /** One row of the personal history (leaderboards shape) with score trend. */
-const HistoryRow = ({ row, previousRow, hardcoreLabel }) => {
-  let evoIcon = <span className="evo-bullet">●</span>;
-  let evoClass = "evo-equal";
-
-  if (previousRow) {
-    if (row.score > previousRow.score) {
-      evoIcon = <span className="evo-arrow">▲</span>;
-      evoClass = "evo-up";
-    } else if (row.score < previousRow.score) {
-      evoIcon = <span className="evo-arrow">▼</span>;
-      evoClass = "evo-down";
-    }
-  }
-
+const HistoryRow = ({ row, previousRow, number, hardcoreLabel, gameLabel }) => {
+  const [evoClass, evoIcon] = trendOf(row, previousRow);
   return (
-    <tr>
-      <td className="col-date">{formatDate(row.created_at)}</td>
-      <td className="col-score highlight-cyan">
-        <ScoreCell value={row.score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />
-      </td>
-      <td className="col-time highlight-magenta">{formatTime(row.time_spent_seconds)}</td>
-      <td className={`col-evo ${evoClass}`}>{evoIcon}</td>
-    </tr>
+    <LeaderboardRow
+      rank={number}
+      name={formatDate(row.created_at) || gameLabel}
+      stat={<ScoreCell value={row.score} hardcore={row.hardcore} hardcoreLabel={hardcoreLabel} />}
+      meta={formatTime(row.time_spent_seconds)}
+      trend={
+        <span className={`lb-trend ${evoClass}`} aria-hidden="true">
+          {evoIcon}
+        </span>
+      }
+    />
   );
 };
 
+// Stable defaults: a fresh [] each render would re-trigger the history fetch effect.
+const EMPTY_RECORDS = {};
+const EMPTY_HISTORY = [];
+
 const LeaderboardScreen = ({
   userProfile,
-  localRecords = {},
-  localGameHistory = [],
+  localRecords = EMPTY_RECORDS,
+  localGameHistory = EMPTY_HISTORY,
   session = null,
   onBack,
   lang = "fr",
@@ -282,6 +272,30 @@ const LeaderboardScreen = ({
     );
   };
 
+  const myId = session?.user?.id || userProfile?.id || null;
+  const isSignedIn = Boolean(session?.user);
+
+  const renderGlobalContent = () => {
+    if (!isSupabaseConfigured) return <AtlasState title={t("not_connected")} />;
+    if (loading) return <AtlasState variant="loading" title={t("connecting")} />;
+    if (error) return <AtlasState variant="error" title={error} />;
+    if (scoresData.length === 0) return <AtlasState title={t("empty_leaderboard")} />;
+    return (
+      <LeaderboardList label={t("global_leaderboard")}>
+        {scoresData.map((row, index) => (
+          <GlobalScoreRow
+            key={row.id}
+            row={row}
+            index={index}
+            hardcoreLabel={t("hardcore_mode")}
+            isMe={Boolean(myId) && row.profiles?.id === myId}
+            youLabel={t("you_tag")}
+          />
+        ))}
+      </LeaderboardList>
+    );
+  };
+
   const renderHistoryContent = () => {
     if (!isSupabaseConfigured) {
       return (
@@ -312,28 +326,17 @@ const LeaderboardScreen = ({
       <div className="personal-history-layout">
         {renderEvolutionChart()}
 
-        <div className="leaderboard-table-container scrollbar-styled">
-          <table className="leaderboard-table personal-history-table">
-            <thead>
-              <tr>
-                <th className="col-date">{t("date")}</th>
-                <th className="col-score">{t("score")}</th>
-                <th className="col-time">{t("time")}</th>
-                <th className="col-evo">{lang === "fr" ? "Évol." : "Evol."}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {historyData.map((row, index) => (
-                <HistoryRow
-                  key={row.id}
-                  row={row}
-                  previousRow={historyData[index + 1]}
-                  hardcoreLabel={t("hardcore_mode")}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <LeaderboardList label={t("personal_history")}>
+          {historyData.map((row, index) => (
+            <HistoryRow
+              key={row.id || index}
+              row={row}
+              previousRow={historyData[index + 1]}
+              number={historyData.length - index}
+              hardcoreLabel={t("hardcore_mode")}
+            />
+          ))}
+        </LeaderboardList>
       </div>
     );
   };
@@ -345,26 +348,26 @@ const LeaderboardScreen = ({
       onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="panel-header">
-        {/* Use common SegmentedControl for uniform header toggle */}
-        <SegmentedControl
-          className="panel-tabs-header"
-          options={[
-            { value: "global", label: t("global_leaderboard") },
-            { value: "personal", label: t("personal_history") },
-            ...(isConquestEnabled() ? [{ value: "conquest", label: "Conquête" }] : []),
-          ]}
-          value={activeTab}
-          onChange={setActiveTab}
-        />
-
-        <button className="panel-close-btn" onClick={onBack} title={t("close")}>
+        <h2 className="panel-title">{t("global_leaderboard")}</h2>
+        <button type="button" className="panel-close-btn" onClick={onBack} title={t("close")}>
           <Close width={20} height={20} />
         </button>
       </div>
+      <OptionGroup
+        className="leaderboard-tabs"
+        label={t("global_leaderboard")}
+        options={[
+          { value: "global", label: t("tab_global") },
+          { value: "personal", label: t("tab_history") },
+          ...(isConquestEnabled() ? [{ value: "conquest", label: "Conquête" }] : []),
+        ]}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {activeTab === "conquest" ? (
         <div className="leaderboard-full-layout">
-          <ConquestLeaderboard lang={lang} isSignedIn={Boolean(session?.user)} />
+          <ConquestLeaderboard lang={lang} isSignedIn={isSignedIn} />
         </div>
       ) : (
         <div className="leaderboard-full-layout">
@@ -407,38 +410,10 @@ const LeaderboardScreen = ({
 
             {/* Conditional Rendering of Tab Content */}
             {activeTab === "global" ? (
-              <div className="leaderboard-table-container scrollbar-styled">
-                {!isSupabaseConfigured ? (
-                  <AtlasState title={t("not_connected")} />
-                ) : loading ? (
-                  <AtlasState variant="loading" title={t("connecting")} />
-                ) : error ? (
-                  <AtlasState variant="error" title={error} />
-                ) : scoresData.length === 0 ? (
-                  <AtlasState title={t("empty_leaderboard")} />
-                ) : (
-                  <table className="leaderboard-table">
-                    <thead>
-                      <tr>
-                        <th className="col-rank">{t("rank")}</th>
-                        <th className="col-player">Joueur</th>
-                        <th className="col-score">{t("score")}</th>
-                        <th className="col-time">{t("time")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scoresData.map((row, index) => (
-                        <GlobalScoreRow
-                          key={row.id}
-                          row={row}
-                          index={index}
-                          hardcoreLabel={t("hardcore_mode")}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
+              <>
+                {!isSignedIn && <LeaderboardNotice>{t("leaderboard_guest")}</LeaderboardNotice>}
+                {renderGlobalContent()}
+              </>
             ) : (
               renderHistoryContent()
             )}
