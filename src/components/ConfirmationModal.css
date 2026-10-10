@@ -1,7 +1,7 @@
 /* Custom Confirmation Modal styles (dialog body rendered inside panelSystem's
    .dialog-panel / .dialog-card primitives) */
 .dialog-card p {
-  font-size: 1.25rem;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   margin-bottom: var(--spacing-lg);
   line-height: 1.4;
@@ -37,11 +37,7 @@
   background: var(--glass-hover);
   border-color: var(--accent);
   color: var(--accent);
-  transform: translateY(-2.5px) scale(1.02);
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
+  transform: translateY(-1px);
 }
 
 .modal-btn.confirm:active {
@@ -63,11 +59,7 @@
   background: var(--glass-hover);
   border-color: var(--accent);
   color: var(--accent);
-  transform: translateY(-2.5px) scale(1.02);
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-  animation: btn-hover-flicker 0.3s steps(2) infinite;
+  transform: translateY(-1px);
 }
 
 .modal-btn.cancel:active {

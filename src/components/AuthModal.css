@@ -35,7 +35,7 @@
   gap: var(--spacing-sm);
   font-family: var(--font-main);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   border-radius: var(--radius-sm);
   cursor: pointer;
   box-sizing: border-box;
@@ -107,7 +107,7 @@
   font-weight: 700;
   padding: 12px var(--spacing-sm);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
 }
 
 .disabled-input {

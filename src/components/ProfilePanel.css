@@ -46,7 +46,7 @@
   background: var(--text-main);
   color: var(--bg-color);
   font-family: var(--font-display);
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   font-weight: 900;
   padding: 2px 6px;
   border-radius: var(--radius-full);
@@ -64,7 +64,7 @@
 }
 
 .form-group label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-family: var(--font-main);
   font-weight: 700;
   color: var(--text-muted);
@@ -170,7 +170,7 @@
 }
 
 .avatar-lock-overlay .lock-lvl {
-  font-size: 0.55rem;
+  font-size: var(--font-size-2xs);
   font-weight: 900;
   color: var(--text-muted);
   font-family: var(--font-display);
@@ -261,13 +261,13 @@
 
 .xp-level-title {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: var(--font-size-md);
   font-weight: 900;
   color: var(--text-main);
 }
 
 .xp-total-count {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
 }
 
@@ -299,7 +299,7 @@
 
 .minecraft-xp-bar-text {
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 900;
   color: var(--xp-black);
   z-index: 2;
@@ -326,7 +326,7 @@
 }
 
 .stat-label {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   text-align: center;
 }
@@ -446,14 +446,14 @@
 
 .badge-detail-name {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: var(--font-size-md);
   font-weight: 900;
   color: var(--text-main);
   margin: 0;
 }
 
 .badge-detail-status {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   font-weight: 700;
 }
 
@@ -466,7 +466,7 @@
 }
 
 .badge-detail-description {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   line-height: 1.4;
   margin: 0;
@@ -499,7 +499,7 @@
 .form-feedback {
   padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   margin-top: var(--spacing-xs);
   text-align: center;
   border: 1px solid transparent;
@@ -572,7 +572,7 @@
 }
 
 .profile-blur-text {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   color: var(--text-main);
   margin: 0;
@@ -608,7 +608,7 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   font-family: var(--font-main);
   cursor: pointer;
   text-decoration: underline;

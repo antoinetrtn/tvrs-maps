@@ -349,7 +349,7 @@ const ProfilePanel = ({
                               {item.isLocked && (
                                 <div className="avatar-lock-overlay">
                                   <Lock width={12} height={12} className="lock-icon" />
-                                  <span className="lock-lvl">🏆</span>
+                                  <Trophy width={12} height={12} className="lock-lvl" />
                                 </div>
                               )}
                             </div>
