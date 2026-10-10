@@ -5,6 +5,8 @@ import { Close, Globe, Hash, Heart, MapPin, TreePine } from "pixelarticons/react
 import React, { useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
+import { isConquestEnabled } from "../multiplayer/conquestConfig";
+import ConquestLeaderboard from "../multiplayer/ConquestLeaderboard.jsx";
 import { getLeaderboard, getUserHistory, isSupabaseConfigured } from "../services/supabaseClient";
 import { formatTime } from "../utils/utils";
 import AtlasState from "./AtlasState";
@@ -349,6 +351,7 @@ const LeaderboardScreen = ({
           options={[
             { value: "global", label: t("global_leaderboard") },
             { value: "personal", label: t("personal_history") },
+            ...(isConquestEnabled() ? [{ value: "conquest", label: "Conquête" }] : []),
           ]}
           value={activeTab}
           onChange={setActiveTab}
@@ -359,83 +362,89 @@ const LeaderboardScreen = ({
         </button>
       </div>
 
-      <div className="leaderboard-full-layout">
-        <div className="leaderboard-column">
-          <div className="leaderboard-controls">
-            {/* Game mode selector chips */}
-            <div className="nav-chips">
-              {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => (
-                <button
-                  key={mKey}
-                  type="button"
-                  className={`nav-chip ${colMode === mKey ? "active" : ""}`}
-                  onClick={() => setColMode(mKey)}
-                  title={t(`mode_${mKey}`)}
-                >
-                  {MODE_ICONS[mKey]}
-                  <span>{t(`mode_${mKey}`)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Stats Summary cards always displayed at the top of active mode */}
-          <div className="personal-stats-grid">
-            <div className="personal-stat-card glass-panel">
-              <span className="stat-label text-natural-case">{t("games_played")}</span>
-              <span className="stat-value highlight-cyan">{currentRecord.gamesPlayed}</span>
-            </div>
-            <div className="personal-stat-card glass-panel">
-              <span className="stat-label text-natural-case">{t("best_score")}</span>
-              <span className="stat-value highlight-green">{currentRecord.maxScore}</span>
-            </div>
-            <div className="personal-stat-card glass-panel">
-              <span className="stat-label text-natural-case">{t("best_time")}</span>
-              <span className="stat-value highlight-magenta">
-                {currentRecord.bestTime ? formatTime(currentRecord.bestTime) : "--"}
-              </span>
-            </div>
-          </div>
-
-          {/* Conditional Rendering of Tab Content */}
-          {activeTab === "global" ? (
-            <div className="leaderboard-table-container scrollbar-styled">
-              {!isSupabaseConfigured ? (
-                <AtlasState title={t("not_connected")} />
-              ) : loading ? (
-                <AtlasState variant="loading" title={t("connecting")} />
-              ) : error ? (
-                <AtlasState variant="error" title={error} />
-              ) : scoresData.length === 0 ? (
-                <AtlasState title={t("empty_leaderboard")} />
-              ) : (
-                <table className="leaderboard-table">
-                  <thead>
-                    <tr>
-                      <th className="col-rank">{t("rank")}</th>
-                      <th className="col-player">Joueur</th>
-                      <th className="col-score">{t("score")}</th>
-                      <th className="col-time">{t("time")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scoresData.map((row, index) => (
-                      <GlobalScoreRow
-                        key={row.id}
-                        row={row}
-                        index={index}
-                        hardcoreLabel={t("hardcore_mode")}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          ) : (
-            renderHistoryContent()
-          )}
+      {activeTab === "conquest" ? (
+        <div className="leaderboard-full-layout">
+          <ConquestLeaderboard lang={lang} isSignedIn={Boolean(session?.user)} />
         </div>
-      </div>
+      ) : (
+        <div className="leaderboard-full-layout">
+          <div className="leaderboard-column">
+            <div className="leaderboard-controls">
+              {/* Game mode selector chips */}
+              <div className="nav-chips">
+                {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => (
+                  <button
+                    key={mKey}
+                    type="button"
+                    className={`nav-chip ${colMode === mKey ? "active" : ""}`}
+                    onClick={() => setColMode(mKey)}
+                    title={t(`mode_${mKey}`)}
+                  >
+                    {MODE_ICONS[mKey]}
+                    <span>{t(`mode_${mKey}`)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats Summary cards always displayed at the top of active mode */}
+            <div className="personal-stats-grid">
+              <div className="personal-stat-card glass-panel">
+                <span className="stat-label text-natural-case">{t("games_played")}</span>
+                <span className="stat-value highlight-cyan">{currentRecord.gamesPlayed}</span>
+              </div>
+              <div className="personal-stat-card glass-panel">
+                <span className="stat-label text-natural-case">{t("best_score")}</span>
+                <span className="stat-value highlight-green">{currentRecord.maxScore}</span>
+              </div>
+              <div className="personal-stat-card glass-panel">
+                <span className="stat-label text-natural-case">{t("best_time")}</span>
+                <span className="stat-value highlight-magenta">
+                  {currentRecord.bestTime ? formatTime(currentRecord.bestTime) : "--"}
+                </span>
+              </div>
+            </div>
+
+            {/* Conditional Rendering of Tab Content */}
+            {activeTab === "global" ? (
+              <div className="leaderboard-table-container scrollbar-styled">
+                {!isSupabaseConfigured ? (
+                  <AtlasState title={t("not_connected")} />
+                ) : loading ? (
+                  <AtlasState variant="loading" title={t("connecting")} />
+                ) : error ? (
+                  <AtlasState variant="error" title={error} />
+                ) : scoresData.length === 0 ? (
+                  <AtlasState title={t("empty_leaderboard")} />
+                ) : (
+                  <table className="leaderboard-table">
+                    <thead>
+                      <tr>
+                        <th className="col-rank">{t("rank")}</th>
+                        <th className="col-player">Joueur</th>
+                        <th className="col-score">{t("score")}</th>
+                        <th className="col-time">{t("time")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scoresData.map((row, index) => (
+                        <GlobalScoreRow
+                          key={row.id}
+                          row={row}
+                          index={index}
+                          hardcoreLabel={t("hardcore_mode")}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            ) : (
+              renderHistoryContent()
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

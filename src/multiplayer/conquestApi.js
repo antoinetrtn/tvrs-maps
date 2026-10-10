@@ -58,6 +58,10 @@ export async function getMyActiveConquestMatch() {
   return match?.id ? match : null;
 }
 
+/** Public Elo board: { top: [...], me: {...} | null }. */
+export const getConquestLeaderboard = (limit = 50) =>
+  rpc("conquest_leaderboard", { p_limit: limit });
+
 export const getConquestState = (matchId) => rpc("conquest_get_state", { p_match_id: matchId });
 
 /**

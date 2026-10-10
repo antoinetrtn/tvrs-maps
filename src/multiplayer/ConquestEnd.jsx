@@ -1,7 +1,9 @@
+import "./ConquestElo.css";
+
 import React, { useMemo } from "react";
 
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
-import { computeStandings, computeWinner } from "./conquestLogic";
+import { computeStandings, computeWinner, eloChange, formatEloDelta } from "./conquestLogic";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import { conquestText } from "./conquestText";
 
@@ -9,6 +11,7 @@ const ConquestEnd = ({ lang, conquest, onExit }) => {
   const t = conquestText(lang);
   const { players, claims, bonuses, userId, match } = conquest;
   const result = match?.result || null;
+  const elo = eloChange(result, userId);
   const standings = useMemo(
     () => computeStandings(players, claims, bonuses),
     [players, claims, bonuses]
@@ -26,6 +29,16 @@ const ConquestEnd = ({ lang, conquest, onExit }) => {
       <header className="conquest-header">
         <h2 className="conquest-title">{headline}</h2>
         {result?.forfeit_by && <p className="conquest-subtitle">{t.forfeitNote}</p>}
+        {elo ? (
+          <p className="conquest-elo">
+            {t.elo} {elo.after}{" "}
+            <span className={elo.delta >= 0 ? "is-up" : "is-down"}>
+              {formatEloDelta(elo.delta)}
+            </span>
+          </p>
+        ) : (
+          result && <p className="conquest-hint">{t.unrated}</p>
+        )}
       </header>
       <SettingsSection title={t.finalBoard}>
         {standings.map((player, index) => (
