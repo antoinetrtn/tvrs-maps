@@ -145,7 +145,7 @@ export function useGlobeMaterial(options = {}) {
         timer = setTimeout(apply, 200);
         return;
       }
-      const max = renderer.capabilities?.getMaxAnisotropy?.() || 1;
+      const max = renderer.capabilities?.getMaxAnisotropy?.() || renderer.getMaxAnisotropy?.() || 1;
       loadedTexture.anisotropy = Math.min(8, max);
       loadedTexture.needsUpdate = true;
     };

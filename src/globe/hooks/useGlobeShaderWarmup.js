@@ -88,6 +88,9 @@ export function useGlobeShaderWarmup(globeEl, warmKey) {
       }
       // Without the extension compile() cannot report progress without
       // blocking, so the warm-up would only add work: leave rendering as is.
+      // WebGPU (experimental flag) builds pipelines asynchronously already,
+      // and getContext() there would configure the canvas before init.
+      if (renderer.isWebGPURenderer) return;
       if (!renderer.getContext?.()?.getExtension?.("KHR_parallel_shader_compile")) return;
       const state = stateRef.current;
       // globe.gl draws through an EffectComposer whose RenderPass calls

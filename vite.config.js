@@ -17,12 +17,24 @@ export const globeAliases = [
       "./node_modules/three-conic-polygon-geometry/dist/three-conic-polygon-geometry.mjs"
     ),
   },
+  // Experimental WebGPU renderer flag (src/globe/render/globeRendererFlag.js).
+  {
+    find: /^three-render-objects$/,
+    replacement: fromRoot("./src/globe/render/threeRenderObjectsShim.js"),
+  },
+  {
+    find: /^three-render-objects-original$/,
+    replacement: fromRoot("./node_modules/three-render-objects/dist/three-render-objects.mjs"),
+  },
 ];
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: { alias: globeAliases },
+  // Pre-bundle EffectComposer with globe.gl so the WebGPU shim patches the
+  // same class instance in dev (one copy in production builds anyway).
+  optimizeDeps: { include: ["three/examples/jsm/postprocessing/EffectComposer.js"] },
   build: {
     // The globe renderer ships as a large pre-bundled vendor module. Keep the
     // app chunk small, and allow that isolated vendor chunk without warnings.
