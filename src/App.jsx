@@ -28,6 +28,7 @@ import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
+import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import { isSupabaseConfigured } from "./services/supabaseClient";
 
 function App() {
@@ -449,6 +450,7 @@ function App() {
     homeMode,
   });
 
+  const cq = useConquestLayer({ currentScreen, setCurrentScreen, lang, userProfile, sessionView });
   const panicActive = isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30;
 
   return (
@@ -484,13 +486,15 @@ function App() {
           onOpenAuth={() => setShowAuthModal(true)}
           homeMode={homeMode}
           setHomeMode={setHomeMode}
+          onOpenConquest={cq.open}
         />
       ) : null}
       <GameSessionView
-        {...sessionView}
+        {...cq.sessionView}
         isMobileViewport={isMobileViewport}
         closePanel={closePanel}
       />
+      {cq.screen}
       {confirmState && (
         <ConfirmationModal
           message={confirmState.message}

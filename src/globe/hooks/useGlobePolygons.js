@@ -52,6 +52,7 @@ export function useGlobePolygons({
   selectedCountry,
   foundSet,
   _foundList,
+  ownershipColors = null, // Conquête: countryId -> owner colour
   isHomeScreen,
   isEndScreen,
   gameDataMap = countryDataMap,
@@ -146,6 +147,8 @@ export function useGlobePolygons({
         });
         if (transColor) return transColor;
       }
+      const ownerColor = ownershipColors?.[getFeatureAdmin(d)];
+      if (ownerColor) return ownerColor;
 
       if (isRegionalMode) {
         const admin = getFeatureAdmin(d);
@@ -238,6 +241,7 @@ export function useGlobePolygons({
       return resolved;
     },
     [
+      ownershipColors,
       selectedCountry,
       mode,
       foundSet,
