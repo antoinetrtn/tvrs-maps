@@ -11,6 +11,7 @@
   border: 2px solid var(--stamp-ink);
   outline: 1px solid color-mix(in srgb, var(--stamp-ink) 60%, transparent);
   outline-offset: 3px;
+  font-family: var(--font-display);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-weight: 700;
@@ -21,6 +22,8 @@
 }
 
 .score-stamp {
+  /* Opaque ink pad so the pixel numerals stay legible over the globe */
+  background: color-mix(in srgb, var(--bg-color) 82%, transparent);
   width: 96px;
   height: 96px;
   border-radius: var(--radius-full);

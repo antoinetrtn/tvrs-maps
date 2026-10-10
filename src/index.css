@@ -68,7 +68,7 @@
 
   --font-main: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Display face for headings, scores, timers and large numerals */
-  /* Map-style serif for place / country names (atlas lettering) */
+  /* Serif reserved for country names only (see .data-panel-row-name / .sug-text) */
   --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
   --font-display:
     "Bitcount Single", "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -296,13 +296,18 @@ body {
    btn-hover-flicker/modalEnter keyframes, .glitch-hover/.btn-active utilities)
    live in styles/buttons.css, loaded right after this file from main.jsx. */
 
-/* Atlas lettering — map-style serif for country / region / place names.
-   Numbers (scores, timers) stay on --font-display (Bitcount). */
+/* Pixel identity: Bitcount carries titles, stamps, plates and HUD.
+   The serif survives only on country names (long proper nouns need it to stay
+   legible at list sizes, where the pixel face turns into mush). */
 .data-panel-title,
 .data-panel-region-name,
-.data-panel-row-name,
 .history-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.data-panel-row-name {
   font-family: var(--font-serif);
   font-weight: 500;
-  letter-spacing: 0.01em;
 }
