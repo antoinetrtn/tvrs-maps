@@ -13,16 +13,3 @@
 .conquest-elo .is-down {
   color: var(--error);
 }
-
-.conquest-board {
-  width: 100%;
-}
-
-.conquest-board .is-me {
-  color: var(--accent);
-}
-
-.conquest-board-elo {
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-}
