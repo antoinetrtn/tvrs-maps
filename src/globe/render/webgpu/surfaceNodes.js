@@ -107,8 +107,16 @@ export function satelliteSensorColorNode(map) {
 }
 
 let mountainShared = null;
+/** Node twin of LowPolyBiomes' mountain glitch material. */
+export function createMountainGlitchNodeMaterial(mountainGlitchUniforms, isLight) {
+  const mat = new MeshPhongNodeMaterial({ flatShading: true, shininess: 0, specular: 0x000000 });
+  mat.outputNode = mountainGlitchOutputNode(mountainGlitchUniforms, isLight);
+  mat.customProgramCacheKey = () => `mountain-glitch-gpu-${isLight ? "light" : "dark"}`;
+  return mat;
+}
+
 /** Mountain glitch (LowPolyBiomes glitchMat onBeforeCompile). */
-export function mountainGlitchOutputNode(mountainGlitchUniforms, isLight) {
+function mountainGlitchOutputNode(mountainGlitchUniforms, isLight) {
   if (!mountainShared) {
     mountainShared = {
       uTime: mirrorUniform(mountainGlitchUniforms.uTime),

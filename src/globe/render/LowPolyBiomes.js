@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 import { FOUND_SURFACE_GREEN, getFoundGreenThreeColor } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
-import { createPhongMaterial, mountainGlitchOutputNode } from "./webgpu/surfaceNodes";
+import { createMountainGlitchNodeMaterial } from "./webgpu/surfaceNodes";
 
 export const mountainGlitchUniforms = {
   uTime: { value: 0 },
@@ -111,19 +111,15 @@ export const createMountainFeature = (
     });
   });
 
-  // Renderer in the key: a WebGL and a WebGPU globe can share this module cache.
-  const glitchMatKey = `mountainGlitch_${themeName}_${isLight ? "light" : "dark"}_${isGlobeWebGPU() ? "gpu" : "gl"}`;
+  const gpu = isGlobeWebGPU() ? "_gpu" : ""; // WebGL & WebGPU globes share this cache
+  const glitchMatKey = `mountainGlitch_${themeName}_${isLight ? "light" : "dark"}${gpu}`;
   const glitchMat = getMaterial(glitchMatKey, () => {
-    const mat = createPhongMaterial({
+    if (isGlobeWebGPU()) return createMountainGlitchNodeMaterial(mountainGlitchUniforms, isLight);
+    const mat = new THREE.MeshPhongMaterial({
       flatShading: true,
       shininess: 0,
       specular: 0x000000,
     });
-    if (mat.isNodeMaterial) {
-      mat.outputNode = mountainGlitchOutputNode(mountainGlitchUniforms, isLight);
-      mat.customProgramCacheKey = () => `mountain-glitch-gpu-${isLight ? "light" : "dark"}`;
-      return mat;
-    }
     mat.customProgramCacheKey = () => `mountain-glitch-${themeName}-${isLight ? "light" : "dark"}`;
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = mountainGlitchUniforms.uTime;

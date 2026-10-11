@@ -169,99 +169,103 @@ function selectionEffect(finalColor, green, time, theme, worldPos) {
 const edgeGlowAt = (blockUv, time) =>
   mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv.add(floor(time.mul(15)))));
 
+const on = (x) => x.greaterThan(0.5);
+
+/** Screen-space static, the transition amplitude and the effect base colour. */
+function glitchBase(u, lit) {
+  const time = u.uTime;
+  const transitionActive = step(0.006, u.uFadeProgress).mul(
+    float(1).sub(step(0.994, u.uFadeProgress))
+  );
+  const selectInScale = mix(1.0, 0.52, step(0.5, u.uSelectInTransition));
+  const glitchAmp = transitionActive
+    .mul(sin(u.uFadeProgress.mul(PI)).mul(0.6).add(0.4))
+    .mul(selectInScale);
+  const t = time.mul(glitchAmp.mul(62).add(28));
+
+  const fragPx = screenCoordinate.xy.mul(u.uPixelScale);
+  const blockUv = floor(fragPx.mul(0.24));
+  const noiseUv = fragPx.mul(0.28);
+  const noiseCoarse = hash(blockUv.add(sin(t)));
+  const noiseFine = hash(noiseUv.add(vec2(cos(t.mul(1.6)), sin(t.mul(0.95)))));
+  const noise = mix(noiseCoarse, noiseFine, 0.4);
+
+  const light = on(u.uIsLight);
+  const baseMin = select(light, float(0.65), float(0.12));
+  const baseMax = select(light, float(0.98), float(0.68));
+  const scanline = sin(fragPx.y.mul(1.05).add(time.mul(glitchAmp.mul(14).add(6)))).mul(
+    select(light, float(0.03), float(0.048))
+  );
+  const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline)).toVar();
+
+  const finalColor = vec3(staticVec).toVar();
+  If(on(u.uIsError), () => {
+    finalColor.assign(errorEffect(lit, time, u.uTheme, blockUv, positionWorld));
+  })
+    .ElseIf(on(u.uIsSuccess), () => {
+      finalColor.assign(successEffect(u, time, blockUv, positionWorld));
+    })
+    .ElseIf(on(u.uIsSelection), () => {
+      finalColor.assign(selectionEffect(lit, u.uFoundGreen, time, u.uTheme, positionWorld));
+    })
+    .ElseIf(on(u.uIsFound), () => {
+      finalColor.assign(u.uFoundGreen);
+    });
+  const sideShade = mix(1.0, u.uSideShade, step(0.5, u.uIsSide));
+  finalColor.mulAssign(sideShade);
+  return { transitionActive, glitchAmp, fragPx, blockUv, staticVec, finalColor, sideShade };
+}
+
+/** Deselection dissolve: threshold noise, tears and the chroma-split colour. */
+function glitchDissolve(u, base) {
+  const time = u.uTime;
+  const { transitionActive, glitchAmp, fragPx, blockUv, finalColor } = base;
+  const dissolveBlock = floor(fragPx.mul(0.21)).add(
+    vec2(sin(time.mul(58)), cos(time.mul(41)))
+      .mul(glitchAmp)
+      .mul(3.5)
+  );
+  const tn1 = hash(dissolveBlock);
+  const tn2 = hash(dissolveBlock.mul(1.9).add(time.mul(3.7)));
+  const transitionNoise = mix(tn1, tn2, glitchAmp.max(0.35).mul(0.55));
+  const horizontalTear = step(
+    0.78,
+    sin(fragPx.y.mul(0.038).add(time.mul(glitchAmp.mul(95).add(48))))
+  );
+  const verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x.mul(0.07)), floor(time.mul(24)))));
+
+  const glitchThreshold = u.uFadeProgress.toVar();
+  const glitchColor = vec3(finalColor).toVar();
+  If(on(transitionActive), () => {
+    glitchThreshold.addAssign(transitionNoise.sub(0.5).mul(glitchAmp.mul(0.3).add(0.46)));
+    glitchThreshold.assign(
+      clamp(glitchThreshold.sub(horizontalTear.mul(0.16)).add(verticalGlitch.mul(0.12)), 0, 1)
+    );
+  });
+  If(on(transitionActive).and(on(u.uIsFound).not()), () => {
+    const chroma = transitionNoise.sub(0.5).mul(0.28).mul(glitchAmp);
+    glitchColor.assign(
+      vec3(
+        clamp(finalColor.x.add(chroma), 0, 1),
+        clamp(finalColor.y.mul(float(1).sub(glitchAmp.mul(0.15))), 0, 1),
+        clamp(finalColor.z.sub(chroma), 0, 1)
+      )
+    );
+    const tear = mix(vec3(0, 0.8, 1), vec3(1, 0, 0.8), hash(blockUv.add(floor(time.mul(30)))));
+    glitchColor.assign(mix(glitchColor, tear, glitchAmp.mul(0.42).mul(horizontalTear)));
+    glitchColor.assign(mix(glitchColor, vec3(0), glitchAmp.mul(0.25).mul(verticalGlitch)));
+  });
+  return { glitchThreshold, glitchColor };
+}
+
 /** Fragment output node equivalent to GLITCH_FRAGMENT_BODY. */
 function createGlitchOutputNode(u) {
   return Fn(() => {
-    const on = (x) => x.greaterThan(0.5);
     const time = u.uTime;
     const lit = litDisplayColor();
-    const worldPos = positionWorld;
-
-    const transitionActive = step(0.006, u.uFadeProgress).mul(
-      float(1).sub(step(0.994, u.uFadeProgress))
-    );
-    const selectInScale = mix(1.0, 0.52, step(0.5, u.uSelectInTransition));
-    const glitchAmp = transitionActive
-      .mul(sin(u.uFadeProgress.mul(PI)).mul(0.6).add(0.4))
-      .mul(selectInScale);
-    const t = time.mul(glitchAmp.mul(62).add(28));
-
-    const fragPx = screenCoordinate.xy.mul(u.uPixelScale);
-    const blockUv = floor(fragPx.mul(0.24));
-    const noiseUv = fragPx.mul(0.28);
-    const noiseCoarse = hash(blockUv.add(sin(t)));
-    const noiseFine = hash(noiseUv.add(vec2(cos(t.mul(1.6)), sin(t.mul(0.95)))));
-    const noise = mix(noiseCoarse, noiseFine, 0.4);
-
-    const light = on(u.uIsLight);
-    const baseMin = select(light, float(0.65), float(0.12));
-    const baseMax = select(light, float(0.98), float(0.68));
-    const scanline = sin(fragPx.y.mul(1.05).add(time.mul(glitchAmp.mul(14).add(6)))).mul(
-      select(light, float(0.03), float(0.048))
-    );
-    const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline)).toVar();
-
-    const finalColor = vec3(staticVec).toVar();
-    If(on(u.uIsError), () => {
-      finalColor.assign(errorEffect(lit, time, u.uTheme, blockUv, worldPos));
-    })
-      .ElseIf(on(u.uIsSuccess), () => {
-        finalColor.assign(successEffect(u, time, blockUv, worldPos));
-      })
-      .ElseIf(on(u.uIsSelection), () => {
-        finalColor.assign(selectionEffect(lit, u.uFoundGreen, time, u.uTheme, worldPos));
-      })
-      .ElseIf(on(u.uIsFound), () => {
-        finalColor.assign(u.uFoundGreen);
-      });
-    const sideShade = mix(1.0, u.uSideShade, step(0.5, u.uIsSide));
-    finalColor.mulAssign(sideShade);
-
-    const dissolveBlock = floor(fragPx.mul(0.21)).add(
-      vec2(sin(time.mul(58)), cos(time.mul(41)))
-        .mul(glitchAmp)
-        .mul(3.5)
-    );
-    const tn1 = hash(dissolveBlock);
-    const tn2 = hash(dissolveBlock.mul(1.9).add(time.mul(3.7)));
-    const transitionNoise = mix(tn1, tn2, glitchAmp.max(0.35).mul(0.55));
-    const horizontalTear = step(
-      0.78,
-      sin(fragPx.y.mul(0.038).add(time.mul(glitchAmp.mul(95).add(48))))
-    );
-    const verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x.mul(0.07)), floor(time.mul(24)))));
-
-    const glitchThreshold = u.uFadeProgress.toVar();
-    If(on(transitionActive), () => {
-      glitchThreshold.addAssign(transitionNoise.sub(0.5).mul(glitchAmp.mul(0.3).add(0.46)));
-      If(on(horizontalTear), () => {
-        glitchThreshold.assign(clamp(glitchThreshold.sub(0.16), 0, 1));
-      });
-      If(on(verticalGlitch), () => {
-        glitchThreshold.assign(clamp(glitchThreshold.add(0.12), 0, 1));
-      });
-    });
-    const finalProgress = clamp(u.uFadeProgress, 0, 1);
-
-    const glitchColor = vec3(finalColor).toVar();
-    const isFoundSurface = on(u.uIsFound);
-    If(on(transitionActive).and(isFoundSurface.not()), () => {
-      const chroma = transitionNoise.sub(0.5).mul(0.28).mul(glitchAmp);
-      glitchColor.assign(
-        vec3(
-          clamp(finalColor.x.add(chroma), 0, 1),
-          clamp(finalColor.y.mul(float(1).sub(glitchAmp.mul(0.15))), 0, 1),
-          clamp(finalColor.z.sub(chroma), 0, 1)
-        )
-      );
-      If(on(horizontalTear), () => {
-        const tear = mix(vec3(0, 0.8, 1), vec3(1, 0, 0.8), hash(blockUv.add(floor(time.mul(30)))));
-        glitchColor.assign(mix(glitchColor, tear, glitchAmp.mul(0.42)));
-      });
-      If(on(verticalGlitch), () => {
-        glitchColor.assign(mix(glitchColor, vec3(0), glitchAmp.mul(0.25)));
-      });
-    });
+    const base = glitchBase(u, lit);
+    const { transitionActive, fragPx, blockUv, staticVec, sideShade } = base;
+    const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
 
     const settleColor = mix(lit, u.uFoundGreen.mul(sideShade), step(0.5, u.uIsFound)).toVar();
     const surfaceNoise = hash(fragPx.mul(0.42).add(vec2(0.12, 0.45)))
@@ -270,50 +274,53 @@ function createGlitchOutputNode(u) {
     staticVec.addAssign(surfaceNoise);
     settleColor.addAssign(surfaceNoise.mul(0.7));
     const blockVal = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
+    const edgeGlow = edgeGlowAt(blockUv, time).mul(1.6);
 
-    const rgb = vec3(staticVec.mul(sideShade)).toVar();
+    const feedback = on(u.uIsError).or(on(u.uIsSuccess));
+    const isFoundSurface = on(u.uIsFound);
+    const transiting = on(transitionActive);
     const satellite = on(u.uIsSatellite);
-    If(on(u.uIsError).or(on(u.uIsSuccess)), () => {
+
+    // Colour branch (GLSL: error/success → found → transition → resting static).
+    const rgb = vec3(staticVec.mul(sideShade)).toVar();
+    If(feedback, () => {
       rgb.assign(glitchColor);
     })
       .ElseIf(isFoundSurface, () => {
         rgb.assign(u.uFoundGreen.mul(sideShade));
       })
-      .ElseIf(on(transitionActive), () => {
+      .ElseIf(transiting.and(satellite), () => {
         rgb.assign(glitchColor);
-        If(satellite.not(), () => {
-          If(blockVal.lessThan(glitchThreshold), () => {
-            rgb.assign(settleColor);
-          }).ElseIf(blockVal.lessThan(glitchThreshold.add(0.12)), () => {
-            rgb.assign(mix(glitchColor, edgeGlowAt(blockUv, time).mul(1.6), 0.65));
-          });
-        });
+      })
+      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold)), () => {
+        rgb.assign(settleColor);
+      })
+      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold.add(0.12))), () => {
+        rgb.assign(mix(glitchColor, edgeGlow, 0.65));
+      })
+      .ElseIf(transiting, () => {
+        rgb.assign(glitchColor);
       });
     // (The GLSL soft select-in branch is unreachable: it needs transitionActive,
     // already handled above.)
-
     rgb.addAssign(
       hash(fragPx.mul(0.38).add(vec2(0.4, 0.7)))
         .sub(0.5)
         .mul(0.055)
     );
 
+    // Alpha branch (satellite dissolve fades the cap out, block by block).
     const alpha = float(1).toVar();
-    If(on(u.uIsError).or(on(u.uIsSuccess)).or(isFoundSurface).not(), () => {
-      If(on(transitionActive), () => {
-        If(satellite, () => {
-          If(blockVal.lessThan(u.uFadeProgress), () => {
-            alpha.assign(0);
-          }).Else(() => {
-            If(blockVal.lessThan(u.uFadeProgress.add(0.12)), () => {
-              rgb.assign(mix(rgb, edgeGlowAt(blockUv, time).mul(1.6), 0.65));
-            });
-            alpha.assign(float(1).sub(u.uFadeProgress.mul(u.uFadeProgress)));
-          });
-        });
-      }).Else(() => {
-        alpha.assign(select(satellite, float(1).sub(finalProgress), float(1)));
-      });
+    const fade = u.uFadeProgress;
+    const satDissolve = feedback.or(isFoundSurface).not().and(transiting).and(satellite);
+    If(satDissolve.and(blockVal.lessThan(fade)), () => {
+      alpha.assign(0);
+    }).ElseIf(satDissolve, () => {
+      rgb.assign(select(blockVal.lessThan(fade.add(0.12)), mix(rgb, edgeGlow, 0.65), rgb));
+      alpha.assign(float(1).sub(fade.mul(fade)));
+    });
+    If(feedback.or(isFoundSurface).or(transiting).not().and(satellite), () => {
+      alpha.assign(float(1).sub(clamp(fade, 0, 1)));
     });
 
     return vec4(fromDisplay(clamp(rgb, 0, 1)), alpha);
