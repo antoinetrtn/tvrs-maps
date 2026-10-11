@@ -137,13 +137,10 @@ export function useGlobeLighting({
     studioRight.visible = !UI_COLORS.isBlackoutTheme;
     innerGlow.visible = true;
 
-    if (justCreatedLighting) {
-      scene.traverse((obj) => {
-        if (obj.isLight && !obj.name.startsWith("globe-")) {
-          obj.intensity = 0;
-        }
-      });
-    }
+    // globe.gl's own ambient + directional lights stay as they are. They used
+    // to be zeroed here, but only when the rig was rebuilt *after* globe.gl had
+    // added them, i.e. on a live theme switch and never on a fresh load: the
+    // globe then looked darker than after a refresh (Antoine's theme bug).
 
     if (UI_COLORS.isBlackoutTheme) {
       // Blackout theme: brighter uniform ambient to make country polygons visible on flat dark globe

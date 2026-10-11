@@ -1,31 +1,38 @@
 /**
- * Experimental WebGPU renderer flag for the globe (off by default).
+ * Globe renderer choice: WebGL (default) or experimental WebGPU.
  *
- * Enabled when either:
- * - the build sets VITE_GLOBE_RENDERER=webgpu, or
- * - the URL has ?renderer=webgpu on a non-production host.
- * `?renderer=webgl` always forces the classic path. Without `navigator.gpu`
- * we stay on WebGLRenderer; if the adapter request fails later, three's
- * WebGPURenderer falls back to its own WebGL2 backend by itself.
+ * Priority: `?renderer=webgl|webgpu` in the URL, then the Settings preference
+ * (globePrefs, persisted in localStorage), then VITE_GLOBE_RENDERER=webgpu.
+ * WebGPU also needs `navigator.gpu`; otherwise we stay on WebGLRenderer. If the
+ * adapter request fails later, three's WebGPURenderer falls back to its own
+ * WebGL2 backend by itself.
  */
-const PRODUCTION_HOSTS = new Set(["maps.tvrs.fr", "www.maps.tvrs.fr"]);
+import { getGlobePrefs } from "../globePrefs";
+
+export function hasWebGPUSupport() {
+  return typeof navigator !== "undefined" && Boolean(navigator.gpu);
+}
 
 export function resolveGlobeRenderer({
   envValue = import.meta.env?.VITE_GLOBE_RENDERER,
   search = globalThis.location?.search || "",
-  hostname = globalThis.location?.hostname || "",
-  hasWebGPU = typeof navigator !== "undefined" && Boolean(navigator.gpu),
+  preference = getGlobePrefs().renderer,
+  hasWebGPU = hasWebGPUSupport(),
 } = {}) {
   const param = new URLSearchParams(search).get("renderer");
-  if (param === "webgl") return "webgl";
-  const fromUrl = param === "webgpu" && !PRODUCTION_HOSTS.has(hostname);
-  const fromEnv = String(envValue || "").toLowerCase() === "webgpu";
-  return (fromUrl || fromEnv) && hasWebGPU ? "webgpu" : "webgl";
+  let wanted = String(envValue || "").toLowerCase() === "webgpu" ? "webgpu" : "webgl";
+  if (preference === "webgpu" || preference === "webgl") wanted = preference;
+  if (param === "webgpu" || param === "webgl") wanted = param;
+  return wanted === "webgpu" && hasWebGPU ? "webgpu" : "webgl";
 }
 
-let cached = null;
-/** Resolved once per page load (the renderer cannot change at runtime). */
+/** Renderer for globes created now (the globe host remounts on change). */
 export function isGlobeWebGPU() {
-  if (cached === null) cached = resolveGlobeRenderer() === "webgpu";
-  return cached;
+  return resolveGlobeRenderer() === "webgpu";
+}
+
+/** True when the URL forces a renderer (the Settings toggle is then moot). */
+export function isRendererForcedByUrl(search = globalThis.location?.search || "") {
+  const param = new URLSearchParams(search).get("renderer");
+  return param === "webgpu" || param === "webgl";
 }

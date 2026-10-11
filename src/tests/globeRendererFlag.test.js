@@ -1,39 +1,34 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveGlobeRenderer } from "../globe/render/globeRendererFlag";
+import { isRendererForcedByUrl, resolveGlobeRenderer } from "../globe/render/globeRendererFlag";
 
-const base = { envValue: "", search: "", hostname: "dev.example.app", hasWebGPU: true };
+const base = { envValue: "", search: "", preference: "webgl", hasWebGPU: true };
 
-describe("globe renderer flag", () => {
+describe("globe renderer choice", () => {
   it("defaults to WebGL", () => {
     expect(resolveGlobeRenderer(base)).toBe("webgl");
   });
 
-  it("enables WebGPU with ?renderer=webgpu off production", () => {
+  it("follows the Settings preference", () => {
+    expect(resolveGlobeRenderer({ ...base, preference: "webgpu" })).toBe("webgpu");
+  });
+
+  it("lets the URL override the preference both ways", () => {
     expect(resolveGlobeRenderer({ ...base, search: "?renderer=webgpu" })).toBe("webgpu");
+    expect(resolveGlobeRenderer({ ...base, preference: "webgpu", search: "?renderer=webgl" })).toBe(
+      "webgl"
+    );
+    expect(isRendererForcedByUrl("?renderer=webgl")).toBe(true);
+    expect(isRendererForcedByUrl("")).toBe(false);
   });
 
-  it("ignores the URL switch on the production host", () => {
-    expect(
-      resolveGlobeRenderer({ ...base, search: "?renderer=webgpu", hostname: "maps.tvrs.fr" })
-    ).toBe("webgl");
-  });
-
-  it("enables WebGPU from VITE_GLOBE_RENDERER", () => {
-    expect(resolveGlobeRenderer({ ...base, envValue: "WebGPU", hostname: "maps.tvrs.fr" })).toBe(
+  it("uses VITE_GLOBE_RENDERER when no preference is stored", () => {
+    expect(resolveGlobeRenderer({ ...base, preference: undefined, envValue: "WebGPU" })).toBe(
       "webgpu"
     );
   });
 
   it("falls back silently without navigator.gpu", () => {
-    expect(resolveGlobeRenderer({ ...base, search: "?renderer=webgpu", hasWebGPU: false })).toBe(
-      "webgl"
-    );
-  });
-
-  it("?renderer=webgl always wins", () => {
-    expect(resolveGlobeRenderer({ ...base, envValue: "webgpu", search: "?renderer=webgl" })).toBe(
-      "webgl"
-    );
+    expect(resolveGlobeRenderer({ ...base, preference: "webgpu", hasWebGPU: false })).toBe("webgl");
   });
 });

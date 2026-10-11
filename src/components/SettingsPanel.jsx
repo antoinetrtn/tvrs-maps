@@ -5,6 +5,7 @@ import React from "react";
 
 import { useTranslation } from "../config/i18n";
 import AccentPicker from "./AccentPicker";
+import GlobeDisplaySettings from "./GlobeDisplaySettings";
 import OptionGroup from "./ui/OptionGroup";
 import { SettingsRow, SettingsSection } from "./ui/Settings";
 import Slider from "./ui/Slider";
@@ -119,6 +120,7 @@ const SettingsPanel = ({
               onChange={setGlobeTheme}
             />
           </SettingsRow>
+          <GlobeDisplaySettings t={t} />
           <SettingsRow label={t("accent_color")} layout="stacked">
             <AccentPicker
               lang={lang}
