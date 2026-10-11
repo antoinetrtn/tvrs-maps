@@ -723,3 +723,15 @@ export const CONQUEST_PLAYER_COLORS = {
   /** Globe outline marking patterned (non-solid) players for colour-blind play. */
   ink: THEME.dark.textMain,
 };
+
+/** Conquête spatial cursors (canvas sprites): orb glow stops + name tag. */
+export const CONQUEST_CURSOR_STYLE = {
+  orbStops: [
+    [0, "rgba(255, 255, 255, 1)"],
+    [0.28, "rgba(255, 255, 255, 0.95)"],
+    [0.42, "rgba(255, 255, 255, 0.45)"],
+    [1, "rgba(255, 255, 255, 0)"],
+  ],
+  tagBg: "rgba(14, 17, 22, 0.85)",
+  tagText: "#ede6d6",
+};

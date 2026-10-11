@@ -68,19 +68,22 @@ export const getConquestState = (matchId) => rpc("conquest_get_state", { p_match
  * Realtime room: Presence for the lobby (who is connected) and Broadcast to
  * tell the other players to resync after any validated server write.
  */
-export function openConquestChannel(code, userId, { onSync, onPresence, onStatus }) {
+export function openConquestChannel(code, userId, { onSync, onPresence, onStatus, onCursor }) {
   const channel = supabase.channel(`conquest:${code}`, {
     config: { presence: { key: userId }, broadcast: { self: false } },
   });
   channel
     .on("broadcast", { event: "sync" }, (message) => onSync(message?.payload || {}))
     .on("presence", { event: "sync" }, () => onPresence(Object.keys(channel.presenceState())))
+    // Spatial cursors: ephemeral camera positions, never persisted.
+    .on("broadcast", { event: "cursor" }, (message) => onCursor?.(message?.payload || {}))
     .subscribe((status) => {
       onStatus?.(status);
       if (status === "SUBSCRIBED") channel.track({ online_at: new Date().toISOString() });
     });
   return {
     notify: (payload = {}) => channel.send({ type: "broadcast", event: "sync", payload }),
+    sendCursor: (payload) => channel.send({ type: "broadcast", event: "cursor", payload }),
     close: () => supabase.removeChannel(channel),
   };
 }

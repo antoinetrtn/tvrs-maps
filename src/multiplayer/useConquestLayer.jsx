@@ -4,6 +4,7 @@ import "./ConquestScreen.css";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { isConquestEnabled } from "./conquestConfig";
+import ConquestCursorLayer from "./ConquestCursorLayer.jsx";
 import { clearConquestParam, readConquestCode } from "./conquestLink";
 import ConquestScreen from "./ConquestScreen.jsx";
 import { hasStoredConquestMatch, useConquestMatch } from "./useConquestMatch";
@@ -106,14 +107,17 @@ export function useConquestLayer({
   }, [active, sessionView, overlay, focusCountry, handleCountryClick, perfProfile]);
 
   const screen = active ? (
-    <ConquestScreen
-      lang={lang}
-      conquest={conquest}
-      onExit={exit}
-      onOverlayChange={setOverlay}
-      onFocusCountry={setFocusCountry}
-      countryClickRef={countryClickRef}
-    />
+    <>
+      <ConquestCursorLayer conquest={conquest} />
+      <ConquestScreen
+        lang={lang}
+        conquest={conquest}
+        onExit={exit}
+        onOverlayChange={setOverlay}
+        onFocusCountry={setFocusCountry}
+        countryClickRef={countryClickRef}
+      />
+    </>
   ) : null;
 
   return { open: enabled ? open : null, sessionView: view, screen };
