@@ -6,6 +6,7 @@ import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
 import Switch from "../components/ui/Switch.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
+import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
 import { conquestText } from "./conquestText";
 
 const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
@@ -120,7 +121,7 @@ const playerTags = (t, player, match, userId, online) =>
     .filter(Boolean)
     .join(" · ");
 
-const ConquestLobby = ({ lang, conquest, onBack }) => {
+const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
   const t = conquestText(lang);
   const { match, players, userId, online, busy, error } = conquest;
   const isHost = match?.host_id === userId;
@@ -131,6 +132,11 @@ const ConquestLobby = ({ lang, conquest, onBack }) => {
       <header className="conquest-header">
         <h2 className="conquest-title">{t.title}</h2>
         <p className="conquest-subtitle">{t.subtitle}</p>
+        {onRules && (
+          <div className="conquest-rules-slot">
+            <ConquestRulesButton lang={lang} onClick={onRules} />
+          </div>
+        )}
       </header>
       {!match ? (
         <LobbyEntry t={t} busy={busy} onCreate={conquest.create} onJoin={conquest.join} />

@@ -13,6 +13,8 @@ import {
   shieldedCountryIds,
   stealLockouts,
 } from "./conquestLogic";
+import ConquestRulesSheet from "./ConquestRulesSheet.jsx";
+import { useConquestRulesAutoOpen } from "./useConquestRulesAutoOpen";
 
 const TICK_MS = 250;
 
@@ -77,13 +79,17 @@ const ConquestScreen = ({
     onExit();
   }, [conquest, onExit]);
 
+  // Rules sheet: opens by itself the first time, then from the « Règles » buttons.
+  const [rulesOpen, setRulesOpen] = useConquestRulesAutoOpen();
+  const openRules = useCallback(() => setRulesOpen(true), [setRulesOpen]);
+
   const target = phase === "countdown" ? match?.started_at : match?.ends_at;
   const clockMs = target ? remainingMs(target, now, clockOffset) : 0;
 
   return (
     <div className="conquest-overlay">
       {(phase === "idle" || phase === "lobby") && (
-        <ConquestLobby lang={lang} conquest={conquest} onBack={exit} />
+        <ConquestLobby lang={lang} conquest={conquest} onBack={exit} onRules={openRules} />
       )}
       {(phase === "countdown" || phase === "live") && (
         <ConquestHud
@@ -95,9 +101,11 @@ const ConquestScreen = ({
           countryName={countryName}
           onFocusCountry={onFocusCountry}
           countryClickRef={countryClickRef}
+          onRules={openRules}
         />
       )}
       {phase === "finished" && <ConquestEnd lang={lang} conquest={conquest} onExit={exit} />}
+      <ConquestRulesSheet open={rulesOpen} onClose={() => setRulesOpen(false)} lang={lang} />
     </div>
   );
 };

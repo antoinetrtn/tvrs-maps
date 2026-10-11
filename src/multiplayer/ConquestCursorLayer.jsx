@@ -34,7 +34,11 @@ function useCursorSender({ live, userId, sendCursor }) {
       const next = { lat: pov.lat, lng: pov.lng };
       if (!shouldSendCursor(lastRef.current, next, now)) return;
       lastRef.current = { ...next, at: now };
-      sendCursor?.({ u: userId, lat: +next.lat.toFixed(3), lng: +next.lng.toFixed(3) });
+      sendCursor?.({
+        u: userId,
+        lat: Number(next.lat.toFixed(3)),
+        lng: Number(next.lng.toFixed(3)),
+      });
     }, CURSOR_SEND_INTERVAL_MS);
     return () => clearInterval(id);
   }, [live, userId, sendCursor]);
