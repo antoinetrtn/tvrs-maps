@@ -3,6 +3,12 @@ import * as THREE from "three";
 
 import { getThemeColors } from "../../config/designSystem";
 import { useAppTheme } from "../../hooks/useAppTheme";
+import {
+  blackoutOceanOutputNode,
+  createPhongMaterial,
+  createStandardMaterial,
+  satelliteSensorColorNode,
+} from "../render/webgpu/surfaceNodes";
 
 const applyBlackoutOceanShader = (shader) => {
   shader.vertexShader = `
@@ -174,27 +180,29 @@ export function useGlobeMaterial(options = {}) {
           ? UI_COLORS.globeMaterialColor
           : UI_COLORS[UI_COLORS.globeMaterialColor] || UI_COLORS.mapSea
         : UI_COLORS.mapSea;
-      const mat = new THREE.MeshStandardMaterial({
+      const mat = createStandardMaterial({
         color: new THREE.Color(baseColor),
         roughness: 0.88,
         metalness: 0.05,
       });
-      mat.onBeforeCompile = applyBlackoutOceanShader;
+      if (mat.isNodeMaterial) mat.outputNode = blackoutOceanOutputNode();
+      else mat.onBeforeCompile = applyBlackoutOceanShader;
       return mat;
     }
 
     if (UI_COLORS.globeTextureUrl) {
-      const mat = new THREE.MeshStandardMaterial({
+      const mat = createStandardMaterial({
         map: customGlobeTexture,
         color: 0xffffff,
         roughness: 0.95,
         metalness: 0.0,
       });
-      mat.onBeforeCompile = applySatelliteSensorShader;
+      if (mat.isNodeMaterial) mat.colorNode = satelliteSensorColorNode(customGlobeTexture);
+      else mat.onBeforeCompile = applySatelliteSensorShader;
       return mat;
     }
 
-    return new THREE.MeshPhongMaterial({
+    return createPhongMaterial({
       color: UI_COLORS.globeMaterialColor || UI_COLORS.mapSea,
       emissive: globeLightingEnabled
         ? new THREE.Color(UI_COLORS.globeEmissive)
