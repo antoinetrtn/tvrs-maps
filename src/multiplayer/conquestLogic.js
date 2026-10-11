@@ -103,7 +103,35 @@ export function shieldedCountryIds(claims = [], clientNowMs = Date.now(), offset
  * Globe overlay: owner colour per country, an ink outline for patterned
  * players (colour-blind cue) and a slow ring on shielded countries.
  */
-export function buildConquestOverlay(claims = [], players = [], shieldedIds = []) {
+/**
+ * Countries greyed out for me after a failed steal: the server refuses a new
+ * steal on that country for `steal_fail_cooldown_seconds` (20 s) and blocks
+ * me entirely until my `penalty_until`. Returns [{ id, ms }] still running.
+ */
+export function stealLockouts(
+  { events = [], players = [], userId, rules } = {},
+  clientNowMs = Date.now(),
+  offsetMs = 0
+) {
+  const cooldownMs = (Number(rules?.steal_fail_cooldown_seconds) || 20) * 1000;
+  const me = players.find((player) => player.user_id === userId);
+  const penaltyMs = me?.penalty_until ? remainingMs(me.penalty_until, clientNowMs, offsetMs) : 0;
+  const latest = {};
+  for (const event of events) {
+    if (event.kind !== "steal_fail" || event.actor_id !== userId || !event.country_id) continue;
+    const endsAt = new Date(event.created_at).getTime() + cooldownMs;
+    latest[event.country_id] = Math.max(latest[event.country_id] || 0, endsAt);
+  }
+  return Object.entries(latest)
+    .map(([id, endsAt]) => ({
+      id,
+      ms: Math.max(remainingMs(new Date(endsAt).toISOString(), clientNowMs, offsetMs), penaltyMs),
+    }))
+    .filter((lock) => lock.ms > 0)
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export function buildConquestOverlay(claims = [], players = [], shieldedIds = [], lockedIds = []) {
   const byUser = {};
   for (const player of players) byUser[player.user_id] = getPaletteEntry(player.color);
   const colors = {};
@@ -126,7 +154,9 @@ export function buildConquestOverlay(claims = [], players = [], shieldedIds = []
       speed: 1.2,
       repeat: 1400,
     }));
-  return { colors, strokes, rings };
+  for (const id of lockedIds) colors[id] = CONQUEST_PLAYER_COLORS.locked;
+  // Unclaimed countries share one neutral tone (never a player colour).
+  return { colors, strokes, rings, neutral: CONQUEST_PLAYER_COLORS.neutral };
 }
 
 /**

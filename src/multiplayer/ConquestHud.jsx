@@ -1,3 +1,5 @@
+import "./ConquestLockouts.css";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -18,6 +20,7 @@ const ConquestHud = ({
   conquest,
   phase,
   clockMs,
+  lockouts = [],
   countryName,
   onFocusCountry,
   countryClickRef,
@@ -165,6 +168,23 @@ const ConquestHud = ({
         </ul>
       </aside>
       <div className="conquest-answer conquest-surface">
+        {lockouts.length > 0 && (
+          <ul className="conquest-lockouts" aria-live="polite">
+            {lockouts.map((lock) => (
+              <li key={lock.id}>
+                <button
+                  type="button"
+                  className="conquest-lockout"
+                  onClick={() => onFocusCountry(lock.id)}
+                >
+                  <span className="conquest-lockout-name">{countryName(lock.id)}</span>
+                  <span>{t.lockedFor}</span>
+                  <span className="conquest-lockout-time">{Math.ceil(lock.ms / 1000)} s</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         {toast && <p className={`conquest-toast ${toast.ok ? "is-ok" : "is-ko"}`}>{toast.text}</p>}
         {stealTarget && !challenge && (
           <button type="button" className="btn-primary" onClick={() => openSteal(stealTarget)}>

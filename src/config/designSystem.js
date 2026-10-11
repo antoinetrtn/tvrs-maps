@@ -722,6 +722,10 @@ export const CONQUEST_PLAYER_COLORS = {
   green: THEME.dark.success,
   /** Globe outline marking patterned (non-solid) players for colour-blind play. */
   ink: THEME.dark.textMain,
+  /** Unclaimed world: a quiet slate, distinct from every player colour. */
+  neutral: "#363b44",
+  /** Country locked for me after a failed steal (greyed out + countdown). */
+  locked: "#8b919c",
 };
 
 /** Conquête spatial cursors (canvas sprites): orb glow stops + name tag. */
