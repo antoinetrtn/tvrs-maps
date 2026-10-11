@@ -44,6 +44,7 @@ import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
+import SatelliteImageryLayer from "./SatelliteImageryLayer.jsx";
 
 // Module-level so its identity is stable: an inline arrow here rebuilt the
 // whole lighting rig (lights + inner-glow shader) on every render.
@@ -105,7 +106,6 @@ const GlobeMap = (props) => {
   });
 
   const isLight = theme === "light";
-
   const {
     selectableFeatureIndex,
     countrySizes,
@@ -129,7 +129,6 @@ const GlobeMap = (props) => {
     perfProfile,
     canonicalRef,
   });
-
   const {
     getPolygonCapMaterial,
     getPolygonSideMaterial,
@@ -582,6 +581,7 @@ const GlobeMap = (props) => {
             onBackgroundClick={handleBackgroundClick}
           />
         </div>
+        <SatelliteImageryLayer globeEl={globeEl} globeTheme={globeTheme} />
       </div>
     </div>
   );

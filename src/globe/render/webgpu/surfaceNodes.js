@@ -91,11 +91,11 @@ export function blackoutOceanOutputNode(
 }
 
 /** applySatelliteSensorShader: screen-space anti-aliased sensor grid on the map. */
-export function satelliteSensorColorNode(map) {
+export function satelliteSensorColorNode(map, gridSourceUv = null) {
   return Fn(() => {
     const mapUv = uv();
     const sampled = texture(map, mapUv);
-    const gridUv = mapUv.mul(vec2(16384.0, 8192.0));
+    const gridUv = (gridSourceUv || mapUv).mul(vec2(16384.0, 8192.0));
     const cellPx = max(fwidth(gridUv), vec2(1e-4));
     const gridVis = float(1).sub(smoothstep(0.18, 0.4, max(cellPx.x, cellPx.y)));
     const gridFract = abs(fract(gridUv.sub(0.5)).sub(0.5)).div(cellPx);
