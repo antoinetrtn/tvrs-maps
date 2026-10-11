@@ -14,7 +14,20 @@
   animation: conquest-fade-in var(--transition-fast) ease-out;
 }
 
+.conquest-rules-scrim {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
 .conquest-rules-dialog {
+  position: relative;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   width: 100%;

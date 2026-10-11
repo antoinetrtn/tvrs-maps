@@ -14,15 +14,16 @@ function renderHighlightedText(text) {
   if (!text) {
     return null;
   }
-  return text.split(NUM_TOKEN_REGEX).map((chunk, idx) => {
-    if (/\d/.test(chunk)) {
-      return (
-        <strong key={idx} className="conquest-rules-highlight">
-          {chunk}
-        </strong>
-      );
-    }
-    return chunk;
+  let offset = 0;
+  return text.split(NUM_TOKEN_REGEX).map((chunk) => {
+    const at = offset;
+    offset += chunk.length;
+    if (!/\d/.test(chunk)) return chunk;
+    return (
+      <strong key={`n${at}`} className="conquest-rules-highlight">
+        {chunk}
+      </strong>
+    );
   });
 }
 
@@ -36,17 +37,15 @@ function trapFocus(event, dialog) {
     return;
   }
   const first = focusables[0];
-  const last = focusables[focusables.length - 1];
+  const last = focusables.at(-1);
   if (event.shiftKey) {
     if (document.activeElement === first || !dialog.contains(document.activeElement)) {
       event.preventDefault();
       last.focus();
     }
-  } else {
-    if (document.activeElement === last || !dialog.contains(document.activeElement)) {
-      event.preventDefault();
-      first.focus();
-    }
+  } else if (document.activeElement === last || !dialog.contains(document.activeElement)) {
+    event.preventDefault();
+    first.focus();
   }
 }
 
@@ -107,15 +106,6 @@ export default function ConquestRulesSheet({ open, onClose, lang }) {
     onClose?.();
   }, [onClose]);
 
-  const handleBackdropClick = useCallback(
-    (event) => {
-      if (event.target === event.currentTarget) {
-        handleClose();
-      }
-    },
-    [handleClose]
-  );
-
   useEffect(() => {
     if (!open) {
       return;
@@ -158,14 +148,17 @@ export default function ConquestRulesSheet({ open, onClose, lang }) {
   }
 
   return createPortal(
-    <div
-      className="conquest-rules-backdrop"
-      role="presentation"
-      onClick={handleBackdropClick}
-      data-testid="conquest-rules-backdrop"
-    >
-      <div
-        role="dialog"
+    <div className="conquest-rules-backdrop">
+      <button
+        type="button"
+        className="conquest-rules-scrim"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={handleClose}
+        data-testid="conquest-rules-backdrop"
+      />
+      <dialog
+        open
         aria-modal="true"
         aria-labelledby="conquest-rules-title"
         className="conquest-rules-dialog"
@@ -201,7 +194,7 @@ export default function ConquestRulesSheet({ open, onClose, lang }) {
             ))}
           </div>
         </div>
-      </div>
+      </dialog>
     </div>,
     document.body
   );

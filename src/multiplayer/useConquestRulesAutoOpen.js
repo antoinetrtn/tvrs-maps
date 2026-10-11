@@ -22,10 +22,10 @@ export const markRulesSeen = () => {
 };
 
 export function useConquestRulesAutoOpen() {
-  const [open, setOpenState] = useState(() => !isRulesSeen());
+  const [open, setOpen] = useState(() => !isRulesSeen());
 
-  const setOpen = useCallback((next) => {
-    setOpenState((prev) => {
+  const update = useCallback((next) => {
+    setOpen((prev) => {
       const val = typeof next === "function" ? next(prev) : next;
       if (!val) {
         markRulesSeen();
@@ -34,5 +34,5 @@ export function useConquestRulesAutoOpen() {
     });
   }, []);
 
-  return [open, setOpen];
+  return [open, update];
 }
