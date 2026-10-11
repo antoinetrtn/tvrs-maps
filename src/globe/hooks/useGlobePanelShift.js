@@ -2,36 +2,43 @@ import { useEffect, useRef } from "react";
 
 const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
-/** Smoothly animates --globe-panel-shift on elementRef without React re-renders. */
-export function useGlobePanelShift(targetShift, elementRef, durationMs = 420) {
-  const shiftRef = useRef(targetShift);
+const VARS = { x: "--globe-panel-shift", y: "--globe-keyboard-shift" };
+
+/**
+ * Smoothly animates the globe wrapper's screen-space shift without React
+ * re-renders: x = desktop data panel, y = mobile keyboard (keeps the selected
+ * country centred in the part of the screen that is actually visible).
+ * Accepts a number (x only) or { x, y }.
+ */
+export function useGlobePanelShift(target, elementRef, durationMs = 420) {
+  const toX = typeof target === "number" ? target : target?.x || 0;
+  const toY = typeof target === "number" ? 0 : target?.y || 0;
+  const shiftRef = useRef({ x: toX, y: toY });
   const rafRef = useRef(null);
 
   useEffect(() => {
     const el = elementRef?.current;
-    const from = shiftRef.current;
-    const to = targetShift;
+    const from = { ...shiftRef.current };
 
-    const apply = (value) => {
-      shiftRef.current = value;
+    const apply = (x, y) => {
+      shiftRef.current = { x, y };
       if (el) {
-        el.style.setProperty("--globe-panel-shift", `${value}px`);
+        el.style.setProperty(VARS.x, `${x}px`);
+        el.style.setProperty(VARS.y, `${y}px`);
       }
     };
 
-    if (Math.abs(to - from) < 0.5) {
-      apply(to);
-      return;
+    if (Math.abs(toX - from.x) < 0.5 && Math.abs(toY - from.y) < 0.5) {
+      apply(toX, toY);
+      return undefined;
     }
 
     const start = performance.now();
-
     const tick = (now) => {
       const t = Math.min(1, (now - start) / durationMs);
-      apply(from + (to - from) * easeOutCubic(t));
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
+      const k = easeOutCubic(t);
+      apply(from.x + (toX - from.x) * k, from.y + (toY - from.y) * k);
+      if (t < 1) rafRef.current = requestAnimationFrame(tick);
     };
 
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -40,5 +47,5 @@ export function useGlobePanelShift(targetShift, elementRef, durationMs = 420) {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [targetShift, durationMs, elementRef]);
+  }, [toX, toY, durationMs, elementRef]);
 }

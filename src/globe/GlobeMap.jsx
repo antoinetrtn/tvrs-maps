@@ -498,7 +498,7 @@ const GlobeMap = (props) => {
             background: "transparent",
             width: globeRenderWidth,
             left: -homeGlobeOffset,
-            "--globe-panel-shift": `${globePanelShift}px`,
+            "--globe-panel-shift": `${globePanelShift.x}px`,
           }}
         >
           <Globe
