@@ -414,7 +414,7 @@ function App() {
     theme,
     viewport,
     isKeyboardMode,
-    globeTheme,
+    globeTheme: appTheme.globeRenderTheme,
     learnSubMode,
     onLearnSubModeChange,
     learnSearchQuery,

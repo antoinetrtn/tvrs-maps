@@ -10,6 +10,7 @@ import {
   DEFAULT_GLOBE_THEME,
   getThemeCssVariables,
   isValidGlobeTheme,
+  migrateGlobeTheme,
 } from "../config/designSystem";
 import { BREAKPOINTS, STORAGE_KEYS } from "../config/gameConstants";
 
@@ -23,8 +24,11 @@ const uiScale = (w = BREAKPOINTS.desktop) =>
 export function useAppTheme(viewportWidth) {
   const [globeTheme, setGlobeThemeRaw] = useState(() => {
     try {
-      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
-      if (cached && isValidGlobeTheme(cached)) return cached;
+      const cached = migrateGlobeTheme(localStorage.getItem(STORAGE_KEYS.globeTheme));
+      if (cached && isValidGlobeTheme(cached)) {
+        localStorage.setItem(STORAGE_KEYS.globeTheme, cached);
+        return cached;
+      }
     } catch {}
     return DEFAULT_GLOBE_THEME;
   });
@@ -51,7 +55,7 @@ export function useAppTheme(viewportWidth) {
   }, []);
 
   const setGlobeTheme = useCallback((t) => {
-    const validTheme = t === "satellite" ? "satellite" : "blackout";
+    const validTheme = t === "satellite" ? "satellite" : "monochrome";
     setGlobeThemeRaw(validTheme);
     const targetUiTheme = "dark";
     setThemeRaw(targetUiTheme);
@@ -81,5 +85,7 @@ export function useAppTheme(viewportWidth) {
 
   const accentProps = useMemo(() => ({ accent, setAccent }), [accent, setAccent]);
 
-  return { theme, setTheme, globeTheme, setGlobeTheme, accentProps, appStyle };
+  // Globe render key: Monochrome carries the accent so the globe palette re-derives live.
+  const globeRenderTheme = globeTheme === "monochrome" ? `monochrome@${accent}` : globeTheme;
+  return { theme, setTheme, globeTheme, globeRenderTheme, setGlobeTheme, accentProps, appStyle };
 }

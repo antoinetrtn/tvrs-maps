@@ -17,6 +17,9 @@ export const polygonGlitchUniforms = {
   uFoundGreen: { value: getFoundGreenThreeColor().clone() },
   // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
   uPixelScale: { value: 1 },
+  // Deselection tear colours: cyan/magenta, accent-derived on the Monochrome globe.
+  uGlitchTintA: { value: new THREE.Color(0x00ccff) },
+  uGlitchTintB: { value: new THREE.Color(0xff00cc) },
   // Success flash timeline — stamped (in uTime seconds) when a guess lands.
   uSuccessStart: { value: -10 },
   uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
@@ -124,6 +127,8 @@ export function attachPolygonGlitchShader(
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+    shader.uniforms.uGlitchTintA = polygonGlitchUniforms.uGlitchTintA;
+    shader.uniforms.uGlitchTintB = polygonGlitchUniforms.uGlitchTintB;
     shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
     shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };

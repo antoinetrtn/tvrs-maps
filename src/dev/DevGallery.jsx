@@ -134,7 +134,7 @@ const AccentColumn = ({ id }) => {
 
 /** Every UI primitive under the 6 accents, in the real dark theme tokens. */
 const DevGallery = () => (
-  <main className="dg-root" style={getThemeCssVariables("dark", "blackout")}>
+  <main className="dg-root" style={getThemeCssVariables("dark", "monochrome")}>
     <header className="dg-header">
       <h1>Galerie de composants</h1>
       <p>Page de développement uniquement — absente des builds de production.</p>
