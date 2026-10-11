@@ -111,17 +111,29 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      color-mix(in srgb, var(--bg-color) 34%, transparent) 0 1px,
-      transparent 1px 3px
-    ),
-    radial-gradient(
-      ellipse at center,
-      transparent 58%,
-      color-mix(in srgb, var(--bg-color) 60%, transparent) 100%
-    );
+  /* Fine, faint phosphor lines (1px every 2px). They fade out toward the
+     centre so the play area stays clean and only the rim reads as "CRT". */
+  background: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--bg-color) 14%, transparent) 0 1px,
+    transparent 1px 2px
+  );
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 30%, var(--bg-color) 95%);
+  mask-image: radial-gradient(ellipse at center, transparent 30%, var(--bg-color) 95%);
+}
+
+/* Soft curved-glass vignette, kept separate from the masked scanlines. */
+.globe-map-shell.crt::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 64%,
+    color-mix(in srgb, var(--bg-color) 32%, transparent) 100%
+  );
 }
 
 /* NASA GIBS acknowledgement for the progressive satellite tiles. */
