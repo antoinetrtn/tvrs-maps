@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
+import { getGlobePrefs } from "../globePrefs";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 
@@ -16,7 +17,6 @@ const SATELLITE_OWNER_OPACITY = 0.62;
  * triangulation wireframe (which read as a noisy mesh).
  */
 function applySatelliteVisibility(material, { opaque, found, transitioning, ownerTint }) {
-  material.wireframe = false;
   material.visible = true;
   material.transparent = !opaque;
   if (opaque) material.opacity = 1.0;
@@ -26,6 +26,19 @@ function applySatelliteVisibility(material, { opaque, found, transitioning, owne
   else material.visible = false;
 }
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
+
+/** Wireframe found caps are opaque lines; filled caps keep their own state. */
+function applyFoundMeshStyle(material, isMeshFound) {
+  if (material.wireframe !== isMeshFound) {
+    material.wireframe = isMeshFound;
+    material.needsUpdate = true;
+  }
+  if (!isMeshFound) return;
+  material.visible = true;
+  if (material.transparent) material.needsUpdate = true;
+  material.transparent = false;
+  material.opacity = 1;
+}
 
 function resolvePolygonEmissiveProps({
   color,
@@ -168,6 +181,7 @@ export function getPolygonMaterialForFeature({
   lerpColor: _lerpColor,
   restingColor,
   ownerTint = false, // Conquête: owned country must stay visible over textures
+  foundStyle = getGlobePrefs().foundStyle, // Settings: "mesh" = found caps as a line mesh
 }) {
   const isSameAdmin = (a, b) => {
     if (!a || !b) return false;
@@ -217,9 +231,15 @@ export function getPolygonMaterialForFeature({
 
   const isFoundCapMaterial = showFoundOnGlobe && kind === "cap" && !isShaderCap;
   const look = `${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`;
-  let cacheKey = `${kind}-${look}${ownerTint ? "-owner" : ""}`;
-  if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}`;
-  else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}-${globeTheme}`;
+  // "Maillage" style: found caps drawn as their triangulation wireframe (the
+  // satellite look before PR 144), in every theme. The selected country keeps its
+  // filled highlight.
+  const isMeshFound =
+    foundStyle === "mesh" && kind === "cap" && (isFound || showFoundOnGlobe) && !isIsolated;
+  const meshSuffix = isMeshFound ? "-mesh" : "";
+  let cacheKey = `${kind}-${look}${ownerTint ? "-owner" : ""}${meshSuffix}`;
+  if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}${meshSuffix}`;
+  else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}-${globeTheme}${meshSuffix}`;
   else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}`;
   else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}`;
 
@@ -360,5 +380,6 @@ export function getPolygonMaterialForFeature({
     });
   }
 
+  applyFoundMeshStyle(material, isMeshFound);
   return material;
 }

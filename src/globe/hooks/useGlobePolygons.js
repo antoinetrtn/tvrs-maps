@@ -14,6 +14,7 @@ import {
 import { GAME_REGIONS, getPolygonAltitudeFor } from "../../config/gameConfig";
 import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
+import { useGlobePrefs } from "../globePrefs";
 import { getPolygonMaterialForFeature } from "../render/globePolygonMaterial";
 import {
   FOUND_HIGHLIGHT,
@@ -103,6 +104,7 @@ export function useGlobePolygons({
   }, [globeTheme, theme]);
 
   const UI_COLORS = useMemo(() => getThemeColors(globeTheme, theme), [theme, globeTheme]);
+  const { foundStyle } = useGlobePrefs();
 
   const getRegionSurfaceColor = useCallback(
     (region) => getThemeRegionColor(globeTheme, theme, region),
@@ -529,6 +531,7 @@ export function useGlobePolygons({
       return material;
     },
     [
+      foundStyle, // read via getGlobePrefs() in the material; listed to rebuild
       conquestOverlay,
       getPolygonColor,
       getPolygonSideColor,
