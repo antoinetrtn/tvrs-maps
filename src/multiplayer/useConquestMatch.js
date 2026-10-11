@@ -16,6 +16,7 @@ import {
   startConquestMatch,
   stealConquestCountry,
 } from "./conquestApi";
+import { conquestCursorStore } from "./conquestCursors";
 import {
   computeClockOffset,
   describeRpcError,
@@ -123,6 +124,10 @@ export function useConquestMatch({ lang, displayName }) {
       channelRef.current = openConquestChannel(match.code, uid, {
         onSync: scheduleRefresh,
         onPresence: setOnline,
+        onCursor: (payload) => {
+          const ids = new Set((stateRef.current.players || []).map((p) => p.user_id));
+          conquestCursorStore.receive(payload, { selfId: uid, playerIds: ids });
+        },
         onStatus: (status) => setRealtimeUp(status === "SUBSCRIBED"),
       });
     },
@@ -267,6 +272,7 @@ export function useConquestMatch({ lang, displayName }) {
     clearTimeout(syncTimerRef.current);
     channelRef.current?.close();
     channelRef.current = null;
+    conquestCursorStore.clear();
     matchIdRef.current = null;
     stateRef.current = EMPTY_STATE;
     storage.clear();
@@ -324,6 +330,9 @@ export function useConquestMatch({ lang, displayName }) {
     []
   );
 
+  // Throttling lives in the caller (ConquestCursorLayer); no-op offline.
+  const sendCursor = useCallback((payload) => channelRef.current?.sendCursor?.(payload), []);
+
   return {
     userId,
     ...state,
@@ -343,5 +352,6 @@ export function useConquestMatch({ lang, displayName }) {
     cancelSteal,
     leave,
     refresh,
+    sendCursor,
   };
 }
