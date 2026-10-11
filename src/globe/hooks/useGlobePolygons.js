@@ -149,9 +149,8 @@ export function useGlobePolygons({
         });
         if (transColor) return transColor;
       }
-      const ownerColor = conquestOverlay?.colors?.[getFeatureAdmin(d)];
-      if (ownerColor) return ownerColor;
-      if (conquestOverlay?.neutral) return conquestOverlay.neutral;
+      const ownerColor = conquestOverlay?.colors?.[getFeatureAdmin(d)] || conquestOverlay?.neutral;
+      if (ownerColor) return ownerColor; // Conquête: owner, lockout or neutral world
 
       if (isRegionalMode) {
         const admin = getFeatureAdmin(d);
