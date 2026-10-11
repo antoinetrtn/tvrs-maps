@@ -35,13 +35,14 @@
   --globe-panel-shift: 0px;
   --globe-nudge-x: 0px;
   --globe-nudge-y: 0px;
+  --globe-keyboard-shift: 0px;
   position: relative;
   width: 100%;
   height: 100%;
   z-index: 1;
   transform: translate3d(
     calc(var(--globe-layout-x) + var(--globe-panel-shift) + var(--globe-nudge-x)),
-    var(--globe-nudge-y),
+    calc(var(--globe-keyboard-shift) + var(--globe-nudge-y)),
     0
   );
   will-change: transform;

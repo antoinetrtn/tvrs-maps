@@ -65,6 +65,17 @@ const getCustomModePointOfView = (mode, learnSubMode, viewport, isPanelOpen) => 
   };
 };
 
+/**
+ * Mobile keyboard: vertical px shift that moves the canvas centre onto the
+ * centre of the visible viewport (visualViewport), so the selected country —
+ * always aimed at the canvas centre — lands in the visible part of the screen.
+ */
+export const getKeyboardShift = ({ viewport, isKeyboardMode, isHomeScreen, canvasHeight }) => {
+  if (isHomeScreen || !isKeyboardMode || viewport.width >= BREAKPOINTS.mobile) return 0;
+  const visibleCenter = (viewport.top || 0) + viewport.height / 2;
+  return Math.min(0, Math.round(visibleCenter - canvasHeight / 2));
+};
+
 const buildSelectedCountryCameraTarget = ({
   data,
   viewport,
@@ -73,7 +84,6 @@ const buildSelectedCountryCameraTarget = ({
   customPOV,
   hasPreviousSelection,
   currentPOV,
-  maxWindowHeight,
   canonicalPositions = {},
 }) => {
   // GLOBAL RULE: force camera target to exact shape position (centroid or path midpoint)
@@ -90,10 +100,10 @@ const buildSelectedCountryCameraTarget = ({
   const preservedAltitude =
     currentPOV && Number.isFinite(currentPOV.altitude) ? currentPOV.altitude : fallbackAltitude;
   const isKeyboardOpen = isMobile && isKeyboardMode;
-  const keyboardHeight = Math.max(0, maxWindowHeight - viewport.height);
-  const keyboardRatio = keyboardHeight / maxWindowHeight;
   const bottomHUDRatio = isMobile ? 0.15 : 0;
-  const occlusionRatio = isKeyboardOpen ? keyboardRatio : bottomHUDRatio;
+  // Keyboard open: the globe wrapper itself is shifted in screen space to the
+  // visible viewport (getKeyboardShift), so no latitude fudge on top of it.
+  const occlusionRatio = isKeyboardOpen ? 0 : bottomHUDRatio;
   const visibleHeightDegrees = 36 * preservedAltitude;
   const latOffset = isHomeScreen ? 0 : -visibleHeightDegrees * (occlusionRatio * 0.7);
 
@@ -346,7 +356,6 @@ export function useGlobeCamera({
           customPOV,
           hasPreviousSelection,
           currentPOV: globeEl.current.pointOfView(),
-          maxWindowHeight: maxWindowHeightRef.current,
           canonicalPositions,
         });
         const previousTarget = lastTargetRef.current;
@@ -434,7 +443,15 @@ export function useGlobeCamera({
     isPanelOpen && !isHomeScreen && viewport.width >= BREAKPOINTS.desktop
       ? getDataPanelLayoutWidth(viewport.width)
       : 0;
-  const globePanelShift = panelLayoutWidth > 0 ? -panelLayoutWidth / 2 : 0;
+  const globePanelShift = {
+    x: panelLayoutWidth > 0 ? -panelLayoutWidth / 2 : 0,
+    y: getKeyboardShift({
+      viewport,
+      isKeyboardMode,
+      isHomeScreen,
+      canvasHeight: maxWindowHeightRef.current,
+    }),
+  };
   const globeWidth = Math.max(320, maxWindowWidthRef.current);
   const globeHeight = maxWindowHeightRef.current;
   // Same canvas size on home and in game: the extra width is symmetric (the
