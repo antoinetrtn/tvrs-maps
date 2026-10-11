@@ -338,6 +338,8 @@ const buildMonochromeTheme = (accentId) => {
     lockedColors: {
       graticule: p.graticule,
       accentGrid: p.graticule,
+      borderUnfound: p.border,
+      mapBorder: p.border,
       glitchTintA: p.glitchTintA,
       glitchTintB: p.glitchTintB,
     },

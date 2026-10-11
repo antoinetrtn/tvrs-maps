@@ -80,6 +80,8 @@ export const buildMonochromePalette = (accentId) => {
     graticule: mixHex(INK, accent, mixForLuminance(accent, 0.12)),
     glow: Number.parseInt((paper ? mixHex(INK, accent, 0.7) : accent).slice(1), 16),
     rim: paper ? mixHex(INK, accent, 0.6) : accent,
+    // Country borders: deep ink-tinted accent, engraved into the bright phosphor land.
+    border: mixHex(INK, accent, paper ? 0.12 : 0.08),
     glitchTintA: accent,
     glitchTintB: mixHex(accent, "#ffffff", 0.6),
   };
