@@ -5,6 +5,8 @@
  */
 import * as THREE from "three";
 
+import { CONQUEST_CURSOR_STYLE } from "../../config/designSystem";
+
 const CURSOR_ALTITUDE = 0.16; // globe radii above the surface
 const GLOBE_RADIUS = 100;
 // Constant on-screen size (sizeAttenuation off): readable at any zoom, mobile too.
@@ -19,10 +21,7 @@ function getOrbTexture() {
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext("2d");
   const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  g.addColorStop(0, "rgba(255,255,255,1)");
-  g.addColorStop(0.28, "rgba(255,255,255,0.95)");
-  g.addColorStop(0.42, "rgba(255,255,255,0.45)");
-  g.addColorStop(1, "rgba(255,255,255,0)");
+  CONQUEST_CURSOR_STYLE.orbStops.forEach(([at, c]) => g.addColorStop(at, c));
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, size, size);
   orbTexture = new THREE.CanvasTexture(canvas);
@@ -40,11 +39,11 @@ function makeLabelTexture(name, color) {
   canvas.width = width;
   canvas.height = 48;
   ctx.font = font;
-  ctx.fillStyle = "rgba(10, 12, 16, 0.82)";
+  ctx.fillStyle = CONQUEST_CURSOR_STYLE.tagBg;
   ctx.fillRect(0, 0, width, 48);
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, 8, 48); // player colour strip (hard edge, DS style)
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = CONQUEST_CURSOR_STYLE.tagText;
   ctx.textBaseline = "middle";
   ctx.fillText(text, 22, 25);
   const texture = new THREE.CanvasTexture(canvas);
