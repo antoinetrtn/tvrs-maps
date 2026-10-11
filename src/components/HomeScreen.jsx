@@ -6,6 +6,7 @@ import React, { useCallback, useState } from "react";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import GlassIconButton from "./GlassIconButton";
+import { getHomeHeroText } from "./homeHeroText";
 import HomeScreenCategoryCarousel from "./HomeScreenCategoryCarousel";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardScreen from "./LeaderboardScreen";
@@ -44,6 +45,7 @@ const HomeScreen = ({
   const [profileOpen, setProfileOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const t = useTranslation(lang);
+  const hero = getHomeHeroText(lang);
 
   const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
 
@@ -73,8 +75,12 @@ const HomeScreen = ({
   return (
     <>
       <div className={`home-screen-overlay ${theme}`}>
+        <header className="home-hero">
+          <Logo size="medium" className="home-hero-logo" />
+          <h1 className="home-hero-title">{hero.title}</h1>
+          <p className="home-hero-sub">{hero.sub}</p>
+        </header>
         <div className="home-stage-container">
-          <Logo size="large" className="home-logo" />
           <HomeScreenCategoryCarousel
             onStartGame={onStartGame}
             lang={lang}
