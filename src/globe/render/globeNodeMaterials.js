@@ -8,11 +8,12 @@ import {
   clamp,
   dot,
   max,
-  modelNormalMatrix,
   normalLocal,
   positionView,
   pow,
   smoothstep,
+  sRGBTransferEOTF,
+  transformNormalToView,
   uniform,
 } from "three/tsl";
 import { MeshBasicNodeMaterial } from "three/webgpu";
@@ -26,7 +27,9 @@ export function createFresnelGlowNodeMaterial({ color = 0x64b5f6, coef = 1, powe
   const glowColor = uniform(new THREE.Color(color));
   const uCoef = uniform(coef);
   const uPower = uniform(power);
-  const normal = modelNormalMatrix.mul(normalLocal).normalize();
+  // View-space normal like GLSL `normalMatrix * normal` (modelNormalMatrix is
+  // the world-space one; it skewed the rim and over-brightened the halo).
+  const normal = transformNormalToView(normalLocal).normalize();
   const x = clamp(dot(normal, positionView.normalize()), 0, 1);
   const intensity = pow(smoothstep(0, 0.62, x), max(1.8, uPower.mul(2))).mul(uCoef);
 
@@ -36,7 +39,9 @@ export function createFresnelGlowNodeMaterial({ color = 0x64b5f6, coef = 1, powe
     side: THREE.BackSide,
     depthWrite: false,
   });
-  material.colorNode = glowColor;
+  // The GLSL writes glowColor raw (no colorspace include) — i.e. as a display
+  // value. Decode it so the WebGPU sRGB output encode lands on the same pixel.
+  material.colorNode = sRGBTransferEOTF(glowColor);
   material.opacityNode = intensity;
   material.uniforms = { glowColor, coef: uCoef, power: uPower };
   return material;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 
 import { cullPolygonsBeyondHorizon } from "../render/horizonCulling";
+import { swapLineMaterialsForWebGPU } from "../render/webgpu/lineMaterialSwap";
 
 /**
  * Native touch listeners. React registers touch handlers as passive, so the
@@ -55,6 +56,9 @@ function useGlobeHorizonCulling(globeEl) {
       }
       previous = scene.onBeforeRender;
       scene.onBeforeRender = function cullBeforeRender(renderer, sc, camera, ...rest) {
+        // WebGPU flag: rivers' GLSL LineMaterial → Line2NodeMaterial, every
+        // frame so a new path never reaches the GPU with the GLSL material.
+        if (renderer?.isWebGPURenderer) swapLineMaterialsForWebGPU(sc);
         const p = camera.position;
         const now = performance.now();
         const moved =

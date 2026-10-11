@@ -5,6 +5,7 @@ import { countryDataMap } from "../../data/gameData";
 import { getGlobePrefs } from "../globePrefs";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
+import { countryGrainOutputNode, createPhongMaterial } from "./webgpu/surfaceNodes";
 
 // Opacity of found-country caps over the satellite texture.
 const SATELLITE_FOUND_OPACITY = 0.5;
@@ -246,7 +247,7 @@ export function getPolygonMaterialForFeature({
   let material = sharedMaterialsRef.current.get(cacheKey);
 
   if (!material) {
-    material = new THREE.MeshPhongMaterial({
+    material = createPhongMaterial({
       side: THREE.DoubleSide,
       blending: THREE.NormalBlending,
       depthWrite: true,
@@ -318,7 +319,8 @@ export function getPolygonMaterialForFeature({
         isSatellite,
       });
     } else {
-      material.onBeforeCompile = applyCountrySurfaceGrainShader;
+      if (material.isNodeMaterial) material.outputNode = countryGrainOutputNode();
+      else material.onBeforeCompile = applyCountrySurfaceGrainShader;
     }
 
     material.userData.isIsolated = isIsolated;

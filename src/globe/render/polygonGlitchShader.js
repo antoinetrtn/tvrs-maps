@@ -9,6 +9,7 @@ import {
   GLITCH_VERTEX_BODY,
   GLITCH_VERTEX_DECLARATIONS,
 } from "./globeShaders";
+import { attachGlitchNodes } from "./webgpu/glitchNode";
 
 /** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
 export const polygonGlitchUniforms = {
@@ -99,6 +100,26 @@ export function attachPolygonGlitchShader(
   }
 ) {
   const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
+  if (material.isNodeMaterial) {
+    // WebGPU renderer (experimental flag): TSL port with the same uniforms.
+    const shader = attachGlitchNodes(material, polygonGlitchUniforms, {
+      uSideShade: GLITCH_EFFECT_SETTINGS.sideShadeFactor,
+      uFadeProgress: 0,
+      uTargetColor: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
+      uIsError: isSelected && isError ? 1 : 0,
+      uIsSuccess: isSelected && isSuccess ? 1 : 0,
+      uIsSelection: isSelected && isSelectionHighlight ? 1 : 0,
+      uIsLight: isLight ? 1 : 0,
+      uTheme: isBlackoutTheme ? 1 : 0,
+      uIsSide: kind === "side" ? 1 : 0,
+      uIsFound: isFound ? 1 : 0,
+      uIsSatellite: isSatellite ? 1 : 0,
+      uSelectInTransition: isIncomingTransitioning ? 1 : 0,
+    });
+    material.userData.shader = shader;
+    registerAnimatedPolygonMaterial(material);
+    return;
+  }
   material.customProgramCacheKey = () => `shader-cap-glitch-v9-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
