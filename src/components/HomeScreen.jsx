@@ -1,4 +1,5 @@
 import "./HomeScreen.css";
+import "./homeLayouts.proto.css";
 
 import { Chess, Settings2, User } from "pixelarticons/react";
 import React, { useCallback, useState } from "react";
@@ -6,6 +7,7 @@ import React, { useCallback, useState } from "react";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import GlassIconButton from "./GlassIconButton";
+import HomeBrand from "./HomeBrand";
 import HomeScreenCategoryCarousel from "./HomeScreenCategoryCarousel";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardScreen from "./LeaderboardScreen";
@@ -44,6 +46,11 @@ const HomeScreen = ({
   const [profileOpen, setProfileOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const t = useTranslation(lang);
+  // PROTOTYPE: ?homeLayout=1|2|3 previews the home layout proposals.
+  const [protoLayout] = useState(() => {
+    const v = new URLSearchParams(window.location.search).get("homeLayout");
+    return ["1", "2", "3"].includes(v) ? v : null;
+  });
 
   const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
 
@@ -72,9 +79,50 @@ const HomeScreen = ({
 
   return (
     <>
-      <div className={`home-screen-overlay ${theme}`}>
+      <div className={`home-screen-overlay ${theme}`} data-home-layout={protoLayout || undefined}>
+        {protoLayout === "1" && <HomeBrand className="brand-corner" />}
+        {protoLayout === "2" && (
+          <header className="home-hud-header">
+            <HomeBrand />
+            <span className="home-hud-rec">
+              <i aria-hidden="true" /> {lang === "fr" ? "EN LIGNE" : "LIVE"}
+            </span>
+            <span className="home-hud-ticker">
+              {lang === "fr"
+                ? "236 PAYS · 5 MODES · CONQUÊTE 1V1 · 48°51′N 2°21′E"
+                : "236 COUNTRIES · 5 MODES · 1V1 CONQUEST · 48°51′N 2°21′E"}
+            </span>
+          </header>
+        )}
+        {protoLayout === "2" && <div className="home-viewfinder" aria-hidden="true" />}
+        {protoLayout === "3" && (
+          <div className="home-hero">
+            <HomeBrand />
+            <h1 className="home-hero-title">
+              {lang === "fr" ? (
+                <>
+                  Le monde
+                  <br />
+                  en 15 minutes.
+                </>
+              ) : (
+                <>
+                  The world
+                  <br />
+                  in 15 minutes.
+                </>
+              )}
+            </h1>
+            <p className="home-hero-sub">
+              {lang === "fr"
+                ? "236 pays à retrouver sur le globe. Combien en connais-tu ?"
+                : "236 countries to find on the globe. How many do you know?"}
+            </p>
+          </div>
+        )}
         <div className="home-stage-container">
-          <Logo size="large" className="home-logo" />
+          {protoLayout === "1" && <span className="home-sheet-handle" aria-hidden="true" />}
+          {!protoLayout && <Logo size="large" className="home-logo" />}
           <HomeScreenCategoryCarousel
             onStartGame={onStartGame}
             lang={lang}
