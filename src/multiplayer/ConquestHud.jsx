@@ -10,6 +10,7 @@ import {
   resolveCountryClick,
 } from "./conquestLogic";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
+import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
 import ConquestStealPanel from "./ConquestStealPanel.jsx";
 import { conquestText } from "./conquestText";
 
@@ -24,6 +25,7 @@ const ConquestHud = ({
   countryName,
   onFocusCountry,
   countryClickRef,
+  onRules,
 }) => {
   const t = conquestText(lang);
   const { players, claims, events, bonuses, userId, clockOffset } = conquest;
@@ -146,6 +148,7 @@ const ConquestHud = ({
             </li>
           ))}
         </ol>
+        {onRules && <ConquestRulesButton lang={lang} onClick={onRules} />}
       </div>
       <aside className="conquest-feed conquest-surface" aria-live="polite">
         <span className="conquest-label">{t.feed}</span>
