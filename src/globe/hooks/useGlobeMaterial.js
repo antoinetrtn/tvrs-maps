@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 
-import { getThemeColors } from "../../config/designSystem";
+import { getThemeColors, GLOBE_FX_DEFAULTS } from "../../config/designSystem";
 import { useAppTheme } from "../../hooks/useAppTheme";
+import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 import {
   blackoutOceanOutputNode,
   createPhongMaterial,
@@ -28,6 +29,8 @@ const applyBlackoutOceanShader = (shader) => {
     varying vec3 vWorldNormal;
     varying vec3 vWorldPos;
     varying vec2 vUv;
+    uniform vec3 uRimColor;
+    uniform float uRimStrength;
 
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
@@ -50,7 +53,8 @@ const applyBlackoutOceanShader = (shader) => {
       // Superposition du moirage de grille très adouci + bruit neutre + halo gris acier
       vec3 moireGrid = vec3(0.88, 0.92, 0.96) * (1.0 - gridLine) * 0.055 * (0.6 + 0.5 * lightFacing);
       vec3 sensorNoise = vec3((noise - 0.5) * 0.025);
-      vec3 neutralRim = vec3(0.85, 0.88, 0.92) * rimLight * 0.07;
+      // CRT halo: accent-tinted rim (Monochrome), neutral steel otherwise.
+      vec3 neutralRim = uRimColor * rimLight * uRimStrength;
 
       gl_FragColor.rgb += moireGrid + sensorNoise + neutralRim;
       `
@@ -185,8 +189,15 @@ export function useGlobeMaterial(options = {}) {
         roughness: 0.88,
         metalness: 0.05,
       });
-      if (mat.isNodeMaterial) mat.outputNode = blackoutOceanOutputNode();
-      else mat.onBeforeCompile = applyBlackoutOceanShader;
+      const rimColor = new THREE.Color(UI_COLORS.oceanRimColor || GLOBE_FX_DEFAULTS.oceanRimColor);
+      const rimStrength = Number(UI_COLORS.oceanRimStrength) || 0.07;
+      if (mat.isNodeMaterial) mat.outputNode = blackoutOceanOutputNode(rimColor, rimStrength);
+      else
+        mat.onBeforeCompile = (shader) => {
+          shader.uniforms.uRimColor = { value: rimColor };
+          shader.uniforms.uRimStrength = { value: rimStrength };
+          applyBlackoutOceanShader(shader);
+        };
       return mat;
     }
 
@@ -216,6 +227,16 @@ export function useGlobeMaterial(options = {}) {
       shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7,
     });
   }, [UI_COLORS, isLight, globeLightingEnabled, customGlobeTexture]);
+
+  // Deselection glitch tears follow the theme (accent-derived on Monochrome).
+  useEffect(() => {
+    polygonGlitchUniforms.uGlitchTintA.value.set(
+      UI_COLORS.glitchTintA || GLOBE_FX_DEFAULTS.glitchTintA
+    );
+    polygonGlitchUniforms.uGlitchTintB.value.set(
+      UI_COLORS.glitchTintB || GLOBE_FX_DEFAULTS.glitchTintB
+    );
+  }, [UI_COLORS.glitchTintA, UI_COLORS.glitchTintB]);
 
   useEffect(() => {
     return () => {

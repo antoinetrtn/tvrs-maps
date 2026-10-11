@@ -48,7 +48,7 @@ export const translations = {
     interface_theme: "Thème interface",
     theme_light: "Clair",
     theme_dark: "Sombre",
-    theme_light_blackout_hint: "Indisponible avec le globe Noir & Blanc",
+    theme_light_blackout_hint: "Indisponible avec le globe Monochrome",
     interface_scale: "Taille de l'interface",
     scale_auto: "Auto",
 
@@ -133,7 +133,7 @@ export const translations = {
 
     // Globe Themes
     theme_satellite: "Satellite",
-    theme_blackout: "Noir & Blanc",
+    theme_blackout: "Monochrome",
 
     // Profil & Leaderboard
     profile: "Profil",
@@ -261,7 +261,7 @@ export const translations = {
     interface_theme: "Interface Theme",
     theme_light: "Light",
     theme_dark: "Dark",
-    theme_light_blackout_hint: "Unavailable with the Blacked Out globe",
+    theme_light_blackout_hint: "Unavailable with the Monochrome globe",
     interface_scale: "Interface Scale",
     scale_auto: "Auto",
 
@@ -345,7 +345,7 @@ export const translations = {
 
     // Globe Themes
     theme_satellite: "Satellite",
-    theme_blackout: "Blacked Out",
+    theme_blackout: "Monochrome",
 
     // Profile & Leaderboard
     profile: "Profile",

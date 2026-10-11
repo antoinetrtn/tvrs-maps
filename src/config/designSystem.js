@@ -33,6 +33,7 @@
 // ==========================================
 
 import { getAccentOverrides } from "./accentPresets.js";
+import { buildMonochromePalette } from "./monochromeGlobe.js";
 
 /**
  * NASA Blue Marble (topo + bathy, public domain), self-hosted as WebP with
@@ -98,15 +99,21 @@ const STYLE_TOKENS = {
 // 2. CORE THEMES
 // ==========================================
 
-const THEMES_LIST = [{ id: "satellite" }, { id: "blackout" }];
+const THEMES_LIST = [{ id: "satellite" }, { id: "monochrome" }];
 const _GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
 export function isValidGlobeTheme(id) {
   return THEMES_LIST.some((entry) => entry.id === id);
 }
 
 // The theme used on a fresh install (before any localStorage preference exists).
-// Blackout is the dark, high-contrast default.
-export const DEFAULT_GLOBE_THEME = "blackout";
+// Monochrome (accent-derived CRT) is the dark, high-contrast default.
+export const DEFAULT_GLOBE_THEME = "monochrome";
+
+/** "blackout" was renamed "monochrome": map saved settings onto the new id. */
+export const migrateGlobeTheme = (id) => (id === "blackout" ? "monochrome" : id);
+
+/** Render key "monochrome@acid" → "monochrome" (the accent rides along so the globe re-derives live). */
+const globeBaseTheme = (key) => String(key || "").split("@")[0];
 
 // LIGHT PALETTE — soft near-black ink on warm paper. No pure #000 in the UI:
 // pure black reads harsh/dated on light surfaces ("noir trop noir"). Shadows are
@@ -266,7 +273,7 @@ const GLOBE_THEMES = {
       colors: DEFAULT_DEPARTMENT_COLORS,
     },
   },
-  blackout: {
+  monochrome: {
     globeSettings: {
       globeMaterialType: "basic",
       globeMaterialColor: "#0f2a33",
@@ -302,6 +309,51 @@ const GLOBE_THEMES = {
       type: "monochrome",
     },
   },
+};
+
+/** Default (non-Monochrome) glitch tear colours and ocean rim tint. */
+export const GLOBE_FX_DEFAULTS = {
+  glitchTintA: "#00ccff",
+  glitchTintB: "#ff00cc",
+  oceanRimColor: "#d9e0eb",
+};
+
+const monochromeCache = new Map();
+const buildMonochromeTheme = (accentId) => {
+  const p = buildMonochromePalette(accentId);
+  const base = GLOBE_THEMES.monochrome;
+  return {
+    ...base,
+    globeSettings: {
+      ...base.globeSettings,
+      globeMaterialColor: p.ocean,
+      glowColorHexDark: p.glow,
+      glowColorHexLight: p.glow,
+      glowPower: 1.6,
+      glowCoef: p.paper ? 0.5 : 0.6,
+      graticuleOpacity: 0.32,
+      oceanRimColor: p.rim,
+      oceanRimStrength: p.paper ? 0.12 : 0.2,
+    },
+    lockedColors: {
+      graticule: p.graticule,
+      accentGrid: p.graticule,
+      glitchTintA: p.glitchTintA,
+      glitchTintB: p.glitchTintB,
+    },
+    continents: { surface: { dark: p.land } },
+  };
+};
+
+/** Theme config for a globe render key ("satellite", "monochrome@<accent>"). */
+const getGlobeThemeCfg = (globeTheme) => {
+  const [base, accentId] = String(globeTheme).split("@");
+  if (base === "monochrome" && accentId) {
+    if (!monochromeCache.has(accentId))
+      monochromeCache.set(accentId, buildMonochromeTheme(accentId));
+    return monochromeCache.get(accentId);
+  }
+  return GLOBE_THEMES[migrateGlobeTheme(base)] || GLOBE_THEMES.satellite;
 };
 
 export const GLOBE_STYLE = {
@@ -371,7 +423,7 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
 
 export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") => {
   const baseTheme = THEME[systemTheme] || THEME.dark;
-  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const themeCfg = getGlobeThemeCfg(globeTheme);
   const globeOverrides = { ...themeCfg.globeSettings };
 
   if (globeTheme === "satellite") {
@@ -386,7 +438,7 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
     globeOverrides.glowColorHexLight = 0x3a76f0;
   }
 
-  if (globeTheme === "blackout" && systemTheme === "light") {
+  if (globeBaseTheme(globeTheme) === "monochrome" && systemTheme === "light") {
     globeOverrides.globeMaterialColor = "#ffffff";
   }
 
@@ -395,6 +447,8 @@ export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") =
     ...globeOverrides,
     // User-selected accent (Settings) wins over the theme's default accent.
     ...getAccentOverrides(),
+    // Monochrome pins its globe-only colours to the accent-derived palette.
+    ...(themeCfg.lockedColors || {}),
   };
 };
 
@@ -504,7 +558,7 @@ const normalizeRegion = (region) => {
 };
 
 const resolveThemePalette = (globeTheme) => {
-  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const themeCfg = getGlobeThemeCfg(globeTheme);
   const palette = themeCfg.continents || GLOBE_THEMES.satellite.continents;
   return { themeCfg, palette };
 };
@@ -554,7 +608,7 @@ export const getThemeRegionColorLabel = (globeTheme, _systemTheme, region) => {
 };
 
 export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fallbackColor) => {
-  const themeCfg = GLOBE_THEMES[globeTheme] || GLOBE_THEMES.satellite;
+  const themeCfg = getGlobeThemeCfg(globeTheme);
   const deptCfg = themeCfg.departments || { type: "colorful" };
 
   if (deptCfg.type === "monochrome") {

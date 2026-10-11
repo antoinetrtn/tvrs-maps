@@ -66,7 +66,10 @@ export function countryGrainOutputNode() {
 }
 
 /** applyBlackoutOceanShader: soft geographic moiré grid + sensor noise + rim. */
-export function blackoutOceanOutputNode() {
+export function blackoutOceanOutputNode(
+  rimColor = new THREE.Color(0.85, 0.88, 0.92),
+  rimStrength = 0.07
+) {
   return Fn(() => {
     const gridUv = uv().mul(vec2(16384.0, 8192.0));
     const gridFract = abs(fract(gridUv.sub(0.5)).sub(0.5));
@@ -82,7 +85,7 @@ export function blackoutOceanOutputNode() {
       .mul(0.055)
       .mul(lightFacing.mul(0.5).add(0.6));
     const sensor = vec3(noise.sub(0.5).mul(0.025));
-    const neutralRim = vec3(0.85, 0.88, 0.92).mul(rim).mul(0.07);
+    const neutralRim = vec3(rimColor.r, rimColor.g, rimColor.b).mul(rim).mul(rimStrength);
     return displayOutput(litDisplayColor().add(moire).add(sensor).add(neutralRim));
   })();
 }

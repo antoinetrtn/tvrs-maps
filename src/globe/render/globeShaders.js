@@ -83,6 +83,8 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSuccessStart;
   uniform float uSuccessDuration;
   uniform float uIsSatellite;
+  uniform vec3 uGlitchTintA;
+  uniform vec3 uGlitchTintB;
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
@@ -234,7 +236,7 @@ export const GLITCH_FRAGMENT_BODY = `
     
     // Horizontal scanline/tear overlay with neon color aberrations
     if (horizontalTear > 0.5) {
-      vec3 tearColor = mix(vec3(0.0, 0.8, 1.0), vec3(1.0, 0.0, 0.8), hash(blockUv + floor(uTime * 30.0)));
+      vec3 tearColor = mix(uGlitchTintA, uGlitchTintB, hash(blockUv + floor(uTime * 30.0)));
       glitchColor = mix(glitchColor, tearColor, 0.42 * glitchAmp);
     }
     if (verticalGlitch > 0.5) {

@@ -44,6 +44,8 @@ function getSharedNodes(polygonGlitchUniforms) {
       uSuccessStart: mirrorUniform(polygonGlitchUniforms.uSuccessStart),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
       uFoundGreen: mirrorUniform(polygonGlitchUniforms.uFoundGreen),
+      uGlitchTintA: mirrorUniform(polygonGlitchUniforms.uGlitchTintA),
+      uGlitchTintB: mirrorUniform(polygonGlitchUniforms.uGlitchTintB),
     };
   }
   return sharedNodes;
@@ -251,7 +253,7 @@ function glitchDissolve(u, base) {
         clamp(finalColor.z.sub(chroma), 0, 1)
       )
     );
-    const tear = mix(vec3(0, 0.8, 1), vec3(1, 0, 0.8), hash(blockUv.add(floor(time.mul(30)))));
+    const tear = mix(u.uGlitchTintA, u.uGlitchTintB, hash(blockUv.add(floor(time.mul(30)))));
     glitchColor.assign(mix(glitchColor, tear, glitchAmp.mul(0.42).mul(horizontalTear)));
     glitchColor.assign(mix(glitchColor, vec3(0), glitchAmp.mul(0.25).mul(verticalGlitch)));
   });
