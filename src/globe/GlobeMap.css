@@ -137,6 +137,17 @@
   pointer-events: auto;
 }
 
+/* Home on mobile: the action bar owns the bottom edge, so the credit sits
+   top-right under the status bar / notch instead. */
+@media (max-width: 768px) {
+  .globe-map-shell.home-layout .globe-imagery-credit {
+    top: calc(var(--spacing-xs) + env(safe-area-inset-top, 0px));
+    right: var(--spacing-sm);
+    bottom: auto;
+    left: auto;
+  }
+}
+
 .globe-imagery-credit:hover,
 .globe-imagery-credit:focus-visible {
   opacity: 1;

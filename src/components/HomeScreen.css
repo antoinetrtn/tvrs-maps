@@ -73,11 +73,11 @@
     justify-content: space-between;
     flex-direction: column;
     gap: var(--spacing-md);
-    /* Bottom padding reserves the band occupied by the fixed .home-bottom-right
-       bar so it never overlaps the carousel on short screens. */
+    /* The action bar is part of the column flow on mobile (not fixed), so
+       card → Conquête → bar spacing is driven by tokens and can never collide. */
     padding: calc(var(--spacing-sm) + env(safe-area-inset-top, 0px))
       max(var(--spacing-md), env(safe-area-inset-right, 0px))
-      calc(var(--control-lg) + var(--spacing-lg) + var(--safe-bottom));
+      calc(var(--spacing-md) + var(--safe-bottom));
     height: 100dvh;
     overflow-y: auto;
     box-sizing: border-box;
@@ -89,14 +89,24 @@
     gap: clamp(var(--spacing-xs), 1.5svh, var(--spacing-ms));
   }
 
+  .home-stage-container {
+    margin-top: auto;
+  }
+
+  .home-stage-container .conquest-home-entry {
+    margin-top: var(--spacing-sm);
+  }
+
   .home-bottom-right {
-    position: fixed;
-    bottom: calc(var(--spacing-md) + var(--safe-bottom));
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
     right: auto;
     top: auto;
-    margin-top: 0;
+    align-self: center;
+    flex-shrink: 0;
+    margin-top: var(--spacing-xs);
     z-index: 1000;
   }
 }
