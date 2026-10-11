@@ -134,6 +134,8 @@ export const translations = {
     // Globe Themes
     theme_satellite: "Satellite",
     theme_blackout: "Noir & Blanc",
+    home_hero_title: "Le monde\nen 15 minutes.",
+    home_hero_sub: "236 pays à retrouver sur le globe. Combien en connais-tu ?",
 
     // Profil & Leaderboard
     profile: "Profil",
@@ -346,6 +348,8 @@ export const translations = {
     // Globe Themes
     theme_satellite: "Satellite",
     theme_blackout: "Blacked Out",
+    home_hero_title: "The world\nin 15 minutes.",
+    home_hero_sub: "236 countries to find on the globe. How many do you know?",
 
     // Profile & Leaderboard
     profile: "Profile",

@@ -73,8 +73,12 @@ const HomeScreen = ({
   return (
     <>
       <div className={`home-screen-overlay ${theme}`}>
+        <header className="home-hero">
+          <Logo size="medium" className="home-hero-logo" />
+          <h1 className="home-hero-title">{t("home_hero_title")}</h1>
+          <p className="home-hero-sub">{t("home_hero_sub")}</p>
+        </header>
         <div className="home-stage-container">
-          <Logo size="large" className="home-logo" />
           <HomeScreenCategoryCarousel
             onStartGame={onStartGame}
             lang={lang}

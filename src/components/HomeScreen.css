@@ -8,8 +8,10 @@
   z-index: 500;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding-left: clamp(var(--spacing-xl), 8vw, 128px);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding-left: clamp(var(--spacing-xl), 6vw, 96px);
   gap: var(--spacing-xl);
   pointer-events: none;
   background: transparent;
@@ -27,15 +29,6 @@
   width: clamp(320px, 88vw, 440px);
   z-index: 10;
   animation: home-card-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.home-logo {
-  position: relative;
-  margin-bottom: var(--spacing-sm);
-  padding: 0;
-  background: none !important;
-  filter: drop-shadow(0 2px 14px color-mix(in srgb, var(--bg-color) 85%, transparent));
-  transform: translateZ(34px);
 }
 
 .home-bottom-right {
@@ -77,13 +70,14 @@
 
 @media (max-width: 768px) {
   .home-screen-overlay {
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: space-between;
     flex-direction: column;
     gap: var(--spacing-md);
     /* Bottom padding reserves the band occupied by the fixed .home-bottom-right
        bar so it never overlaps the carousel on short screens. */
-    padding: max(var(--spacing-md), env(safe-area-inset-top)) var(--spacing-md)
+    padding: calc(var(--spacing-sm) + env(safe-area-inset-top, 0px))
+      max(var(--spacing-md), env(safe-area-inset-right, 0px))
       calc(var(--control-lg) + var(--spacing-lg) + var(--safe-bottom));
     height: 100dvh;
     overflow-y: auto;
@@ -91,19 +85,9 @@
   }
 
   .home-stage-container {
+    align-self: center;
     width: min(100%, 440px);
     gap: clamp(var(--spacing-xs), 1.5svh, var(--spacing-ms));
-  }
-
-  /* Scale the logo with viewport height instead of the fixed 360x270 desktop
-     box (Logo.jsx's ResizeObserver rescales the ASCII art automatically). */
-  .home-stage-container .home-logo.large {
-    width: auto;
-    max-width: min(85vw, 340px);
-    height: clamp(120px, 26svh, 270px);
-    aspect-ratio: 4 / 3;
-    margin: 0 0 var(--spacing-xxs);
-    transform: none !important;
   }
 
   .home-bottom-right {
@@ -118,21 +102,9 @@
   }
 }
 
-/* Short mobile screens: shrink the logo further so logo + carousel + bottom
-   bar all fit without overlap. */
-@media (max-width: 768px) and (max-height: 700px) {
-  .home-stage-container .home-logo.large {
-    height: clamp(96px, 20svh, 160px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .home-screen-overlay {
     perspective: none;
-  }
-
-  .home-logo {
-    transform: none;
   }
 }
 
@@ -327,5 +299,118 @@
     flex: 1 !important;
     overflow-y: auto !important;
     padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
+  }
+}
+
+/* ── Hero: original TVRS logo (vector) + tagline over the globe ── */
+.home-hero {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  pointer-events: none;
+}
+
+.home-hero .home-hero-logo.logo-container.medium {
+  width: 150px;
+  height: 112px;
+  margin-left: -10px;
+}
+
+.home-hero-logo .main-logo-svg {
+  color: var(--text-main);
+  filter: drop-shadow(-2px 0 color-mix(in srgb, var(--accent) 75%, transparent))
+    drop-shadow(2px 0 color-mix(in srgb, var(--color-cyan) 45%, transparent))
+    drop-shadow(0 4px 14px var(--bg-color));
+  animation: home-logo-glitch 0.9s steps(1) both;
+}
+
+.home-hero-logo .logo-stars .star {
+  fill: var(--accent);
+}
+
+.home-hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 5vw, 5rem);
+  font-weight: 700;
+  line-height: 0.95;
+  white-space: pre-line;
+  color: var(--text-main);
+  text-shadow:
+    0 2px 18px var(--bg-color),
+    -2px 0 color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.home-hero-sub {
+  max-width: 30ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-md);
+  text-shadow: 0 1px 10px var(--bg-color);
+}
+
+@keyframes home-logo-glitch {
+  0% {
+    opacity: 0;
+    clip-path: inset(40% 0 45% 0);
+    transform: translateX(-6px);
+  }
+
+  20% {
+    opacity: 1;
+    clip-path: inset(10% 0 60% 0);
+    transform: translateX(5px);
+  }
+
+  40% {
+    clip-path: inset(55% 0 5% 0);
+    transform: translateX(-3px);
+  }
+
+  60% {
+    clip-path: inset(0 0 30% 0);
+    transform: translateX(2px);
+  }
+
+  80%,
+  100% {
+    clip-path: inset(0);
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-hero .home-hero-logo.logo-container.medium {
+    width: 112px;
+    height: 84px;
+    margin-left: -8px;
+  }
+
+  .home-hero-title {
+    font-size: clamp(2rem, 10vw, 2.75rem);
+  }
+}
+
+/* Short phones (SE, landscape-ish): tighter hero, keep the card + Conquête + bar on screen. */
+@media (max-width: 768px) and (max-height: 700px) {
+  .home-hero .home-hero-logo.logo-container.medium {
+    width: 84px;
+    height: 63px;
+  }
+
+  .home-hero-title {
+    font-size: clamp(1.6rem, 8vw, 2.1rem);
+  }
+
+  .home-hero-sub {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-logo .main-logo-svg {
+    animation: none;
   }
 }
