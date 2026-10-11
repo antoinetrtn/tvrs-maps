@@ -317,3 +317,97 @@
     display: none;
   }
 }
+
+/* ── Layout 3 v2: original TVRS logo, smaller and integrated ── */
+.home-hero .home-hero-logo.logo-container.medium {
+  width: 112px;
+  height: 84px;
+  margin-left: -8px;
+}
+
+.home-hero-logo .main-logo-svg {
+  color: var(--text-main);
+  filter: drop-shadow(-2px 0 color-mix(in srgb, var(--accent) 75%, transparent))
+    drop-shadow(2px 0 color-mix(in srgb, var(--color-cyan) 45%, transparent))
+    drop-shadow(0 4px 14px var(--bg-color));
+  animation: hero-logo-glitch 0.9s steps(1) both;
+}
+
+.home-hero-logo .logo-stars .star {
+  fill: var(--accent);
+}
+
+@keyframes hero-logo-glitch {
+  0% {
+    opacity: 0;
+    clip-path: inset(40% 0 45% 0);
+    transform: translateX(-6px);
+  }
+  20% {
+    opacity: 1;
+    clip-path: inset(10% 0 60% 0);
+    transform: translateX(5px);
+  }
+  40% {
+    clip-path: inset(55% 0 5% 0);
+    transform: translateX(-3px);
+  }
+  60% {
+    clip-path: inset(0 0 30% 0);
+    transform: translateX(2px);
+  }
+  80%,
+  100% {
+    clip-path: inset(0);
+    transform: none;
+  }
+}
+
+.home-hero .home-hero-title {
+  margin-top: 0;
+}
+
+/* Variant B: centred logo + centred hero copy */
+.home-hero.logo-center {
+  align-items: center;
+  text-align: center;
+}
+
+.home-hero.logo-center .home-hero-logo.logo-container.medium {
+  margin-left: 0;
+}
+
+.home-hero.logo-center .home-hero-sub {
+  margin-inline: auto;
+}
+
+/* Variant C: logo inline beside the title */
+.home-hero.logo-inline {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.home-hero.logo-inline .home-hero-logo.logo-container.medium {
+  width: 84px;
+  height: 63px;
+  margin: 0;
+}
+
+.home-hero.logo-inline .home-hero-sub {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1025px) {
+  .home-hero .home-hero-logo.logo-container.medium {
+    width: 150px;
+    height: 112px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-logo .main-logo-svg {
+    animation: none;
+  }
+}

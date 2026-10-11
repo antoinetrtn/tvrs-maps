@@ -51,6 +51,9 @@ const HomeScreen = ({
     const v = new URLSearchParams(window.location.search).get("homeLayout");
     return ["1", "2", "3"].includes(v) ? v : null;
   });
+  const [protoLogoPos] = useState(
+    () => new URLSearchParams(window.location.search).get("logoPos") || "left"
+  );
 
   const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
 
@@ -96,8 +99,8 @@ const HomeScreen = ({
         )}
         {protoLayout === "2" && <div className="home-viewfinder" aria-hidden="true" />}
         {protoLayout === "3" && (
-          <div className="home-hero">
-            <HomeBrand />
+          <div className={`home-hero logo-${protoLogoPos}`}>
+            <Logo size="medium" variant="vector" className="home-hero-logo" />
             <h1 className="home-hero-title">
               {lang === "fr" ? (
                 <>
