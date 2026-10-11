@@ -9,8 +9,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  padding-left: clamp(var(--spacing-xl), 6vw, 96px);
+  /* "safe" keeps the top reachable when the column is taller than the window. */
+  justify-content: safe center;
+  padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-lg) clamp(var(--spacing-xl), 6vw, 96px);
+  overflow-y: auto;
+  box-sizing: border-box;
   gap: var(--spacing-xl);
   pointer-events: none;
   background: transparent;
@@ -399,5 +402,31 @@
 @media (prefers-reduced-motion: reduce) {
   .home-hero-logo .main-logo-svg {
     animation: none;
+  }
+}
+
+/* Desktop/tablet windows that are short (e.g. 1100x600, 900x700): compact the
+   hero so card + Conquête stay on screen, and keep the fixed bottom-right bar
+   clear of the column. */
+@media (min-width: 769px) and (max-height: 760px) {
+  .home-screen-overlay {
+    gap: var(--spacing-md);
+    padding-bottom: calc(var(--control-lg) + var(--spacing-lg) * 2);
+  }
+
+  .home-hero {
+    --hero-logo-w: 96px;
+  }
+
+  .home-hero-title {
+    font-size: clamp(2rem, 4vw, 2.75rem);
+  }
+
+  .home-hero-sub {
+    display: none;
+  }
+
+  .home-stage-container .conquest-home-entry {
+    margin-top: var(--spacing-xs);
   }
 }
