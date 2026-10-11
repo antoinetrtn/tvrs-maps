@@ -415,7 +415,7 @@ const GlobeMap = (props) => {
 
   return (
     <div
-      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
+      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""} ${String(globeTheme).startsWith("monochrome") ? "crt" : ""}`}
     >
       <div
         className={`globe-container ${theme}`}

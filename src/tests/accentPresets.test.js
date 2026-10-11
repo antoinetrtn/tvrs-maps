@@ -39,7 +39,7 @@ describe("accent presets", () => {
   });
 
   it.each(Object.entries(ACCENT_PRESETS))("%s meets AA contrast", (_id, p) => {
-    const { bg: ink, bgElevated } = getThemeColors("blackout", "dark");
+    const { bg: ink, bgElevated } = getThemeColors("monochrome", "dark");
     for (const bg of [ink, bgElevated]) {
       expect(contrast(p.accent, bg)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(p.hover, bg)).toBeGreaterThanOrEqual(4.5);
@@ -85,7 +85,7 @@ describe("accent persistence", () => {
 describe("accent tokens", () => {
   it("drives CSS variables (button, focus, stamps, xp)", () => {
     setActiveAccent("signal");
-    const vars = getThemeCssVariables("dark", "blackout");
+    const vars = getThemeCssVariables("dark", "monochrome");
     expect(vars["--accent"]).toBe(ACCENT_PRESETS.signal.accent);
     expect(vars["--accent-hover"]).toBe(ACCENT_PRESETS.signal.hover);
     expect(vars["--accent-contrast"]).toBe(ACCENT_PRESETS.signal.contrast);
@@ -94,7 +94,7 @@ describe("accent tokens", () => {
 
   it("drives globe colours (selection ring, grid)", () => {
     setActiveAccent("cyan");
-    const colors = getThemeColors("blackout", "dark");
+    const colors = getThemeColors("monochrome", "dark");
     expect(colors.selectionRingColor).toBe(ACCENT_PRESETS.cyan.accent);
     expect(colors.graticule).toBe(ACCENT_PRESETS.cyan.grid);
     expect(colors.gridDot).toContain(ACCENT_PRESETS.cyan.rgb);

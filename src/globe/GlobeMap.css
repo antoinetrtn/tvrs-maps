@@ -99,3 +99,26 @@
     --globe-layout-x: 0px;
   }
 }
+
+/* Monochrome CRT screen: static scanlines + curved-glass vignette. One
+   composited layer above the canvas (no canvas filter, no animation, so it
+   is cheap and already reduced-motion safe). The accent halo itself lives in
+   the renderer (atmosphere glow + ocean rim). */
+.globe-map-shell.crt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--bg-color) 34%, transparent) 0 1px,
+      transparent 1px 3px
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 58%,
+      color-mix(in srgb, var(--bg-color) 60%, transparent) 100%
+    );
+}

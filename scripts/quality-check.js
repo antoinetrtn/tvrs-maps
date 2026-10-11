@@ -50,6 +50,7 @@ const hardcodedColorPattern = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)
 const colorAllowListFiles = new Set([
   "src/config/designSystem.js",
   "src/config/accentPresets.js", // curated accent palette = design tokens
+  "src/config/monochromeGlobe.js", // accent-derived globe palette (ink base)
   "src/index.css",
   "src/components/Logo.jsx",
 ]);

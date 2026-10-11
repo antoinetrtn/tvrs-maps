@@ -106,7 +106,7 @@ const SettingsPanel = ({
               label={t("globe_theme")}
               options={[
                 {
-                  value: "blackout",
+                  value: "monochrome",
                   label: t("theme_blackout"),
                   icon: <Globe width={14} height={14} />,
                 },
