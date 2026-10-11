@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
+import { attribute } from "three/tsl";
 
 import { getThemeColors, GLOBE_FX_DEFAULTS } from "../../config/designSystem";
 import { useAppTheme } from "../../hooks/useAppTheme";
@@ -62,7 +63,7 @@ const applyBlackoutOceanShader = (shader) => {
   `;
 };
 
-const applySatelliteSensorShader = (shader) => {
+const applySatelliteSensorShader = (shader, gridUvExpr = "vMapUv") => {
   shader.fragmentShader = shader.fragmentShader.replace(
     "#include <map_fragment>",
     `
@@ -73,7 +74,7 @@ const applySatelliteSensorShader = (shader) => {
       // smaller than a pixel: the raw grid aliased into moiré stripes. The
       // grid (and its per-cell noise) now fades in only once cells span a
       // few pixels, with 1px-wide lines whatever the zoom.
-      vec2 gridUv = vMapUv * vec2(16384.0, 8192.0);
+      vec2 gridUv = ${gridUvExpr} * vec2(16384.0, 8192.0);
       vec2 cellPx = max(fwidth(gridUv), vec2(1e-4));
       float gridVis = 1.0 - smoothstep(0.18, 0.4, max(cellPx.x, cellPx.y));
       vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5) / cellPx;
@@ -94,6 +95,39 @@ const applySatelliteSensorShader = (shader) => {
     `
   );
 };
+
+/**
+ * Material for one progressive satellite tile (useSatelliteTileLayer): same
+ * PBR params and sensor grid as the globe, the grid driven by the tile's
+ * equirectangular `globalUv` so it stays continuous with the base texture.
+ */
+export function createSatelliteTileMaterial(texture) {
+  const mat = createStandardMaterial({
+    map: texture,
+    color: 0xffffff,
+    roughness: 0.95,
+    metalness: 0,
+  });
+  if (mat.isNodeMaterial) {
+    mat.colorNode = satelliteSensorColorNode(texture, attribute("globalUv", "vec2"));
+    return mat;
+  }
+  mat.customProgramCacheKey = () => "satellite-tile";
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        "#include <common>\nattribute vec2 globalUv;\nvarying vec2 vGlobalUv;"
+      )
+      .replace("#include <uv_vertex>", "#include <uv_vertex>\nvGlobalUv = globalUv;");
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <common>",
+      "#include <common>\nvarying vec2 vGlobalUv;"
+    );
+    applySatelliteSensorShader(shader, "vGlobalUv");
+  };
+  return mat;
+}
 
 export function useGlobeMaterial(options = {}) {
   const { UI_COLORS: themeColors, isLight: isThemeLight } = useAppTheme();
@@ -209,7 +243,7 @@ export function useGlobeMaterial(options = {}) {
         metalness: 0.0,
       });
       if (mat.isNodeMaterial) mat.colorNode = satelliteSensorColorNode(customGlobeTexture);
-      else mat.onBeforeCompile = applySatelliteSensorShader;
+      else mat.onBeforeCompile = (shader) => applySatelliteSensorShader(shader);
       return mat;
     }
 
