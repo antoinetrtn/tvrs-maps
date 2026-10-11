@@ -11,6 +11,7 @@ import {
   deriveMatchPhase,
   remainingMs,
   shieldedCountryIds,
+  stealLockouts,
 } from "./conquestLogic";
 
 const TICK_MS = 250;
@@ -46,9 +47,17 @@ const ConquestScreen = ({
   // String key: the overlay (and thus globe recolouring) only changes when the
   // set of shielded countries changes, not on every clock tick.
   const shieldKey = shieldedCountryIds(claims, now, clockOffset).join("|");
+  const lockouts = stealLockouts({ ...conquest, rules: match?.rules }, now, clockOffset);
+  const lockKey = lockouts.map((lock) => lock.id).join("|");
   const overlay = useMemo(
-    () => buildConquestOverlay(claims, players, shieldKey ? shieldKey.split("|") : []),
-    [claims, players, shieldKey]
+    () =>
+      buildConquestOverlay(
+        claims,
+        players,
+        shieldKey ? shieldKey.split("|") : [],
+        lockKey ? lockKey.split("|") : []
+      ),
+    [claims, players, shieldKey, lockKey]
   );
   useEffect(() => {
     onOverlayChange(overlay);
@@ -82,6 +91,7 @@ const ConquestScreen = ({
           conquest={conquest}
           phase={phase}
           clockMs={clockMs}
+          lockouts={lockouts}
           countryName={countryName}
           onFocusCountry={onFocusCountry}
           countryClickRef={countryClickRef}

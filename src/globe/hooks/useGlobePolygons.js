@@ -151,6 +151,7 @@ export function useGlobePolygons({
       }
       const ownerColor = conquestOverlay?.colors?.[getFeatureAdmin(d)];
       if (ownerColor) return ownerColor;
+      if (conquestOverlay?.neutral) return conquestOverlay.neutral;
 
       if (isRegionalMode) {
         const admin = getFeatureAdmin(d);
