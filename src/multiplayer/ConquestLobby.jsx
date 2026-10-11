@@ -130,13 +130,11 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
   return (
     <div className="conquest-panel conquest-surface">
       <header className="conquest-header">
-        <h2 className="conquest-title">{t.title}</h2>
+        <div className="conquest-header-row">
+          <h2 className="conquest-title">{t.title}</h2>
+          {onRules && <ConquestRulesButton lang={lang} onClick={onRules} />}
+        </div>
         <p className="conquest-subtitle">{t.subtitle}</p>
-        {onRules && (
-          <div className="conquest-rules-slot">
-            <ConquestRulesButton lang={lang} onClick={onRules} />
-          </div>
-        )}
       </header>
       {!match ? (
         <LobbyEntry t={t} busy={busy} onCreate={conquest.create} onJoin={conquest.join} />

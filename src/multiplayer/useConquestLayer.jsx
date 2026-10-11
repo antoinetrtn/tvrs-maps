@@ -5,12 +5,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { isConquestEnabled } from "./conquestConfig";
 import ConquestCursorLayer from "./ConquestCursorLayer.jsx";
+import { CONQUEST_FOCUS_HOLD_MS, nextConquestFocus, shouldAutoRelease } from "./conquestFocus";
 import { clearConquestParam, readConquestCode } from "./conquestLink";
 import ConquestScreen from "./ConquestScreen.jsx";
 import { hasStoredConquestMatch, useConquestMatch } from "./useConquestMatch";
 
 const EMPTY_FOUND = [];
-const FOCUS_HOLD_MS = 2500;
 
 /**
  * Wires the « Conquête » mode into App: entry callback (null while the flag is
@@ -26,11 +26,12 @@ export function useConquestLayer({
   const enabled = isConquestEnabled();
   const active = enabled && currentScreen === "conquest";
   const [overlay, setOverlay] = useState(null);
-  const [focusCountry, setFocusCountry] = useState(null);
+  const [focus, setFocus] = useState(null);
   // The HUD registers what a globe click does (steal / focus the input).
   const countryClickRef = useRef(null);
   const handleCountryClick = useCallback((admin) => {
     if (admin) countryClickRef.current?.(admin);
+    else setFocus(null);
   }, []);
   const conquest = useConquestMatch({
     lang,
@@ -68,17 +69,27 @@ export function useConquestLayer({
   }, [enabled, resume, open]);
   const exit = useCallback(() => {
     setOverlay(null);
-    setFocusCountry(null);
+    setFocus(null);
     setCurrentScreen("home");
   }, [setCurrentScreen]);
 
-  // Feed click / capture: briefly select the country so the camera centres it,
-  // then release the selection so the owner colour shows again.
+  const focusCountry = useCallback(
+    (id) => setFocus((prev) => nextConquestFocus(prev, id, { sticky: false })),
+    []
+  );
+  const selectCountry = useCallback(
+    (id) => setFocus((prev) => nextConquestFocus(prev, id, { sticky: true })),
+    []
+  );
+
+  // Transient focus (feed click, lockout, capture result): briefly select the
+  // country so the camera centres it, then release it so the owner colour shows again.
+  // Sticky selections (user tapped on the globe) stay until tapped again or deselected.
   useEffect(() => {
-    if (!focusCountry) return undefined;
-    const id = setTimeout(() => setFocusCountry(null), FOCUS_HOLD_MS);
+    if (!shouldAutoRelease(focus)) return undefined;
+    const id = setTimeout(() => setFocus(null), CONQUEST_FOCUS_HOLD_MS);
     return () => clearTimeout(id);
-  }, [focusCountry]);
+  }, [focus]);
 
   const basePerf = sessionView.globeProps.perfProfile;
   // No country labels during a match: a label shows the flag/capital, which
@@ -96,7 +107,7 @@ export function useConquestLayer({
         ...sessionView.globeProps,
         mode: "countries",
         foundList: EMPTY_FOUND,
-        selectedCountry: focusCountry,
+        selectedCountry: focus?.id || null,
         onCountrySelect: handleCountryClick,
         perfProfile,
         isHomeScreen: false,
@@ -104,7 +115,7 @@ export function useConquestLayer({
         conquestOverlay: overlay,
       },
     };
-  }, [active, sessionView, overlay, focusCountry, handleCountryClick, perfProfile]);
+  }, [active, sessionView, overlay, focus, handleCountryClick, perfProfile]);
 
   const screen = active ? (
     <>
@@ -114,7 +125,8 @@ export function useConquestLayer({
         conquest={conquest}
         onExit={exit}
         onOverlayChange={setOverlay}
-        onFocusCountry={setFocusCountry}
+        onFocusCountry={focusCountry}
+        onSelectCountry={selectCountry}
         countryClickRef={countryClickRef}
       />
     </>

@@ -28,6 +28,7 @@ const ConquestScreen = ({
   onExit,
   onOverlayChange,
   onFocusCountry,
+  onSelectCountry,
   countryClickRef,
 }) => {
   const [now, setNow] = useState(() => Date.now());
@@ -100,6 +101,7 @@ const ConquestScreen = ({
           lockouts={lockouts}
           countryName={countryName}
           onFocusCountry={onFocusCountry}
+          onSelectCountry={onSelectCountry}
           countryClickRef={countryClickRef}
           onRules={openRules}
         />

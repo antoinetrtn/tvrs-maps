@@ -24,6 +24,7 @@ const ConquestHud = ({
   lockouts = [],
   countryName,
   onFocusCountry,
+  onSelectCountry,
   countryClickRef,
   onRules,
 }) => {
@@ -109,7 +110,7 @@ const ConquestHud = ({
   // Globe click: centre the country, then steal / prompt / inform.
   const handleCountryClick = (countryId) => {
     if (phase !== "live" || challenge) return;
-    onFocusCountry(countryId);
+    onSelectCountry(countryId);
     const action = resolveCountryClick(countryId, claims, userId, Date.now(), clockOffset);
     if (action === "steal") {
       void openSteal(countryId);

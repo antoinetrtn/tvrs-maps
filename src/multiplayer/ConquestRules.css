@@ -250,8 +250,24 @@
   color: var(--accent);
 }
 
-.conquest-rules-slot {
+.conquest-header-row {
   display: flex;
-  justify-content: flex-start;
-  margin-top: var(--spacing-xs);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.conquest-header-row .conquest-rules-open-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.conquest-hud-top .conquest-rules-open-btn {
+  margin-left: auto;
+  align-self: baseline;
+  flex-shrink: 0;
+}
+
+.conquest-hud-top .conquest-timer {
+  align-self: baseline;
 }
