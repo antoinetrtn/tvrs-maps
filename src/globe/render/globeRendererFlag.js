@@ -1,29 +1,47 @@
 /**
- * Globe renderer choice: WebGL (default) or experimental WebGPU.
+ * Globe renderer choice: WebGPU by default, WebGL as the fallback.
  *
- * Priority: `?renderer=webgl|webgpu` in the URL, then the Settings preference
- * (globePrefs, persisted in localStorage), then VITE_GLOBE_RENDERER=webgpu.
- * WebGPU also needs `navigator.gpu`; otherwise we stay on WebGLRenderer. If the
- * adapter request fails later, three's WebGPURenderer falls back to its own
- * WebGL2 backend by itself.
+ * Wanted renderer, by priority: `?renderer=webgl|webgpu` in the URL, then the
+ * Settings preference (globePrefs; only stored when the user picks one, so a
+ * saved "webgl" is an explicit choice and is kept), then
+ * VITE_GLOBE_RENDERER, then WebGPU. WebGPU is only used when `navigator.gpu`
+ * exists, an adapter was found and it has not failed this session
+ * (webgpuHealth); otherwise WebGL.
  */
 import { getGlobePrefs } from "../globePrefs";
+import { getWebGPUHealth } from "./webgpuHealth";
 
 export function hasWebGPUSupport() {
   return typeof navigator !== "undefined" && Boolean(navigator.gpu);
 }
 
-export function resolveGlobeRenderer({
+const pick = (value) => {
+  const v = String(value || "").toLowerCase();
+  return v === "webgl" || v === "webgpu" ? v : null;
+};
+
+/** Renderer the user/config asks for, before capability checks. */
+export function wantedGlobeRenderer({
   envValue = import.meta.env?.VITE_GLOBE_RENDERER,
   search = globalThis.location?.search || "",
   preference = getGlobePrefs().renderer,
-  hasWebGPU = hasWebGPUSupport(),
 } = {}) {
-  const param = new URLSearchParams(search).get("renderer");
-  let wanted = String(envValue || "").toLowerCase() === "webgpu" ? "webgpu" : "webgl";
-  if (preference === "webgpu" || preference === "webgl") wanted = preference;
-  if (param === "webgpu" || param === "webgl") wanted = param;
-  return wanted === "webgpu" && hasWebGPU ? "webgpu" : "webgl";
+  return (
+    pick(new URLSearchParams(search).get("renderer")) ||
+    pick(preference) ||
+    pick(envValue) ||
+    "webgpu"
+  );
+}
+
+export function resolveGlobeRenderer({
+  hasWebGPU = hasWebGPUSupport(),
+  health = getWebGPUHealth(),
+  ...wantedOptions
+} = {}) {
+  if (wantedGlobeRenderer(wantedOptions) !== "webgpu") return "webgl";
+  const usable = hasWebGPU && health.adapter !== "none" && !health.failed;
+  return usable ? "webgpu" : "webgl";
 }
 
 /** Renderer for globes created now (the globe host remounts on change). */
@@ -33,6 +51,5 @@ export function isGlobeWebGPU() {
 
 /** True when the URL forces a renderer (the Settings toggle is then moot). */
 export function isRendererForcedByUrl(search = globalThis.location?.search || "") {
-  const param = new URLSearchParams(search).get("renderer");
-  return param === "webgpu" || param === "webgl";
+  return pick(new URLSearchParams(search).get("renderer")) !== null;
 }

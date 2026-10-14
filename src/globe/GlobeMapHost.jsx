@@ -1,28 +1,53 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useSyncExternalStore } from "react";
 
 import { showToast, ToastViewport } from "../components/ui/Toast";
 import GlobeMap from "./GlobeMap.jsx";
 import { useGlobePrefs } from "./globePrefs";
-import { resolveGlobeRenderer } from "./render/globeRendererFlag";
+import {
+  hasWebGPUSupport,
+  resolveGlobeRenderer,
+  wantedGlobeRenderer,
+} from "./render/globeRendererFlag";
+import { getWebGPUHealth, probeWebGPUAdapter, subscribeWebGPUHealth } from "./render/webgpuHealth";
 
-const RENDERER_LABEL = { webgl: "WebGL", webgpu: "WebGPU (expérimental)" };
+const RENDERER_LABEL = { webgl: "WebGL", webgpu: "WebGPU" };
 
 /**
- * Mounts the globe for the chosen renderer. A renderer cannot be swapped on a
- * live three.js scene, so changing it in Settings remounts the globe (keyed
- * on the renderer) and frees the previous GPU context.
+ * Mounts the globe for the active renderer (WebGPU by default, WebGL
+ * fallback). A renderer cannot be swapped on a live three.js scene, so a
+ * change (Settings, no adapter, init failure, device lost) remounts the globe
+ * (keyed on the renderer) and frees the previous GPU context.
  */
 const GlobeMapHost = (props) => {
   const prefs = useGlobePrefs();
-  const renderer = resolveGlobeRenderer({ preference: prefs.renderer });
-  const previous = useRef(renderer);
+  const health = useSyncExternalStore(subscribeWebGPUHealth, getWebGPUHealth, getWebGPUHealth);
+  const wanted = wantedGlobeRenderer({ preference: prefs.renderer });
+  // WebGPU wanted but the adapter is not probed yet: wait (a few ms) rather
+  // than mount a WebGPU globe that would immediately fall back.
+  const probing = wanted === "webgpu" && hasWebGPUSupport() && health.adapter === "unknown";
+  const renderer = resolveGlobeRenderer({ preference: prefs.renderer, health });
+  const previous = useRef(probing ? null : renderer);
 
   useEffect(() => {
-    if (previous.current === renderer) return undefined;
+    if (probing) void probeWebGPUAdapter();
+  }, [probing]);
+
+  useEffect(() => {
+    if (probing) return;
+    if (previous.current === null) {
+      previous.current = renderer;
+      return;
+    }
+    if (previous.current === renderer) return;
     previous.current = renderer;
-    showToast({ message: `Globe : rendu ${RENDERER_LABEL[renderer]}`, tone: "success" });
-    return undefined;
-  }, [renderer]);
+    const fellBack = renderer === "webgl" && wanted === "webgpu";
+    showToast({
+      message: fellBack
+        ? "WebGPU indisponible : retour au rendu WebGL"
+        : `Globe : rendu ${RENDERER_LABEL[renderer]}`,
+      tone: fellBack ? "info" : "success",
+    });
+  }, [probing, renderer, wanted]);
 
   useEffect(
     () => () => {
@@ -37,7 +62,7 @@ const GlobeMapHost = (props) => {
 
   return (
     <>
-      <GlobeMap key={renderer} {...props} />
+      {!probing && <GlobeMap key={renderer} {...props} />}
       <ToastViewport />
     </>
   );

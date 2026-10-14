@@ -1,6 +1,6 @@
 /**
  * Globe display preferences that live outside React props: the renderer
- * (WebGL / experimental WebGPU) and the found-country style. A tiny external
+ * (WebGPU by default / WebGL) and the found-country style. A tiny external
  * store so the settings sheet, the globe host and the polygon hook share them
  * without threading props through App.
  */
@@ -14,7 +14,7 @@ const ALLOWED = {
   renderer: ["webgl", "webgpu"],
   foundStyle: ["surface", "mesh"],
 };
-// renderer: null = no choice yet (VITE_GLOBE_RENDERER, then WebGL).
+// renderer: null = no choice yet (VITE_GLOBE_RENDERER, then WebGPU when usable).
 const DEFAULTS = { renderer: null, foundStyle: "surface" };
 
 function readStored(name) {
