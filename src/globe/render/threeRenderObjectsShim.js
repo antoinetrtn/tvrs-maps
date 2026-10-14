@@ -1,12 +1,13 @@
 /**
  * Aliased in place of `three-render-objects` (see vite.config.js) so globe.gl,
  * which does not forward the option, creates its renderer with `useWebGPU`
- * when the experimental flag is on. With the flag off this is a pass-through.
+ * when WebGPU is the active renderer. With WebGL this is a pass-through.
  */
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import ThreeRenderObjects from "three-render-objects-original";
 
 import { isGlobeWebGPU } from "./globeRendererFlag";
+import { markWebGPUFailed, watchWebGPURenderer } from "./webgpuHealth";
 
 let composerPatched = false;
 const initPromises = new WeakMap();
@@ -30,8 +31,11 @@ function patchComposerForWebGPU() {
           renderer,
           renderer
             .init()
-            .then(() => composer.render())
-            .catch(() => {})
+            .then(() => {
+              watchWebGPURenderer(renderer);
+              composer.render();
+            })
+            .catch(markWebGPUFailed)
         );
       }
       return undefined;
