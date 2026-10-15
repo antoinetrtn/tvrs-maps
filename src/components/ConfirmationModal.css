@@ -22,9 +22,12 @@
   font-weight: 700;
   font-size: var(--font-size-base);
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    transform var(--transition-spring),
-    opacity var(--transition-spring);
+    transform var(--dur-micro) var(--steps-press),
+    background-color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear,
+    color var(--dur-fast) linear;
 }
 
 .modal-btn.confirm {
@@ -41,12 +44,12 @@
 }
 
 .modal-btn.confirm:active {
-  transform: translateY(0.5px) scale(0.98);
+  transform: var(--press-offset);
   background: var(--accent);
   color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-soft);
+  box-shadow: none;
   text-shadow: none;
-  transition: transform var(--transition-instant);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 .modal-btn.cancel {
@@ -63,11 +66,11 @@
 }
 
 .modal-btn.cancel:active {
-  transform: translateY(0.5px) scale(0.98);
+  transform: var(--press-offset);
   background: var(--accent);
   color: var(--accent-contrast);
   border-color: var(--accent);
-  box-shadow: 0 2px 8px var(--accent-soft);
+  box-shadow: none;
   text-shadow: none;
-  transition: transform var(--transition-instant);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }

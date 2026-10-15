@@ -2,6 +2,7 @@ import "./index.css";
 import "./styles/buttons.css";
 import "./styles/panelSystem.css";
 import "./styles/glitchMoments.css";
+import "./styles/motion.css";
 
 import React from "react";
 import ReactDOM from "react-dom/client";

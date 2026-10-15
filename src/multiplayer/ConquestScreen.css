@@ -423,9 +423,10 @@
   text-transform: uppercase;
   cursor: pointer;
   pointer-events: auto;
+  touch-action: manipulation;
   transition:
-    border-color var(--transition-fast),
-    transform var(--transition-instant);
+    border-color var(--dur-fast) linear,
+    transform var(--dur-micro) var(--steps-press);
 }
 
 .conquest-home-entry:hover {
@@ -433,7 +434,8 @@
 }
 
 .conquest-home-entry:active {
-  transform: translate(1px, 1px);
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 .conquest-home-icon {

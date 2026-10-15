@@ -11,6 +11,7 @@ import HomeScreenCategoryCarousel from "./HomeScreenCategoryCarousel";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardScreen from "./LeaderboardScreen";
 import Logo from "./Logo";
+import ModeShutter from "./ModeShutter";
 import ProfilePanel from "./ProfilePanel";
 import SettingsPanel from "./SettingsPanel";
 
@@ -74,6 +75,7 @@ const HomeScreen = ({
 
   return (
     <>
+      <ModeShutter screen="home" />
       <div className={`home-screen-overlay ${theme}`}>
         <header className="home-hero">
           <Logo size="medium" className="home-hero-logo" />

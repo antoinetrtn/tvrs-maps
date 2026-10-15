@@ -316,7 +316,12 @@
   border: 1.5px solid var(--accent);
   cursor: pointer;
   box-shadow: none;
-  transition: all var(--transition-spring);
+  touch-action: manipulation;
+  transition:
+    transform var(--dur-micro) var(--steps-press),
+    box-shadow var(--dur-micro) var(--steps-press),
+    background-color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear;
 }
 
 .card-play-btn span {
@@ -331,7 +336,9 @@
 }
 
 .card-play-btn:active {
-  transform: translateY(0) scale(0.97);
+  transform: var(--press-offset);
+  box-shadow: 1px 1px 0 var(--text-main);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 .card-learn-btn {
@@ -347,7 +354,12 @@
   background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition-spring);
+  touch-action: manipulation;
+  transition:
+    transform var(--dur-micro) var(--steps-press),
+    background-color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear,
+    color var(--dur-fast) linear;
 }
 
 .card-learn-btn:hover {
@@ -358,7 +370,8 @@
 }
 
 .card-learn-btn:active {
-  transform: translateY(0) scale(0.95);
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 /* Dots Row - Pixel Squares */

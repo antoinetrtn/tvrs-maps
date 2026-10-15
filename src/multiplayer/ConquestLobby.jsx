@@ -128,7 +128,7 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
   const allReady = players.length >= 2 && players.every((player) => player.ready);
 
   return (
-    <div className="conquest-panel conquest-surface">
+    <div className="conquest-panel conquest-surface px-cascade">
       <header className="conquest-header">
         <div className="conquest-header-row">
           <h2 className="conquest-title">{t.title}</h2>

@@ -19,10 +19,11 @@
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
+  touch-action: manipulation;
   transition:
-    transform var(--transition-spring),
-    box-shadow var(--transition-spring),
-    background var(--transition-spring);
+    transform var(--dur-micro) var(--steps-press),
+    box-shadow var(--dur-micro) var(--steps-press),
+    background var(--dur-fast) linear;
 }
 
 .glass-icon-btn:hover,
@@ -37,12 +38,13 @@
 .glass-icon-btn:active,
 .settings-trigger-btn:active,
 .profile-trigger-btn:active {
-  transform: translateY(0.5px) scale(0.92);
+  transform: var(--press-offset);
   background: var(--accent) !important;
   color: var(--accent-contrast) !important;
-  box-shadow: 0 2px 8px var(--accent-soft);
+  box-shadow: none;
   text-shadow: none;
-  transition: transform var(--transition-instant);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
+  transition: transform var(--dur-micro) var(--steps-press);
 }
 
 /* Shared primary button — used by EndScreen, ProfilePanel and AuthModal. */
@@ -52,9 +54,11 @@
   font-weight: 600;
   font-size: var(--font-size-base);
   cursor: pointer;
+  touch-action: manipulation;
   transition:
-    transform var(--transition-spring),
-    opacity var(--transition-spring);
+    transform var(--dur-micro) var(--steps-press),
+    box-shadow var(--dur-micro) var(--steps-press),
+    opacity var(--dur-fast) linear;
   background: var(--accent);
   color: var(--accent-contrast);
   border: 1px solid var(--accent);
@@ -69,15 +73,12 @@
 }
 
 .btn-primary:active {
-  transform: translateY(0.5px) scale(0.98);
+  transform: var(--press-offset);
   background: var(--accent);
   color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-soft);
+  box-shadow: 1px 1px 0 var(--text-main);
   text-shadow: none;
-  transition:
-    transform var(--transition-instant),
-    background-color var(--transition-instant),
-    box-shadow var(--transition-instant);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 /* Shared secondary button — quieter sibling of .btn-primary. */
@@ -91,10 +92,11 @@
   background: var(--glass-bg);
   color: var(--text-main);
   border: 1px solid var(--glass-border-strong);
+  touch-action: manipulation;
   transition:
-    transform var(--transition-spring),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
+    transform var(--dur-micro) var(--steps-press),
+    color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear;
 }
 
 .btn-secondary:disabled {
@@ -111,8 +113,8 @@
 }
 
 .btn-secondary:active {
-  transform: translateY(0.5px) scale(0.98);
-  transition: transform var(--transition-instant);
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 /* The flicker colors are the same glitch tokens the static :hover shadows use,

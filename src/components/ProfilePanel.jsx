@@ -237,7 +237,7 @@ const ProfilePanel = ({
 
       <div className="panel-body scrollbar-styled">
         {activeTab === "profile" ? (
-          <div className="profile-tab-content">
+          <div className="profile-tab-content px-band-in">
             {/* Blurring Overlay for guest mode */}
             {isSupabaseConfigured && !session && (
               <div className="profile-blur-overlay">
@@ -389,7 +389,7 @@ const ProfilePanel = ({
             </div>
           </div>
         ) : (
-          <div className="stats-tab-content">
+          <div className="stats-tab-content px-band-in">
             {/* Scrollable Middle Area (Contains ONLY Achievements) */}
             <div className="badges-gallery-section">
               <span className="section-label">Challenges & Émotes</span>

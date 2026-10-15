@@ -366,11 +366,11 @@ const LeaderboardScreen = ({
       />
 
       {activeTab === "conquest" ? (
-        <div className="leaderboard-full-layout">
+        <div key={activeTab} className="leaderboard-full-layout">
           <ConquestLeaderboard lang={lang} isSignedIn={isSignedIn} />
         </div>
       ) : (
-        <div className="leaderboard-full-layout">
+        <div key={activeTab} className="leaderboard-full-layout">
           <div className="leaderboard-column">
             <div className="leaderboard-controls">
               {/* Game mode selector chips */}
@@ -391,7 +391,7 @@ const LeaderboardScreen = ({
             </div>
 
             {/* Stats Summary cards always displayed at the top of active mode */}
-            <div className="personal-stats-grid">
+            <div className="personal-stats-grid px-cascade">
               <div className="personal-stat-card glass-panel">
                 <span className="stat-label text-natural-case">{t("games_played")}</span>
                 <span className="stat-value highlight-cyan">{currentRecord.gamesPlayed}</span>
