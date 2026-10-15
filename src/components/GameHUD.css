@@ -209,12 +209,13 @@
 }
 
 .hud-btn-circular:active {
-  transform: scale(0.92) translateY(0);
+  transform: var(--press-offset);
   background: var(--accent);
   color: var(--accent-contrast);
-  box-shadow: 0 2px 8px var(--accent-soft);
+  box-shadow: none;
   text-shadow: none;
-  transition: transform var(--transition-instant);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
+  transition: transform var(--dur-micro) var(--steps-press);
 }
 
 .island-sub-gauges {

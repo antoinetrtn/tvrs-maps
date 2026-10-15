@@ -31,6 +31,11 @@ src/
   styles/
     panelSystem.css           Système unifié panneaux/overlays : sheet-panel,
                               panel-header, segmented-control, nav-chips, dialogs.
+    motion.css                Tokens de motion (--dur-*, --steps-*, --blur-scrim, --stagger),
+                              appui « bloc » (px-press-flash), indicateur d'onglet,
+                              bandes (px-band-in), cascade (.px-cascade), volets
+                              Solo ↔ Conquête (.mode-shutter) et repli global
+                              prefers-reduced-motion. Carré, par pas, jamais de glow.
 
   globe/                      TOUT le rendu 3D vit ici.
     GlobeMap.jsx              ~590 l. Compose <Globe> (react-globe.gl) et branche

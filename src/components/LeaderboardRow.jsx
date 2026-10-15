@@ -41,7 +41,7 @@ const LeaderboardRow = ({
 
 /** Wrapper list so all tabs share spacing and scrolling. */
 export const LeaderboardList = ({ children, label }) => (
-  <ul className="lb-list scrollbar-styled" aria-label={label}>
+  <ul className="lb-list px-cascade scrollbar-styled" aria-label={label}>
     {children}
   </ul>
 );

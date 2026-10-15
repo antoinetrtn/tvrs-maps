@@ -3,6 +3,7 @@ import "./ConquestScreen.css";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import ModeShutter from "../components/ModeShutter.jsx";
 import { isConquestEnabled } from "./conquestConfig";
 import ConquestCursorLayer from "./ConquestCursorLayer.jsx";
 import { CONQUEST_FOCUS_HOLD_MS, nextConquestFocus, shouldAutoRelease } from "./conquestFocus";
@@ -119,6 +120,7 @@ export function useConquestLayer({
 
   const screen = active ? (
     <>
+      <ModeShutter screen="conquest" />
       <ConquestCursorLayer conquest={conquest} />
       <ConquestScreen
         lang={lang}

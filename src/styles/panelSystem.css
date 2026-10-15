@@ -18,17 +18,19 @@
   position: fixed;
   inset: 0;
   background: var(--settings-backdrop-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* Fixed light blur: only the opacity animates, never the blur radius. */
+  backdrop-filter: var(--blur-scrim);
+  -webkit-backdrop-filter: var(--blur-scrim);
   z-index: var(--z-overlay);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity var(--dur-sheet-out) linear;
 }
 
 .panel-overlay.open {
   opacity: 1;
   pointer-events: auto;
+  transition: opacity var(--dur-fast) linear;
 }
 
 /* ──── UNIFIED HEADER ──── */
@@ -94,10 +96,12 @@
   color: var(--text-muted);
   cursor: pointer;
   border-radius: var(--radius-sm);
+  touch-action: manipulation;
   transition:
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
+    transform var(--dur-micro) var(--steps-press),
+    background var(--dur-fast) linear,
+    color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear;
   padding: 0;
   margin-left: auto; /* ensure it stays at end even when tabs grow */
 }
@@ -110,7 +114,8 @@
 
 .panel-close-btn:active,
 .panel-back-btn:active {
-  transform: scale(0.92);
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 .panel-close-btn {
@@ -311,21 +316,41 @@
   padding: var(--spacing-lg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  transform: scale(0.9) translateY(15px);
-  transform-origin: bottom right;
-  opacity: 0;
+  /* Closed = hidden after the exit animation (visibility delay), never faded.
+     Open = revealed top to bottom by a stepped clip-path (no overshoot, no
+     scale). The exit runs ~40% faster. Once the animation ends clip-path is
+     back to none, which keeps the ::before backdrop blur working. */
+  visibility: hidden;
   pointer-events: none;
-  transition:
-    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: visibility 0s linear var(--dur-sheet-out);
+  animation: sheet-out var(--dur-sheet-out) var(--steps-sheet-out) both;
   box-shadow: var(--glass-shadow);
   overscroll-behavior: none;
 }
 
 .sheet-panel.open {
-  transform: scale(1) translateY(0);
-  opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition-delay: 0s;
+  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
+}
+
+@keyframes sheet-in {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(var(--sheet-clip-bleed));
+  }
+}
+
+@keyframes sheet-out {
+  from {
+    clip-path: inset(var(--sheet-clip-bleed));
+  }
+  to {
+    clip-path: inset(0 0 100% 0);
+  }
 }
 
 /* Below the desktop breakpoint (aligned with the HUD's mobile layout switch),
@@ -346,19 +371,10 @@
     max-height: 100dvh !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    /* Slide up transition on mobile */
-    transform: translateY(100%) !important;
-    transform-origin: bottom center !important;
-    transition:
-      transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-      opacity 0.25s ease !important;
+    /* Same stepped clip-path reveal as desktop (no slide, no overshoot) */
+    transform: none !important;
     padding-top: calc(var(--spacing-md) + var(--safe-top)) !important;
     padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
-  }
-
-  .sheet-panel.open {
-    transform: translateY(0) !important;
-    opacity: 1 !important;
   }
 
   .sheet-panel .panel-body {
@@ -384,9 +400,9 @@
   justify-content: center;
   z-index: var(--z-dialog);
   background: var(--settings-backdrop-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  animation: panel-fade-in 0.25s ease-out;
+  backdrop-filter: var(--blur-scrim);
+  -webkit-backdrop-filter: var(--blur-scrim);
+  animation: ui-fade-in var(--dur-fast) linear;
 }
 
 .dialog-card {
@@ -402,18 +418,7 @@
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: 0 10px 40px var(--xp-shadow-heavy);
-  animation: panel-zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes panel-zoom-in {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
 }
 
 /* ──── SCROLLBAR STYLED ──── */

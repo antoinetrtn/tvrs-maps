@@ -151,9 +151,10 @@
 }
 
 .home-podium-widget:active {
-  transform: translateY(0.5px) scale(0.96);
+  transform: var(--press-offset);
   background: var(--accent) !important;
-  box-shadow: 0 2px 8px var(--accent-soft);
+  box-shadow: none;
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 .widget-spot {
