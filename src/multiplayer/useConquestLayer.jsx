@@ -121,7 +121,11 @@ export function useConquestLayer({
   const screen = active ? (
     <>
       <ModeShutter screen="conquest" />
-      <ConquestCursorLayer conquest={conquest} />
+      <ConquestCursorLayer
+        conquest={conquest}
+        countriesData={sessionView.globeProps.countriesData}
+        selectedCountryId={focus?.id || null}
+      />
       <ConquestScreen
         lang={lang}
         conquest={conquest}
