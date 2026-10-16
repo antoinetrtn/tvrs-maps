@@ -157,7 +157,8 @@
   padding: var(--spacing-md);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .xp-card-header {
@@ -171,7 +172,7 @@
   background: var(--subtle-tint);
   border: 1px solid var(--glass-border);
   padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   display: flex;
 }
 
@@ -186,37 +187,13 @@
   font-size: var(--font-size-md);
   font-weight: 900;
   color: var(--text-main);
+  text-transform: none;
 }
 
 .xp-total-count {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
-}
-
-.minecraft-xp-bar-container {
-  width: 100%;
-  height: 20px;
-  background: var(--xp-bar-bg);
-  border: 2px solid var(--xp-bar-border-light);
-  box-shadow: inset 0 2px 4px var(--xp-shadow-light);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.minecraft-xp-bar-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(
-    180deg,
-    var(--xp-green-fill-top) 0%,
-    var(--xp-green-inner) 50%,
-    var(--xp-green-fill-bottom) 100%
-  );
-  transition: width 0.4s ease-out;
+  text-transform: none;
 }
 
 /* Quick Stats Grid */
@@ -265,10 +242,15 @@
   grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-sm);
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: var(--spacing-xs);
   align-content: start;
+  padding: var(--spacing-xs);
+  margin-inline: calc(-1 * var(--spacing-xs));
+  scroll-padding: var(--spacing-xs);
+  box-sizing: border-box;
 }
 
 .badge-item-btn {
@@ -276,7 +258,7 @@
   padding: 0;
   background: var(--glass-bg);
   border: 1px solid var(--badge-color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -285,22 +267,22 @@
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
+    color var(--transition-fast);
 }
 
 .badge-item-btn:hover {
   background: var(--glass-hover);
-  transform: translateY(-1px);
+  border-color: var(--text-main);
 }
 
 .badge-item-btn.unlocked {
-  box-shadow: inset 0 0 10px var(--badge-color-glow);
+  background: color-mix(in srgb, var(--badge-color-border) 14%, var(--glass-bg));
+  box-shadow: none;
 }
 
 .badge-item-btn.selected {
   border-color: var(--text-main) !important;
-  box-shadow: 0 0 10px var(--text-main);
+  box-shadow: inset 0 0 0 2px var(--text-main);
 }
 
 .badge-lock-badge {
@@ -310,7 +292,7 @@
   width: 14px;
   height: 14px;
   background: var(--xp-shadow-heavy);
-  border-radius: 50%;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -325,7 +307,8 @@
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -343,7 +326,8 @@
   padding: var(--spacing-xs);
   background: var(--subtle-tint);
   border: 1px dashed var(--badge-detail-color);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;

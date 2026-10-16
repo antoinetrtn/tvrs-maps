@@ -1,0 +1,45 @@
+.xp-bar {
+  --xp-cells: 20;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  flex: none;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.xp-bar-bar {
+  height: 12px;
+  border: 1px solid var(--glass-border);
+}
+
+.xp-bar-mini {
+  height: 3px;
+  border: none;
+}
+
+.xp-bar-track,
+.xp-bar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  -webkit-mask-image: repeating-linear-gradient(
+    90deg,
+    black 0 calc(100% / var(--xp-cells) - 2px),
+    transparent 0 calc(100% / var(--xp-cells))
+  );
+  mask-image: repeating-linear-gradient(
+    90deg,
+    black 0 calc(100% / var(--xp-cells) - 2px),
+    transparent 0 calc(100% / var(--xp-cells))
+  );
+}
+
+.xp-bar-track {
+  background: color-mix(in srgb, var(--text-main) 12%, transparent);
+}
+
+.xp-bar-fill {
+  background: var(--accent);
+  transition: clip-path var(--dur-base) var(--steps-snap);
+}

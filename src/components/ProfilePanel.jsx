@@ -15,6 +15,7 @@ import {
 import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
 import SegmentedControl from "./SegmentedControl";
+import XpBar from "./XpBar";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes
 const CHALLENGE_AVATARS = {
@@ -280,8 +281,7 @@ const ProfilePanel = ({
                     </div>
                   </div>
 
-                  {/* Content: niv (level), invader, stats etc. scroll together as one block */}
-                  {/* Minecraft Style XP Block (Moved to Default Profile Tab) */}
+                  {/* XP progression card */}
                   <div
                     className="xp-progression-card glass-panel"
                     style={{ marginBottom: "var(--spacing-md)" }}
@@ -297,9 +297,10 @@ const ProfilePanel = ({
                         </span>
                       </div>
                     </div>
-                    <div className="minecraft-xp-bar-container">
-                      <div className="minecraft-xp-bar-fill" style={{ width: `${percent}%` }} />
-                    </div>
+                    <XpBar
+                      percent={percent}
+                      label={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+                    />
                   </div>
 
                   {/* Quick Stats Grid */}

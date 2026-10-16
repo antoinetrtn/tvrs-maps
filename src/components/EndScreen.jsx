@@ -10,6 +10,7 @@ import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import { getGameStats } from "../utils/utils";
 import PixelFireworks from "./PixelFireworks";
+import XpBar from "./XpBar";
 import XpOrbsAnimation from "./XpOrbsAnimation";
 
 const EndScreen = ({
@@ -223,9 +224,7 @@ const EndScreen = ({
               <span className="xp-level-title">{t("level", { level: animatedLevel })}</span>
               <span className="xp-gain-badge">+{gainedXp} XP</span>
             </div>
-            <div className="minecraft-xp-bar-container">
-              <div className="minecraft-xp-bar-fill" style={{ width: `${percent}%` }} />
-            </div>
+            <XpBar percent={percent} label={t("level", { level: animatedLevel })} />
             {showLevelUp && (
               <div className="end-screen-level-up-banner text-natural-case">{t("level_up")}</div>
             )}

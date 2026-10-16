@@ -217,7 +217,7 @@
 
 /* Level badge inside profile glass button */
 
-/* Profile trigger: icon centered, XP fill + level badge absolutely positioned */
+/* Profile trigger: icon centered, mini XP bar along bottom edge + level badge */
 .profile-trigger-btn {
   position: relative;
   display: grid;
@@ -225,32 +225,18 @@
   overflow: visible;
 }
 
-.profile-trigger-btn > .profile-xp-progress-container,
 .profile-trigger-btn > .profile-btn-level-tag {
   position: absolute;
 }
 
-.profile-xp-progress-container {
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.profile-xp-progress {
+.profile-trigger-btn .profile-btn-xp-bar {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    var(--xp-green-glow),
-    color-mix(in srgb, var(--xp-green-glow) 60%, transparent)
-  );
-  opacity: 0.65;
-  border-radius: inherit;
-  transition: width var(--transition-fast);
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  width: auto;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .profile-icon {
@@ -273,15 +259,15 @@
 .profile-btn-level-tag {
   top: -5px;
   right: -5px;
-  background: var(--xp-green-inner);
-  color: var(--xp-black);
+  background: var(--accent);
+  color: var(--accent-contrast);
   font-family: var(--font-display);
   font-size: calc(0.62rem * var(--ui-scale, 1));
   font-weight: 900;
   padding: 1px var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--xp-black);
-  box-shadow: 0 2px 4px var(--xp-shadow-medium);
+  border-radius: 0;
+  border: 1px solid var(--bg-color);
+  box-shadow: none;
   pointer-events: none;
   z-index: 2;
 }
