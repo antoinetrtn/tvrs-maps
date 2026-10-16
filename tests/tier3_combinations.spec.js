@@ -96,7 +96,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     guestPage: page,
   }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(4).click();
+    await dots.nth(5).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");

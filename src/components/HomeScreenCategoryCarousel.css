@@ -374,6 +374,23 @@
   animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
+/* Carte Conquête : « Règles » remplace le bouton Apprendre (icône + libellé court) */
+.card-rules-btn {
+  width: auto;
+  min-width: 48px;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-md);
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.card-rules-btn span {
+  font-family: var(--font-display);
+}
+
 /* Dots Row - Pixel Squares */
 .deck-dots-row {
   display: flex;

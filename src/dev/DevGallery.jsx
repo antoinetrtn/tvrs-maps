@@ -5,7 +5,7 @@ import "../components/PassportStamp.css";
 import "../multiplayer/ConquestScreen.css";
 import "./DevGallery.css";
 
-import { Chess, Close, Settings2, User } from "pixelarticons/react";
+import { Close, Settings2, User } from "pixelarticons/react";
 import React, { useState } from "react";
 
 import AtlasState from "../components/AtlasState";
@@ -61,13 +61,6 @@ const AccentColumn = ({ id }) => {
         </GlassIconButton>
         <button type="button" className="panel-close-btn" title="Fermer">
           <Close width={20} height={20} />
-        </button>
-      </Block>
-      <Block title="CTA Conquête">
-        <button type="button" className="conquest-home-entry">
-          <Chess width={18} height={18} className="conquest-home-icon" aria-hidden="true" />
-          <span className="conquest-home-label">Conquête 1v1</span>
-          <span className="conquest-home-badge">Nouveau</span>
         </button>
       </Block>
       <Block title="Switch">

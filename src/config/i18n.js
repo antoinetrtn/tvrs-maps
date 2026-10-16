@@ -15,6 +15,7 @@ export const translations = {
     mode_us_states: "États américains",
     mode_rivers_mountains: "Reliefs & Fleuves",
     mode_learn: "Apprendre",
+    mode_rules: "Règles",
 
     // Home Screen Controls
     minus_one_minute: "-1 minute",
@@ -229,6 +230,7 @@ export const translations = {
     mode_us_states: "US States",
     mode_rivers_mountains: "Rivers & Peaks",
     mode_learn: "Learn",
+    mode_rules: "Rules",
 
     // Home Screen Controls
     minus_one_minute: "-1 minute",

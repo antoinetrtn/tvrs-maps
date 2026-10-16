@@ -54,7 +54,11 @@ src/
                               (montagnes 3D low-poly).
 
   components/                 Écrans & UI (CSS co-localisé par composant) :
-                              HomeScreen (+ HomeScreenCategoryCarousel), GameSessionView
+                              HomeScreen (+ HomeScreenCategoryCarousel/HomeModeCard ; la
+                              carte « conquest » est la 1re du carrousel quand le mode est
+                              activé — Jouer ouvre le salon, « Règles » la feuille
+                              ConquestRulesSheet ; homeModes.js mappe cette carte vers le
+                              globe monde), GameSessionView
                               (monte GlobeMap + GameHUD + GameDataPanel + EndScreen),
                               GameHUD, GameDataPanel (tableau de résultats — remplace
                               l'ancien ResultsModal), EndScreen, LeaderboardScreen,
