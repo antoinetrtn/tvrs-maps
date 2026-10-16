@@ -114,7 +114,6 @@
 
 .conquest-code-input,
 .conquest-code,
-.conquest-timer,
 .conquest-rank,
 .conquest-total,
 .conquest-score {
@@ -186,8 +185,7 @@
   color: var(--accent);
 }
 
-.conquest-scoreboard,
-.conquest-feed ul {
+.conquest-scoreboard {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -223,9 +221,6 @@
 
 .conquest-score {
   margin-left: auto;
-}
-
-.conquest-score {
   font-size: var(--font-size-xs);
   font-weight: 400;
   color: var(--text-muted);
@@ -270,138 +265,6 @@
 .conquest-total {
   margin-left: var(--spacing-sm);
   color: var(--accent);
-}
-
-/* In-match HUD */
-.conquest-hud {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.conquest-hud > * {
-  position: absolute;
-  pointer-events: auto;
-  padding: var(--spacing-ms);
-}
-
-.conquest-hud-top {
-  top: var(--spacing-md);
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-  transform: translateX(-50%);
-}
-
-.conquest-timer {
-  font-size: var(--font-size-xl);
-  color: var(--accent);
-}
-
-.conquest-timer.is-urgent {
-  color: var(--warning);
-}
-
-.conquest-feed {
-  top: var(--spacing-md);
-  right: var(--spacing-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  width: min(280px, 40vw);
-  font-size: var(--font-size-sm);
-}
-
-.conquest-feed-line {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.conquest-feed-line:hover,
-.conquest-feed-line:focus-visible {
-  color: var(--accent);
-  text-decoration: underline;
-}
-
-.conquest-answer {
-  bottom: var(--spacing-xl);
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  width: min(440px, calc(100vw - var(--spacing-xl)));
-  transform: translateX(-50%);
-}
-
-.conquest-toast {
-  align-self: flex-start;
-  margin: 0;
-  padding: var(--spacing-xxs) var(--spacing-sm);
-  border: 1px solid currentcolor;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-}
-
-.conquest-toast.is-ok {
-  color: var(--success);
-}
-
-.conquest-toast.is-ko {
-  color: var(--warning);
-}
-
-.conquest-steal {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.conquest-flag-options.ui-options {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.conquest-flag-options .ui-option {
-  justify-content: center;
-  padding: var(--spacing-xs);
-}
-
-.conquest-flag-options .ui-option-mark,
-.conquest-flag-options .ui-option-label {
-  display: none;
-}
-
-.conquest-flag {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-}
-
-@media (max-width: 640px) {
-  .conquest-hud-top {
-    gap: var(--spacing-sm);
-    width: calc(100vw - var(--spacing-md));
-    justify-content: space-between;
-  }
-
-  .conquest-feed {
-    top: auto;
-    right: 50%;
-    bottom: calc(var(--spacing-xl) + 88px);
-    width: min(440px, calc(100vw - var(--spacing-xl)));
-    transform: translateX(50%);
-  }
-
-  .conquest-feed li:not(:first-child) {
-    display: none;
-  }
 }
 
 /* SettingsRow without a label: let the player chip span the whole row. */
