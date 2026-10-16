@@ -531,6 +531,6 @@ const main = async () => {
 if (process.argv[1]?.endsWith("ui-text-diet.mjs")) {
   main().catch((err) => {
     console.error("Erreur d'exécution ui-text-diet:", err);
-    process.exit(0);
+    process.exit(1);
   });
 }

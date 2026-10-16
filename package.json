@@ -14,6 +14,7 @@
     "generate:conquest-seed": "node scripts/generate-conquest-seed.mjs",
     "lint": "node scripts/quality-check.js",
     "check:tokens": "node scripts/check-tokens.mjs",
+    "audit:text": "node scripts/ui-text-diet.mjs",
     "lint:eslint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
