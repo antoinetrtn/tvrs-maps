@@ -285,7 +285,7 @@
   height: 100%;
   border-radius: var(--radius-full);
   background: var(--continent-color);
-  transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: width 1s var(--ease-out);
 }
 
 .end-screen-actions {
@@ -492,7 +492,7 @@
   outline: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
-  animation: stamp-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: stamp-in 0.45s var(--ease-spring) both;
 }
 
 @media (max-width: 640px) {

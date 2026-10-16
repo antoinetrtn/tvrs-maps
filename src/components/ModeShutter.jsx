@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
+
 const BLINDS = Array.from({ length: 6 }, (_, i) => i);
 // Last blind: 5 × stagger (40ms) + duration (160ms), plus a frame of margin.
 const SHUTTER_MS = 400;
@@ -7,10 +9,6 @@ const SHUTTER_MS = 400;
 // Last top-level screen that mounted a shutter ("home" | "conquest"). The very
 // first mount (app start) has no previous screen, so it never plays.
 let lastScreen = null;
-
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
 
 /**
  * Solo ↔ Conquête switch: six blinds start closed over the incoming screen and

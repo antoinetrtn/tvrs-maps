@@ -17,6 +17,7 @@ import {
   cursorPosition,
 } from "../globe/render/cursorSprites";
 import { isSameAdmin } from "../globe/render/polygonColorResolver";
+import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { getFeatureAdmin } from "../utils/utils";
 import { createHintPool } from "./conquestCursorHints";
 import {
@@ -39,9 +40,6 @@ import { getPaletteEntry } from "./conquestLogic";
 
 const GLOBE_RADIUS = 100;
 const getGlobe = () => (typeof window === "undefined" ? null : window.__TVRS_GLOBE_EL__);
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
 
 /** Highlight altitudes (globe radii): above the polygon caps, higher if the local selection is there too. */
 const HIGHLIGHT_ALT = 0.003;

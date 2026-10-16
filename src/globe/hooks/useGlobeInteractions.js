@@ -131,7 +131,7 @@ export function useGlobeInteractions({
       pointerNudgeRafRef.current = null;
     }
     pendingNudgeRef.current = null;
-    wrapper.style.transition = "transform 520ms cubic-bezier(0.18, 0.9, 0.22, 1.18)";
+    wrapper.style.transition = "transform var(--dur-slow) var(--ease-out)";
     wrapper.style.setProperty("--globe-nudge-x", "0px");
     wrapper.style.setProperty("--globe-nudge-y", "0px");
   }, [globeContentWrapperRef]);

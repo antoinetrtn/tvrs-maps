@@ -3,7 +3,7 @@
 .cq-hints {
   position: fixed;
   inset: 0;
-  z-index: 19; /* under the conquest panels (20), over the globe */
+  z-index: var(--z-conquest-cursors); /* under the conquest panels (20), over the globe */
   pointer-events: none;
   overflow: hidden;
 }

@@ -10,6 +10,7 @@ import {
 } from "../../config/gameConstants";
 import { countryDataMap } from "../../data/gameData";
 import { riversMountainsDataMap } from "../../data/riversMountainsData";
+import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { getCanonicalPosition } from "../../utils/utils";
 import {
   clampGlobeAltitude,
@@ -21,6 +22,7 @@ import {
   syncGlobeCameraAndZoomLimits,
 } from "../render/globeAltitude";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
+import { CAMERA_MS, cameraDuration, selectCameraDuration } from "./cameraTiming";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.005;
 // Hard ceiling on the WebGL backing-store density (fill-rate on DPR-3 phones).
@@ -151,12 +153,13 @@ const applyIdleCameraPointOfView = ({
   customPOV,
   wasHomeScreen,
 }) => {
+  const reduced = prefersReducedMotion();
   if (isEndScreen) {
     globeEl.current.pointOfView(
       customPOV
         ? customPOV
         : { lat: 20, lng: 0, altitude: viewport.width < BREAKPOINTS.mobile ? 2.2 : 1.8 },
-      1200
+      cameraDuration(CAMERA_MS.endScreen, reduced)
     );
     return;
   }
@@ -166,12 +169,13 @@ const applyIdleCameraPointOfView = ({
     const targetPov = isMobile
       ? { lat: 18, lng: 20, altitude: 2.2 }
       : { lat: 16, lng: 28, altitude: 1.1 };
-    globeEl.current?.pointOfView?.(targetPov, 850);
+    globeEl.current?.pointOfView?.(targetPov, cameraDuration(CAMERA_MS.home, reduced));
     return;
   }
 
   if (customPOV) {
-    globeEl.current?.pointOfView?.(customPOV, wasHomeScreen ? 650 : 500);
+    const ms = wasHomeScreen ? CAMERA_MS.gameStart : CAMERA_MS.customPov;
+    globeEl.current?.pointOfView?.(customPOV, cameraDuration(ms, reduced));
     return;
   }
 
@@ -183,7 +187,7 @@ const applyIdleCameraPointOfView = ({
         lng: startView.lng,
         altitude: viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35,
       },
-      650
+      cameraDuration(CAMERA_MS.gameStart, reduced)
     );
   }
 };
@@ -370,21 +374,17 @@ export function useGlobeCamera({
           previousSelectedCountryRef.current === selectedCountry &&
           targetChanged;
 
-        if (selectionChanged || onlyViewportNudge) {
+        if (selectionChanged || (onlyViewportNudge && !isInteractingRef.current)) {
           // A viewport nudge (keyboard open/close on mobile) recenters the same
           // country: glide it a touch slower on mobile so a large keyboard
           // offset doesn't snap the globe. Real selection changes keep their
           // snappier timing.
-          const duration = isHomeScreen
-            ? 650
-            : onlyViewportNudge
-              ? perfProfile?.isMobile
-                ? 340
-                : 180
-              : perfProfile?.isMobile
-                ? 320
-                : 420;
-          globeEl.current.pointOfView(target, duration);
+          const duration = selectCameraDuration({
+            isHomeScreen,
+            onlyViewportNudge,
+            isMobile: Boolean(perfProfile?.isMobile),
+          });
+          globeEl.current.pointOfView(target, cameraDuration(duration, prefersReducedMotion()));
           lastTargetRef.current = target;
         }
       }
