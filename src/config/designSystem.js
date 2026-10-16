@@ -728,14 +728,9 @@ export const CONQUEST_PLAYER_COLORS = {
   locked: "#8b919c",
 };
 
-/** Conquête spatial cursors (canvas sprites): orb glow stops + name tag. */
+/** Conquête spatial cursors: pixel « curseur terminal » (ink tag + text). */
 export const CONQUEST_CURSOR_STYLE = {
-  orbStops: [
-    [0, "rgba(255, 255, 255, 1)"],
-    [0.28, "rgba(255, 255, 255, 0.95)"],
-    [0.42, "rgba(255, 255, 255, 0.45)"],
-    [1, "rgba(255, 255, 255, 0)"],
-  ],
-  tagBg: "rgba(14, 17, 22, 0.85)",
+  tagBg: "#0e1116",
   tagText: "#ede6d6",
+  sightline: "#ede6d6",
 };
