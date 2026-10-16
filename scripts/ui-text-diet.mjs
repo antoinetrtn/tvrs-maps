@@ -174,152 +174,154 @@ const browserInitScript = ({ lang, storedMatch, fakeAuthSession }) => {
   (document.head || document.documentElement).appendChild(el);
 };
 
-const visHelper = (el) => {
-  for (let c = el, op = 1.0; c && c !== document.documentElement; c = c.parentElement) {
-    if (c.hidden || c.classList?.contains("sr-only")) return false;
-    const s = getComputedStyle(c),
-      o = parseFloat(s.opacity);
-    if (s.display === "none" || s.visibility === "hidden" || s.clip === "rect(0px, 0px, 0px, 0px)")
-      return false;
-    if (!Number.isNaN(o) && (op *= o) < 0.05) return false;
-  }
-  return Boolean(el?.isConnected);
-};
-
-const inViewHelper = (r, el) => {
-  if (!r || r.width <= 1 || r.height <= 1 || r.right <= 0 || r.bottom <= 0) return false;
-  if (r.left >= window.innerWidth || r.top >= window.innerHeight) return false;
-  const cx = Math.floor((Math.max(0, r.left) + Math.min(window.innerWidth, r.right)) / 2);
-  const cy = Math.floor((Math.max(0, r.top) + Math.min(window.innerHeight, r.bottom)) / 2);
-  const top = document.elementFromPoint(cx, cy);
-  return Boolean(top && (top === el || el.contains(top) || top.contains(el)));
-};
-
-const collectBlocksHelper = (vis, inView) => {
-  const blocks = [];
-  const w = document.createTreeWalker(document.body, 4, {
-    acceptNode: (n) => (/^(script|style|noscript|canvas)$/i.test(n.parentElement?.tagName) ? 2 : 1),
-  });
-  let node;
-  while ((node = w.nextNode())) {
-    const p = node.parentElement,
-      t = (node.nodeValue || "").trim();
-    if (!p || !t || !vis(p)) continue;
-    let r = null;
-    try {
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      r = range.getBoundingClientRect();
-    } catch {}
-    if ((!r || r.width <= 1) && p) r = p.getBoundingClientRect();
-    if (inView(r, p)) blocks.push({ el: p, text: t });
-  }
-  document.querySelectorAll("input, textarea").forEach((inp) => {
-    const v = (inp.value || "").trim() || (inp.placeholder || "").trim();
-    if (v && vis(inp) && inView(inp.getBoundingClientRect(), inp))
-      blocks.push({ el: inp, text: v });
-  });
-  return blocks;
-};
-
-const queryElementsHelper = (blocks, vis, inView, sel, isSent) => {
-  const headings = new Set(["P", "LI", "LABEL", "H1", "H2", "H3", "H4", "H5", "H6"]);
-  return Array.from(document.querySelectorAll(sel))
-    .filter(
-      (el) =>
-        vis(el) &&
-        inView(el.getBoundingClientRect(), el) &&
-        !(isSent && el.tagName === "SPAN" && headings.has(el.parentElement?.tagName))
-    )
-    .map((el) => {
-      const text = blocks
-        .filter((i) => i.el === el || el.contains(i.el))
-        .map((i) => i.text)
-        .join(" ")
-        .trim();
-      const words = text.split(/\s+/).filter((t) => /[a-zA-Z\p{L}]/u.test(t)).length;
-      return {
-        tag: el.tagName.toLowerCase(),
-        className: (el.className || "").trim(),
-        text,
-        words,
-        flag: isSent ? true : words > 3,
-      };
-    })
-    .filter((item) => (isSent ? item.words > 12 : true));
-};
-
-const aggregateBlocksHelper = (blocks, vis, inView, queryHelper) => {
-  let words = 0,
-    numbers = 0;
-  const elMap = new Map();
-  for (const b of blocks) {
-    let bw = 0,
-      bn = 0;
-    for (const tok of b.text.split(/\s+/)) {
-      if (/[a-zA-Z\p{L}]/u.test(tok)) bw++;
-      else if (/\d/.test(tok)) bn++;
+const measureInPage = () => {
+  const visHelper = (el) => {
+    for (let c = el, op = 1.0; c && c !== document.documentElement; c = c.parentElement) {
+      if (c.hidden || c.classList?.contains("sr-only")) return false;
+      const s = getComputedStyle(c),
+        o = parseFloat(s.opacity);
+      if (
+        s.display === "none" ||
+        s.visibility === "hidden" ||
+        s.clip === "rect(0px, 0px, 0px, 0px)"
+      )
+        return false;
+      if (!Number.isNaN(o) && (op *= o) < 0.05) return false;
     }
-    words += bw;
-    numbers += bn;
-    if (!elMap.has(b.el))
-      elMap.set(b.el, {
-        tag: b.el.tagName.toLowerCase(),
-        cls: b.el.className || "",
-        texts: [],
-        words: 0,
-        numbers: 0,
-      });
-    const e = elMap.get(b.el);
-    e.texts.push(b.text);
-    e.words += bw;
-    e.numbers += bn;
-  }
-  const buttons = queryHelper(
-    blocks,
-    vis,
-    inView,
-    'button, [role="button"], a[class*="btn"]',
-    false
-  );
-  const sentences = queryHelper(
-    blocks,
-    vis,
-    inView,
-    "p, span, li, label, h1, h2, h3, h4, h5, h6",
-    true
-  );
-  const elements = Array.from(elMap.values()).map((e) => ({
-    tag: e.tag,
-    className: e.cls.trim(),
-    text: e.texts.join(" "),
-    words: e.words,
-    numbers: e.numbers,
-  }));
-  const top15 = [...elements].sort((a, b) => b.words - a.words).slice(0, 15);
-  return {
-    words,
-    numbers,
-    elements: elements.slice(0, 40),
-    buttons: buttons.slice(0, 40),
-    sentences: sentences.slice(0, 40),
-    longestBlocks: top15,
+    return Boolean(el?.isConnected);
   };
+
+  const inViewHelper = (r, el) => {
+    if (!r || r.width <= 1 || r.height <= 1 || r.right <= 0 || r.bottom <= 0) return false;
+    if (r.left >= window.innerWidth || r.top >= window.innerHeight) return false;
+    const cx = Math.floor((Math.max(0, r.left) + Math.min(window.innerWidth, r.right)) / 2);
+    const cy = Math.floor((Math.max(0, r.top) + Math.min(window.innerHeight, r.bottom)) / 2);
+    const top = document.elementFromPoint(cx, cy);
+    return Boolean(top && (top === el || el.contains(top) || top.contains(el)));
+  };
+
+  const collectBlocksHelper = (vis, inView) => {
+    const blocks = [];
+    const w = document.createTreeWalker(document.body, 4, {
+      acceptNode: (n) =>
+        /^(script|style|noscript|canvas)$/i.test(n.parentElement?.tagName) ? 2 : 1,
+    });
+    let node;
+    while ((node = w.nextNode())) {
+      const p = node.parentElement,
+        t = (node.nodeValue || "").trim();
+      if (!p || !t || !vis(p)) continue;
+      let r = null;
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        r = range.getBoundingClientRect();
+      } catch {}
+      if ((!r || r.width <= 1) && p) r = p.getBoundingClientRect();
+      if (inView(r, p)) blocks.push({ el: p, text: t });
+    }
+    document.querySelectorAll("input, textarea").forEach((inp) => {
+      const v = (inp.value || "").trim() || (inp.placeholder || "").trim();
+      if (v && vis(inp) && inView(inp.getBoundingClientRect(), inp))
+        blocks.push({ el: inp, text: v });
+    });
+    return blocks;
+  };
+
+  const queryElementsHelper = (blocks, vis, inView, sel, isSent) => {
+    const headings = new Set(["P", "LI", "LABEL", "H1", "H2", "H3", "H4", "H5", "H6"]);
+    return Array.from(document.querySelectorAll(sel))
+      .filter(
+        (el) =>
+          vis(el) &&
+          inView(el.getBoundingClientRect(), el) &&
+          !(isSent && el.tagName === "SPAN" && headings.has(el.parentElement?.tagName))
+      )
+      .map((el) => {
+        const text = blocks
+          .filter((i) => i.el === el || el.contains(i.el))
+          .map((i) => i.text)
+          .join(" ")
+          .trim();
+        const words = text.split(/\s+/).filter((t) => /[a-zA-Z\p{L}]/u.test(t)).length;
+        return {
+          tag: el.tagName.toLowerCase(),
+          className: (el.className || "").trim(),
+          text,
+          words,
+          flag: isSent ? true : words > 3,
+        };
+      })
+      .filter((item) => (isSent ? item.words > 12 : true));
+  };
+
+  const aggregateBlocksHelper = (blocks, vis, inView, queryHelper) => {
+    let words = 0,
+      numbers = 0;
+    const elMap = new Map();
+    for (const b of blocks) {
+      let bw = 0,
+        bn = 0;
+      for (const tok of b.text.split(/\s+/)) {
+        if (/[a-zA-Z\p{L}]/u.test(tok)) bw++;
+        else if (/\d/.test(tok)) bn++;
+      }
+      words += bw;
+      numbers += bn;
+      if (!elMap.has(b.el))
+        elMap.set(b.el, {
+          tag: b.el.tagName.toLowerCase(),
+          cls: b.el.className || "",
+          texts: [],
+          words: 0,
+          numbers: 0,
+        });
+      const e = elMap.get(b.el);
+      e.texts.push(b.text);
+      e.words += bw;
+      e.numbers += bn;
+    }
+    const buttons = queryHelper(
+      blocks,
+      vis,
+      inView,
+      'button, [role="button"], a[class*="btn"]',
+      false
+    );
+    const sentences = queryHelper(
+      blocks,
+      vis,
+      inView,
+      "p, span, li, label, h1, h2, h3, h4, h5, h6",
+      true
+    );
+    const elements = Array.from(elMap.values()).map((e) => ({
+      tag: e.tag,
+      className: e.cls.trim(),
+      text: e.texts.join(" "),
+      words: e.words,
+      numbers: e.numbers,
+    }));
+    const top15 = [...elements].sort((a, b) => b.words - a.words).slice(0, 15);
+    return {
+      words,
+      numbers,
+      elements: elements.slice(0, 40),
+      buttons: buttons.slice(0, 40),
+      sentences: sentences.slice(0, 40),
+      longestBlocks: top15,
+    };
+  };
+
+  return aggregateBlocksHelper(
+    collectBlocksHelper(visHelper, inViewHelper),
+    visHelper,
+    inViewHelper,
+    queryElementsHelper
+  );
 };
 
-export async function countVisibleWords(page) {
-  const args = {
-    vS: visHelper.toString(),
-    iS: inViewHelper.toString(),
-    cS: collectBlocksHelper.toString(),
-    qS: queryElementsHelper.toString(),
-    aS: aggregateBlocksHelper.toString(),
-  };
-  return await page.evaluate(({ vS, iS, cS, qS, aS }) => {
-    const [vis, inView, c, q, a] = [vS, iS, cS, qS, aS].map((s) => eval(`(${s})`));
-    return a(c(vis, inView), vis, inView, q);
-  }, args);
-}
+export const countVisibleWords = (page) => page.evaluate(measureInPage);
 
 const setupScreen = async (page, screen, baseUrl) => {
   await page.goto(baseUrl);
@@ -380,7 +382,7 @@ const formatCandidates = (blocks) =>
   (blocks || [])
     .slice(0, 3)
     .map((b) => {
-      const c = b.text.replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
+      const c = b.text.replace(/[\\|]/g, "\\$&").replace(/\s+/g, " ").trim();
       return `"${c.length > 60 ? `${c.slice(0, 57)}...` : c}" (${b.words} mots)`;
     })
     .join("<br>") || "-";
