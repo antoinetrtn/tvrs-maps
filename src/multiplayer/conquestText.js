@@ -99,7 +99,6 @@ const PAIRS = {
   ],
   room: ["Salon", "Room"],
   players: ["Joueurs", "Players"],
-  readyLabel: ["Prêt", "Ready"],
   flagOption: ["Drapeau", "Flag"],
   elo: ["Elo", "Elo"],
   unrated: [

@@ -1,9 +1,10 @@
+import "./ConquestReady.css";
+
 import { Copy, ExternalLink } from "pixelarticons/react";
 import React, { useEffect, useState } from "react";
 
 import AtlasState from "../components/AtlasState";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
-import Switch from "../components/ui/Switch.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
@@ -121,14 +122,40 @@ const playerTags = (t, player, match, userId, online) =>
     .filter(Boolean)
     .join(" · ");
 
+/** Big "I'm ready" call to action; becomes "Prêt ✓ / Annuler" once pressed. */
+export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => (
+  <button
+    type="button"
+    className={`conquest-ready-cta ${ready ? "is-ready" : ""} ${emphasized ? "" : "is-quiet"}`}
+    aria-pressed={ready}
+    disabled={busy}
+    onClick={onToggle}
+  >
+    {ready ? (
+      <>
+        <span className="conquest-ready-cta-main">
+          {t.ready}
+          <span aria-hidden="true"> ✓</span>
+        </span>
+        <span className="conquest-ready-cta-sub">{t.cancelReady}</span>
+      </>
+    ) : (
+      <span className="conquest-ready-cta-main">{t.imReady}</span>
+    )}
+  </button>
+);
+
 const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
   const t = conquestText(lang);
   const { match, players, userId, online, busy, error } = conquest;
   const isHost = match?.host_id === userId;
+  const me = players.find((player) => player.user_id === userId);
   const allReady = players.length >= 2 && players.every((player) => player.ready);
 
   return (
-    <div className="conquest-panel conquest-surface px-cascade">
+    <div
+      className={`conquest-panel conquest-surface px-cascade ${match ? "conquest-panel--room" : ""}`}
+    >
       <header className="conquest-header">
         <div className="conquest-header-row">
           <h2 className="conquest-title">{t.title}</h2>
@@ -150,32 +177,39 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
                   player={player}
                   tag={playerTags(t, player, match, userId, online)}
                 >
-                  <span className={`conquest-ready-label ${player.ready ? "is-ready" : ""}`}>
+                  <span
+                    className={`conquest-ready-label ${player.ready ? "is-ready" : ""}`}
+                    data-ready={player.ready ? "true" : "false"}
+                  >
+                    <span className="conquest-ready-pip" aria-hidden="true" />
                     {player.ready ? t.ready : t.notReady}
                   </span>
-                  <Switch
-                    checked={Boolean(player.ready)}
-                    label={`${t.readyLabel} — ${player.display_name}`}
-                    disabled={busy || player.user_id !== userId}
-                    onChange={(ready) => conquest.setReady(ready)}
-                  />
                 </ConquestPlayerChip>
               </SettingsRow>
             ))}
             {players.length < 2 && <p className="conquest-hint">{t.waiting}</p>}
           </SettingsSection>
-          {isHost ? (
-            <button
-              type="button"
-              className="btn-primary conquest-block"
-              disabled={busy || !allReady}
-              onClick={conquest.start}
-            >
-              {t.startMatch}
-            </button>
-          ) : (
-            <p className="conquest-hint">{t.waitingHost}</p>
-          )}
+          <div className="conquest-lobby-footer">
+            <ReadyButton
+              t={t}
+              ready={Boolean(me?.ready)}
+              busy={busy}
+              onToggle={() => conquest.setReady(!me?.ready)}
+              emphasized={!(isHost && me?.ready && allReady)}
+            />
+            {isHost ? (
+              <button
+                type="button"
+                className={`${me?.ready && allReady ? "btn-primary" : "btn-secondary"} conquest-block`}
+                disabled={busy || !allReady}
+                onClick={conquest.start}
+              >
+                {t.startMatch}
+              </button>
+            ) : (
+              <p className="conquest-hint">{t.waitingHost}</p>
+            )}
+          </div>
         </>
       )}
       {error &&
