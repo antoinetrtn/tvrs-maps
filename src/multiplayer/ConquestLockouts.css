@@ -35,9 +35,10 @@
 }
 
 @media (max-width: 768px) {
-  /* Phone: the lockout chip grows the answer card upward; the feed (which
-     already says "steal failed") steps aside instead of overlapping it. */
-  .conquest-hud:has(.conquest-lockouts) .conquest-feed {
+  /* Phone: the lockout chip or toast grows the answer card upward; the feed
+     steps aside instead of overlapping it. */
+  .conquest-hud:has(.conquest-lockouts) .conquest-feed,
+  .conquest-hud:has(.conquest-toast) .conquest-feed {
     display: none;
   }
 }

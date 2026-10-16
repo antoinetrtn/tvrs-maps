@@ -220,6 +220,13 @@ trait, mode de couleur des labels, palettes continents/départements). **Conséq
 voulue : changer le thème du globe change le globe, pas l'interface.** Tout ce qui
 n'est pas listé dans `globeSettings` reste identique entre satellite et blackout.
 
+**Accent par défaut** : `DEFAULT_ACCENT` (`src/config/accentPresets.js`) vaut `bone`
+(« Os (sobre) »), lié au globe Monochrome via `monochrome@<accent>`. Il ne s'applique
+qu'aux utilisateurs sans accent enregistré : `readStoredAccent` renvoie toujours
+l'accent déjà sauvegardé (`STORAGE_KEYS.accent`) s'il est valide, sans jamais
+l'écraser. Les valeurs de repli du `:root` de `src/index.css` (premier paint) doivent
+rester alignées sur ce preset (garde `npm run check:tokens`).
+
 Helpers de couleur région : `getThemeRegionColor` (surface), `…Attenuated`
 (non-trouvé), `…Label`. Blackout n'a pas de palette `attenuated`/`label` → fallback
 calculé par mélange programmatique (pas de `color-mix` CSS, indispo dans three.js).

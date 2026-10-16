@@ -1,62 +1,60 @@
+import "./ConquestHud.css";
 import "./ConquestLockouts.css";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { HudFeed, HudTopBar } from "./ConquestHudParts.jsx";
 import {
   computeStandings,
   describeClaimRefusal,
-  formatClock,
   formatFeedEvent,
+  getPaletteEntry,
   resolveCountryClick,
 } from "./conquestLogic";
-import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
-import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
 import ConquestStealPanel from "./ConquestStealPanel.jsx";
 import { conquestText } from "./conquestText";
 
-const FEED_SIZE = 6;
+const FEED_SIZE = 3;
 
-const ConquestHud = ({
-  lang,
-  conquest,
-  phase,
-  clockMs,
-  lockouts = [],
-  countryName,
-  onFocusCountry,
-  onSelectCountry,
-  countryClickRef,
-  onRules,
-}) => {
-  const t = conquestText(lang);
-  const { players, claims, events, bonuses, userId, clockOffset } = conquest;
-  const [answer, setAnswer] = useState("");
-  const [toast, setToast] = useState(null);
-  const [stealTarget, setStealTarget] = useState(null);
-  const [challenge, setChallenge] = useState(null);
-  const pendingRef = useRef(false);
-  const inputRef = useRef(null);
-  const standings = useMemo(
-    () => computeStandings(players, claims, bonuses),
-    [players, claims, bonuses]
-  );
-  const feed = useMemo(
+const useConquestFeed = (events, players, countryName, lang) =>
+  useMemo(
     () =>
       events
         .slice()
         .reverse()
-        .map((event) => ({
-          id: event.id,
-          countryId: event.country_id,
-          text: formatFeedEvent(event, { players, countryName, lang }),
-        }))
+        .map((event) => {
+          const actor = players.find((p) => p.user_id === event.actor_id);
+          const actorColor = actor ? getPaletteEntry(actor.color)?.hex : null;
+          return {
+            id: event.id,
+            countryId: event.country_id,
+            actorColor,
+            text: formatFeedEvent(event, { players, countryName, lang }),
+          };
+        })
         .filter((line) => line.text)
         .slice(0, FEED_SIZE),
     [events, players, countryName, lang]
   );
-  const refusal = (result) => describeClaimRefusal(result, { players, countryName, lang });
 
-  // Serialises RPCs so a double Enter / double click never sends two attempts.
+function useConquestActions({
+  conquest,
+  phase,
+  countryName,
+  lang,
+  t,
+  onFocusCountry,
+  answer,
+  setAnswer,
+}) {
+  const [toast, setToast] = useState(null);
+  const [stealTarget, setStealTarget] = useState(null);
+  const [challenge, setChallenge] = useState(null);
+  const pendingRef = useRef(false);
+
+  const refusal = (res) =>
+    describeClaimRefusal(res, { players: conquest.players, countryName, lang });
+
   const guarded = async (fn) => {
     if (pendingRef.current || phase !== "live") return;
     pendingRef.current = true;
@@ -67,47 +65,65 @@ const ConquestHud = ({
     }
   };
 
-  const openSteal = (countryId) =>
+  const openSteal = (cid) =>
     guarded(async () => {
-      const result = await conquest.requestSteal(countryId);
+      const res = await conquest.requestSteal(cid);
       setStealTarget(null);
-      if (result?.ok) setChallenge(result);
-      else if (result) setToast({ ok: false, text: refusal(result) });
+      if (res?.ok) setChallenge(res);
+      else if (res) setToast({ ok: false, text: refusal(res) });
     });
 
   const submit = (e) => {
     e.preventDefault();
-    const value = answer.trim();
-    if (!value) return;
+    const val = answer.trim();
+    if (!val) return;
     void guarded(async () => {
-      const result = await conquest.claim(value);
-      if (!result) return;
-      setStealTarget(result.reason === "already_owned" ? result.country_id : null);
-      if (result.ok || result.reason === "already_owned") setAnswer("");
-      if (result.ok)
-        setToast({ ok: true, text: `${countryName(result.country_id)} ${t.captured}` });
-      else setToast({ ok: false, text: refusal(result) });
-      if (result.country_id) onFocusCountry(result.country_id);
+      const res = await conquest.claim(val);
+      if (!res) return;
+      setStealTarget(res.reason === "already_owned" ? res.country_id : null);
+      if (res.ok || res.reason === "already_owned") setAnswer("");
+      if (res.ok) setToast({ ok: true, text: `${countryName(res.country_id)} ${t.captured}` });
+      else setToast({ ok: false, text: refusal(res) });
+      if (res.country_id) onFocusCountry(res.country_id);
     });
   };
 
-  const answerSteal = (value) =>
+  const answerSteal = (val) =>
     guarded(async () => {
-      const result = await conquest.steal(value);
+      const res = await conquest.steal(val);
       setChallenge(null);
-      if (result?.ok) setToast({ ok: true, text: `${countryName(result.country_id)} ${t.stole}` });
-      else if (result) setToast({ ok: false, text: refusal(result) });
+      if (res?.ok) setToast({ ok: true, text: `${countryName(res.country_id)} ${t.stole}` });
+      else if (res) setToast({ ok: false, text: refusal(res) });
     });
 
-  // Abandoning counts as a failed attempt on the server (no free reroll).
   const cancelSteal = () =>
     guarded(async () => {
-      const result = await conquest.cancelSteal();
+      const res = await conquest.cancelSteal();
       setChallenge(null);
-      if (result) setToast({ ok: false, text: refusal(result) });
+      if (res) setToast({ ok: false, text: refusal(res) });
     });
 
-  // Globe click: centre the country, then steal / prompt / inform.
+  return { toast, setToast, stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal };
+}
+
+function useCountryClickHandler({
+  phase,
+  challenge,
+  claims,
+  userId,
+  clockOffset,
+  countryClickRef,
+  onSelectCountry,
+  openSteal,
+  setToast,
+  countryName,
+  lang,
+  players,
+  t,
+  inputRef,
+}) {
+  const refusal = (res) => describeClaimRefusal(res, { players, countryName, lang });
+
   const handleCountryClick = (countryId) => {
     if (phase !== "live" || challenge) return;
     onSelectCountry(countryId);
@@ -122,104 +138,154 @@ const ConquestHud = ({
       setToast({ ok: false, text: refusal({ reason, country_id: countryId }) });
     }
   };
+
   useEffect(() => {
     countryClickRef.current = handleCountryClick;
     return () => {
       countryClickRef.current = null;
     };
   });
+}
+
+const HudAnswer = ({
+  challenge,
+  lockouts,
+  toast,
+  stealTarget,
+  countryName,
+  t,
+  openSteal,
+  answerSteal,
+  cancelSteal,
+  submit,
+  inputRef,
+  answer,
+  setAnswer,
+  phase,
+  onFocusCountry,
+}) => (
+  <div className={`conquest-answer ${challenge ? "conquest-surface has-challenge" : ""}`}>
+    {lockouts.length > 0 && (
+      <ul className="conquest-lockouts" aria-live="polite">
+        {lockouts.map((lock) => (
+          <li key={lock.id}>
+            <button
+              type="button"
+              className="conquest-lockout"
+              onClick={() => onFocusCountry(lock.id)}
+            >
+              <span className="conquest-lockout-name">{countryName(lock.id)}</span>
+              <span>{t.lockedFor}</span>
+              <span className="conquest-lockout-time">{Math.ceil(lock.ms / 1000)} s</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    )}
+    {toast && <p className={`conquest-toast ${toast.ok ? "is-ok" : "is-ko"}`}>{toast.text}</p>}
+    {stealTarget && !challenge && (
+      <button type="button" className="btn-primary" onClick={() => openSteal(stealTarget)}>
+        {t.stealOffer} {countryName(stealTarget)}
+      </button>
+    )}
+    {challenge ? (
+      <ConquestStealPanel
+        key={`${challenge.country_id}-${challenge.expires_at}`}
+        t={t}
+        challenge={challenge}
+        countryName={countryName}
+        onAnswer={answerSteal}
+        onCancel={cancelSteal}
+      />
+    ) : (
+      <form onSubmit={submit}>
+        <input
+          ref={inputRef}
+          className="conquest-input"
+          value={answer}
+          disabled={phase !== "live"}
+          placeholder={t.inputPlaceholder}
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          onChange={(e) => setAnswer(e.target.value)}
+        />
+      </form>
+    )}
+  </div>
+);
+
+const ConquestHud = ({
+  lang,
+  conquest,
+  phase,
+  clockMs,
+  lockouts = [],
+  countryName,
+  onFocusCountry,
+  onSelectCountry,
+  countryClickRef,
+}) => {
+  const t = conquestText(lang);
+  const { players, claims, events, bonuses, userId, clockOffset } = conquest;
+  const [answer, setAnswer] = useState("");
+  const inputRef = useRef(null);
+
+  const standings = useMemo(
+    () => computeStandings(players, claims, bonuses),
+    [players, claims, bonuses]
+  );
+  const feed = useConquestFeed(events, players, countryName, lang);
+  const { toast, setToast, stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal } =
+    useConquestActions({
+      conquest,
+      phase,
+      countryName,
+      lang,
+      t,
+      onFocusCountry,
+      answer,
+      setAnswer,
+    });
+
+  useCountryClickHandler({
+    phase,
+    challenge,
+    claims,
+    userId,
+    clockOffset,
+    countryClickRef,
+    onSelectCountry,
+    openSteal,
+    setToast,
+    countryName,
+    lang,
+    players,
+    t,
+    inputRef,
+  });
 
   return (
     <div className="conquest-hud">
-      <div className="conquest-hud-top conquest-surface">
-        <span className={`conquest-timer ${clockMs <= 120000 ? "is-urgent" : ""}`}>
-          {phase === "countdown"
-            ? `${t.countdown} ${Math.ceil(clockMs / 1000)}`
-            : formatClock(clockMs)}
-        </span>
-        <ol className="conquest-scoreboard">
-          {standings.map((player) => (
-            <li key={player.user_id}>
-              <ConquestPlayerChip player={player} tag={player.user_id === userId ? t.you : null}>
-                <span className="conquest-score">
-                  {player.total} {t.pts} · {player.countries} {t.countries}
-                  {player.bonus ? ` · +${player.bonus}` : ""}
-                </span>
-              </ConquestPlayerChip>
-            </li>
-          ))}
-        </ol>
-        {onRules && <ConquestRulesButton lang={lang} onClick={onRules} />}
-      </div>
-      <aside className="conquest-feed conquest-surface" aria-live="polite">
-        <span className="conquest-label">{t.feed}</span>
-        <ul>
-          {feed.map((line) => (
-            <li key={line.id}>
-              {line.countryId ? (
-                <button
-                  type="button"
-                  className="conquest-feed-line"
-                  onClick={() => onFocusCountry(line.countryId)}
-                >
-                  {line.text}
-                </button>
-              ) : (
-                line.text
-              )}
-            </li>
-          ))}
-        </ul>
-      </aside>
-      <div className="conquest-answer conquest-surface">
-        {lockouts.length > 0 && (
-          <ul className="conquest-lockouts" aria-live="polite">
-            {lockouts.map((lock) => (
-              <li key={lock.id}>
-                <button
-                  type="button"
-                  className="conquest-lockout"
-                  onClick={() => onFocusCountry(lock.id)}
-                >
-                  <span className="conquest-lockout-name">{countryName(lock.id)}</span>
-                  <span>{t.lockedFor}</span>
-                  <span className="conquest-lockout-time">{Math.ceil(lock.ms / 1000)} s</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {toast && <p className={`conquest-toast ${toast.ok ? "is-ok" : "is-ko"}`}>{toast.text}</p>}
-        {stealTarget && !challenge && (
-          <button type="button" className="btn-primary" onClick={() => openSteal(stealTarget)}>
-            {t.stealOffer} {countryName(stealTarget)}
-          </button>
-        )}
-        {challenge ? (
-          <ConquestStealPanel
-            key={`${challenge.country_id}-${challenge.expires_at}`}
-            t={t}
-            challenge={challenge}
-            countryName={countryName}
-            onAnswer={answerSteal}
-            onCancel={cancelSteal}
-          />
-        ) : (
-          <form onSubmit={submit}>
-            <input
-              ref={inputRef}
-              className="conquest-input"
-              value={answer}
-              disabled={phase !== "live"}
-              placeholder={t.inputPlaceholder}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              onChange={(e) => setAnswer(e.target.value)}
-            />
-          </form>
-        )}
-      </div>
+      <HudTopBar standings={standings} userId={userId} phase={phase} clockMs={clockMs} t={t} />
+      <HudFeed feed={feed} onFocusCountry={onFocusCountry} t={t} />
+      <HudAnswer
+        challenge={challenge}
+        lockouts={lockouts}
+        toast={toast}
+        stealTarget={stealTarget}
+        countryName={countryName}
+        t={t}
+        openSteal={openSteal}
+        answerSteal={answerSteal}
+        cancelSteal={cancelSteal}
+        submit={submit}
+        inputRef={inputRef}
+        answer={answer}
+        setAnswer={setAnswer}
+        phase={phase}
+        onFocusCountry={onFocusCountry}
+      />
     </div>
   );
 };

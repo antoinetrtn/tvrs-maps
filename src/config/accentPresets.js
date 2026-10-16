@@ -61,7 +61,7 @@ export const ACCENT_PRESETS = {
   },
 };
 
-export const DEFAULT_ACCENT = "magenta";
+export const DEFAULT_ACCENT = "bone";
 
 export const isValidAccent = (id) =>
   typeof id === "string" && Object.prototype.hasOwnProperty.call(ACCENT_PRESETS, id);

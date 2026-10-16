@@ -229,13 +229,3 @@
   margin-left: auto;
   flex-shrink: 0;
 }
-
-.conquest-hud-top .conquest-rules-open-btn {
-  margin-left: auto;
-  align-self: baseline;
-  flex-shrink: 0;
-}
-
-.conquest-hud-top .conquest-timer {
-  align-self: baseline;
-}

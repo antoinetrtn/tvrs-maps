@@ -38,6 +38,11 @@ describe("accent presets", () => {
     expect(isValidAccent(DEFAULT_ACCENT)).toBe(true);
   });
 
+  it("defaults to bone with label 'Os (sobre)'", () => {
+    expect(DEFAULT_ACCENT).toBe("bone");
+    expect(ACCENT_PRESETS[DEFAULT_ACCENT].label.fr).toBe("Os (sobre)");
+  });
+
   it.each(Object.entries(ACCENT_PRESETS))("%s meets AA contrast", (_id, p) => {
     const { bg: ink, bgElevated } = getThemeColors("monochrome", "dark");
     for (const bg of [ink, bgElevated]) {
@@ -57,6 +62,18 @@ describe("accent presets", () => {
 });
 
 describe("accent persistence", () => {
+  it("returns bone when nothing is stored", () => {
+    expect(readStoredAccent(localStorage, KEY)).toBe("bone");
+  });
+
+  it("preserves previously saved magenta and cyan for existing users", () => {
+    localStorage.setItem(KEY, "magenta");
+    expect(readStoredAccent(localStorage, KEY)).toBe("magenta");
+
+    localStorage.setItem(KEY, "cyan");
+    expect(readStoredAccent(localStorage, KEY)).toBe("cyan");
+  });
+
   it("persists and reads back a valid accent", () => {
     expect(persistAccent(localStorage, KEY, "acid")).toBe("acid");
     expect(localStorage.getItem(KEY)).toBe("acid");
@@ -103,5 +120,10 @@ describe("accent tokens", () => {
   it("overrides contain no gold/yellow", () => {
     const o = getAccentOverrides("magenta");
     expect(o.gold).toBe(ACCENT_PRESETS.magenta.accent);
+  });
+
+  it("resolves monochrome@bone accent to bone preset accent", () => {
+    const colors = getThemeColors("monochrome@bone", "dark");
+    expect(colors.accent).toBe(ACCENT_PRESETS.bone.accent);
   });
 });

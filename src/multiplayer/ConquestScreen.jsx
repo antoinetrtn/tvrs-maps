@@ -103,7 +103,6 @@ const ConquestScreen = ({
           onFocusCountry={onFocusCountry}
           onSelectCountry={onSelectCountry}
           countryClickRef={countryClickRef}
-          onRules={openRules}
         />
       )}
       {phase === "finished" && <ConquestEnd lang={lang} conquest={conquest} onExit={exit} />}
