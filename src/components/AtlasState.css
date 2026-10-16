@@ -34,7 +34,7 @@
 
 .atlas-state-needle {
   transform-origin: 24px 24px;
-  animation: atlas-needle-sweep 2.4s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation: atlas-needle-sweep 2.4s var(--ease-inout) infinite;
 }
 
 .atlas-state-needle-north {

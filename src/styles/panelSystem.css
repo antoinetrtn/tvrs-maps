@@ -4,6 +4,11 @@
 
 /* ──── Z-INDEX HIERARCHY ──── */
 :root {
+  --z-conquest-cursors: 19;
+  --z-conquest: 20;
+  --z-screen: 500;
+  --z-hud: 1000;
+  --z-hud-top: 1001;
   --z-overlay: 5000;
   --z-sheet: 5100;
   --z-fullpage: 5200;
@@ -11,6 +16,8 @@
   --z-fx: 5250;
   --z-toast: 5400;
   --z-celebration: 5450;
+  --z-vignette: 9990;
+  --z-scanline: 99999;
 }
 
 /* ──── UNIFIED OVERLAY ──── */

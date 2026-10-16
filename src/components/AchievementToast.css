@@ -23,7 +23,7 @@
   pointer-events: auto;
 
   /* Single CSS animation to manage the slide-in, stay, and slide-out */
-  animation: toast-slide-in-out 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: toast-slide-in-out 4s var(--ease-spring) forwards;
 }
 
 .achievement-toast-icon-container {
