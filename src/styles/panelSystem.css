@@ -422,17 +422,38 @@
 }
 
 /* ──── SCROLLBAR STYLED ──── */
-.panel-body::-webkit-scrollbar {
-  width: 4px;
+@supports selector(::-webkit-scrollbar) {
+  :is(.scrollbar-styled, .panel-body)::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  :is(.scrollbar-styled, .panel-body)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  :is(.scrollbar-styled, .panel-body)::-webkit-scrollbar-thumb {
+    background: var(--glass-border);
+    border-radius: 0;
+  }
+
+  :is(.scrollbar-styled, .panel-body)::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+
+  :is(.scrollbar-styled, .panel-body)::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
-.panel-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.panel-body::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: 2px;
+@supports not selector(::-webkit-scrollbar) {
+  .scrollbar-styled,
+  .panel-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border) transparent;
+  }
 }
 
 /* Shared plain fade-in (was duplicated as ui-fade-in / ui-fade-in). */

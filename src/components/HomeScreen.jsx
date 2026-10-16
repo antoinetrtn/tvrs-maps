@@ -15,6 +15,7 @@ import Logo from "./Logo";
 import ModeShutter from "./ModeShutter";
 import ProfilePanel from "./ProfilePanel";
 import SettingsPanel from "./SettingsPanel";
+import XpBar from "./XpBar";
 
 const HomeScreen = ({
   onStartGame,
@@ -153,16 +154,15 @@ const HomeScreen = ({
             onPointerDown={(e) => e.stopPropagation()}
             title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
           >
-            {/* Inner container clips the XP progress fill to the rounded button shape */}
-            <div className="profile-xp-progress-container">
-              <span
-                className="profile-xp-progress"
-                style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
-              />
-            </div>
             <div className="profile-icon">
               <User width={20} height={20} />
             </div>
+            <XpBar
+              variant="mini"
+              percent={percent}
+              label={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+              className="profile-btn-xp-bar"
+            />
             <span className="profile-btn-level-tag">{level}</span>
           </GlassIconButton>
 
