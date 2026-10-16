@@ -54,8 +54,8 @@ const ModeCard = ({
             tabIndex: 0,
             "aria-label":
               lang === "fr"
-                ? modeItem.titleFr.replace("\n", " ")
-                : modeItem.titleEn.replace("\n", " "),
+                ? modeItem.titleFr.replaceAll("\n", " ")
+                : modeItem.titleEn.replaceAll("\n", " "),
             onClick: (e) => {
               if (wasDraggingRef.current) {
                 e.preventDefault();
