@@ -29,15 +29,16 @@ const Coastline = () => (
   </svg>
 );
 
-const AtlasState = ({ variant = "empty", title, hint }) => (
+const AtlasState = ({ variant = "empty", title, hint, srOnly = false }) => (
   <div
     className={`atlas-state atlas-state--${variant}`}
     role={variant === "error" ? "alert" : "status"}
     aria-live="polite"
+    title={srOnly && title ? title : undefined}
   >
     {variant === "loading" ? <CompassRose /> : <Coastline />}
-    {title && <p className="atlas-state-title">{title}</p>}
-    {hint && <p className="atlas-state-hint">{hint}</p>}
+    {title && <p className={`atlas-state-title ${srOnly ? "sr-only" : ""}`}>{title}</p>}
+    {hint && <p className={`atlas-state-hint ${srOnly ? "sr-only" : ""}`}>{hint}</p>}
   </div>
 );
 

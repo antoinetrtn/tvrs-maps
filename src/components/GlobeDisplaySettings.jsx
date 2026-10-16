@@ -16,13 +16,19 @@ const GlobeDisplaySettings = ({ t }) => {
   const supported = hasWebGPUSupport();
   const forced = isRendererForcedByUrl();
   const isWebGPU = resolveGlobeRenderer({ preference: prefs.renderer }) === "webgpu";
-  let rendererDesc = t("renderer_webgpu_desc");
-  if (!supported) rendererDesc = t("renderer_webgpu_unsupported");
-  else if (forced) rendererDesc = t("renderer_webgpu_forced");
+  let visibleDesc;
+  let srDesc = t("renderer_webgpu_desc");
+  if (!supported) {
+    visibleDesc = t("renderer_webgpu_unsupported_short");
+    srDesc = t("renderer_webgpu_unsupported");
+  } else if (forced) {
+    visibleDesc = t("renderer_webgpu_forced_short");
+    srDesc = t("renderer_webgpu_forced");
+  }
 
   return (
     <>
-      <SettingsRow label={t("found_style")} layout="stacked">
+      <SettingsRow label={t("found_style_short")} layout="stacked">
         <OptionGroup
           label={t("found_style")}
           options={[
@@ -33,7 +39,7 @@ const GlobeDisplaySettings = ({ t }) => {
           onChange={(v) => setGlobePref("foundStyle", v)}
         />
       </SettingsRow>
-      <SettingsRow label={t("renderer_webgpu")} description={rendererDesc}>
+      <SettingsRow label={t("renderer_webgpu")} description={visibleDesc} srDescription={srDesc}>
         <Switch
           checked={isWebGPU}
           disabled={!supported || forced}

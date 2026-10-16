@@ -63,10 +63,10 @@ const SettingsPanel = ({
       </div>
 
       <div className="panel-body scrollbar-styled">
-        <SettingsSection title={t("settings_section_game")}>
+        <SettingsSection title={t("settings_section_game")} hideTitle>
           <SettingsRow layout="stacked">
             <Slider
-              label={t("game_duration")}
+              label={t("game_duration_short")}
               value={minutes}
               min={MIN_DURATION_MIN}
               max={MAX_DURATION_MIN}
@@ -78,8 +78,8 @@ const SettingsPanel = ({
             />
           </SettingsRow>
           <SettingsRow
-            label={t("peaceful_mode")}
-            description={peacefulMode ? t("peaceful_desc") : t("peaceful_off")}
+            label={t("peaceful_mode_short")}
+            srDescription={peacefulMode ? t("peaceful_desc") : t("peaceful_off")}
           >
             <Switch
               checked={Boolean(peacefulMode)}
@@ -89,8 +89,8 @@ const SettingsPanel = ({
           </SettingsRow>
         </SettingsSection>
 
-        <SettingsSection title={t("settings_section_display")}>
-          <SettingsRow label="Language / Langue" layout="stacked">
+        <SettingsSection title={t("settings_section_display")} hideTitle>
+          <SettingsRow layout="stacked">
             <OptionGroup
               label="Language / Langue"
               options={[
@@ -101,7 +101,7 @@ const SettingsPanel = ({
               onChange={setLang}
             />
           </SettingsRow>
-          <SettingsRow label={t("globe_theme")} layout="stacked">
+          <SettingsRow layout="stacked">
             <OptionGroup
               label={t("globe_theme")}
               options={[
@@ -121,7 +121,7 @@ const SettingsPanel = ({
             />
           </SettingsRow>
           <GlobeDisplaySettings t={t} />
-          <SettingsRow label={t("accent_color")} layout="stacked">
+          <SettingsRow layout="stacked">
             <AccentPicker
               lang={lang}
               accent={accent}

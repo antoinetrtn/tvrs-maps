@@ -85,7 +85,7 @@ const HomeScreen = ({
         <header className="home-hero">
           <Logo size="medium" className="home-hero-logo" />
           <h1 className="home-hero-title">{hero.title}</h1>
-          <p className="home-hero-sub">{hero.sub}</p>
+          <p className="home-hero-sub sr-only">{hero.sub}</p>
         </header>
         <div className="home-stage-container">
           <HomeScreenCategoryCarousel

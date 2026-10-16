@@ -17,6 +17,7 @@ import { departmentsDataMap } from "../data/departmentsData";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
+import { getGameModesMetadata } from "./homeHeroText";
 import ModeCard from "./HomeModeCard";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 
@@ -28,6 +29,21 @@ const getEventClientX = (e) => {
     return e.changedTouches[0].clientX;
   return 0;
 };
+
+const MODE_ICONS = {
+  [HOME_CONQUEST_KEY]: <Chess width={48} height={48} />,
+  countries: <Globe width={48} height={48} />,
+  capitals: <MapPin width={48} height={48} />,
+  departments: <Hash width={48} height={48} />,
+  us_states: <Earth width={48} height={48} />,
+  rivers_mountains: <Waves width={48} height={48} />,
+};
+
+const buildCarouselItems = (metadata) =>
+  metadata.map((item) => ({
+    ...item,
+    icon: MODE_ICONS[item.key] || null,
+  }));
 
 const HomeScreenCategoryCarousel = ({
   onStartGame,
@@ -48,80 +64,16 @@ const HomeScreenCategoryCarousel = ({
   const isAnimatingRef = useRef(false);
   const t = useTranslation(lang);
 
-  // Dynamic Dataset Counts dynamically derived from imported data maps
   const gameModesCarousel = useMemo(() => {
-    const countriesCount = Object.keys(countryDataMap).length;
-    const capitalsCount = Object.keys(countryDataMap).filter(
-      (k) => countryDataMap[k]?.capital
-    ).length;
-    const departmentsCount = Object.keys(departmentsDataMap).length;
-    const usStatesCount = Object.keys(usStatesDataMap).length;
-    const riversMountainsCount = Object.keys(riversMountainsDataMap).length;
-
-    const conquestCard = {
-      key: HOME_CONQUEST_KEY,
-      icon: <Chess width={44} height={44} />,
-      titleFr: "Conquête\n1v1",
-      titleEn: "Conquest\n1v1",
-      descFr: "Duel en ligne : capturez des pays, volez ceux de l'adversaire.",
-      descEn: "Online duel: capture countries, steal your opponent's.",
-      badgeFr: "1V1 EN LIGNE",
-      badgeEn: "ONLINE 1V1",
-    };
-
-    return [
-      ...(onOpenConquest ? [conquestCard] : []),
-      {
-        key: "countries",
-        icon: <Globe width={44} height={44} />,
-        titleFr: "Pays du\nMonde",
-        titleEn: "World\nCountries",
-        descFr: `${countriesCount} pays et territoires à localiser sur le globe 3D interactif.`,
-        descEn: `${countriesCount} countries and territories to locate on the interactive 3D globe.`,
-        badgeFr: `${countriesCount} PAYS`,
-        badgeEn: `${countriesCount} COUNTRIES`,
-      },
-      {
-        key: "capitals",
-        icon: <MapPin width={44} height={44} />,
-        titleFr: "Capitales du\nMonde",
-        titleEn: "World\nCapitals",
-        descFr: `Retrouvez la capitale de chaque pays et territoire (${capitalsCount} au total).`,
-        descEn: `Find the capital of every country and territory (${capitalsCount} total).`,
-        badgeFr: `${capitalsCount} CAPITALES`,
-        badgeEn: `${capitalsCount} CAPITALS`,
-      },
-      {
-        key: "departments",
-        icon: <Hash width={44} height={44} />,
-        titleFr: "Départements\nFrançais",
-        titleEn: "French\nDepartments",
-        descFr: `Placement des ${departmentsCount} départements et collectivités d'Outre-mer.`,
-        descEn: `Locate all ${departmentsCount} French departments across mainland & overseas.`,
-        badgeFr: `${departmentsCount} DÉPARTEMENTS`,
-        badgeEn: `${departmentsCount} DEPARTMENTS`,
-      },
-      {
-        key: "us_states",
-        icon: <Earth width={44} height={44} />,
-        titleFr: "États\nAméricains",
-        titleEn: "US\nStates",
-        descFr: `Testez vos connaissances sur les ${usStatesCount} États américains.`,
-        descEn: `Test your knowledge on all ${usStatesCount} US States.`,
-        badgeFr: `${usStatesCount} ÉTATS`,
-        badgeEn: `${usStatesCount} STATES`,
-      },
-      {
-        key: "rivers_mountains",
-        icon: <Waves width={44} height={44} />,
-        titleFr: "Montagnes &\nFleuves",
-        titleEn: "Rivers &\nMountains",
-        descFr: `${riversMountainsCount} reliefs majeurs : chaînes de montagnes et grands fleuves du monde.`,
-        descEn: `${riversMountainsCount} major reliefs: mountain ranges and famous rivers.`,
-        badgeFr: `${riversMountainsCount} RELIEFS & FLEUVES`,
-        badgeEn: `${riversMountainsCount} RELIEFS & RIVERS`,
-      },
-    ];
+    const metadata = getGameModesMetadata({
+      countriesCount: Object.keys(countryDataMap).length,
+      capitalsCount: Object.keys(countryDataMap).filter((k) => countryDataMap[k]?.capital).length,
+      departmentsCount: Object.keys(departmentsDataMap).length,
+      usStatesCount: Object.keys(usStatesDataMap).length,
+      riversMountainsCount: Object.keys(riversMountainsDataMap).length,
+      includeConquest: Boolean(onOpenConquest),
+    });
+    return buildCarouselItems(metadata);
   }, [onOpenConquest]);
 
   const activeIndex = useMemo(() => {

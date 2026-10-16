@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { describe, expect, it } from "vitest";
 
-import LeaderboardRow, { LeaderboardList } from "../components/LeaderboardRow";
+import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "../components/LeaderboardRow";
 
 describe("LeaderboardRow", () => {
   it("renders rank, name, main stat and secondary stat", () => {
@@ -33,6 +33,18 @@ describe("LeaderboardRow", () => {
     );
     expect(container.querySelector(".lb-row.is-me")).toBeTruthy();
     expect(screen.getByText("toi")).toBeTruthy();
+  });
+
+  it("renders LeaderboardNotice with forwarded props and content", () => {
+    render(
+      <LeaderboardNotice aria-label="Notice label" title="Notice tooltip">
+        <span>Connecte-toi</span>
+      </LeaderboardNotice>
+    );
+    const p = screen.getByText("Connecte-toi").closest("p");
+    expect(p.className).toContain("lb-notice");
+    expect(p.getAttribute("aria-label")).toBe("Notice label");
+    expect(p.getAttribute("title")).toBe("Notice tooltip");
   });
 });
 
