@@ -77,13 +77,56 @@ const CardActions = ({
   );
 };
 
+const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badgeLabel }) => (
+  <div className="card-content">
+    <div className="card-plate-meta">
+      <span className="card-plate-number" title={plateLabel} aria-label={plateLabel}>
+        {plateNumber}
+      </span>
+      <span className="card-plate-count" title={badgeLabel} aria-label={badgeLabel}>
+        {badgeText}
+      </span>
+    </div>
+    <div className="card-header-row">
+      <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
+      <span className="card-mode-icon" aria-hidden="true">
+        {modeItem.icon}
+      </span>
+    </div>
+    <p id={`card-desc-${modeItem.key}`} className="card-desc sr-only">
+      {lang === "fr" ? modeItem.descFr : modeItem.descEn}
+    </p>
+  </div>
+);
+
+const getCardStyle = (pose, isTopCard, reducedMotion) => {
+  if (reducedMotion) {
+    return {
+      "--card-x": "0px",
+      "--card-y": "0px",
+      "--card-rot": "0deg",
+      "--card-scale": 1,
+      "--card-scale-eff": 1,
+      "--card-z": 0,
+      zIndex: isTopCard ? 100 : 20,
+    };
+  }
+  return {
+    "--card-x": `${pose.translateX}px`,
+    "--card-y": `${pose.translateY}px`,
+    "--card-rot": `${pose.rotateZ}deg`,
+    "--card-scale": pose.scale,
+    "--card-scale-eff": pose.scale * (1000 / (1000 - pose.translateZ)),
+    "--card-z": pose.translateZ,
+    zIndex: pose.zIndex,
+  };
+};
+
 const ModeCard = ({
   modeItem,
   idx,
   activeIndex,
   totalModes,
-  dragOffset,
-  isDragging,
   animatingDirection,
   wasDraggingRef,
   lang,
@@ -92,18 +135,21 @@ const ModeCard = ({
   onOpenConquest,
   onOpenConquestRules,
   onSelectSideCard,
+  reducedMotion = false,
 }) => {
   const stackPos = (idx - activeIndex + totalModes) % totalModes;
   const isTopCard = stackPos === 0;
   const isConquest = modeItem.key === HOME_CONQUEST_KEY;
 
-  const { translateX, translateY, translateZ, rotateZ, scale, zIndex } = getCardPose({
+  const pose = getCardPose({
     stackPos,
     totalModes,
-    dragOffset,
-    isDragging,
-    animatingDirection,
+    dragOffset: 0,
+    isDragging: false,
+    animatingDirection: reducedMotion ? null : animatingDirection,
   });
+
+  const cardStyle = getCardStyle(pose, isTopCard, reducedMotion);
   const selectSideCard = () => onSelectSideCard(stackPos);
 
   const plateNumber = String(idx + 1).padStart(2, "0");
@@ -117,14 +163,10 @@ const ModeCard = ({
   return (
     <div
       data-mode={modeItem.key}
+      data-stack-pos={stackPos}
+      data-is-prev={stackPos === totalModes - 1 ? "true" : undefined}
       className={`deck-mode-card ${isTopCard ? "is-top-card" : "is-stacked-card"}`}
-      style={{
-        transform: `translate3d(${translateX}px, ${translateY}px, 0) rotateZ(${rotateZ}deg) scale(${scale * (1000 / (1000 - translateZ))})`,
-        zIndex,
-        transition: isDragging
-          ? "none"
-          : "transform 220ms cubic-bezier(0.18, 0.9, 0.26, 1), border-color 220ms ease, box-shadow 220ms ease",
-      }}
+      style={cardStyle}
       {...(isTopCard
         ? {
             "aria-describedby": `card-desc-${modeItem.key}`,
@@ -153,28 +195,14 @@ const ModeCard = ({
           })}
     >
       <div className="card-plate-pattern" aria-hidden="true" />
-
-      <div className="card-content">
-        <div className="card-plate-meta">
-          <span className="card-plate-number" title={plateLabel} aria-label={plateLabel}>
-            {plateNumber}
-          </span>
-          <span className="card-plate-count" title={badgeLabel} aria-label={badgeLabel}>
-            {badgeText}
-          </span>
-        </div>
-        <div className="card-header-row">
-          <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
-          <span className="card-mode-icon" aria-hidden="true">
-            {modeItem.icon}
-          </span>
-        </div>
-
-        <p id={`card-desc-${modeItem.key}`} className="card-desc sr-only">
-          {lang === "fr" ? modeItem.descFr : modeItem.descEn}
-        </p>
-      </div>
-
+      <CardContent
+        modeItem={modeItem}
+        lang={lang}
+        plateNumber={plateNumber}
+        plateLabel={plateLabel}
+        badgeText={badgeText}
+        badgeLabel={badgeLabel}
+      />
       <CardActions
         isTopCard={isTopCard}
         isConquest={isConquest}
