@@ -16,13 +16,14 @@ const AccentPicker = ({ lang = "fr", accent, setAccent, label }) => (
           type="button"
           role="radio"
           aria-checked={isActive}
+          aria-label={name}
           className={`accent-swatch ${isActive ? "active" : ""}`}
           style={{ "--swatch": preset.accent }}
           onClick={() => setAccent?.(id)}
           title={name}
         >
           <span className="accent-swatch-chip" aria-hidden="true" />
-          <span className="accent-swatch-label">{name}</span>
+          <span className="accent-swatch-label sr-only">{name}</span>
         </button>
       );
     })}

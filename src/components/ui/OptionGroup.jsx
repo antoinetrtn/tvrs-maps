@@ -37,6 +37,8 @@ const OptionGroup = ({ options = [], value, onChange, label, className = "" }) =
             type="button"
             role="radio"
             aria-checked={active}
+            aria-label={opt.label}
+            title={opt.label}
             tabIndex={active ? 0 : -1}
             disabled={opt.disabled || undefined}
             className={`ui-option ${active ? "active" : ""}`}

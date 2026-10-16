@@ -201,18 +201,24 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   const renderInitialFlow = () => (
     <div className="auth-modal-initial-flow">
       <button type="button" onClick={() => setStep("email")} className="auth-row-btn tvrs-btn">
-        <User width={16} height={16} className="auth-btn-icon" />
-        <span>Compte TVRS</span>
+        <User width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
+        <span>{t("auth_tvrs_account")}</span>
       </button>
 
       <button type="button" onClick={handleGoogleSignIn} className="auth-row-btn google-btn">
-        <Earth width={16} height={16} className="auth-btn-icon" />
-        <span>Continuer avec Google</span>
+        <Earth width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
+        <span>{t("auth_google")}</span>
       </button>
 
-      <button type="button" onClick={onGuest} className="auth-row-btn guest-btn">
-        <Gamepad width={16} height={16} className="auth-btn-icon" />
-        <span>Continuer en invité (Guest)</span>
+      <button
+        type="button"
+        onClick={onGuest}
+        className="auth-row-btn guest-btn"
+        aria-label={t("auth_guest")}
+        title={t("auth_guest")}
+      >
+        <Gamepad width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
+        <span>{t("auth_guest_short")}</span>
       </button>
     </div>
   );
@@ -272,7 +278,11 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   if (!isOpen) return null;
 
   const title =
-    step === "initial" ? "Authentification" : step === "email" ? "Compte TVRS" : t("auth_password");
+    step === "initial"
+      ? t("auth_modal_title")
+      : step === "email"
+        ? t("auth_tvrs_account")
+        : t("auth_password");
 
   const renderHeader = () => (
     <div className="panel-header">

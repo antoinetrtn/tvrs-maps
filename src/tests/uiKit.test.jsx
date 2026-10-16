@@ -131,4 +131,27 @@ describe("SettingsSection / SettingsRow", () => {
     );
     expect(container.querySelector(".ui-settings-row--stacked")).toBeTruthy();
   });
+
+  it("hides title visually when hideTitle is true", () => {
+    render(
+      <SettingsSection title="Partie" hideTitle>
+        <span>content</span>
+      </SettingsSection>
+    );
+    expect(screen.getByRole("region", { name: "Partie" })).toBeTruthy();
+    const heading = screen.getByRole("heading", { name: "Partie" });
+    expect(heading.className).toContain("sr-only");
+  });
+
+  it("supports srDescription with aria-describedby", () => {
+    render(
+      <SettingsRow label="Mode paisible" srDescription="Vies infinies">
+        <button type="button">ctl</button>
+      </SettingsRow>
+    );
+    const desc = screen.getByText("Vies infinies");
+    expect(desc.className).toContain("sr-only");
+    const ctl = screen.getByRole("button", { name: "ctl" }).parentElement;
+    expect(ctl.getAttribute("aria-describedby")).toBe(desc.id);
+  });
 });

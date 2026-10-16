@@ -1,6 +1,6 @@
 import "./ConquestReady.css";
 
-import { Copy, ExternalLink } from "pixelarticons/react";
+import { Copy, Crown, ExternalLink } from "pixelarticons/react";
 import React, { useEffect, useState } from "react";
 
 import AtlasState from "../components/AtlasState";
@@ -13,12 +13,14 @@ import { conquestText } from "./conquestText";
 const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
   const [code, setCode] = useState("");
   return (
-    <SettingsSection title={t.room}>
+    <SettingsSection title={t.room} hideTitle>
       <button
         type="button"
         className="btn-primary conquest-block"
         disabled={busy}
         onClick={onCreate}
+        aria-label={t.createFull || t.create}
+        title={t.createFull || t.create}
       >
         {t.create}
       </button>
@@ -40,7 +42,13 @@ const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
           spellCheck={false}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
         />
-        <button type="submit" className="btn-secondary" disabled={busy || code.length < 6}>
+        <button
+          type="submit"
+          className="btn-secondary"
+          disabled={busy || code.length < 6}
+          aria-label={t.join}
+          title={t.join}
+        >
           {t.join}
         </button>
       </form>
@@ -89,19 +97,27 @@ const RoomShare = ({ t, code }) => {
   };
 
   return (
-    <SettingsRow label={t.roomCode} layout="stacked">
+    <SettingsRow layout="stacked">
       <div className="conquest-room-code">
-        <span className="conquest-code">{code}</span>
+        <span className="conquest-code" aria-label={t.roomCode}>
+          {code}
+        </span>
         <button
           type="button"
           className="conquest-icon-btn"
           onClick={onCopy}
-          aria-label={t.copyLink}
-          title={t.copyLink}
+          aria-label={t.copyCode}
+          title={t.copyCode}
         >
-          <Copy width={18} height={18} />
+          <Copy width={18} height={18} aria-hidden="true" />
         </button>
-        <button type="button" className="btn-secondary conquest-share-btn" onClick={onShare}>
+        <button
+          type="button"
+          className="btn-secondary conquest-share-btn"
+          onClick={onShare}
+          aria-label={t.share}
+          title={t.share}
+        >
           <ExternalLink width={16} height={16} aria-hidden="true" />
           <span>{t.share}</span>
         </button>
@@ -113,14 +129,91 @@ const RoomShare = ({ t, code }) => {
   );
 };
 
-const playerTags = (t, player, match, userId, online) =>
-  [
-    player.user_id === match.host_id ? t.host : null,
-    player.user_id === userId ? t.you : null,
-    online.length && !online.includes(player.user_id) ? t.offline : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+const PlayerTag = ({ t, isHost, isMe, isOffline }) => {
+  if (!isHost && !isMe && !isOffline) return null;
+  return (
+    <span className="conquest-player-tag">
+      {isHost && (
+        <span className="conquest-tag-host" title={t.host} aria-label={t.host}>
+          <Crown width={14} height={14} aria-hidden="true" />
+          <span className="sr-only">({t.host})</span>
+        </span>
+      )}
+      {isMe && (
+        <span className="conquest-tag-me" title={t.you} aria-label={t.you}>
+          <span aria-hidden="true">▸</span>
+          <span className="sr-only">({t.you})</span>
+        </span>
+      )}
+      {isOffline && <span className="conquest-tag-offline sr-only">({t.offline})</span>}
+    </span>
+  );
+};
+
+const PlayerList = ({ t, players, match, userId, online }) => (
+  <SettingsSection title={t.players} hideTitle>
+    {players.map((player) => (
+      <SettingsRow key={player.user_id}>
+        <ConquestPlayerChip
+          player={player}
+          tag={
+            <PlayerTag
+              t={t}
+              isHost={player.user_id === match.host_id}
+              isMe={player.user_id === userId}
+              isOffline={Boolean(online.length && !online.includes(player.user_id))}
+            />
+          }
+        >
+          <span
+            className={`conquest-ready-label ${player.ready ? "is-ready" : ""}`}
+            data-ready={player.ready ? "true" : "false"}
+            title={player.ready ? t.ready : t.notReady}
+          >
+            <span className="conquest-ready-pip" aria-hidden="true" />
+            <span className="sr-only">{player.ready ? t.ready : t.notReady}</span>
+          </span>
+        </ConquestPlayerChip>
+      </SettingsRow>
+    ))}
+    {players.length < 2 && (
+      <SettingsRow>
+        <div className="conquest-player-chip conquest-player-chip--empty" aria-label={t.waiting}>
+          <span className="conquest-swatch conquest-swatch--empty" aria-hidden="true" />
+          <span className="conquest-player-name" aria-hidden="true">
+            …
+          </span>
+          <span className="sr-only">{t.waiting}</span>
+        </div>
+      </SettingsRow>
+    )}
+  </SettingsSection>
+);
+
+const LobbyFooter = ({ t, isHost, me, allReady, busy, conquest }) => (
+  <div className="conquest-lobby-footer">
+    <ReadyButton
+      t={t}
+      ready={Boolean(me?.ready)}
+      busy={busy}
+      onToggle={() => conquest.setReady(!me?.ready)}
+      emphasized={!(isHost && me?.ready && allReady)}
+    />
+    {isHost ? (
+      <button
+        type="button"
+        className={`${me?.ready && allReady ? "btn-primary" : "btn-secondary"} conquest-block`}
+        disabled={busy || !allReady}
+        onClick={conquest.start}
+        title={t.startMatchFull || t.startMatch}
+      >
+        {t.startMatch}
+      </button>
+    ) : (
+      <p className="conquest-hint sr-only">{t.waitingHost}</p>
+    )}
+  </div>
+);
 
 /** Big "I'm ready" call to action; becomes "Prêt ✓ / Annuler" once pressed. */
 export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => (
@@ -161,55 +254,24 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
           <h2 className="conquest-title">{t.title}</h2>
           {onRules && <ConquestRulesButton lang={lang} onClick={onRules} />}
         </div>
-        <p className="conquest-subtitle">{t.subtitle}</p>
+        <p className="conquest-subtitle sr-only">{t.subtitle}</p>
       </header>
       {!match ? (
         <LobbyEntry t={t} busy={busy} onCreate={conquest.create} onJoin={conquest.join} />
       ) : (
         <>
-          <SettingsSection title={t.room}>
+          <SettingsSection title={t.room} hideTitle>
             <RoomShare t={t} code={match.code} />
           </SettingsSection>
-          <SettingsSection title={t.players}>
-            {players.map((player) => (
-              <SettingsRow key={player.user_id}>
-                <ConquestPlayerChip
-                  player={player}
-                  tag={playerTags(t, player, match, userId, online)}
-                >
-                  <span
-                    className={`conquest-ready-label ${player.ready ? "is-ready" : ""}`}
-                    data-ready={player.ready ? "true" : "false"}
-                  >
-                    <span className="conquest-ready-pip" aria-hidden="true" />
-                    {player.ready ? t.ready : t.notReady}
-                  </span>
-                </ConquestPlayerChip>
-              </SettingsRow>
-            ))}
-            {players.length < 2 && <p className="conquest-hint">{t.waiting}</p>}
-          </SettingsSection>
-          <div className="conquest-lobby-footer">
-            <ReadyButton
-              t={t}
-              ready={Boolean(me?.ready)}
-              busy={busy}
-              onToggle={() => conquest.setReady(!me?.ready)}
-              emphasized={!(isHost && me?.ready && allReady)}
-            />
-            {isHost ? (
-              <button
-                type="button"
-                className={`${me?.ready && allReady ? "btn-primary" : "btn-secondary"} conquest-block`}
-                disabled={busy || !allReady}
-                onClick={conquest.start}
-              >
-                {t.startMatch}
-              </button>
-            ) : (
-              <p className="conquest-hint">{t.waitingHost}</p>
-            )}
-          </div>
+          <PlayerList t={t} players={players} match={match} userId={userId} online={online} />
+          <LobbyFooter
+            t={t}
+            isHost={isHost}
+            me={me}
+            allReady={allReady}
+            busy={busy}
+            conquest={conquest}
+          />
         </>
       )}
       {error &&
@@ -218,7 +280,13 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
         ) : (
           <AtlasState variant="error" title={error} hint={t.joinErrorHint} />
         ))}
-      <button type="button" className="btn-secondary conquest-block" onClick={onBack}>
+      <button
+        type="button"
+        className="btn-secondary conquest-block"
+        onClick={onBack}
+        aria-label={match ? t.leave : t.back}
+        title={match ? t.leave : t.back}
+      >
         {match ? t.leave : t.back}
       </button>
     </div>

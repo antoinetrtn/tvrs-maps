@@ -130,13 +130,23 @@
 }
 
 .lb-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  min-height: 40px;
   flex-shrink: 0;
   margin: 0 0 var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-md);
   border: 1px dashed var(--glass-border-strong);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   color: var(--text-muted);
+}
+
+.lb-notice-icon {
+  flex-shrink: 0;
+  color: var(--accent);
 }
 
 /* Header + tabs */

@@ -9,3 +9,23 @@
     margin-bottom: var(--spacing-md);
   }
 }
+
+@media (max-width: 640px) {
+  .leaderboard-panel .leaderboard-tabs .ui-option:not(.active) .ui-option-label {
+    display: none;
+  }
+
+  .leaderboard-panel .leaderboard-tabs .ui-option:not(.active) {
+    padding-inline: var(--spacing-sm);
+  }
+
+  .leaderboard-panel .nav-chips .nav-chip:not(.active) span {
+    display: none;
+  }
+
+  .leaderboard-panel .nav-chips .nav-chip:not(.active) {
+    padding: 0 var(--spacing-sm);
+    min-width: 40px;
+    justify-content: center;
+  }
+}

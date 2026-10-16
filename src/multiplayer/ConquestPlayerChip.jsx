@@ -13,7 +13,13 @@ const ConquestPlayerChip = ({ player, tag, children }) => {
         aria-hidden="true"
       />
       <span className="conquest-player-name">{player.display_name}</span>
-      {tag ? <span className="conquest-player-tag">{tag}</span> : null}
+      {tag ? (
+        typeof tag === "string" ? (
+          <span className="conquest-player-tag">{tag}</span>
+        ) : (
+          tag
+        )
+      ) : null}
       {children}
     </div>
   );

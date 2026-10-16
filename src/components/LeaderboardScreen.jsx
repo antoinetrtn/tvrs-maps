@@ -2,7 +2,19 @@ import "./LeaderboardScreen.css";
 import "./ui/ui.css";
 import "./LeaderboardScreenMobile.css";
 
-import { Close, Globe, Hash, Heart, MapPin, TreePine } from "pixelarticons/react";
+import {
+  Clock,
+  Close,
+  Flag,
+  Gamepad,
+  Globe,
+  Hash,
+  Heart,
+  MapPin,
+  TreePine,
+  Trophy,
+  User,
+} from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
@@ -16,10 +28,10 @@ import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./Leaderboar
 import OptionGroup from "./ui/OptionGroup";
 
 const MODE_ICONS = {
-  countries: <Globe width={16} height={16} />,
-  capitals: <MapPin width={16} height={16} />,
-  departments: <Hash width={14} height={14} />,
-  rivers_mountains: <TreePine width={16} height={16} />,
+  countries: <Globe width={16} height={16} aria-hidden="true" />,
+  capitals: <MapPin width={16} height={16} aria-hidden="true" />,
+  departments: <Hash width={14} height={14} aria-hidden="true" />,
+  rivers_mountains: <TreePine width={16} height={16} aria-hidden="true" />,
 };
 
 const formatDate = (isoString) => {
@@ -246,9 +258,7 @@ const LeaderboardScreen = ({
     return (
       <div className="evolution-chart-container glass-panel">
         <span className="chart-title text-natural-case">
-          {lang === "fr"
-            ? "Évolution des scores (10 dernières)"
-            : "Score Evolution (Last 10 games)"}
+          {lang === "fr" ? "Évolution" : "Evolution"}
         </span>
         <div className="evolution-chart">
           {recentGames.map((game, idx) => {
@@ -276,10 +286,10 @@ const LeaderboardScreen = ({
   const isSignedIn = Boolean(session?.user);
 
   const renderGlobalContent = () => {
-    if (!isSupabaseConfigured) return <AtlasState title={t("not_connected")} />;
-    if (loading) return <AtlasState variant="loading" title={t("connecting")} />;
+    if (!isSupabaseConfigured) return <AtlasState title={t("not_connected")} srOnly />;
+    if (loading) return <AtlasState variant="loading" title={t("connecting")} srOnly />;
     if (error) return <AtlasState variant="error" title={error} />;
-    if (scoresData.length === 0) return <AtlasState title={t("empty_leaderboard")} />;
+    if (scoresData.length === 0) return <AtlasState title={t("empty_leaderboard")} srOnly />;
     return (
       <LeaderboardList label={t("global_leaderboard")}>
         {scoresData.map((row, index) => (
@@ -306,12 +316,13 @@ const LeaderboardScreen = ({
               ? "Connectez-vous pour voir l'historique complet de vos parties."
               : "Sign in to see your complete game history."
           }
+          srOnly
         />
       );
     }
 
     if (historyLoading) {
-      return <AtlasState variant="loading" title={t("connecting")} />;
+      return <AtlasState variant="loading" title={t("connecting")} srOnly />;
     }
 
     if (historyError) {
@@ -319,7 +330,7 @@ const LeaderboardScreen = ({
     }
 
     if (historyData.length === 0) {
-      return <AtlasState title={t("no_records_yet")} />;
+      return <AtlasState title={t("no_records_yet")} srOnly />;
     }
 
     return (
@@ -357,9 +368,25 @@ const LeaderboardScreen = ({
         className="leaderboard-tabs"
         label={t("global_leaderboard")}
         options={[
-          { value: "global", label: t("tab_global") },
-          { value: "personal", label: t("tab_history") },
-          ...(isConquestEnabled() ? [{ value: "conquest", label: "Conquête" }] : []),
+          {
+            value: "global",
+            label: t("tab_global"),
+            icon: <Trophy width={16} height={16} aria-hidden="true" />,
+          },
+          {
+            value: "personal",
+            label: t("tab_history"),
+            icon: <Clock width={16} height={16} aria-hidden="true" />,
+          },
+          ...(isConquestEnabled()
+            ? [
+                {
+                  value: "conquest",
+                  label: lang === "fr" ? "Conquête" : "Conquest",
+                  icon: <Flag width={16} height={16} aria-hidden="true" />,
+                },
+              ]
+            : []),
         ]}
         value={activeTab}
         onChange={setActiveTab}
@@ -374,34 +401,60 @@ const LeaderboardScreen = ({
           <div className="leaderboard-column">
             <div className="leaderboard-controls">
               {/* Game mode selector chips */}
-              <div className="nav-chips">
-                {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => (
-                  <button
-                    key={mKey}
-                    type="button"
-                    className={`nav-chip ${colMode === mKey ? "active" : ""}`}
-                    onClick={() => setColMode(mKey)}
-                    title={t(`mode_${mKey}`)}
-                  >
-                    {MODE_ICONS[mKey]}
-                    <span>{t(`mode_${mKey}`)}</span>
-                  </button>
-                ))}
+              <div className="nav-chips" role="radiogroup" aria-label={t("game_modes") || "Modes"}>
+                {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => {
+                  const full = t(`mode_${mKey}`);
+                  const short = t(`mode_${mKey}_short`) || full;
+                  const isActive = colMode === mKey;
+                  return (
+                    <button
+                      key={mKey}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      className={`nav-chip ${isActive ? "active" : ""}`}
+                      onClick={() => setColMode(mKey)}
+                      aria-label={full}
+                      title={full}
+                    >
+                      {MODE_ICONS[mKey]}
+                      <span>{short}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Stats Summary cards always displayed at the top of active mode */}
             <div className="personal-stats-grid px-cascade">
-              <div className="personal-stat-card glass-panel">
-                <span className="stat-label text-natural-case">{t("games_played")}</span>
+              <div
+                className="personal-stat-card glass-panel"
+                role="group"
+                aria-label={`${t("games_played")} : ${currentRecord.gamesPlayed}`}
+                title={t("games_played")}
+              >
+                <span className="sr-only">{t("games_played")}</span>
+                <Gamepad width={14} height={14} className="stat-icon" aria-hidden="true" />
                 <span className="stat-value highlight-cyan">{currentRecord.gamesPlayed}</span>
               </div>
-              <div className="personal-stat-card glass-panel">
-                <span className="stat-label text-natural-case">{t("best_score")}</span>
+              <div
+                className="personal-stat-card glass-panel"
+                role="group"
+                aria-label={`${t("best_score")} : ${currentRecord.maxScore}`}
+                title={t("best_score")}
+              >
+                <span className="sr-only">{t("best_score")}</span>
+                <Trophy width={14} height={14} className="stat-icon" aria-hidden="true" />
                 <span className="stat-value highlight-green">{currentRecord.maxScore}</span>
               </div>
-              <div className="personal-stat-card glass-panel">
-                <span className="stat-label text-natural-case">{t("best_time")}</span>
+              <div
+                className="personal-stat-card glass-panel"
+                role="group"
+                aria-label={`${t("best_time")} : ${currentRecord.bestTime ? formatTime(currentRecord.bestTime) : "--"}`}
+                title={t("best_time")}
+              >
+                <span className="sr-only">{t("best_time")}</span>
+                <Clock width={14} height={14} className="stat-icon" aria-hidden="true" />
                 <span className="stat-value highlight-magenta">
                   {currentRecord.bestTime ? formatTime(currentRecord.bestTime) : "--"}
                 </span>
@@ -411,7 +464,15 @@ const LeaderboardScreen = ({
             {/* Conditional Rendering of Tab Content */}
             {activeTab === "global" ? (
               <>
-                {!isSignedIn && <LeaderboardNotice>{t("leaderboard_guest")}</LeaderboardNotice>}
+                {!isSignedIn && (
+                  <LeaderboardNotice
+                    aria-label={t("leaderboard_guest")}
+                    title={t("leaderboard_guest")}
+                  >
+                    <User width={14} height={14} className="lb-notice-icon" aria-hidden="true" />
+                    <span>{t("leaderboard_guest_short")}</span>
+                  </LeaderboardNotice>
+                )}
                 {renderGlobalContent()}
               </>
             ) : (

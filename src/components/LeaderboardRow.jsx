@@ -47,6 +47,10 @@ export const LeaderboardList = ({ children, label }) => (
 );
 
 /** Inline notice used for the guest sign-in prompt. */
-export const LeaderboardNotice = ({ children }) => <p className="lb-notice">{children}</p>;
+export const LeaderboardNotice = ({ children, className = "", ...props }) => (
+  <p className={`lb-notice ${className}`} {...props}>
+    {children}
+  </p>
+);
 
 export default LeaderboardRow;

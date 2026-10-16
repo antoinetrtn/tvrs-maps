@@ -344,11 +344,7 @@
 }
 
 .home-hero-sub {
-  max-width: 30ch;
   margin: 0;
-  color: var(--text-muted);
-  font-size: var(--font-size-md);
-  text-shadow: 0 1px 10px var(--bg-color);
 }
 
 @keyframes home-logo-fade {
@@ -376,10 +372,6 @@
   .home-hero-title {
     font-size: clamp(1.6rem, 8vw, 2.1rem);
   }
-
-  .home-hero-sub {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -403,9 +395,5 @@
 
   .home-hero-title {
     font-size: clamp(2rem, 4vw, 2.75rem);
-  }
-
-  .home-hero-sub {
-    display: none;
   }
 }

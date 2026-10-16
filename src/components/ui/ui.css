@@ -29,6 +29,10 @@
   color: var(--text-muted);
 }
 
+.ui-settings-title.sr-only {
+  margin: -1px;
+}
+
 .ui-settings-rows {
   display: flex;
   flex-direction: column;
