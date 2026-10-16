@@ -1,4 +1,5 @@
 import "./HomeScreenCategoryCarousel.css";
+import "./HomeScreenCarouselMotion.css";
 
 import {
   Chess,
@@ -17,18 +18,11 @@ import { departmentsDataMap } from "../data/departmentsData";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
+import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
 import { getGameModesMetadata } from "./homeHeroText";
 import ModeCard from "./HomeModeCard";
 import { HOME_CONQUEST_KEY } from "./homeModes";
-
-const getEventClientX = (e) => {
-  if (typeof e.clientX === "number" && e.clientX !== 0) return e.clientX;
-  if (e.touches && e.touches[0] && typeof e.touches[0].clientX === "number")
-    return e.touches[0].clientX;
-  if (e.changedTouches && e.changedTouches[0] && typeof e.changedTouches[0].clientX === "number")
-    return e.changedTouches[0].clientX;
-  return 0;
-};
+import useCarouselDrag from "./useCarouselDrag";
 
 const MODE_ICONS = {
   [HOME_CONQUEST_KEY]: <Chess width={48} height={48} />,
@@ -45,6 +39,49 @@ const buildCarouselItems = (metadata) =>
     icon: MODE_ICONS[item.key] || null,
   }));
 
+const DeckArrow = ({ side, onClick, label, icon }) => (
+  <div
+    className={`deck-click-zone ${side}`}
+    onClick={(e) => {
+      e.currentTarget.blur();
+      onClick();
+    }}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick();
+      }
+    }}
+    title={label}
+    aria-label={label}
+    role="button"
+    tabIndex={0}
+  >
+    <div className="deck-arrow">{icon}</div>
+  </div>
+);
+
+const DeckDots = ({ items, activeIndex, lang, onDotClick }) => (
+  <div className="deck-dots-row">
+    {items.map((item, idx) => {
+      const itemTitle = lang === "fr" ? item.titleFr : item.titleEn;
+      return (
+        <button
+          type="button"
+          key={item.key}
+          className={`deck-dot ${idx === activeIndex ? "active" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDotClick(idx);
+          }}
+          title={itemTitle}
+          aria-label={itemTitle}
+        />
+      );
+    })}
+  </div>
+);
+
 const HomeScreenCategoryCarousel = ({
   onStartGame,
   onOpenConquest = null,
@@ -52,17 +89,12 @@ const HomeScreenCategoryCarousel = ({
   lang,
   homeMode,
   setHomeMode,
+  exiting = false,
 }) => {
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
   const [animatingDirection, setAnimatingDirection] = useState(null);
-
-  const startXRef = useRef(0);
-  const currentDxRef = useRef(0);
-  const startTimeRef = useRef(0);
-  const wasDraggingRef = useRef(false);
   const isAnimatingRef = useRef(false);
   const t = useTranslation(lang);
+  const reducedMotion = usePrefersReducedMotion();
 
   const gameModesCarousel = useMemo(() => {
     const metadata = getGameModesMetadata({
@@ -85,16 +117,16 @@ const HomeScreenCategoryCarousel = ({
 
   const triggerAnimatedChange = useCallback(
     (direction, targetIdxOverride = null) => {
-      if (isAnimatingRef.current) return;
+      if (isAnimatingRef.current || exiting) return;
       isAnimatingRef.current = true;
       setAnimatingDirection(direction);
 
-      const nextIdx = (() => {
-        if (targetIdxOverride !== null) return targetIdxOverride;
-        return direction === "leftSwipe"
-          ? (activeIndex + 1) % totalModes
-          : (activeIndex - 1 + totalModes) % totalModes;
-      })();
+      const nextIdx =
+        targetIdxOverride !== null
+          ? targetIdxOverride
+          : direction === "leftSwipe"
+            ? (activeIndex + 1) % totalModes
+            : (activeIndex - 1 + totalModes) % totalModes;
       setHomeMode(gameModesCarousel[nextIdx].key);
 
       setTimeout(() => {
@@ -102,7 +134,7 @@ const HomeScreenCategoryCarousel = ({
         isAnimatingRef.current = false;
       }, 200);
     },
-    [totalModes, activeIndex, gameModesCarousel, setHomeMode]
+    [totalModes, activeIndex, gameModesCarousel, setHomeMode, exiting]
   );
 
   const triggerRightSwipe = useCallback(() => {
@@ -113,6 +145,21 @@ const HomeScreenCategoryCarousel = ({
     triggerAnimatedChange("leftSwipe");
   }, [triggerAnimatedChange]);
 
+  const onSelectIndex = useCallback(
+    (nextIdx) => {
+      setHomeMode(gameModesCarousel[nextIdx].key);
+    },
+    [gameModesCarousel, setHomeMode]
+  );
+
+  const { stageRef, isDragging, wasDraggingRef, handlePointerDown } = useCarouselDrag({
+    activeIndex,
+    totalModes,
+    onSelectIndex,
+    reducedMotion,
+    exiting,
+  });
+
   const handleSelectSideCard = useCallback(
     (stackPos) => {
       const targetIdx = (activeIndex + stackPos) % totalModes;
@@ -122,68 +169,9 @@ const HomeScreenCategoryCarousel = ({
     [activeIndex, totalModes, triggerAnimatedChange]
   );
 
-  const handlePointerDown = (e) => {
-    if (e.target.closest("button") || isAnimatingRef.current) return;
-    const startX = getEventClientX(e);
-    if (!startX) return;
-
-    startXRef.current = startX;
-    currentDxRef.current = 0;
-    startTimeRef.current = Date.now();
-    wasDraggingRef.current = false;
-    setIsDragging(true);
-    setDragOffset(0);
-
-    const handlePointerMove = (moveEvt) => {
-      const currentX = getEventClientX(moveEvt);
-      if (!currentX) return;
-      const dx = currentX - startXRef.current;
-      currentDxRef.current = dx;
-
-      if (Math.abs(dx) > 8) {
-        wasDraggingRef.current = true;
-      }
-      setDragOffset(dx);
-    };
-
-    const handlePointerUp = () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("pointercancel", handlePointerUp);
-      window.removeEventListener("touchmove", handlePointerMove);
-      window.removeEventListener("touchend", handlePointerUp);
-
-      const dx = currentDxRef.current;
-      const dt = Math.max(1, Date.now() - startTimeRef.current);
-      const velocity = Math.abs(dx) / dt;
-
-      setIsDragging(false);
-
-      if (Math.abs(dx) > 20 || (velocity > 0.15 && Math.abs(dx) > 6)) {
-        if (dx < 0) {
-          setHomeMode(gameModesCarousel[(activeIndex + 1) % totalModes].key);
-        } else {
-          setHomeMode(gameModesCarousel[(activeIndex - 1 + totalModes) % totalModes].key);
-        }
-      }
-      setDragOffset(0);
-      currentDxRef.current = 0;
-
-      setTimeout(() => {
-        wasDraggingRef.current = false;
-      }, 100);
-    };
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("pointercancel", handlePointerUp);
-    window.addEventListener("touchmove", handlePointerMove, { passive: true });
-    window.addEventListener("touchend", handlePointerUp);
-  };
-
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (exiting || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
         triggerRightSwipe();
@@ -193,32 +181,21 @@ const HomeScreenCategoryCarousel = ({
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [triggerLeftSwipe, triggerRightSwipe]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [triggerLeftSwipe, triggerRightSwipe, exiting]);
 
   return (
-    <div className={`cards-deck-wrapper ${isDragging ? "is-user-dragging" : ""}`}>
-      {/* Left Half-Circle Tap Zone -> Left Swipe Equivalent */}
-      <div
-        className="deck-click-zone left"
-        onClick={(e) => {
-          // Drop focus after a tap so no "active" state lingers on touch.
-          e.currentTarget.blur();
-          triggerLeftSwipe();
-        }}
-        title={t("previous")}
-        aria-label={t("previous")}
-        role="button"
-        tabIndex={0}
-      >
-        <div className="deck-arrow">
-          <ChevronLeft width={18} height={18} />
-        </div>
-      </div>
+    <div
+      className={`cards-deck-wrapper ${isDragging ? "is-user-dragging" : ""} ${reducedMotion ? "is-reduced-motion" : ""}`}
+    >
+      <DeckArrow
+        side="left"
+        onClick={triggerLeftSwipe}
+        label={t("previous")}
+        icon={<ChevronLeft width={18} height={18} />}
+      />
 
-      <div className="deck-stage" onPointerDown={handlePointerDown}>
+      <div className="deck-stage" ref={stageRef} onPointerDown={handlePointerDown}>
         {gameModesCarousel.map((modeItem, idx) => (
           <ModeCard
             key={modeItem.key}
@@ -226,8 +203,6 @@ const HomeScreenCategoryCarousel = ({
             idx={idx}
             activeIndex={activeIndex}
             totalModes={totalModes}
-            dragOffset={dragOffset}
-            isDragging={isDragging}
             animatingDirection={animatingDirection}
             wasDraggingRef={wasDraggingRef}
             lang={lang}
@@ -236,43 +211,27 @@ const HomeScreenCategoryCarousel = ({
             onOpenConquest={onOpenConquest}
             onOpenConquestRules={onOpenConquestRules}
             onSelectSideCard={handleSelectSideCard}
+            reducedMotion={reducedMotion}
           />
         ))}
       </div>
 
-      {/* Right Half-Circle Tap Zone -> Right Swipe Equivalent */}
-      <div
-        className="deck-click-zone right"
-        onClick={(e) => {
-          // Drop focus after a tap so no "active" state lingers on touch.
-          e.currentTarget.blur();
-          triggerRightSwipe();
+      <DeckArrow
+        side="right"
+        onClick={triggerRightSwipe}
+        label={t("next")}
+        icon={<ChevronRight width={18} height={18} />}
+      />
+
+      <DeckDots
+        items={gameModesCarousel}
+        activeIndex={activeIndex}
+        lang={lang}
+        onDotClick={(idx) => {
+          const direction = idx > activeIndex ? "leftSwipe" : "rightSwipe";
+          triggerAnimatedChange(direction, idx);
         }}
-        title={t("next")}
-        aria-label={t("next")}
-        role="button"
-        tabIndex={0}
-      >
-        <div className="deck-arrow">
-          <ChevronRight width={18} height={18} />
-        </div>
-      </div>
-
-      <div className="deck-dots-row">
-        {gameModesCarousel.map((item, idx) => (
-          <button
-            type="button"
-            key={item.key}
-            className={`deck-dot ${idx === activeIndex ? "active" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              const direction = idx > activeIndex ? "leftSwipe" : "rightSwipe";
-              triggerAnimatedChange(direction, idx);
-            }}
-            title={lang === "fr" ? item.titleFr : item.titleEn}
-          />
-        ))}
-      </div>
+      />
     </div>
   );
 };

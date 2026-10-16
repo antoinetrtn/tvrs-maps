@@ -15,7 +15,6 @@ import {
   DEFAULT_MODE,
   HOME_AUTOROTATE_INTERVAL_MS,
   PERFORMANCE,
-  SCREEN_TRANSITION_MS,
   STORAGE_KEYS,
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
@@ -27,6 +26,8 @@ import { useGameSession } from "./hooks/useGameSession";
 import { useGameSessionProps } from "./hooks/useGameSessionProps";
 import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
+import useScreenExit, { EXIT_MS } from "./hooks/useScreenExit";
+import useScreenGlitch from "./hooks/useScreenGlitch";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
 import { isGuestLaunch } from "./multiplayer/conquestLink";
@@ -35,6 +36,7 @@ import { isSupabaseConfigured } from "./services/supabaseClient";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home");
+  const { showHome, homeExiting } = useScreenExit(currentScreen, EXIT_MS);
 
   const {
     session,
@@ -79,7 +81,7 @@ function App() {
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
-  const [isScreenGlitching, setIsScreenGlitching] = useState(false);
+  const isScreenGlitching = useScreenGlitch(currentScreen);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const [achievementQueue, setAchievementQueue] = useState([]);
@@ -107,19 +109,6 @@ function App() {
   const t = useTranslation(lang);
   const extInputRef = useRef(null);
   const globeFeedbackApplierRef = useRef(null);
-  const prevScreenRef = useRef(currentScreen);
-
-  useEffect(() => {
-    if (prevScreenRef.current !== currentScreen) {
-      const isEnteringGame = currentScreen === "game" && prevScreenRef.current === "home";
-      prevScreenRef.current = currentScreen;
-      if (isEnteringGame) {
-        setIsScreenGlitching(true);
-        const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [currentScreen, showResultsTable]);
 
   useEffect(() => {
     if (isSupabaseConfigured && session === null) {
@@ -462,7 +451,7 @@ function App() {
       {(panicActive || lifeLostFlash) && (
         <div className={`panic-vignette-overlay${panicActive ? "" : " life-lost"}`} />
       )}
-      {currentScreen === "home" ? (
+      {showHome ? (
         <HomeScreen
           onStartGame={startGame}
           theme={theme}
@@ -488,6 +477,7 @@ function App() {
           homeMode={homeMode}
           setHomeMode={setHomeMode}
           onOpenConquest={cq.open}
+          exiting={homeExiting}
         />
       ) : null}
       <GameSessionView

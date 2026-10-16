@@ -1,7 +1,7 @@
 import "./HomeScreen.css";
 
 import { Settings2, User } from "pixelarticons/react";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
 import ConquestRulesSheet from "../multiplayer/ConquestRulesSheet.jsx";
@@ -43,6 +43,7 @@ const HomeScreen = ({
   onOpenAuth,
   homeMode,
   setHomeMode,
+  exiting = false,
 }) => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -50,6 +51,15 @@ const HomeScreen = ({
   const [conquestRulesOpen, setConquestRulesOpen] = useState(false);
   const t = useTranslation(lang);
   const hero = getHomeHeroText(lang);
+
+  useEffect(() => {
+    if (exiting) {
+      setSettingsOpen(false);
+      setProfileOpen(false);
+      setLeaderboardOpen(false);
+      setConquestRulesOpen(false);
+    }
+  }, [exiting]);
 
   const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
   const handleOpenConquestRules = useCallback(() => setConquestRulesOpen(true), []);
@@ -81,7 +91,11 @@ const HomeScreen = ({
   return (
     <>
       <ModeShutter screen="home" />
-      <div className={`home-screen-overlay ${theme}`}>
+      <div
+        className={`home-screen-overlay ${theme} ${exiting ? "is-exiting" : ""}`}
+        inert={exiting ? "" : undefined}
+        aria-hidden={exiting ? "true" : undefined}
+      >
         <header className="home-hero">
           <Logo size="medium" className="home-hero-logo" />
           <h1 className="home-hero-title">{hero.title}</h1>
@@ -95,6 +109,7 @@ const HomeScreen = ({
             lang={lang}
             homeMode={homeMode}
             setHomeMode={setHomeMode}
+            exiting={exiting}
           />
         </div>
 

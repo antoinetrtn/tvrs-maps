@@ -4,6 +4,7 @@
 
 /* ──── Z-INDEX HIERARCHY ──── */
 :root {
+  --z-home-content: 10;
   --z-conquest-cursors: 19;
   --z-conquest: 20;
   --z-screen: 500;
