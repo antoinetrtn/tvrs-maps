@@ -6,6 +6,7 @@ import AchievementToast from "./components/AchievementToast.jsx";
 import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
+import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
 import HomeScreen from "./components/HomeScreen.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
@@ -50,7 +51,7 @@ function App() {
   const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [homeMode, setHomeMode] = useState("countries");
+  const [homeMode, setHomeMode] = useState(HOME_CONQUEST_KEY);
   const prevActiveDataMapRef = useRef(null);
   const prevHomeModeRef = useRef(homeMode);
 
@@ -143,9 +144,8 @@ function App() {
     allCountryKeys,
     totalPossible,
   } = useGeoData({
-    mode: currentScreen === "home" ? homeMode : mode,
-    learnSubMode:
-      currentScreen === "home" ? (homeMode === "capitals" ? "countries" : homeMode) : learnSubMode,
+    mode: currentScreen === "home" ? getHomeGeoMode(homeMode) : mode,
+    learnSubMode: currentScreen === "home" ? getHomeLearnSubMode(homeMode) : learnSubMode,
   });
 
   if (
@@ -274,7 +274,7 @@ function App() {
     resetGame(DEFAULT_MODE);
     setSelectedCountry(null);
     setMode(DEFAULT_MODE);
-    setHomeMode("countries");
+    setHomeMode(HOME_CONQUEST_KEY);
     setShowLearnPanel(false);
     setLearnSearchQuery("");
     setShowInfoModal(false);
@@ -447,7 +447,7 @@ function App() {
     globeFeedbackApplierRef,
     livesLeft,
     isHardcoreRun,
-    homeMode,
+    homeMode: getHomeGeoMode(homeMode),
   });
 
   const cq = useConquestLayer({ currentScreen, setCurrentScreen, lang, userProfile, sessionView });

@@ -97,7 +97,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
 
     // Select Departments card via dots
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(2).click();
+    await dots.nth(3).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -133,7 +133,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
 
     // Select US States card via dots
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(3).click();
+    await dots.nth(4).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");

@@ -1,9 +1,10 @@
 import "./HomeScreen.css";
 
-import { Chess, Settings2, User } from "pixelarticons/react";
+import { Settings2, User } from "pixelarticons/react";
 import React, { useCallback, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
+import ConquestRulesSheet from "../multiplayer/ConquestRulesSheet.jsx";
 import { getLevelAndProgress } from "../utils/gamification";
 import GlassIconButton from "./GlassIconButton";
 import { getHomeHeroText } from "./homeHeroText";
@@ -45,10 +46,13 @@ const HomeScreen = ({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [conquestRulesOpen, setConquestRulesOpen] = useState(false);
   const t = useTranslation(lang);
   const hero = getHomeHeroText(lang);
 
   const handleCloseProfile = useCallback(() => setProfileOpen(false), []);
+  const handleOpenConquestRules = useCallback(() => setConquestRulesOpen(true), []);
+  const handleCloseConquestRules = useCallback(() => setConquestRulesOpen(false), []);
 
   const handleOpenAuth = useCallback(() => {
     setProfileOpen(false);
@@ -85,19 +89,12 @@ const HomeScreen = ({
         <div className="home-stage-container">
           <HomeScreenCategoryCarousel
             onStartGame={onStartGame}
+            onOpenConquest={onOpenConquest}
+            onOpenConquestRules={handleOpenConquestRules}
             lang={lang}
             homeMode={homeMode}
             setHomeMode={setHomeMode}
           />
-          {onOpenConquest && (
-            <button type="button" className="conquest-home-entry" onClick={onOpenConquest}>
-              <Chess width={18} height={18} className="conquest-home-icon" aria-hidden="true" />
-              <span className="conquest-home-label">
-                {lang === "fr" ? "Conquête 1v1" : "Conquest 1v1"}
-              </span>
-              <span className="conquest-home-badge">{lang === "fr" ? "Nouveau" : "New"}</span>
-            </button>
-          )}
         </div>
 
         <div className="home-bottom-right">
@@ -238,6 +235,8 @@ const HomeScreen = ({
         theme={theme}
         isOpen={leaderboardOpen}
       />
+
+      <ConquestRulesSheet open={conquestRulesOpen} onClose={handleCloseConquestRules} lang={lang} />
     </>
   );
 };

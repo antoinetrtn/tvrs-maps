@@ -97,10 +97,6 @@
     margin-top: auto;
   }
 
-  .home-stage-container .conquest-home-entry {
-    margin-top: var(--spacing-sm);
-  }
-
   .home-bottom-right {
     position: relative;
     bottom: auto;
@@ -425,9 +421,5 @@
 
   .home-hero-sub {
     display: none;
-  }
-
-  .home-stage-container .conquest-home-entry {
-    margin-top: var(--spacing-xs);
   }
 }
