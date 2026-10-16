@@ -1,6 +1,5 @@
 import "./LeaderboardScreen.css";
 import "./ui/ui.css";
-import "./LeaderboardScreenMobile.css";
 
 import {
   Clock,
@@ -25,7 +24,7 @@ import { formatTime } from "../utils/utils";
 import AtlasState from "./AtlasState";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./LeaderboardRow";
-import OptionGroup from "./ui/OptionGroup";
+import TabBar from "./ui/TabBar";
 
 const MODE_ICONS = {
   countries: <Globe width={16} height={16} aria-hidden="true" />,
@@ -364,7 +363,8 @@ const LeaderboardScreen = ({
           <Close width={20} height={20} />
         </button>
       </div>
-      <OptionGroup
+      <TabBar
+        level={1}
         className="leaderboard-tabs"
         label={t("global_leaderboard")}
         options={[
@@ -401,28 +401,24 @@ const LeaderboardScreen = ({
           <div className="leaderboard-column">
             <div className="leaderboard-controls">
               {/* Game mode selector chips */}
-              <div className="nav-chips" role="radiogroup" aria-label={t("game_modes") || "Modes"}>
-                {["countries", "capitals", "departments", "rivers_mountains"].map((mKey) => {
-                  const full = t(`mode_${mKey}`);
-                  const short = t(`mode_${mKey}_short`) || full;
-                  const isActive = colMode === mKey;
-                  return (
-                    <button
-                      key={mKey}
-                      type="button"
-                      role="radio"
-                      aria-checked={isActive}
-                      className={`nav-chip ${isActive ? "active" : ""}`}
-                      onClick={() => setColMode(mKey)}
-                      aria-label={full}
-                      title={full}
-                    >
-                      {MODE_ICONS[mKey]}
-                      <span>{short}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <TabBar
+                level={2}
+                label={t("game_modes") || "Modes"}
+                options={["countries", "capitals", "departments", "rivers_mountains"].map(
+                  (mKey) => {
+                    const full = t(`mode_${mKey}`);
+                    const short = t(`mode_${mKey}_short`) || full;
+                    return {
+                      value: mKey,
+                      label: short,
+                      title: full,
+                      icon: MODE_ICONS[mKey],
+                    };
+                  }
+                )}
+                value={colMode}
+                onChange={setColMode}
+              />
             </div>
 
             {/* Stats Summary cards always displayed at the top of active mode */}

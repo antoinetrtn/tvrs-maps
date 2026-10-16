@@ -30,7 +30,7 @@ src/
                               composants globaux réutilisables (.btn-primary, glitch…).
   styles/
     panelSystem.css           Système unifié panneaux/overlays : sheet-panel,
-                              panel-header, segmented-control, nav-chips, dialogs.
+                              panel-header, TabBar (ui/TabBar), dialogs.
     motion.css                Tokens de motion (--dur-*, --steps-*, --blur-scrim, --stagger),
                               appui « bloc » (px-press-flash), indicateur d'onglet,
                               bandes (px-band-in), cascade (.px-cascade), volets

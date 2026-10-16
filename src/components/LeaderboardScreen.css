@@ -52,14 +52,6 @@
   flex-shrink: 0;
 }
 
-.leaderboard-panel .leaderboard-tabs .ui-option-mark {
-  display: none;
-}
-
-.leaderboard-panel .nav-chip {
-  min-height: 40px;
-}
-
 /* Table styles */
 
 .score-cell {
@@ -125,13 +117,10 @@
 
 /* Loading / empty / error states live in AtlasState.css. */
 
-/* Tabs now use unified .segmented-control from panelSystem.css.
-   Width is controlled via .panel-header .segmented-control { flex: 1 } */
-
 /* --- STATS GRID --- */
 .personal-stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   flex-shrink: 0;
@@ -144,6 +133,7 @@
   justify-content: center;
   gap: var(--spacing-xs);
   min-height: 40px;
+  min-width: 0;
   padding: var(--spacing-xs) var(--spacing-sm);
   text-align: center;
   /* TODO(design): pointed at --glass-bg-subtle, a token that never existed — the
@@ -171,6 +161,10 @@
   font-family: var(--font-display);
   font-size: var(--font-size-base);
   font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .highlight-green {
@@ -336,9 +330,13 @@
 }
 
 @media (max-width: 768px) {
-  .panel-tabs-header {
-    max-width: 220px;
-    margin-right: var(--spacing-xs);
+  .leaderboard-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: var(--spacing-md);
   }
 
   .personal-stats-grid {
@@ -356,5 +354,20 @@
 
   .evolution-chart {
     height: 60px;
+  }
+}
+
+@media (max-width: 360px) {
+  .personal-stats-grid {
+    gap: var(--spacing-xxs);
+  }
+
+  .personal-stat-card {
+    padding: var(--spacing-xs) 2px;
+    gap: var(--spacing-xxs);
+  }
+
+  .personal-stat-card .stat-value {
+    font-size: var(--font-size-xs);
   }
 }
