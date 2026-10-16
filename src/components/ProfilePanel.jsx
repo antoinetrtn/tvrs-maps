@@ -14,7 +14,7 @@ import {
 } from "../services/supabaseClient";
 import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
-import SegmentedControl from "./SegmentedControl";
+import TabBar from "./ui/TabBar";
 import XpBar from "./XpBar";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes
@@ -208,17 +208,19 @@ const ProfilePanel = ({
       onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="panel-header">
-        <SegmentedControl
+        <TabBar
+          level={1}
+          label={t("tab_profile")}
           options={[
             {
               value: "profile",
               label: t("tab_profile"),
-              icon: <User width={14} height={14} className="tab-icon" />,
+              icon: <User width={16} height={16} aria-hidden="true" />,
             },
             {
               value: "stats",
               label: t("tab_stats"),
-              icon: <Trophy width={14} height={14} className="tab-icon" />,
+              icon: <Trophy width={16} height={16} aria-hidden="true" />,
             },
           ]}
           value={activeTab}
@@ -395,17 +397,18 @@ const ProfilePanel = ({
             <div className="badges-gallery-section">
               <span className="section-label">Challenges & Émotes</span>
 
-              <div className="nav-chips">
-                {["all", "general", "continents", "scores", "speed", "relief"].map((cat) => (
-                  <button
-                    key={cat}
-                    className={`nav-chip ${challengesFilter === cat ? "active" : ""}`}
-                    onClick={() => setChallengesFilter(cat)}
-                  >
-                    {filterLabels[cat] || cat}
-                  </button>
-                ))}
-              </div>
+              <TabBar
+                level={2}
+                label="Challenges & Émotes"
+                options={["all", "general", "continents", "scores", "speed", "relief"].map(
+                  (cat) => ({
+                    value: cat,
+                    label: filterLabels[cat] || cat,
+                  })
+                )}
+                value={challengesFilter}
+                onChange={setChallengesFilter}
+              />
 
               <div className="badges-grid scrollbar-styled">
                 {filteredChallenges.map((ch) => {

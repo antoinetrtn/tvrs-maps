@@ -150,14 +150,13 @@
 }
 
 /* Header + tabs */
-.leaderboard-panel .leaderboard-tabs {
+.leaderboard-panel .tab-bar {
   flex-shrink: 0;
   margin-bottom: var(--spacing-md);
 }
 
-.leaderboard-panel .leaderboard-tabs .ui-option {
-  min-width: 0;
-  padding-inline: var(--spacing-xs);
+.leaderboard-panel .leaderboard-controls .tab-bar {
+  margin-bottom: 0;
 }
 
 @media (max-width: 1024px) {

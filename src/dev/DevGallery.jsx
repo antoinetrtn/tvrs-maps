@@ -16,6 +16,7 @@ import OptionGroup from "../components/ui/OptionGroup";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings";
 import Slider from "../components/ui/Slider";
 import Switch from "../components/ui/Switch";
+import TabBar from "../components/ui/TabBar";
 import { ACCENT_PRESETS, getAccentOverrides } from "../config/accentPresets";
 import { getThemeCssVariables } from "../config/designSystem";
 
@@ -38,6 +39,8 @@ const AccentColumn = ({ id }) => {
   const [on, setOn] = useState(true);
   const [minutes, setMinutes] = useState(10);
   const [lang, setLang] = useState("fr");
+  const [tab1, setTab1] = useState("a");
+  const [tab2, setTab2] = useState("opt1");
   return (
     <section className="dg-column" style={accentVars(id)} aria-label={id}>
       <h2 className="dg-column-title">{ACCENT_PRESETS[id].label.fr}</h2>
@@ -88,6 +91,37 @@ const AccentColumn = ({ id }) => {
             { value: "en", label: "English" },
           ]}
         />
+      </Block>
+      <Block title="TabBar">
+        <TabBar
+          level={1}
+          label="Menu principal"
+          value={tab1}
+          onChange={setTab1}
+          options={[
+            { value: "a", label: "Onglet 1" },
+            { value: "b", label: "Onglet 2" },
+            { value: "c", label: "Onglet 3" },
+          ]}
+        />
+        <div style={{ marginTop: "var(--spacing-sm)" }}>
+          <TabBar
+            level={2}
+            label="Sous-menu démo"
+            value={tab2}
+            onChange={setTab2}
+            options={[
+              { value: "opt1", label: "Tous" },
+              { value: "opt2", label: "Général" },
+              { value: "opt3", label: "Continents" },
+              { value: "opt4", label: "Scores" },
+              { value: "opt5", label: "Vitesse" },
+              { value: "opt6", label: "Relief" },
+              { value: "opt7", label: "Spécial" },
+              { value: "opt8", label: "Bonus" },
+            ]}
+          />
+        </div>
       </Block>
       <Block title="SettingsSection / Row">
         <SettingsSection title="Partie">
