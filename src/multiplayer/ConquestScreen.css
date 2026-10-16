@@ -1,7 +1,7 @@
 /* « Conquête » 1v1 — aligned on the UI kit (src/components/ui/ui.css):
    radius-sm, 1px borders, hard offset shadows, Bitcount titles/numbers,
    Space Grotesk text, user accent. Buttons are the shared .btn-primary /
-   .btn-secondary; groups are SettingsSection; ready is a Switch; flag
+   .btn-secondary; groups are SettingsSection; ready CTA lives in ConquestReady.css; flag
    choices are an OptionGroup. Only layout lives here. */
 
 .conquest-overlay {
@@ -180,23 +180,6 @@
   opacity: 1;
 }
 
-.conquest-ready-label {
-  margin-left: auto;
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.conquest-ready-label.is-ready {
-  color: var(--success);
-}
-
-.conquest-player-chip > .conquest-ready-label + .ui-switch {
-  margin-left: 0;
-}
-
 .conquest-code {
   font-size: var(--font-size-xl);
   letter-spacing: 0.12em;
@@ -238,7 +221,6 @@
   color: var(--text-muted);
 }
 
-.conquest-player-chip > .ui-switch,
 .conquest-score {
   margin-left: auto;
 }
