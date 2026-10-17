@@ -1,6 +1,6 @@
 import "./ProfilePanel.css";
 
-import { Close, Lock, Trophy, User } from "pixelarticons/react";
+import { Lock, Trophy, User } from "pixelarticons/react";
 import React, { useEffect, useState } from "react";
 
 import { AVATAR_COLORS } from "../config/designSystem";
@@ -14,8 +14,9 @@ import {
 } from "../services/supabaseClient";
 import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
+import ProfileFooter from "./ProfileFooter";
 import Button from "./ui/Button";
-import IconButton from "./ui/IconButton";
+import PanelCloseButton from "./ui/PanelCloseButton";
 import TabBar from "./ui/TabBar";
 import XpBar from "./XpBar";
 
@@ -228,18 +229,7 @@ const ProfilePanel = ({
           value={activeTab}
           onChange={setActiveTab}
         />
-        <IconButton
-          variant="ghost"
-          size="sm"
-          label={t("close")}
-          className="panel-close-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-        >
-          <Close width={20} height={20} />
-        </IconButton>
+        <PanelCloseButton label={t("close")} onClick={onClose} stopPropagation />
       </div>
 
       <div className="panel-body scrollbar-styled">
@@ -369,35 +359,14 @@ const ProfilePanel = ({
 
                 {formError && <div className="form-feedback error">{formError}</div>}
 
-                {/* Sticky Footer Area */}
-                <div className="profile-sticky-footer">
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={isSaving || (isSupabaseConfigured && !session)}
-                    className={`form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
-                  >
-                    {saveSuccess
-                      ? `✓ ${t("profile_saved")}`
-                      : isSaving
-                        ? t("saving")
-                        : t("save_profile")}
-                  </Button>
-
-                  {/* Clean Logout inside the sticky footer */}
-                  {isSupabaseConfigured && session && (
-                    <div className="profile-signout-wrapper">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="profile-signout-link"
-                        onClick={handleSignOutClick}
-                      >
-                        {t("auth_sign_out")}
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                <ProfileFooter
+                  t={t}
+                  disabled={isSaving || (isSupabaseConfigured && !session)}
+                  isSaving={isSaving}
+                  saveSuccess={saveSuccess}
+                  showSignOut={isSupabaseConfigured && Boolean(session)}
+                  onSignOut={handleSignOutClick}
+                />
               </form>
             </div>
           </div>

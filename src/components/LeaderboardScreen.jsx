@@ -3,7 +3,6 @@ import "./ui/ui.css";
 
 import {
   Clock,
-  Close,
   Flag,
   Gamepad,
   Globe,
@@ -24,7 +23,7 @@ import { formatTime } from "../utils/utils";
 import AtlasState from "./AtlasState";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./LeaderboardRow";
-import IconButton from "./ui/IconButton";
+import PanelCloseButton from "./ui/PanelCloseButton";
 import TabBar from "./ui/TabBar";
 
 const MODE_ICONS = {
@@ -360,15 +359,7 @@ const LeaderboardScreen = ({
     >
       <div className="panel-header">
         <h2 className="panel-title">{t("global_leaderboard")}</h2>
-        <IconButton
-          variant="ghost"
-          size="sm"
-          label={t("close")}
-          className="panel-close-btn"
-          onClick={onBack}
-        >
-          <Close width={20} height={20} />
-        </IconButton>
+        <PanelCloseButton label={t("close")} onClick={onBack} />
       </div>
       <TabBar
         level={1}

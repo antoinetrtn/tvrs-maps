@@ -8,6 +8,7 @@ const SIZES = ["sm", "md", "lg"];
 /**
  * IconButton — square icon-only button of the kit.
  *
+ * - `title={null}` removes the native tooltip (when a custom `data-tooltip` is used).
  * - `label` is REQUIRED: it becomes `aria-label` and the native tooltip (`title`). In development
  *   a missing label is reported through `console.error` (the button still renders).
  * - `variant`: glass (solid glass surface, default) · outline (bordered, transparent) ·
@@ -48,7 +49,7 @@ const IconButton = React.forwardRef(function IconButton(
       type={type}
       className={classes}
       aria-label={label}
-      title={title ?? label}
+      title={title !== undefined ? title : label}
       {...rest}
     >
       {children}

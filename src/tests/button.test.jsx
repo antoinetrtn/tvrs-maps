@@ -152,3 +152,27 @@ describe("IconButton", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 });
+
+describe("PanelCloseButton / IconButton title", () => {
+  it("PanelCloseButton is a labelled ghost icon button that closes", async () => {
+    const { default: PanelCloseButton } = await import("../components/ui/PanelCloseButton");
+    const onClick = vi.fn();
+    render(<PanelCloseButton label="Fermer" onClick={onClick} />);
+    const el = screen.getByRole("button", { name: "Fermer" });
+    expect(el.getAttribute("type")).toBe("button");
+    expect(el.className).toContain("panel-close-btn");
+    fireEvent.click(el);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("IconButton uses the label as native title unless title={null}", () => {
+    const { rerender } = render(<IconButton label="Aide">?</IconButton>);
+    expect(screen.getByRole("button").getAttribute("title")).toBe("Aide");
+    rerender(
+      <IconButton label="Aide" title={null}>
+        ?
+      </IconButton>
+    );
+    expect(screen.getByRole("button").getAttribute("title")).toBeNull();
+  });
+});

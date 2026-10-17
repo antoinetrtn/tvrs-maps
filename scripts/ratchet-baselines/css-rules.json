@@ -29,10 +29,9 @@
   "glow-shadow": {
     "src/App.css": 7,
     "src/components/AchievementToast.css": 1,
-    "src/components/ConfirmationModal.css": 1,
     "src/components/EndScreen.css": 7,
     "src/components/GameDataPanel.css": 2,
-    "src/components/GameHUD.css": 4,
+    "src/components/GameHUD.css": 3,
     "src/components/HomeScreen.css": 6,
     "src/components/HomeScreenCategoryCarousel.css": 4,
     "src/components/LeaderboardScreen.css": 7,
@@ -45,7 +44,7 @@
   "important": {
     "src/App.css": 5,
     "src/components/EndScreen.css": 1,
-    "src/components/GameHUD.css": 27,
+    "src/components/GameHUD.css": 23,
     "src/components/HomeScreen.css": 14,
     "src/components/HomeScreenCarouselMotion.css": 13,
     "src/components/HomeScreenCategoryCarousel.css": 9,
@@ -59,13 +58,11 @@
     "src/index.css": 6,
     "src/multiplayer/ConquestRules.css": 2,
     "src/multiplayer/RulesIllustration.css": 1,
-    "src/styles/buttons.css": 5,
     "src/styles/motion.css": 6,
-    "src/styles/panelSystem.css": 18
+    "src/styles/panelSystem.css": 16
   },
   "outline-none": {
     "src/components/GameDataPanel.css": 1,
-    "src/components/GameHUD.css": 1,
     "src/components/HomeScreenCategoryCarousel.css": 1,
     "src/components/ProfilePanel.css": 1,
     "src/index.css": 1

@@ -1,13 +1,13 @@
 import "./ui/ui.css";
 
-import { Close, Earth, Globe } from "pixelarticons/react";
+import { Earth, Globe } from "pixelarticons/react";
 import React from "react";
 
 import { useTranslation } from "../config/i18n";
 import AccentPicker from "./AccentPicker";
 import GlobeDisplaySettings from "./GlobeDisplaySettings";
-import IconButton from "./ui/IconButton";
 import OptionGroup from "./ui/OptionGroup";
+import PanelCloseButton from "./ui/PanelCloseButton";
 import { SettingsRow, SettingsSection } from "./ui/Settings";
 import Slider from "./ui/Slider";
 import Switch from "./ui/Switch";
@@ -58,15 +58,7 @@ const SettingsPanel = ({
         <h2 className="panel-title" id="settings-panel-title">
           {t("settings")}
         </h2>
-        <IconButton
-          variant="ghost"
-          size="sm"
-          label={t("close")}
-          className="panel-close-btn"
-          onClick={onClose}
-        >
-          <Close width={20} height={20} />
-        </IconButton>
+        <PanelCloseButton label={t("close")} onClick={onClose} />
       </div>
 
       <div className="panel-body scrollbar-styled">

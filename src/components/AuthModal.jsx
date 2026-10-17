@@ -1,6 +1,6 @@
 import "./AuthModal.css";
 
-import { ArrowLeft, Close, Earth, Gamepad, User } from "pixelarticons/react";
+import { ArrowLeft, Earth, Gamepad, User } from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -8,6 +8,7 @@ import { useTranslation } from "../config/i18n";
 import { signInWithEmail, signInWithGoogle, signUpWithEmail } from "../services/supabaseClient";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
+import PanelCloseButton from "./ui/PanelCloseButton";
 
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {
   const t = useTranslation(lang);
@@ -316,15 +317,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         </IconButton>
       )}
       <h2 className="panel-title">{title}</h2>
-      <IconButton
-        variant="ghost"
-        size="sm"
-        label={t("close")}
-        className="panel-close-btn"
-        onClick={onClose}
-      >
-        <Close width={18} height={18} />
-      </IconButton>
+      <PanelCloseButton label={t("close")} onClick={onClose} iconSize={18} />
     </div>
   );
 
