@@ -20,10 +20,12 @@ import { isConquestEnabled } from "../multiplayer/conquestConfig";
 import ConquestLeaderboard from "../multiplayer/ConquestLeaderboard.jsx";
 import { getLeaderboard, getUserHistory, isSupabaseConfigured } from "../services/supabaseClient";
 import { formatTime } from "../utils/utils";
-import AtlasState from "./AtlasState";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./LeaderboardRow";
 import Dialog, { DialogTitle } from "./ui/Dialog";
+import EmptyState from "./ui/EmptyState";
+import ErrorState from "./ui/ErrorState";
+import LoadingState from "./ui/LoadingState";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import TabBar from "./ui/TabBar";
 
@@ -286,10 +288,10 @@ const LeaderboardScreen = ({
   const isSignedIn = Boolean(session?.user);
 
   const renderGlobalContent = () => {
-    if (!isSupabaseConfigured) return <AtlasState title={t("not_connected")} srOnly />;
-    if (loading) return <AtlasState variant="loading" title={t("connecting")} srOnly />;
-    if (error) return <AtlasState variant="error" title={error} />;
-    if (scoresData.length === 0) return <AtlasState title={t("empty_leaderboard")} srOnly />;
+    if (!isSupabaseConfigured) return <EmptyState title={t("not_connected")} srOnly />;
+    if (loading) return <LoadingState title={t("connecting")} srOnly />;
+    if (error) return <ErrorState title={error} />;
+    if (scoresData.length === 0) return <EmptyState title={t("empty_leaderboard")} srOnly />;
     return (
       <LeaderboardList label={t("global_leaderboard")}>
         {scoresData.map((row, index) => (
@@ -309,7 +311,7 @@ const LeaderboardScreen = ({
   const renderHistoryContent = () => {
     if (!isSupabaseConfigured) {
       return (
-        <AtlasState
+        <EmptyState
           title={t("not_connected")}
           hint={
             lang === "fr"
@@ -322,15 +324,15 @@ const LeaderboardScreen = ({
     }
 
     if (historyLoading) {
-      return <AtlasState variant="loading" title={t("connecting")} srOnly />;
+      return <LoadingState title={t("connecting")} srOnly />;
     }
 
     if (historyError) {
-      return <AtlasState variant="error" title={historyError} />;
+      return <ErrorState title={historyError} />;
     }
 
     if (historyData.length === 0) {
-      return <AtlasState title={t("no_records_yet")} srOnly />;
+      return <EmptyState title={t("no_records_yet")} srOnly />;
     }
 
     return (

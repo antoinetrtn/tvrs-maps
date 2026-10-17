@@ -1,12 +1,14 @@
 import "./ConquestReady.css";
 
 import { Copy, Crown, ExternalLink } from "pixelarticons/react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
-import AtlasState from "../components/AtlasState";
 import Button from "../components/ui/Button.jsx";
+import ErrorState from "../components/ui/ErrorState.jsx";
 import IconButton from "../components/ui/IconButton.jsx";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
+import TextField from "../components/ui/TextField.jsx";
+import { showToast } from "../components/ui/Toast.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
@@ -33,7 +35,8 @@ const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
           onJoin(code);
         }}
       >
-        <input
+        <TextField
+          variant="outline"
           className="conquest-input conquest-code-input"
           value={code}
           maxLength={8}
@@ -84,18 +87,16 @@ export const shareRoomCode = async (code, nav = globalThis.navigator, text = "")
 };
 
 const RoomShare = ({ t, code }) => {
-  const [toast, setToast] = useState(null);
-  useEffect(() => {
-    if (!toast) return undefined;
-    const id = setTimeout(() => setToast(null), 2200);
-    return () => clearTimeout(id);
-  }, [toast]);
-
-  const onCopy = async () =>
-    setToast((await copyRoomCode(buildConquestLink(code))) ? t.linkCopied : null);
+  const onCopy = async () => {
+    if (await copyRoomCode(buildConquestLink(code))) {
+      showToast({ message: t.linkCopied, tone: "success", duration: 2200 });
+    }
+  };
   const onShare = async () => {
     const result = await shareRoomCode(code, globalThis.navigator, t.shareText(code));
-    if (result === "copied") setToast(t.linkCopied);
+    if (result === "copied") {
+      showToast({ message: t.linkCopied, tone: "success", duration: 2200 });
+    }
   };
 
   return (
@@ -124,9 +125,6 @@ const RoomShare = ({ t, code }) => {
           <span>{t.share}</span>
         </Button>
       </div>
-      <p className={`conquest-copy-toast ${toast ? "is-visible" : ""}`} role="status">
-        {toast || ""}
-      </p>
     </SettingsRow>
   );
 };
@@ -282,7 +280,7 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
         (match ? (
           <p className="conquest-error">{error}</p>
         ) : (
-          <AtlasState variant="error" title={error} hint={t.joinErrorHint} />
+          <ErrorState title={error} hint={t.joinErrorHint} />
         ))}
       <Button
         variant="secondary"

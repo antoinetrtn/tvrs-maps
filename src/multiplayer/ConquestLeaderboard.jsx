@@ -2,8 +2,10 @@ import "../components/ui/ui.css";
 
 import React, { useEffect, useState } from "react";
 
-import AtlasState from "../components/AtlasState";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "../components/LeaderboardRow";
+import EmptyState from "../components/ui/EmptyState";
+import ErrorState from "../components/ui/ErrorState";
+import LoadingState from "../components/ui/LoadingState";
 import { getConquestLeaderboard } from "./conquestApi";
 import { conquestText } from "./conquestText";
 
@@ -42,8 +44,8 @@ const ConquestLeaderboard = ({ lang = "fr", isSignedIn = false }) => {
     };
   }, []);
 
-  if (error) return <AtlasState variant="error" title={error} />;
-  if (!board) return <AtlasState variant="loading" title={t.loading} />;
+  if (error) return <ErrorState title={error} />;
+  if (!board) return <LoadingState title={t.loading} />;
 
   const { top = [], me = null } = board;
   const meInTop = me && top.some((row) => row.user_id === me.user_id);
@@ -51,7 +53,7 @@ const ConquestLeaderboard = ({ lang = "fr", isSignedIn = false }) => {
     <>
       {!isSignedIn && <LeaderboardNotice>{t.boardGuest}</LeaderboardNotice>}
       {top.length === 0 ? (
-        <AtlasState title={t.boardEmpty} />
+        <EmptyState title={t.boardEmpty} />
       ) : (
         <LeaderboardList label={t.boardTitle}>
           {top.map((row) => (

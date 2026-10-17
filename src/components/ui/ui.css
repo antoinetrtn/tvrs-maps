@@ -324,7 +324,7 @@
 .ui-toast-viewport {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--spacing-xl, 32px) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--control-lg) + var(--spacing-xl) + var(--safe-bottom));
   z-index: var(--z-toast);
   transform: translateX(-50%);
   pointer-events: none;
@@ -344,16 +344,43 @@
   color: var(--text-main);
   font-size: var(--font-size-sm);
   pointer-events: auto;
-  animation: ui-toast-in 160ms steps(4, end);
+  animation: ui-toast-in var(--dur-fast) var(--steps-snap);
 }
 
 .ui-toast--success {
-  border-left-color: var(--color-success, var(--accent));
+  border-left-color: var(--color-success, var(--success, var(--accent)));
+}
+
+.ui-toast--error {
+  border-left-color: var(--error, var(--accent));
+}
+
+.ui-toast-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-toast-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.ui-toast-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
 }
 
 .ui-toast-message {
   flex: 1;
   min-width: 0;
+  line-height: 1.3;
 }
 
 .ui-toast-action,

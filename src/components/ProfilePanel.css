@@ -41,35 +41,8 @@
   color: var(--text-muted);
 }
 
-.form-group input {
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-family: var(--font-main);
-  font-size: var(--font-size-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-  border-radius: var(--radius-sm);
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent-soft);
-}
-
-.form-group input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.form-group input:focus:not(:focus-visible) {
-  outline: none;
+.profile-form-header .ui-textfield-field {
+  margin-bottom: var(--spacing-md);
 }
 
 /* Unified Grid: 4 columns for Avatars, Colors and Badges */

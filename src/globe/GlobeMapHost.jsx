@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useSyncExternalStore } from "react";
 
-import { showToast, ToastViewport } from "../components/ui/Toast";
+import { showToast } from "../components/ui/Toast";
 import GlobeMap from "./GlobeMap.jsx";
 import { useGlobePrefs } from "./globePrefs";
 import {
@@ -60,12 +60,7 @@ const GlobeMapHost = (props) => {
     [renderer]
   );
 
-  return (
-    <>
-      {!probing && <GlobeMap key={renderer} {...props} />}
-      <ToastViewport />
-    </>
-  );
+  return !probing ? <GlobeMap key={renderer} {...props} /> : null;
 };
 
 export default GlobeMapHost;

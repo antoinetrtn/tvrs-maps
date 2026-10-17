@@ -15,16 +15,56 @@ let nextId = 1;
 
 const emit = () => listeners.forEach((fn) => fn());
 
-export function showToast({ message, actionLabel, onAction, tone = "info", duration = 4000 }) {
-  current = { id: nextId++, message, actionLabel, onAction, tone, duration };
+function triggerDismiss(toast) {
+  if (!toast || toast.dismissed) return;
+  toast.dismissed = true;
+  if (typeof toast.onDismiss === "function") {
+    try {
+      toast.onDismiss();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+}
+
+export function showToast({
+  message,
+  title,
+  icon,
+  actionLabel,
+  onAction,
+  onDismiss,
+  tone = "info",
+  duration = 4000,
+}) {
+  if (current) {
+    const prev = current;
+    current = null;
+    triggerDismiss(prev);
+  }
+  const id = nextId++;
+  current = {
+    id,
+    message,
+    title,
+    icon,
+    actionLabel,
+    onAction,
+    onDismiss,
+    tone,
+    duration,
+    dismissed: false,
+  };
   emit();
-  return current.id;
+  return id;
 }
 
 export function dismissToast(id) {
   if (!current || (id !== undefined && current.id !== id)) return;
+  const prev = current;
   current = null;
   emit();
+  triggerDismiss(prev);
 }
 
 const subscribe = (fn) => {
@@ -33,9 +73,26 @@ const subscribe = (fn) => {
 };
 const getCurrent = () => current;
 
-export const Toast = ({ message, actionLabel, onAction, tone = "info", onClose }) => (
-  <div className={`ui-toast ui-toast--${tone}`}>
-    <span className="ui-toast-message">{message}</span>
+export const Toast = ({
+  message,
+  title,
+  icon,
+  actionLabel,
+  onAction,
+  tone = "info",
+  onClose,
+  role,
+}) => (
+  <div className={`ui-toast ui-toast--${tone}`} data-tone={tone} role={role}>
+    {icon ? (
+      <span className="ui-toast-icon" aria-hidden="true">
+        {icon}
+      </span>
+    ) : null}
+    <div className="ui-toast-content">
+      {title ? <span className="ui-toast-title">{title}</span> : null}
+      {message ? <span className="ui-toast-message">{message}</span> : null}
+    </div>
     {actionLabel ? (
       <Button variant="ghost" size="sm" className="ui-toast-action" onClick={onAction}>
         {actionLabel}
@@ -62,12 +119,19 @@ export const ToastViewport = () => {
     const timer = setTimeout(() => dismissToast(toast.id), toast.duration);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  const isError = toast?.tone === "error";
+  const role = isError ? "alert" : "status";
+  const ariaLive = isError ? "assertive" : "polite";
+
   const viewport = (
-    <div className="ui-toast-viewport" role="status" aria-live="polite">
+    <div className="ui-toast-viewport" role={role} aria-live={ariaLive}>
       {toast ? (
         <Toast
           key={toast.id}
+          title={toast.title}
           message={toast.message}
+          icon={toast.icon}
           tone={toast.tone}
           actionLabel={toast.actionLabel}
           onAction={toast.onAction}

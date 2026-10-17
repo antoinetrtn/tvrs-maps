@@ -2,13 +2,14 @@ import "./App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import AchievementToast from "./components/AchievementToast.jsx";
 import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import GeoDataStatus from "./components/GeoDataStatus.jsx";
 import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
 import HomeScreen from "./components/HomeScreen.jsx";
+import InvaderAvatar from "./components/InvaderAvatar.jsx";
+import { showToast, ToastViewport } from "./components/ui/Toast.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
   DEFAULT_GAME_DURATION_SEC,
@@ -98,6 +99,20 @@ function App() {
     () => setAchievementQueue((prev) => prev.slice(1)),
     []
   );
+
+  const shownAchievementRef = useRef(null);
+  useEffect(() => {
+    if (!activeAchievement || shownAchievementRef.current === activeAchievement) return;
+    shownAchievementRef.current = activeAchievement;
+    const { title, message, invaderId, color } = activeAchievement;
+    showToast({
+      title,
+      message,
+      icon: <InvaderAvatar invaderId={invaderId} color={color} size={36} />,
+      duration: 4000,
+      onDismiss: handleCloseAchievement,
+    });
+  }, [activeAchievement, handleCloseAchievement]);
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
@@ -502,15 +517,7 @@ function App() {
         />
       )}
 
-      {activeAchievement && (
-        <AchievementToast
-          title={activeAchievement.title}
-          message={activeAchievement.message}
-          invaderId={activeAchievement.invaderId}
-          color={activeAchievement.color}
-          onClose={handleCloseAchievement}
-        />
-      )}
+      <ToastViewport />
       <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
       <AuthModal
         isOpen={showAuthModal}

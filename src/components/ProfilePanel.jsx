@@ -19,6 +19,7 @@ import Button from "./ui/Button";
 import Dialog from "./ui/Dialog";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import TabBar from "./ui/TabBar";
+import TextField from "./ui/TextField";
 import XpBar from "./XpBar";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes
@@ -266,19 +267,17 @@ const ProfilePanel = ({
                 <div className="profile-form-middle scrollbar-styled">
                   {/* Sticky Top Header Area (nom/username sticky, like mobile no-double-scroll logic) */}
                   <div className="profile-form-header">
-                    <div className="form-group" style={{ width: "100%" }}>
-                      <label htmlFor="profile-username-input">{t("username")}</label>
-                      <input
-                        id="profile-username-input"
-                        type="text"
-                        value={usernameInput}
-                        onChange={(e) => setUsernameInput(e.target.value)}
-                        placeholder="Pseudo..."
-                        maxLength={20}
-                        className="glass-panel"
-                        disabled={isSupabaseConfigured && !session}
-                      />
-                    </div>
+                    <TextField
+                      id="profile-username-input"
+                      label={t("username")}
+                      type="text"
+                      value={usernameInput}
+                      onChange={(e) => setUsernameInput(e.target.value)}
+                      placeholder="Pseudo..."
+                      maxLength={20}
+                      className="glass-panel"
+                      disabled={isSupabaseConfigured && !session}
+                    />
                   </div>
 
                   {/* XP progression card */}
