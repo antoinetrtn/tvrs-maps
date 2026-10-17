@@ -15,6 +15,16 @@
   --dur-fling: 190ms;
   --dur-settle: 260ms;
   --dur-loop: 900ms; /* Looping stepped indicators (e.g. map-data loading cells) */
+  --dur-pop: 350ms; /* Score tick, label appear */
+  --dur-stamp: 450ms; /* Stamp / trophy entrance */
+  --dur-fill: 600ms; /* Progress bar fills */
+  --dur-reveal: 800ms; /* Fade-in reveals, pulses */
+  --dur-count: 1000ms; /* Counters, flashes, blinks */
+  --dur-ambient: 2000ms; /* Slow ambient loops */
+  --dur-ambient-slow: 3000ms; /* Slowest ambient loops (twinkle) */
+  --dur-toast: 4000ms; /* Auto-dismissing toast lifetime */
+  --dur-step: 100ms; /* Unit for staggered delays: calc(var(--dur-step) * n) */
+  --dur-reduced: 0.01ms; /* Reduced-motion collapse */
 
   /* Easings (smooth, for non-pixel matter) */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -163,10 +173,10 @@
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: var(--dur-reduced) !important;
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: var(--dur-reduced) !important;
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }

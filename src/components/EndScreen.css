@@ -57,8 +57,7 @@
   font-family: var(--font-display);
   margin: 0 0 var(--spacing-xs);
   font-size: var(--font-size-xs);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--text-muted);
 }
 
@@ -82,7 +81,7 @@
   z-index: 6;
   min-height: var(--control-lg);
   padding: var(--spacing-xs) var(--spacing-lg);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-md);
   pointer-events: auto;
   animation: slideUp var(--transition-emphasized) both;
@@ -274,7 +273,7 @@
   position: relative;
   width: 48px;
   height: 4px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--subtle-tint-strong);
   overflow: hidden;
 }
@@ -282,7 +281,7 @@
 .progress-fill {
   display: block;
   height: 100%;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--continent-color);
   transition: width 1s var(--ease-out);
 }

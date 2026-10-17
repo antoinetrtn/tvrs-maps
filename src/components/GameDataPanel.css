@@ -171,12 +171,20 @@
   color: var(--text-main);
   font-family: var(--font-main);
   font-size: var(--font-size-md);
-  outline: none;
   transition: border-color var(--transition-fast);
 }
 
 .data-panel-search-input:focus {
   border-color: var(--accent);
+}
+
+.data-panel-search-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.data-panel-search-input:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .data-panel-body {
@@ -319,7 +327,7 @@
 .data-panel-row .status-dot {
   width: 6px;
   height: 6px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--region-color);
 }
 

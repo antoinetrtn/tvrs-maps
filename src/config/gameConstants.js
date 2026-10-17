@@ -11,6 +11,8 @@
 
 // --- Modes -------------------------------------------------------------------
 // 'learn' is intentionally NOT in gameConfig.PLAY_MODES (it never scores/scrambles).
+import { BREAKPOINTS } from "./breakpoints.js";
+
 export const DEFAULT_MODE = "countries";
 
 // --- Timing ------------------------------------------------------------------
@@ -67,10 +69,7 @@ export const GAME_START_VIEWPOINTS = [
 ];
 export const GAME_START_VIEW_JITTER_DEG = 8;
 
-export const BREAKPOINTS = {
-  mobile: 768,
-  desktop: 1024,
-};
+export { BREAKPOINTS };
 
 /** Width reserved on the right for the data panel (panel + gutters). */
 export function getDataPanelLayoutWidth(viewportWidth) {

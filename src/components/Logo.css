@@ -36,7 +36,7 @@
 
 @media (max-width: 768px) {
   .logo-container {
-    transform-style: flat !important;
+    transform-style: flat;
   }
 }
 

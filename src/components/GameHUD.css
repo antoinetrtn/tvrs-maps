@@ -213,7 +213,7 @@
 .circular-gauge {
   width: var(--control-sm);
   height: var(--control-sm);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-full); /* css-rules-allow: radius-circular — conic gradient dial */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,7 +227,7 @@
   width: 24px;
   height: 24px;
   background: var(--glass-bg);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-full); /* css-rules-allow: radius-circular — conic gradient dial */
 }
 
 .gauge-val {
