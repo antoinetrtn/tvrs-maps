@@ -2,6 +2,13 @@ import "./AnswerSuggestionList.css";
 
 import React from "react";
 
+function handleOptionKeyDown(e, idx, onSelect) {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    onSelect(idx);
+  }
+}
+
 const AnswerSuggestionList = ({
   id = "answer-suggestions-list",
   suggestions = [],
@@ -36,6 +43,7 @@ const AnswerSuggestionList = ({
             className={`suggestion-item ${isSelected ? "is-selected" : ""} ${isFound ? "is-found" : ""}`}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onSelect(idx)}
+            onKeyDown={(e) => handleOptionKeyDown(e, idx, onSelect)}
           >
             <span className="sug-left">
               <span className="sug-text">{s.display}</span>

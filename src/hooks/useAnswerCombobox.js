@@ -61,13 +61,13 @@ function handleEnterKey({
 }) {
   if (import.meta.env.DEV && (currentValue === "WIN100" || currentValue === "LOSE100")) {
     e.preventDefault();
-    if (onEnter && onEnter(currentValue)) {
+    if (onEnter?.(currentValue)) {
       reset();
     }
     return;
   }
 
-  if (!currentValue || !currentValue.trim()) {
+  if (!currentValue?.trim()) {
     return;
   }
 
@@ -92,7 +92,7 @@ export default function useAnswerCombobox({
   t,
 }) {
   const generatedId = useId();
-  const listId = `answer-suggestions-${generatedId.replace(/:/g, "")}`;
+  const listId = `answer-suggestions-${generatedId.replaceAll(":", "")}`;
 
   const [inputValue, setInputValue] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);

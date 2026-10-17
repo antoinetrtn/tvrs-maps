@@ -3,6 +3,62 @@ import { normalizeString } from "./utils";
 
 export const MIN_SUGGEST_CHARS = 3;
 
+function computeDisplay(mapped, key, isCapitalTarget, lang) {
+  if (isCapitalTarget) {
+    if (lang === "fr" && mapped.capital_fr) {
+      return mapped.capital_fr;
+    }
+    return mapped.capital || "";
+  }
+  if (lang === "fr") {
+    return mapped.name_fr || mapped.name_en || key;
+  }
+  return mapped.name_en || key;
+}
+
+function computeSubtext(mode, mapped, isCapitalTarget, lang) {
+  if (mode === "departments") {
+    return mapped.code || null;
+  }
+  if (mode === "rivers_mountains") {
+    const isMountain = mapped.type === "mountain_range" || mapped.type === "mountain";
+    return isMountain ? `🏔️ ${mapped.height || "?"} m` : `💧 ${mapped.length || "?"} km`;
+  }
+  if (isCapitalTarget) {
+    return null;
+  }
+  if (lang === "fr" && mapped.capital_fr) {
+    return mapped.capital_fr;
+  }
+  return mapped.capital || null;
+}
+
+function computeNormalizedAliases(mapped, isCapitalTarget) {
+  if (isCapitalTarget || !Array.isArray(mapped.aliases)) {
+    return [];
+  }
+  return mapped.aliases.map((a) => normalizeString(a)).filter(Boolean);
+}
+
+function buildIndexEntry(key, mapped, isCapitalTarget, mode, lang) {
+  const display = computeDisplay(mapped, key, isCapitalTarget, lang);
+  if (!display) return null;
+
+  const subtext = computeSubtext(mode, mapped, isCapitalTarget, lang);
+  const normalizedTarget = normalizeString(display);
+  const targetWords = normalizedTarget ? normalizedTarget.split(" ").filter(Boolean) : [];
+  const normalizedAliases = computeNormalizedAliases(mapped, isCapitalTarget);
+
+  return {
+    key,
+    display,
+    subtext,
+    normalizedTarget,
+    targetWords,
+    normalizedAliases,
+  };
+}
+
 /**
  * Builds a normalized index of suggestions for quick lookup during quiz modes.
  *
@@ -25,48 +81,80 @@ export function buildSuggestionIndex(
 
   for (const [key, mapped] of Object.entries(countryDataMap)) {
     if (!mapped) continue;
-
-    const nameDisplay =
-      lang === "fr" ? mapped.name_fr || mapped.name_en || key : mapped.name_en || key;
-    const capitalDisplay =
-      lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital || "";
-    const display = isCapitalTarget ? capitalDisplay : nameDisplay;
-
-    if (!display) continue;
-
-    let subtext = null;
-    if (mode === "departments") {
-      subtext = mapped.code || null;
-    } else if (mode === "rivers_mountains") {
-      const isMountain = mapped.type === "mountain_range" || mapped.type === "mountain";
-      subtext = isMountain ? `🏔️ ${mapped.height || "?"} m` : `💧 ${mapped.length || "?"} km`;
-    } else if (isCapitalTarget) {
-      subtext = null;
-    } else {
-      subtext = lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital || null;
+    const entry = buildIndexEntry(key, mapped, isCapitalTarget, mode, lang);
+    if (entry) {
+      index.push(entry);
     }
-
-    const normalizedTarget = normalizeString(display);
-    const targetWords = normalizedTarget ? normalizedTarget.split(" ").filter(Boolean) : [];
-
-    let normalizedAliases = [];
-    if (!isCapitalTarget && Array.isArray(mapped.aliases)) {
-      normalizedAliases = mapped.aliases.map((a) => normalizeString(a)).filter(Boolean);
-    }
-
-    index.push({
-      key,
-      display,
-      subtext,
-      normalizedTarget,
-      targetWords,
-      normalizedAliases,
-    });
   }
 
   index.lang = lang;
   index.mode = mode;
   return index;
+}
+
+function getMatchTier(item, normalizedInput, isShort) {
+  if (item.normalizedTarget === normalizedInput) {
+    return 0;
+  }
+  if (item.normalizedAliases.includes(normalizedInput)) {
+    return 1;
+  }
+  if (isShort) {
+    return -1;
+  }
+  if (item.normalizedTarget.startsWith(normalizedInput)) {
+    return 2;
+  }
+  if (item.targetWords.some((w) => w.startsWith(normalizedInput))) {
+    return 3;
+  }
+  if (item.normalizedAliases.some((a) => a.startsWith(normalizedInput))) {
+    return 4;
+  }
+  return -1;
+}
+
+function collectMatches(index, normalizedInput) {
+  const isShort = normalizedInput.length < MIN_SUGGEST_CHARS;
+  const matches = [];
+
+  for (const item of index) {
+    const tier = getMatchTier(item, normalizedInput, isShort);
+    if (tier !== -1) {
+      matches.push({ tier, item });
+    }
+  }
+
+  return matches;
+}
+
+function isKeyFound(foundSet, key) {
+  return Boolean(foundSet?.has ? foundSet.has(key) : foundSet?.includes?.(key));
+}
+
+function dedupeMatches(matches, foundSet) {
+  const deduplicated = [];
+  const seenIndices = new Map();
+
+  for (const match of matches) {
+    const item = match.item;
+    const found = isKeyFound(foundSet, item.key);
+    const existingIdx = seenIndices.get(item.normalizedTarget);
+
+    if (existingIdx === undefined) {
+      seenIndices.set(item.normalizedTarget, deduplicated.length);
+      deduplicated.push({
+        key: item.key,
+        display: item.display,
+        subtext: item.subtext,
+        found,
+      });
+    } else if (!found) {
+      deduplicated[existingIdx].found = false;
+    }
+  }
+
+  return deduplicated;
 }
 
 /**
@@ -94,64 +182,66 @@ export function getAnswerSuggestions(input, index, { foundSet, limit = 5, lang =
   const normalizedInput = normalizeString(input);
   if (!normalizedInput) return [];
 
-  const isShort = normalizedInput.length < MIN_SUGGEST_CHARS;
-  const langToUse = lang || index.lang || "fr";
-  const matches = [];
-
-  for (const item of index) {
-    let tier = -1;
-
-    if (item.normalizedTarget === normalizedInput) {
-      tier = 0;
-    } else if (item.normalizedAliases.includes(normalizedInput)) {
-      tier = 1;
-    } else if (!isShort) {
-      if (item.normalizedTarget.startsWith(normalizedInput)) {
-        tier = 2;
-      } else if (item.targetWords.some((w) => w.startsWith(normalizedInput))) {
-        tier = 3;
-      } else if (item.normalizedAliases.some((a) => a.startsWith(normalizedInput))) {
-        tier = 4;
-      }
-    }
-
-    if (tier !== -1) {
-      matches.push({ tier, item });
-    }
-  }
-
+  const matches = collectMatches(index, normalizedInput);
   if (matches.length === 0) return [];
 
+  const langToUse = lang || index.lang || "fr";
   matches.sort((a, b) => {
     if (a.tier !== b.tier) return a.tier - b.tier;
     return a.item.display.localeCompare(b.item.display, langToUse);
   });
 
-  const isKeyFound = (key) =>
-    Boolean(foundSet && (foundSet.has ? foundSet.has(key) : foundSet.includes(key)));
+  return dedupeMatches(matches, foundSet).slice(0, limit);
+}
 
-  const deduplicated = [];
-  const seenIndices = new Map();
+function extractLearnEntryData(entry) {
+  if (Array.isArray(entry)) {
+    return { adminKey: entry[0], mapped: entry[1] };
+  }
+  return { adminKey: entry?.key || entry?.id, mapped: entry };
+}
 
-  for (const match of matches) {
-    const item = match.item;
-    const found = isKeyFound(item.key);
-    const existingIdx = seenIndices.get(item.normalizedTarget);
+function getLearnDisplays(mapped, adminKey, lang) {
+  const nameDisplay =
+    lang === "fr" ? mapped.name_fr || mapped.name_en || adminKey : mapped.name_en || adminKey;
+  const capitalDisplay =
+    lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital || null;
+  return { nameDisplay, capitalDisplay };
+}
 
-    if (existingIdx === undefined) {
-      seenIndices.set(item.normalizedTarget, deduplicated.length);
-      deduplicated.push({
-        key: item.key,
-        display: item.display,
-        subtext: item.subtext,
-        found,
-      });
-    } else if (!found) {
-      deduplicated[existingIdx].found = false;
-    }
+function isEligibleLearnTarget(target, inputLength) {
+  return inputLength >= 5 || target.includes(" ") || target.includes("-");
+}
+
+function createLearnSuggestion(entry, normalizedInput, rawInput, lang) {
+  const { adminKey, mapped } = extractLearnEntryData(entry);
+  if (!mapped) return null;
+
+  const { nameDisplay, capitalDisplay } = getLearnDisplays(mapped, adminKey, lang);
+  const normalizedNameToMatch = normalizeString(nameDisplay);
+  const normalizedCapitalToMatch = capitalDisplay ? normalizeString(capitalDisplay) : null;
+
+  const matchName = normalizedNameToMatch.includes(normalizedInput);
+  const matchCap = Boolean(normalizedCapitalToMatch?.includes(normalizedInput));
+
+  if (!matchName && !matchCap) {
+    return null;
   }
 
-  return deduplicated.slice(0, limit);
+  const target = matchName ? nameDisplay : capitalDisplay;
+  if (!isEligibleLearnTarget(target, rawInput.length)) {
+    return null;
+  }
+
+  const subtext = matchName
+    ? mapped.capital_fr || mapped.capital
+    : mapped.name_fr || mapped.name_en || adminKey;
+
+  return {
+    key: adminKey,
+    display: target,
+    subtext,
+  };
 }
 
 /**
@@ -174,42 +264,11 @@ export function getLearnSuggestions(input, countryDataMap, { lang = "fr", limit 
   const entries = Array.isArray(countryDataMap) ? countryDataMap : Object.entries(countryDataMap);
 
   for (const entry of entries) {
-    let adminKey;
-    let mapped;
-    if (Array.isArray(entry)) {
-      [adminKey, mapped] = entry;
-    } else {
-      mapped = entry;
-      adminKey = entry.key || entry.id;
+    const suggestion = createLearnSuggestion(entry, normalizedInput, input, lang);
+    if (suggestion) {
+      results.push(suggestion);
+      if (results.length >= limit) break;
     }
-    if (!mapped) continue;
-
-    const nameDisplay =
-      lang === "fr" ? mapped.name_fr || mapped.name_en || adminKey : mapped.name_en || adminKey;
-    const capitalDisplay =
-      lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital || null;
-
-    const normalizedNameToMatch = normalizeString(nameDisplay);
-    const normalizedCapitalToMatch = capitalDisplay ? normalizeString(capitalDisplay) : "";
-
-    const matchName = normalizedNameToMatch.includes(normalizedInput);
-    const matchCap = Boolean(
-      normalizedCapitalToMatch && normalizedCapitalToMatch.includes(normalizedInput)
-    );
-
-    if (matchName || matchCap) {
-      const target = matchName ? nameDisplay : capitalDisplay;
-      if (input.length >= 5 || target.includes(" ") || target.includes("-")) {
-        results.push({
-          key: adminKey,
-          display: target,
-          subtext: matchName
-            ? mapped.capital_fr || mapped.capital
-            : mapped.name_fr || mapped.name_en || adminKey,
-        });
-      }
-    }
-    if (results.length >= limit) break;
   }
 
   return results.slice(0, limit);

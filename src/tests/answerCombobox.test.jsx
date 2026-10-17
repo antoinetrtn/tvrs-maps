@@ -273,4 +273,24 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(option.textContent).toContain("✓");
     expect(option.textContent).toContain("trouvé");
   });
+
+  it("(12) clavier direct sur option: Enter ou Espace sur l'élément option déclenche onSelect", () => {
+    const { container } = renderHUD();
+    const input = screen.getByRole("combobox");
+
+    fireEvent.change(input, { target: { value: "fran" } });
+    const option = container.querySelector('[role="option"]');
+    expect(option).not.toBeNull();
+
+    fireEvent.keyDown(option, { key: " " });
+    expect(onEnterMock).toHaveBeenCalledWith("France");
+    expect(input.value).toBe("");
+
+    onEnterMock.mockClear();
+    fireEvent.change(input, { target: { value: "fran" } });
+    const newOption = container.querySelector('[role="option"]');
+    expect(newOption).not.toBeNull();
+    fireEvent.keyDown(newOption, { key: "Enter" });
+    expect(onEnterMock).toHaveBeenCalledWith("France");
+  });
 });
