@@ -46,8 +46,7 @@ import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 import SatelliteImageryLayer from "./SatelliteImageryLayer.jsx";
 
-// Module-level so its identity is stable: an inline arrow here rebuilt the
-// whole lighting rig (lights + inner-glow shader) on every render.
+// Module-level for a stable identity (an inline arrow rebuilt the lighting rig each render).
 const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
 
 const GlobeMap = (props) => {
@@ -333,6 +332,7 @@ const GlobeMap = (props) => {
   });
 
   const { getBiomeAssetsData, getBiomeAltitude, createBiomeThreeObject } = useGlobeBiomes({
+    globeEl,
     mode,
     gameDataMap,
     selectedCountry,

@@ -18,6 +18,8 @@ export const DEFAULT_GAME_DURATION_SEC = 15 * 60; // 15 minutes
 
 // Home-screen showcase: how often the auto-targeted demo country rotates.
 export const HOME_AUTOROTATE_INTERVAL_MS = 5500;
+/** Home globe swaps its layer only once the card carousel has been still this long (ms). */
+export const HOME_GLOBE_SETTLE_MS = 320;
 
 // Mobile soft-keyboard open/close debounce.
 export const KEYBOARD_CLOSE_DELAY_MS = 180;
