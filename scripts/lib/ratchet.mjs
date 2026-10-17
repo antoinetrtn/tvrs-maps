@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+const byName = (a, b) => a.localeCompare(b);
+
 /**
  * Compare current violation counts against baseline counts.
  * Both current and baseline are { [rule: string]: { [file: string]: number } }.
@@ -12,12 +14,12 @@ export function diffCounts(current, baseline) {
 
   const allRules = new Set([...Object.keys(current || {}), ...Object.keys(baseline || {})]);
 
-  for (const rule of Array.from(allRules).sort()) {
+  for (const rule of [...allRules].sort(byName)) {
     const currentFiles = current?.[rule] || {};
     const baselineFiles = baseline?.[rule] || {};
     const allFiles = new Set([...Object.keys(currentFiles), ...Object.keys(baselineFiles)]);
 
-    for (const file of Array.from(allFiles).sort()) {
+    for (const file of [...allFiles].sort(byName)) {
       const to = currentFiles[file] ?? 0;
       const from = baselineFiles[file] ?? 0;
 
@@ -51,10 +53,10 @@ export function loadBaseline(filePath) {
  */
 export function writeBaseline(filePath, counts) {
   const clean = {};
-  for (const rule of Object.keys(counts || {}).sort()) {
+  for (const rule of Object.keys(counts || {}).sort(byName)) {
     const fileEntries = Object.entries(counts[rule] || {})
       .filter(([, count]) => typeof count === "number" && count > 0)
-      .sort(([a], [b]) => a.localeCompare(b));
+      .sort(([a], [b]) => byName(a, b));
     if (fileEntries.length > 0) {
       clean[rule] = Object.fromEntries(fileEntries);
     }
@@ -78,7 +80,7 @@ export function formatSummaryTable(current, baseline, rulesCatalog = {}) {
   let sumNow = 0;
   let sumBaseline = 0;
 
-  for (const rule of Array.from(allRules).sort()) {
+  for (const rule of [...allRules].sort(byName)) {
     const now = Object.values(current?.[rule] || {}).reduce((a, b) => a + b, 0);
     const base = Object.values(baseline?.[rule] || {}).reduce((a, b) => a + b, 0);
     const delta = now - base;
@@ -105,8 +107,8 @@ export function formatSummaryTable(current, baseline, rulesCatalog = {}) {
 
   const totalDelta = sumNow - sumBaseline;
   const totalDeltaStr = totalDelta > 0 ? `+${totalDelta}` : `${totalDelta}`;
-  lines.push(`${"-".repeat(maxRuleLen)}-+-----------+----------+------`);
   lines.push(
+    `${"-".repeat(maxRuleLen)}-+-----------+----------+------`,
     `${pad("Total", maxRuleLen)} | ${padLeft(sumNow, 9)} | ${padLeft(sumBaseline, 8)} | ${padLeft(totalDeltaStr, 4)}`
   );
 

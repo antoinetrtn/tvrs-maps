@@ -44,6 +44,8 @@ export const RULES = {
 const SERIF_RE =
   /(?:(?<!sans-)serif\b|ui-serif\b|\b(?:Georgia|Times\s+New\s+Roman|Times|Playfair|Merriweather|Garamond|Cambria|Palatino)\b)/i;
 
+const HEX_RE = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/;
+
 const DURATION_PROPS = new Set([
   "transition",
   "transition-duration",
@@ -53,26 +55,34 @@ const DURATION_PROPS = new Set([
   "transition-delay",
 ]);
 
-function extractAllowComments(text, isCss) {
-  const lineAllows = new Map();
-  const pattern = isCss
-    ? /\/\*\s*css-rules-allow:\s*([^\*]+?)\*\//gi
-    : /(?:\/\/\s*css-rules-allow:\s*([^\n]+)|\/\*\s*css-rules-allow:\s*([^\*]+)\*\/)/gi;
+const ALLOW_MARKER = "css-rules-allow:";
 
-  let match;
-  while ((match = pattern.exec(text)) !== null) {
-    const rawContent = match[1] || match[2] || "";
-    const rulePart = rawContent.split(/\s+[-—–]\s+|—|–/)[0] || "";
-    const rules = rulePart
+function allowCommentEnd(text, idx) {
+  const lineStart = text.lastIndexOf("\n", idx) + 1;
+  const prefix = text.slice(lineStart, idx);
+  const isBlock = prefix.lastIndexOf("/*") > prefix.lastIndexOf("//");
+  const end = text.indexOf(isBlock ? "*/" : "\n", idx);
+  return end === -1 ? text.length : end;
+}
+
+function extractAllowComments(text) {
+  const lineAllows = new Map();
+  let idx = text.indexOf(ALLOW_MARKER);
+  while (idx !== -1) {
+    const end = allowCommentEnd(text, idx);
+    const rawContent = text.slice(idx + ALLOW_MARKER.length, end);
+    const rules = rawContent
+      .split(/[—–]| - /)[0]
       .split(",")
-      .map((r) => r.trim().toLowerCase())
+      .map((rule) => rule.trim().toLowerCase())
       .filter(Boolean);
-    const startLine = text.slice(0, match.index).split("\n").length;
-    const lineCount = (match[0].match(/\n/g) || []).length;
-    for (let l = startLine; l <= startLine + lineCount; l += 1) {
+    const startLine = text.slice(0, idx).split("\n").length;
+    const endLine = startLine + text.slice(idx, end).split("\n").length - 1;
+    for (let l = startLine; l <= endLine; l += 1) {
       if (!lineAllows.has(l)) lineAllows.set(l, new Set());
-      rules.forEach((r) => lineAllows.get(l).add(r));
+      rules.forEach((rule) => lineAllows.get(l).add(rule));
     }
+    idx = text.indexOf(ALLOW_MARKER, end);
   }
   return lineAllows;
 }
@@ -85,8 +95,7 @@ function splitTopLevelCommas(str) {
   const parts = [];
   let depth = 0;
   let cur = "";
-  for (let i = 0; i < str.length; i += 1) {
-    const c = str[i];
+  for (const c of str) {
     if (c === "(") depth += 1;
     else if (c === ")" && depth > 0) depth -= 1;
     else if (c === "," && depth === 0) {
@@ -100,66 +109,64 @@ function splitTopLevelCommas(str) {
   return parts;
 }
 
+function addDeclaration(scope, raw, startLine) {
+  const colon = raw.indexOf(":");
+  if (colon <= 0) return;
+  const prop = raw.slice(0, colon).trim();
+  const value = raw.slice(colon + 1).trim();
+  if (prop && value)
+    scope.declarations.push({ prop, value, line: startLine, selector: scope.header });
+}
+
+function resetBuffer(st) {
+  st.buf = "";
+  st.bufStart = st.line;
+}
+
+function closeBlock(st) {
+  if (st.stack.length === 0) return resetBuffer(st);
+  const scope = st.stack.at(-1);
+  if (st.buf.trim()) addDeclaration(scope, st.buf.trim(), st.bufStart);
+  st.stack.pop();
+  if (scope.declarations.length > 0) st.rules.push(scope);
+  return resetBuffer(st);
+}
+
+function endDeclaration(st) {
+  if (st.stack.length > 0) addDeclaration(st.stack.at(-1), st.buf.trim(), st.bufStart);
+  resetBuffer(st);
+}
+
+function openBlock(st) {
+  st.stack.push({ header: st.buf.trim(), declarations: [] });
+  resetBuffer(st);
+}
+
+function pushText(st, c) {
+  if (st.buf.trim() === "" && !/\s/.test(c)) st.bufStart = st.line;
+  st.buf += c;
+}
+
+function stepCss(st, c, prev) {
+  if (st.inQ) {
+    if (c === st.inQ && prev !== "\\") st.inQ = null;
+  } else if (c === '"' || c === "'") st.inQ = c;
+  else if (c === "(") st.pDepth += 1;
+  else if (c === ")") st.pDepth = Math.max(0, st.pDepth - 1);
+  else if (st.pDepth === 0 && c === "{") return openBlock(st);
+  else if (st.pDepth === 0 && c === ";") return endDeclaration(st);
+  else if (st.pDepth === 0 && c === "}") return closeBlock(st);
+  else return pushText(st, c);
+  st.buf += c;
+}
+
 function parseCssRules(cssText) {
-  let line = 1,
-    buf = "",
-    bufStart = 1,
-    inQ = null,
-    pDepth = 0;
-  const stack = [],
-    rules = [];
-
-  const addDecl = (scope, raw, startLine) => {
-    const colon = raw.indexOf(":");
-    if (colon <= 0) return;
-    const prop = raw.slice(0, colon).trim();
-    const value = raw.slice(colon + 1).trim();
-    if (prop && value)
-      scope.declarations.push({
-        prop,
-        value,
-        line: startLine,
-        selector: scope.header,
-      });
-  };
-
+  const st = { line: 1, buf: "", bufStart: 1, inQ: null, pDepth: 0, stack: [], rules: [] };
   for (let i = 0; i < cssText.length; i += 1) {
-    const c = cssText[i];
-    if (c === "\n") line += 1;
-    if (inQ) {
-      if (c === inQ && cssText[i - 1] !== "\\") inQ = null;
-      buf += c;
-    } else if (c === '"' || c === "'") {
-      inQ = c;
-      buf += c;
-    } else if (c === "(") {
-      pDepth += 1;
-      buf += c;
-    } else if (c === ")") {
-      if (pDepth > 0) pDepth -= 1;
-      buf += c;
-    } else if (c === "{" && pDepth === 0) {
-      stack.push({ header: buf.trim(), declarations: [] });
-      buf = "";
-      bufStart = line;
-    } else if (c === ";" && pDepth === 0) {
-      if (stack.length > 0) addDecl(stack[stack.length - 1], buf.trim(), bufStart);
-      buf = "";
-      bufStart = line;
-    } else if (c === "}" && pDepth === 0) {
-      if (stack.length > 0) {
-        if (buf.trim()) addDecl(stack[stack.length - 1], buf.trim(), bufStart);
-        const finished = stack.pop();
-        if (finished.declarations.length > 0) rules.push(finished);
-      }
-      buf = "";
-      bufStart = line;
-    } else {
-      if (buf.trim() === "" && c !== " " && c !== "\t" && c !== "\r" && c !== "\n") bufStart = line;
-      buf += c;
-    }
+    if (cssText[i] === "\n") st.line += 1;
+    stepCss(st, cssText[i], cssText[i - 1]);
   }
-  return rules;
+  return st.rules;
 }
 
 function isRadiusProp(prop) {
@@ -186,8 +193,8 @@ function isGlowLayer(layer) {
       if (lengths.length === 2) return false;
       continue;
     }
-    const match = /^([+-]?(?:\d*\.?\d+))(px|rem|em|ex|ch|vw|vh|vmin|vmax|%)?$/i.exec(t);
-    if (match) lengths.push(parseFloat(match[1]));
+    const num = t.replace(/(?:px|rem|em|ex|ch|vw|vh|vmin|vmax|%)$/i, "");
+    if (num !== "" && Number.isFinite(Number(num))) lengths.push(Number(num));
   }
   return lengths.length >= 3 && lengths[2] !== 0;
 }
@@ -206,38 +213,47 @@ function checkGlowShadow(decl) {
   return false;
 }
 
-function checkRadiusDecl(decl, addViolation) {
+function isCircularRadius(decl) {
   const val = decl.value;
-  let circular = val.includes("var(--radius-full)");
-  if (!circular && isRadiusProp(decl.prop)) {
-    if (/(?:^|[^\d])(?:50%|100%)(?:[^\d]|$)/.test(val) || /\b(9999px|999px)\b/i.test(val)) {
-      circular = true;
-    } else {
-      const pxMatches = [...val.matchAll(/\b(\d+(?:\.\d+)?)px\b/gi)];
-      circular = pxMatches.some((m) => parseFloat(m[1]) >= 100);
-    }
-  }
-  if (circular) return void addViolation("radius-circular", decl);
+  if (val.includes("var(--radius-full)")) return true;
+  if (!isRadiusProp(decl.prop)) return false;
+  if (/(?:^|[^\d])(?:50%|100%)(?:[^\d]|$)/.test(val) || /\b(9999px|999px)\b/i.test(val))
+    return true;
+  return [...val.matchAll(/\b(\d+(?:\.\d+)?)px\b/gi)].some((m) => Number.parseFloat(m[1]) >= 100);
+}
 
-  if (isRadiusProp(decl.prop)) {
-    const clean = val.replace(/var\([^)]*\)/g, "").replace(/!\s*important/gi, "");
-    let hasLarge = false;
-    for (const m of clean.matchAll(/\b(\d+(?:\.\d+)?)px\b/gi)) {
-      if (parseFloat(m[1]) > 8) hasLarge = true;
-    }
-    for (const m of clean.matchAll(/\b(\d+(?:\.\d+)?)(rem|em)\b/gi)) {
-      if (parseFloat(m[1]) * 16 > 8) hasLarge = true;
-    }
-    if (hasLarge) addViolation("radius-large", decl);
-  }
+function hasLargeRadius(value) {
+  const clean = value.replaceAll(/var\([^)]*\)/g, "").replaceAll(/!\s*important/gi, "");
+  const px = [...clean.matchAll(/\b(\d+(?:\.\d+)?)px\b/gi)].some(
+    (m) => Number.parseFloat(m[1]) > 8
+  );
+  const rem = [...clean.matchAll(/\b(\d+(?:\.\d+)?)(?:rem|em)\b/gi)].some(
+    (m) => Number.parseFloat(m[1]) * 16 > 8
+  );
+  return px || rem;
+}
+
+function checkRadiusDecl(decl, addViolation) {
+  if (isCircularRadius(decl)) return addViolation("radius-circular", decl);
+  if (isRadiusProp(decl.prop) && hasLargeRadius(decl.value)) addViolation("radius-large", decl);
+}
+
+function hasRawTime(value) {
+  let val = value;
+  while (/var\([^()]*\)/.test(val)) val = val.replaceAll(/var\([^()]*\)/g, " ");
+  return val.split(/[\s,()]+/).some((token) => {
+    const lower = token.toLowerCase();
+    let num = "";
+    if (lower.endsWith("ms")) num = lower.slice(0, -2);
+    else if (lower.endsWith("s")) num = lower.slice(0, -1);
+    return num !== "" && Number.isFinite(Number(num)) && Number(num) !== 0;
+  });
 }
 
 function checkDuration(decl, addViolation) {
-  if (!DURATION_PROPS.has(decl.prop.toLowerCase())) return;
-  let val = decl.value;
-  while (/var\([^()]*\)/.test(val)) val = val.replace(/var\([^()]*\)/g, "");
-  const timeMatches = [...val.matchAll(/(?:^|[^a-zA-Z0-9_.-])(\d*\.?\d+)(s|ms)\b/gi)];
-  if (timeMatches.some((m) => parseFloat(m[1]) !== 0)) addViolation("duration-raw", decl);
+  if (DURATION_PROPS.has(decl.prop.toLowerCase()) && hasRawTime(decl.value)) {
+    addViolation("duration-raw", decl);
+  }
 }
 
 function checkOutline(decl, addViolation) {
@@ -262,50 +278,51 @@ function checkBlurCss(decl, addViolation) {
   const p = decl.prop.toLowerCase();
   if (["filter", "backdrop-filter", "-webkit-backdrop-filter"].includes(p)) {
     const matches = [...decl.value.matchAll(/blur\(\s*(\d+(?:\.\d+)?)\s*px\s*\)/gi)];
-    if (matches.some((m) => parseFloat(m[1]) > 4)) addViolation("blur-over-4px", decl);
+    if (matches.some((m) => Number.parseFloat(m[1]) > 4)) addViolation("blur-over-4px", decl);
   } else if (decl.prop.startsWith("--") && /blur/i.test(decl.prop)) {
-    const matches = [...decl.value.matchAll(/(\d+(?:\.\d+)?)\s*px\b/gi)];
-    if (matches.some((m) => parseFloat(m[1]) > 4)) addViolation("blur-over-4px", decl);
+    const compact = decl.value.replaceAll(/\s/g, "");
+    const matches = [...compact.matchAll(/(\d+(?:\.\d+)?)px\b/gi)];
+    if (matches.some((m) => Number.parseFloat(m[1]) > 4)) addViolation("blur-over-4px", decl);
   }
 }
 
-function checkCssDecl(decl, siblings, filePath, addViolation) {
-  if (filePath !== "src/index.css" && !filePath.endsWith("/src/index.css")) {
-    if (/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/.test(decl.value)) {
-      addViolation("hex-color", decl);
-    }
-  }
+function checkBasicProps(decl, filePath, addViolation) {
+  const prop = decl.prop.toLowerCase();
+  const isIndexCss = filePath === "src/index.css" || filePath.endsWith("/src/index.css");
+  if (!isIndexCss && HEX_RE.test(decl.value)) addViolation("hex-color", decl);
   if (/!\s*important\b/i.test(decl.value)) addViolation("important", decl);
-
-  if (decl.prop.toLowerCase() === "z-index") {
-    const cleanZ = decl.value.replace(/!\s*important/gi, "").trim();
+  if (prop === "z-index") {
+    const cleanZ = decl.value.replaceAll(/!\s*important/gi, "").trim();
     if (/^[+-]?\d+$/.test(cleanZ)) addViolation("z-index-raw", decl);
   }
-  if (decl.prop.toLowerCase() === "text-transform" && /\buppercase\b/i.test(decl.value)) {
+  if (prop === "text-transform" && /\buppercase\b/i.test(decl.value)) {
     addViolation("uppercase", decl);
   }
+  if (prop === "font-family" && SERIF_RE.test(decl.value)) addViolation("serif-font", decl);
+}
+
+function hasDvhTwin(decl, siblings) {
+  return siblings.some(
+    (sib) =>
+      sib !== decl &&
+      sib.prop.toLowerCase() === decl.prop.toLowerCase() &&
+      /(?:dvh|svh|lvh)/i.test(sib.value)
+  );
+}
+
+function checkCssDecl(decl, siblings, filePath, addViolation) {
+  checkBasicProps(decl, filePath, addViolation);
   checkRadiusDecl(decl, addViolation);
   checkBlurCss(decl, addViolation);
-
-  if (/\b100vh\b/.test(decl.value)) {
-    const hasTwin = siblings.some(
-      (sib) =>
-        sib !== decl &&
-        sib.prop.toLowerCase() === decl.prop.toLowerCase() &&
-        /(?:dvh|svh|lvh)/i.test(sib.value)
-    );
-    if (!hasTwin) addViolation("viewport-100vh", decl);
+  if (/\b100vh\b/.test(decl.value) && !hasDvhTwin(decl, siblings)) {
+    addViolation("viewport-100vh", decl);
   }
-
   if (checkGlowShadow(decl)) addViolation("glow-shadow", decl);
   if (!decl.prop.startsWith("--") && decl.value.includes("cubic-bezier(")) {
     addViolation("cubic-bezier-raw", decl);
   }
   checkDuration(decl, addViolation);
   checkOutline(decl, addViolation);
-  if (decl.prop.toLowerCase() === "font-family" && SERIF_RE.test(decl.value)) {
-    addViolation("serif-font", decl);
-  }
 }
 
 function scanJsSource(filePath, text, allowMap) {
@@ -318,11 +335,12 @@ function scanJsSource(filePath, text, allowMap) {
     const rawLine = lines[i];
     const code = rawLine.replace(/\/\/[^\n]*/, "");
 
-    const blurMatches = [...code.matchAll(/blur\(\s*(\d+(?:\.\d+)?)\s*px\s*\)/gi)];
-    const blurProp = [...code.matchAll(/blur\s*:\s*["'`]?\s*(\d+(?:\.\d+)?)\s*px/gi)];
+    const compact = code.replaceAll(/\s/g, "");
+    const blurMatches = [...compact.matchAll(/blur\((\d+(?:\.\d+)?)px\)/gi)];
+    const blurProp = [...compact.matchAll(/blur:["'`]?(\d+(?:\.\d+)?)px/gi)];
     if (
-      blurMatches.some((m) => parseFloat(m[1]) > 4) ||
-      blurProp.some((m) => parseFloat(m[1]) > 4)
+      blurMatches.some((m) => Number.parseFloat(m[1]) > 4) ||
+      blurProp.some((m) => Number.parseFloat(m[1]) > 4)
     ) {
       if (!isExempt("blur-over-4px", lineNum)) {
         violations.push({
@@ -354,7 +372,7 @@ export function scanSource(filePath, text) {
   const isJs = filePath.endsWith(".js") || filePath.endsWith(".jsx");
   if (!isCss && !isJs) return [];
 
-  const allowMap = extractAllowComments(text, isCss);
+  const allowMap = extractAllowComments(text);
   if (isJs) return scanJsSource(filePath, text, allowMap);
 
   const cleanCss = stripCssComments(text);
