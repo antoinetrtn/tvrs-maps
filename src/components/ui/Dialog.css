@@ -69,7 +69,7 @@
   border: 1px solid var(--glass-border-strong);
   border-bottom: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-  box-shadow: 0 -4px 16px var(--black);
+  box-shadow: none;
   color: var(--text-main);
   font-family: var(--font-main);
   animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);

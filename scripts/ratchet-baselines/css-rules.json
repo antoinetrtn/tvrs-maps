@@ -36,10 +36,7 @@
     "src/components/HomeScreenCategoryCarousel.css": 4,
     "src/components/LeaderboardScreen.css": 7,
     "src/components/ProfilePanel.css": 5,
-    "src/components/TrainingSheet.css": 1,
-    "src/index.css": 1,
-    "src/multiplayer/ConquestRules.css": 1,
-    "src/styles/panelSystem.css": 1
+    "src/index.css": 1
   },
   "important": {
     "src/App.css": 5,
@@ -56,7 +53,6 @@
     "src/components/ui/ui.css": 1,
     "src/dev/DevGallery.css": 4,
     "src/index.css": 6,
-    "src/multiplayer/ConquestRules.css": 2,
     "src/multiplayer/RulesIllustration.css": 1,
     "src/styles/motion.css": 6,
     "src/styles/panelSystem.css": 16
