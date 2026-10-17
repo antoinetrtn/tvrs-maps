@@ -12,8 +12,7 @@
   outline: 1px solid color-mix(in srgb, var(--stamp-ink) 60%, transparent);
   outline-offset: 3px;
   font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   font-weight: 700;
   transform: rotate(-6deg);
   opacity: 0.92;
@@ -26,7 +25,9 @@
   background: color-mix(in srgb, var(--bg-color) 82%, transparent);
   width: 96px;
   height: 96px;
-  border-radius: var(--radius-full);
+  border-radius: var(
+    --radius-full
+  ); /* css-rules-allow: radius-circular — circular passport stamp */
   outline-offset: 4px;
   gap: var(--spacing-xxs);
 }

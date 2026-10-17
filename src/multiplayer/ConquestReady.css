@@ -8,7 +8,6 @@
   font-size: var(--font-size-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--text-muted);
 }
 
@@ -62,7 +61,6 @@
   box-shadow: 4px 4px 0 var(--black);
   font-family: var(--font-display);
   letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .conquest-ready-cta::before {
@@ -91,21 +89,13 @@
   color: var(--text-muted);
 }
 
-.conquest-ready-cta:hover:not(:disabled),
-.ui-btn.conquest-ready-cta:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 4px 4px 0 var(--black);
-}
-
 .conquest-ready-cta:active:not(:disabled),
 .ui-btn.conquest-ready-cta:active:not(:disabled) {
   transform: var(--press-offset);
   box-shadow: 1px 1px 0 var(--black);
 }
 
-.conquest-ready-cta.is-ready,
-.conquest-ready-cta.is-ready:hover,
-.ui-btn.conquest-ready-cta.is-ready:hover {
+.conquest-ready-cta.is-ready {
   border-color: var(--success);
   color: var(--success);
 }
@@ -122,11 +112,29 @@
 }
 
 /* Once ready and the host can start, the start button takes the lead. */
-.conquest-ready-cta.is-quiet,
-.conquest-ready-cta.is-quiet:hover,
-.ui-btn.conquest-ready-cta.is-quiet:hover {
+.conquest-ready-cta.is-quiet {
   min-height: var(--control-lg);
   box-shadow: none;
+}
+
+@media (hover: hover) {
+  .conquest-ready-cta:hover:not(:disabled),
+  .ui-btn.conquest-ready-cta:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 var(--black);
+  }
+
+  .conquest-ready-cta.is-ready:hover,
+  .ui-btn.conquest-ready-cta.is-ready:hover {
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  .conquest-ready-cta.is-quiet:hover,
+  .ui-btn.conquest-ready-cta.is-quiet:hover {
+    min-height: var(--control-lg);
+    box-shadow: none;
+  }
 }
 
 .conquest-ready-cta.is-quiet .conquest-ready-cta-main {
