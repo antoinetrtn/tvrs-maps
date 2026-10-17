@@ -30,5 +30,3 @@ export default function LoadingState({ title, hint, srOnly = false, className = 
     />
   );
 }
-
-export { LoadingState };

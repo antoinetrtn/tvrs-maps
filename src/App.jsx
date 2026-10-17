@@ -8,8 +8,7 @@ import GameSessionView from "./components/GameSessionView.jsx";
 import GeoDataStatus from "./components/GeoDataStatus.jsx";
 import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
 import HomeScreen from "./components/HomeScreen.jsx";
-import InvaderAvatar from "./components/InvaderAvatar.jsx";
-import { showToast, ToastViewport } from "./components/ui/Toast.jsx";
+import { ToastViewport } from "./components/ui/Toast.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
   DEFAULT_GAME_DURATION_SEC,
@@ -20,6 +19,7 @@ import {
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
+import useAchievementToasts from "./hooks/useAchievementToasts.jsx";
 import { useAppTheme } from "./hooks/useAppTheme";
 import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
 import { useCountryStatsRecorder } from "./hooks/useCountryStatsRecorder";
@@ -92,27 +92,7 @@ function App() {
   const isScreenGlitching = useScreenGlitch(currentScreen);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const [achievementQueue, setAchievementQueue] = useState([]);
-  const activeAchievement = achievementQueue[0] || null;
-  const addAchievementToQueue = useCallback((a) => setAchievementQueue((prev) => [...prev, a]), []);
-  const handleCloseAchievement = useCallback(
-    () => setAchievementQueue((prev) => prev.slice(1)),
-    []
-  );
-
-  const shownAchievementRef = useRef(null);
-  useEffect(() => {
-    if (!activeAchievement || shownAchievementRef.current === activeAchievement) return;
-    shownAchievementRef.current = activeAchievement;
-    const { title, message, invaderId, color } = activeAchievement;
-    showToast({
-      title,
-      message,
-      icon: <InvaderAvatar invaderId={invaderId} color={color} size={36} />,
-      duration: 4000,
-      onDismiss: handleCloseAchievement,
-    });
-  }, [activeAchievement, handleCloseAchievement]);
+  const { addAchievementToQueue } = useAchievementToasts();
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
