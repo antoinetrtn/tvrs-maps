@@ -81,6 +81,19 @@
   animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
+/* Disabled state: same treatment as .btn-secondary:disabled. Declared after
+   :hover/:active so a disabled button never reacts to the pointer. */
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  animation: none;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
 /* Shared secondary button — quieter sibling of .btn-primary. */
 .btn-secondary {
   padding: var(--spacing-sm) var(--spacing-lg);
