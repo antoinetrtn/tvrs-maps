@@ -1,8 +1,7 @@
 import "./TrainingSheet.css";
 import "./ui/ui.css";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
 import {
@@ -15,7 +14,6 @@ import {
   summarizeMastery,
   TRAINING_POOL_SIZES,
 } from "../services/countryStats";
-import { useDialogA11y } from "../utils/dialogFocus";
 import { buildTrainingPool, getTrainableKeys } from "../utils/trainingPool";
 import {
   TrainingHeader,
@@ -24,6 +22,7 @@ import {
   TrainingStats,
 } from "./TrainingSheetSections";
 import Button from "./ui/Button";
+import Dialog from "./ui/Dialog";
 import OptionGroup from "./ui/OptionGroup";
 
 function useTrainingSheetData({ open, mode, profileId, onStart, onClose }) {
@@ -105,9 +104,6 @@ function useTrainingSheetData({ open, mode, profileId, onStart, onClose }) {
 
 export default function TrainingSheet({ open, mode, lang, profileId, onClose, onStart }) {
   const t = useTranslation(lang);
-  const dialogRef = useRef(null);
-  useDialogA11y(open, onClose, dialogRef);
-
   const data = useTrainingSheetData({ open, mode, profileId, onStart, onClose });
 
   const sizeOptions = useMemo(
@@ -119,70 +115,57 @@ export default function TrainingSheet({ open, mode, lang, profileId, onClose, on
     [data.availableSizes, t]
   );
 
-  if (!open || typeof document === "undefined") return null;
-
-  return createPortal(
-    <div className="training-sheet-backdrop">
-      <button
-        type="button"
-        className="training-sheet-scrim"
-        tabIndex={-1}
-        aria-hidden="true"
-        onClick={onClose}
-        data-testid="training-sheet-backdrop"
+  return (
+    <Dialog
+      variant="sheet"
+      open={open}
+      onClose={onClose}
+      labelledBy="training-sheet-title"
+      backdropTestId="training-sheet-backdrop"
+    >
+      <TrainingHeader
+        title={t("training_title")}
+        subtitle={t(`mode_${mode}`)}
+        closeLabel={t("training_close")}
+        onClose={onClose}
       />
-      <dialog
-        open
-        aria-modal="true"
-        aria-labelledby="training-sheet-title"
-        className="training-sheet-dialog"
-        ref={dialogRef}
-      >
-        <TrainingHeader
-          title={t("training_title")}
-          subtitle={t(`mode_${mode}`)}
-          closeLabel={t("training_close")}
-          onClose={onClose}
+      <div className="training-sheet-body">
+        <p className="training-intro">{t("training_intro")}</p>
+        <TrainingStats summary={data.summary} t={t} />
+        <TrainingReviewSection
+          hasEnoughData={data.summary.hasEnoughData}
+          weakestKeys={data.weakestKeys}
+          mode={mode}
+          lang={lang}
+          t={t}
         />
-        <div className="training-sheet-body">
-          <p className="training-intro">{t("training_intro")}</p>
-          <TrainingStats summary={data.summary} t={t} />
-          <TrainingReviewSection
-            hasEnoughData={data.summary.hasEnoughData}
-            weakestKeys={data.weakestKeys}
-            mode={mode}
-            lang={lang}
-            t={t}
-          />
-          <div className="training-section">
-            <span className="training-label">{t("training_size")}</span>
-            <OptionGroup
-              options={sizeOptions}
-              value={data.size}
-              onChange={data.setSize}
-              label={t("training_size")}
-            />
-          </div>
-          <Button
-            type="button"
-            variant="primary"
-            className="training-btn training-start-btn"
-            onClick={data.handleStart}
-          >
-            {t("training_start")}
-          </Button>
-          <TrainingReset
-            seenCount={data.summary.seen}
-            confirmReset={data.confirmReset}
-            showResetDone={data.showResetDone}
-            onPromptReset={() => data.setConfirmReset(true)}
-            onCancelReset={() => data.setConfirmReset(false)}
-            onConfirmReset={data.handleResetConfirm}
-            t={t}
+        <div className="training-section">
+          <span className="training-label">{t("training_size")}</span>
+          <OptionGroup
+            options={sizeOptions}
+            value={data.size}
+            onChange={data.setSize}
+            label={t("training_size")}
           />
         </div>
-      </dialog>
-    </div>,
-    document.body
+        <Button
+          type="button"
+          variant="primary"
+          className="training-btn training-start-btn"
+          onClick={data.handleStart}
+        >
+          {t("training_start")}
+        </Button>
+        <TrainingReset
+          seenCount={data.summary.seen}
+          confirmReset={data.confirmReset}
+          showResetDone={data.showResetDone}
+          onPromptReset={() => data.setConfirmReset(true)}
+          onCancelReset={() => data.setConfirmReset(false)}
+          onConfirmReset={data.handleResetConfirm}
+          t={t}
+        />
+      </div>
+    </Dialog>
   );
 }

@@ -1,47 +1,9 @@
 /* Conquest rules modal dialog / bottom sheet */
 
-.conquest-rules-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-dialog);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: var(--settings-backdrop-bg);
-  backdrop-filter: var(--blur-scrim);
-  -webkit-backdrop-filter: var(--blur-scrim);
-  padding: 0;
-  animation: ui-fade-in var(--dur-fast) linear;
-}
-
-.conquest-rules-scrim {
-  position: absolute;
-  inset: 0;
-  border: none;
-  padding: 0;
-  background: transparent;
-  cursor: default;
-}
-
+/* Surface geometry (backdrop, scrim, sheet/card switch) comes from ui/Dialog.css. */
 .conquest-rules-dialog {
-  position: relative;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-height: 85dvh;
-  background: var(--glass-bg);
-  border-top: 1px solid var(--glass-border-strong);
-  border-left: 1px solid var(--glass-border-strong);
-  border-right: 1px solid var(--glass-border-strong);
-  border-bottom: none;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  box-shadow: 0 -4px 16px var(--black);
-  color: var(--text-main);
-  font-family: var(--font-main);
-  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
+  --ui-sheet-width: 640px;
+  --ui-sheet-max-h: 720px;
 }
 
 .conquest-rules-header {
@@ -138,33 +100,12 @@
 }
 
 @media (min-width: 640px) {
-  .conquest-rules-backdrop {
-    align-items: center;
-    padding: var(--spacing-lg);
-  }
-
-  .conquest-rules-dialog {
-    width: min(640px, calc(100vw - var(--spacing-xl)));
-    max-height: min(85dvh, 720px);
-    border: 1px solid var(--glass-border-strong);
-    border-radius: var(--radius-md);
-    box-shadow: 4px 4px 0 var(--black);
-  }
-
   .conquest-rules-body {
     padding-bottom: var(--spacing-lg);
   }
 
   .conquest-rules-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .conquest-rules-backdrop,
-  .conquest-rules-dialog {
-    animation: none !important;
-    transition: none !important;
   }
 }
 

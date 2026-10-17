@@ -3,6 +3,7 @@ import React from "react";
 
 import { getTrainingLabel } from "../utils/trainingPool";
 import Button from "./ui/Button";
+import { DialogTitle } from "./ui/Dialog";
 import IconButton from "./ui/IconButton";
 
 const TOTAL_BAR_CELLS = 20;
@@ -10,9 +11,7 @@ const TOTAL_BAR_CELLS = 20;
 export const TrainingHeader = ({ title, subtitle, closeLabel, onClose }) => (
   <header className="training-sheet-header">
     <div className="training-section">
-      <h2 id="training-sheet-title" className="training-sheet-title">
-        {title}
-      </h2>
+      <DialogTitle className="training-sheet-title">{title}</DialogTitle>
       <p className="training-sheet-subtitle">{subtitle}</p>
     </div>
     <IconButton

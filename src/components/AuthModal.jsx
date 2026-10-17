@@ -2,11 +2,11 @@ import "./AuthModal.css";
 
 import { ArrowLeft, Earth, Gamepad, User } from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 
 import { useTranslation } from "../config/i18n";
 import { signInWithEmail, signInWithGoogle, signUpWithEmail } from "../services/supabaseClient";
 import Button from "./ui/Button";
+import Dialog, { DialogTitle } from "./ui/Dialog";
 import IconButton from "./ui/IconButton";
 import PanelCloseButton from "./ui/PanelCloseButton";
 
@@ -316,7 +316,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           <ArrowLeft width={18} height={18} />
         </IconButton>
       )}
-      <h2 className="panel-title">{title}</h2>
+      <DialogTitle className="panel-title">{title}</DialogTitle>
       <PanelCloseButton label={t("close")} onClick={onClose} iconSize={18} />
     </div>
   );
@@ -331,16 +331,13 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           ? renderPasswordStep()
           : null;
 
-  return createPortal(
-    <div className={`dialog-panel ${theme}`} onClick={onClose}>
-      <div className="dialog-card" onClick={(e) => e.stopPropagation()}>
-        {renderHeader()}
-        {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
-        {successMsg && <div className="form-feedback success">{successMsg}</div>}
-        {stepContent}
-      </div>
-    </div>,
-    document.body
+  return (
+    <Dialog onClose={onClose} theme={theme}>
+      {renderHeader()}
+      {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
+      {successMsg && <div className="form-feedback success">{successMsg}</div>}
+      {stepContent}
+    </Dialog>
   );
 };
 

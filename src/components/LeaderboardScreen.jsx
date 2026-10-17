@@ -23,6 +23,7 @@ import { formatTime } from "../utils/utils";
 import AtlasState from "./AtlasState";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./LeaderboardRow";
+import Dialog, { DialogTitle } from "./ui/Dialog";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import TabBar from "./ui/TabBar";
 
@@ -352,13 +353,15 @@ const LeaderboardScreen = ({
   };
 
   return (
-    <div
-      className={`sheet-panel leaderboard-panel glass-panel ${isOpen ? "open" : ""} ${theme}`}
-      onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
+    <Dialog
+      variant="panel"
+      open={isOpen}
+      onClose={onBack}
+      theme={theme}
+      className="leaderboard-panel glass-panel"
     >
       <div className="panel-header">
-        <h2 className="panel-title">{t("global_leaderboard")}</h2>
+        <DialogTitle className="panel-title">{t("global_leaderboard")}</DialogTitle>
         <PanelCloseButton label={t("close")} onClick={onBack} />
       </div>
       <TabBar
@@ -475,7 +478,7 @@ const LeaderboardScreen = ({
           </div>
         </div>
       )}
-    </div>
+    </Dialog>
   );
 };
 

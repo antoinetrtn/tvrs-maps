@@ -13,8 +13,8 @@
   --z-overlay: 5000;
   --z-sheet: 5100;
   --z-fullpage: 5200;
-  --z-dialog: 5300;
   --z-fx: 5250;
+  --z-dialog: 5300;
   --z-toast: 5400;
   --z-celebration: 5450;
   --z-vignette: 9990;
@@ -192,35 +192,7 @@
 
 /* ──── FULLPAGE PANEL (always fullscreen) ──── */
 
-/* ──── DIALOG PANEL (centered card, never fullscreen) ──── */
-.dialog-panel {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-dialog);
-  background: var(--settings-backdrop-bg);
-  backdrop-filter: var(--blur-scrim);
-  -webkit-backdrop-filter: var(--blur-scrim);
-  animation: ui-fade-in var(--dur-fast) linear;
-}
-
-.dialog-card {
-  width: 380px;
-  max-width: 90vw;
-  padding: var(--spacing-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 10px 40px var(--xp-shadow-heavy);
-  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
-}
+/* Dialog / modal surfaces (.dialog-panel, .dialog-card, bottom sheets) live in ui/Dialog.css. */
 
 /* ──── SCROLLBAR STYLED ──── */
 @supports selector(::-webkit-scrollbar) {
