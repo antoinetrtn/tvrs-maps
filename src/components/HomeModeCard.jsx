@@ -14,6 +14,20 @@ const guardDrag = (wasDraggingRef, fn) => (e) => {
   fn?.();
 };
 
+const SecondaryButton = ({ isTopCard, className, onClick, title, label, icon }) => (
+  <button
+    type="button"
+    tabIndex={isTopCard ? 0 : -1}
+    className={className}
+    onClick={onClick}
+    title={title}
+    aria-label={title}
+  >
+    {icon}
+    <span className="card-btn-label desktop-reveal">{label}</span>
+  </button>
+);
+
 const CardActions = ({
   isTopCard,
   isConquest,
@@ -46,43 +60,34 @@ const CardActions = ({
       </button>
 
       {!isConquest && (
-        <button
-          type="button"
-          tabIndex={isTopCard ? 0 : -1}
+        <SecondaryButton
+          isTopCard={isTopCard}
           className="card-learn-btn card-train-btn"
           onClick={onTrain}
           title={t("training_card_label")}
-          aria-label={t("training_card_label")}
-        >
-          <Target width={20} height={20} aria-hidden="true" />
-          <span className="sr-only">{t("training_card_label")}</span>
-        </button>
+          label={t("card_train_short") || t("training_card_label")}
+          icon={<Target width={20} height={20} aria-hidden="true" />}
+        />
       )}
 
       {isConquest ? (
-        <button
-          type="button"
-          tabIndex={isTopCard ? 0 : -1}
+        <SecondaryButton
+          isTopCard={isTopCard}
           className="card-learn-btn card-rules-btn"
           onClick={onSecondary}
           title={t("mode_rules")}
-          aria-label={t("mode_rules")}
-        >
-          <ScrollVertical width={20} height={20} aria-hidden="true" />
-          <span className="sr-only">{t("mode_rules")}</span>
-        </button>
+          label={t("card_rules_short") || t("mode_rules")}
+          icon={<ScrollVertical width={20} height={20} aria-hidden="true" />}
+        />
       ) : (
-        <button
-          type="button"
-          tabIndex={isTopCard ? 0 : -1}
+        <SecondaryButton
+          isTopCard={isTopCard}
           className="card-learn-btn"
           onClick={onSecondary}
           title={t("mode_learn")}
-          aria-label={t("mode_learn")}
-        >
-          <BookOpen width={20} height={20} aria-hidden="true" />
-          <span className="sr-only">{t("mode_learn")}</span>
-        </button>
+          label={t("card_learn_short") || t("mode_learn")}
+          icon={<BookOpen width={20} height={20} aria-hidden="true" />}
+        />
       )}
     </div>
   );
@@ -104,7 +109,7 @@ const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badge
         {modeItem.icon}
       </span>
     </div>
-    <p id={`card-desc-${modeItem.key}`} className="card-desc sr-only">
+    <p id={`card-desc-${modeItem.key}`} className="card-desc desktop-reveal">
       {lang === "fr" ? modeItem.descFr : modeItem.descEn}
     </p>
   </div>
@@ -130,6 +135,33 @@ const getCardStyle = (pose, isTopCard, reducedMotion) => {
     "--card-scale-eff": pose.scale * (1000 / (1000 - pose.translateZ)),
     "--card-z": pose.translateZ,
     zIndex: pose.zIndex,
+  };
+};
+
+const getStackedCardProps = (isTopCard, modeItem, lang, wasDraggingRef, onSelect) => {
+  if (isTopCard) {
+    return { "aria-describedby": `card-desc-${modeItem.key}` };
+  }
+  const modeTitle =
+    lang === "fr" ? modeItem.titleFr.replaceAll("\n", " ") : modeItem.titleEn.replaceAll("\n", " ");
+  return {
+    role: "button",
+    tabIndex: 0,
+    "aria-label": modeTitle,
+    onClick: (e) => {
+      if (wasDraggingRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      onSelect();
+    },
+    onKeyDown: (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onSelect();
+      }
+    },
   };
 };
 
@@ -172,6 +204,14 @@ const ModeCard = ({
       ? modeItem.countLabelFr || modeItem.badgeFr
       : modeItem.countLabelEn || modeItem.badgeEn;
 
+  const interactiveProps = getStackedCardProps(
+    isTopCard,
+    modeItem,
+    lang,
+    wasDraggingRef,
+    selectSideCard
+  );
+
   return (
     <div
       data-mode={modeItem.key}
@@ -179,32 +219,7 @@ const ModeCard = ({
       data-is-prev={stackPos === totalModes - 1 ? "true" : undefined}
       className={`deck-mode-card ${isTopCard ? "is-top-card" : "is-stacked-card"}`}
       style={cardStyle}
-      {...(isTopCard
-        ? {
-            "aria-describedby": `card-desc-${modeItem.key}`,
-          }
-        : {
-            role: "button",
-            tabIndex: 0,
-            "aria-label":
-              lang === "fr"
-                ? modeItem.titleFr.replaceAll("\n", " ")
-                : modeItem.titleEn.replaceAll("\n", " "),
-            onClick: (e) => {
-              if (wasDraggingRef.current) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-              }
-              selectSideCard();
-            },
-            onKeyDown: (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                selectSideCard();
-              }
-            },
-          })}
+      {...interactiveProps}
     >
       <div className="card-plate-pattern" aria-hidden="true" />
       <CardContent

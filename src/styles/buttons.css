@@ -26,9 +26,7 @@
     background var(--dur-fast) linear;
 }
 
-.glass-icon-btn:hover,
-.settings-trigger-btn:hover,
-.profile-trigger-btn:hover {
+:is(.glass-icon-btn, .settings-trigger-btn, .profile-trigger-btn):not(.home-dock-segment):hover {
   transform: translateY(-1px);
   color: var(--accent) !important;
   background: var(--glass-hover) !important;

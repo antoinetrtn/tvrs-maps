@@ -1,7 +1,7 @@
 {
   "blur-over-4px": {
     "src/config/designSystem.js": 4,
-    "src/globe/GlobeMap.jsx": 2,
+    "src/globe/GlobeMap.jsx": 1,
     "src/index.css": 2
   },
   "cubic-bezier-raw": {

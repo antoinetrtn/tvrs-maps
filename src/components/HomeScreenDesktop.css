@@ -1,0 +1,390 @@
+/* Desktop-specific layout & micro-interactions for HomeScreen
+   Identity: square cells, minimalist, calm typography (Bitcount 400/500),
+   stepped transitions (no glow, no blur). */
+
+/* Mobile / default visually-hidden state for elements revealed only on desktop (identical to .sr-only) */
+.desktop-reveal {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.deck-counter {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  /* Mode card sizing variables */
+  .home-screen-overlay {
+    --deck-w: clamp(400px, 29vw, 560px);
+    --deck-h: clamp(264px, 20vw, 320px);
+  }
+
+  .home-stage-container {
+    width: var(--deck-w);
+    align-items: flex-start;
+    margin: 0;
+  }
+
+  /* Carousel grid layout: deck stage on top, navigation controls below */
+  .cards-deck-wrapper {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "stage stage stage"
+      "prev dots next";
+    width: var(--deck-w);
+    max-width: var(--deck-w);
+    row-gap: var(--spacing-md);
+    align-items: center;
+  }
+
+  .deck-stage {
+    grid-area: stage;
+    width: var(--deck-w);
+    height: var(--deck-h);
+  }
+
+  .deck-click-zone.left {
+    grid-area: prev;
+  }
+
+  .deck-click-zone.right {
+    grid-area: next;
+  }
+
+  .deck-dots-row {
+    grid-area: dots;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin: 0;
+    width: 100%;
+  }
+
+  /* Reset absolute side placement of click zones on desktop */
+  .deck-click-zone {
+    position: static;
+    transform: none;
+    width: auto;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+  }
+
+  /* Desktop arrows: 40x40px squares, 1px border */
+  .deck-arrow {
+    width: var(--control-md);
+    height: var(--control-md);
+    min-width: var(--control-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in srgb, var(--text-main) 20%, transparent);
+    background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
+    color: var(--text-muted);
+    opacity: 1;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    box-shadow: none;
+    transition:
+      color var(--dur-fast) linear,
+      border-color var(--dur-fast) linear,
+      transform var(--dur-micro) var(--steps-press);
+  }
+
+  .deck-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .deck-click-zone:hover .deck-arrow {
+    color: var(--text-main);
+    border-color: var(--accent);
+  }
+
+  .deck-click-zone.left:hover .deck-arrow {
+    transform: translateX(-2px);
+  }
+
+  .deck-click-zone.right:hover .deck-arrow {
+    transform: translateX(2px);
+  }
+
+  .deck-click-zone:focus-visible .deck-arrow {
+    color: var(--text-main);
+    border-color: var(--accent);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .deck-click-zone:active .deck-arrow {
+    transform: var(--press-offset);
+  }
+
+  /* Dots on desktop: 8px square mark, active: 24px wide bar with accent */
+  .deck-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 0;
+    background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+    opacity: 0.5;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: none;
+    transition:
+      width var(--dur-fast) var(--steps-snap),
+      background var(--dur-fast) linear,
+      opacity var(--dur-fast) linear;
+  }
+
+  .deck-dot::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .deck-dot:hover {
+    opacity: 0.9;
+    background: var(--text-main);
+  }
+
+  .deck-dot:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .deck-dot.active {
+    width: 24px;
+    height: 8px;
+    background: var(--accent);
+    opacity: 1;
+  }
+
+  .deck-counter {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    margin-left: var(--spacing-xs);
+  }
+
+  /* Mode card sizing and styling */
+  .deck-mode-card,
+  .deck-mode-card.is-top-card,
+  .deck-mode-card.is-stacked-card {
+    /* The JS pose scales cards by 1000/920 (perspective mimic): compensate so the
+       visible top card is exactly --deck-w x --deck-h. */
+    width: calc(var(--deck-w) * 0.92);
+    height: calc(var(--deck-h) * 0.92);
+    top: calc(var(--deck-h) * 0.04);
+    padding: var(--spacing-lg);
+  }
+
+  /* Atlas plate pattern consistent at bigger size (graticule 40px, rings near icon) */
+  .deck-mode-card .card-plate-pattern {
+    background:
+      radial-gradient(
+        circle at calc(100% - 48px) 48px,
+        transparent 0 20px,
+        color-mix(in srgb, var(--accent) 10%, transparent) 20px 21px,
+        transparent 21px 32px,
+        color-mix(in srgb, var(--accent) 7%, transparent) 32px 33px,
+        transparent 33px 44px,
+        color-mix(in srgb, var(--accent) 4%, transparent) 44px 45px,
+        transparent 45px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--text-main) 3%, transparent) 0 1px,
+        transparent 1px 40px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in srgb, var(--text-main) 3%, transparent) 0 1px,
+        transparent 1px 40px
+      );
+  }
+
+  /* Top row metadata */
+  .card-plate-meta {
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.08em;
+  }
+
+  .card-plate-number {
+    color: var(--accent);
+  }
+
+  .card-plate-count {
+    font-size: var(--font-size-xs);
+  }
+
+  .card-header-row {
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  /* Title: Bitcount 500, responsive clamp, no text-shadow */
+  .card-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.6rem, 2.1vw, 2.2rem);
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-shadow: none;
+  }
+
+  /* Mode icon inside square frame */
+  .card-mode-icon {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: var(--radius-sm);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-mode-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Description paragraph revealed on desktop */
+  .card-desc.desktop-reveal {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: var(--spacing-xs) 0 0;
+    padding: 0;
+    overflow: hidden;
+    clip-path: none;
+    white-space: normal;
+    font-family: var(--font-main);
+    font-weight: 400;
+    font-size: var(--font-size-md);
+    line-height: 1.45;
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  /* Stacked (non-top) cards hide description so not read twice */
+  .deck-mode-card.is-stacked-card .card-desc {
+    visibility: hidden;
+  }
+
+  /* Actions row */
+  .card-actions {
+    gap: var(--spacing-sm);
+    margin-top: auto;
+  }
+
+  .card-play-btn {
+    height: 48px;
+    flex: 1;
+    font-size: var(--font-size-md);
+    font-weight: 500;
+  }
+
+  .card-play-btn span {
+    font-weight: 500;
+  }
+
+  .card-learn-btn,
+  .card-train-btn,
+  .card-rules-btn {
+    height: 48px;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--text-main) 22%, transparent);
+    color: var(--text-muted);
+  }
+
+  .card-learn-btn:hover,
+  .card-train-btn:hover,
+  .card-rules-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+/* Secondary button labels on desktop (at 1100px+ visible with text, 769-1099px square icon buttons) */
+@media (min-width: 1100px) {
+  .card-learn-btn,
+  .card-train-btn,
+  .card-rules-btn {
+    width: auto;
+    min-width: 40px;
+    padding: 0 var(--spacing-ms);
+    gap: var(--spacing-xs);
+  }
+
+  .card-btn-label.desktop-reveal {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+    font-family: var(--font-main);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1099px) {
+  .card-learn-btn,
+  .card-train-btn,
+  .card-rules-btn {
+    width: 48px;
+    min-width: 48px;
+    padding: 0;
+  }
+
+  .card-btn-label.desktop-reveal {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) and (max-height: 760px) {
+  .home-screen-overlay {
+    --deck-h: 268px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-click-zone.left:hover .deck-arrow,
+  .deck-click-zone.right:hover .deck-arrow {
+    transform: none;
+  }
+
+  .deck-dot {
+    transition: none;
+  }
+}

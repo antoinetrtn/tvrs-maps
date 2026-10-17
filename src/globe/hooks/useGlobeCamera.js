@@ -23,6 +23,7 @@ import {
 } from "../render/globeAltitude";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 import { CAMERA_MS, cameraDuration, selectCameraDuration } from "./cameraTiming";
+import { getHomeDesktopPov } from "./homePov";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.005;
 // Hard ceiling on the WebGL backing-store density (fill-rate on DPR-3 phones).
@@ -166,9 +167,7 @@ const applyIdleCameraPointOfView = ({
 
   if (isHomeScreen) {
     const isMobile = viewport.width < BREAKPOINTS.mobile;
-    const targetPov = isMobile
-      ? { lat: 18, lng: 20, altitude: 2.2 }
-      : { lat: 16, lng: 28, altitude: 1.1 };
+    const targetPov = isMobile ? { lat: 18, lng: 20, altitude: 2.2 } : getHomeDesktopPov(viewport);
     globeEl.current?.pointOfView?.(targetPov, cameraDuration(CAMERA_MS.home, reduced));
     return;
   }

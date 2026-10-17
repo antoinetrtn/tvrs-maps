@@ -59,18 +59,6 @@
   }
 }
 
-/* Hover only on real pointers: on touch screens :hover sticks after a tap
-   (big accent ring that never resets). Keyboard users get :focus-visible. */
-@media (hover: hover) and (pointer: fine) {
-  .deck-click-zone:hover .deck-arrow {
-    opacity: 1;
-    color: var(--accent);
-    border-color: var(--accent);
-    transform: none;
-    box-shadow: none;
-  }
-}
-
 .deck-click-zone:focus {
   outline: none;
 }

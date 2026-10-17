@@ -25,7 +25,9 @@ export const translations = {
     mode_rivers_mountains_short: "Reliefs",
     mode_learn: "Apprendre",
     mode_rules: "Règles",
-
+    card_train_short: "Entraîner",
+    card_rules_short: "Règles",
+    card_learn_short: "Apprendre",
     // Home Screen Controls
     minus_one_minute: "-1 minute",
     plus_one_minute: "+1 minute",
@@ -130,14 +132,12 @@ export const translations = {
     new_pb: "Nouveau Record !",
     view_table: "Voir le tableau",
     play_again: "Rejouer",
-
     // Results Modal
     game_over: "Partie terminée",
     progress_title: "Progression",
     close: "Fermer",
     stop_game: "Arrêter la partie",
     continue: "Continuer",
-
     // Continent / Region labels
     region_Europe: "Europe",
     region_Americas: "Amériques",
@@ -148,11 +148,9 @@ export const translations = {
     region_France: "France",
     region_Reliefs: "Reliefs & Fleuves",
     region_Unknown: "Inconnu",
-
     // Globe Themes
     theme_satellite: "Satellite",
     theme_blackout: "Monochrome",
-
     // Profil & Leaderboard
     profile: "Profil",
     profile_screen_title: "Mon Profil & Classements",
@@ -164,6 +162,7 @@ export const translations = {
     leaderboard_guest: "Connecte-toi pour apparaître au classement.",
     leaderboard_guest_short: "Connecte-toi",
     global_leaderboard: "Classement",
+    leaderboard: "Classement",
     username: "Pseudo",
     save_profile: "Enregistrer",
     select_avatar: "Choisir un avatar",
@@ -260,7 +259,9 @@ export const translations = {
     mode_rivers_mountains_short: "Peaks",
     mode_learn: "Learn",
     mode_rules: "Rules",
-
+    card_train_short: "Train",
+    card_rules_short: "Rules",
+    card_learn_short: "Learn",
     // Home Screen Controls
     minus_one_minute: "-1 minute",
     plus_one_minute: "+1 minute",
@@ -397,6 +398,7 @@ export const translations = {
     leaderboard_guest: "Sign in to appear on the leaderboard.",
     leaderboard_guest_short: "Sign in",
     global_leaderboard: "Leaderboard",
+    leaderboard: "Leaderboard",
     username: "Username",
     save_profile: "Save Profile",
     select_avatar: "Select Avatar",

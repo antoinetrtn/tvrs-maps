@@ -1,4 +1,5 @@
 import "./HomeScreen.css";
+import "./HomeDock.css";
 
 import { Settings2, User } from "pixelarticons/react";
 import React, { useCallback, useEffect, useState } from "react";
@@ -117,10 +118,10 @@ const HomeScreen = ({
           />
         </div>
 
-        <div className="home-bottom-right">
-          {/* Common component usage for uniform header actions + no more style drift */}
-          <div
-            className="home-podium-widget glass-panel"
+        <div className="home-bottom-right" role="toolbar" aria-label={t("settings")}>
+          <button
+            type="button"
+            className="home-podium-widget glass-panel home-dock-segment"
             onClick={(e) => {
               e.stopPropagation();
               setLeaderboardOpen((prev) => !prev);
@@ -128,42 +129,46 @@ const HomeScreen = ({
               setSettingsOpen(false);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            title={t("leaderboard")}
+            aria-label={t("leaderboard")}
+            data-tooltip={t("leaderboard")}
           >
-            <div className="widget-spot rank-2">
-              <div className="widget-avatar">
-                <InvaderAvatar
-                  invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
-                  color={displayExplorers[1].profiles?.avatar_color || "cyan"}
-                  size={20}
-                />
+            <div className="home-podium-spots">
+              <div className="widget-spot rank-2">
+                <div className="widget-avatar">
+                  <InvaderAvatar
+                    invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
+                    color={displayExplorers[1].profiles?.avatar_color || "cyan"}
+                    size={20}
+                  />
+                </div>
+                <span className="widget-rank-num">2</span>
               </div>
-              <span className="widget-rank-num">2</span>
-            </div>
-            <div className="widget-spot rank-1">
-              <div className="widget-avatar">
-                <InvaderAvatar
-                  invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
-                  color={displayExplorers[0].profiles?.avatar_color || "cyan"}
-                  size={20}
-                />
+              <div className="widget-spot rank-1">
+                <div className="widget-avatar">
+                  <InvaderAvatar
+                    invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
+                    color={displayExplorers[0].profiles?.avatar_color || "cyan"}
+                    size={20}
+                  />
+                </div>
+                <span className="widget-rank-num">1</span>
               </div>
-              <span className="widget-rank-num">1</span>
-            </div>
-            <div className="widget-spot rank-3">
-              <div className="widget-avatar">
-                <InvaderAvatar
-                  invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
-                  color={displayExplorers[2].profiles?.avatar_color || "cyan"}
-                  size={20}
-                />
+              <div className="widget-spot rank-3">
+                <div className="widget-avatar">
+                  <InvaderAvatar
+                    invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
+                    color={displayExplorers[2].profiles?.avatar_color || "cyan"}
+                    size={20}
+                  />
+                </div>
+                <span className="widget-rank-num">3</span>
               </div>
-              <span className="widget-rank-num">3</span>
             </div>
-          </div>
+            <span className="home-dock-label">{t("leaderboard")}</span>
+          </button>
 
           <GlassIconButton
-            className="profile-trigger-btn"
+            className="profile-trigger-btn home-dock-segment"
             onClick={(e) => {
               e.stopPropagation();
               setProfileOpen((prev) => !prev);
@@ -171,7 +176,9 @@ const HomeScreen = ({
               setLeaderboardOpen(false);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            title={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+            aria-label={t("profile")}
+            data-tooltip={t("profile")}
+            label={t("profile")}
           >
             <div className="profile-icon">
               <User width={20} height={20} />
@@ -186,7 +193,7 @@ const HomeScreen = ({
           </GlassIconButton>
 
           <GlassIconButton
-            className="settings-trigger-btn"
+            className="settings-trigger-btn home-dock-segment"
             onClick={(e) => {
               e.stopPropagation();
               setSettingsOpen((prev) => !prev);
@@ -194,9 +201,13 @@ const HomeScreen = ({
               setLeaderboardOpen(false);
             }}
             onPointerDown={(e) => e.stopPropagation()}
-            title={t("settings")}
+            aria-label={t("settings")}
+            data-tooltip={t("settings")}
+            label={t("settings")}
           >
-            <Settings2 width={20} height={20} />
+            <div className="settings-icon">
+              <Settings2 width={20} height={20} />
+            </div>
           </GlassIconButton>
         </div>
       </div>

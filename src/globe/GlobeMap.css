@@ -93,7 +93,7 @@
 @media (min-width: 769px) {
   .globe-map-shell.home-layout .globe-content-wrapper {
     /* Shift globe into the right pane between the home card and screen edge */
-    --globe-layout-x: clamp(120px, 14vw, 260px);
+    --globe-layout-x: clamp(140px, 17vw, 380px);
   }
 
   .globe-map-shell.game-layout .globe-content-wrapper {
