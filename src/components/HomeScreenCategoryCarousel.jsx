@@ -23,6 +23,7 @@ import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
 import { getGameModesMetadata } from "./homeHeroText";
 import ModeCard from "./HomeModeCard";
 import { HOME_CONQUEST_KEY } from "./homeModes";
+import IconButton from "./ui/IconButton";
 import useCarouselDrag from "./useCarouselDrag";
 
 const MODE_ICONS = {
@@ -41,20 +42,22 @@ const buildCarouselItems = (metadata) =>
   }));
 
 const DeckArrow = ({ side, onClick, label, icon }) => (
-  <button
-    type="button"
-    className={`deck-click-zone ${side}`}
-    onClick={(e) => {
-      if (e.detail > 0) {
-        e.currentTarget.blur();
-      }
-      onClick();
-    }}
-    title={label}
-    aria-label={label}
-  >
-    <span className="deck-arrow">{icon}</span>
-  </button>
+  <div className={`deck-click-zone ${side}`}>
+    <IconButton
+      size="sm"
+      variant="outline"
+      label={label}
+      className="deck-arrow"
+      onClick={(e) => {
+        if (e.detail > 0) {
+          e.currentTarget.blur();
+        }
+        onClick();
+      }}
+    >
+      {icon}
+    </IconButton>
+  </div>
 );
 
 const DeckDots = ({ items, activeIndex, lang, onDotClick }) => {
@@ -66,6 +69,7 @@ const DeckDots = ({ items, activeIndex, lang, onDotClick }) => {
       {items.map((item, idx) => {
         const itemTitle = lang === "fr" ? item.titleFr : item.titleEn;
         return (
+          // pagination dot: intentionally not a kit Button (6px visual, 24px hit area via ::after)
           <button
             type="button"
             key={item.key}

@@ -99,7 +99,6 @@
     color: var(--text-muted);
     opacity: 1;
     border-radius: var(--radius-sm);
-    cursor: pointer;
     box-shadow: none;
     transition:
       color var(--dur-fast) linear,
@@ -112,20 +111,26 @@
     height: 20px;
   }
 
-  .deck-click-zone:hover .deck-arrow {
+  .deck-arrow:hover,
+  .deck-click-zone:hover .deck-arrow,
+  .ui-icon-btn.deck-arrow:hover:not(:disabled) {
     color: var(--text-main);
     border-color: var(--accent);
   }
 
-  .deck-click-zone.left:hover .deck-arrow {
+  .deck-click-zone.left:hover .deck-arrow,
+  .deck-click-zone.left .deck-arrow:hover {
     transform: translateX(-2px);
   }
 
-  .deck-click-zone.right:hover .deck-arrow {
+  .deck-click-zone.right:hover .deck-arrow,
+  .deck-click-zone.right .deck-arrow:hover {
     transform: translateX(2px);
   }
 
-  .deck-click-zone:focus-visible .deck-arrow {
+  .deck-arrow:focus-visible,
+  .deck-click-zone:focus-visible .deck-arrow,
+  .ui-icon-btn.deck-arrow:focus-visible {
     color: var(--text-main);
     border-color: var(--accent);
     outline: 2px solid var(--accent);
@@ -328,7 +333,10 @@
 
   .card-learn-btn:hover,
   .card-train-btn:hover,
-  .card-rules-btn:hover {
+  .card-rules-btn:hover,
+  .ui-btn.card-learn-btn:hover:not(:disabled),
+  .ui-btn.card-train-btn:hover:not(:disabled),
+  .ui-btn.card-rules-btn:hover:not(:disabled) {
     border-color: var(--accent);
     color: var(--accent);
   }
@@ -380,7 +388,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .deck-click-zone.left:hover .deck-arrow,
-  .deck-click-zone.right:hover .deck-arrow {
+  .deck-click-zone.right:hover .deck-arrow,
+  .deck-click-zone.left .deck-arrow:hover,
+  .deck-click-zone.right .deck-arrow:hover {
     transform: none;
   }
 

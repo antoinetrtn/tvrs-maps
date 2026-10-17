@@ -218,6 +218,7 @@
 .conquest-feed-line-text {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--spacing-xs);
   min-height: 28px;
   padding: 0;
@@ -225,14 +226,14 @@
   background: none;
   color: inherit;
   font: inherit;
+  font-weight: inherit;
   text-align: left;
   min-width: 0;
 }
-.conquest-feed-line {
-  cursor: pointer;
-}
 .conquest-feed-line:hover,
-.conquest-feed-line:focus-visible {
+.conquest-feed-line:focus-visible,
+.ui-btn.conquest-feed-line:hover:not(:disabled) {
+  background: none;
   color: var(--accent);
   text-decoration: underline;
 }

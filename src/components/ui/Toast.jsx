@@ -1,6 +1,9 @@
 import React, { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
+import Button from "./Button";
+import IconButton from "./IconButton";
+
 /**
  * Toast — pixel notification (ui kit). `showToast()` from anywhere; a single
  * <ToastViewport /> renders the current toast in an aria-live region, with an
@@ -34,14 +37,20 @@ export const Toast = ({ message, actionLabel, onAction, tone = "info", onClose }
   <div className={`ui-toast ui-toast--${tone}`}>
     <span className="ui-toast-message">{message}</span>
     {actionLabel ? (
-      <button type="button" className="ui-toast-action" onClick={onAction}>
+      <Button variant="ghost" size="sm" className="ui-toast-action" onClick={onAction}>
         {actionLabel}
-      </button>
+      </Button>
     ) : null}
     {onClose ? (
-      <button type="button" className="ui-toast-close" aria-label="Fermer" onClick={onClose}>
+      <IconButton
+        label="Fermer"
+        size="sm"
+        variant="ghost"
+        className="ui-toast-close"
+        onClick={onClose}
+      >
         ×
-      </button>
+      </IconButton>
     ) : null}
   </div>
 );

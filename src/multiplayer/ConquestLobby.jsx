@@ -219,8 +219,10 @@ const LobbyFooter = ({ t, isHost, me, allReady, busy, conquest }) => (
 
 /** Big "I'm ready" call to action; becomes "Prêt ✓ / Annuler" once pressed. */
 export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => (
-  <button
-    type="button"
+  <Button
+    variant="primary"
+    size="lg"
+    block
     className={`conquest-ready-cta ${ready ? "is-ready" : ""} ${emphasized ? "" : "is-quiet"}`}
     aria-pressed={ready}
     disabled={busy}
@@ -237,7 +239,7 @@ export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => 
     ) : (
       <span className="conquest-ready-cta-main">{t.imReady}</span>
     )}
-  </button>
+  </Button>
 );
 
 const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {

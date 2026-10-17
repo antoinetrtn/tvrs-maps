@@ -119,8 +119,7 @@ const HomeScreen = ({
         </div>
 
         <div className="home-bottom-right" role="toolbar" aria-label={t("settings")}>
-          <button
-            type="button"
+          <GlassIconButton
             className="home-podium-widget glass-panel home-dock-segment"
             onClick={(e) => {
               e.stopPropagation();
@@ -131,6 +130,7 @@ const HomeScreen = ({
             onPointerDown={(e) => e.stopPropagation()}
             aria-label={t("leaderboard")}
             data-tooltip={t("leaderboard")}
+            label={t("leaderboard")}
           >
             <div className="home-podium-spots">
               <div className="widget-spot rank-2">
@@ -164,8 +164,7 @@ const HomeScreen = ({
                 <span className="widget-rank-num">3</span>
               </div>
             </div>
-            <span className="home-dock-label">{t("leaderboard")}</span>
-          </button>
+          </GlassIconButton>
 
           <GlassIconButton
             className="profile-trigger-btn home-dock-segment"

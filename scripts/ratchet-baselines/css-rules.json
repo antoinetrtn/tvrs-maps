@@ -32,7 +32,7 @@
     "src/components/EndScreen.css": 7,
     "src/components/GameDataPanel.css": 2,
     "src/components/GameHUD.css": 3,
-    "src/components/HomeScreen.css": 6,
+    "src/components/HomeScreen.css": 5,
     "src/components/HomeScreenCategoryCarousel.css": 4,
     "src/components/LeaderboardScreen.css": 7,
     "src/components/ProfilePanel.css": 5,
@@ -42,9 +42,9 @@
     "src/App.css": 5,
     "src/components/EndScreen.css": 1,
     "src/components/GameHUD.css": 23,
-    "src/components/HomeScreen.css": 14,
+    "src/components/HomeScreen.css": 11,
     "src/components/HomeScreenCarouselMotion.css": 13,
-    "src/components/HomeScreenCategoryCarousel.css": 9,
+    "src/components/HomeScreenCategoryCarousel.css": 5,
     "src/components/LeaderboardRow.css": 1,
     "src/components/LeaderboardScreen.css": 7,
     "src/components/Logo.css": 1,
@@ -59,7 +59,6 @@
   },
   "outline-none": {
     "src/components/GameDataPanel.css": 1,
-    "src/components/HomeScreenCategoryCarousel.css": 1,
     "src/components/ProfilePanel.css": 1,
     "src/index.css": 1
   },

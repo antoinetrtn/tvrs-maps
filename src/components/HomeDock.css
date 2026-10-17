@@ -52,7 +52,6 @@
     -webkit-backdrop-filter: blur(3px);
     box-shadow: none;
     color: var(--text-muted);
-    cursor: pointer;
     touch-action: manipulation;
     font: inherit;
     overflow: visible;
@@ -180,6 +179,7 @@
   }
 
   .home-bottom-right .home-podium-widget {
+    width: auto;
     padding: 0 var(--spacing-sm);
   }
 

@@ -37,6 +37,20 @@
   justify-content: flex-end;
 }
 
+.hud-logo-clickable {
+  padding: 0;
+  border: none;
+  background: transparent;
+  pointer-events: auto;
+  min-height: unset;
+}
+
+@media (hover: hover) {
+  .hud-logo-clickable:hover {
+    background: transparent;
+  }
+}
+
 .hud-top-center {
   display: flex;
   align-items: center;
@@ -54,6 +68,7 @@
   pointer-events: auto;
   display: flex;
   align-items: center;
+  gap: 0;
   padding: 0 var(--spacing-ms);
   height: var(--control-lg);
   border-radius: var(--radius-sm);
@@ -63,7 +78,6 @@
   width: 100%;
   max-width: var(--island-width);
   min-width: 300px;
-  cursor: pointer;
   transition:
     background var(--transition-spring),
     transform var(--transition-spring),
@@ -77,9 +91,11 @@
     0 0 0 1px var(--accent-soft),
     0 8px 24px color-mix(in srgb, var(--accent) 15%, transparent);
   color: var(--accent);
+  background: var(--glass-bg);
 }
 
-.central-island-panel:active {
+.central-island-panel:active,
+.ui-btn.central-island-panel:active {
   transform: scale(0.985) translateY(0.5px);
   background: var(--accent);
   box-shadow: 0 2px 8px var(--accent-soft);
@@ -108,6 +124,7 @@
 }
 
 .island-divider {
+  display: block;
   width: 1px;
   height: 16px;
   background: var(--glass-border);
@@ -125,6 +142,7 @@
 }
 
 .progress-linear-container {
+  display: block;
   width: 100%;
   height: 6px;
   background: transparent;
@@ -147,6 +165,7 @@
 }
 
 .progress-linear-fill {
+  display: block;
   position: relative;
   z-index: 1;
   height: 100%;
@@ -462,18 +481,12 @@
 
 /* Minimalist HUD pills for active keyboard entry on mobile */
 .hud-mini-pill {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 0;
   padding: 0 var(--spacing-ms);
   height: 40px;
-  border-radius: var(--radius-sm);
-  background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  color: var(--text-main);
   font-weight: 700;
-  font-size: var(--font-size-sm);
   pointer-events: auto;
 }
 
@@ -534,7 +547,6 @@
 /* Mobile dropdown popover styling */
 
 .timer-pill {
-  cursor: pointer;
   pointer-events: auto;
 }
 

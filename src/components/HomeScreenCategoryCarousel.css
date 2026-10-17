@@ -24,7 +24,7 @@
 }
 
 .cards-deck-wrapper.is-user-dragging .deck-arrow {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 .deck-click-zone {
@@ -34,11 +34,10 @@
   width: 75px;
   height: 250px;
   z-index: 180;
-  cursor: pointer;
   display: flex;
   align-items: center;
   pointer-events: none;
-  background: transparent !important;
+  background: transparent;
 }
 
 .deck-click-zone.left {
@@ -59,11 +58,9 @@
   }
 }
 
-.deck-click-zone:focus {
-  outline: none;
-}
-
-.deck-click-zone:focus-visible .deck-arrow {
+.deck-arrow:focus-visible,
+.deck-click-zone:focus-visible .deck-arrow,
+.ui-icon-btn.deck-arrow:focus-visible {
   opacity: 1;
   color: var(--accent);
   border-color: var(--accent);
@@ -89,7 +86,6 @@
   opacity: 0.55;
   box-shadow: none;
   pointer-events: auto;
-  cursor: pointer;
   transition:
     color var(--dur-fast) linear,
     border-color var(--dur-fast) linear,
@@ -295,22 +291,15 @@
   border-radius: var(--radius-sm);
   background: var(--accent);
   color: var(--accent-contrast);
-  font-family: var(--font-display) !important;
+  font-family: var(--font-display);
   font-size: var(--font-size-base);
   font-weight: 800;
   border: 1.5px solid var(--accent);
-  cursor: pointer;
   box-shadow: none;
-  touch-action: manipulation;
-  transition:
-    transform var(--dur-micro) var(--steps-press),
-    box-shadow var(--dur-micro) var(--steps-press),
-    background-color var(--dur-fast) linear,
-    border-color var(--dur-fast) linear;
 }
 
 .card-play-btn span {
-  font-family: var(--font-display) !important;
+  font-family: var(--font-display);
 }
 
 .card-play-btn:hover {
@@ -333,21 +322,16 @@
   width: var(--control-lg);
   height: var(--control-lg);
   min-width: var(--control-lg);
+  padding: 0;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
   background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
   color: var(--text-muted);
-  cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    transform var(--dur-micro) var(--steps-press),
-    background-color var(--dur-fast) linear,
-    border-color var(--dur-fast) linear,
-    color var(--dur-fast) linear;
 }
 
-.card-learn-btn:hover {
+.card-learn-btn:hover,
+.ui-btn.card-learn-btn:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--text-main) 38%, transparent);
   color: var(--text-main);
   background: color-mix(in srgb, var(--text-main) 12%, var(--bg-color));
