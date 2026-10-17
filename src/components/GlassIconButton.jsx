@@ -6,7 +6,7 @@ import React from "react";
  * Use for any "icon in glass" trigger to prevent future style drift.
  */
 const GlassIconButton = React.forwardRef(function GlassIconButton(
-  { children, className = "", onClick, onPointerDown, title, style, ...rest },
+  { children, className = "", onClick, onPointerDown, title, label, style, ...rest },
   ref
 ) {
   const classes = ["glass-icon-btn", className].filter(Boolean).join(" ");
@@ -22,6 +22,7 @@ const GlassIconButton = React.forwardRef(function GlassIconButton(
       {...rest}
     >
       {children}
+      {label && <span className="home-dock-label">{label}</span>}
     </button>
   );
 });

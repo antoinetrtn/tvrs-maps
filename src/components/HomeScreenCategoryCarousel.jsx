@@ -1,5 +1,6 @@
 import "./HomeScreenCategoryCarousel.css";
 import "./HomeScreenCarouselMotion.css";
+import "./HomeScreenDesktop.css";
 
 import {
   Chess,
@@ -40,63 +41,52 @@ const buildCarouselItems = (metadata) =>
   }));
 
 const DeckArrow = ({ side, onClick, label, icon }) => (
-  <div
+  <button
+    type="button"
     className={`deck-click-zone ${side}`}
     onClick={(e) => {
-      e.currentTarget.blur();
-      onClick();
-    }}
-    onKeyDown={(e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        onClick();
+      if (e.detail > 0) {
+        e.currentTarget.blur();
       }
+      onClick();
     }}
     title={label}
     aria-label={label}
-    role="button"
-    tabIndex={0}
   >
-    <div className="deck-arrow">{icon}</div>
-  </div>
+    <span className="deck-arrow">{icon}</span>
+  </button>
 );
 
-const DeckDots = ({ items, activeIndex, lang, onDotClick }) => (
-  <div className="deck-dots-row">
-    {items.map((item, idx) => {
-      const itemTitle = lang === "fr" ? item.titleFr : item.titleEn;
-      return (
-        <button
-          type="button"
-          key={item.key}
-          className={`deck-dot ${idx === activeIndex ? "active" : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onDotClick(idx);
-          }}
-          title={itemTitle}
-          aria-label={itemTitle}
-        />
-      );
-    })}
-  </div>
-);
+const DeckDots = ({ items, activeIndex, lang, onDotClick }) => {
+  const currentNum = String(activeIndex + 1).padStart(2, "0");
+  const totalNum = String(items.length).padStart(2, "0");
 
-const HomeScreenCategoryCarousel = ({
-  onStartGame,
-  onOpenConquest = null,
-  onOpenConquestRules = null,
-  onOpenTraining = null,
-  lang,
-  homeMode,
-  setHomeMode,
-  exiting = false,
-}) => {
-  const [animatingDirection, setAnimatingDirection] = useState(null);
-  const isAnimatingRef = useRef(false);
-  const t = useTranslation(lang);
-  const reducedMotion = usePrefersReducedMotion();
+  return (
+    <div className="deck-dots-row">
+      {items.map((item, idx) => {
+        const itemTitle = lang === "fr" ? item.titleFr : item.titleEn;
+        return (
+          <button
+            type="button"
+            key={item.key}
+            className={`deck-dot ${idx === activeIndex ? "active" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDotClick(idx);
+            }}
+            title={itemTitle}
+            aria-label={itemTitle}
+          />
+        );
+      })}
+      <span className="deck-counter" aria-hidden="true">
+        {currentNum} / {totalNum}
+      </span>
+    </div>
+  );
+};
 
+function useGameModesList(onOpenConquest, homeMode) {
   const gameModesCarousel = useMemo(() => {
     const metadata = getGameModesMetadata({
       countriesCount: Object.keys(countryDataMap).length,
@@ -114,7 +104,35 @@ const HomeScreenCategoryCarousel = ({
     return idx === -1 ? 0 : idx;
   }, [homeMode, gameModesCarousel]);
 
-  const totalModes = gameModesCarousel.length;
+  return { gameModesCarousel, activeIndex, totalModes: gameModesCarousel.length };
+}
+
+function useCarouselKeyboardNav(goToNext, goToPrev, exiting) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (exiting || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goToNext();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goToPrev();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [goToNext, goToPrev, exiting]);
+}
+
+function useCarouselNavigation({
+  activeIndex,
+  totalModes,
+  gameModesCarousel,
+  setHomeMode,
+  exiting,
+}) {
+  const [animatingDirection, setAnimatingDirection] = useState(null);
+  const isAnimatingRef = useRef(false);
 
   const triggerAnimatedChange = useCallback(
     (direction, targetIdxOverride = null) => {
@@ -138,12 +156,12 @@ const HomeScreenCategoryCarousel = ({
     [totalModes, activeIndex, gameModesCarousel, setHomeMode, exiting]
   );
 
-  const triggerRightSwipe = useCallback(() => {
-    triggerAnimatedChange("rightSwipe");
+  const goToNext = useCallback(() => {
+    triggerAnimatedChange("leftSwipe");
   }, [triggerAnimatedChange]);
 
-  const triggerLeftSwipe = useCallback(() => {
-    triggerAnimatedChange("leftSwipe");
+  const goToPrev = useCallback(() => {
+    triggerAnimatedChange("rightSwipe");
   }, [triggerAnimatedChange]);
 
   const onSelectIndex = useCallback(
@@ -152,14 +170,6 @@ const HomeScreenCategoryCarousel = ({
     },
     [gameModesCarousel, setHomeMode]
   );
-
-  const { stageRef, isDragging, wasDraggingRef, handlePointerDown } = useCarouselDrag({
-    activeIndex,
-    totalModes,
-    onSelectIndex,
-    reducedMotion,
-    exiting,
-  });
 
   const handleSelectSideCard = useCallback(
     (stackPos) => {
@@ -170,20 +180,55 @@ const HomeScreenCategoryCarousel = ({
     [activeIndex, totalModes, triggerAnimatedChange]
   );
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (exiting || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        triggerRightSwipe();
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        triggerLeftSwipe();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [triggerLeftSwipe, triggerRightSwipe, exiting]);
+  return {
+    animatingDirection,
+    triggerAnimatedChange,
+    goToNext,
+    goToPrev,
+    onSelectIndex,
+    handleSelectSideCard,
+  };
+}
+
+const HomeScreenCategoryCarousel = ({
+  onStartGame,
+  onOpenConquest = null,
+  onOpenConquestRules = null,
+  onOpenTraining = null,
+  lang,
+  homeMode,
+  setHomeMode,
+  exiting = false,
+}) => {
+  const t = useTranslation(lang);
+  const reducedMotion = usePrefersReducedMotion();
+
+  const { gameModesCarousel, activeIndex, totalModes } = useGameModesList(onOpenConquest, homeMode);
+
+  const {
+    animatingDirection,
+    triggerAnimatedChange,
+    goToNext,
+    goToPrev,
+    onSelectIndex,
+    handleSelectSideCard,
+  } = useCarouselNavigation({
+    activeIndex,
+    totalModes,
+    gameModesCarousel,
+    setHomeMode,
+    exiting,
+  });
+
+  const { stageRef, isDragging, wasDraggingRef, handlePointerDown } = useCarouselDrag({
+    activeIndex,
+    totalModes,
+    onSelectIndex,
+    reducedMotion,
+    exiting,
+  });
+
+  useCarouselKeyboardNav(goToNext, goToPrev, exiting);
 
   return (
     <div
@@ -191,9 +236,9 @@ const HomeScreenCategoryCarousel = ({
     >
       <DeckArrow
         side="left"
-        onClick={triggerLeftSwipe}
+        onClick={goToPrev}
         label={t("previous")}
-        icon={<ChevronLeft width={18} height={18} />}
+        icon={<ChevronLeft width={20} height={20} />}
       />
 
       <div className="deck-stage" ref={stageRef} onPointerDown={handlePointerDown}>
@@ -220,9 +265,9 @@ const HomeScreenCategoryCarousel = ({
 
       <DeckArrow
         side="right"
-        onClick={triggerRightSwipe}
+        onClick={goToNext}
         label={t("next")}
-        icon={<ChevronRight width={18} height={18} />}
+        icon={<ChevronRight width={20} height={20} />}
       />
 
       <DeckDots
