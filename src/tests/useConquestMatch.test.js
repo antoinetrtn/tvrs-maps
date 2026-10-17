@@ -47,7 +47,10 @@ describe("useConquestMatch", () => {
     api.getExistingConquestUser.mockResolvedValue("u1");
     api.leaveConquestMatch.mockResolvedValue({ ok: true });
   });
-  afterEach(() => localStorage.clear());
+  afterEach(() => {
+    localStorage.clear();
+    vi.useRealTimers();
+  });
 
   it("does not resume without a stored match", async () => {
     const { result } = renderHook(() => useConquestMatch({ lang: "fr", displayName: "A" }));
@@ -108,5 +111,40 @@ describe("useConquestMatch", () => {
     await waitFor(() => expect(api.leaveConquestMatch).toHaveBeenCalledWith("m1"));
     expect(result.current.match).toBeNull();
     expect(hasStoredConquestMatch()).toBe(false);
+  });
+
+  it("resyncs within 5 s when Realtime is subscribed", async () => {
+    vi.useFakeTimers();
+    localStorage.setItem(CONQUEST_STORAGE_KEY, JSON.stringify({ id: "m1", code: "ABC123" }));
+    api.getMyActiveConquestMatch.mockResolvedValue(MATCH);
+    api.getConquestState.mockResolvedValue(state(1));
+
+    let channelCbs;
+    api.openConquestChannel.mockImplementation((code, uid, cbs) => {
+      channelCbs = cbs;
+      return { notify: vi.fn(), close: vi.fn() };
+    });
+
+    const { result } = renderHook(() => useConquestMatch({ lang: "fr", displayName: "A" }));
+    await act(async () => {
+      await result.current.resume();
+    });
+
+    expect(api.getConquestState).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      channelCbs.onStatus("SUBSCRIBED");
+    });
+    expect(result.current.realtimeUp).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(4900);
+    });
+    expect(api.getConquestState).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(api.getConquestState).toHaveBeenCalledTimes(2);
   });
 });

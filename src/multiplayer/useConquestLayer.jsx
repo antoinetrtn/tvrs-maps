@@ -6,7 +6,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import ModeShutter from "../components/ModeShutter.jsx";
 import { isConquestEnabled } from "./conquestConfig";
 import ConquestCursorLayer from "./ConquestCursorLayer.jsx";
-import { CONQUEST_FOCUS_HOLD_MS, nextConquestFocus, shouldAutoRelease } from "./conquestFocus";
+import {
+  CONQUEST_FOCUS_HOLD_MS,
+  nextConquestFocus,
+  shouldAutoRelease,
+  withQuietFocus,
+} from "./conquestFocus";
 import { clearConquestParam, readConquestCode } from "./conquestLink";
 import ConquestScreen from "./ConquestScreen.jsx";
 import { hasStoredConquestMatch, useConquestMatch } from "./useConquestMatch";
@@ -97,6 +102,8 @@ export function useConquestLayer({
   // would leak the answer of a steal challenge.
   const perfProfile = useMemo(() => ({ ...basePerf, maxLabels: 0 }), [basePerf]);
 
+  const conquestOverlay = useMemo(() => withQuietFocus(overlay, focus), [overlay, focus]);
+
   const view = useMemo(() => {
     if (!active) return sessionView;
     return {
@@ -113,10 +120,10 @@ export function useConquestLayer({
         perfProfile,
         isHomeScreen: false,
         isEndScreen: false,
-        conquestOverlay: overlay,
+        conquestOverlay,
       },
     };
-  }, [active, sessionView, overlay, focus, handleCountryClick, perfProfile]);
+  }, [active, sessionView, conquestOverlay, focus, handleCountryClick, perfProfile]);
 
   const screen = active ? (
     <>
