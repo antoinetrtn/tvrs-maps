@@ -68,7 +68,7 @@ function mergeGeometries(geomA, geomB) {
       current = adj.get(key);
     }
     const start = result[0];
-    const end = result[result.length - 1];
+    const end = result.at(-1);
     if (!arePointsEqual(start, end)) {
       result.push(start);
     }

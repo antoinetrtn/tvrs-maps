@@ -102,7 +102,7 @@ export function useGeoResource({ url, enabled = true, transform }) {
         if (cancelled) return;
         if (attemptIndex < RETRY_DELAYS_MS.length) {
           const delay = RETRY_DELAYS_MS[attemptIndex];
-          retryTimer = setTimeout(() => executeAttempt(attemptIndex + 1), delay);
+          retryTimer = setTimeout(() => void executeAttempt(attemptIndex + 1), delay);
         } else {
           console.error(`Failed to load geo resource from ${url}:`, err);
           setError(err);
@@ -111,7 +111,7 @@ export function useGeoResource({ url, enabled = true, transform }) {
       }
     };
 
-    executeAttempt(0);
+    void executeAttempt(0);
 
     return () => {
       cancelled = true;

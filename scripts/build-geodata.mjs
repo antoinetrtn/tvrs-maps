@@ -65,11 +65,11 @@ function simplifyRing(ring, factor) {
   const out = [];
   for (const [x, y] of ring) {
     const p = [round(x, factor), round(y, factor)];
-    const last = out[out.length - 1];
-    if (!last || last[0] !== p[0] || last[1] !== p[1]) out.push(p);
+    const prev = out.at(-1);
+    if (prev?.[0] !== p[0] || prev?.[1] !== p[1]) out.push(p);
   }
   const first = out[0];
-  const last = out[out.length - 1];
+  const last = out.at(-1);
   if (out.length && (first[0] !== last[0] || first[1] !== last[1])) out.push([...first]);
   return out;
 }

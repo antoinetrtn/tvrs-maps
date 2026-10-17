@@ -6,117 +6,61 @@ import { useGeoResource } from "../hooks/useGeoResource";
 
 vi.mock("../hooks/useGeoResource");
 
+/** Mocks the three resources by URL; returns their retry spies. */
+function mockResources({ countries = "ready", departments = "ready", usStates = "ready" }) {
+  const retries = { countries: vi.fn(), departments: vi.fn(), usStates: vi.fn() };
+  const statuses = { countries, departments, usStates };
+  vi.mocked(useGeoResource).mockImplementation(({ url }) => {
+    const id = ["countries", "departements"].find((k) => url.includes(k));
+    const key = id === "departements" ? "departments" : (id ?? "usStates");
+    const status = statuses[key];
+    return {
+      data: status === "ready" ? [{ id: key }] : [],
+      status,
+      error: status === "error" ? new Error("fail") : null,
+      retry: retries[key],
+    };
+  });
+  return retries;
+}
+
+const renderMode = (mode) => renderHook(() => useGeoData({ mode })).result.current.geoStatus;
+
 describe("useGeoData geoStatus aggregation", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("only countries required in countries mode (failing departments idle prefetch keeps status ready)", () => {
-    const countriesRetry = vi.fn();
-    const departmentsRetry = vi.fn();
-    const usStatesRetry = vi.fn();
+  it("countries mode: a failing departments idle prefetch stays silent", () => {
+    const retries = mockResources({ departments: "error" });
+    const geoStatus = renderMode("countries");
 
-    vi.mocked(useGeoResource).mockImplementation(({ url }) => {
-      if (url.includes("countries")) {
-        return { data: [{ id: "c0" }], status: "ready", error: null, retry: countriesRetry };
-      }
-      if (url.includes("departements")) {
-        return {
-          data: [],
-          status: "error",
-          error: new Error("fail"),
-          retry: departmentsRetry,
-        };
-      }
-      return { data: [], status: "ready", error: null, retry: usStatesRetry };
-    });
-
-    const { result } = renderHook(() => useGeoData({ mode: "countries" }));
-
-    expect(result.current.geoStatus.status).toBe("ready");
-    expect(result.current.geoStatus.failed).toEqual([]);
-
-    result.current.geoStatus.retry();
-    expect(countriesRetry).not.toHaveBeenCalled();
-    expect(departmentsRetry).not.toHaveBeenCalled();
+    expect(geoStatus.status).toBe("ready");
+    expect(geoStatus.failed).toEqual([]);
+    geoStatus.retry();
+    expect(retries.countries).not.toHaveBeenCalled();
+    expect(retries.departments).not.toHaveBeenCalled();
   });
 
-  it(
-    "departments required in departments mode " +
-      "(failing -> error, failed ['departments'], retry refetches only it)",
-    () => {
-      const countriesRetry = vi.fn();
-      const departmentsRetry = vi.fn();
-      const usStatesRetry = vi.fn();
+  it.each([
+    ["departments", "departments"],
+    ["us_states", "usStates"],
+  ])("%s mode: its dataset is required, retry refetches only it", (mode, key) => {
+    const retries = mockResources({ [key]: "error" });
+    const geoStatus = renderMode(mode);
 
-      vi.mocked(useGeoResource).mockImplementation(({ url }) => {
-        if (url.includes("countries")) {
-          return { data: [{ id: "c0" }], status: "ready", error: null, retry: countriesRetry };
-        }
-        if (url.includes("departements")) {
-          return {
-            data: [],
-            status: "error",
-            error: new Error("fail"),
-            retry: departmentsRetry,
-          };
-        }
-        return { data: [], status: "ready", error: null, retry: usStatesRetry };
-      });
-
-      const { result } = renderHook(() => useGeoData({ mode: "departments" }));
-
-      expect(result.current.geoStatus.status).toBe("error");
-      expect(result.current.geoStatus.failed).toEqual(["departments"]);
-
-      result.current.geoStatus.retry();
-      expect(departmentsRetry).toHaveBeenCalledTimes(1);
-      expect(countriesRetry).not.toHaveBeenCalled();
-    }
-  );
-
-  it("us states required in us_states mode (failing -> error, failed ['usStates'], retry refetches only it)", () => {
-    const countriesRetry = vi.fn();
-    const departmentsRetry = vi.fn();
-    const usStatesRetry = vi.fn();
-
-    vi.mocked(useGeoResource).mockImplementation(({ url }) => {
-      if (url.includes("countries")) {
-        return { data: [{ id: "c0" }], status: "ready", error: null, retry: countriesRetry };
-      }
-      if (url.includes("departements")) {
-        return { data: [], status: "ready", error: null, retry: departmentsRetry };
-      }
-      return {
-        data: [],
-        status: "error",
-        error: new Error("fail"),
-        retry: usStatesRetry,
-      };
-    });
-
-    const { result } = renderHook(() => useGeoData({ mode: "us_states" }));
-
-    expect(result.current.geoStatus.status).toBe("error");
-    expect(result.current.geoStatus.failed).toEqual(["usStates"]);
-
-    result.current.geoStatus.retry();
-    expect(usStatesRetry).toHaveBeenCalledTimes(1);
-    expect(countriesRetry).not.toHaveBeenCalled();
-    expect(departmentsRetry).not.toHaveBeenCalled();
+    expect(geoStatus.status).toBe("error");
+    expect(geoStatus.failed).toEqual([key]);
+    geoStatus.retry();
+    expect(retries[key]).toHaveBeenCalledTimes(1);
+    expect(Object.values(retries).filter((fn) => fn.mock.calls.length)).toHaveLength(1);
   });
 
-  it("sets status to loading when a required dataset is loading", () => {
-    vi.mocked(useGeoResource).mockImplementation(({ url }) => {
-      if (url.includes("countries")) {
-        return { data: [], status: "loading", error: null, retry: vi.fn() };
-      }
-      return { data: [], status: "idle", error: null, retry: vi.fn() };
-    });
+  it("is loading while a required dataset is loading", () => {
+    mockResources({ countries: "loading", departments: "idle", usStates: "idle" });
+    const geoStatus = renderMode("countries");
 
-    const { result } = renderHook(() => useGeoData({ mode: "countries" }));
-
-    expect(result.current.geoStatus.status).toBe("loading");
-    expect(result.current.geoStatus.failed).toEqual([]);
+    expect(geoStatus.status).toBe("loading");
+    expect(geoStatus.failed).toEqual([]);
   });
 });
