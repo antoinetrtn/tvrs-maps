@@ -16,6 +16,7 @@ import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
 import ProfileFooter from "./ProfileFooter";
 import Button from "./ui/Button";
+import Dialog from "./ui/Dialog";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import TabBar from "./ui/TabBar";
 import XpBar from "./XpBar";
@@ -205,10 +206,13 @@ const ProfilePanel = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`sheet-panel profile-panel glass-panel open ${theme}`}
-      onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
+    <Dialog
+      variant="panel"
+      open
+      onClose={onClose}
+      theme={theme}
+      label={t("tab_profile")}
+      className="profile-panel glass-panel"
     >
       <div className="panel-header">
         <TabBar
@@ -458,7 +462,7 @@ const ProfilePanel = ({
           </div>
         )}
       </div>
-    </div>
+    </Dialog>
   );
 };
 

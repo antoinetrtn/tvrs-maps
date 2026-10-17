@@ -1,15 +1,13 @@
 import "./ConquestRules.css";
 
-import { useCallback, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useCallback } from "react";
 
+import Dialog, { DialogTitle } from "../components/ui/Dialog";
 import IconButton from "../components/ui/IconButton";
 import { getConquestRulesText } from "./conquestRulesText";
 import RulesIllustration from "./RulesIllustration";
 import { markRulesSeen } from "./useConquestRulesAutoOpen";
 
-const FOCUSABLE_SELECTOR =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 const NUM_TOKEN_REGEX = /(\+?\d+(?:v\d| pts| s\b)?)/g;
 
 function renderHighlightedText(text) {
@@ -27,28 +25,6 @@ function renderHighlightedText(text) {
       </strong>
     );
   });
-}
-
-function trapFocus(event, dialog) {
-  if (event.key !== "Tab" || !dialog) {
-    return;
-  }
-  const focusables = Array.from(dialog.querySelectorAll(FOCUSABLE_SELECTOR));
-  if (focusables.length === 0) {
-    event.preventDefault();
-    return;
-  }
-  const first = focusables[0];
-  const last = focusables.at(-1);
-  if (event.shiftKey) {
-    if (document.activeElement === first || !dialog.contains(document.activeElement)) {
-      event.preventDefault();
-      last.focus();
-    }
-  } else if (document.activeElement === last || !dialog.contains(document.activeElement)) {
-    event.preventDefault();
-    first.focus();
-  }
 }
 
 const makeIcon = (d, size = 24) => (
@@ -100,106 +76,51 @@ export function ConquestRulesButton({ lang, onClick }) {
 
 export default function ConquestRulesSheet({ open, onClose, lang }) {
   const t = getConquestRulesText(lang);
-  const dialogRef = useRef(null);
-  const prevActiveRef = useRef(null);
 
   const handleClose = useCallback(() => {
     markRulesSeen();
     onClose?.();
   }, [onClose]);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const prevActive = document.activeElement;
-    prevActiveRef.current = prevActive;
-
-    const focusTimer = setTimeout(() => {
-      if (!dialogRef.current) {
-        return;
-      }
-      const focusables = dialogRef.current.querySelectorAll(FOCUSABLE_SELECTOR);
-      if (focusables.length > 0) {
-        focusables[0].focus();
-      }
-    }, 0);
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        event.stopPropagation();
-        handleClose();
-        return;
-      }
-      trapFocus(event, dialogRef.current);
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      clearTimeout(focusTimer);
-      window.removeEventListener("keydown", handleKeyDown);
-      if (prevActive && typeof prevActive.focus === "function") {
-        prevActive.focus();
-      }
-    };
-  }, [open, handleClose]);
-
-  if (!open || typeof document === "undefined") {
-    return null;
-  }
-
-  return createPortal(
-    <div className="conquest-rules-backdrop">
-      <button
-        type="button"
-        className="conquest-rules-scrim"
-        tabIndex={-1}
-        aria-hidden="true"
-        onClick={handleClose}
-        data-testid="conquest-rules-backdrop"
-      />
-      <dialog
-        open
-        aria-modal="true"
-        aria-labelledby="conquest-rules-title"
-        className="conquest-rules-dialog"
-        ref={dialogRef}
-      >
-        <header className="conquest-rules-header">
-          <div className="conquest-rules-header-text">
-            <h2 id="conquest-rules-title" className="conquest-rules-title">
-              {t.title}
-            </h2>
-            <p className="conquest-rules-subtitle">{t.subtitle}</p>
-          </div>
-          <IconButton
-            variant="outline"
-            size="sm"
-            label={t.close}
-            className="conquest-rules-close-btn"
-            onClick={handleClose}
-          >
-            {makeIcon(CLOSE_PATH, 16)}
-          </IconButton>
-        </header>
-
-        <div className="conquest-rules-body">
-          <RulesIllustration labels={t.illustration} />
-          <div className="conquest-rules-grid">
-            {t.sections.map((section) => (
-              <article key={section.id} className="conquest-rules-card">
-                <div className="conquest-rules-card-head">
-                  <span className="conquest-rules-icon">{makeIcon(ICON_PATHS[section.id])}</span>
-                  <h3 className="conquest-rules-card-title">{section.title}</h3>
-                </div>
-                <p className="conquest-rules-card-text">{renderHighlightedText(section.text)}</p>
-              </article>
-            ))}
-          </div>
+  return (
+    <Dialog
+      variant="sheet"
+      open={open}
+      onClose={handleClose}
+      labelledBy="conquest-rules-title"
+      className="conquest-rules-dialog"
+      backdropTestId="conquest-rules-backdrop"
+    >
+      <header className="conquest-rules-header">
+        <div className="conquest-rules-header-text">
+          <DialogTitle className="conquest-rules-title">{t.title}</DialogTitle>
+          <p className="conquest-rules-subtitle">{t.subtitle}</p>
         </div>
-      </dialog>
-    </div>,
-    document.body
+        <IconButton
+          variant="outline"
+          size="sm"
+          label={t.close}
+          className="conquest-rules-close-btn"
+          onClick={handleClose}
+        >
+          {makeIcon(CLOSE_PATH, 16)}
+        </IconButton>
+      </header>
+
+      <div className="conquest-rules-body">
+        <RulesIllustration labels={t.illustration} />
+        <div className="conquest-rules-grid">
+          {t.sections.map((section) => (
+            <article key={section.id} className="conquest-rules-card">
+              <div className="conquest-rules-card-head">
+                <span className="conquest-rules-icon">{makeIcon(ICON_PATHS[section.id])}</span>
+                <h3 className="conquest-rules-card-title">{section.title}</h3>
+              </div>
+              <p className="conquest-rules-card-text">{renderHighlightedText(section.text)}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </Dialog>
   );
 }

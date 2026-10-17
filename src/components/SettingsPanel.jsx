@@ -6,6 +6,7 @@ import React from "react";
 import { useTranslation } from "../config/i18n";
 import AccentPicker from "./AccentPicker";
 import GlobeDisplaySettings from "./GlobeDisplaySettings";
+import Dialog, { DialogTitle } from "./ui/Dialog";
 import OptionGroup from "./ui/OptionGroup";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import { SettingsRow, SettingsSection } from "./ui/Settings";
@@ -41,23 +42,16 @@ const SettingsPanel = ({
   };
 
   return (
-    // Sheet container: stops clicks/pointers reaching the globe layer behind and
-    // closes on Escape. It is a dialog surface, not a control.
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
-    <div
-      role="dialog"
-      aria-labelledby="settings-panel-title"
-      className={`sheet-panel settings-panel glass-panel ${open ? "open" : ""} ${theme}`}
-      onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose?.(e);
-      }}
-      onPointerDown={(e) => e.stopPropagation()}
+    <Dialog
+      variant="panel"
+      open={open}
+      onClose={onClose}
+      theme={theme}
+      labelledBy="settings-panel-title"
+      className="settings-panel glass-panel"
     >
       <div className="panel-header">
-        <h2 className="panel-title" id="settings-panel-title">
-          {t("settings")}
-        </h2>
+        <DialogTitle className="panel-title">{t("settings")}</DialogTitle>
         <PanelCloseButton label={t("close")} onClick={onClose} />
       </div>
 
@@ -130,7 +124,7 @@ const SettingsPanel = ({
           </SettingsRow>
         </SettingsSection>
       </div>
-    </div>
+    </Dialog>
   );
 };
 
