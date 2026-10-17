@@ -17,13 +17,14 @@ const SATELLITE_OWNER_OPACITY = 0.62;
  * meaning. Found countries get a soft glitch tint instead of the raw
  * triangulation wireframe (which read as a noisy mesh).
  */
-function applySatelliteVisibility(material, { opaque, found, transitioning, ownerTint }) {
+function applySatelliteVisibility(material, { opaque, found, transitioning, ownerTint, veil = 0 }) {
   material.visible = true;
   material.transparent = !opaque;
   if (opaque) material.opacity = 1.0;
   else if (found) material.opacity = SATELLITE_FOUND_OPACITY;
   else if (transitioning) material.opacity = 1.0;
   else if (ownerTint) material.opacity = SATELLITE_OWNER_OPACITY;
+  else if (veil > 0) material.opacity = veil;
   else material.visible = false;
 }
 import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
@@ -49,6 +50,7 @@ function resolvePolygonEmissiveProps({
   isHighlightedOnGlobe,
   isDepartmentMode,
   isGhostCountry,
+  isGhostVeil = false,
   globeLightingEnabled,
   isLight,
   UI_COLORS,
@@ -57,6 +59,16 @@ function resolvePolygonEmissiveProps({
   const emissiveIntensity = 0;
   const specularHex = new THREE.Color(UI_COLORS.black);
   const shininess = 0.7;
+
+  // Satellite: the ghost world is a flat dark veil, no lighting or highlights.
+  if (isGhostVeil) {
+    return {
+      emissiveHex: color,
+      emissiveIntensity: 0,
+      specularHex: new THREE.Color(0, 0, 0),
+      shininess: 0,
+    };
+  }
 
   if (showFoundOnGlobe && kind === "cap") {
     return {
@@ -151,6 +163,16 @@ function applyCountrySurfaceGrainShader(shader) {
   );
 }
 
+/**
+ * Only glitch-shader materials are re-based when their country is deselected.
+ * Plain materials (Learn highlight, found caps, regional lands) keep the exact
+ * look they were cached with: the old deselect reset dimmed a cached highlight
+ * (emissive 1 → 0.26) for the frames before the new material was applied, then
+ * re-selecting that country brought it back dark.
+ */
+export const isDeselectResettableMaterial = (material) =>
+  Boolean(material?.userData?.isGlitchShaderCap) && !material.userData.isFoundCap;
+
 export function getPolygonMaterialForFeature({
   d,
   kind,
@@ -183,6 +205,7 @@ export function getPolygonMaterialForFeature({
   restingColor,
   ownerTint = false, // Conquête: owned country must stay visible over textures
   foundStyle = getGlobePrefs().foundStyle, // Settings: "mesh" = found caps as a line mesh
+  ghostVeil = 0, // Satellite regional modes: opacity of the dark veil over the rest of the world
 }) {
   const isSameAdmin = (a, b) => {
     if (!a || !b) return false;
@@ -225,6 +248,7 @@ export function getPolygonMaterialForFeature({
     isHighlightedOnGlobe: isHighlightedOnGlobeToUse,
     isDepartmentMode,
     isGhostCountry: d.isGhostCountry,
+    isGhostVeil: ghostVeil > 0 && kind === "cap",
     globeLightingEnabled,
     isLight,
     UI_COLORS,
@@ -241,6 +265,7 @@ export function getPolygonMaterialForFeature({
   let cacheKey = `${kind}-${look}${ownerTint ? "-owner" : ""}${meshSuffix}`;
   if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}${meshSuffix}`;
   else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}-${globeTheme}${meshSuffix}`;
+  else if (ghostVeil > 0) cacheKey = `ghost-veil-${kind}-${look}-${ghostVeil}`;
   else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}`;
   else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}`;
 
@@ -281,6 +306,7 @@ export function getPolygonMaterialForFeature({
         found: showFoundOnGlobe,
         transitioning: isPrevTransitioning || isIncomingTransitioning,
         ownerTint,
+        veil: kind === "cap" ? ghostVeil : 0,
       });
     }
 
@@ -324,6 +350,7 @@ export function getPolygonMaterialForFeature({
     }
 
     material.userData.isIsolated = isIsolated;
+    material.userData.isGlitchShaderCap = isShaderCap;
     material.userData.isShared = !isFoundCapMaterial && !(isDepartmentMode || isIsolated);
     material.userData.admin = admin;
     sharedMaterialsRef.current.set(cacheKey, material);

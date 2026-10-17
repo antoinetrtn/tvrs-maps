@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 
 /** Refs + state for polygon select-in / deselect-out glitch transitions. */
-export function useGlobeSelectionTransition(selectedCountry, mode) {
+export function useGlobeSelectionTransition(selectedCountry, mode, gameDataMap = null) {
   const transitioningPreviousCountryRef = useRef(null);
   const [transitioningPreviousCountryState, setTransitioningPreviousCountryState] = useState(null);
   const transitioningIncomingCountryRef = useRef(null);
@@ -17,7 +17,10 @@ export function useGlobeSelectionTransition(selectedCountry, mode) {
     const prev = prevSelectedCountryRef.current;
     prevSelectedCountryRef.current = selectedCountry;
 
-    if (mode !== "learn") {
+    // The previous selection glitches out only while its layer is still on the globe:
+    // after a layer switch (home carousel) it is just one of the fading features.
+    const prevInCurrentLayer = !prev || !gameDataMap || Boolean(gameDataMap[prev]);
+    if (mode !== "learn" && prevInCurrentLayer) {
       transitioningPreviousCountryRef.current = prev;
       setTransitioningPreviousCountryState(prev);
       currentPrevState = prev;

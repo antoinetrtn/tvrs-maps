@@ -10,6 +10,7 @@ import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
 import { loopHasWork } from "../render/globeLoopWork";
+import { isDeselectResettableMaterial } from "../render/globePolygonMaterial";
 import { getCachedMaterial } from "../render/polygonColorResolver";
 import {
   getAnimatedPolygonMaterialCount,
@@ -263,7 +264,7 @@ export function useGlobeAnimationLoop({
             }
           });
           [oldCapMat, oldSideMat].forEach((mat, index) => {
-            if (!mat || mat.userData.isFoundCap) return;
+            if (!isDeselectResettableMaterial(mat)) return;
             if (!mat.userData.shader && mat.userData.admin !== oldAdmin) return;
             const isCap = index === 0;
 
