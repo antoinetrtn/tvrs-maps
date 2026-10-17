@@ -60,7 +60,7 @@
   width: 8px;
   height: 8px;
   background: var(--accent);
-  animation: geo-cell-step 900ms steps(5, end) infinite;
+  animation: geo-cell-step var(--dur-loop) steps(5, end) infinite;
 }
 
 .geo-status-header {
