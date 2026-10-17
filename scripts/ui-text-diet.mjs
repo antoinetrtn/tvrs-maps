@@ -349,7 +349,7 @@ const setupScreen = async (page, screen, baseUrl) => {
     await page.locator(".deck-mode-card.is-top-card .card-play-btn").click();
     await page.locator(".conquest-panel").waitFor();
     if (id === "conquest-lobby") {
-      await page.locator(".conquest-panel .btn-primary").first().click();
+      await page.locator(".conquest-panel :is(.btn-primary, .ui-btn--primary)").first().click();
       await page.locator(".conquest-ready-cta").waitFor();
     }
     return page.waitForTimeout(400);
