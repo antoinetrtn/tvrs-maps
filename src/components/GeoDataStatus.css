@@ -1,0 +1,118 @@
+/* GeoDataStatus.css — Retro-technical geo status overlay */
+
+.geo-status-wrapper {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: var(--z-overlay);
+}
+
+.geo-status-card {
+  pointer-events: auto;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: var(--spacing-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: 0;
+  backdrop-filter: var(--blur-scrim);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  font-size: var(--font-size-xs);
+  text-align: left;
+  animation: geo-status-sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
+}
+
+.geo-status-card-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.geo-status-card-error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  border-color: var(--accent);
+}
+
+.geo-status-track {
+  position: relative;
+  display: flex;
+  gap: var(--spacing-xs);
+  width: 56px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
+.geo-status-cell {
+  width: 8px;
+  height: 8px;
+  background: var(--glass-border-strong);
+  opacity: 0.4;
+}
+
+.geo-status-runner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  animation: geo-cell-step var(--dur-loop) steps(5, end) infinite;
+}
+
+.geo-status-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--accent);
+}
+
+.geo-status-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--text-main);
+}
+
+.geo-status-hint {
+  color: var(--text-muted);
+  margin: var(--spacing-xs) 0 var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.geo-status-retry {
+  align-self: flex-start;
+  border-radius: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+@keyframes geo-cell-step {
+  to {
+    transform: translateX(60px);
+  }
+}
+
+@keyframes geo-status-sheet-in {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .geo-status-card {
+    animation: none;
+    clip-path: none;
+  }
+  .geo-status-runner {
+    display: none;
+  }
+  .geo-status-cell:first-child {
+    opacity: 1;
+    background: var(--accent);
+  }
+}

@@ -14,6 +14,7 @@
   --dur-screen-exit: 180ms; /* Mirrored by EXIT_MS in src/config/gameConstants.js */
   --dur-fling: 190ms;
   --dur-settle: 260ms;
+  --dur-loop: 900ms; /* Looping stepped indicators (e.g. map-data loading cells) */
 
   /* Easings (smooth, for non-pixel matter) */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

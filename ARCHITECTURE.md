@@ -100,10 +100,14 @@ src/
   tests/                      Tests Vitest (purs : shaders, gamification, i18n, config…).
   types/                      supabase.ts (types générés).
 
-public/data/
-  countries-50m-low.json      GeoJSON polygones pays (basse résolution = runtime).
-  departements-1000m.geojson  GeoJSON départements FR.
-  us-states.json              GeoJSON états US.
+public/data/                  GeoJSON servis (GÉNÉRÉS : ne pas éditer à la main).
+  countries-50m-low.json      polygones pays (basse résolution = runtime).
+  departements-1000m.geojson  départements FR.
+  us-states.json              états US.
+data-src/geodata/             Sources d'origine conservées (non servies) + README.
+scripts/build-geodata.mjs     `npm run build:geodata` régénère public/data depuis data-src
+                              (coordonnées à 3 décimales, propriétés utiles seulement, JSON
+                              compact) ; `npm run check:geodata` vérifie qu'ils sont à jour.
 ```
 
 **Invariants** (détaillés dans `QUALITY.md`) : pas de chaîne UI en dur (→ `config/i18n.js`),
