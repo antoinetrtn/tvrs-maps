@@ -34,6 +34,15 @@ jobs:
       - name: Run Quality Check (Lint, custom rules & Knip)
         run: npm run lint
 
+      - name: Check design tokens
+        run: npm run check:tokens
+
+      - name: Check CSS rules (ratchet)
+        run: npm run check:css-rules
+
+      - name: Check a11y lint (ratchet)
+        run: npm run check:a11y
+
       - name: Run Tests
         run: npm run test:run
 

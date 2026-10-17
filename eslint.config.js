@@ -77,9 +77,14 @@ export default [
       ...jsxA11y.configs.recommended.rules,
       // Downgrade some strict interaction rules to warn for now (game UI with custom controls/glass panels);
       // full keyboard + ARIA can be improved iteratively without blocking other quality gains.
+      // These warnings are RATCHETED: `npm run check:a11y` (scripts/check-a11y-ratchet.mjs) compares the
+      // per-file count of every jsx-a11y finding with scripts/ratchet-baselines/a11y.json and fails CI as
+      // soon as one increases, so existing debt can only shrink and new violations are refused.
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/no-static-element-interactions": "warn",
       "jsx-a11y/no-autofocus": "warn",
+      // Icon-only controls must carry an accessible name (aria-label / text).
+      "jsx-a11y/control-has-associated-label": "warn",
 
       // Security (selected rules to avoid too much noise)
       "security/detect-unsafe-regex": "warn",
