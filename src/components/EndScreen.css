@@ -80,17 +80,10 @@
   margin-inline: auto;
   width: fit-content;
   z-index: 6;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-sm);
   min-height: var(--control-lg);
   padding: var(--spacing-xs) var(--spacing-lg);
   border-radius: var(--radius-full);
-  font-family: var(--font-main);
   font-size: var(--font-size-md);
-  font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
   pointer-events: auto;
   animation: slideUp var(--transition-emphasized) both;
   transition:
@@ -136,7 +129,9 @@
   border-radius: var(--radius-md);
   animation: slideUp var(--transition-emphasized) both;
   animation-delay: 0.2s;
-  cursor: pointer;
+  text-align: left;
+  font-weight: normal;
+  color: var(--text-main);
   transition:
     transform var(--transition-layout),
     box-shadow var(--transition-normal),
@@ -149,6 +144,7 @@
     var(--glass-shadow-strong),
     0 0 0 1px var(--highlight-soft) inset;
   transform: translateY(-2px);
+  background: var(--glass-bg);
 }
 
 .progress-bars-header {
@@ -190,6 +186,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-md);
+  width: 100%;
 }
 
 @keyframes slideUp {
@@ -273,6 +270,7 @@
 }
 
 .progress-track {
+  display: block;
   position: relative;
   width: 48px;
   height: 4px;
@@ -282,6 +280,7 @@
 }
 
 .progress-fill {
+  display: block;
   height: 100%;
   border-radius: var(--radius-full);
   background: var(--continent-color);

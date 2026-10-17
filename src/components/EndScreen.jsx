@@ -104,8 +104,9 @@ const EndScreen = ({
   if (minimized) {
     return (
       <div className={`end-screen-overlay minimized ${theme}`}>
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
           className="end-screen-restore-chip glass-panel"
           onClick={() => setMinimized(false)}
           title={t("back_to_results")}
@@ -115,7 +116,7 @@ const EndScreen = ({
             {foundList.length}/{totalCountries}
           </span>
           <span className="restore-chip-label">{t("back_to_results")}</span>
-        </button>
+        </Button>
       </div>
     );
   }

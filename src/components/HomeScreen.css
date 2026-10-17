@@ -142,37 +142,13 @@
 /* Podium widget */
 .home-podium-widget {
   pointer-events: auto;
+  width: auto;
   height: var(--control-lg);
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
   /* Podium tight centering */
   padding: 0 var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  transition:
-    transform var(--transition-spring),
-    box-shadow var(--transition-spring),
-    background var(--transition-spring);
-}
-
-.home-podium-widget:not(.home-dock-segment):hover {
-  transform: translateY(-1px);
-  border-color: var(--accent) !important;
-  background: var(--glass-hover) !important;
-  box-shadow:
-    var(--glass-shadow-strong),
-    0 0 8px var(--accent-soft);
-}
-
-.home-podium-widget:active {
-  transform: var(--press-offset);
-  background: var(--accent) !important;
-  box-shadow: none;
-  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 .widget-spot {

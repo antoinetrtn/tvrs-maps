@@ -2,6 +2,7 @@ import "./ConquestRules.css";
 
 import { useCallback } from "react";
 
+import Button from "../components/ui/Button.jsx";
 import Dialog, { DialogTitle } from "../components/ui/Dialog";
 import IconButton from "../components/ui/IconButton";
 import { getConquestRulesText } from "./conquestRulesText";
@@ -67,10 +68,10 @@ const HELP_PATH =
 export function ConquestRulesButton({ lang, onClick }) {
   const t = getConquestRulesText(lang);
   return (
-    <button type="button" className="conquest-rules-open-btn" onClick={onClick}>
+    <Button variant="secondary" size="sm" className="conquest-rules-open-btn" onClick={onClick}>
       {makeIcon(HELP_PATH, 16)}
       <span>{t.open}</span>
-    </button>
+    </Button>
   );
 }
 

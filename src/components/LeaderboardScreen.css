@@ -222,7 +222,7 @@
   flex-direction: column;
   align-items: center;
   position: relative;
-  cursor: pointer;
+  cursor: default;
   height: 100%;
   justify-content: flex-end;
 }

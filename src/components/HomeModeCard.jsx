@@ -3,6 +3,7 @@ import React from "react";
 
 import { getCardPose } from "./homeCardPose";
 import { HOME_CONQUEST_KEY } from "./homeModes";
+import Button from "./ui/Button";
 
 const guardDrag = (wasDraggingRef, fn) => (e) => {
   if (wasDraggingRef.current) {
@@ -15,8 +16,9 @@ const guardDrag = (wasDraggingRef, fn) => (e) => {
 };
 
 const SecondaryButton = ({ isTopCard, className, onClick, title, label, icon }) => (
-  <button
-    type="button"
+  <Button
+    variant="secondary"
+    size="lg"
     tabIndex={isTopCard ? 0 : -1}
     className={className}
     onClick={onClick}
@@ -25,7 +27,7 @@ const SecondaryButton = ({ isTopCard, className, onClick, title, label, icon }) 
   >
     {icon}
     <span className="card-btn-label desktop-reveal">{label}</span>
-  </button>
+  </Button>
 );
 
 const CardActions = ({
@@ -49,15 +51,16 @@ const CardActions = ({
 
   return (
     <div className="card-actions">
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        size="lg"
         tabIndex={isTopCard ? 0 : -1}
         className={`card-play-btn mode-${modeKey}`}
         onClick={onPlay}
       >
         <Play width={20} height={20} aria-hidden="true" />
         <span>{t("play")}</span>
-      </button>
+      </Button>
 
       {!isConquest && (
         <SecondaryButton

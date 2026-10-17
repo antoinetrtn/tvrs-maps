@@ -54,29 +54,15 @@
 
 .conquest-ready-cta {
   position: relative;
-  display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-xxs);
-  width: 100%;
   min-height: 64px;
   padding: var(--spacing-sm) var(--spacing-lg);
   overflow: hidden;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
   box-shadow: 4px 4px 0 var(--black);
   font-family: var(--font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    transform var(--dur-micro) var(--steps-press),
-    box-shadow var(--dur-micro) var(--steps-press),
-    color var(--dur-fast) steps(1, end);
 }
 
 .conquest-ready-cta::before {
@@ -105,26 +91,21 @@
   color: var(--text-muted);
 }
 
-.conquest-ready-cta:hover:not(:disabled) {
+.conquest-ready-cta:hover:not(:disabled),
+.ui-btn.conquest-ready-cta:hover:not(:disabled) {
   transform: translateY(-1px);
+  box-shadow: 4px 4px 0 var(--black);
 }
 
-.conquest-ready-cta:active:not(:disabled) {
+.conquest-ready-cta:active:not(:disabled),
+.ui-btn.conquest-ready-cta:active:not(:disabled) {
   transform: var(--press-offset);
   box-shadow: 1px 1px 0 var(--black);
 }
 
-.conquest-ready-cta:focus-visible {
-  outline: 2px solid var(--text-main);
-  outline-offset: 2px;
-}
-
-.conquest-ready-cta:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.conquest-ready-cta.is-ready {
+.conquest-ready-cta.is-ready,
+.conquest-ready-cta.is-ready:hover,
+.ui-btn.conquest-ready-cta.is-ready:hover {
   border-color: var(--success);
   color: var(--success);
 }
@@ -141,7 +122,9 @@
 }
 
 /* Once ready and the host can start, the start button takes the lead. */
-.conquest-ready-cta.is-quiet {
+.conquest-ready-cta.is-quiet,
+.conquest-ready-cta.is-quiet:hover,
+.ui-btn.conquest-ready-cta.is-quiet:hover {
   min-height: var(--control-lg);
   box-shadow: none;
 }

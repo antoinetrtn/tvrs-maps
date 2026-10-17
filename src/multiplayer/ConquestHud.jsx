@@ -170,15 +170,16 @@ const HudAnswer = ({
       <ul className="conquest-lockouts" aria-live="polite">
         {lockouts.map((lock) => (
           <li key={lock.id}>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               className="conquest-lockout"
               onClick={() => onFocusCountry(lock.id)}
             >
               <span className="conquest-lockout-name">{countryName(lock.id)}</span>
               <span>{t.lockedFor}</span>
               <span className="conquest-lockout-time">{Math.ceil(lock.ms / 1000)} s</span>
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

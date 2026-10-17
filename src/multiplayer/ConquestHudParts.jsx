@@ -1,5 +1,6 @@
 import React from "react";
 
+import Button from "../components/ui/Button.jsx";
 import { formatClock, getPaletteEntry } from "./conquestLogic";
 
 const CountryIcon = () => (
@@ -113,8 +114,9 @@ export const HudFeed = ({ feed, onFocusCountry, t }) => (
       {feed.map((line) => (
         <li key={line.id}>
           {line.countryId ? (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               className="conquest-feed-line"
               onClick={() => onFocusCountry(line.countryId)}
             >
@@ -126,7 +128,7 @@ export const HudFeed = ({ feed, onFocusCountry, t }) => (
                 />
               ) : null}
               <span className="conquest-feed-text">{line.text}</span>
-            </button>
+            </Button>
           ) : (
             <span className="conquest-feed-line-text">
               {line.actorColor ? (

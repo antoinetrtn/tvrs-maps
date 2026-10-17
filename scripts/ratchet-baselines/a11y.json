@@ -1,6 +1,5 @@
 {
   "jsx-a11y/click-events-have-key-events": {
-    "src/components/GameHUD.jsx": 2,
     "src/components/HomeScreen.jsx": 1
   },
   "jsx-a11y/control-has-associated-label": {
@@ -14,7 +13,6 @@
     "src/multiplayer/ConquestStealPanel.jsx": 1
   },
   "jsx-a11y/no-static-element-interactions": {
-    "src/components/GameHUD.jsx": 2,
     "src/components/HomeScreen.jsx": 1
   }
 }

@@ -13,6 +13,7 @@ import { ANSWER_INPUT_PROPS } from "../utils/answerField";
 import AnswerSuggestionList from "./AnswerSuggestionList";
 import Logo from "./Logo";
 import { PixelHeart } from "./PixelHeart";
+import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
 
 const GameHUD = ({
@@ -228,7 +229,9 @@ const GameHUD = ({
                 <Home width={18} height={18} />
               </IconButton>
               {mode !== "learn" && (
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   className={`hud-mini-pill score-pill ${scoreGlow ? "score-increased-flash" : ""}`}
                   onClick={onInfo}
                   onMouseDown={(e) => e.preventDefault()}
@@ -236,7 +239,7 @@ const GameHUD = ({
                 >
                   <span className="mini-pill-val">{score}</span>
                   <span className="mini-pill-sub">/{totalPossible}</span>
-                </button>
+                </Button>
               )}
             </div>
 
@@ -282,14 +285,16 @@ const GameHUD = ({
                       <Play width={16} height={16} />
                     </IconButton>
                   )}
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     className={`hud-mini-pill timer-pill ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
                     onClick={onInfo}
                     onMouseDown={(e) => e.preventDefault()}
                     title={t("progress_title")}
                   >
                     <span className="mini-pill-val">{formatTime(timeLeft)}</span>
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -298,45 +303,48 @@ const GameHUD = ({
           // === DESKTOP TOP HUD BAR ===
           <>
             <div className="hud-top-left">
-              <div
+              <Button
+                variant="ghost"
                 className="hud-logo-clickable"
                 onClick={onGoHome}
                 onMouseDown={(e) => e.preventDefault()}
+                aria-label={t("return_home")}
                 title={t("return_home")}
-                style={{ pointerEvents: "auto", cursor: "pointer" }}
               >
                 <Logo size="small" variant="hud" />
-              </div>
+              </Button>
             </div>
 
             <div className="hud-top-center">
               {mode !== "learn" && (
-                <div
+                <Button
+                  variant="ghost"
                   className="central-island-panel"
                   onClick={onInfo}
                   onMouseDown={(e) => e.preventDefault()}
+                  title={t("progress_title")}
                 >
-                  <div
+                  <span
                     className={`island-font ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
                   >
                     {formatTime(timeLeft)}
-                  </div>
-                  <div className="island-divider" />
-                  <div className="island-progress-wrap">
-                    <div className="progress-linear-container">
-                      <div
+                  </span>
+                  <span className="island-divider" />
+                  <span className="island-progress-wrap">
+                    <span className="progress-linear-container">
+                      <span
                         className="progress-linear-fill"
                         style={{ width: `${progressPercent}%` }}
                       />
-                    </div>
-                  </div>
-                  <div className="island-divider" />
-                  <div className={`island-font ${scoreGlow ? "score-increased-flash" : ""}`}>
+                    </span>
+                  </span>
+                  <span className="island-divider" />
+                  <span className={`island-font ${scoreGlow ? "score-increased-flash" : ""}`}>
                     <span className="island-font">
                       {score}/{totalPossible}
                     </span>
-                  </div>
-                </div>
+                  </span>
+                </Button>
               )}
             </div>
 
