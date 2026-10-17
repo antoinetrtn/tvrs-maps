@@ -1,9 +1,12 @@
 import { useMemo } from "react";
 
+import { geoTranslations } from "./geoText";
 import { trainingTranslations } from "./trainingText";
 
 export const translations = {
   fr: {
+    ...geoTranslations.fr,
+
     // Confirmation Modals
     cancel: "Annuler",
     confirm: "Confirmer",
@@ -237,6 +240,8 @@ export const translations = {
     ...trainingTranslations.fr,
   },
   en: {
+    ...geoTranslations.en,
+
     // Confirmation Modals
     cancel: "Cancel",
     confirm: "Confirm",

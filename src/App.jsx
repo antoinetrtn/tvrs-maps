@@ -6,6 +6,7 @@ import AchievementToast from "./components/AchievementToast.jsx";
 import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
+import GeoDataStatus from "./components/GeoDataStatus.jsx";
 import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
 import HomeScreen from "./components/HomeScreen.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
@@ -138,6 +139,7 @@ function App() {
     activeDataMap,
     allCountryKeys,
     totalPossible,
+    geoStatus,
   } = useGeoData({
     mode: currentScreen === "home" ? getHomeGeoMode(globeHomeMode) : mode,
     learnSubMode: currentScreen === "home" ? getHomeLearnSubMode(globeHomeMode) : learnSubMode,
@@ -509,6 +511,7 @@ function App() {
           onClose={handleCloseAchievement}
         />
       )}
+      <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
