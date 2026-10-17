@@ -1,6 +1,6 @@
 import "./GlobeMap.css";
 
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import Globe from "react-globe.gl";
 
 import SpaceBackground from "../components/SpaceBackground";
@@ -44,6 +44,7 @@ import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
+import { isGlobeHoverRaycastNeeded } from "./render/pointerRaycast";
 import SatelliteImageryLayer from "./SatelliteImageryLayer.jsx";
 
 // Module-level for a stable identity (an inline arrow rebuilt the lighting rig each render).
@@ -405,6 +406,19 @@ const GlobeMap = (props) => {
     }
   }
 
+  // Hover raycast only where a click handler needs it (see pointerRaycast.js).
+  const hoverRaycastEnabled = isGlobeHoverRaycastNeeded({
+    isHomeScreen,
+    isRiversMountainsMode,
+    profileEnabled: perfProfile?.enablePointerInteraction,
+  });
+  useEffect(() => {
+    if (hoverRaycastEnabled) return;
+    // globe.gl keeps its "clickable" pointer cursor until the next hover event,
+    // which never comes once the raycast is off.
+    globeEl.current?.renderer?.()?.domElement?.classList.remove("clickable");
+  }, [hoverRaycastEnabled]);
+
   const activeAtmosphereColor = useMemo(
     () => getOpaqueThreeColor(UI_COLORS.atmosphere),
     [UI_COLORS.atmosphere]
@@ -454,40 +468,9 @@ const GlobeMap = (props) => {
               opacity: 0.6,
             }}
           />
-
-          {!UI_COLORS.isBlackoutTheme && (
-            <>
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-20%",
-                  left: "-20%",
-                  width: "140%",
-                  height: "140%",
-                  background: isLight
-                    ? `radial-gradient(circle at 30% 30%, var(--decor-glow-primary) 0%, var(--decor-glow-primary-end) 60%)`
-                    : `radial-gradient(circle at 30% 30%, var(--decor-glow-primary) 0%, var(--decor-glow-primary-end) 70%)`,
-                  filter: "blur(80px)",
-                  opacity: 0.7,
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "-20%",
-                  right: "-20%",
-                  width: "100%",
-                  height: "100%",
-                  background: isLight
-                    ? `radial-gradient(circle at 70% 70%, var(--decor-glow-secondary) 0%, var(--decor-glow-secondary-end) 50%)`
-                    : `radial-gradient(circle at 70% 70%, var(--decor-glow-secondary) 0%, var(--decor-glow-secondary-end) 60%)`,
-                  filter: "blur(100px)",
-                  opacity: 0.5,
-                }}
-              />
-            </>
-          )}
+          {/* The two `blur(80px)` / `blur(100px)` decorative gradients were removed:
+              their `--decor-glow-*` variables are defined nowhere, so they painted
+              nothing (background: none) while still costing a full-screen blur layer. */}
         </div>
         <div
           ref={globeContentWrapperRef}
@@ -515,7 +498,7 @@ const GlobeMap = (props) => {
             showGraticules={true}
             rendererConfig={globeRendererConfig}
             animateIn={false}
-            enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
+            enablePointerInteraction={hoverRaycastEnabled}
             polygonsData={polygonsData}
             polygonGeoJsonGeometry="renderGeometry"
             polygonCapCurvatureResolution={getPolygonCurvatureResolution}

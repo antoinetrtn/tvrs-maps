@@ -16,6 +16,8 @@ export function usePerfProfile(viewportWidth) {
       pixelRatio,
       antialias: !isMobile,
       enableAutoRotate: true,
+      // Master switch only: GlobeMap still turns the hover raycast off wherever no
+      // click handler needs it (see globe/render/pointerRaycast.js).
       enablePointerInteraction: true,
       maxLabels: PERFORMANCE.maxLabels[tier],
       showAtmosphere: true,
