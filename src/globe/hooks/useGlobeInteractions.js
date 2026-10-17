@@ -5,6 +5,13 @@ import { perfTracker } from "../../utils/perfTracker";
 import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
 import { clampGlobeAltitude } from "../render/globeAltitude";
 
+export function shouldRestoreInputFocusOnPointerUp({ pointerType, isHomeScreen } = {}) {
+  if (isHomeScreen) {
+    return false;
+  }
+  return pointerType === "mouse" || pointerType === "pen";
+}
+
 export function useGlobeInteractions({
   globeEl,
   globeContentWrapperRef,
@@ -238,11 +245,19 @@ export function useGlobeInteractions({
 
   const handlePointerUp = useCallback(
     (event) => {
+      const shouldRestoreFocus = shouldRestoreInputFocusOnPointerUp({
+        pointerType: event.pointerType,
+        isHomeScreen,
+      });
       const tap = tapRef.current;
       tapRef.current = null;
       resetGlobeNudge();
       if (isHomeScreen) return;
       if (!tap || tap.pointerId !== event.pointerId) return;
+
+      if (shouldRestoreFocus) {
+        onPreserveInputFocus?.();
+      }
 
       const dx = event.clientX - tap.x;
       const dy = event.clientY - tap.y;
