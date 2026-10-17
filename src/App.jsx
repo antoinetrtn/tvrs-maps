@@ -173,7 +173,6 @@ function App() {
     popupError,
     popupWarning,
     setPopupError,
-    setPopupWarning,
     isNewPB,
     xpResult,
     handleInput,
@@ -364,7 +363,6 @@ function App() {
     specificCountryGuess,
     handleInput,
     setPopupError,
-    setPopupWarning,
   });
 
   const handleCountrySelect = useCountrySelectHandler({

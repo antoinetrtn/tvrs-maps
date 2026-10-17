@@ -65,26 +65,65 @@ describe("answerCombobox (<GameHUD> integration)", () => {
       countryDataMap: mockCountryDataMap,
       theme: "dark",
       globeTheme: "blackout",
+      selectedCountry: null,
       ...customProps,
     };
     return render(<GameHUD {...props} />);
   };
 
-  it("(1) saisie exacte 'France' + Entrée sans sélection => onEnter NON appelé, is-rejected présent, liste ouverte", () => {
-    const { container } = renderHUD();
+  it.each([
+    ["countries", "France"],
+    ["capitals", "Paris"],
+    ["us_states", "California"],
+    ["departments", "Ain"],
+    ["rivers_mountains", "Alpes"],
+  ])(
+    "(a) mode %s sans sélection: saisie '%s' + Entrée => rejet, liste masquée, placeholder et aria-live",
+    (mode, text) => {
+      const { container } = renderHUD({ mode, selectedCountry: null });
+      const input = screen.getByRole("combobox");
+      const island = container.querySelector(".input-island");
+
+      expect(input.getAttribute("placeholder")).toBe("Sélectionne sur le globe");
+
+      fireEvent.change(input, { target: { value: text } });
+      fireEvent.keyDown(input, { key: "Enter" });
+
+      expect(onEnterMock).not.toHaveBeenCalled();
+      expect(island.classList.contains("is-rejected")).toBe(true);
+      expect(input.value).toBe(text);
+      expect(container.querySelector('[role="listbox"]')).toBeNull();
+
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion.textContent).toContain("Sélectionne un pays sur le globe");
+    }
+  );
+
+  it("champ vide + Entrée sans sélection => ne fait rien", () => {
+    const { container } = renderHUD({ selectedCountry: null });
     const input = screen.getByRole("combobox");
     const island = container.querySelector(".input-island");
+
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(onEnterMock).not.toHaveBeenCalled();
+    expect(island.classList.contains("is-rejected")).toBe(false);
+  });
+
+  it("(b) selectedCountry='FRA' + saisie 'France' + Entrée sans surbrillance => onEnter('France') appelé, champ vidé", () => {
+    renderHUD({ selectedCountry: "FRA" });
+    const input = screen.getByRole("combobox");
 
     fireEvent.change(input, { target: { value: "France" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(onEnterMock).not.toHaveBeenCalled();
-    expect(island.classList.contains("is-rejected")).toBe(true);
-    expect(container.querySelector('[role="listbox"]')).not.toBeNull();
+    expect(onEnterMock).toHaveBeenCalledTimes(1);
+    expect(onEnterMock).toHaveBeenCalledWith("France");
+    expect(input.value).toBe("");
   });
 
-  it("(2) clic sur une suggestion => onEnter('France') appelé une fois, champ vidé", () => {
-    const { container } = renderHUD();
+  it("(c) clic sur une suggestion => onEnter('France') appelé une fois, champ vidé", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
     fireEvent.change(input, { target: { value: "fran" } });
@@ -97,50 +136,45 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(input.value).toBe("");
   });
 
-  it("(3) clavier: saisie 'fran', ArrowDown, Enter => onEnter appelé avec la suggestion surlignée; ArrowDown/ArrowUp wrap", () => {
-    const { container } = renderHUD();
+  it("(c) clavier: saisie 'fran', ArrowDown, Enter => onEnter appelé avec la suggestion surlignée; wrap", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
     fireEvent.change(input, { target: { value: "fran" } });
     const options = container.querySelectorAll('[role="option"]');
     expect(options.length).toBe(1);
 
-    // Initial state: activeIndex = -1
     expect(input.getAttribute("aria-activedescendant")).toBeNull();
 
-    // ArrowUp from -1 wraps to last option
+    // ArrowUp wraps to last
     fireEvent.keyDown(input, { key: "ArrowUp" });
     expect(input.getAttribute("aria-activedescendant")).toBe(options[0].id);
     expect(options[0].getAttribute("aria-selected")).toBe("true");
 
-    // ArrowDown wraps from last (0) to 0
+    // ArrowDown wraps to first
     fireEvent.keyDown(input, { key: "ArrowDown" });
     expect(input.getAttribute("aria-activedescendant")).toBe(options[0].id);
 
-    // Enter validates highlighted option
+    // Enter validates chosen option
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onEnterMock).toHaveBeenCalledWith("France");
     expect(input.value).toBe("");
   });
 
-  it("(4) saisie partielle 'fra' + Entrée => rejet, aucune pré-surbrillance (aria-activedescendant absent)", () => {
-    const { container } = renderHUD();
+  it("(c) aucune pré-surbrillance: saisie 'fra' laisse aria-activedescendant absent", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
-    const island = container.querySelector(".input-island");
 
     fireEvent.change(input, { target: { value: "fra" } });
-
-    // No pre-highlight
     expect(input.getAttribute("aria-activedescendant")).toBeNull();
 
-    fireEvent.keyDown(input, { key: "Enter" });
-    expect(onEnterMock).not.toHaveBeenCalled();
-    expect(island.classList.contains("is-rejected")).toBe(true);
-    expect(input.getAttribute("aria-activedescendant")).toBeNull();
+    const options = container.querySelectorAll('[role="option"]');
+    expect(options.length).toBeGreaterThan(0);
+    options.forEach((opt) => expect(opt.getAttribute("aria-selected")).toBe("false"));
   });
 
-  it("(5) accents/casse: 'ETATS' / 'états' retrouvent 'États-Unis'", () => {
-    const { container } = renderHUD();
+  it("(c) accents/casse: 'ETATS' / 'états' retrouvent 'États-Unis'", () => {
+    const { container } = renderHUD({ selectedCountry: "USA" });
     const input = screen.getByRole("combobox");
 
     fireEvent.change(input, { target: { value: "ETATS" } });
@@ -154,25 +188,19 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(options[0].textContent).toContain("États-Unis");
   });
 
-  it("(6) Échap ferme, Entrée suivante rouvre", () => {
-    const { container } = renderHUD();
+  it("(c) Échap ferme la liste de suggestions", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
     fireEvent.change(input, { target: { value: "fran" } });
     expect(container.querySelector('[role="listbox"]')).not.toBeNull();
 
-    // Escape closes the listbox
     fireEvent.keyDown(input, { key: "Escape" });
     expect(container.querySelector('[role="listbox"]')).toBeNull();
-
-    // Pressing Enter with non-empty input rejects and reopens the list
-    fireEvent.keyDown(input, { key: "Enter" });
-    expect(onEnterMock).not.toHaveBeenCalled();
-    expect(container.querySelector('[role="listbox"]')).not.toBeNull();
   });
 
-  it("(7) Tab non intercepté (keydown Tab defaultPrevented === false)", () => {
-    renderHUD();
+  it("(c) Tab non intercepté (keydown Tab defaultPrevented === false)", () => {
+    renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
     const event = new KeyboardEvent("keydown", { key: "Tab", cancelable: true });
@@ -180,52 +208,52 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it("(8) mode learn: Entrée valide la première suggestion (comportement historique)", () => {
-    let learnVal = "";
-    const onLearnSearchChangeMock = vi.fn().mockImplementation((val) => {
-      learnVal = val;
-    });
-
-    const { rerender } = renderHUD({
-      mode: "learn",
-      learnSearchQuery: learnVal,
-      onLearnSearchChange: onLearnSearchChangeMock,
-    });
-
+  it("(c) onEnter retournant false => champ non vidé", () => {
+    onEnterMock.mockReturnValue(false);
+    renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
-    fireEvent.change(input, { target: { value: "paris" } });
 
-    rerender(
-      <GameHUD
-        mode="learn"
-        lang="fr"
-        score={0}
-        totalPossible={10}
-        timeLeft={300}
-        isPlaying={true}
-        isGameOver={false}
-        onEnter={onEnterMock}
-        onGoHome={vi.fn()}
-        onStop={vi.fn()}
-        onInfo={vi.fn()}
-        onNavigateFocus={vi.fn()}
-        viewport={{ width: 1200, height: 800, top: 0 }}
-        foundList={[]}
-        countryDataMap={mockCountryDataMap}
-        theme="dark"
-        globeTheme="blackout"
-        learnSearchQuery={learnVal}
-        onLearnSearchChange={onLearnSearchChangeMock}
-      />
-    );
-
-    // In learn mode, pressing Enter directly validates suggestions[0]
+    fireEvent.change(input, { target: { value: "fran" } });
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(onEnterMock).toHaveBeenCalledWith("Paris");
+
+    expect(onEnterMock).toHaveBeenCalledWith("fran");
+    expect(input.value).toBe("fran");
   });
 
-  it("(9) ARIA: role=combobox, aria-expanded, aria-controls pointe le listbox, options role=option, aria-selected suit la surbrillance", () => {
-    const { container } = renderHUD();
+  it("(c) entrée déjà trouvée marquée data-found", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA", foundList: ["FRA"] });
+    const input = screen.getByRole("combobox");
+
+    fireEvent.change(input, { target: { value: "fra" } });
+    const option = container.querySelector('[role="option"]');
+    expect(option).not.toBeNull();
+    expect(option.getAttribute("data-found")).toBe("true");
+    expect(option.textContent).toContain("✓");
+    expect(option.textContent).toContain("trouvé");
+  });
+
+  it("(c) clavier direct sur option: Enter ou Espace sur l'élément option déclenche onSelect", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
+    const input = screen.getByRole("combobox");
+
+    fireEvent.change(input, { target: { value: "fran" } });
+    const option = container.querySelector('[role="option"]');
+    expect(option).not.toBeNull();
+
+    fireEvent.keyDown(option, { key: " " });
+    expect(onEnterMock).toHaveBeenCalledWith("France");
+    expect(input.value).toBe("");
+
+    onEnterMock.mockClear();
+    fireEvent.change(input, { target: { value: "fran" } });
+    const newOption = container.querySelector('[role="option"]');
+    expect(newOption).not.toBeNull();
+    fireEvent.keyDown(newOption, { key: "Enter" });
+    expect(onEnterMock).toHaveBeenCalledWith("France");
+  });
+
+  it("(c) ARIA: role=combobox, aria-expanded, aria-controls pointe le listbox, aria-selected", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
     expect(input.getAttribute("role")).toBe("combobox");
@@ -249,48 +277,82 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(input.getAttribute("aria-activedescendant")).toBe(option.id);
   });
 
-  it("(10) onEnter retournant false => champ non vidé", () => {
-    onEnterMock.mockReturnValue(false);
-    renderHUD();
+  it("(d) Entrée répétée sans sélection rejoue le shake (classe retirée puis remise)", async () => {
+    const { container } = renderHUD({ selectedCountry: null });
     const input = screen.getByRole("combobox");
+    const island = container.querySelector(".input-island");
 
-    fireEvent.change(input, { target: { value: "fran" } });
-    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.change(input, { target: { value: "France" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(onEnterMock).toHaveBeenCalledWith("France");
-    expect(input.value).toBe("fran");
+    expect(island.classList.contains("is-rejected")).toBe(true);
+
+    // Repeated Enter while already rejected resets isRejected and reapplies
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(island.classList.contains("is-rejected")).toBe(false);
+
+    await vi.waitFor(() => {
+      expect(island.classList.contains("is-rejected")).toBe(true);
+    });
   });
 
-  it("(11) entrée déjà trouvée marquée data-found", () => {
-    const { container } = renderHUD({ foundList: ["FRA"] });
+  it("(d) en DEV 'WIN100' + Entrée sans sélection => onEnter('WIN100') appelé", () => {
+    renderHUD({ selectedCountry: null });
     const input = screen.getByRole("combobox");
 
-    fireEvent.change(input, { target: { value: "fra" } });
-    const option = container.querySelector('[role="option"]');
-    expect(option).not.toBeNull();
-    expect(option.getAttribute("data-found")).toBe("true");
-    expect(option.textContent).toContain("✓");
-    expect(option.textContent).toContain("trouvé");
-  });
+    fireEvent.change(input, { target: { value: "WIN100" } });
+    fireEvent.keyDown(input, { key: "Enter" });
 
-  it("(12) clavier direct sur option: Enter ou Espace sur l'élément option déclenche onSelect", () => {
-    const { container } = renderHUD();
-    const input = screen.getByRole("combobox");
-
-    fireEvent.change(input, { target: { value: "fran" } });
-    const option = container.querySelector('[role="option"]');
-    expect(option).not.toBeNull();
-
-    fireEvent.keyDown(option, { key: " " });
-    expect(onEnterMock).toHaveBeenCalledWith("France");
+    expect(onEnterMock).toHaveBeenCalledTimes(1);
+    expect(onEnterMock).toHaveBeenCalledWith("WIN100");
     expect(input.value).toBe("");
+  });
 
-    onEnterMock.mockClear();
-    fireEvent.change(input, { target: { value: "fran" } });
-    const newOption = container.querySelector('[role="option"]');
-    expect(newOption).not.toBeNull();
-    fireEvent.keyDown(newOption, { key: "Enter" });
-    expect(onEnterMock).toHaveBeenCalledWith("France");
+  it("(e) mode learn: Entrée valide la première suggestion sans selectedCountry", () => {
+    let learnVal = "";
+    const onLearnSearchChangeMock = vi.fn().mockImplementation((val) => {
+      learnVal = val;
+    });
+
+    const { rerender } = renderHUD({
+      mode: "learn",
+      selectedCountry: null,
+      learnSearchQuery: learnVal,
+      onLearnSearchChange: onLearnSearchChangeMock,
+    });
+
+    const input = screen.getByRole("combobox");
+    expect(input.getAttribute("placeholder")).toBe("Rechercher...");
+
+    fireEvent.change(input, { target: { value: "paris" } });
+
+    rerender(
+      <GameHUD
+        mode="learn"
+        lang="fr"
+        score={0}
+        totalPossible={10}
+        timeLeft={300}
+        isPlaying={true}
+        isGameOver={false}
+        onEnter={onEnterMock}
+        onGoHome={vi.fn()}
+        onStop={vi.fn()}
+        onInfo={vi.fn()}
+        onNavigateFocus={vi.fn()}
+        viewport={{ width: 1200, height: 800, top: 0 }}
+        foundList={[]}
+        countryDataMap={mockCountryDataMap}
+        theme="dark"
+        globeTheme="blackout"
+        selectedCountry={null}
+        learnSearchQuery={learnVal}
+        onLearnSearchChange={onLearnSearchChangeMock}
+      />
+    );
+
+    // In learn mode, pressing Enter directly validates suggestions[0]
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onEnterMock).toHaveBeenCalledWith("Paris");
   });
 });
