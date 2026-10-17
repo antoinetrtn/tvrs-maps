@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { FOUND_SURFACE_GREEN, getFoundGreenThreeColor } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
+import { buildMergedPeaksGeometry } from "./mergedPeaks";
 import { createMountainGlitchNodeMaterial } from "./webgpu/surfaceNodes";
 
 export const mountainGlitchUniforms = {
@@ -201,6 +202,20 @@ export const createMountainFeature = (
 
   const activeMat = isFound ? foundMat : isSelected ? glitchMat : baseMat;
 
+  // Plain Phong materials (base / found) don't depend on the per-peak local
+  // position, so the peaks are merged into a single mesh. The selected range
+  // keeps one mesh per peak: its glitch shader derives its noise from the
+  // peak-local `position` attribute (look unchanged).
+  const mergePeaks = activeMat !== glitchMat;
+  const peakSpecs = [];
+  const addPeak = (radius, peakHeight, x, y, z, rotY) => {
+    if (mergePeaks) {
+      peakSpecs.push({ radius, height: peakHeight, x, y, z, rotY });
+    } else {
+      group.add(createSinglePeakMesh(radius, peakHeight, activeMat, x, y, z, rotY));
+    }
+  };
+
   if (path && Array.isArray(path) && path.length > 0) {
     let pathArcLength = 0;
     for (let k = 0; k < path.length - 1; k++) {
@@ -250,16 +265,14 @@ export const createMountainFeature = (
       const peakHeight = 0.32 * hFactor * normalizedHeightScale;
       const peakRadius = peakHeight * 0.46 * randomRadiusVar;
 
-      const peak = createSinglePeakMesh(
+      addPeak(
         peakRadius,
         peakHeight,
-        activeMat,
         localX,
         peakHeight / 2 - deltaY,
         localZ,
         (i * 19.3) % (Math.PI * 2)
       );
-      group.add(peak);
     }
   } else {
     const N = Math.max(22, Math.round(spread * 8.5));
@@ -295,17 +308,12 @@ export const createMountainFeature = (
       const peakHeight = 0.32 * hFactor * normalizedHeightScale;
       const peakRadius = peakHeight * 0.46 * randomRadiusVar;
 
-      const peak = createSinglePeakMesh(
-        peakRadius,
-        peakHeight,
-        activeMat,
-        X,
-        peakHeight / 2 - deltaY,
-        Z,
-        (i * 19.3) % (Math.PI * 2)
-      );
-      group.add(peak);
+      addPeak(peakRadius, peakHeight, X, peakHeight / 2 - deltaY, Z, (i * 19.3) % (Math.PI * 2));
     }
+  }
+
+  if (mergePeaks && peakSpecs.length > 0) {
+    group.add(new THREE.Mesh(buildMergedPeaksGeometry(peakSpecs), activeMat));
   }
 
   // Force culling and optimize shadows

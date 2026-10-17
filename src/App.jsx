@@ -14,6 +14,7 @@ import {
   DEFAULT_GAME_DURATION_SEC,
   DEFAULT_MODE,
   HOME_AUTOROTATE_INTERVAL_MS,
+  HOME_GLOBE_SETTLE_MS,
   PERFORMANCE,
   STORAGE_KEYS,
 } from "./config/gameConstants";
@@ -28,6 +29,7 @@ import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
 import useScreenExit, { EXIT_MS } from "./hooks/useScreenExit";
 import useScreenGlitch from "./hooks/useScreenGlitch";
+import useSettledValue from "./hooks/useSettledValue";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
 import { isGuestLaunch } from "./multiplayer/conquestLink";
@@ -55,7 +57,10 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [homeMode, setHomeMode] = useState(HOME_CONQUEST_KEY);
   const prevActiveDataMapRef = useRef(null);
-  const prevHomeModeRef = useRef(homeMode);
+  // Globe layer for the home screen: follows the carousel only once it settles.
+  const isHomeScreenActive = currentScreen === "home";
+  const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
+  const prevHomeModeRef = useRef(globeHomeMode);
 
   const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
@@ -133,16 +138,16 @@ function App() {
     allCountryKeys,
     totalPossible,
   } = useGeoData({
-    mode: currentScreen === "home" ? getHomeGeoMode(homeMode) : mode,
-    learnSubMode: currentScreen === "home" ? getHomeLearnSubMode(homeMode) : learnSubMode,
+    mode: currentScreen === "home" ? getHomeGeoMode(globeHomeMode) : mode,
+    learnSubMode: currentScreen === "home" ? getHomeLearnSubMode(globeHomeMode) : learnSubMode,
   });
 
   if (
     currentScreen === "home" &&
-    (activeDataMap !== prevActiveDataMapRef.current || homeMode !== prevHomeModeRef.current)
+    (activeDataMap !== prevActiveDataMapRef.current || globeHomeMode !== prevHomeModeRef.current)
   ) {
     prevActiveDataMapRef.current = activeDataMap;
-    prevHomeModeRef.current = homeMode;
+    prevHomeModeRef.current = globeHomeMode;
     if (activeDataMap) {
       const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
       if (keys.length > 0) {
@@ -294,7 +299,7 @@ function App() {
     return () => {
       clearInterval(interval);
     };
-  }, [currentScreen, activeDataMap, homeMode]);
+  }, [currentScreen, activeDataMap, globeHomeMode]);
 
   const handleCustomConfirm = (message, action) =>
     setConfirmState({
@@ -436,7 +441,7 @@ function App() {
     globeFeedbackApplierRef,
     livesLeft,
     isHardcoreRun,
-    homeMode: getHomeGeoMode(homeMode),
+    homeMode: getHomeGeoMode(globeHomeMode),
   });
 
   const cq = useConquestLayer({ currentScreen, setCurrentScreen, lang, userProfile, sessionView });
