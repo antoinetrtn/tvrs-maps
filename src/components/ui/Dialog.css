@@ -52,7 +52,7 @@
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 10px 40px var(--xp-shadow-heavy);
+  box-shadow: 4px 4px 0 var(--black);
   animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
 }
 
