@@ -35,11 +35,23 @@ export const RULES = {
   "duration-raw": r("Raw transition/animation time literal outside var()", "Use duration tokens."),
   "outline-none": r("outline: none/0 without :focus-visible in selector", "Keep focus indicators."),
   "serif-font": r("Serif font family specified in CSS or JS", "Use sans-serif or monospace fonts."),
+  "hover-unguarded": r(
+    ":hover selector outside @media (hover: hover) (sticky hover on touch devices)",
+    "Wrap the rule in @media (hover: hover)."
+  ),
+  "breakpoint-offscale": r(
+    "@media width breakpoint outside the scale of src/config/breakpoints.js",
+    "Use a BREAKPOINT_SCALE value (max-width) or value + 1 (min-width)."
+  ),
   "radius-large": r(
     "border-radius > 8px (> 0.5rem) not circular",
     "Rule 8: border-radius must be <= 8px."
   ),
 };
+
+import { BREAKPOINT_SCALE } from "../../src/config/breakpoints.js";
+
+const SCALE_PX = new Set(Object.values(BREAKPOINT_SCALE));
 
 const SERIF_RE =
   /(?:(?<!sans-)serif\b|ui-serif\b|\b(?:Georgia|Times\s+New\s+Roman|Times|Playfair|Merriweather|Garamond|Cambria|Palatino)\b)/i;
@@ -138,7 +150,11 @@ function endDeclaration(st) {
 }
 
 function openBlock(st) {
-  st.stack.push({ header: st.buf.trim(), declarations: [] });
+  st.stack.push({
+    header: st.buf.trim(),
+    declarations: [],
+    ancestors: st.stack.map((s) => s.header),
+  });
   resetBuffer(st);
 }
 
@@ -399,5 +415,53 @@ export function scanSource(filePath, text) {
     }
   }
 
+  violations.push(...scanRuleContext(filePath, rules, allowMap));
+  violations.push(...scanBreakpoints(filePath, cleanCss, allowMap));
+
   return violations.sort((a, b) => a.line - b.line);
+}
+
+/** Rule-level checks that need the selector and its enclosing at-rules. */
+function scanRuleContext(filePath, rules, allowMap) {
+  const out = [];
+  for (const rule of rules) {
+    if (rule.header.startsWith("@") || !rule.header.includes(":hover")) continue;
+    if (rule.ancestors.some((a) => /\(\s*hover\s*:\s*hover\s*\)/i.test(a))) continue;
+    const line = rule.declarations[0].line;
+    if (
+      allowMap.get(line)?.has("hover-unguarded") ||
+      allowMap.get(line - 1)?.has("hover-unguarded")
+    )
+      continue;
+    out.push({ rule: "hover-unguarded", file: filePath, line, excerpt: rule.header });
+  }
+  return out;
+}
+
+function isScaleBreakpoint(px) {
+  return SCALE_PX.has(px) || SCALE_PX.has(px - 1);
+}
+
+/** Flags @media width queries (max/min-width) that are not on the breakpoint scale. */
+function scanBreakpoints(filePath, cleanCss, allowMap) {
+  const out = [];
+  for (const m of cleanCss.matchAll(/@media([^{]*)\{/g)) {
+    const line = cleanCss.slice(0, m.index).split("\n").length;
+    if (
+      allowMap.get(line)?.has("breakpoint-offscale") ||
+      allowMap.get(line - 1)?.has("breakpoint-offscale")
+    )
+      continue;
+    for (const w of m[1].matchAll(/\(\s*(?:max|min)-width\s*:\s*(\d+(?:\.\d+)?)px\s*\)/gi)) {
+      if (!isScaleBreakpoint(Number(w[1]))) {
+        out.push({
+          rule: "breakpoint-offscale",
+          file: filePath,
+          line,
+          excerpt: `@media${m[1].trim()}`,
+        });
+      }
+    }
+  }
+  return out;
 }

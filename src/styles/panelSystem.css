@@ -2,8 +2,29 @@
    PANEL SYSTEM — Unified Design System for all panels, modals & dialogs
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ──── Z-INDEX HIERARCHY ──── */
+/* ──── Z-INDEX HIERARCHY ────
+   Two scales. LOCAL stacking (inside one component / stacking context) uses the
+   --z-base…--z-raised-6 and --z-floating* tokens; GLOBAL layers (screens, HUD, overlays,
+   dialogs, toasts) use the named tokens below. Never write a bare integer z-index
+   (enforced by scripts/check-css-rules.mjs). */
 :root {
+  /* local stacking */
+  --z-below: -1;
+  --z-base: 0;
+  --z-raised: 1;
+  --z-raised-2: 2;
+  --z-raised-3: 3;
+  --z-raised-4: 4;
+  --z-raised-5: 5;
+  --z-raised-6: 6;
+  --z-floating: 10;
+  --z-floating-2: 50;
+  --z-carousel-lift: 95;
+  --z-floating-3: 100;
+  --z-carousel-controls: 180;
+  --z-panel-menu: 300;
+  --z-panel-menu-top: 301;
+  /* global layers */
   --z-home-content: 10;
   --z-conquest-cursors: 19;
   --z-conquest: 20;

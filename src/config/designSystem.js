@@ -71,10 +71,8 @@ const STYLE_TOKENS = {
   },
   blur: {
     sm: "blur(4px)",
-    md: "blur(12px)",
-    lg: "blur(16px)",
-    glass: "blur(10px)",
-    glassCompact: "blur(8px)",
+    glass: "blur(4px)",
+    glassCompact: "blur(3px)",
   },
   size: {
     controlSm: "32px",

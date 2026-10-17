@@ -47,8 +47,8 @@
   --glass-shadow: 0 8px 24px rgba(5, 7, 10, 0.55);
   --glass-shadow-strong: 0 12px 32px rgba(5, 7, 10, 0.55);
   --glass-shadow-drag: 0 20px 48px rgba(5, 7, 10, 0.6);
-  --glass-blur: blur(10px);
-  --glass-blur-compact: blur(8px);
+  --glass-blur: blur(4px);
+  --glass-blur-compact: blur(3px);
   --overlay-bg: rgba(14, 17, 22, 0.85);
   --settings-backdrop-bg: rgba(0, 0, 0, 0.45);
   --modal-header-bg: rgba(22, 27, 34, 0.92);

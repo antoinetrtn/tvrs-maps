@@ -468,7 +468,7 @@ const GlobeMap = (props) => {
               opacity: 0.6,
             }}
           />
-          {/* The two `blur(80px)` / `blur(100px)` decorative gradients were removed:
+          {/* The two `80px and 100px blur decorative gradients were removed:
               their `--decor-glow-*` variables are defined nowhere, so they painted
               nothing (background: none) while still costing a full-screen blur layer. */}
         </div>

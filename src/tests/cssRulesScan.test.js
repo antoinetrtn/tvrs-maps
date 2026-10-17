@@ -266,4 +266,40 @@ describe("ratchet — diffCounts", () => {
       { rule: "important", file: "src/c.css", from: 1, to: 0 },
     ]);
   });
+  it("hover-unguarded: flags :hover outside @media (hover: hover), accepts guarded rules", () => {
+    const bad = scanSource("src/components/Card.css", ".card:hover { color: red; }");
+    expect(bad.some((v) => v.rule === "hover-unguarded")).toBe(true);
+
+    const good = scanSource(
+      "src/components/Card.css",
+      "@media (hover: hover) { .card:hover { color: red; } }"
+    );
+    expect(good.some((v) => v.rule === "hover-unguarded")).toBe(false);
+
+    const nested = scanSource(
+      "src/components/Card.css",
+      "@media (hover: hover) and (min-width: 769px) { .card:hover { color: red; } }"
+    );
+    expect(nested.some((v) => v.rule === "hover-unguarded")).toBe(false);
+
+    const allowed = scanSource(
+      "src/components/Card.css",
+      "/* css-rules-allow: hover-unguarded — test */\n.card:hover { color: red; }"
+    );
+    expect(allowed.some((v) => v.rule === "hover-unguarded")).toBe(false);
+  });
+
+  it("breakpoint-offscale: accepts the scale and its +1 complement, flags other widths", () => {
+    const ok = scanSource(
+      "src/components/Card.css",
+      "@media (max-width: 768px) { .a { color: red; } }\n@media (min-width: 769px) { .a { color: blue; } }"
+    );
+    expect(ok.some((v) => v.rule === "breakpoint-offscale")).toBe(false);
+
+    const bad = scanSource(
+      "src/components/Card.css",
+      "@media (max-width: 900px) { .a { color: red; } }"
+    );
+    expect(bad.filter((v) => v.rule === "breakpoint-offscale")).toHaveLength(1);
+  });
 });
