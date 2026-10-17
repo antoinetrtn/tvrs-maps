@@ -1,6 +1,6 @@
 import "./GameDataPanel.css";
 
-import { Close, Home } from "pixelarticons/react";
+import { Home } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getThemeRegionColor } from "../config/designSystem";
@@ -9,6 +9,8 @@ import { useTranslation } from "../config/i18n";
 import { getPanelData, normalizeString } from "../utils/utils";
 import GameDataPanelRow from "./GameDataPanelRow";
 import LearnModeToggles from "./LearnModeToggles";
+import Button from "./ui/Button";
+import PanelCloseButton from "./ui/PanelCloseButton";
 
 const GameDataPanel = ({
   dataMap,
@@ -115,11 +117,7 @@ const GameDataPanel = ({
           {scoreLabel && <span className="data-panel-score">{scoreLabel}</span>}
         </div>
         <div className="data-panel-header-actions">
-          {onClose && (
-            <button className="panel-close-btn" onClick={onClose} aria-label={t("close")}>
-              <Close width={20} height={20} />
-            </button>
-          )}
+          {onClose && <PanelCloseButton label={t("close")} onClick={onClose} />}
         </div>
       </header>
 
@@ -195,10 +193,10 @@ const GameDataPanel = ({
 
       {isGameOver && onGoHome && (
         <div className="panel-footer data-panel-footer">
-          <button className="btn-primary" onClick={onGoHome}>
+          <Button variant="primary" onClick={onGoHome}>
             <Home width={16} height={16} />
             {t("home")}
-          </button>
+          </Button>
         </div>
       )}
     </aside>

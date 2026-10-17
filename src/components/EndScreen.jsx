@@ -12,6 +12,7 @@ import { getGameStats } from "../utils/utils";
 import EndScreenContinents from "./EndScreenContinents";
 import EndScreenTraining from "./EndScreenTraining";
 import PixelFireworks from "./PixelFireworks";
+import Button from "./ui/Button";
 import XpBar from "./XpBar";
 import XpOrbsAnimation from "./XpOrbsAnimation";
 
@@ -248,13 +249,13 @@ const EndScreen = ({
         )}
 
         <div className="end-screen-actions">
-          <button className="btn-secondary" onClick={() => setMinimized(true)}>
+          <Button variant="secondary" onClick={() => setMinimized(true)}>
             <ChevronDown width={16} height={16} />
             {t("explore_globe")}
-          </button>
-          <button className="btn-primary" onClick={onRestart}>
+          </Button>
+          <Button variant="primary" onClick={onRestart}>
             {t("home")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

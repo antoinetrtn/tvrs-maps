@@ -371,13 +371,9 @@
 /* Form Actions */
 .form-submit-btn {
   width: 100%;
-  box-sizing: border-box;
-  font-family: var(--font-main);
   font-weight: 700;
   padding: var(--spacing-ms) var(--spacing-lg);
-  border-radius: var(--radius-sm);
   border: none;
-  cursor: pointer;
   background: var(--text-main);
   color: var(--bg-color);
   transition:
@@ -465,12 +461,9 @@
 }
 
 .profile-blur-btn {
-  font-family: var(--font-main);
   font-weight: 700;
   padding: var(--spacing-sm) var(--spacing-md);
   font-size: var(--font-size-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
 }
 
 .profile-customization-container.blurred {
@@ -490,20 +483,9 @@
 }
 
 .profile-signout-link {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
   font-size: var(--font-size-xs);
-  font-family: var(--font-main);
-  cursor: pointer;
   text-decoration: underline;
   opacity: 0.75;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-  padding: var(--spacing-xs);
 }
 
 .profile-signout-link:hover {

@@ -292,24 +292,18 @@
   gap: var(--spacing-sm);
 }
 
-.end-screen-actions .btn-primary,
-.end-screen-actions .btn-secondary {
+.end-screen-actions .ui-btn {
   flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-xs);
 }
 
 /* Over the globe, the quiet secondary needs its own glass surface + blur
    to stay readable without any backdrop band. */
-.end-screen-actions .btn-secondary {
+.end-screen-actions .ui-btn--secondary {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
 }
-
-/* .btn-primary lives in index.css (shared with ProfilePanel and AuthModal). */
 
 /* Narrow / short viewports: scrollable content + sticky home button */
 @media (max-width: 900px), (max-height: 720px) {

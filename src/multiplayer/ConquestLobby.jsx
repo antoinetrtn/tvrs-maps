@@ -4,6 +4,8 @@ import { Copy, Crown, ExternalLink } from "pixelarticons/react";
 import React, { useEffect, useState } from "react";
 
 import AtlasState from "../components/AtlasState";
+import Button from "../components/ui/Button.jsx";
+import IconButton from "../components/ui/IconButton.jsx";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
@@ -14,16 +16,16 @@ const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
   const [code, setCode] = useState("");
   return (
     <SettingsSection title={t.room} hideTitle>
-      <button
-        type="button"
-        className="btn-primary conquest-block"
+      <Button
+        variant="primary"
+        block
         disabled={busy}
         onClick={onCreate}
         aria-label={t.createFull || t.create}
         title={t.createFull || t.create}
       >
         {t.create}
-      </button>
+      </Button>
       <form
         className="conquest-join-form"
         onSubmit={(e) => {
@@ -42,15 +44,15 @@ const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
           spellCheck={false}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
         />
-        <button
+        <Button
           type="submit"
-          className="btn-secondary"
+          variant="secondary"
           disabled={busy || code.length < 6}
           aria-label={t.join}
           title={t.join}
         >
           {t.join}
-        </button>
+        </Button>
       </form>
     </SettingsSection>
   );
@@ -102,25 +104,25 @@ const RoomShare = ({ t, code }) => {
         <span className="conquest-code" aria-label={t.roomCode}>
           {code}
         </span>
-        <button
-          type="button"
+        <IconButton
+          variant="glass"
+          size="lg"
+          label={t.copyCode}
           className="conquest-icon-btn"
           onClick={onCopy}
-          aria-label={t.copyCode}
-          title={t.copyCode}
         >
           <Copy width={18} height={18} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="btn-secondary conquest-share-btn"
+        </IconButton>
+        <Button
+          variant="secondary"
+          className="conquest-share-btn"
           onClick={onShare}
           aria-label={t.share}
           title={t.share}
         >
           <ExternalLink width={16} height={16} aria-hidden="true" />
           <span>{t.share}</span>
-        </button>
+        </Button>
       </div>
       <p className={`conquest-copy-toast ${toast ? "is-visible" : ""}`} role="status">
         {toast || ""}
@@ -200,15 +202,15 @@ const LobbyFooter = ({ t, isHost, me, allReady, busy, conquest }) => (
       emphasized={!(isHost && me?.ready && allReady)}
     />
     {isHost ? (
-      <button
-        type="button"
-        className={`${me?.ready && allReady ? "btn-primary" : "btn-secondary"} conquest-block`}
+      <Button
+        variant={me?.ready && allReady ? "primary" : "secondary"}
+        block
         disabled={busy || !allReady}
         onClick={conquest.start}
         title={t.startMatchFull || t.startMatch}
       >
         {t.startMatch}
-      </button>
+      </Button>
     ) : (
       <p className="conquest-hint sr-only">{t.waitingHost}</p>
     )}
@@ -280,15 +282,15 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
         ) : (
           <AtlasState variant="error" title={error} hint={t.joinErrorHint} />
         ))}
-      <button
-        type="button"
-        className="btn-secondary conquest-block"
+      <Button
+        variant="secondary"
+        block
         onClick={onBack}
         aria-label={match ? t.leave : t.back}
         title={match ? t.leave : t.back}
       >
         {match ? t.leave : t.back}
-      </button>
+      </Button>
     </div>
   );
 };

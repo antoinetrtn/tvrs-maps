@@ -2,6 +2,8 @@ import { Close } from "pixelarticons/react";
 import React from "react";
 
 import { getTrainingLabel } from "../utils/trainingPool";
+import Button from "./ui/Button";
+import IconButton from "./ui/IconButton";
 
 const TOTAL_BAR_CELLS = 20;
 
@@ -13,15 +15,15 @@ export const TrainingHeader = ({ title, subtitle, closeLabel, onClose }) => (
       </h2>
       <p className="training-sheet-subtitle">{subtitle}</p>
     </div>
-    <button
-      type="button"
+    <IconButton
+      variant="outline"
+      size="lg"
+      label={closeLabel}
       className="training-sheet-close-btn"
       onClick={onClose}
-      aria-label={closeLabel}
-      title={closeLabel}
     >
       <Close width={20} height={20} aria-hidden="true" />
-    </button>
+    </IconButton>
   </header>
 );
 
@@ -98,20 +100,22 @@ export const TrainingReset = ({
       <div className="training-reset-row confirm">
         <span className="training-reset-confirm-text">{t("training_reset_confirm")}</span>
         <div className="training-reset-actions">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             className="training-btn training-action-btn training-cancel-btn"
             onClick={onCancelReset}
           >
             {t("cancel")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
             className="training-btn training-action-btn training-confirm-btn"
             onClick={onConfirmReset}
           >
             {t("training_reset_yes")}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -119,9 +123,15 @@ export const TrainingReset = ({
 
   return (
     <div className="training-reset-row">
-      <button type="button" className="training-reset-btn" onClick={onPromptReset}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="training-reset-btn"
+        onClick={onPromptReset}
+      >
         {t("training_reset")}
-      </button>
+      </Button>
     </div>
   );
 };

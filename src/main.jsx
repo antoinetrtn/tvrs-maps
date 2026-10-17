@@ -1,5 +1,5 @@
 import "./index.css";
-import "./styles/buttons.css";
+import "./components/ui/Button.css";
 import "./styles/panelSystem.css";
 import "./styles/glitchMoments.css";
 import "./styles/motion.css";

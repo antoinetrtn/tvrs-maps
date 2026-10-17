@@ -3,6 +3,7 @@ import "./ConquestElo.css";
 import { Flag, Gift, Sword, Trophy } from "pixelarticons/react";
 import React, { useMemo } from "react";
 
+import Button from "../components/ui/Button.jsx";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
 import { computeStandings, computeWinner, eloChange, formatEloDelta } from "./conquestLogic";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
@@ -114,15 +115,9 @@ const ConquestEnd = ({ lang, conquest, onExit }) => {
       <EndHeader winner={winner} userId={userId} t={t} result={result} elo={elo} />
       <EndBoard standings={standings} userId={userId} t={t} />
       <p className="conquest-hint sr-only">{t.rematchHint}</p>
-      <button
-        type="button"
-        className="btn-primary conquest-block"
-        onClick={onExit}
-        aria-label={t.back}
-        title={t.back}
-      >
+      <Button variant="primary" block onClick={onExit} aria-label={t.back} title={t.back}>
         {t.back}
-      </button>
+      </Button>
     </div>
   );
 };

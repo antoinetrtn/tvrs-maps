@@ -1,6 +1,6 @@
 import "./ProfilePanel.css";
 
-import { Close, Lock, Trophy, User } from "pixelarticons/react";
+import { Lock, Trophy, User } from "pixelarticons/react";
 import React, { useEffect, useState } from "react";
 
 import { AVATAR_COLORS } from "../config/designSystem";
@@ -14,6 +14,9 @@ import {
 } from "../services/supabaseClient";
 import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
+import ProfileFooter from "./ProfileFooter";
+import Button from "./ui/Button";
+import PanelCloseButton from "./ui/PanelCloseButton";
 import TabBar from "./ui/TabBar";
 import XpBar from "./XpBar";
 
@@ -226,16 +229,7 @@ const ProfilePanel = ({
           value={activeTab}
           onChange={setActiveTab}
         />
-        <button
-          className="panel-close-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          title={t("close")}
-        >
-          <Close width={20} height={20} />
-        </button>
+        <PanelCloseButton label={t("close")} onClick={onClose} stopPropagation />
       </div>
 
       <div className="panel-body scrollbar-styled">
@@ -246,16 +240,16 @@ const ProfilePanel = ({
               <div className="profile-blur-overlay">
                 <div className="profile-blur-card glass-panel">
                   <p className="profile-blur-text text-natural-case">{t("auth_required")}</p>
-                  <button
-                    type="button"
+                  <Button
+                    variant="primary"
                     onClick={(e) => {
                       e.preventDefault();
                       if (onOpenAuth) onOpenAuth();
                     }}
-                    className="btn-primary profile-blur-btn"
+                    className="profile-blur-btn"
                   >
                     {t("auth_sign_in")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -365,29 +359,14 @@ const ProfilePanel = ({
 
                 {formError && <div className="form-feedback error">{formError}</div>}
 
-                {/* Sticky Footer Area */}
-                <div className="profile-sticky-footer">
-                  <button
-                    type="submit"
-                    disabled={isSaving || (isSupabaseConfigured && !session)}
-                    className={`btn-primary form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
-                  >
-                    {saveSuccess
-                      ? `✓ ${t("profile_saved")}`
-                      : isSaving
-                        ? t("saving")
-                        : t("save_profile")}
-                  </button>
-
-                  {/* Clean Logout inside the sticky footer */}
-                  {isSupabaseConfigured && session && (
-                    <div className="profile-signout-wrapper">
-                      <button onClick={handleSignOutClick} className="profile-signout-link">
-                        {t("auth_sign_out")}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <ProfileFooter
+                  t={t}
+                  disabled={isSaving || (isSupabaseConfigured && !session)}
+                  isSaving={isSaving}
+                  saveSuccess={saveSuccess}
+                  showSignOut={isSupabaseConfigured && Boolean(session)}
+                  onSignOut={handleSignOutClick}
+                />
               </form>
             </div>
           </div>

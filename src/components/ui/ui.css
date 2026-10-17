@@ -80,35 +80,8 @@
 
 /* ---- Icon stepper button (−/+) ---- */
 .ui-icon-step {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: var(--control-lg);
-  height: var(--control-lg);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-sm);
-  background: transparent;
+  border-color: var(--glass-border-strong);
   color: var(--text-main);
-  cursor: pointer;
-  transition:
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-instant);
-}
-
-.ui-icon-step:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.ui-icon-step:active:not(:disabled) {
-  transform: translate(1px, 1px);
-}
-
-.ui-icon-step:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
 }
 
 /* ---- Slider ---- */
@@ -343,8 +316,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ui-switch-knob,
-  .ui-icon-step {
+  .ui-switch-knob {
     transition: none;
   }
 }

@@ -13,6 +13,7 @@ import { ANSWER_INPUT_PROPS } from "../utils/answerField";
 import AnswerSuggestionList from "./AnswerSuggestionList";
 import Logo from "./Logo";
 import { PixelHeart } from "./PixelHeart";
+import IconButton from "./ui/IconButton";
 
 const GameHUD = ({
   mode,
@@ -218,14 +219,14 @@ const GameHUD = ({
           // === MOBILE TOP HUD BAR ===
           <>
             <div className="hud-top-left">
-              <button
-                className="hud-btn-circular"
+              <IconButton
+                label={t("home")}
+                className="hud-btn"
                 onClick={onGoHome}
                 onMouseDown={(e) => e.preventDefault()}
-                title={t("home")}
               >
                 <Home width={18} height={18} />
-              </button>
+              </IconButton>
               {mode !== "learn" && (
                 <button
                   className={`hud-mini-pill score-pill ${scoreGlow ? "score-increased-flash" : ""}`}
@@ -243,14 +244,14 @@ const GameHUD = ({
 
             <div className="hud-top-right">
               {mode === "learn" ? (
-                <button
-                  className={`hud-btn-circular ${showLearnPanel ? "active" : ""}`}
+                <IconButton
+                  label={t("data_table")}
+                  className={`hud-btn ${showLearnPanel ? "active" : ""}`}
                   onClick={onToggleLearnPanel}
                   onMouseDown={(e) => e.preventDefault()}
-                  title={t("data_table")}
                 >
                   <InfoBox width={18} height={18} />
-                </button>
+                </IconButton>
               ) : (
                 <div
                   style={{
@@ -261,25 +262,25 @@ const GameHUD = ({
                   }}
                 >
                   {isPlaying && !isGameOver ? (
-                    <button
-                      className="hud-btn-circular"
+                    <IconButton
+                      label={t("stop")}
+                      className="hud-btn"
                       style={{ color: "var(--error)", width: "40px", height: "40px" }}
                       onClick={onStop}
                       onMouseDown={(e) => e.preventDefault()}
-                      title={t("stop")}
                     >
                       <Square width={16} height={16} />
-                    </button>
+                    </IconButton>
                   ) : (
-                    <button
-                      className="hud-btn-circular"
+                    <IconButton
+                      label={t("play")}
+                      className="hud-btn"
                       style={{ color: "var(--success)", width: "40px", height: "40px" }}
                       onClick={() => onNavigateFocus("next")}
                       onMouseDown={(e) => e.preventDefault()}
-                      title={t("play")}
                     >
                       <Play width={16} height={16} />
-                    </button>
+                    </IconButton>
                   )}
                   <button
                     className={`hud-mini-pill timer-pill ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
@@ -342,25 +343,25 @@ const GameHUD = ({
             <div className="hud-top-right">
               {heartsRow}
               {mode === "learn" ? null : hideHudPlayStop ? null : isPlaying && !isGameOver ? (
-                <button
-                  className="hud-btn-circular"
+                <IconButton
+                  label={t("stop")}
+                  className="hud-btn"
                   style={{ color: "var(--error)" }}
                   onClick={onStop}
                   onMouseDown={(e) => e.preventDefault()}
-                  title={t("stop")}
                 >
                   <Square width={18} height={18} />
-                </button>
+                </IconButton>
               ) : (
-                <button
-                  className="hud-btn-circular"
+                <IconButton
+                  label={t("play")}
+                  className="hud-btn"
                   style={{ color: "var(--success)" }}
                   onClick={() => onNavigateFocus("next")}
                   onMouseDown={(e) => e.preventDefault()}
-                  title={t("play")}
                 >
                   <Play width={18} height={18} />
-                </button>
+                </IconButton>
               )}
             </div>
           </>
@@ -394,9 +395,9 @@ const GameHUD = ({
               );
             })}
           </div>
-          <button className="hud-btn-circular" onClick={onInfo} title={t("information")}>
+          <IconButton label={t("information")} className="hud-btn" onClick={onInfo}>
             <InfoBox width={18} height={18} />
-          </button>
+          </IconButton>
         </div>
       )}
 
@@ -427,14 +428,14 @@ const GameHUD = ({
 
           <div className="bottom-hud-islands">
             {isFocusedCountry && mode !== "learn" && (
-              <button
-                className="hud-btn-circular prev-btn"
+              <IconButton
+                label={t("previous")}
+                className="hud-btn prev-btn"
                 onClick={() => onNavigateFocus("prev")}
                 onMouseDown={(e) => e.preventDefault()}
-                title={t("previous")}
               >
                 <ChevronLeft width={18} height={18} />
-              </button>
+              </IconButton>
             )}
 
             <div
@@ -452,14 +453,14 @@ const GameHUD = ({
             </div>
 
             {isFocusedCountry && mode !== "learn" && (
-              <button
-                className="hud-btn-circular next-btn"
+              <IconButton
+                label={t("next")}
+                className="hud-btn next-btn"
                 onClick={() => onNavigateFocus("next")}
                 onMouseDown={(e) => e.preventDefault()}
-                title={t("next")}
               >
                 <ChevronRight width={18} height={18} />
-              </button>
+              </IconButton>
             )}
           </div>
 

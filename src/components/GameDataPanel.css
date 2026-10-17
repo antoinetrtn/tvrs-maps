@@ -43,11 +43,8 @@
   padding: var(--spacing-sm) var(--spacing-md) max(var(--spacing-sm), var(--safe-bottom));
 }
 
-.data-panel-footer .btn-primary {
+.data-panel-footer .ui-btn {
   width: min(100%, 320px);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-xs);
 }
 
@@ -121,29 +118,8 @@
 }
 
 .learn-carousel-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
   background: var(--glass-border);
   color: var(--text-main);
-  cursor: pointer;
-  transition:
-    background var(--transition-spring),
-    transform var(--transition-spring);
-}
-
-.learn-carousel-arrow:hover {
-  background: var(--glass-hover);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.learn-carousel-arrow:active {
-  transform: scale(0.95);
 }
 
 .learn-carousel-content {

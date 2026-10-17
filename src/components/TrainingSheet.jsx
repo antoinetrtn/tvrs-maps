@@ -23,6 +23,7 @@ import {
   TrainingReviewSection,
   TrainingStats,
 } from "./TrainingSheetSections";
+import Button from "./ui/Button";
 import OptionGroup from "./ui/OptionGroup";
 
 function useTrainingSheetData({ open, mode, profileId, onStart, onClose }) {
@@ -162,13 +163,14 @@ export default function TrainingSheet({ open, mode, lang, profileId, onClose, on
               label={t("training_size")}
             />
           </div>
-          <button
+          <Button
             type="button"
-            className="btn-primary training-btn training-start-btn"
+            variant="primary"
+            className="training-btn training-start-btn"
             onClick={data.handleStart}
           >
             {t("training_start")}
-          </button>
+          </Button>
           <TrainingReset
             seenCount={data.summary.seen}
             confirmReset={data.confirmReset}

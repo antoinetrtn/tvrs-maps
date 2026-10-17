@@ -379,8 +379,7 @@
   }
   .conquest-hud .conquest-steal .conquest-input,
   .conquest-hud .conquest-steal button,
-  .conquest-hud .conquest-steal .btn-primary,
-  .conquest-hud .conquest-steal .btn-secondary,
+  .conquest-hud .conquest-steal .ui-btn,
   .conquest-hud .conquest-steal .ui-option {
     min-height: 44px;
   }

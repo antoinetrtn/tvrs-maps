@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, Earth, Globe, Hash, MapPin, Waves } from "pi
 import React, { useMemo } from "react";
 
 import { useTranslation } from "../config/i18n";
+import IconButton from "./ui/IconButton";
 
 const LearnModeToggles = ({ learnSubMode, onLearnSubModeChange, lang }) => {
   const t = useTranslation(lang);
@@ -53,16 +54,28 @@ const LearnModeToggles = ({ learnSubMode, onLearnSubModeChange, lang }) => {
 
   return (
     <div className="learn-carousel-control">
-      <button className="learn-carousel-arrow" onClick={handlePrev} title={t("previous")}>
+      <IconButton
+        variant="outline"
+        size="sm"
+        label={t("previous")}
+        className="learn-carousel-arrow"
+        onClick={handlePrev}
+      >
         <ChevronLeft width={18} height={18} />
-      </button>
+      </IconButton>
       <div className="learn-carousel-content">
         <span className="learn-carousel-icon">{activeItem.icon}</span>
         <span className="learn-carousel-label">{activeItem.label}</span>
       </div>
-      <button className="learn-carousel-arrow" onClick={handleNext} title={t("next")}>
+      <IconButton
+        variant="outline"
+        size="sm"
+        label={t("next")}
+        className="learn-carousel-arrow"
+        onClick={handleNext}
+      >
         <ChevronRight width={18} height={18} />
-      </button>
+      </IconButton>
     </div>
   );
 };

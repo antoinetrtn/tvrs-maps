@@ -4,6 +4,7 @@ import { Reload } from "pixelarticons/react";
 import { useEffect, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
+import Button from "./ui/Button";
 
 export default function GeoDataStatus({ status, onRetry, lang }) {
   const t = useTranslation(lang);
@@ -56,9 +57,9 @@ export default function GeoDataStatus({ status, onRetry, lang }) {
             <span className="geo-status-title">{t("geo_error_title")}</span>
           </div>
           <p className="geo-status-hint">{t("geo_error_hint")}</p>
-          <button type="button" className="btn-secondary geo-status-retry" onClick={onRetry}>
+          <Button variant="secondary" className="geo-status-retry" onClick={onRetry}>
             {t("geo_retry")}
-          </button>
+          </Button>
         </div>
       </div>
     );

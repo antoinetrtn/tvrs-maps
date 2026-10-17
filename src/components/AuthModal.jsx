@@ -1,11 +1,14 @@
 import "./AuthModal.css";
 
-import { ArrowLeft, Close, Earth, Gamepad, User } from "pixelarticons/react";
+import { ArrowLeft, Earth, Gamepad, User } from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useTranslation } from "../config/i18n";
 import { signInWithEmail, signInWithGoogle, signUpWithEmail } from "../services/supabaseClient";
+import Button from "./ui/Button";
+import IconButton from "./ui/IconButton";
+import PanelCloseButton from "./ui/PanelCloseButton";
 
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {
   const t = useTranslation(lang);
@@ -200,18 +203,32 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   // (lint ratchet: max depth ≤5). Each step is a self-contained block.
   const renderInitialFlow = () => (
     <div className="auth-modal-initial-flow">
-      <button type="button" onClick={() => setStep("email")} className="auth-row-btn tvrs-btn">
+      <Button
+        variant="secondary"
+        size="lg"
+        block
+        onClick={() => setStep("email")}
+        className="auth-row-btn tvrs-btn"
+      >
         <User width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
         <span>{t("auth_tvrs_account")}</span>
-      </button>
+      </Button>
 
-      <button type="button" onClick={handleGoogleSignIn} className="auth-row-btn google-btn">
+      <Button
+        variant="secondary"
+        size="lg"
+        block
+        onClick={handleGoogleSignIn}
+        className="auth-row-btn google-btn"
+      >
         <Earth width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
         <span>{t("auth_google")}</span>
-      </button>
+      </Button>
 
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="lg"
+        block
         onClick={onGuest}
         className="auth-row-btn guest-btn"
         aria-label={t("auth_guest")}
@@ -219,7 +236,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
       >
         <Gamepad width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
         <span>{t("auth_guest_short")}</span>
-      </button>
+      </Button>
     </div>
   );
 
@@ -238,9 +255,9 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
         />
       </div>
-      <button type="submit" disabled={loading} className="btn-primary auth-modal-submit-btn">
+      <Button type="submit" variant="primary" loading={loading} className="auth-modal-submit-btn">
         {loading ? "Vérification..." : "Continuer"}
-      </button>
+      </Button>
     </form>
   );
 
@@ -265,13 +282,15 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         />
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={loading || isCooldown}
-        className="btn-primary auth-modal-submit-btn"
+        variant="primary"
+        loading={loading}
+        disabled={isCooldown}
+        className="auth-modal-submit-btn"
       >
         {loading ? t("saving") : isCooldown ? "Attendez..." : passwordButtonLabel}
-      </button>
+      </Button>
     </form>
   );
 
@@ -287,19 +306,18 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   const renderHeader = () => (
     <div className="panel-header">
       {step !== "initial" && (
-        <button
-          type="button"
+        <IconButton
+          variant="ghost"
+          size="sm"
+          label={t("back")}
           className="panel-back-btn"
           onClick={step === "email" ? resetFlow : goBackToEmail}
-          title={t("back")}
         >
           <ArrowLeft width={18} height={18} />
-        </button>
+        </IconButton>
       )}
       <h2 className="panel-title">{title}</h2>
-      <button className="panel-close-btn" onClick={onClose} title={t("close")}>
-        <Close width={18} height={18} />
-      </button>
+      <PanelCloseButton label={t("close")} onClick={onClose} iconSize={18} />
     </div>
   );
 

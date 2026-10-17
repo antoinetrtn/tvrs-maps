@@ -4,6 +4,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 
 import { useTranslation } from "../config/i18n";
+import Button from "./ui/Button";
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
   const t = useTranslation(lang);
@@ -12,12 +13,12 @@ const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
       <div className="dialog-card">
         <p>{message}</p>
         <div className="modal-actions">
-          <button className="modal-btn cancel" onClick={onCancel}>
+          <Button variant="secondary" className="modal-btn cancel" onClick={onCancel}>
             {t("cancel")}
-          </button>
-          <button className="modal-btn confirm" onClick={onConfirm}>
+          </Button>
+          <Button variant="primary" className="modal-btn confirm" onClick={onConfirm}>
             {t("confirm")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>,
