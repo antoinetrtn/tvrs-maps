@@ -117,28 +117,24 @@
 .conquest-rules-card {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-ms);
+  padding: 0;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   box-shadow: 2px 2px 0 var(--black);
+  overflow: hidden;
+}
+
+.conquest-rules-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-ms);
 }
 
 .conquest-rules-card-head {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.conquest-rules-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  color: var(--accent);
 }
 
 .conquest-rules-card-title {

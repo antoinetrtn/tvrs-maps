@@ -1,0 +1,214 @@
+/* Rules scenes 7-8 (end, elo) */
+
+/* ──── SCENE 7: END ──── */
+.rules-scene .rs-end-timer {
+  clip-path: inset(0 100% 0 0);
+}
+
+.rules-scene .rs-end-col-accent,
+.rules-scene .rs-end-col-muted {
+  transform-origin: 0 27px;
+  transform: scaleY(1);
+}
+
+.rules-scene .rs-end-marker {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rules-scene:not(.is-static) .rs-end-timer {
+  animation: rs-end-drain var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-end-col-accent,
+.rules-scene:not(.is-static) .rs-end-col-muted {
+  animation: rs-end-grow var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-end-marker {
+  animation: rs-end-mark var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+@keyframes rs-end-drain {
+  0% {
+    clip-path: inset(0 0 0 0);
+  }
+  5% {
+    clip-path: inset(0 16.66% 0 0);
+  }
+  10% {
+    clip-path: inset(0 33.33% 0 0);
+  }
+  15% {
+    clip-path: inset(0 50% 0 0);
+  }
+  20% {
+    clip-path: inset(0 66.66% 0 0);
+  }
+  25% {
+    clip-path: inset(0 83.33% 0 0);
+  }
+  28%,
+  92% {
+    clip-path: inset(0 100% 0 0);
+  }
+  93%,
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes rs-end-grow {
+  0%,
+  27% {
+    transform: scaleY(0);
+  }
+  28%,
+  34% {
+    transform: scaleY(0.25);
+  }
+  35%,
+  41% {
+    transform: scaleY(0.5);
+  }
+  42%,
+  48% {
+    transform: scaleY(0.75);
+  }
+  49%,
+  92% {
+    transform: scaleY(1);
+  }
+  93%,
+  100% {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes rs-end-mark {
+  0%,
+  55% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  56%,
+  63% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+  64%,
+  92% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  93%,
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* ──── SCENE 8: ELO ──── */
+.rules-scene .rs-elo-start {
+  opacity: 1;
+}
+
+.rules-scene .rs-elo-chart {
+  clip-path: inset(0 0 0 0);
+}
+
+.rules-scene .rs-elo-marker {
+  opacity: 1;
+  transform: translateY(-4px);
+}
+
+.rules-scene .rs-elo-hop-stem {
+  opacity: 1;
+}
+
+.rules-scene:not(.is-static) .rs-elo-chart {
+  animation: rs-elo-reveal var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-elo-marker {
+  animation: rs-elo-jump var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-elo-hop-stem {
+  animation: rs-elo-stem-anim var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+@keyframes rs-elo-reveal {
+  0%,
+  14% {
+    clip-path: inset(0 100% 0 0);
+  }
+  15%,
+  24% {
+    clip-path: inset(0 80% 0 0);
+  }
+  25%,
+  34% {
+    clip-path: inset(0 60% 0 0);
+  }
+  35%,
+  44% {
+    clip-path: inset(0 40% 0 0);
+  }
+  45%,
+  54% {
+    clip-path: inset(0 20% 0 0);
+  }
+  55%,
+  92% {
+    clip-path: inset(0 0 0 0);
+  }
+  93%,
+  100% {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@keyframes rs-elo-jump {
+  0%,
+  54% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  55%,
+  64% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  65%,
+  92% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+  93%,
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rs-elo-stem-anim {
+  0%,
+  64% {
+    opacity: 0;
+  }
+  65%,
+  92% {
+    opacity: 1;
+  }
+  93%,
+  100% {
+    opacity: 0;
+  }
+}

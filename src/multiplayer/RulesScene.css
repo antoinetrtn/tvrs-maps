@@ -1,0 +1,424 @@
+/* Rules scenes base and scenes 1-4 (match, capture, shield, steal) */
+
+.rules-scene {
+  --rs-loop: 4s;
+  --rs-d: 0s;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background-color: var(--bg-color);
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--glass-border) 40%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--glass-border) 40%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 8px 8px;
+  border-bottom: 1px solid var(--glass-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rules-scene-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Animations paused until visible */
+.rules-scene:not(.is-static) :is([class*="rs-"]) {
+  animation-play-state: paused;
+}
+
+.rules-scene.is-playing:not(.is-static) :is([class*="rs-"]) {
+  animation-play-state: running;
+}
+
+/* Static fallback / reduced motion */
+.rules-scene.is-static *,
+.rules-scene.is-static *::before,
+.rules-scene.is-static *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rules-scene *,
+  .rules-scene *::before,
+  .rules-scene *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ──── SCENE 1: MATCH ──── */
+.rules-scene .rs-match-player-left {
+  transform: translateX(4px);
+}
+
+.rules-scene .rs-match-player-right {
+  transform: translateX(-4px);
+}
+
+.rules-scene .rs-match-count {
+  opacity: 0;
+}
+
+.rules-scene .rs-match-timer {
+  clip-path: inset(0 66.66% 0 0);
+}
+
+.rules-scene .rs-match-divider {
+  fill: var(--glass-border-strong);
+}
+
+.rules-scene:not(.is-static) .rs-match-player-left {
+  animation: rs-match-pl var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-match-player-right {
+  animation: rs-match-pr var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-match-c3 {
+  animation: rs-match-c3-anim var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-match-c2 {
+  animation: rs-match-c2-anim var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-match-c1 {
+  animation: rs-match-c1-anim var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-match-timer {
+  animation: rs-match-drain var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-match-divider {
+  animation: rs-match-div-anim var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+@keyframes rs-match-pl {
+  0%,
+  35% {
+    transform: translateX(0);
+  }
+  36%,
+  92% {
+    transform: translateX(4px);
+  }
+  93%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rs-match-pr {
+  0%,
+  35% {
+    transform: translateX(0);
+  }
+  36%,
+  92% {
+    transform: translateX(-4px);
+  }
+  93%,
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rs-match-c3-anim {
+  0% {
+    opacity: 1;
+  }
+  12%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rs-match-c2-anim {
+  0%,
+  11% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  24%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rs-match-c1-anim {
+  0%,
+  23% {
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+  }
+  36%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rs-match-drain {
+  0%,
+  35% {
+    clip-path: inset(0 0 0 0);
+  }
+  36% {
+    clip-path: inset(0 16.66% 0 0);
+  }
+  46% {
+    clip-path: inset(0 33.33% 0 0);
+  }
+  56% {
+    clip-path: inset(0 50% 0 0);
+  }
+  66% {
+    clip-path: inset(0 66.66% 0 0);
+  }
+  76% {
+    clip-path: inset(0 83.33% 0 0);
+  }
+  86%,
+  92% {
+    clip-path: inset(0 100% 0 0);
+  }
+  93%,
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes rs-match-div-anim {
+  0%,
+  35% {
+    fill: var(--glass-border-strong);
+  }
+  36%,
+  45% {
+    fill: var(--accent);
+  }
+  46%,
+  100% {
+    fill: var(--glass-border-strong);
+  }
+}
+
+/* ──── SCENE 2: CAPTURE ──── */
+.rules-scene .rs-capture-target {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.rules-scene .rs-capture-type-1,
+.rules-scene .rs-capture-type-2,
+.rules-scene .rs-capture-type-3 {
+  opacity: 1;
+}
+
+.rules-scene .rs-capture-caret {
+  transform: translateX(12px);
+  opacity: 1;
+}
+
+.rules-scene .rs-capture-pop {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rules-scene:not(.is-static) .rs-capture-target {
+  animation: rs-capture-cell var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-capture-type-1 {
+  animation: rs-cap-t1 var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-capture-type-2 {
+  animation: rs-cap-t2 var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-capture-type-3 {
+  animation: rs-cap-t3 var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-capture-caret {
+  animation: rs-cap-caret var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+.rules-scene:not(.is-static) .rs-capture-pop {
+  animation: rs-cap-pop var(--rs-loop) steps(1, end) infinite;
+  animation-fill-mode: both;
+}
+
+@keyframes rs-capture-cell {
+  0%,
+  59% {
+    fill: transparent;
+    stroke: var(--text-muted);
+  }
+  60%,
+  67% {
+    fill: var(--text-main);
+    stroke: var(--text-main);
+  }
+  68%,
+  92% {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  93%,
+  100% {
+    fill: transparent;
+    stroke: var(--text-muted);
+  }
+}
+
+@keyframes rs-cap-t1 {
+  0%,
+  14% {
+    opacity: 0;
+  }
+  15%,
+  92% {
+    opacity: 1;
+  }
+  93%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rs-cap-t2 {
+  0%,
+  29% {
+    opacity: 0;
+  }
+  30%,
+  92% {
+    opacity: 1;
+  }
+  93%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rs-cap-t3 {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  45%,
+  92% {
+    opacity: 1;
+  }
+  93%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rs-cap-caret {
+  0%,
+  7% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  8%,
+  14% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  15%,
+  22% {
+    transform: translateX(4px);
+    opacity: 1;
+  }
+  23%,
+  29% {
+    transform: translateX(4px);
+    opacity: 0;
+  }
+  30%,
+  37% {
+    transform: translateX(8px);
+    opacity: 1;
+  }
+  38%,
+  44% {
+    transform: translateX(8px);
+    opacity: 0;
+  }
+  45%,
+  52% {
+    transform: translateX(12px);
+    opacity: 1;
+  }
+  53%,
+  59% {
+    transform: translateX(12px);
+    opacity: 0;
+  }
+  60%,
+  92% {
+    transform: translateX(12px);
+    opacity: 1;
+  }
+  93%,
+  100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes rs-cap-pop {
+  0%,
+  67% {
+    opacity: 0;
+    transform: translateY(1px);
+  }
+  68%,
+  75% {
+    opacity: 1;
+    transform: translateY(1px);
+  }
+  76%,
+  92% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  93%,
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
