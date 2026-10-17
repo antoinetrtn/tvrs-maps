@@ -1,4 +1,4 @@
-/* Desktop action dock — single grouped rectangular panel at bottom-right
+/* Desktop action dock — three separate square buttons at bottom-right
    Identity: pixel/square, 1px borders, light blur, stepped transitions.
    Mobile (<= 768px): labels hidden, dock elements styled individually. */
 
@@ -14,7 +14,7 @@
   .home-podium-spots {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-sm);
   }
 
   .home-bottom-right {
@@ -24,16 +24,15 @@
     z-index: var(--z-hud);
     display: inline-flex;
     flex-direction: row;
-    align-items: stretch;
-    height: 52px;
+    align-items: center;
     padding: 0;
     margin: 0;
-    gap: 0;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-sm);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    gap: var(--spacing-sm);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     box-shadow: none;
     overflow: visible;
     pointer-events: auto;
@@ -41,47 +40,29 @@
 
   .home-bottom-right .home-dock-segment {
     position: relative;
-    height: 52px;
-    min-height: 52px;
+    height: 48px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
-    border: none;
-    border-radius: 0;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     box-shadow: none;
     color: var(--text-muted);
     cursor: pointer;
     touch-action: manipulation;
     font: inherit;
+    overflow: visible;
     transition:
       background var(--dur-fast) linear,
+      border-color var(--dur-fast) linear,
       color var(--dur-fast) linear;
   }
 
-  .home-bottom-right > .home-dock-segment:first-child {
-    border-top-left-radius: var(--radius-sm);
-    border-bottom-left-radius: var(--radius-sm);
-  }
-
-  .home-bottom-right > .home-dock-segment:last-child {
-    border-top-right-radius: var(--radius-sm);
-    border-bottom-right-radius: var(--radius-sm);
-  }
-
-  .home-bottom-right > .home-dock-segment + .home-dock-segment {
-    border-left: 1px solid var(--glass-border);
-  }
-
-  /* Podium segment on desktop */
-  .home-bottom-right .home-podium-widget {
-    height: 52px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-  }
-
+  /* Podium spots on desktop */
   .home-bottom-right .widget-spot {
     width: 28px;
     height: 28px;
@@ -107,21 +88,11 @@
     border-color: var(--color-bronze);
   }
 
-  /* Profile segment on desktop */
-  .home-bottom-right .profile-trigger-btn {
-    height: 52px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-    position: relative;
-    overflow: visible;
-  }
-
+  /* Level badge on profile button */
   .home-bottom-right .profile-btn-level-tag {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: -6px;
+    right: -6px;
     background: var(--accent);
     color: var(--accent-contrast);
     font-family: var(--font-display);
@@ -129,29 +100,20 @@
     font-weight: 700;
     line-height: 1;
     padding: 2px 4px;
-    border: none;
+    border: 1px solid var(--bg-color);
     border-radius: 0;
     box-shadow: none;
-    z-index: var(--z-home-content);
+    z-index: var(--z-hud-top);
   }
 
+  /* Mini XP bar in profile button */
   .home-bottom-right .profile-btn-xp-bar {
     position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 4px;
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    bottom: 5px;
     width: auto;
     z-index: var(--z-home-content);
-  }
-
-  /* Settings segment on desktop */
-  .home-bottom-right .settings-trigger-btn {
-    height: 52px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-    position: relative;
   }
 
   .home-bottom-right .profile-icon,
@@ -171,7 +133,8 @@
   /* Micro-interactions: hover, focus-visible, active */
   .home-bottom-right .home-dock-segment:hover {
     transform: none;
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--glass-bg));
+    border-color: var(--accent);
     color: var(--accent);
     box-shadow: none;
   }
@@ -182,7 +145,7 @@
 
   .home-bottom-right .home-dock-segment:focus-visible {
     outline: 2px solid var(--accent);
-    outline-offset: -2px;
+    outline-offset: 2px;
     z-index: var(--z-hud-top);
   }
 
@@ -207,9 +170,13 @@
 
   .home-bottom-right .profile-trigger-btn,
   .home-bottom-right .settings-trigger-btn {
-    width: 52px;
-    min-width: 52px;
+    width: 48px;
+    min-width: 48px;
     padding: 0;
+  }
+
+  .home-bottom-right .profile-icon {
+    transform: translateY(-2px);
   }
 
   .home-bottom-right .home-podium-widget {
@@ -252,6 +219,10 @@
 
 /* >= 1280px: visible labels */
 @media (min-width: 1280px) {
+  .home-bottom-right {
+    gap: calc(var(--spacing-sm) + var(--spacing-xs));
+  }
+
   .home-dock-label {
     display: inline-block;
     font-family: var(--font-main);
