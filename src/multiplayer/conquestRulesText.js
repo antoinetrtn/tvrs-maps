@@ -7,6 +7,13 @@ const RULES = {
     subtitle: "Guide rapide du mode 1v1",
     close: "Fermer les règles",
     open: "Règles",
+    illustration: {
+      alt: "Aperçu d'une partie de Conquête : deux joueurs se disputent les pays d'une carte du monde.",
+      you: "Toi",
+      opponent: "Adversaire",
+      free: "Libre",
+      shielded: "Protégé",
+    },
     sections: [
       [
         "Match",
@@ -47,6 +54,13 @@ const RULES = {
     subtitle: "Quick guide to 1v1 mode",
     close: "Close rules",
     open: "Rules",
+    illustration: {
+      alt: "Overview of a Conquest match: two players fight over the countries of a world map.",
+      you: "You",
+      opponent: "Opponent",
+      free: "Free",
+      shielded: "Shielded",
+    },
     sections: [
       [
         "Match",

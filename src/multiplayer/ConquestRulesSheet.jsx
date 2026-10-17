@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { getConquestRulesText } from "./conquestRulesText";
+import RulesIllustration from "./RulesIllustration";
 import { markRulesSeen } from "./useConquestRulesAutoOpen";
 
 const FOCUSABLE_SELECTOR =
@@ -182,6 +183,7 @@ export default function ConquestRulesSheet({ open, onClose, lang }) {
         </header>
 
         <div className="conquest-rules-body">
+          <RulesIllustration labels={t.illustration} />
           <div className="conquest-rules-grid">
             {t.sections.map((section) => (
               <article key={section.id} className="conquest-rules-card">

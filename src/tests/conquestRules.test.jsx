@@ -152,3 +152,40 @@ describe("useConquestRulesAutoOpen", () => {
     getItemSpy.mockRestore();
   });
 });
+
+describe("RulesIllustration", () => {
+  it("renders one illustration above the rule cards, with a legend and an accessible label", () => {
+    render(<ConquestRulesSheet open={true} onClose={vi.fn()} lang="fr" />);
+
+    const illustrations = document.querySelectorAll(".rules-illu");
+    expect(illustrations).toHaveLength(1);
+    const illustration = illustrations[0];
+    expect(illustration.getAttribute("role")).toBe("img");
+    expect(illustration.getAttribute("aria-label")).toContain("Conquête");
+    expect(illustration.querySelectorAll(".ri-legend-item")).toHaveLength(4);
+
+    const grid = document.querySelector(".conquest-rules-grid");
+    expect(
+      illustration.compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it("exposes the complete static frame when reduced motion is requested", () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("reduce"),
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    try {
+      render(<ConquestRulesSheet open={true} onClose={vi.fn()} lang="en" />);
+      const illustration = document.querySelector(".rules-illu");
+      expect(illustration.classList.contains("is-static")).toBe(true);
+      expect(illustration.classList.contains("is-playing")).toBe(false);
+      expect(illustration.getAttribute("aria-label")).toContain("Conquest");
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+});
