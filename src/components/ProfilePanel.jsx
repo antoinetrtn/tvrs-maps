@@ -400,6 +400,7 @@ const ProfilePanel = ({
                   return (
                     <button
                       key={ch.id}
+                      type="button"
                       className={`badge-item-btn glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
                       onClick={() => setSelectedChallengeId(ch.id)}
                       style={{
