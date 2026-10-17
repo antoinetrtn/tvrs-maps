@@ -129,6 +129,10 @@ export const POLYGON_ALTITUDE = {
   // Ghost countries (dimmed world around a regional map) are tessellated by the
   // original Delaunay: worst cap dip at 1° is 0.044 (Greenland) < 0.0005 × 100.
   ghostCountry: 0.0005,
+  // Layer cross-fade: the outgoing regional features stay above the new layer while they
+  // dissolve; the world France / USA stay under the incoming departments / states.
+  exitingRegional: 0.0016,
+  parentBackdrop: 0.0001,
 };
 
 /**

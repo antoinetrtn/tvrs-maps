@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 
 import { departmentsDataMap } from "../../data/departmentsData";
 import { countryDataMap } from "../../data/gameData";
 import { usStatesDataMap } from "../../data/usStatesData";
+import usePrefersReducedMotion from "../../hooks/usePrefersReducedMotion";
 import {
   getCanonicalPosition,
   getFeatureAdmin,
@@ -10,86 +11,63 @@ import {
   getLngLatBounds,
   getRenderGeometry,
 } from "../../utils/utils";
+import { isModeTransitionLive, MODE_TRANSITION_MS, nowMs } from "../render/modeTransition";
+import useModeTransitionSteps from "./useModeTransitionSteps";
 
-function buildTransitionRenderData(trans, countriesData, departmentsData, usStatesData) {
-  const activeDept = trans.toDept || trans.fromDept;
-  const activeUs = trans.toUs || trans.fromUs;
-
-  const exclusions = [];
-  if (activeDept) exclusions.push("France");
-  if (activeUs) exclusions.push("United States of America");
-  const exclusionSet = new Set(exclusions);
-
-  const ghostWorld = countriesData
-    .filter((feature) => !exclusionSet.has(getFeatureAdmin(feature)))
-    .map((feature) => ({
-      ...feature,
-      isGhostCountry: true,
-      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-    }));
-
-  const parentFeatures = countriesData
-    .filter((feature) => exclusionSet.has(getFeatureAdmin(feature)))
-    .map((feature) => ({
-      ...feature,
-      isParentCountryFeature: true,
-      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-    }));
-
-  const exitingRegionalData = [];
-  const enteringRegionalData = [];
-
-  if (trans.fromDept) {
-    exitingRegionalData.push(
-      ...departmentsData
-        .filter((feature) => departmentsDataMap[getFeatureAdmin(feature)])
-        .map((feature) => ({
+/**
+ * Features that must stay on the globe while the outgoing layer fades out.
+ * The incoming layer is already part of the final data (so the end of the
+ * transition only removes meshes instead of rebuilding the whole globe):
+ * - leaving a regional layer: its states/departments, faded to the sea;
+ * - entering one: the parent country (France / USA) of the world layer.
+ */
+export function buildExitingFeatures(trans, countriesData, departmentsData, usStatesData) {
+  const exiting = [];
+  const pushRegional = (features, map) =>
+    features
+      .filter((feature) => map[getFeatureAdmin(feature)])
+      .forEach((feature) =>
+        exiting.push({
           ...feature,
           isExitingDepartmentFeature: true,
           renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-        }))
-    );
-  } else if (trans.toDept) {
-    enteringRegionalData.push(
-      ...departmentsData
-        .filter((feature) => departmentsDataMap[getFeatureAdmin(feature)])
-        .map((feature) => ({
-          ...feature,
-          isEnteringDepartmentFeature: true,
-          renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-        }))
-    );
-  }
+        })
+      );
+  if (trans.fromDept) pushRegional(departmentsData, departmentsDataMap);
+  if (trans.fromUs) pushRegional(usStatesData, usStatesDataMap);
 
-  if (trans.fromUs) {
-    exitingRegionalData.push(
-      ...usStatesData
-        .filter((feature) => usStatesDataMap[getFeatureAdmin(feature)])
-        .map((feature) => ({
+  const fromWorld = !trans.fromDept && !trans.fromUs;
+  if (fromWorld) {
+    const parents = new Set();
+    if (trans.toDept) parents.add("France");
+    if (trans.toUs) parents.add("United States of America");
+    countriesData
+      .filter((feature) => parents.has(getFeatureAdmin(feature)))
+      .forEach((feature) =>
+        exiting.push({
           ...feature,
-          isExitingDepartmentFeature: true,
+          isParentCountryFeature: true,
           renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-        }))
-    );
-  } else if (trans.toUs) {
-    enteringRegionalData.push(
-      ...usStatesData
-        .filter((feature) => usStatesDataMap[getFeatureAdmin(feature)])
-        .map((feature) => ({
-          ...feature,
-          isEnteringDepartmentFeature: true,
-          renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-        }))
-    );
+        })
+      );
   }
+  return exiting;
+}
 
-  return [...ghostWorld, ...parentFeatures, ...exitingRegionalData, ...enteringRegionalData];
+/** Leaving a regional layer: France / USA of the world layer fade in under the exiting states. */
+function flagIncomingParents(worldData, trans) {
+  const parents = new Set();
+  if (trans.fromDept) parents.add("France");
+  if (trans.fromUs) parents.add("United States of America");
+  return worldData.map((feature) =>
+    parents.has(getFeatureAdmin(feature)) ? { ...feature, isParentCountryFeature: true } : feature
+  );
 }
 
 export function useGlobeRenderData({
   isDepartmentMode = false,
   isUsStatesMode = false,
-  isHomeScreen,
+  isHomeScreen: _isHomeScreen,
   isEndScreen: _isEndScreen,
   countriesData,
   departmentsData,
@@ -105,26 +83,31 @@ export function useGlobeRenderData({
     toDept: false,
     toUs: false,
     startTime: 0,
-    duration: 500,
+    duration: MODE_TRANSITION_MS,
   });
 
   const prevModeRef = useRef({ isDepartmentMode, isUsStatesMode });
+  const reducedMotion = usePrefersReducedMotion();
 
-  useEffect(() => {
-    const prev = prevModeRef.current;
-    if (prev.isDepartmentMode !== isDepartmentMode || prev.isUsStatesMode !== isUsStatesMode) {
-      modeTransitionRef.current = {
-        active: true,
-        fromDept: prev.isDepartmentMode,
-        fromUs: prev.isUsStatesMode,
-        toDept: isDepartmentMode,
-        toUs: isUsStatesMode,
-        startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
-        duration: 500,
-      };
-      prevModeRef.current = { isDepartmentMode, isUsStatesMode };
-    }
-  }, [isDepartmentMode, isUsStatesMode]);
+  // Started while rendering (not in an effect) so the very first frame of the new
+  // layer already carries the transition: an effect landed after the data swap and
+  // left the old layer to vanish in a single frame.
+  const prev = prevModeRef.current;
+  if (prev.isDepartmentMode !== isDepartmentMode || prev.isUsStatesMode !== isUsStatesMode) {
+    prevModeRef.current = { isDepartmentMode, isUsStatesMode };
+    modeTransitionRef.current = {
+      active: !reducedMotion,
+      fromDept: prev.isDepartmentMode,
+      fromUs: prev.isUsStatesMode,
+      toDept: isDepartmentMode,
+      toUs: isUsStatesMode,
+      startTime: nowMs(),
+      duration: MODE_TRANSITION_MS,
+    };
+  }
+  const transitionLive = isModeTransitionLive(modeTransitionRef.current);
+  // Stepped colour updates while live (see useModeTransitionSteps).
+  const transitionStep = useModeTransitionSteps(modeTransitionRef, transitionLive);
 
   const selectableCountriesData = useMemo(() => {
     if (isDepartmentMode)
@@ -148,17 +131,7 @@ export function useGlobeRenderData({
     }));
   }, [selectableCountriesData]);
 
-  const renderCountriesData = useMemo(() => {
-    const trans = modeTransitionRef.current;
-    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
-    if (trans.active && now - trans.startTime >= trans.duration) {
-      trans.active = false;
-    }
-
-    if (trans.active) {
-      return buildTransitionRenderData(trans, countriesData, departmentsData, usStatesData);
-    }
-
+  const finalRenderCountriesData = useMemo(() => {
     if (!isDepartmentMode && !isUsStatesMode) return worldCountriesRenderData;
 
     const exclusions = isDepartmentMode ? ["France"] : ["United States of America"];
@@ -183,12 +156,23 @@ export function useGlobeRenderData({
     worldCountriesRenderData,
     baseRenderCountriesData,
     countriesData,
-    departmentsData,
-    usStatesData,
     isDepartmentMode,
     isUsStatesMode,
-    isHomeScreen,
   ]);
+
+  // While the layers cross-fade, the outgoing features stay in the data; the
+  // incoming ones are the final objects, so the end only removes meshes.
+  const transitionKey = transitionLive ? modeTransitionRef.current.startTime : 0;
+  const renderCountriesData = useMemo(() => {
+    if (!transitionKey) return finalRenderCountriesData;
+    const trans = modeTransitionRef.current;
+    const exiting = buildExitingFeatures(trans, countriesData, departmentsData, usStatesData);
+    const incoming =
+      trans.toDept || trans.toUs
+        ? finalRenderCountriesData
+        : flagIncomingParents(finalRenderCountriesData, trans);
+    return [...incoming, ...exiting];
+  }, [transitionKey, finalRenderCountriesData, countriesData, departmentsData, usStatesData]);
 
   const selectableFeatureIndex = useMemo(() => {
     return selectableCountriesData
@@ -253,5 +237,7 @@ export function useGlobeRenderData({
     countriesWithGeometry,
     canonicalPositions,
     modeTransitionRef,
+    transitionStep,
+    transitionLive,
   };
 }

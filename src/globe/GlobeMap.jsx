@@ -86,8 +86,6 @@ const GlobeMap = (props) => {
   const lastZoomRef = useRef(2.5);
   const canonicalRef = useRef({});
 
-  const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode);
-
   const {
     isDepartmentMode,
     isUsStatesMode,
@@ -104,6 +102,8 @@ const GlobeMap = (props) => {
     perfProfile,
   });
 
+  const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode, gameDataMap);
+
   const isLight = theme === "light";
   const {
     selectableFeatureIndex,
@@ -113,6 +113,8 @@ const GlobeMap = (props) => {
     canonicalPositions,
     polygonsData,
     modeTransitionRef,
+    transitionStep,
+    transitionLive,
   } = useGlobeRenderPipeline({
     isDepartmentMode,
     isUsStatesMode,
@@ -165,6 +167,7 @@ const GlobeMap = (props) => {
     selectionTransition,
     gameDataMap,
     modeTransitionRef,
+    transitionStep,
   });
 
   const {
@@ -524,7 +527,8 @@ const GlobeMap = (props) => {
             polygonStrokeColor={getPolygonStrokeColorWrapped}
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
-            polygonsTransitionDuration={GLITCH_SELECTION_TRANSITION_MS}
+            // No altitude tween while a layer cross-fade is live (new polygons start at full height).
+            polygonsTransitionDuration={transitionLive ? 0 : GLITCH_SELECTION_TRANSITION_MS}
             pointsData={markersData}
             pointLat="lat"
             pointLng="lng"
