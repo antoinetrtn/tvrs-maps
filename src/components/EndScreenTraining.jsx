@@ -1,3 +1,5 @@
+import "./EndScreenTraining.css";
+
 import React from "react";
 
 import { getTrainingLabel } from "../utils/trainingPool";
