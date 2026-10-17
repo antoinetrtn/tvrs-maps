@@ -86,6 +86,7 @@ const HomeScreenCategoryCarousel = ({
   onStartGame,
   onOpenConquest = null,
   onOpenConquestRules = null,
+  onOpenTraining = null,
   lang,
   homeMode,
   setHomeMode,
@@ -210,6 +211,7 @@ const HomeScreenCategoryCarousel = ({
             onStartGame={onStartGame}
             onOpenConquest={onOpenConquest}
             onOpenConquestRules={onOpenConquestRules}
+            onOpenTraining={onOpenTraining}
             onSelectSideCard={handleSelectSideCard}
             reducedMotion={reducedMotion}
           />

@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 
+import { trainingTranslations } from "./trainingText";
+
 export const translations = {
   fr: {
     // Confirmation Modals
@@ -231,6 +233,7 @@ export const translations = {
     badge_loyal_player_desc: "Joue un total de 10 parties sur TVRS Maps.",
     badge_night_owl_title: "Oiseau de Nuit",
     badge_night_owl_desc: "Termine une partie entre 22h et 4h du matin.",
+    ...trainingTranslations.fr,
   },
   en: {
     // Confirmation Modals
@@ -459,6 +462,7 @@ export const translations = {
     badge_loyal_player_desc: "Play 10 games in total on TVRS Maps.",
     badge_night_owl_title: "Night Owl",
     badge_night_owl_desc: "Complete a game between 10 PM and 4 AM.",
+    ...trainingTranslations.en,
   },
 };
 

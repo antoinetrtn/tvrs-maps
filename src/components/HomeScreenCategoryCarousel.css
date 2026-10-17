@@ -372,11 +372,26 @@
 }
 
 /* Carte Conquête : « Règles » remplace le bouton Apprendre (bouton icône carré 44px) */
-.card-rules-btn {
+.card-rules-btn,
+.card-train-btn {
   width: var(--control-lg);
   height: var(--control-lg);
   min-width: var(--control-lg);
   padding: 0;
+}
+
+.card-train-btn svg {
+  transition: transform var(--dur-micro) var(--steps-press);
+}
+
+.card-train-btn:hover svg {
+  transform: translate(1px, 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-train-btn:hover svg {
+    transform: none;
+  }
 }
 
 /* Dots Row - Pixel Squares */

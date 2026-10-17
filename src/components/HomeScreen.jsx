@@ -15,6 +15,7 @@ import Logo from "./Logo";
 import ModeShutter from "./ModeShutter";
 import ProfilePanel from "./ProfilePanel";
 import SettingsPanel from "./SettingsPanel";
+import TrainingSheet from "./TrainingSheet";
 import XpBar from "./XpBar";
 
 const HomeScreen = ({
@@ -49,6 +50,7 @@ const HomeScreen = ({
   const [profileOpen, setProfileOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [conquestRulesOpen, setConquestRulesOpen] = useState(false);
+  const [trainingMode, setTrainingMode] = useState(null);
   const t = useTranslation(lang);
   const hero = getHomeHeroText(lang);
 
@@ -58,6 +60,7 @@ const HomeScreen = ({
       setProfileOpen(false);
       setLeaderboardOpen(false);
       setConquestRulesOpen(false);
+      setTrainingMode(null);
     }
   }, [exiting]);
 
@@ -106,6 +109,7 @@ const HomeScreen = ({
             onStartGame={onStartGame}
             onOpenConquest={onOpenConquest}
             onOpenConquestRules={handleOpenConquestRules}
+            onOpenTraining={setTrainingMode}
             lang={lang}
             homeMode={homeMode}
             setHomeMode={setHomeMode}
@@ -252,6 +256,14 @@ const HomeScreen = ({
       />
 
       <ConquestRulesSheet open={conquestRulesOpen} onClose={handleCloseConquestRules} lang={lang} />
+      <TrainingSheet
+        open={Boolean(trainingMode)}
+        mode={trainingMode || "countries"}
+        lang={lang}
+        profileId={userProfile?.id}
+        onClose={() => setTrainingMode(null)}
+        onStart={(pool) => onStartGame(trainingMode, undefined, pool)}
+      />
     </>
   );
 };
