@@ -13,7 +13,15 @@ const EndScreenContinents = ({
 }) => (
   <div
     className="continents-progress-bars"
+    role="button"
+    tabIndex={0}
     onClick={onViewTable}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onViewTable?.();
+      }
+    }}
     title={t("view_table")}
     ref={containerRef}
   >
