@@ -1,7 +1,7 @@
 import "./EndScreen.css";
 import "./PassportStamp.css";
 
-import { ChevronDown, ChevronUp, InfoBox, Trophy } from "pixelarticons/react";
+import { ChevronDown, ChevronUp, Trophy } from "pixelarticons/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { getThemeRegionColor } from "../config/designSystem";
@@ -9,6 +9,8 @@ import { GAME_REGIONS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
 import { getGameStats } from "../utils/utils";
+import EndScreenContinents from "./EndScreenContinents";
+import EndScreenTraining from "./EndScreenTraining";
 import PixelFireworks from "./PixelFireworks";
 import XpBar from "./XpBar";
 import XpOrbsAnimation from "./XpOrbsAnimation";
@@ -29,6 +31,9 @@ const EndScreen = ({
   xpResult = null,
   livesLeft = null,
   isHardcoreRun = false,
+  isTraining = false,
+  trainingMode = "countries",
+  trainingReviewKeys = [],
 }) => {
   const dataMap = activeDataMap || countryDataMap;
   const t = useTranslation(lang);
@@ -57,6 +62,7 @@ const EndScreen = ({
   const isPerfectScore = foundList.length === totalCountries;
 
   const getTitle = () => {
+    if (isTraining) return t("training_end_title");
     if (isHardcoreRun && livesLeft === 0) return t("hardcore_game_over");
     if (isPerfectScore) return t("incredible");
     return t("well_done");
@@ -141,6 +147,7 @@ const EndScreen = ({
             })}
           </p>
           <h1>{getTitle()}</h1>
+          {isTraining && <p className="training-end-note">{t("training_end_note")}</p>}
           <div className="journal-stamps">
             <div className="passport-stamp score-stamp" aria-label={t("stamp_explored")}>
               <span className="stamp-caption">{t("stamp_explored")}</span>
@@ -151,7 +158,7 @@ const EndScreen = ({
                 {foundList.length}/{totalCountries}
               </span>
             </div>
-            {isNewPB && (
+            {!isTraining && isNewPB && (
               <div className="passport-stamp new-pb-badge">
                 <Trophy width={14} height={14} />
                 <span>{t("new_pb")}</span>
@@ -164,58 +171,28 @@ const EndScreen = ({
           {/* This space is for the globe which is rendered behind */}
         </div>
 
-        <div
-          className="continents-progress-bars"
-          onClick={onViewTable}
-          title={t("view_table")}
-          ref={orbsSourceRef}
-        >
-          <div className="progress-bars-header">
-            <span className="final-score-inline">
-              {foundList.length} / {totalCountries}
-            </span>
-            <span className="progress-info-icon">
-              <InfoBox width={18} height={18} />
-            </span>
-          </div>
-
-          <div className="progress-bars-grid">
-            {CONTINENT_ORDER.filter((reg) => reg !== "Unknown" && stats[reg].total > 0).map(
-              (region) => {
-                const data = stats[region];
-                const pct = Math.round((data.found / data.total) * 100);
-                const color = colors[region] || "var(--accent)";
-                const label = t(`region_${region}`) || region;
-
-                return (
-                  <div
-                    key={region}
-                    className="progress-item"
-                    style={{ "--continent-color": color }}
-                  >
-                    <div className="progress-info">
-                      <div className="progress-title">
-                        <span className="progress-dot" />
-                        <span className="progress-label">{label}</span>
-                      </div>
-                      <div className="progress-stats">
-                        <div className="progress-track">
-                          <div className="progress-fill" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="progress-count">
-                          {data.found}/{data.total}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-            )}
-          </div>
-        </div>
+        {isTraining ? (
+          <EndScreenTraining
+            trainingMode={trainingMode}
+            trainingReviewKeys={trainingReviewKeys}
+            lang={lang}
+            t={t}
+          />
+        ) : (
+          <EndScreenContinents
+            stats={stats}
+            order={CONTINENT_ORDER}
+            colors={colors}
+            foundCount={foundList.length}
+            total={totalCountries}
+            onViewTable={onViewTable}
+            containerRef={orbsSourceRef}
+            t={t}
+          />
+        )}
 
         {/* Gamification Progress Display */}
-        {xpResult && (
+        {!isTraining && xpResult && (
           <div
             className={`end-screen-xp-card glass-panel ${showLevelUp ? "level-up-shake" : ""}`}
             ref={orbsTargetRef}
@@ -231,7 +208,7 @@ const EndScreen = ({
           </div>
         )}
 
-        {lastScores && lastScores.length > 0 && (
+        {!isTraining && lastScores && lastScores.length > 0 && (
           <div className="end-screen-history glass-panel">
             <h3 className="history-title text-natural-case">{t("last_scores")}</h3>
             <div className="history-scores-row">

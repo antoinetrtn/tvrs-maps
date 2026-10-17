@@ -1,8 +1,18 @@
-import { BookOpen, Play, ScrollVertical } from "pixelarticons/react";
+import { BookOpen, Play, ScrollVertical, Target } from "pixelarticons/react";
 import React from "react";
 
 import { getCardPose } from "./homeCardPose";
 import { HOME_CONQUEST_KEY } from "./homeModes";
+
+const guardDrag = (wasDraggingRef, fn) => (e) => {
+  if (wasDraggingRef.current) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+  e.stopPropagation();
+  fn?.();
+};
 
 const CardActions = ({
   isTopCard,
@@ -11,30 +21,17 @@ const CardActions = ({
   wasDraggingRef,
   onOpenConquest,
   onOpenConquestRules,
+  onOpenTraining,
   onStartGame,
   t,
 }) => {
-  const handlePlay = (e) => {
-    if (wasDraggingRef.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    e.stopPropagation();
-    if (isConquest) onOpenConquest?.();
-    else onStartGame(modeKey);
-  };
-
-  const handleSecondary = (e) => {
-    if (wasDraggingRef.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    e.stopPropagation();
-    if (isConquest) onOpenConquestRules?.();
-    else onStartGame("learn", modeKey);
-  };
+  const onPlay = guardDrag(wasDraggingRef, () =>
+    isConquest ? onOpenConquest?.() : onStartGame(modeKey)
+  );
+  const onTrain = guardDrag(wasDraggingRef, () => onOpenTraining?.(modeKey));
+  const onSecondary = guardDrag(wasDraggingRef, () =>
+    isConquest ? onOpenConquestRules?.() : onStartGame("learn", modeKey)
+  );
 
   return (
     <div className="card-actions">
@@ -42,18 +39,32 @@ const CardActions = ({
         type="button"
         tabIndex={isTopCard ? 0 : -1}
         className={`card-play-btn mode-${modeKey}`}
-        onClick={handlePlay}
+        onClick={onPlay}
       >
         <Play width={20} height={20} aria-hidden="true" />
         <span>{t("play")}</span>
       </button>
+
+      {!isConquest && (
+        <button
+          type="button"
+          tabIndex={isTopCard ? 0 : -1}
+          className="card-learn-btn card-train-btn"
+          onClick={onTrain}
+          title={t("training_card_label")}
+          aria-label={t("training_card_label")}
+        >
+          <Target width={20} height={20} aria-hidden="true" />
+          <span className="sr-only">{t("training_card_label")}</span>
+        </button>
+      )}
 
       {isConquest ? (
         <button
           type="button"
           tabIndex={isTopCard ? 0 : -1}
           className="card-learn-btn card-rules-btn"
-          onClick={handleSecondary}
+          onClick={onSecondary}
           title={t("mode_rules")}
           aria-label={t("mode_rules")}
         >
@@ -65,7 +76,7 @@ const CardActions = ({
           type="button"
           tabIndex={isTopCard ? 0 : -1}
           className="card-learn-btn"
-          onClick={handleSecondary}
+          onClick={onSecondary}
           title={t("mode_learn")}
           aria-label={t("mode_learn")}
         >
@@ -134,6 +145,7 @@ const ModeCard = ({
   onStartGame,
   onOpenConquest,
   onOpenConquestRules,
+  onOpenTraining,
   onSelectSideCard,
   reducedMotion = false,
 }) => {
@@ -210,6 +222,7 @@ const ModeCard = ({
         wasDraggingRef={wasDraggingRef}
         onOpenConquest={onOpenConquest}
         onOpenConquestRules={onOpenConquestRules}
+        onOpenTraining={onOpenTraining}
         onStartGame={onStartGame}
         t={t}
       />

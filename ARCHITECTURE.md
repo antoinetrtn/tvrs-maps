@@ -94,7 +94,9 @@ src/
                               (checkChallengesRealTime), recordSuccessfulGuessSideEffects.js.
 
   services/                   supabaseClient.js (auth, profils, records, leaderboard),
-                              TaskService.js.
+                              TaskService.js, countryStats/ (stats trouvé/raté par pays,
+                              score de maîtrise pur `mastery.js`, stockage localStorage
+                              versionné `storage.js`, service à backend interchangeable).
   tests/                      Tests Vitest (purs : shaders, gamification, i18n, config…).
   types/                      supabase.ts (types générés).
 
@@ -131,6 +133,17 @@ centralisées dans `config/gameConfig.js` pour que les modes ne divergent pas
 visuellement. S'ajoute un axe **hardcore/peaceful** (toggle persisté,
 `hardcoreMode` dans `App`) : le hardcore ajoute des vies (`livesLeft`) et marque
 les records/scores leaderboard correspondants.
+
+### Entraînement ciblé
+
+Option « cible » (icône Target) sur chaque carte de l'accueil → `TrainingSheet`. À la fin d'une
+partie solo (hors Apprendre), `useCountryStatsRecorder` enregistre par pays trouvé / raté (cibles
+vues non trouvées + mauvaises réponses ; un pays jamais ciblé n'est pas compté) via
+`services/countryStats` (localStorage `tvrs-country-stats:v1:<profil>`, plafonné en taille ; AUCUN
+accès Supabase). `mastery.js` calcule un score de faiblesse ∈ [0,1] (historique récent pondéré par
+décroissance, a priori neutre 0,5 → un pays jamais vu passe après les ratés fréquents et avant les
+pays maîtrisés, petit bonus d'oubli). Une partie ciblée (`useTrainingRun`) remplace la liste du mode
+par un pool de 10/20/30 éléments, plus faibles d'abord ; ni record, ni XP, ni classement.
 
 ## 4. Flux de données et état
 

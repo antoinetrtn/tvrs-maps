@@ -52,12 +52,12 @@
   }
 }
 
-:is(.tab-bar-tab, .ui-option):active:not(:disabled) {
+:is(.tab-bar-tab, .ui-option, .training-btn):active:not(:disabled) {
   transform: var(--press-offset);
   animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
-:is(.tab-bar-tab, .ui-option) {
+:is(.tab-bar-tab, .ui-option, .training-btn) {
   touch-action: manipulation;
 }
 

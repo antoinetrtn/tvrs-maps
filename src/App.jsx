@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import AchievementToast from "./components/AchievementToast.jsx";
 import AuthModal from "./components/AuthModal.jsx";
@@ -10,26 +10,27 @@ import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./compon
 import HomeScreen from "./components/HomeScreen.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
-  BREAKPOINTS,
   DEFAULT_GAME_DURATION_SEC,
   DEFAULT_MODE,
   HOME_AUTOROTATE_INTERVAL_MS,
   HOME_GLOBE_SETTLE_MS,
-  PERFORMANCE,
   STORAGE_KEYS,
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
 import { useAppTheme } from "./hooks/useAppTheme";
 import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
+import { useCountryStatsRecorder } from "./hooks/useCountryStatsRecorder";
 import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
 import { useGameSession } from "./hooks/useGameSession";
 import { useGameSessionProps } from "./hooks/useGameSessionProps";
 import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
+import { usePerfProfile } from "./hooks/usePerfProfile";
 import useScreenExit, { EXIT_MS } from "./hooks/useScreenExit";
 import useScreenGlitch from "./hooks/useScreenGlitch";
 import useSettledValue from "./hooks/useSettledValue";
+import { useTrainingRun } from "./hooks/useTrainingRun";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
 import { isGuestLaunch } from "./multiplayer/conquestLink";
@@ -157,6 +158,9 @@ function App() {
     }
   }
 
+  const { trainingPool, setTrainingPool, clearTraining, sessionKeys, sessionTotal } =
+    useTrainingRun({ allCountryKeys, totalPossible });
+
   const {
     foundList,
     score,
@@ -185,8 +189,9 @@ function App() {
     mistakes,
   } = useGameSession({
     mode,
-    allCountryKeys,
-    totalPossible,
+    allCountryKeys: sessionKeys,
+    totalPossible: sessionTotal,
+    trainingPool,
     gameDuration,
     lang,
     userProfile,
@@ -205,6 +210,17 @@ function App() {
     effectiveKeyboardMode: isKeyboardMode,
     globeFeedbackApplierRef,
     hardcoreMode,
+  });
+
+  useCountryStatsRecorder({
+    mode,
+    profileId: userProfile?.id,
+    currentScreen,
+    selectedCountry,
+    foundList,
+    isPlaying,
+    isGameOver,
+    popupError,
   });
 
   // Transient red flash when a life is lost (wrong answer in game modes)
@@ -230,9 +246,11 @@ function App() {
   }, [mode]);
 
   const startGame = useCallback(
-    (selectedMode, subMode) => {
+    (selectedMode, subMode, pool = null) => {
       resetGame(selectedMode);
       setMode(selectedMode);
+      setTrainingPool(pool?.length ? pool : null); // entraînement ciblé : 1re cible = la moins maîtrisée
+      if (pool?.length) setSelectedCountry(pool[0]);
       if (selectedMode === "learn" && subMode) {
         setLearnSubMode(subMode);
       }
@@ -255,7 +273,7 @@ function App() {
       refocus();
       [50, 150, 300].forEach((ms) => setTimeout(refocus, ms));
     },
-    [resetGame, extInputRef]
+    [resetGame, extInputRef, setTrainingPool]
   );
 
   useEffect(() => {
@@ -266,6 +284,7 @@ function App() {
 
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
+    clearTraining();
     setSelectedCountry(null);
     setMode(DEFAULT_MODE);
     setHomeMode(HOME_CONQUEST_KEY);
@@ -274,7 +293,7 @@ function App() {
     setShowInfoModal(false);
     setShowResultsTable(false);
     setCurrentScreen("home");
-  }, [resetGame, setSelectedCountry]);
+  }, [resetGame, setSelectedCountry, clearTraining]);
 
   useEffect(() => {
     if (currentScreen === "home") {
@@ -310,26 +329,7 @@ function App() {
       },
     });
 
-  const perfProfile = useMemo(() => {
-    const isMobile = viewport.width < BREAKPOINTS.mobile;
-    const isTablet = viewport.width >= BREAKPOINTS.mobile && viewport.width < BREAKPOINTS.desktop;
-    const tier = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
-    const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = Math.min(devicePixelRatio, PERFORMANCE.maxPixelRatio[tier]);
-    return {
-      isMobile,
-      isTablet,
-      pixelRatio,
-      antialias: !isMobile,
-      enableAutoRotate: true,
-      enablePointerInteraction: true,
-      maxLabels: PERFORMANCE.maxLabels[tier],
-      showAtmosphere: true,
-      useImageTextures: false,
-      cullOffscreenCountries: isMobile,
-      polygonCapCurvatureResolution: PERFORMANCE.polygonCapCurvatureResolution[tier],
-    };
-  }, [viewport.width]);
+  const perfProfile = usePerfProfile(viewport.width);
 
   const { isMobileViewport, isPanelOpen, panelDataMap, panelMode, closePanel, handlePanelSelect } =
     useGameDataPanelState({
@@ -386,7 +386,8 @@ function App() {
     goHome,
     lang,
     score,
-    totalPossible,
+    totalPossible: sessionTotal,
+    trainingPool,
     timeLeft,
     handleHudEnter,
     isPlaying,
