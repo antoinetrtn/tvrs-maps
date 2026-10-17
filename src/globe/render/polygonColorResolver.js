@@ -422,3 +422,16 @@ export function resolveRestingColorForFeature({
   }
   return lerpColor(base, UI_COLORS.black, isLight ? 0.04 : 0.08);
 }
+
+/** Conquête: le focus transitoire d'un pays possédé ne masque pas la couleur du propriétaire. */
+export function isQuietOwnedFocusFor(overlay, admin, gameDataMap) {
+  const id = overlay?.quietFocusId;
+  if (!id || !overlay.colors?.[admin]) return false;
+  return id === admin || isSameAdmin(admin, id, gameDataMap);
+}
+
+/** Conquête: couleur de base (cap / side) d'un pays possédé, cible de la dissolution. */
+export function resolveOwnerBaseColor(owner, kind, { lerpColor, UI_COLORS, isLight }) {
+  const capColor = lerpColor(owner, UI_COLORS.black, isLight ? 0.32 : 0.16);
+  return kind === "side" ? lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08) : capColor;
+}

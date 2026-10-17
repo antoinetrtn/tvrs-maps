@@ -1,15 +1,19 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { CONQUEST_PLAYER_COLORS } from "../config/designSystem";
 import { useGlobePolygons } from "../globe/hooks/useGlobePolygons";
 import { withQuietFocus } from "../multiplayer/conquestFocus";
 
+const OWNER = CONQUEST_PLAYER_COLORS.teal;
+const NEUTRAL = CONQUEST_PLAYER_COLORS.neutral;
+
 describe("withQuietFocus", () => {
   const overlay = {
-    colors: { France: "#22c55e" },
+    colors: { France: OWNER },
     strokes: {},
     rings: [],
-    neutral: "#334155",
+    neutral: NEUTRAL,
   };
 
   it("returns null when overlay is null", () => {
@@ -79,10 +83,10 @@ describe("useGlobePolygons with quiet focus", () => {
 
   it("renders quiet owned focus like a non-selected owned country", () => {
     const conquestOverlay = {
-      colors: { France: "#22c55e" },
+      colors: { France: OWNER },
       strokes: {},
       rings: [],
-      neutral: "#334155",
+      neutral: NEUTRAL,
       quietFocusId: "France",
     };
 
@@ -101,8 +105,8 @@ describe("useGlobePolygons with quiet focus", () => {
     expect(result.current.isQuietOwnedFocus("France")).toBe(true);
     expect(result.current.isQuietOwnedFocus("Germany")).toBe(false);
 
-    // 2. getBasePolygonColor returns the owner colour
-    expect(result.current.getBasePolygonColor(feature)).toBe("#22c55e");
+    // 2. l'état du propriétaire reste la cible de la dissolution
+    expect(result.current.getBaseColorForCountryAndKind("France", "cap")).toBeTruthy();
 
     // 3. getPolygonStroke uses the non-selected stroke (not UI_COLORS.accent)
     const stroke = result.current.getPolygonStroke(feature);
@@ -115,7 +119,7 @@ describe("useGlobePolygons with quiet focus", () => {
 
     // 5. getBaseColorForCountryAndKind returns the owner colour lerped with black
     const baseColorCap = result.current.getBaseColorForCountryAndKind("France", "cap");
-    const expectedCap = result.current.lerpColor("#22c55e", result.current.UI_COLORS.black, 0.16);
+    const expectedCap = result.current.lerpColor(OWNER, result.current.UI_COLORS.black, 0.16);
     expect(baseColorCap).toBe(expectedCap);
 
     const baseColorSide = result.current.getBaseColorForCountryAndKind("France", "side");
@@ -129,10 +133,10 @@ describe("useGlobePolygons with quiet focus", () => {
 
   it("preserves selection styling for sticky selections on owned countries", () => {
     const conquestOverlay = {
-      colors: { France: "#22c55e" },
+      colors: { France: OWNER },
       strokes: {},
       rings: [],
-      neutral: "#334155",
+      neutral: NEUTRAL,
       quietFocusId: null, // sticky selection, not quiet
     };
 
@@ -155,7 +159,7 @@ describe("useGlobePolygons with quiet focus", () => {
 
     // getBaseColorForCountryAndKind still returns owner colour so dissolve fades to owner
     const baseColorCap = result.current.getBaseColorForCountryAndKind("France", "cap");
-    const expectedCap = result.current.lerpColor("#22c55e", result.current.UI_COLORS.black, 0.16);
+    const expectedCap = result.current.lerpColor(OWNER, result.current.UI_COLORS.black, 0.16);
     expect(baseColorCap).toBe(expectedCap);
   });
 

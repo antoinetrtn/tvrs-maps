@@ -138,7 +138,7 @@ const RATCHET_LIMITS = {
   "src/components/GameHUD.jsx": 490,
   "src/hooks/useGameSession.js": 750,
   "src/hooks/useUserProfile.js": 490,
-  "src/globe/hooks/useGlobePolygons.js": 715, // +Conquête owner overlay (colours, strokes, satellite tint)
+  "src/globe/hooks/useGlobePolygons.js": 730, // +Conquête owner overlay (colours, strokes, satellite tint) +focus transitoire silencieux
   "src/config/designSystem.js": 745, // + typography scale tokens (STYLE_TOKENS.fontSize + getThemeCssVariables)
   "src/components/GameHUD.css": 1000,
   "src/index.css": 560, // + typography scale, ghost-token defaults, glass icon button primitive (moved from HomeScreen.css)

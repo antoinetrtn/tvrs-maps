@@ -25,6 +25,7 @@ import {
   FOUND_HIGHLIGHT,
   getFeatureMonochromeShade,
   getTransitionState,
+  isQuietOwnedFocusFor,
   isSameAdmin,
   mutedFoundGreen,
   resolveCountryCapColor,
@@ -32,6 +33,7 @@ import {
   resolveFoundCountryStroke,
   resolveGhostVeil,
   resolveModeTransitionStroke,
+  resolveOwnerBaseColor,
   resolveRegionalLandColor,
   resolveRestingColorForFeature,
   shouldUseRegionalUnfoundLand,
@@ -144,13 +146,7 @@ export function useGlobePolygons({
   );
 
   const isQuietOwnedFocus = useCallback(
-    (admin) =>
-      Boolean(
-        conquestOverlay?.quietFocusId &&
-        (conquestOverlay.quietFocusId === admin ||
-          isSameAdmin(admin, conquestOverlay.quietFocusId, gameDataMap)) &&
-        conquestOverlay.colors?.[admin]
-      ),
+    (admin) => isQuietOwnedFocusFor(conquestOverlay, admin, gameDataMap),
     [conquestOverlay, gameDataMap]
   );
 
@@ -387,8 +383,7 @@ export function useGlobePolygons({
 
       const admin = getFeatureAdmin(d);
       const isSelected =
-        (!conquestOverlay || !isQuietOwnedFocus(admin)) &&
-        isSameAdmin(admin, selectedCountry, gameDataMap);
+        !isQuietOwnedFocus(admin) && isSameAdmin(admin, selectedCountry, gameDataMap);
       const darken = isSelected
         ? isLight
           ? GLOBE_STYLE.lighting.sideDarken.selectedLight
@@ -421,13 +416,7 @@ export function useGlobePolygons({
   const getBaseColorForCountryAndKind = useCallback(
     (admin, kind) => {
       const owner = conquestOverlay?.colors?.[admin];
-      if (owner) {
-        const capColor = lerpColor(owner, UI_COLORS.black, isLight ? 0.32 : 0.16);
-        if (kind === "side") {
-          return lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08);
-        }
-        return capColor;
-      }
+      if (owner) return resolveOwnerBaseColor(owner, kind, { lerpColor, UI_COLORS, isLight });
 
       const data = countryDataMap[admin];
       const region = data?.region || "Unknown";
@@ -503,7 +492,10 @@ export function useGlobePolygons({
       const cache = polygonMaterialCacheRef.current[kind];
       const color = kind === "cap" ? getPolygonColor(d) : getPolygonSideColor(d);
       const quiet = isQuietOwnedFocus(admin);
-      const ownedInConquest = Boolean(conquestOverlay?.colors?.[admin]);
+      // Conquête: un pays possédé ne rejoue pas la dissolution de (dé)sélection (pas de flash).
+      const owned = Boolean(conquestOverlay?.colors?.[admin]);
+      const prevTransition = owned ? null : transitioningPreviousCountryState;
+      const incomingTransition = owned ? null : transitioningIncomingCountryState;
       const isFound = foundSet.has(admin);
       const isLearnSelected = !quiet && mode === "learn" && admin === selectedCountry;
       const isHighlightedOnGlobe =
@@ -545,14 +537,8 @@ export function useGlobePolygons({
         isHomeScreen,
         isError,
         isSuccess,
-        // Conquête: un pays déjà possédé ne rejoue pas la dissolution de (dé)sélection,
-        // sa couleur de propriétaire reste visible sans flash intermédiaire.
-        transitioningPreviousCountryState: ownedInConquest
-          ? null
-          : transitioningPreviousCountryState,
-        transitioningIncomingCountryState: ownedInConquest
-          ? null
-          : transitioningIncomingCountryState,
+        transitioningPreviousCountryState: prevTransition,
+        transitioningIncomingCountryState: incomingTransition,
         isDepartmentMode: isRegionalMode,
         globeTheme,
         isLight,
@@ -730,7 +716,6 @@ export function useGlobePolygons({
     UI_COLORS,
     getBaseColorForCountryAndKind,
     lerpColor,
-    getBasePolygonColor,
     getPolygonColor,
     getPolygonSideColor,
     getPolygonStroke,
