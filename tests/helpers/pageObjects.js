@@ -74,7 +74,7 @@ export class GameHUD {
     this.fullHearts = page.locator(".PixelHeart.heart-full");
     this.lostHearts = page.locator(".PixelHeart.heart-lost");
     this.suggestionsList = page.locator(".suggestions-list");
-    this.suggestionItems = page.locator(".suggestion-item");
+    this.suggestionItems = page.locator("[role=option]");
     this.prevBtn = page.locator(".hud-btn-circular.prev-btn");
     this.nextBtn = page.locator(".hud-btn-circular.next-btn");
     this.homeLogo = page.locator(".hud-logo-clickable");
@@ -83,6 +83,15 @@ export class GameHUD {
 
   async enterAnswer(answerText) {
     await this.inputField.fill(answerText);
+    try {
+      await this.page
+        .locator(".suggestion-item")
+        .first()
+        .waitFor({ state: "visible", timeout: 250 });
+      await this.inputField.press("ArrowDown");
+    } catch {
+      // Pas de suggestion apparue
+    }
     await this.inputField.press("Enter");
   }
 }

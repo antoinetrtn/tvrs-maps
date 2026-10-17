@@ -8,8 +8,9 @@ import { getThemeRegionColor } from "../config/designSystem";
 import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
+import useAnswerCombobox from "../hooks/useAnswerCombobox";
 import { ANSWER_INPUT_PROPS } from "../utils/answerField";
-import { normalizeString } from "../utils/utils";
+import AnswerSuggestionList from "./AnswerSuggestionList";
 import Logo from "./Logo";
 import { PixelHeart } from "./PixelHeart";
 
@@ -49,8 +50,6 @@ const GameHUD = ({
   livesLeft = null,
   isHardcoreRun = false,
 }) => {
-  const [inputValue, setInputValue] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
   const [scoreGlow, setScoreGlow] = useState(false);
   const prevScoreRef = useRef(score);
 
@@ -104,148 +103,23 @@ const GameHUD = ({
 
   const t = useTranslation(lang);
 
-  const preNormalizedData = useMemo(() => {
-    if (!countryDataMap) return {};
-    const result = {};
-    Object.entries(countryDataMap).forEach(([key, value]) => {
-      if (!value) return;
-      result[key] = {
-        ...value,
-        normalizedNameFr: normalizeString(value.name_fr || value.name_en || key),
-        normalizedNameEn: normalizeString(value.name_en || key),
-        normalizedCapitalFr: value.capital_fr
-          ? normalizeString(value.capital_fr)
-          : value.capital
-            ? normalizeString(value.capital)
-            : "",
-        normalizedCapitalEn: value.capital ? normalizeString(value.capital) : "",
-        normalizedAliases: (value.aliases || []).map((alias) => normalizeString(alias)),
-      };
+  const { inputProps, suggestions, activeIndex, isRejected, choose, statusText } =
+    useAnswerCombobox({
+      mode,
+      lang,
+      countryDataMap,
+      foundList,
+      onEnter,
+      inputRef: extInputRef,
+      learnSearchQuery,
+      onLearnSearchChange,
+      t,
     });
-    return result;
-  }, [countryDataMap]);
 
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
-  };
-
-  const handleTextChange = (e) => {
-    const val = e.target.value;
-    setInputValue(val);
-    if (mode === "learn" && onLearnSearchChange) {
-      onLearnSearchChange(val);
-    }
-
-    // Stricter trigger: at least 4 chars and must represent a significant part of the word
-    if (val.length >= 4) {
-      const normalizedInput = normalizeString(val);
-      const newSuggestions = [];
-      const keysToCheck =
-        mode === "learn"
-          ? Object.keys(preNormalizedData)
-          : Object.keys(preNormalizedData).filter((k) => !foundList.includes(k));
-
-      for (const adminKey of keysToCheck) {
-        const mapped = preNormalizedData[adminKey];
-        if (!mapped) continue;
-
-        const normalizedNameToMatch =
-          lang === "fr" ? mapped.normalizedNameFr : mapped.normalizedNameEn;
-        const normalizedCapitalToMatch =
-          lang === "fr" ? mapped.normalizedCapitalFr : mapped.normalizedCapitalEn;
-
-        const nameDisplay =
-          lang === "fr" ? mapped.name_fr || mapped.name_en || adminKey : mapped.name_en || adminKey;
-        const capitalDisplay =
-          lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital || null;
-
-        // In learn mode, match both name and capital
-        if (mode === "learn") {
-          const matchName = normalizedNameToMatch.includes(normalizedInput);
-          const matchCap =
-            normalizedCapitalToMatch && normalizedCapitalToMatch.includes(normalizedInput);
-
-          // Suggestions should help with long/complex names
-          if (matchName || matchCap) {
-            const target = matchName ? nameDisplay : capitalDisplay;
-            // Only suggest if input is long enough or target is complex (has spaces/hyphens)
-            if (val.length >= 5 || target.includes(" ") || target.includes("-")) {
-              newSuggestions.push({
-                key: adminKey,
-                display: target,
-                subtext: matchName
-                  ? mapped.capital_fr || mapped.capital
-                  : mapped.name_fr || mapped.name_en || adminKey,
-              });
-            }
-          }
-        } else {
-          const targetNormalized =
-            mode === "countries" || mode === "departments" || mode === "rivers_mountains"
-              ? normalizedNameToMatch
-              : normalizedCapitalToMatch;
-          const targetDisplay =
-            mode === "countries" || mode === "departments" || mode === "rivers_mountains"
-              ? nameDisplay
-              : capitalDisplay;
-
-          if (targetNormalized && targetNormalized.startsWith(normalizedInput)) {
-            const ratio = val.length / targetDisplay.length;
-            const hasSeparator = val.includes(" ") || val.includes("-");
-            const isTargetCompound = targetDisplay.includes(" ") || targetDisplay.includes("-");
-
-            // Logic for game mode:
-            // 1. If single word: must be at least 80% finished (e.g. "Franc" -> "France")
-            // 2. If compound: must have a separator AND started the second word (e.g. "Sainte-H" -> "Sainte-Hélène")
-            const parts = val.split(/[ -]/).filter((s) => s.length > 0);
-            const isSignificantCompoundMatch =
-              isTargetCompound && hasSeparator && parts.length >= 2;
-            const isAlmostFinishedSingle = !isTargetCompound && ratio >= 0.8;
-
-            if (isAlmostFinishedSingle || isSignificantCompoundMatch) {
-              newSuggestions.push({
-                key: adminKey,
-                display: targetDisplay,
-                subtext:
-                  mode === "departments"
-                    ? mapped.code
-                    : mode === "rivers_mountains"
-                      ? mapped.type === "mountain_range" || mapped.type === "mountain"
-                        ? `🏔️ ${mapped.height || "?"} m`
-                        : `💧 ${mapped.length || "?"} km`
-                      : mode === "capitals"
-                        ? null
-                        : mapped?.capital_fr || mapped?.capital,
-              });
-            }
-          }
-        }
-      }
-      setSuggestions(newSuggestions.slice(0, 5));
-    } else setSuggestions([]);
-  };
-
-  const handleKeyDown = (e) => {
-    if ((e.key === "Tab" || e.key === "Enter") && suggestions.length > 0) {
-      e.preventDefault();
-      submitSuggestion(suggestions[0].display);
-    } else if (e.key === "Enter" && onEnter) {
-      e.preventDefault();
-      if (onEnter(inputValue)) {
-        setInputValue("");
-        setSuggestions([]);
-      }
-    }
-  };
-
-  const submitSuggestion = (match) => {
-    if (onEnter && onEnter(match)) {
-      setInputValue("");
-      setSuggestions([]);
-      if (extInputRef.current) extInputRef.current.focus();
-    }
   };
 
   const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
@@ -536,29 +410,14 @@ const GameHUD = ({
               : {}
           }
         >
-          {suggestions.length > 0 && (
-            /* preventDefault on the container too: taps landing in the gaps or
-               padding between items must not blur the input (mobile keyboard). */
-            <div
-              className="suggestions-list animation-fade-in"
-              role="presentation"
-              onMouseDown={(e) => e.preventDefault()}
-            >
-              {suggestions.map((s, idx) => (
-                <button
-                  key={idx}
-                  className="suggestion-item"
-                  onMouseDown={(e) => {
-                    e.preventDefault(); // STOPS BLUR
-                  }}
-                  onClick={() => submitSuggestion(s.display)}
-                  type="button"
-                >
-                  <span className="sug-text">{s.display}</span>
-                  {s.subtext && <small className="sug-sub">({s.subtext})</small>}
-                </button>
-              ))}
-            </div>
+          {suggestions.length > 0 && inputProps["aria-expanded"] && (
+            <AnswerSuggestionList
+              id={inputProps["aria-controls"]}
+              suggestions={suggestions}
+              activeIndex={activeIndex}
+              onSelect={choose}
+              t={t}
+            />
           )}
 
           <div className="bottom-hud-islands">
@@ -574,19 +433,15 @@ const GameHUD = ({
             )}
 
             <div
-              className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""}`}
+              className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""} ${isRejected ? "is-rejected" : ""}`}
             >
               <input
                 ref={extInputRef}
                 {...ANSWER_INPUT_PROPS}
+                {...inputProps}
                 id="q-resp-field"
                 placeholder={placeholderText}
                 className="input-field"
-                value={
-                  mode === "learn" && learnSearchQuery !== undefined ? learnSearchQuery : inputValue
-                }
-                onChange={handleTextChange}
-                onKeyDown={handleKeyDown}
                 aria-label={t("quiz_answer")}
               />
             </div>
@@ -601,6 +456,10 @@ const GameHUD = ({
                 <ChevronRight width={18} height={18} />
               </button>
             )}
+          </div>
+
+          <div className="sr-only" aria-live="polite" aria-atomic="true">
+            {statusText}
           </div>
         </div>
       )}

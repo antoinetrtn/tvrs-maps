@@ -79,6 +79,8 @@ export const translations = {
     previous: "Précédent",
     next: "Suivant",
     quiz_answer: "Réponse du quiz",
+    answer_pick_hint: "Choisis dans la liste",
+    suggestion_found: "trouvé",
 
     // Learn Toggles
     show_country_labels: "Afficher les labels des pays",
@@ -307,6 +309,8 @@ export const translations = {
     previous: "Previous",
     next: "Next",
     quiz_answer: "Quiz answer",
+    answer_pick_hint: "Pick from the list",
+    suggestion_found: "found",
 
     // Learn Toggles
     show_country_labels: "Show country labels",
