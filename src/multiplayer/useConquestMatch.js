@@ -25,9 +25,10 @@ import {
   pickClockOffset,
 } from "./conquestLogic";
 
-/** Fast resync while Realtime is down, slow safety net once subscribed. */
+/** Fast resync while Realtime is down, safety net once subscribed. */
 const RESYNC_DEGRADED_MS = 5000;
-const RESYNC_REALTIME_MS = 15000;
+// Filet de sécurité court, un broadcast perdu ne doit pas laisser le globe périmé plus de 5 s.
+const RESYNC_REALTIME_MS = 5000;
 const SYNC_DEBOUNCE_MS = 250;
 const CLOCK_SAMPLES = 5;
 export const CONQUEST_STORAGE_KEY = "tvrs-conquest-match";

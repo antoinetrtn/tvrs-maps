@@ -19,3 +19,12 @@ export function nextConquestFocus(prev, countryId, { sticky } = {}) {
 export function shouldAutoRelease(focus) {
   return Boolean(focus && !focus.sticky);
 }
+
+/**
+ * Attaches quietFocusId to the overlay when focus is transient (not sticky).
+ * Returns the exact overlay reference when overlay is falsy or focus is falsy/sticky.
+ */
+export function withQuietFocus(overlay, focus) {
+  if (!overlay || !focus || focus.sticky) return overlay;
+  return { ...overlay, quietFocusId: focus.id };
+}
