@@ -24,6 +24,7 @@ import { formatTime } from "../utils/utils";
 import AtlasState from "./AtlasState";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./LeaderboardRow";
+import IconButton from "./ui/IconButton";
 import TabBar from "./ui/TabBar";
 
 const MODE_ICONS = {
@@ -359,9 +360,15 @@ const LeaderboardScreen = ({
     >
       <div className="panel-header">
         <h2 className="panel-title">{t("global_leaderboard")}</h2>
-        <button type="button" className="panel-close-btn" onClick={onBack} title={t("close")}>
+        <IconButton
+          variant="ghost"
+          size="sm"
+          label={t("close")}
+          className="panel-close-btn"
+          onClick={onBack}
+        >
           <Close width={20} height={20} />
-        </button>
+        </IconButton>
       </div>
       <TabBar
         level={1}

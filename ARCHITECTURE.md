@@ -27,7 +27,7 @@ src/
   App.css                     Coquille app : .app-container, transition d'écran
                               (screen-soft-in/scanline), vignette panique.
   index.css                   Tokens CSS bootstrap (:root + [data-theme="light"]) et
-                              composants globaux réutilisables (.btn-primary, glitch…).
+                              composants globaux réutilisables (ui/Button, ui/IconButton, glitch…).
   styles/
     panelSystem.css           Système unifié panneaux/overlays : sheet-panel,
                               panel-header, TabBar (ui/TabBar), dialogs.

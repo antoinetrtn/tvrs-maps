@@ -3,6 +3,7 @@ import "./ConquestRules.css";
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
+import IconButton from "../components/ui/IconButton";
 import { getConquestRulesText } from "./conquestRulesText";
 import RulesIllustration from "./RulesIllustration";
 import { markRulesSeen } from "./useConquestRulesAutoOpen";
@@ -172,14 +173,15 @@ export default function ConquestRulesSheet({ open, onClose, lang }) {
             </h2>
             <p className="conquest-rules-subtitle">{t.subtitle}</p>
           </div>
-          <button
-            type="button"
+          <IconButton
+            variant="outline"
+            size="sm"
+            label={t.close}
             className="conquest-rules-close-btn"
             onClick={handleClose}
-            aria-label={t.close}
           >
             {makeIcon(CLOSE_PATH, 16)}
-          </button>
+          </IconButton>
         </header>
 
         <div className="conquest-rules-body">

@@ -14,6 +14,8 @@ import {
 } from "../services/supabaseClient";
 import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
+import Button from "./ui/Button";
+import IconButton from "./ui/IconButton";
 import TabBar from "./ui/TabBar";
 import XpBar from "./XpBar";
 
@@ -226,16 +228,18 @@ const ProfilePanel = ({
           value={activeTab}
           onChange={setActiveTab}
         />
-        <button
+        <IconButton
+          variant="ghost"
+          size="sm"
+          label={t("close")}
           className="panel-close-btn"
           onClick={(e) => {
             e.stopPropagation();
             onClose();
           }}
-          title={t("close")}
         >
           <Close width={20} height={20} />
-        </button>
+        </IconButton>
       </div>
 
       <div className="panel-body scrollbar-styled">
@@ -246,16 +250,16 @@ const ProfilePanel = ({
               <div className="profile-blur-overlay">
                 <div className="profile-blur-card glass-panel">
                   <p className="profile-blur-text text-natural-case">{t("auth_required")}</p>
-                  <button
-                    type="button"
+                  <Button
+                    variant="primary"
                     onClick={(e) => {
                       e.preventDefault();
                       if (onOpenAuth) onOpenAuth();
                     }}
-                    className="btn-primary profile-blur-btn"
+                    className="profile-blur-btn"
                   >
                     {t("auth_sign_in")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -367,24 +371,30 @@ const ProfilePanel = ({
 
                 {/* Sticky Footer Area */}
                 <div className="profile-sticky-footer">
-                  <button
+                  <Button
                     type="submit"
+                    variant="primary"
                     disabled={isSaving || (isSupabaseConfigured && !session)}
-                    className={`btn-primary form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
+                    className={`form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
                   >
                     {saveSuccess
                       ? `✓ ${t("profile_saved")}`
                       : isSaving
                         ? t("saving")
                         : t("save_profile")}
-                  </button>
+                  </Button>
 
                   {/* Clean Logout inside the sticky footer */}
                   {isSupabaseConfigured && session && (
                     <div className="profile-signout-wrapper">
-                      <button onClick={handleSignOutClick} className="profile-signout-link">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="profile-signout-link"
+                        onClick={handleSignOutClick}
+                      >
                         {t("auth_sign_out")}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>

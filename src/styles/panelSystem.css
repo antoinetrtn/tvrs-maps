@@ -67,42 +67,8 @@
 }
 
 /* ──── UNIFIED CLOSE & BACK BUTTONS ──── */
-.panel-close-btn,
-.panel-back-btn {
-  flex-shrink: 0;
-  width: var(--control-sm);
-  height: var(--control-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  touch-action: manipulation;
-  transition:
-    transform var(--dur-micro) var(--steps-press),
-    background var(--dur-fast) linear,
-    color var(--dur-fast) linear,
-    border-color var(--dur-fast) linear;
-  padding: 0;
-  margin-left: auto; /* ensure it stays at end even when tabs grow */
-}
-
-.panel-close-btn:hover,
-.panel-back-btn:hover {
-  background: var(--glass-hover);
-  color: var(--text-main);
-}
-
-.panel-close-btn:active,
-.panel-back-btn:active {
-  transform: var(--press-offset);
-  animation: px-press-flash var(--dur-micro) steps(1, end);
-}
-
 .panel-close-btn {
+  flex-shrink: 0;
   margin-left: auto;
 }
 
@@ -219,8 +185,8 @@
   /* Expand close and back touch targets to 44px HIG minimum on mobile */
   .panel-close-btn,
   .panel-back-btn {
-    width: 44px !important;
-    height: 44px !important;
+    width: 44px;
+    height: 44px;
   }
 }
 

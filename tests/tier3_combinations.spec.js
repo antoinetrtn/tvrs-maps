@@ -119,7 +119,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await expect(inputField).toBeVisible();
 
     // Click home logo to return to home screen
-    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .hud-btn-circular").first();
+    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .hud-btn").first();
     await homeLogo.click();
 
     const topCard = page.locator(".deck-mode-card.is-top-card");

@@ -30,7 +30,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputIsland).toHaveClass(/error/);
 
     // Stop round via HUD Stop button
-    const stopBtn = page.locator(".hud-top-right .hud-btn-circular, .hud-top-right button").first();
+    const stopBtn = page.locator(".hud-top-right .hud-btn, .hud-top-right button").first();
     await stopBtn.click();
 
     // Verify EndScreen modal
@@ -38,7 +38,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(endScreen).toBeVisible();
 
     // Test minimize to explore globe chip
-    const exploreBtn = page.locator(".end-screen-actions .btn-secondary");
+    const exploreBtn = page.locator(".end-screen-actions .ui-btn--secondary");
     await exploreBtn.click();
 
     const restoreChip = page.locator(".end-screen-restore-chip");
@@ -49,7 +49,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(endScreen).toHaveClass(/end-screen-overlay/);
 
     // Return to Home screen
-    const homeBtn = page.locator(".end-screen-actions .btn-primary");
+    const homeBtn = page.locator(".end-screen-actions .ui-btn--primary");
     await homeBtn.click();
 
     await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
@@ -85,7 +85,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputField).toHaveValue("France");
 
     // Return Home via logo
-    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .hud-btn-circular").first();
+    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .hud-btn").first();
     await homeLogo.click();
 
     await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
@@ -119,7 +119,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputField).toHaveValue("");
 
     // Return Home via mobile Home button
-    const homeBtn = page.locator(".hud-top-left .hud-btn-circular").first();
+    const homeBtn = page.locator(".hud-top-left .hud-btn").first();
     await homeBtn.click();
 
     await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
@@ -149,14 +149,14 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputField).toHaveValue("");
 
     // Stop round via HUD stop button
-    const stopBtn = page.locator(".hud-top-right .hud-btn-circular, .hud-top-right button").first();
+    const stopBtn = page.locator(".hud-top-right .hud-btn, .hud-top-right button").first();
     await stopBtn.click();
 
     const endScreen = page.locator(".end-screen-overlay");
     await expect(endScreen).toBeVisible();
 
     // Return Home from EndScreen
-    const homeBtn = page.locator(".end-screen-actions .btn-primary");
+    const homeBtn = page.locator(".end-screen-actions .ui-btn--primary");
     await homeBtn.click();
 
     await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+import Button from "../components/ui/Button.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
 
 /** Harder steal challenge: type the capital, or pick the right flag among four. */
@@ -51,12 +52,12 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
         />
       )}
       <div className="conquest-actions-row">
-        <button type="button" className="btn-secondary" onClick={onCancel}>
+        <Button variant="secondary" onClick={onCancel}>
           {t.stealCancel}
-        </button>
-        <button type="submit" className="btn-primary" disabled={!value.trim()}>
+        </Button>
+        <Button type="submit" variant="primary" disabled={!value.trim()}>
           {t.stealOffer}
-        </button>
+        </Button>
       </div>
     </form>
   );

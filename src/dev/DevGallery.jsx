@@ -12,6 +12,8 @@ import AtlasState from "../components/AtlasState";
 import GlassIconButton from "../components/GlassIconButton";
 import InvaderAvatar from "../components/InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "../components/LeaderboardRow";
+import Button from "../components/ui/Button";
+import IconButton from "../components/ui/IconButton";
 import OptionGroup from "../components/ui/OptionGroup";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings";
 import Slider from "../components/ui/Slider";
@@ -45,15 +47,16 @@ const AccentColumn = ({ id }) => {
     <section className="dg-column" style={accentVars(id)} aria-label={id}>
       <h2 className="dg-column-title">{ACCENT_PRESETS[id].label.fr}</h2>
       <Block title="Button">
-        <button type="button" className="btn-primary">
-          Jouer
-        </button>
-        <button type="button" className="btn-secondary">
-          Secondaire
-        </button>
-        <button type="button" className="btn-secondary" disabled>
+        <Button variant="primary">Jouer</Button>
+        <Button variant="secondary">Secondaire</Button>
+        <Button variant="secondary" disabled>
           Désactivé
-        </button>
+        </Button>
+        <Button variant="ghost">Fantôme</Button>
+        <Button variant="danger">Danger</Button>
+        <Button variant="primary" loading>
+          Chargement
+        </Button>
       </Block>
       <Block title="GlassIconButton">
         <GlassIconButton title="Réglages">
@@ -62,9 +65,9 @@ const AccentColumn = ({ id }) => {
         <GlassIconButton title="Profil">
           <User width={20} height={20} />
         </GlassIconButton>
-        <button type="button" className="panel-close-btn" title="Fermer">
+        <IconButton variant="ghost" size="sm" label="Fermer" className="panel-close-btn">
           <Close width={20} height={20} />
-        </button>
+        </IconButton>
       </Block>
       <Block title="Switch">
         <Switch checked={on} onChange={setOn} label="Démo" />

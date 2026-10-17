@@ -3,6 +3,7 @@ import "./ConquestLockouts.css";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import Button from "../components/ui/Button.jsx";
 import { HudFeed, HudTopBar } from "./ConquestHudParts.jsx";
 import {
   computeStandings,
@@ -184,9 +185,9 @@ const HudAnswer = ({
     )}
     {toast && <p className={`conquest-toast ${toast.ok ? "is-ok" : "is-ko"}`}>{toast.text}</p>}
     {stealTarget && !challenge && (
-      <button type="button" className="btn-primary" onClick={() => openSteal(stealTarget)}>
+      <Button variant="primary" onClick={() => openSteal(stealTarget)}>
         {t.stealOffer} {countryName(stealTarget)}
-      </button>
+      </Button>
     )}
     {challenge ? (
       <ConquestStealPanel

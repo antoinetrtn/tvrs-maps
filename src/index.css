@@ -206,7 +206,7 @@ body {
   .settings-trigger-btn,
   .profile-trigger-btn,
   .leaderboard-trigger-btn,
-  .hud-btn-circular,
+  .hud-btn,
   .hud-mini-pill,
   .central-island-panel,
   .focus-mini-pill,
@@ -241,7 +241,7 @@ body {
     .glass-icon-btn:not(.profile-trigger-btn),
     .settings-trigger-btn,
     .leaderboard-trigger-btn,
-    .hud-btn-circular,
+    .hud-btn,
     .hud-mini-pill,
     .learn-toggle-btn,
     .central-island-panel,
@@ -266,9 +266,8 @@ body {
     color var(--transition-normal);
 }
 
-/* Shared button primitives (.glass-icon-btn triggers, .btn-primary/.btn-secondary,
-   btn-hover-flicker/modalEnter keyframes, .glitch-hover/.btn-active utilities)
-   live in styles/buttons.css, loaded right after this file from main.jsx. */
+/* Shared button primitives (ui/Button, ui/IconButton)
+   live in components/ui/Button.css, loaded right after this file from main.jsx. */
 
 /* Pixel identity: Bitcount carries titles, stamps, plates and HUD.
    Long proper nouns (country names in lists) use Space Grotesk (--font-main)

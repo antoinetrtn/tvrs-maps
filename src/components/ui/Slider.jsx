@@ -1,6 +1,8 @@
 import { Minus, Plus } from "pixelarticons/react";
 import React, { useId } from "react";
 
+import IconButton from "./IconButton";
+
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
 /**
@@ -39,16 +41,16 @@ const Slider = ({
       </div>
       <div className="ui-slider-body">
         {showSteppers && (
-          <button
-            type="button"
+          <IconButton
+            variant="outline"
+            size="lg"
+            label={decrementLabel}
             className="ui-icon-step"
-            aria-label={decrementLabel}
-            title={decrementLabel}
             disabled={value <= min}
             onClick={() => set(value - step)}
           >
             <Minus width={16} height={16} />
-          </button>
+          </IconButton>
         )}
         <input
           id={id}
@@ -62,16 +64,16 @@ const Slider = ({
           onChange={(e) => set(Number(e.target.value))}
         />
         {showSteppers && (
-          <button
-            type="button"
+          <IconButton
+            variant="outline"
+            size="lg"
+            label={incrementLabel}
             className="ui-icon-step"
-            aria-label={incrementLabel}
-            title={incrementLabel}
             disabled={value >= max}
             onClick={() => set(value + step)}
           >
             <Plus width={16} height={16} />
-          </button>
+          </IconButton>
         )}
       </div>
     </div>

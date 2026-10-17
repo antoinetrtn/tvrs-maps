@@ -1,7 +1,7 @@
 /* « Conquête » 1v1 — aligned on the UI kit (src/components/ui/ui.css):
    radius-sm, 1px borders, hard offset shadows, Bitcount titles/numbers,
-   Space Grotesk text, user accent. Buttons are the shared .btn-primary /
-   .btn-secondary; groups are SettingsSection; ready CTA lives in ConquestReady.css; flag
+   Space Grotesk text, user accent. Buttons are the shared Button component
+   (ui/Button); groups are SettingsSection; ready CTA lives in ConquestReady.css; flag
    choices are an OptionGroup. Only layout lives here. */
 
 .conquest-overlay {
@@ -117,10 +117,6 @@
   font-size: var(--font-size-sm);
 }
 
-.conquest-block {
-  width: 100%;
-}
-
 .conquest-join-form,
 .conquest-actions-row {
   display: flex;
@@ -177,29 +173,15 @@
   min-width: 0;
 }
 
-.conquest-icon-btn,
+.conquest-icon-btn {
+  border-color: var(--glass-border-strong);
+  color: var(--accent);
+  box-shadow: none;
+}
+
 .conquest-share-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-xs);
   min-height: var(--control-lg);
-}
-
-.conquest-icon-btn {
-  width: var(--control-lg);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--glass-bg);
-  color: var(--accent);
-  cursor: pointer;
-}
-
-.conquest-icon-btn:hover {
-  border-color: var(--accent);
-}
-
-.conquest-share-btn {
   padding: var(--spacing-xs) var(--spacing-md);
   border-color: var(--accent);
   color: var(--accent);

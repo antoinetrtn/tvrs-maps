@@ -6,6 +6,7 @@ import React from "react";
 import { useTranslation } from "../config/i18n";
 import AccentPicker from "./AccentPicker";
 import GlobeDisplaySettings from "./GlobeDisplaySettings";
+import IconButton from "./ui/IconButton";
 import OptionGroup from "./ui/OptionGroup";
 import { SettingsRow, SettingsSection } from "./ui/Settings";
 import Slider from "./ui/Slider";
@@ -57,9 +58,15 @@ const SettingsPanel = ({
         <h2 className="panel-title" id="settings-panel-title">
           {t("settings")}
         </h2>
-        <button className="panel-close-btn" onClick={onClose} title={t("close")}>
+        <IconButton
+          variant="ghost"
+          size="sm"
+          label={t("close")}
+          className="panel-close-btn"
+          onClick={onClose}
+        >
           <Close width={20} height={20} />
-        </button>
+        </IconButton>
       </div>
 
       <div className="panel-body scrollbar-styled">

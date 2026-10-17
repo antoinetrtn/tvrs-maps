@@ -9,6 +9,8 @@ import { useTranslation } from "../config/i18n";
 import { getPanelData, normalizeString } from "../utils/utils";
 import GameDataPanelRow from "./GameDataPanelRow";
 import LearnModeToggles from "./LearnModeToggles";
+import Button from "./ui/Button";
+import IconButton from "./ui/IconButton";
 
 const GameDataPanel = ({
   dataMap,
@@ -116,9 +118,15 @@ const GameDataPanel = ({
         </div>
         <div className="data-panel-header-actions">
           {onClose && (
-            <button className="panel-close-btn" onClick={onClose} aria-label={t("close")}>
+            <IconButton
+              variant="ghost"
+              size="sm"
+              label={t("close")}
+              className="panel-close-btn"
+              onClick={onClose}
+            >
               <Close width={20} height={20} />
-            </button>
+            </IconButton>
           )}
         </div>
       </header>
@@ -195,10 +203,10 @@ const GameDataPanel = ({
 
       {isGameOver && onGoHome && (
         <div className="panel-footer data-panel-footer">
-          <button className="btn-primary" onClick={onGoHome}>
+          <Button variant="primary" onClick={onGoHome}>
             <Home width={16} height={16} />
             {t("home")}
-          </button>
+          </Button>
         </div>
       )}
     </aside>

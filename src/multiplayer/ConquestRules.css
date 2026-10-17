@@ -76,30 +76,6 @@
   color: var(--text-muted);
 }
 
-.conquest-rules-close-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--control-sm);
-  height: var(--control-sm);
-  flex-shrink: 0;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    background-color var(--transition-fast);
-}
-
-.conquest-rules-close-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--glass-hover);
-}
-
 .conquest-rules-body {
   flex: 1;
   overflow-y: auto;
@@ -186,8 +162,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .conquest-rules-backdrop,
-  .conquest-rules-dialog,
-  .conquest-rules-close-btn {
+  .conquest-rules-dialog {
     animation: none !important;
     transition: none !important;
   }

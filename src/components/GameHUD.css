@@ -180,42 +180,8 @@
   pointer-events: none;
 }
 
-.hud-btn-circular {
-  width: var(--control-lg);
-  height: var(--control-lg);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.hud-btn {
   pointer-events: auto;
-  cursor: pointer;
-  color: var(--text-main);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  transition:
-    background var(--transition-spring),
-    transform var(--transition-spring),
-    border-color var(--transition-spring);
-  outline: none; /* Remove blue focus ring */
-}
-
-.hud-btn-circular:hover {
-  transform: scale(1.08) translateY(-1px);
-  border-color: var(--accent);
-  color: var(--accent);
-  box-shadow:
-    0 0 0 1px var(--accent-soft),
-    0 4px 12px color-mix(in srgb, var(--accent) 15%, transparent);
-}
-
-.hud-btn-circular:active {
-  transform: var(--press-offset);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  box-shadow: none;
-  text-shadow: none;
-  animation: px-press-flash var(--dur-micro) steps(1, end);
-  transition: transform var(--dur-micro) var(--steps-press);
 }
 
 .island-sub-gauges {
@@ -553,14 +519,14 @@
   pointer-events: auto;
 }
 
-.top-hud-bar.mobile-layout .hud-btn-circular {
-  width: 40px !important;
-  height: 40px !important;
+.top-hud-bar.mobile-layout .hud-btn {
+  width: 40px;
+  height: 40px;
 }
 
-.top-hud-bar.mobile-layout .hud-btn-circular svg {
-  width: 16px !important;
-  height: 16px !important;
+.top-hud-bar.mobile-layout .hud-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Learn Toggles */

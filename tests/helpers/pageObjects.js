@@ -75,10 +75,10 @@ export class GameHUD {
     this.lostHearts = page.locator(".PixelHeart.heart-lost");
     this.suggestionsList = page.locator(".suggestions-list");
     this.suggestionItems = page.locator("[role=option]");
-    this.prevBtn = page.locator(".hud-btn-circular.prev-btn");
-    this.nextBtn = page.locator(".hud-btn-circular.next-btn");
+    this.prevBtn = page.locator(".hud-btn.prev-btn");
+    this.nextBtn = page.locator(".hud-btn.next-btn");
     this.homeLogo = page.locator(".hud-logo-clickable");
-    this.stopBtn = page.locator(".hud-top-right .hud-btn-circular");
+    this.stopBtn = page.locator(".hud-top-right .hud-btn");
   }
 
   async enterAnswer(answerText) {
@@ -102,8 +102,8 @@ export class EndScreen {
     this.overlay = page.locator(".end-screen-overlay");
     this.headerTitle = page.locator(".end-screen-header h1");
     this.scoreDisplay = page.locator(".final-score-inline");
-    this.exploreGlobeBtn = page.locator(".end-screen-actions .btn-secondary");
-    this.homeBtn = page.locator(".end-screen-actions .btn-primary");
+    this.exploreGlobeBtn = page.locator(".end-screen-actions .ui-btn--secondary");
+    this.homeBtn = page.locator(".end-screen-actions .ui-btn--primary");
     this.restoreChip = page.locator(".end-screen-restore-chip");
   }
 }
