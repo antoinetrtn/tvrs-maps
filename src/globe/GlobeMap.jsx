@@ -379,11 +379,6 @@ const GlobeMap = (props) => {
     updateGlobeLighting,
   });
 
-  const getPolygonCurvatureResolutionWrapped = useCallback(
-    (d) => (d.isGhostCountry ? 1 : getPolygonCurvatureResolution(d)),
-    [getPolygonCurvatureResolution]
-  );
-
   const getObjectRotationWrapped = useCallback(() => [90, 0, 0], []);
   const getLatWrapped = useCallback((d) => d.lat, []);
   const getLngWrapped = useCallback((d) => d.lng, []);
@@ -520,7 +515,7 @@ const GlobeMap = (props) => {
             enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
             polygonsData={polygonsData}
             polygonGeoJsonGeometry="renderGeometry"
-            polygonCapCurvatureResolution={getPolygonCurvatureResolutionWrapped}
+            polygonCapCurvatureResolution={getPolygonCurvatureResolution}
             polygonAltitude={getPolygonAltitude}
             polygonCapColor={getPolygonCapColorWrapped}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}

@@ -8,14 +8,26 @@
 //
 // This wrapper memoizes the triangulated buffers per source ring array and
 // parameter set, and hands each new geometry its own BufferAttributes over the
-// shared (read-only) typed arrays. Output is byte-identical to the original.
+// shared (read-only) typed arrays. Output is identical to a fresh build of the same geometry.
 import { BufferAttribute, BufferGeometry } from "three";
 import OriginalConicPolygonGeometry from "three-conic-polygon-geometry-original";
+
+import RefinedConicPolygonGeometry, { shouldRefine } from "./refinedConicPolygonGeometry";
 
 // Shared through globalThis: the dev-server dependency optimizer can bundle this
 // module twice (app code + the pre-bundled globe library); one cache for both.
 const CACHE_KEY = "__tvrsConicPolygonGeometryCache";
 const cache = (globalThis[CACHE_KEY] ??= new WeakMap());
+
+// Registered polygons (US states, departments) get RefinedConicPolygonGeometry
+// caps: exact cover, bounded sag. Everything else, bottom caps and polygons
+// crossing the antimeridian or a pole keep the original Delaunay/voronoi caps.
+const buildGeometry = (args) => {
+  const [polygon, , , closedBottom] = args;
+  return closedBottom || !shouldRefine(polygon)
+    ? new OriginalConicPolygonGeometry(...args)
+    : new RefinedConicPolygonGeometry(...args);
+};
 
 const paramsKey = (...args) => args.map(String).join("|");
 
@@ -27,7 +39,7 @@ const shareAttribute = (attr) => {
 
 function getTemplate(polygonGeoJson, args) {
   const isCacheable = polygonGeoJson !== null && typeof polygonGeoJson === "object";
-  if (!isCacheable) return new OriginalConicPolygonGeometry(...args);
+  if (!isCacheable) return buildGeometry(args);
   let byParams = cache.get(polygonGeoJson);
   if (!byParams) {
     byParams = new Map();
@@ -36,7 +48,7 @@ function getTemplate(polygonGeoJson, args) {
   const key = paramsKey(...args.slice(1));
   let template = byParams.get(key);
   if (!template) {
-    template = new OriginalConicPolygonGeometry(...args);
+    template = buildGeometry(args);
     byParams.set(key, template);
   }
   return template;
