@@ -9,7 +9,6 @@ export function useHudAnswerHandler({
   specificCountryGuess,
   handleInput,
   setPopupError,
-  setPopupWarning,
 }) {
   return useCallback(
     (val) => {
@@ -22,29 +21,16 @@ export function useHudAnswerHandler({
         return res;
       }
 
-      let res;
-      if (selectedCountry) {
-        res = specificCountryGuess(val);
-      } else {
-        res = handleInput(val);
-        if (res === "ALREADY_FOUND") {
-          setPopupWarning(true);
-          setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
-        } else if (res === "ERROR") {
-          setPopupError(true);
-          setTimeout(() => setPopupError(false), FEEDBACK_TIMING.flashMs);
+      if (!selectedCountry) {
+        if (import.meta.env.DEV && (val === "WIN100" || val === "LOSE100")) {
+          return handleInput(val) === true;
         }
+        return false;
       }
+
+      const res = specificCountryGuess(val);
       return res === "SUCCESS" || res === true || res === "ERROR" || res === "ALREADY_FOUND";
     },
-    [
-      mode,
-      selectedCountry,
-      handleSearch,
-      specificCountryGuess,
-      handleInput,
-      setPopupError,
-      setPopupWarning,
-    ]
+    [mode, selectedCountry, handleSearch, specificCountryGuess, handleInput, setPopupError]
   );
 }

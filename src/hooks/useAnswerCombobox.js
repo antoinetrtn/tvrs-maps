@@ -2,19 +2,20 @@
  * useAnswerCombobox.js — Combobox logic for game answers and learn searches.
  *
  * DESIGN DECISION & JUSTIFICATION:
- * AUCUNE suggestion n'est pré-surlignée par défaut (activeIndex = -1), même
- * lorsqu'un joueur tape exactement le nom complet d'une entité ou un préfixe
- * valide.
- * Si une suggestion était pré-sélectionnée par défaut, taper une chaîne comme
- * "ma" puis appuyer sur Entrée validerait Madagascar (ou toute autre suggestion
- * en tête de liste) par pur hasard, sans décision délibérée du joueur.
  * Dans tous les modes de jeu (countries, capitals, departments, us_states,
- * rivers_mountains), une réponse n'est transmise à `onEnter` que si le joueur
- * l'a EXPLICITEMENT choisie :
- *   1. par clic / tap direct sur l'option,
- *   2. ou par navigation au clavier (Flèche Bas / Flèche Haut) puis Entrée.
- * Appuyer sur Entrée sans suggestion activement surlignée déclenche un rejet
- * visuel sobre (shake en steps() sans perte de vie) et (ré)ouvre la liste.
+ * rivers_mountains), la sélection sur le globe fait foi (selectedCountry).
+ * La liste de suggestions n'est qu'une aide d'orthographe.
+ * AUCUNE suggestion n'est pré-surlignée par défaut (activeIndex = -1) :
+ * Entrée n'auto-valide jamais suggestions[0] par accident (par ex. taper "ma"
+ * ne doit pas valider "Madagascar" au hasard).
+ * Lorsqu'un pays est sélectionné sur le globe :
+ *   1. Entrée sans suggestion surlignée valide directement le texte tapé (onEnter(currentValue)).
+ *   2. Entrée avec suggestion surlignée (ArrowDown / ArrowUp) valide l'option choisie.
+ *   3. Le clic / tap direct sur une option valide la suggestion.
+ * Lorsqu'aucun pays n'est sélectionné (requireSelection = true) :
+ *   - suggestions = [] (liste masquée sans cible).
+ *   - Entrée avec texte non vide déclenche un rejet visuel sobre (shake en steps(),
+ *     champ non vidé, aria-live "Sélectionne un pays sur le globe").
  */
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -32,7 +33,7 @@ function handleLearnKeyDown({
   onEnter,
   currentValue,
   onLearnSearchChange,
-  reset,
+  commitSuccess,
 }) {
   if ((e.key === "Tab" || e.key === "Enter") && suggestions.length > 0) {
     e.preventDefault();
@@ -43,7 +44,7 @@ function handleLearnKeyDown({
     e.preventDefault();
     if (onEnter(currentValue)) {
       if (onLearnSearchChange) onLearnSearchChange("");
-      reset();
+      commitSuccess();
     }
   }
 }
@@ -57,12 +58,13 @@ function handleEnterKey({
   choose,
   triggerReject,
   onEnter,
-  reset,
+  commitSuccess,
+  requireSelection,
 }) {
   if (import.meta.env.DEV && (currentValue === "WIN100" || currentValue === "LOSE100")) {
     e.preventDefault();
     if (onEnter?.(currentValue)) {
-      reset();
+      commitSuccess();
     }
     return;
   }
@@ -73,10 +75,18 @@ function handleEnterKey({
 
   e.preventDefault();
 
+  if (requireSelection) {
+    triggerReject();
+    return;
+  }
+
   if (isOpen && activeIndex >= 0 && activeIndex < suggestions.length) {
     choose(activeIndex);
   } else {
-    triggerReject();
+    const result = onEnter ? onEnter(currentValue) : false;
+    if (result) {
+      commitSuccess();
+    }
   }
 }
 
@@ -90,6 +100,7 @@ export default function useAnswerCombobox({
   learnSearchQuery,
   onLearnSearchChange,
   t,
+  requireSelection = false,
 }) {
   const generatedId = useId();
   const listId = `answer-suggestions-${generatedId.replaceAll(":", "")}`;
@@ -121,11 +132,14 @@ export default function useAnswerCombobox({
     mode === "learn" && learnSearchQuery !== undefined ? learnSearchQuery : inputValue;
 
   const suggestions = useMemo(() => {
+    if (requireSelection) {
+      return [];
+    }
     if (mode === "learn") {
       return getLearnSuggestions(currentValue, countryDataMap, { lang, limit: 5 });
     }
     return getAnswerSuggestions(currentValue, index, { foundSet, limit: 5, lang });
-  }, [mode, currentValue, countryDataMap, lang, index, foundSet]);
+  }, [requireSelection, mode, currentValue, countryDataMap, lang, index, foundSet]);
 
   const triggerReject = useCallback(() => {
     if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
@@ -146,11 +160,27 @@ export default function useAnswerCombobox({
     }, 280);
 
     setIsOpen(true);
-    setStatusText(t ? t("answer_pick_hint") : "Choisis dans la liste");
+    setStatusText(t ? t("select_on_globe_hint") : "Sélectionne un pays sur le globe");
   }, [isRejected, t]);
+
+  const commitSuccess = useCallback(() => {
+    setInputValue("");
+    setActiveIndex(-1);
+    setIsOpen(false);
+    setStatusText("");
+
+    if (inputRef?.current) {
+      try {
+        inputRef.current.focus({ preventScroll: true });
+      } catch {
+        inputRef.current.focus();
+      }
+    }
+  }, [inputRef]);
 
   const choose = useCallback(
     (idx) => {
+      if (requireSelection) return false;
       const chosen = suggestions[idx];
       if (!chosen) return false;
 
@@ -160,21 +190,10 @@ export default function useAnswerCombobox({
       if (mode === "learn" && onLearnSearchChange) {
         onLearnSearchChange("");
       }
-      setInputValue("");
-      setActiveIndex(-1);
-      setIsOpen(false);
-      setStatusText("");
-
-      if (inputRef?.current) {
-        try {
-          inputRef.current.focus({ preventScroll: true });
-        } catch {
-          inputRef.current.focus();
-        }
-      }
+      commitSuccess();
       return true;
     },
-    [suggestions, onEnter, mode, onLearnSearchChange, inputRef]
+    [requireSelection, suggestions, onEnter, mode, onLearnSearchChange, commitSuccess]
   );
 
   const handleChange = useCallback(
@@ -194,11 +213,6 @@ export default function useAnswerCombobox({
 
   const handleKeyDown = useCallback(
     (e) => {
-      const reset = () => {
-        setInputValue("");
-        setIsOpen(false);
-      };
-
       if (mode === "learn") {
         handleLearnKeyDown({
           e,
@@ -207,7 +221,7 @@ export default function useAnswerCombobox({
           onEnter,
           currentValue,
           onLearnSearchChange,
-          reset,
+          commitSuccess,
         });
         return;
       }
@@ -252,7 +266,8 @@ export default function useAnswerCombobox({
           choose,
           triggerReject,
           onEnter,
-          reset,
+          commitSuccess,
+          requireSelection,
         });
       }
     },
@@ -263,9 +278,11 @@ export default function useAnswerCombobox({
       onEnter,
       currentValue,
       onLearnSearchChange,
+      commitSuccess,
       isOpen,
       activeIndex,
       triggerReject,
+      requireSelection,
     ]
   );
 

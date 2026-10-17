@@ -102,6 +102,7 @@ const GameHUD = ({
   }, [extInputRef, mode, isPlaying]);
 
   const t = useTranslation(lang);
+  const requireSelection = mode !== "learn" && !selectedCountry;
 
   const { inputProps, suggestions, activeIndex, isRejected, choose, statusText } =
     useAnswerCombobox({
@@ -114,6 +115,7 @@ const GameHUD = ({
       learnSearchQuery,
       onLearnSearchChange,
       t,
+      requireSelection,
     });
 
   const formatTime = (secs) => {
@@ -155,11 +157,14 @@ const GameHUD = ({
         ? t("search_placeholder_rivers_mountains")
         : t("search_placeholder");
     }
+    if (requireSelection) {
+      return t("answer_placeholder_select");
+    }
     if (mode === "rivers_mountains") {
       return t("search_placeholder_rivers_mountains");
     }
     return t("answer_placeholder");
-  }, [mode, learnSubMode, t]);
+  }, [mode, learnSubMode, requireSelection, t]);
 
   // Determine which continent to highlight
   const activeContinent = useMemo(

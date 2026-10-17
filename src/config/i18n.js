@@ -81,7 +81,8 @@ export const translations = {
     previous: "Précédent",
     next: "Suivant",
     quiz_answer: "Réponse du quiz",
-    answer_pick_hint: "Choisis dans la liste",
+    select_on_globe_hint: "Sélectionne un pays sur le globe",
+    answer_placeholder_select: "Sélectionne sur le globe",
     suggestion_found: "trouvé",
 
     // Learn Toggles
@@ -312,7 +313,8 @@ export const translations = {
     previous: "Previous",
     next: "Next",
     quiz_answer: "Quiz answer",
-    answer_pick_hint: "Pick from the list",
+    select_on_globe_hint: "Select a country on the globe",
+    answer_placeholder_select: "Select on the globe",
     suggestion_found: "found",
 
     // Learn Toggles

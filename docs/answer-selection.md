@@ -1,62 +1,63 @@
-# Sélection Explicite des Réponses (TVRS Maps)
+# Sélection sur le globe obligatoire
 
-Ce document décrit le fonctionnement et les choix d'architecture de l'autocomplétion et de la sélection de réponses dans TVRS Maps.
+Ce document décrit le fonctionnement de la saisie de réponse et de la sélection géographique dans TVRS Maps.
 
-## 1. Contexte & Problématique
+## 1. La Règle Fondamentale
 
-Dans l'ancien comportement du HUD de jeu (`GameHUD`), un joueur pouvait saisir le nom exact d'une entité puis appuyer sur Entrée pour la valider sans passer par les suggestions. De plus, les suggestions ne s'affichaient qu'à partir de 4 caractères et 80% du mot, et Entrée / Tab validait automatiquement la première suggestion. En pratique, cela permettait de deviner au hasard avec des débuts de mots courts.
+Dans tous les modes de jeu solo (`countries`, `capitals`, `departments`, `us_states`, `rivers_mountains` — tout mode distinct de `learn`) :
+- Une réponse ne peut être validée que si une entité est activement **sélectionnée sur le globe** (`selectedCountry` non nul).
+- Taper une réponse (ex: « France ») puis appuyer sur Entrée sans sélection sur le globe **ne fait rien** : aucune validation, aucune vie perdue en mode hardcore, aucune faute comptée, aucun effacement du champ.
+- **Objectif pédagogique** : apprendre à localiser précisément sur le globe plutôt que de deviner des noms au hasard.
 
-## 2. Nouveau Comportement
+## 2. Flux par Mode
 
-Dans tous les modes de jeu de quiz (`countries`, `capitals`, `departments`, `us_states`, `rivers_mountains` — tout mode distinct de `learn`) :
-- Une réponse n'est envoyée au moteur de jeu (`onEnter`) **que si une suggestion a été choisie explicitement** :
-  - par clic ou tap tactile direct sur une option,
-  - ou par navigation au clavier (touches `ArrowDown` / `ArrowUp` pour surligner l'option) puis `Enter`.
-- Appuyer sur `Enter` avec du texte saisi mais sans suggestion surlignée déclenche un **rejet sobre** :
-  - `onEnter` n'est pas appelé.
-  - Aucune pénalité n'est comptée (aucune vie perdue en mode hardcore).
-  - Léger shake de `.input-island` en steps CSS (classe `is-rejected`, durée ~280ms, pas de glow ni easing lisse).
-  - La liste de suggestions se (ré)ouvre immédiatement.
-  - Annonce discrète pour lecteur d'écran via une zone `aria-live="polite"` (`t("answer_pick_hint")`).
-- Appuyer sur `Enter` avec un champ vide ne fait rien.
+### Modes Solo Quiz (`countries`, `capitals`, `departments`, `us_states`, `rivers_mountains`)
 
-## 3. Décisions de Design
+Le comportement est rigoureusement identique pour l'ensemble des modes solo :
 
-### 3.1. Aucune pré-surbrillance (`activeIndex = -1`)
-Par défaut, aucune suggestion n'est activement pré-surlignée dans la liste, même si la chaîne saisie correspond exactement au nom ou à un préfixe d'un pays.
-**Justification** : Si la première suggestion était pré-surlignée, taper "ma" puis Entrée validerait Madagascar (ou une autre entrée) au hasard. L'intention du joueur doit être explicite.
+1. **Sans entité sélectionnée sur le globe (`requireSelection = true`)** :
+   - Placeholder du champ : « Sélectionne sur le globe » (`answer_placeholder_select`).
+   - Liste de suggestions complètement masquée (`suggestions = []`, aucun `role="listbox"` dans le DOM).
+   - Appuyer sur `Enter` avec du texte non vide déclenche un rejet visuel sobre :
+     - Shake CSS `.input-island.is-rejected` (rejouable à chaque frappe d'Entrée consécutive, durée 280 ms).
+     - Le champ n'est pas vidé.
+     - `onEnter` n'est pas appelé.
+     - Annonce d'accessibilité discrète via `aria-live="polite"` : « Sélectionne un pays sur le globe » (`select_on_globe_hint`).
+   - Appuyer sur `Enter` avec un champ vide ne fait rien.
+   - Tout appel à `choose()` est bloqué.
 
-### 3.2. Univers complet avec marquage "trouvé"
-La liste de suggestions inclut **toutes les entités du mode**, y compris celles déjà trouvées (`foundList`).
-**Justification** : Exclure les pays déjà trouvés révélerait par élimination ce qui reste à trouver, voire le pays ciblé lorsque le focus est actif.
-Les entités déjà trouvées sont :
-- Atténuées visuellement (`opacity: 0.5`).
-- Accompagnées d'un glyphe `✓` (`aria-hidden="true"`) et d'un texte accessible `sr-only` (`t("suggestion_found")`).
-- Porteuses de l'attribut `data-found="true"`.
-- Choisir une entité déjà trouvée transmet normalement sa valeur à `onEnter`, qui affiche l'avertissement existant `ALREADY_FOUND`.
+2. **Avec une entité sélectionnée sur le globe (`requireSelection = false`)** :
+   - Placeholder habituel du mode.
+   - La liste de suggestions sert d'aide orthographique.
+   - `Enter` **sans suggestion surlignée** : transmet directement le texte saisi au moteur (`onEnter(currentValue)`). Si la réponse est acceptée, le champ est vidé, la liste fermée et le focus conservé.
+   - `Enter` **avec suggestion surlignée** (`ArrowDown` / `ArrowUp`) : valide la suggestion (`choose(activeIndex)`).
+   - Clic / tap sur une suggestion : valide la suggestion.
 
-### 3.3. Règles de matching & seuil
-- Texte normalisé via `normalizeString` (insensible aux accents, à la casse, tirets/apostrophes convertis en espaces).
-- Seuil d'apparition : **>= 3 caractères normalisés**, OU **égalité exacte** sous le seuil (ex. aliases courts "UK", départements courts "Ain").
-- Conditions de correspondance :
-  1. Préfixe du nom (ou capitale selon le mode).
-  2. Préfixe d'un des mots du nom (ex: "unis" -> "États-Unis").
-  3. Préfixe d'un alias dans les modes dont `targetCheck === "name"`.
-- Tri : égalité exacte d'abord, puis préfixe du nom, puis préfixe de mot / alias, puis ordre alphabétique (`localeCompare`).
-- Dédoublonnage : par nom affiché normalisé (si au moins une clé dupliquée n'est pas trouvée, `found = false`).
-- Limite : 5 suggestions maximum.
+### Mode Apprendre (`learn`)
 
-### 3.4. Navigation Clavier & Accessibilité (ARIA 1.2 Combobox)
-- `Tab` : n'est plus intercepté en mode de jeu (comportement navigateur natif préservé).
-- `Escape` : referme la liste de suggestions.
-- `ArrowDown` / `ArrowUp` : déplacent la surbrillance avec boucle (wrap) et `preventDefault`. Toute nouvelle frappe réinitialise `activeIndex` à `-1`.
-- Motif ARIA : `role="combobox"`, `aria-autocomplete="list"`, `aria-expanded`, `aria-controls` pointant vers la liste `role="listbox"`, options en `role="option"`, `aria-selected` synchronisé et `aria-activedescendant` absent quand aucune suggestion n'est surlignée.
+Strictement inchangé :
+- Aucune sélection sur le globe n'est requise.
+- Recherche sur le nom et la capitale.
+- `Enter` et `Tab` sélectionnent la première suggestion s'il y en a une, sinon valident la recherche globale.
 
-### 3.5. Mode Apprendre (`learn`)
-Le mode `learn` conserve son comportement historique à l'identique :
-- Recherche sur le nom ET la capitale.
-- Seuil à 4 caractères.
-- `Enter` et `Tab` sélectionnent la première suggestion s'il y en a, sinon valident la recherche.
+### Débogage DEV
 
-### 3.6. Conquête 1v1 (Multijoueur)
-Le mode multijoueur Conquête n'utilise pas de composant d'autocomplétion (interaction globe et validation RPC serveur) et reste strictement hors du périmètre de cette fonctionnalité front-end.
+En environnement de développement (`import.meta.env.DEV`), les mots-clés de test `WIN100` et `LOSE100` restent fonctionnels sans sélection préalable sur le globe.
+
+### Conquête 1v1 (Multijoueur)
+
+Hors périmètre : la saisie en Conquête 1v1 envoie directement le nom saisi au serveur via RPC sans exiger de sélection préalable sur le globe. Ce flux n'est pas modifié.
+
+## 3. Bilan par Rapport à la PR #175
+
+### Ce qui est annulé
+- L'obligation de choisir impérativement une suggestion dans la liste déroulante pour pouvoir valider.
+- Le message et le shake de rejet « Choisis dans la liste » (`answer_pick_hint` supprimé).
+
+### Ce qui est conservé
+- **Aucune pré-surbrillance** (`activeIndex = -1` par défaut) : la sélection sur le globe fait foi, la liste n'est qu'une aide d'orthographe. `Enter` n'auto-valide jamais la première suggestion par hasard.
+- **Univers complet** : les entités déjà trouvées restent visibles dans la liste avec `✓`, état atténué et `data-found="true"`.
+- **Seuil de 3 caractères** normalisés (ou correspondance exacte sous le seuil).
+- **Touche `Tab` native** non interceptée en cours de partie.
+- **Accessibilité ARIA 1.2 Combobox** complète (`role="combobox"`, `aria-expanded`, `aria-activedescendant`).
+- **Compatibilité multi-modes** : respect du `targetCheck` (y compris fix `us_states`).
