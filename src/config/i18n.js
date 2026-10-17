@@ -87,6 +87,7 @@ export const translations = {
     next: "Suivant",
     quiz_answer: "Réponse du quiz",
     select_on_globe_hint: "Sélectionne un pays sur le globe",
+    pick_in_list_hint: "Choisis un pays dans la liste",
     answer_placeholder_select: "Sélectionne sur le globe",
     suggestion_found: "trouvé",
 
@@ -320,6 +321,7 @@ export const translations = {
     next: "Next",
     quiz_answer: "Quiz answer",
     select_on_globe_hint: "Select a country on the globe",
+    pick_in_list_hint: "Pick a country from the list",
     answer_placeholder_select: "Select on the globe",
     suggestion_found: "found",
 

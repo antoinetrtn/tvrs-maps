@@ -78,7 +78,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     ["departments", "Ain"],
     ["rivers_mountains", "Alpes"],
   ])(
-    "(a) mode %s sans sélection: saisie '%s' + Entrée => rejet, liste masquée, placeholder et aria-live",
+    "mode %s sans sélection: saisie '%s' + Entrée => rejet, placeholder et aria-live",
     (mode, text) => {
       const { container } = renderHUD({ mode, selectedCountry: null });
       const input = screen.getByRole("combobox");
@@ -92,7 +92,6 @@ describe("answerCombobox (<GameHUD> integration)", () => {
       expect(onEnterMock).not.toHaveBeenCalled();
       expect(island.classList.contains("is-rejected")).toBe(true);
       expect(input.value).toBe(text);
-      expect(container.querySelector('[role="listbox"]')).toBeNull();
 
       const liveRegion = container.querySelector('[aria-live="polite"]');
       expect(liveRegion.textContent).toContain("Sélectionne un pays sur le globe");
@@ -110,19 +109,54 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(island.classList.contains("is-rejected")).toBe(false);
   });
 
-  it("(b) selectedCountry='FRA' + saisie 'France' + Entrée sans surbrillance => onEnter('France') appelé, champ vidé", () => {
-    renderHUD({ selectedCountry: "FRA" });
+  it("(a) selectedCountry 'FRA', type 'France' + Enter sans surbrillance => onEnter non appelé, valeur 'France' conservée, island is-rejected, aria-live 'Choisis un pays dans la liste'", () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
+    const island = container.querySelector(".input-island");
 
     fireEvent.change(input, { target: { value: "France" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(onEnterMock).toHaveBeenCalledTimes(1);
-    expect(onEnterMock).toHaveBeenCalledWith("France");
-    expect(input.value).toBe("");
+    expect(onEnterMock).not.toHaveBeenCalled();
+    expect(input.value).toBe("France");
+    expect(island.classList.contains("is-rejected")).toBe(true);
+
+    const liveRegion = container.querySelector('[aria-live="polite"]');
+    expect(liveRegion.textContent).toContain("Choisis un pays dans la liste");
   });
 
-  it("(c) clic sur une suggestion => onEnter('France') appelé une fois, champ vidé", () => {
+  it("(b) selectedCountry null, type 'fran' => liste d'options affichée (role=option présent, aria-expanded true)", () => {
+    const { container } = renderHUD({ selectedCountry: null });
+    const input = screen.getByRole("combobox");
+
+    fireEvent.change(input, { target: { value: "fran" } });
+
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    const option = container.querySelector('[role="option"]');
+    expect(option).not.toBeNull();
+    expect(option.textContent).toContain("France");
+  });
+
+  it("(c) selectedCountry null, clic sur option => onEnter non appelé, island rejeté, valeur réinitialisée à ''", () => {
+    const { container } = renderHUD({ selectedCountry: null });
+    const input = screen.getByRole("combobox");
+    const island = container.querySelector(".input-island");
+
+    fireEvent.change(input, { target: { value: "fran" } });
+    const option = container.querySelector('[role="option"]');
+    expect(option).not.toBeNull();
+
+    fireEvent.click(option);
+
+    expect(onEnterMock).not.toHaveBeenCalled();
+    expect(island.classList.contains("is-rejected")).toBe(true);
+    expect(input.value).toBe("");
+
+    const liveRegion = container.querySelector('[aria-live="polite"]');
+    expect(liveRegion.textContent).toContain("Sélectionne un pays sur le globe");
+  });
+
+  it("clic sur une suggestion => onEnter('France') appelé une fois, champ vidé", () => {
     const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
@@ -136,7 +170,35 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(input.value).toBe("");
   });
 
-  it("(c) clavier: saisie 'fran', ArrowDown, Enter => onEnter appelé avec la suggestion surlignée; wrap", () => {
+  it("(d) selectedCountry 'FRA', mauvais pays choisi (onEnter retourne 'ERROR') => champ vidé", () => {
+    onEnterMock.mockReturnValue("ERROR");
+    const { container } = renderHUD({ selectedCountry: "FRA" });
+    const input = screen.getByRole("combobox");
+
+    fireEvent.change(input, { target: { value: "fran" } });
+    const option = container.querySelector('[role="option"]');
+    expect(option).not.toBeNull();
+
+    fireEvent.click(option);
+    expect(onEnterMock).toHaveBeenCalledWith("France");
+    expect(input.value).toBe("");
+  });
+
+  it("(e) selectedCountry 'FRA', onEnter retournant false après choix d'une option => champ tout de même vidé (non-learn)", () => {
+    onEnterMock.mockReturnValue(false);
+    const { container } = renderHUD({ selectedCountry: "FRA" });
+    const input = screen.getByRole("combobox");
+
+    fireEvent.change(input, { target: { value: "fran" } });
+    const option = container.querySelector('[role="option"]');
+    expect(option).not.toBeNull();
+
+    fireEvent.click(option);
+    expect(onEnterMock).toHaveBeenCalledWith("France");
+    expect(input.value).toBe("");
+  });
+
+  it("(f) clavier: saisie 'fran', ArrowDown, Enter => onEnter appelé avec la suggestion surlignée et réinitialisation; wrap", () => {
     const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
@@ -208,18 +270,6 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it("(c) onEnter retournant false => champ non vidé", () => {
-    onEnterMock.mockReturnValue(false);
-    renderHUD({ selectedCountry: "FRA" });
-    const input = screen.getByRole("combobox");
-
-    fireEvent.change(input, { target: { value: "fran" } });
-    fireEvent.keyDown(input, { key: "Enter" });
-
-    expect(onEnterMock).toHaveBeenCalledWith("fran");
-    expect(input.value).toBe("fran");
-  });
-
   it("(c) entrée déjà trouvée marquée data-found", () => {
     const { container } = renderHUD({ selectedCountry: "FRA", foundList: ["FRA"] });
     const input = screen.getByRole("combobox");
@@ -277,14 +327,15 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(input.getAttribute("aria-activedescendant")).toBe(option.id);
   });
 
-  it("(d) Entrée répétée sans sélection rejoue le shake (classe retirée puis remise)", async () => {
-    const { container } = renderHUD({ selectedCountry: null });
+  it("(g) Entrée répétée sans choix rejoue le shake (selectedCountry 'FRA', text 'France', pas de surbrillance)", async () => {
+    const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
     const island = container.querySelector(".input-island");
 
     fireEvent.change(input, { target: { value: "France" } });
     fireEvent.keyDown(input, { key: "Enter" });
 
+    expect(onEnterMock).not.toHaveBeenCalled();
     expect(island.classList.contains("is-rejected")).toBe(true);
 
     // Repeated Enter while already rejected resets isRejected and reapplies

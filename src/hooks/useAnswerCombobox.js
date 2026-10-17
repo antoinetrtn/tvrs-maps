@@ -1,21 +1,31 @@
 /**
- * useAnswerCombobox.js — Combobox logic for game answers and learn searches.
+ * useAnswerCombobox.js — Logique de combobox pour la saisie des réponses et la recherche en mode learn.
  *
- * DESIGN DECISION & JUSTIFICATION:
- * Dans tous les modes de jeu (countries, capitals, departments, us_states,
- * rivers_mountains), la sélection sur le globe fait foi (selectedCountry).
- * La liste de suggestions n'est qu'une aide d'orthographe.
- * AUCUNE suggestion n'est pré-surlignée par défaut (activeIndex = -1) :
- * Entrée n'auto-valide jamais suggestions[0] par accident (par ex. taper "ma"
- * ne doit pas valider "Madagascar" au hasard).
- * Lorsqu'un pays est sélectionné sur le globe :
- *   1. Entrée sans suggestion surlignée valide directement le texte tapé (onEnter(currentValue)).
- *   2. Entrée avec suggestion surlignée (ArrowDown / ArrowUp) valide l'option choisie.
- *   3. Le clic / tap direct sur une option valide la suggestion.
- * Lorsqu'aucun pays n'est sélectionné (requireSelection = true) :
- *   - suggestions = [] (liste masquée sans cible).
- *   - Entrée avec texte non vide déclenche un rejet visuel sobre (shake en steps(),
- *     champ non vidé, aria-live "Sélectionne un pays sur le globe").
+ * RÈGLES & DÉCISIONS DE CONCEPTION :
+ * Dans tous les modes de jeu non-learn (countries, capitals, departments, us_states,
+ * rivers_mountains) :
+ * 1. Les suggestions sont TOUJOURS calculées et affichées dès 3 caractères saisis,
+ *    qu'un pays soit sélectionné sur le globe ou non.
+ * 2. Aucune suggestion n'est pré-surlignée par défaut (activeIndex = -1) :
+ *    Entrée n'auto-valide jamais la première suggestion par accident.
+ * 3. La validation d'une réponse se fait EXCLUSIVEMENT par le choix d'une suggestion :
+ *    - Clic ou tap direct sur une option dans la liste.
+ *    - Flèches Haut/Bas pour surligner une option, puis validation avec Entrée.
+ *    Entrée sur le texte brut tapé sans suggestion surlignée ne valide JAMAIS la réponse.
+ *    Dans ce cas, un rejet visuel sobre (shake) est déclenché sans vider le texte, avec l'indice
+ *    "select_on_globe_hint" si aucune sélection n'est active, sinon "pick_in_list_hint".
+ * 4. Lors du choix d'une suggestion (choose) :
+ *    - Si aucun pays n'est sélectionné sur le globe (requireSelection = true) :
+ *      rejet (shake avec l'indice "select_on_globe_hint"), réinitialisation complète du champ
+ *      (texte vidé, activeIndex = -1, liste fermée, focus conservé), onEnter n'est pas appelé,
+ *      et retourne false.
+ *    - Si un pays est sélectionné sur le globe :
+ *      onEnter(chosen.display) est appelé. Quelle que soit l'issue de la tentative,
+ *      le champ est réinitialisé (commitSuccess) et retourne true.
+ *
+ * Mode Learn (mode === "learn") :
+ * Le comportement reste inchangé : validation directe sur Entrée/Tab de la première
+ * suggestion, recherche libre sans sélection obligatoire de pays.
  */
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -75,18 +85,11 @@ function handleEnterKey({
 
   e.preventDefault();
 
-  if (requireSelection) {
-    triggerReject();
-    return;
-  }
-
   if (isOpen && activeIndex >= 0 && activeIndex < suggestions.length) {
     choose(activeIndex);
   } else {
-    const result = onEnter ? onEnter(currentValue) : false;
-    if (result) {
-      commitSuccess();
-    }
+    const hint = requireSelection ? "select_on_globe_hint" : "pick_in_list_hint";
+    triggerReject(hint);
   }
 }
 
@@ -132,43 +135,43 @@ export default function useAnswerCombobox({
     mode === "learn" && learnSearchQuery !== undefined ? learnSearchQuery : inputValue;
 
   const suggestions = useMemo(() => {
-    if (requireSelection) {
-      return [];
-    }
     if (mode === "learn") {
       return getLearnSuggestions(currentValue, countryDataMap, { lang, limit: 5 });
     }
     return getAnswerSuggestions(currentValue, index, { foundSet, limit: 5, lang });
-  }, [requireSelection, mode, currentValue, countryDataMap, lang, index, foundSet]);
+  }, [mode, currentValue, countryDataMap, lang, index, foundSet]);
 
-  const triggerReject = useCallback(() => {
-    if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
+  const triggerReject = useCallback(
+    (hintKey = "select_on_globe_hint") => {
+      if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
 
-    if (!isRejected) {
-      setIsRejected(true);
-    } else {
-      setIsRejected(false);
-      if (typeof requestAnimationFrame === "function") {
-        requestAnimationFrame(() => setIsRejected(true));
+      if (!isRejected) {
+        setIsRejected(true);
       } else {
-        setTimeout(() => setIsRejected(true), 0);
+        setIsRejected(false);
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(() => setIsRejected(true));
+        } else {
+          setTimeout(() => setIsRejected(true), 0);
+        }
       }
-    }
 
-    shakeTimeoutRef.current = setTimeout(() => {
-      setIsRejected(false);
-    }, 280);
+      shakeTimeoutRef.current = setTimeout(() => {
+        setIsRejected(false);
+      }, 280);
 
-    setIsOpen(true);
-    setStatusText(t ? t("select_on_globe_hint") : "Sélectionne un pays sur le globe");
-  }, [isRejected, t]);
+      setIsOpen(true);
+      const defaultText =
+        hintKey === "pick_in_list_hint"
+          ? "Choisis un pays dans la liste"
+          : "Sélectionne un pays sur le globe";
+      const resolved = t ? t(hintKey) : defaultText;
+      setStatusText(resolved === hintKey ? defaultText : resolved);
+    },
+    [isRejected, t]
+  );
 
-  const commitSuccess = useCallback(() => {
-    setInputValue("");
-    setActiveIndex(-1);
-    setIsOpen(false);
-    setStatusText("");
-
+  const restoreFocus = useCallback(() => {
     if (inputRef?.current) {
       try {
         inputRef.current.focus({ preventScroll: true });
@@ -178,22 +181,54 @@ export default function useAnswerCombobox({
     }
   }, [inputRef]);
 
+  const commitSuccess = useCallback(() => {
+    setInputValue("");
+    setActiveIndex(-1);
+    setIsOpen(false);
+    setStatusText("");
+    restoreFocus();
+  }, [restoreFocus]);
+
   const choose = useCallback(
     (idx) => {
-      if (requireSelection) return false;
       const chosen = suggestions[idx];
       if (!chosen) return false;
 
-      const result = onEnter ? onEnter(chosen.display) : false;
-      if (!result) return false;
+      if (mode === "learn") {
+        if (requireSelection) return false;
+        const result = onEnter ? onEnter(chosen.display) : false;
+        if (!result) return false;
 
-      if (mode === "learn" && onLearnSearchChange) {
-        onLearnSearchChange("");
+        if (onLearnSearchChange) {
+          onLearnSearchChange("");
+        }
+        commitSuccess();
+        return true;
       }
+
+      if (requireSelection) {
+        triggerReject("select_on_globe_hint");
+        setInputValue("");
+        setActiveIndex(-1);
+        setIsOpen(false);
+        restoreFocus();
+        return false;
+      }
+
+      onEnter?.(chosen.display);
       commitSuccess();
       return true;
     },
-    [requireSelection, suggestions, onEnter, mode, onLearnSearchChange, commitSuccess]
+    [
+      suggestions,
+      mode,
+      requireSelection,
+      onEnter,
+      onLearnSearchChange,
+      commitSuccess,
+      triggerReject,
+      restoreFocus,
+    ]
   );
 
   const handleChange = useCallback(
