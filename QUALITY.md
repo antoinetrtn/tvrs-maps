@@ -108,8 +108,11 @@ Headless Chrome needs software WebGL: `--use-gl=angle --use-angle=swiftshader --
 A GitHub Action (`.github/workflows/quality.yml`) runs on push/PR to `main` and `dev`. It performs:
 1. `npm run format:check` (Prettier).
 2. `npm run lint` (checks formatting, design tokens, bans, ESLint, and runs Knip dead code audit).
-3. `npm run test:run` (runs all unit tests in Vitest).
-4. `npm run build` (ensures Vite builds successfully).
+3. `npm run check:tokens` (design-token ghosts / dark drift).
+4. `npm run check:css-rules` (CSS/JS design ratchet, see below).
+5. `npm run check:a11y` (jsx-a11y ratchet, see below).
+6. `npm run test:run` (runs all unit tests in Vitest).
+7. `npm run build` (ensures Vite builds successfully).
 
 ### Quality Tooling (ESLint, Prettier, Husky, Sonar, etc.)
 - **ESLint** (flat config): strict rules + react, hooks, a11y (some warn), security, promise, simple-import-sort, prettier, unused-imports.
@@ -127,6 +130,17 @@ A GitHub Action (`.github/workflows/quality.yml`) runs on push/PR to `main` and 
 - **Custom quality ratchets** in `scripts/quality-check.js` remain the project-specific guardrails (file sizes, no magic colors, nesting limits, globe rules, z-index, etc.).
 
 Run `npm run check` locally before pushing (now also enforced by pre-push).
+
+### Design & a11y ratchets (`check:css-rules`, `check:a11y`)
+A *ratchet* records the **current** number of each forbidden pattern, per file, in a JSON baseline (`scripts/ratchet-baselines/`). CI fails as soon as a count **increases** (or a new file introduces one), so existing debt can only shrink and no new violation gets in. Nothing changes visually: the baseline just freezes today's state.
+
+- `npm run check:css-rules` → `scripts/check-css-rules.mjs` (scanner: `scripts/lib/cssRulesScan.mjs`, baseline `scripts/ratchet-baselines/css-rules.json`). Rules:
+  `hex-color` (outside `index.css`), `important`, `z-index-raw` (use `var(--z-…)`), `uppercase` (`text-transform: uppercase`), `radius-circular` (`50%`, `100%`, `≥100px`, `--radius-full`), `radius-large` (`> 8px`), `blur-over-4px` (CSS, tokens and JS strings), `viewport-100vh` (needs a `100dvh` twin), `glow-shadow` (box/text/drop-shadow with a non-zero blur), `cubic-bezier-raw` (use motion tokens), `duration-raw` (use `--dur-*` tokens), `outline-none` (outside `:focus-visible`/`:focus-within`), `serif-font`.
+- `npm run check:a11y` → `scripts/check-a11y-ratchet.mjs` (baseline `scripts/ratchet-baselines/a11y.json`): counts every `jsx-a11y/*` finding (`click-events-have-key-events`, `no-static-element-interactions`, `control-has-associated-label`, …) per file; any `jsx-a11y` **error** fails immediately.
+- Useful flags: `--list [--rule <id>]` (print every current violation), `--update` (rewrite the baseline after you **fixed** violations; it refuses to raise a count unless `--allow-increase`, which must never be used just to make CI pass).
+- Legitimate exception: `/* css-rules-allow: <rule> — reason */` on the same line or the line before (`// css-rules-allow: …` in JS). Use sparingly and justify it.
+- Workflow: when a PR lowers a count, run `npm run check:css-rules -- --update` (and/or `npm run check:a11y -- --update`) and commit the baseline to lock the progress.
+- Known limit: `GlobeMap.jsx` still hides `pathsData`/`pathStroke` behind string concatenation to dodge a `quality-check.js` ban (audit G-18); it is left to the globe lot.
 
 ### Database Migrations (Supabase)
 Any database schema changes must be version-controlled in the repository:

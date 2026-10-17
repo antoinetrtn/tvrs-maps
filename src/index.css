@@ -173,6 +173,7 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* iOS URL bar: dvh twin of the 100vh fallback */
   overflow-x: hidden; /* BLOCK HORIZONTAL SCROLL */
   overflow-y: hidden; /* BLOCK VERTICAL SCROLL ON BODY (App handles it) */
   position: fixed; /* BLOCK NATIVE SCROLL PUSH */
