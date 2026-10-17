@@ -126,8 +126,39 @@ export const POLYGON_ALTITUDE = {
   // map look embossed. Keep the regional relief flat and subtle.
   departmentBase: 0.0003,
   departmentSelected: 0.0016,
-  ghostCountry: 0.0001,
+  // Ghost countries (dimmed world around a regional map) are tessellated by the
+  // original Delaunay: worst cap dip at 1° is 0.044 (Greenland) < 0.0005 × 100.
+  ghostCountry: 0.0005,
 };
+
+/**
+ * Max cap triangulation step (degrees) per polygon layer. A cap is made of flat
+ * triangles, so it dips below its vertices by ≈ 0.0125 × step² globe units (the
+ * regional layers, built by RefinedConicPolygonGeometry, have a hard bound of
+ * 100 × (1 − cos(step/√3)): 0.012 at 1.5°, 0.046 at 3°). The sea sphere pokes
+ * through any cap that dips deeper than its altitude × 100: 0.03 for regional
+ * maps, 0.05 for ghost countries, 0.12 for the world. Each layer therefore gets
+ * a step that keeps it under its own margin, instead of the 3° mobile profile.
+ * Verified on the real GeoJSON by src/tests/polygonCapSag.test.js.
+ */
+export const POLYGON_CAP_RESOLUTION = { world: 2, regional: 1.5, ghost: 1 };
+
+/** Cap triangulation step for a polygon: the perf profile's, capped per layer. */
+export const getPolygonCapResolution = ({ baseResolution = 1.5, isGhost, isRegional }) => {
+  if (isGhost) return Math.min(baseResolution, POLYGON_CAP_RESOLUTION.ghost);
+  if (isRegional) return Math.min(baseResolution, POLYGON_CAP_RESOLUTION.regional);
+  return Math.min(baseResolution, POLYGON_CAP_RESOLUTION.world);
+};
+
+/** Same, decided from the feature's own flags (stable through mode switches). */
+export const getFeatureCapResolution = (d, baseResolution) =>
+  getPolygonCapResolution({
+    baseResolution,
+    isGhost: Boolean(d.isGhostCountry),
+    isRegional: Boolean(
+      d.isDepartmentFeature || d.isEnteringDepartmentFeature || d.isExitingDepartmentFeature
+    ),
+  });
 
 export const getPolygonAltitudeFor = ({
   isDepartmentMode,

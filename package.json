@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
+    "earcut": "^3.2.3",
     "pixelarticons": "^2.1.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

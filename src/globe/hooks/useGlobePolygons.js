@@ -11,7 +11,11 @@ import {
   GLITCH_EFFECT_SETTINGS,
   GLOBE_STYLE,
 } from "../../config/designSystem";
-import { GAME_REGIONS, getPolygonAltitudeFor } from "../../config/gameConfig";
+import {
+  GAME_REGIONS,
+  getFeatureCapResolution,
+  getPolygonAltitudeFor,
+} from "../../config/gameConfig";
 import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
 import { useGlobePrefs } from "../globePrefs";
@@ -668,11 +672,7 @@ export function useGlobePolygons({
   );
 
   const getPolygonCurvatureResolution = useCallback(
-    (d, customSizes) => {
-      const sz = customSizes ? customSizes[getFeatureAdmin(d) || "unknown"] : undefined;
-      const b = perfProfile?.polygonCapCurvatureResolution ?? 1.5;
-      return sz === undefined ? b : sz < 4 ? b * 2.2 : sz > 15 ? b * 0.3 : sz >= 8 ? b * 0.45 : b;
-    },
+    (d) => getFeatureCapResolution(d, perfProfile?.polygonCapCurvatureResolution ?? 1.5),
     [perfProfile?.polygonCapCurvatureResolution]
   );
 

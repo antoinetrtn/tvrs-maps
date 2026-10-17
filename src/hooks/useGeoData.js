@@ -6,6 +6,7 @@ import { departmentsDataMap } from "../data/departmentsData";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
+import { registerRefinedPolygons } from "../globe/render/refinedConicPolygonGeometry";
 import { getRenderGeometry } from "../utils/utils";
 
 function mergeGeometries(geomA, geomB) {
@@ -183,7 +184,7 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
           const mapped = data.features.map((feature, idx) => ({
             ...feature,
             __id: `d${idx}`,
-            renderGeometry: getRenderGeometry(feature),
+            renderGeometry: registerRefinedPolygons(getRenderGeometry(feature)),
           }));
           setDepartmentsData(mapped);
         }
@@ -205,7 +206,7 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
           const mapped = data.features.map((feature, idx) => ({
             ...feature,
             __id: `u${idx}`,
-            renderGeometry: getRenderGeometry(feature),
+            renderGeometry: registerRefinedPolygons(getRenderGeometry(feature)),
           }));
           setUsStatesData(mapped);
         }
