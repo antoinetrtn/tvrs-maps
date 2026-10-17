@@ -127,22 +127,7 @@
 
 .conquest-input {
   flex: 1;
-  width: 100%;
   min-width: 0;
-  height: var(--control-lg);
-  padding: 0 var(--spacing-ms);
-  border: 1px solid var(--glass-border-strong);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-main);
-  font: inherit;
-  font-size: var(--font-size-base);
-}
-
-.conquest-input:focus-visible {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 2px 2px 0 var(--ui-ink, var(--bg-color));
 }
 
 .conquest-code-input,
@@ -183,19 +168,6 @@
   padding: var(--spacing-xs) var(--spacing-md);
   border-color: var(--accent);
   color: var(--accent);
-}
-
-.conquest-copy-toast {
-  min-height: 1.2em;
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--success);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.conquest-copy-toast.is-visible {
-  opacity: 1;
 }
 
 .conquest-code {

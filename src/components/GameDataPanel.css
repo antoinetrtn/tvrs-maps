@@ -164,27 +164,6 @@
 
 .data-panel-search-input {
   width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--glass-border);
-  background: var(--subtle-tint);
-  color: var(--text-main);
-  font-family: var(--font-main);
-  font-size: var(--font-size-md);
-  transition: border-color var(--transition-fast);
-}
-
-.data-panel-search-input:focus {
-  border-color: var(--accent);
-}
-
-.data-panel-search-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.data-panel-search-input:focus:not(:focus-visible) {
-  outline: none;
 }
 
 .data-panel-body {

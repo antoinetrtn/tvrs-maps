@@ -8,17 +8,20 @@ import "./DevGallery.css";
 import { Close, Settings2, User } from "pixelarticons/react";
 import React, { useState } from "react";
 
-import AtlasState from "../components/AtlasState";
 import GlassIconButton from "../components/GlassIconButton";
 import InvaderAvatar from "../components/InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "../components/LeaderboardRow";
 import Button from "../components/ui/Button";
+import EmptyState from "../components/ui/EmptyState";
+import ErrorState from "../components/ui/ErrorState";
 import IconButton from "../components/ui/IconButton";
+import LoadingState from "../components/ui/LoadingState";
 import OptionGroup from "../components/ui/OptionGroup";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings";
 import Slider from "../components/ui/Slider";
 import Switch from "../components/ui/Switch";
 import TabBar from "../components/ui/TabBar";
+import TextField from "../components/ui/TextField";
 import { ACCENT_PRESETS, getAccentOverrides } from "../config/accentPresets";
 import { getThemeCssVariables } from "../config/designSystem";
 
@@ -43,6 +46,7 @@ const AccentColumn = ({ id }) => {
   const [lang, setLang] = useState("fr");
   const [tab1, setTab1] = useState("a");
   const [tab2, setTab2] = useState("opt1");
+  const [text, setText] = useState("");
   return (
     <section className="dg-column" style={accentVars(id)} aria-label={id}>
       <h2 className="dg-column-title">{ACCENT_PRESETS[id].label.fr}</h2>
@@ -57,6 +61,23 @@ const AccentColumn = ({ id }) => {
         <Button variant="primary" loading>
           Chargement
         </Button>
+      </Block>
+      <Block title="TextField">
+        <TextField
+          label="Pseudo"
+          placeholder="Ex: GeoMaster"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+        <TextField
+          variant="outline"
+          label="Code salon"
+          placeholder="ABCD"
+          hint="4 caractères requis"
+        />
+        <TextField variant="search" placeholder="Rechercher..." type="search" />
+        <TextField label="Email" error="Adresse e-mail invalide" defaultValue="invalid@" />
+        <TextField label="Désactivé" disabled defaultValue="Non modifiable" />
       </Block>
       <Block title="GlassIconButton">
         <GlassIconButton title="Réglages">
@@ -154,9 +175,15 @@ const AccentColumn = ({ id }) => {
           <LeaderboardRow rank={6} name="Antoine" stat={151} meta="9:45" isMe youLabel="toi" />
         </LeaderboardList>
       </Block>
-      <Block title="AtlasState">
-        <AtlasState title="Rien ici" hint="État vide" />
-        <AtlasState variant="error" title="Salon introuvable" />
+      <Block title="StateViews">
+        <EmptyState title="Rien ici" hint="État vide" />
+        <LoadingState title="Chargement…" hint="Un instant" />
+        <ErrorState
+          title="Salon introuvable"
+          hint="Vérifie le code"
+          onRetry={() => {}}
+          retryLabel="Réessayer"
+        />
       </Block>
     </section>
   );

@@ -4,6 +4,7 @@ import "./ConquestLockouts.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
+import { showToast } from "../components/ui/Toast.jsx";
 import { HudFeed, HudTopBar } from "./ConquestHudParts.jsx";
 import {
   computeStandings,
@@ -48,7 +49,6 @@ function useConquestActions({
   answer,
   setAnswer,
 }) {
-  const [toast, setToast] = useState(null);
   const [stealTarget, setStealTarget] = useState(null);
   const [challenge, setChallenge] = useState(null);
   const pendingRef = useRef(false);
@@ -71,7 +71,7 @@ function useConquestActions({
       const res = await conquest.requestSteal(cid);
       setStealTarget(null);
       if (res?.ok) setChallenge(res);
-      else if (res) setToast({ ok: false, text: refusal(res) });
+      else if (res) showToast({ message: refusal(res), tone: "error" });
     });
 
   const submit = (e) => {
@@ -83,8 +83,11 @@ function useConquestActions({
       if (!res) return;
       setStealTarget(res.reason === "already_owned" ? res.country_id : null);
       if (res.ok || res.reason === "already_owned") setAnswer("");
-      if (res.ok) setToast({ ok: true, text: `${countryName(res.country_id)} ${t.captured}` });
-      else setToast({ ok: false, text: refusal(res) });
+      if (res.ok) {
+        showToast({ message: `${countryName(res.country_id)} ${t.captured}`, tone: "success" });
+      } else {
+        showToast({ message: refusal(res), tone: "error" });
+      }
       if (res.country_id) onFocusCountry(res.country_id);
     });
   };
@@ -93,18 +96,21 @@ function useConquestActions({
     guarded(async () => {
       const res = await conquest.steal(val);
       setChallenge(null);
-      if (res?.ok) setToast({ ok: true, text: `${countryName(res.country_id)} ${t.stole}` });
-      else if (res) setToast({ ok: false, text: refusal(res) });
+      if (res?.ok) {
+        showToast({ message: `${countryName(res.country_id)} ${t.stole}`, tone: "success" });
+      } else if (res) {
+        showToast({ message: refusal(res), tone: "error" });
+      }
     });
 
   const cancelSteal = () =>
     guarded(async () => {
       const res = await conquest.cancelSteal();
       setChallenge(null);
-      if (res) setToast({ ok: false, text: refusal(res) });
+      if (res) showToast({ message: refusal(res), tone: "error" });
     });
 
-  return { toast, setToast, stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal };
+  return { stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal };
 }
 
 function useCountryClickHandler({
@@ -116,7 +122,6 @@ function useCountryClickHandler({
   countryClickRef,
   onSelectCountry,
   openSteal,
-  setToast,
   countryName,
   lang,
   players,
@@ -132,11 +137,11 @@ function useCountryClickHandler({
     if (action === "steal") {
       void openSteal(countryId);
     } else if (action === "free") {
-      setToast({ ok: true, text: t.clickFree });
+      showToast({ message: t.clickFree, tone: "success" });
       inputRef.current?.focus();
     } else {
       const reason = action === "mine" ? "already_yours" : "shielded";
-      setToast({ ok: false, text: refusal({ reason, country_id: countryId }) });
+      showToast({ message: refusal({ reason, country_id: countryId }), tone: "error" });
     }
   };
 
@@ -151,7 +156,6 @@ function useCountryClickHandler({
 const HudAnswer = ({
   challenge,
   lockouts,
-  toast,
   stealTarget,
   countryName,
   t,
@@ -184,7 +188,6 @@ const HudAnswer = ({
         ))}
       </ul>
     )}
-    {toast && <p className={`conquest-toast ${toast.ok ? "is-ok" : "is-ko"}`}>{toast.text}</p>}
     {stealTarget && !challenge && (
       <Button variant="primary" onClick={() => openSteal(stealTarget)}>
         {t.stealOffer} {countryName(stealTarget)}
@@ -238,7 +241,7 @@ const ConquestHud = ({
     [players, claims, bonuses]
   );
   const feed = useConquestFeed(events, players, countryName, lang);
-  const { toast, setToast, stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal } =
+  const { stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal } =
     useConquestActions({
       conquest,
       phase,
@@ -259,7 +262,6 @@ const ConquestHud = ({
     countryClickRef,
     onSelectCountry,
     openSteal,
-    setToast,
     countryName,
     lang,
     players,
@@ -274,7 +276,6 @@ const ConquestHud = ({
       <HudAnswer
         challenge={challenge}
         lockouts={lockouts}
-        toast={toast}
         stealTarget={stealTarget}
         countryName={countryName}
         t={t}

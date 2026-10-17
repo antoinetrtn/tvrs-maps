@@ -2,13 +2,13 @@ import "./App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import AchievementToast from "./components/AchievementToast.jsx";
 import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import GeoDataStatus from "./components/GeoDataStatus.jsx";
 import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
 import HomeScreen from "./components/HomeScreen.jsx";
+import { ToastViewport } from "./components/ui/Toast.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
   DEFAULT_GAME_DURATION_SEC,
@@ -19,6 +19,7 @@ import {
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
+import useAchievementToasts from "./hooks/useAchievementToasts.jsx";
 import { useAppTheme } from "./hooks/useAppTheme";
 import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
 import { useCountryStatsRecorder } from "./hooks/useCountryStatsRecorder";
@@ -91,13 +92,7 @@ function App() {
   const isScreenGlitching = useScreenGlitch(currentScreen);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const [achievementQueue, setAchievementQueue] = useState([]);
-  const activeAchievement = achievementQueue[0] || null;
-  const addAchievementToQueue = useCallback((a) => setAchievementQueue((prev) => [...prev, a]), []);
-  const handleCloseAchievement = useCallback(
-    () => setAchievementQueue((prev) => prev.slice(1)),
-    []
-  );
+  const { addAchievementToQueue } = useAchievementToasts();
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
@@ -502,15 +497,7 @@ function App() {
         />
       )}
 
-      {activeAchievement && (
-        <AchievementToast
-          title={activeAchievement.title}
-          message={activeAchievement.message}
-          invaderId={activeAchievement.invaderId}
-          color={activeAchievement.color}
-          onClose={handleCloseAchievement}
-        />
-      )}
+      <ToastViewport />
       <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
       <AuthModal
         isOpen={showAuthModal}

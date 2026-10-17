@@ -1,10 +1,10 @@
 import "./GeoDataStatus.css";
 
-import { Reload } from "pixelarticons/react";
 import { useEffect, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
-import Button from "./ui/Button";
+import ErrorState from "./ui/ErrorState";
+import LoadingState from "./ui/LoadingState";
 
 export default function GeoDataStatus({ status, onRetry, lang }) {
   const t = useTranslation(lang);
@@ -33,17 +33,7 @@ export default function GeoDataStatus({ status, onRetry, lang }) {
     }
     return (
       <div className="geo-status-wrapper">
-        <div className="geo-status-card geo-status-card-loading" role="status" aria-live="polite">
-          <div className="geo-status-track" aria-hidden="true">
-            <span className="geo-status-cell" />
-            <span className="geo-status-cell" />
-            <span className="geo-status-cell" />
-            <span className="geo-status-cell" />
-            <span className="geo-status-cell" />
-            <span className="geo-status-runner" />
-          </div>
-          <span className="geo-status-label">{t("geo_loading")}</span>
-        </div>
+        <LoadingState title={t("geo_loading")} />
       </div>
     );
   }
@@ -51,16 +41,12 @@ export default function GeoDataStatus({ status, onRetry, lang }) {
   if (status === "error") {
     return (
       <div className="geo-status-wrapper">
-        <div className="geo-status-card geo-status-card-error" role="alert">
-          <div className="geo-status-header">
-            <Reload width={20} height={20} aria-hidden="true" />
-            <span className="geo-status-title">{t("geo_error_title")}</span>
-          </div>
-          <p className="geo-status-hint">{t("geo_error_hint")}</p>
-          <Button variant="secondary" className="geo-status-retry" onClick={onRetry}>
-            {t("geo_retry")}
-          </Button>
-        </div>
+        <ErrorState
+          title={t("geo_error_title")}
+          hint={t("geo_error_hint")}
+          onRetry={onRetry}
+          retryLabel={t("geo_retry")}
+        />
       </div>
     );
   }

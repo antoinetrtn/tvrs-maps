@@ -9,6 +9,7 @@ import Button from "./ui/Button";
 import Dialog, { DialogTitle } from "./ui/Dialog";
 import IconButton from "./ui/IconButton";
 import PanelCloseButton from "./ui/PanelCloseButton";
+import TextField from "./ui/TextField";
 
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {
   const t = useTranslation(lang);
@@ -242,19 +243,17 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
 
   const renderEmailStep = () => (
     <form onSubmit={handleEmailNext} className="auth-modal-form">
-      <div className="form-group">
-        <label>{t("auth_email")}</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Ex: jean.dupont@gmail.com"
-          className="glass-panel"
-          disabled={loading}
-          required
-          autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
-        />
-      </div>
+      <TextField
+        label={t("auth_email")}
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Ex: jean.dupont@gmail.com"
+        className="glass-panel"
+        disabled={loading}
+        required
+        autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
+      />
       <Button type="submit" variant="primary" loading={loading} className="auth-modal-submit-btn">
         {loading ? "Vérification..." : "Continuer"}
       </Button>
@@ -263,24 +262,25 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
 
   const renderPasswordStep = () => (
     <form onSubmit={handleSubmit} className="auth-modal-form">
-      <div className="form-group">
-        <label>{t("auth_email")}</label>
-        <input type="email" value={email} className="glass-panel disabled-input" disabled />
-      </div>
+      <TextField
+        label={t("auth_email")}
+        type="email"
+        value={email}
+        className="glass-panel disabled-input"
+        disabled
+      />
 
-      <div className="form-group">
-        <label>{t("auth_password")}</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          className="glass-panel"
-          disabled={loading}
-          required
-          autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
-        />
-      </div>
+      <TextField
+        label={t("auth_password")}
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="••••••••"
+        className="glass-panel"
+        disabled={loading}
+        required
+        autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
+      />
 
       <Button
         type="submit"

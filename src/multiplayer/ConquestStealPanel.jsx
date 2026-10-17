@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
+import TextField from "../components/ui/TextField.jsx";
 
 /** Harder steal challenge: type the capital, or pick the right flag among four. */
 const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) => {
@@ -41,7 +42,8 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
           label={`${t.stealFlag} ${name}`}
         />
       ) : (
-        <input
+        <TextField
+          variant="outline"
           className="conquest-input"
           value={value}
           placeholder={t.stealPlaceholder}

@@ -11,6 +11,7 @@ import GameDataPanelRow from "./GameDataPanelRow";
 import LearnModeToggles from "./LearnModeToggles";
 import Button from "./ui/Button";
 import PanelCloseButton from "./ui/PanelCloseButton";
+import TextField from "./ui/TextField";
 
 const GameDataPanel = ({
   dataMap,
@@ -137,7 +138,8 @@ const GameDataPanel = ({
       >
         {showSearch && (
           <div className="data-panel-search-sticky">
-            <input
+            <TextField
+              variant="search"
               type="search"
               className="data-panel-search-input"
               placeholder={t("search_placeholder")}

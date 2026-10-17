@@ -282,25 +282,6 @@
   border-color: var(--accent);
   box-shadow: 3px 3px 0 var(--black);
 }
-.conquest-hud .conquest-toast {
-  align-self: flex-start;
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  margin: 0;
-  padding: var(--spacing-xxs) var(--spacing-sm);
-  border: 1px solid currentcolor;
-  border-radius: var(--radius-sm);
-  background: var(--glass-bg);
-  box-shadow: 2px 2px 0 var(--black);
-  font-size: var(--font-size-xs);
-}
-.conquest-toast.is-ok {
-  color: var(--success);
-}
-.conquest-toast.is-ko {
-  color: var(--warning);
-}
 .conquest-steal {
   display: flex;
   flex-direction: column;

@@ -115,7 +115,7 @@
   text-shadow: 0 0 8px var(--color-magenta-glow);
 }
 
-/* Loading / empty / error states live in AtlasState.css. */
+/* Loading / empty / error states live in StateViews.css. */
 
 /* --- STATS GRID --- */
 .personal-stats-grid {
