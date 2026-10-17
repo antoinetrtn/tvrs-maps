@@ -78,7 +78,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     ["departments", "Ain"],
     ["rivers_mountains", "Alpes"],
   ])(
-    "(a) mode %s sans sélection: saisie '%s' + Entrée => rejet, liste masquée, placeholder et aria-live",
+    "mode %s sans sélection: saisie '%s' + Entrée => rejet, placeholder et aria-live",
     (mode, text) => {
       const { container } = renderHUD({ mode, selectedCountry: null });
       const input = screen.getByRole("combobox");
@@ -92,7 +92,6 @@ describe("answerCombobox (<GameHUD> integration)", () => {
       expect(onEnterMock).not.toHaveBeenCalled();
       expect(island.classList.contains("is-rejected")).toBe(true);
       expect(input.value).toBe(text);
-      expect(container.querySelector('[role="listbox"]')).toBeNull();
 
       const liveRegion = container.querySelector('[aria-live="polite"]');
       expect(liveRegion.textContent).toContain("Sélectionne un pays sur le globe");
@@ -110,33 +109,54 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(island.classList.contains("is-rejected")).toBe(false);
   });
 
-  it("(b) selectedCountry='FRA' + saisie 'France' + Entrée sans surbrillance => onEnter('France') appelé, champ vidé", () => {
-    renderHUD({ selectedCountry: "FRA" });
+  const typeAndEnter = (props, text) => {
+    const view = renderHUD(props);
     const input = screen.getByRole("combobox");
+    fireEvent.change(input, { target: { value: text } });
+    return { ...view, input, island: view.container.querySelector(".input-island") };
+  };
 
-    fireEvent.change(input, { target: { value: "France" } });
+  it("Entrée sans choix dans la liste => aucune validation, texte conservé, rejet + indice", () => {
+    const { container, input, island } = typeAndEnter({ selectedCountry: "FRA" }, "France");
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(onEnterMock).toHaveBeenCalledTimes(1);
-    expect(onEnterMock).toHaveBeenCalledWith("France");
-    expect(input.value).toBe("");
+    expect(onEnterMock).not.toHaveBeenCalled();
+    expect(input.value).toBe("France");
+    expect(island.classList.contains("is-rejected")).toBe(true);
+    expect(container.querySelector('[aria-live="polite"]').textContent).toContain(
+      "Choisis un pays dans la liste"
+    );
   });
 
-  it("(c) clic sur une suggestion => onEnter('France') appelé une fois, champ vidé", () => {
-    const { container } = renderHUD({ selectedCountry: "FRA" });
-    const input = screen.getByRole("combobox");
+  it("sans pays sélectionné, la liste de suggestions s'affiche quand même", () => {
+    const { container, input } = typeAndEnter({ selectedCountry: null }, "fran");
 
-    fireEvent.change(input, { target: { value: "fran" } });
-    const option = container.querySelector('[role="option"]');
-    expect(option).not.toBeNull();
-
-    fireEvent.click(option);
-    expect(onEnterMock).toHaveBeenCalledTimes(1);
-    expect(onEnterMock).toHaveBeenCalledWith("France");
-    expect(input.value).toBe("");
+    expect(input.getAttribute("aria-expanded")).toBe("true");
+    expect(container.querySelector('[role="option"]').textContent).toContain("France");
   });
 
-  it("(c) clavier: saisie 'fran', ArrowDown, Enter => onEnter appelé avec la suggestion surlignée; wrap", () => {
+  it.each([
+    ["sans pays sélectionné", null, true, 0, true, "Sélectionne un pays sur le globe"],
+    ["bonne réponse", "FRA", true, 1, false, ""],
+    ["mauvais pays (ERROR)", "FRA", "ERROR", 1, false, ""],
+    ["onEnter renvoie false", "FRA", false, 1, false, ""],
+  ])(
+    "clic sur une suggestion (%s) => champ vidé, validation=%s appels, rejet=%s",
+    (_label, selectedCountry, returned, calls, rejected, hint) => {
+      onEnterMock.mockReturnValue(returned);
+      const { container, input, island } = typeAndEnter({ selectedCountry }, "fran");
+
+      fireEvent.click(container.querySelector('[role="option"]'));
+
+      expect(onEnterMock).toHaveBeenCalledTimes(calls);
+      if (calls) expect(onEnterMock).toHaveBeenCalledWith("France");
+      expect(island.classList.contains("is-rejected")).toBe(rejected);
+      expect(input.value).toBe("");
+      expect(container.querySelector('[aria-live="polite"]').textContent).toContain(hint);
+    }
+  );
+
+  it("(f) clavier: saisie 'fran', ArrowDown, Enter => onEnter appelé avec la suggestion surlignée et réinitialisation; wrap", () => {
     const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
@@ -208,18 +228,6 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it("(c) onEnter retournant false => champ non vidé", () => {
-    onEnterMock.mockReturnValue(false);
-    renderHUD({ selectedCountry: "FRA" });
-    const input = screen.getByRole("combobox");
-
-    fireEvent.change(input, { target: { value: "fran" } });
-    fireEvent.keyDown(input, { key: "Enter" });
-
-    expect(onEnterMock).toHaveBeenCalledWith("fran");
-    expect(input.value).toBe("fran");
-  });
-
   it("(c) entrée déjà trouvée marquée data-found", () => {
     const { container } = renderHUD({ selectedCountry: "FRA", foundList: ["FRA"] });
     const input = screen.getByRole("combobox");
@@ -277,14 +285,9 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(input.getAttribute("aria-activedescendant")).toBe(option.id);
   });
 
-  it("(d) Entrée répétée sans sélection rejoue le shake (classe retirée puis remise)", async () => {
-    const { container } = renderHUD({ selectedCountry: null });
-    const input = screen.getByRole("combobox");
-    const island = container.querySelector(".input-island");
-
-    fireEvent.change(input, { target: { value: "France" } });
+  it("Entrée répétée sans choix rejoue le shake (classe retirée puis remise)", async () => {
+    const { input, island } = typeAndEnter({ selectedCountry: "FRA" }, "France");
     fireEvent.keyDown(input, { key: "Enter" });
-
     expect(island.classList.contains("is-rejected")).toBe(true);
 
     // Repeated Enter while already rejected resets isRejected and reapplies
