@@ -233,7 +233,7 @@
   display: inline-flex;
   align-items: center;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .conquest-stat {

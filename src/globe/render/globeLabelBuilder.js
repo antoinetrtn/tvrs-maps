@@ -18,7 +18,8 @@ function buildGlobeLabelFlagHtml(iso2, { compact = false, prominent = false } = 
  */
 function scrambleTextWithRatio(text, ratio) {
   if (!text) return "";
-  const glyphs = "░▒▓█░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ";
+  // ASCII-only: every glyph exists in the label font, so no tofu boxes (□) while scrambling.
+  const glyphs = "@#$%&?*[]{}<>/=+_~^0123456789X";
   return text
     .split("")
     .map((char) => {
