@@ -38,12 +38,12 @@ describe("Monochrome globe", () => {
   });
 
   it("feeds the accent into the render key", () => {
-    const acid = getThemeColors("monochrome@acid", "dark");
-    const magenta = getThemeColors("monochrome@magenta", "dark");
-    expect(acid.glitchTintA).toBe(ACCENT_PRESETS.acid.accent);
-    expect(acid.globeMaterialColor).not.toBe(magenta.globeMaterialColor);
-    expect(getThemeRegionColor("monochrome@acid", "dark", "Asia")).toBe(
-      buildMonochromePalette("acid").land.Asia
+    const teal = getThemeColors("monochrome@teal", "dark");
+    const bone = getThemeColors("monochrome@bone", "dark");
+    expect(teal.glitchTintA).toBe(ACCENT_PRESETS.teal.accent);
+    expect(teal.globeMaterialColor).not.toBe(bone.globeMaterialColor);
+    expect(getThemeRegionColor("monochrome@teal", "dark", "Asia")).toBe(
+      buildMonochromePalette("teal").land.Asia
     );
   });
 });

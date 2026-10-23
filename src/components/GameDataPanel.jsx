@@ -3,7 +3,7 @@ import "./GameDataPanel.css";
 import { Home } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColor } from "../config/designSystem";
+import { getThemeRegionColorLabel } from "../config/designSystem";
 import { GAME_REGIONS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { getPanelData, normalizeString } from "../utils/utils";
@@ -47,7 +47,7 @@ const GameDataPanel = ({
   const colors = useMemo(() => {
     const res = {};
     GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColor(globeTheme, theme, r);
+      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
     });
     return res;
   }, [globeTheme, theme]);

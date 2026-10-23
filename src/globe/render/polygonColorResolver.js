@@ -196,7 +196,7 @@ export function resolveCountryCapColor({
   if (isLearn) {
     if (isSelected) {
       if (isError) return UI_COLORS.error;
-      return FOUND_HIGHLIGHT;
+      return GLITCH_EFFECT_SETTINGS.selectionHighlight;
     }
     return mapBase;
   }

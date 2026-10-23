@@ -22,7 +22,6 @@ import { getFeatureAdmin } from "../../utils/utils";
 import { useGlobePrefs } from "../globePrefs";
 import { getPolygonMaterialForFeature } from "../render/globePolygonMaterial";
 import {
-  FOUND_HIGHLIGHT,
   getFeatureMonochromeShade,
   getTransitionState,
   isQuietOwnedFocusFor,
@@ -174,7 +173,7 @@ export function useGlobePolygons({
         if (mode === "learn") {
           if (isDeptSelected) {
             if (isError) return UI_COLORS.error;
-            return FOUND_HIGHLIGHT;
+            return GLITCH_EFFECT_SETTINGS.selectionHighlight;
           }
           const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
           const baseColor = getRegionSurfaceColorDimmed(regionCode);
@@ -184,7 +183,7 @@ export function useGlobePolygons({
         if (isDeptFound) {
           if (isDeptSelected) {
             if (isError) return UI_COLORS.error;
-            return FOUND_HIGHLIGHT;
+            return GLITCH_EFFECT_SETTINGS.selectionHighlight;
           }
           const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Unknown";
           const deptTint = getThemeDepartmentColor(

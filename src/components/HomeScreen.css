@@ -155,7 +155,7 @@
   position: relative;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--subtle-tint);
   border: 1px solid var(--glass-border);
 }
@@ -172,16 +172,16 @@
 }
 
 .widget-spot.rank-1 {
-  border-color: var(--color-gold);
-  box-shadow: 0 0 4px var(--color-gold-glow);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 .widget-spot.rank-2 {
-  border-color: var(--color-silver);
-  box-shadow: 0 0 4px var(--color-silver-glow);
+  border-color: var(--glass-border-strong);
+  background: var(--subtle-tint);
 }
 .widget-spot.rank-3 {
-  border-color: var(--color-bronze);
-  box-shadow: 0 0 4px var(--color-bronze-glow);
+  border-color: var(--glass-border);
+  background: transparent;
 }
 
 .widget-rank-num {
@@ -204,13 +204,19 @@
 }
 
 .widget-spot.rank-1 .widget-rank-num {
-  background: var(--color-gold);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--bg-color);
 }
 .widget-spot.rank-2 .widget-rank-num {
-  background: var(--color-silver);
+  background: var(--text-main);
+  color: var(--bg-color);
+  border-color: var(--bg-color);
 }
 .widget-spot.rank-3 .widget-rank-num {
-  background: var(--color-bronze);
+  background: var(--bg-color);
+  color: var(--text-muted);
+  border-color: var(--glass-border-strong);
 }
 
 /* Level badge inside profile glass button */
@@ -320,7 +326,6 @@
 
 .home-hero-logo .main-logo-svg {
   color: var(--text-main);
-  filter: drop-shadow(0 1px 4px var(--bg-color));
   animation: home-logo-fade var(--dur-slow) var(--ease-out) both;
 }
 
@@ -336,7 +341,6 @@
   line-height: 0.95;
   white-space: pre-line;
   color: var(--text-main);
-  text-shadow: 0 1px 4px var(--bg-color);
 }
 
 .home-hero-sub {

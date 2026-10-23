@@ -96,7 +96,8 @@
 
 .avatar-option.active {
   border-color: var(--accent);
-  box-shadow: 0 0 8px var(--accent-soft);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .avatar-lock-overlay {
@@ -335,7 +336,7 @@
 }
 
 .badge-detail-status.unlocked {
-  color: var(--glitch-cyan);
+  color: var(--success);
 }
 
 .badge-detail-status.locked {
@@ -387,7 +388,7 @@
 .form-feedback.success {
   background: var(--xp-success-bg);
   border-color: var(--xp-success-border);
-  color: var(--glitch-cyan);
+  color: var(--success);
 }
 
 /* Responsive adjustments for mobile */
@@ -429,7 +430,7 @@
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px var(--xp-shadow-heavy);
+  box-shadow: var(--glass-shadow-strong);
   animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
 }
 
@@ -600,19 +601,9 @@ form.profile-form {
   flex-shrink: 0;
 }
 
-/* Success Glow Effect on Save */
+/* Success state on Save (crisp fill, no glow) */
 .form-submit-btn.save-success-glow {
-  background: var(--xp-green-inner) !important;
-  color: var(--xp-black) !important;
-  border-color: var(--xp-green-inner) !important;
-  animation: success-pulse-glow 0.8s ease-in-out infinite alternate;
-}
-
-@keyframes success-pulse-glow {
-  from {
-    box-shadow: 0 0 4px var(--xp-green-glow);
-  }
-  to {
-    box-shadow: 0 0 15px var(--xp-green-inner);
-  }
+  background: var(--success) !important;
+  color: var(--bg-color) !important;
+  border-color: var(--success) !important;
 }
