@@ -4,7 +4,7 @@ import "./GameHUDLives.css";
 import { ChevronLeft, ChevronRight, Home, InfoBox, Play, Square } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColor } from "../config/designSystem";
+import { getThemeRegionColorLabel } from "../config/designSystem";
 import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
@@ -129,7 +129,7 @@ const GameHUD = ({
   const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
   const REGION_COLORS = useMemo(() => {
     return GAME_REGIONS.reduce(
-      (acc, r) => ({ ...acc, [r]: getThemeRegionColor(globeTheme, theme, r) }),
+      (acc, r) => ({ ...acc, [r]: getThemeRegionColorLabel(globeTheme, theme, r) }),
       {}
     );
   }, [globeTheme, theme]);

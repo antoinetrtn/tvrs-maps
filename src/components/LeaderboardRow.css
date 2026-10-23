@@ -38,8 +38,33 @@
 }
 
 .lb-rank.is-podium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  margin-inline: auto;
+  border-radius: var(--radius-sm);
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.lb-rank.rank-1 {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: 1px solid var(--accent);
+}
+
+.lb-rank.rank-2 {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.lb-rank.rank-3 {
+  background: var(--subtle-tint);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border-strong);
 }
 
 .lb-who {

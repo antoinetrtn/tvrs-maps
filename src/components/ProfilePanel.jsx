@@ -403,9 +403,6 @@ const ProfilePanel = ({
                       className={`badge-item-btn glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
                       onClick={() => setSelectedChallengeId(ch.id)}
                       style={{
-                        "--badge-color-glow": isUnlocked
-                          ? `${AVATAR_COLORS[ch.color]}33`
-                          : "transparent",
                         "--badge-color-border": isUnlocked
                           ? AVATAR_COLORS[ch.color]
                           : "var(--glass-border)",

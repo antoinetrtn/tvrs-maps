@@ -66,53 +66,18 @@
   flex-shrink: 0;
 }
 
-.rank-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  height: 22px;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--font-size-xs);
-  padding: var(--spacing-xxs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  background: var(--subtle-tint);
-  border: 1px solid var(--glass-border);
-  color: var(--text-muted);
-  box-sizing: border-box;
-}
-
-.rank-badge.rank-1 {
-  background: var(--color-gold-glow);
-  color: var(--color-gold);
-  border-color: var(--color-gold);
-}
-.rank-badge.rank-2 {
-  background: var(--color-silver-glow);
-  color: var(--color-silver);
-  border-color: var(--color-silver);
-}
-.rank-badge.rank-3 {
-  background: var(--color-bronze-glow);
-  color: var(--color-bronze);
-  border-color: var(--color-bronze);
-}
-
 .highlight-cyan {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--color-cyan);
-  text-shadow: 0 0 8px var(--color-cyan-glow-strong);
+  font-weight: 600;
+  color: var(--text-main);
 }
 
 .highlight-magenta {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
-  color: var(--color-magenta);
-  text-shadow: 0 0 8px var(--color-magenta-glow);
+  color: var(--text-main);
 }
 
 /* Loading / empty / error states live in StateViews.css. */
@@ -170,9 +135,8 @@
 .highlight-green {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--color-lime);
-  text-shadow: 0 0 8px var(--color-lime-glow-strong);
+  font-weight: 600;
+  color: var(--accent);
 }
 
 /* --- PERSONAL HISTORY LAYOUT --- */
@@ -240,15 +204,13 @@
 
 .chart-bar-fill {
   width: 100%;
-  background: var(--color-cyan);
-  box-shadow: 0 0 8px var(--color-cyan-glow-strong);
+  background: var(--accent);
   border-radius: 1px;
-  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: height var(--dur-slow) var(--ease-out);
 }
 
 .chart-bar-wrapper:hover .chart-bar-fill {
-  background: var(--text-main);
-  box-shadow: 0 0 10px var(--accent-glow);
+  background: var(--accent-hover);
 }
 
 .chart-bar-label {
@@ -291,8 +253,8 @@
 .tooltip-score {
   font-family: var(--font-display);
   font-size: var(--font-size-xs);
-  font-weight: 700;
-  color: var(--color-cyan);
+  font-weight: 600;
+  color: var(--accent);
 }
 
 .tooltip-time {
@@ -309,13 +271,11 @@
 /* --- HISTORY TABLE & EVOLUTION --- */
 
 .evo-up {
-  color: var(--color-lime);
-  text-shadow: 0 0 6px var(--color-lime-glow-strong);
+  color: var(--success);
 }
 
 .evo-down {
   color: var(--error);
-  text-shadow: 0 0 6px var(--color-error-glow-strong);
 }
 
 .evo-equal {

@@ -11,38 +11,6 @@
  */
 
 export const ACCENT_PRESETS = {
-  magenta: {
-    label: { fr: "Magenta glitch", en: "Glitch magenta" },
-    accent: "#ff5fa8",
-    hover: "#ff8cc1",
-    contrast: "#0e1116",
-    grid: "#7a3a5a",
-    rgb: "255, 95, 168",
-  },
-  cyan: {
-    label: { fr: "Cyan CRT", en: "CRT cyan" },
-    accent: "#3fd8e8",
-    hover: "#7ee6f0",
-    contrast: "#0e1116",
-    grid: "#2c6f78",
-    rgb: "63, 216, 232",
-  },
-  acid: {
-    label: { fr: "Vert acide", en: "Acid green" },
-    accent: "#b6f03c",
-    hover: "#ccf57a",
-    contrast: "#0e1116",
-    grid: "#5c7a25",
-    rgb: "182, 240, 60",
-  },
-  signal: {
-    label: { fr: "Orange signal", en: "Signal orange" },
-    accent: "#ff8a3d",
-    hover: "#ffab73",
-    contrast: "#0e1116",
-    grid: "#7a4a2a",
-    rgb: "255, 138, 61",
-  },
   bone: {
     label: { fr: "Os (sobre)", en: "Bone (sober)" },
     accent: "#e6dccb",
@@ -70,6 +38,8 @@ export const resolveAccentId = (id) => (isValidAccent(id) ? id : DEFAULT_ACCENT)
 
 let activeAccent = DEFAULT_ACCENT;
 
+export const getActiveAccent = () => activeAccent;
+
 export const setActiveAccent = (id) => {
   activeAccent = resolveAccentId(id);
   return activeAccent;
@@ -94,13 +64,21 @@ export const getAccentOverrides = (id = activeAccent) => {
   };
 };
 
-/** localStorage helpers (safe when storage is unavailable). */
+/** localStorage helpers (safe when storage is unavailable). Migrates retired presets to DEFAULT_ACCENT. */
 export const readStoredAccent = (storage, key) => {
+  let raw = null;
   try {
-    return resolveAccentId(storage?.getItem(key));
+    raw = storage?.getItem(key) ?? null;
   } catch {
     return DEFAULT_ACCENT;
   }
+  const resolved = resolveAccentId(raw);
+  if (raw !== null && raw !== resolved) {
+    try {
+      storage?.setItem(key, resolved);
+    } catch {}
+  }
+  return resolved;
 };
 
 export const persistAccent = (storage, key, id) => {

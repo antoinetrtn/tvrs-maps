@@ -23,7 +23,7 @@ const AccentPicker = ({ lang = "fr", accent, setAccent, label }) => (
           title={name}
         >
           <span className="accent-swatch-chip" aria-hidden="true" />
-          <span className="accent-swatch-label sr-only">{name}</span>
+          <span className="accent-swatch-label">{name}</span>
         </button>
       );
     })}

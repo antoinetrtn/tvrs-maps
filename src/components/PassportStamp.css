@@ -1,6 +1,6 @@
 /* Passport stamps — travel-journal rewards on the end screen. */
 
-/* Passport stamp — inked double ring, slightly rotated, lands with a thump */
+/* Passport stamp — inked double frame, slightly rotated, lands with a thump */
 .passport-stamp {
   --stamp-ink: var(--accent);
   display: inline-flex;
@@ -13,22 +13,20 @@
   outline-offset: 3px;
   font-family: var(--font-display);
   letter-spacing: 0.04em;
-  font-weight: 700;
-  transform: rotate(-6deg);
+  font-weight: 600;
+  transform: rotate(-3deg);
   opacity: 0.92;
-  animation: stamp-in 0.45s var(--ease-spring) 0.35s both;
+  animation: stamp-in var(--dur-stamp) var(--ease-spring) var(--dur-pop) both;
   pointer-events: auto;
 }
 
 .score-stamp {
   /* Opaque ink pad so the pixel numerals stay legible over the globe */
-  background: color-mix(in srgb, var(--bg-color) 82%, transparent);
-  width: 96px;
-  height: 96px;
-  border-radius: var(
-    --radius-full
-  ); /* css-rules-allow: radius-circular — circular passport stamp */
-  outline-offset: 4px;
+  background: color-mix(in srgb, var(--bg-color) 86%, transparent);
+  min-width: 96px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  outline-offset: 3px;
   gap: var(--spacing-xxs);
 }
 
@@ -51,15 +49,15 @@
 @keyframes stamp-in {
   0% {
     opacity: 0;
-    transform: rotate(-6deg) scale(1.6);
+    transform: rotate(-3deg) scale(1.4);
   }
   60% {
     opacity: 1;
-    transform: rotate(-6deg) scale(0.94);
+    transform: rotate(-3deg) scale(0.96);
   }
   100% {
     opacity: 0.92;
-    transform: rotate(-6deg) scale(1);
+    transform: rotate(-3deg) scale(1);
   }
 }
 
@@ -77,22 +75,22 @@
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
-  transform: rotate(4deg);
+  transform: rotate(3deg);
   animation-name: stamp-in-pb;
-  animation-delay: 0.6s;
+  animation-delay: var(--dur-fill);
 }
 
 @keyframes stamp-in-pb {
   0% {
     opacity: 0;
-    transform: rotate(4deg) scale(1.6);
+    transform: rotate(3deg) scale(1.4);
   }
   60% {
     opacity: 1;
-    transform: rotate(4deg) scale(0.94);
+    transform: rotate(3deg) scale(0.96);
   }
   100% {
     opacity: 0.92;
-    transform: rotate(4deg) scale(1);
+    transform: rotate(3deg) scale(1);
   }
 }

@@ -4,7 +4,7 @@ import "./PassportStamp.css";
 import { ChevronDown, ChevronUp, Trophy } from "pixelarticons/react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColor } from "../config/designSystem";
+import { getThemeRegionColorLabel } from "../config/designSystem";
 import { GAME_REGIONS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { getLevelAndProgress } from "../utils/gamification";
@@ -55,7 +55,7 @@ const EndScreen = ({
   const colors = useMemo(() => {
     const res = {};
     GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColor(globeTheme, theme, r);
+      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
     });
     return res;
   }, [globeTheme, theme]);
@@ -219,17 +219,17 @@ const EndScreen = ({
                 let trophyClass = "trophy-grey";
                 if (maxScore > 0) {
                   if (hScore >= maxScore) {
-                    trophyColor = "var(--color-gold)";
+                    trophyColor = "var(--accent)";
                     trophyClass = "trophy-gold";
                   } else if (hScore >= maxScore * 0.7) {
-                    trophyColor = "var(--color-silver)";
+                    trophyColor = "var(--text-main)";
                     trophyClass = "trophy-silver";
                   } else if (hScore >= maxScore * 0.4) {
-                    trophyColor = "var(--color-bronze)";
+                    trophyColor = "var(--text-muted)";
                     trophyClass = "trophy-bronze";
                   }
                 } else if (hScore > 0) {
-                  trophyColor = "var(--color-gold)";
+                  trophyColor = "var(--accent)";
                   trophyClass = "trophy-gold";
                 }
 

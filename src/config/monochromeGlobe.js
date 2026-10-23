@@ -72,11 +72,16 @@ export const buildMonochromePalette = (accentId) => {
   const landTarget = paper ? 0.14 : 0.09;
   const base = mixForLuminance(accent, landTarget);
   const land = REGION_LIGHTNESS.map((k) => mixHex(INK, accent, Math.min(1, base * k)));
+  // High-contrast label/gauge tones (>= 4.5:1 against dark glass panels).
+  const labelTarget = paper ? 0.52 : 0.36;
+  const labelBase = mixForLuminance(accent, labelTarget);
+  const label = REGION_LIGHTNESS.map((k) => mixHex(INK, accent, Math.min(1, labelBase * k)));
   return {
     accent,
     paper,
     ocean: mixHex(INK, accent, 0.02),
     land: Object.fromEntries(REGIONS.map((region, i) => [region, land[i]])),
+    label: Object.fromEntries(REGIONS.map((region, i) => [region, label[i]])),
     graticule: mixHex(INK, accent, mixForLuminance(accent, 0.12)),
     glow: Number.parseInt((paper ? mixHex(INK, accent, 0.7) : accent).slice(1), 16),
     rim: paper ? mixHex(INK, accent, 0.6) : accent,

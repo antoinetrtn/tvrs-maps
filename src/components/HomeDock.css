@@ -76,15 +76,15 @@
   }
 
   .home-bottom-right .widget-spot.rank-1 {
-    border-color: var(--color-gold);
+    border-color: var(--accent);
   }
 
   .home-bottom-right .widget-spot.rank-2 {
-    border-color: var(--color-silver);
+    border-color: var(--glass-border-strong);
   }
 
   .home-bottom-right .widget-spot.rank-3 {
-    border-color: var(--color-bronze);
+    border-color: var(--glass-border);
   }
 
   /* Level badge on profile button */

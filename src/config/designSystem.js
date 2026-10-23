@@ -50,7 +50,6 @@ const STYLE_TOKENS = {
     sm: "4px",
     md: "calc(var(--radius-sm) + var(--spacing-xs))",
     lg: "calc(var(--radius-md) + var(--spacing-xs) * 1.5)",
-    full: "9999px",
   },
   spacing: {
     xxs: "2px",
@@ -302,6 +301,9 @@ const GLOBE_THEMES = {
           Unknown: "#34423d",
         },
       },
+      label: {
+        dark: buildMonochromePalette("bone").label,
+      },
     },
     departments: {
       type: "monochrome",
@@ -341,7 +343,7 @@ const buildMonochromeTheme = (accentId) => {
       glitchTintA: p.glitchTintA,
       glitchTintB: p.glitchTintB,
     },
-    continents: { surface: { dark: p.land } },
+    continents: { surface: { dark: p.land }, label: { dark: p.label } },
   };
 };
 
@@ -498,7 +500,6 @@ export const getThemeCssVariables = (
     "--radius-sm": STYLE_TOKENS.radius.sm,
     "--radius-md": STYLE_TOKENS.radius.md,
     "--radius-lg": STYLE_TOKENS.radius.lg,
-    "--radius-full": STYLE_TOKENS.radius.full,
     "--spacing-xxs": STYLE_TOKENS.spacing.xxs,
     "--spacing-xs": STYLE_TOKENS.spacing.xs,
     "--spacing-sm": STYLE_TOKENS.spacing.sm,
@@ -526,23 +527,6 @@ export const getThemeCssVariables = (
     "--control-md": s(parseInt(STYLE_TOKENS.size.controlMd)),
     "--control-lg": s(parseInt(STYLE_TOKENS.size.controlLg)),
     "--island-width": s(parseInt(STYLE_TOKENS.size.islandWidth)),
-    // Neon accents: full-glow neons are unreadable on light panels, so the
-    // light theme swaps them for deep ink-compatible hues with faint glows.
-    "--color-cyan": "#00f0ff",
-    "--color-magenta": "#ff007f",
-    "--color-cyan-glow": "rgba(0, 240, 255, 0.12)",
-    "--color-magenta-glow": "rgba(255, 0, 127, 0.12)",
-    "--color-gold": "#c9a86a",
-    "--color-gold-glow": "transparent",
-    "--color-silver": "#c0c0c0",
-    "--color-silver-glow": "transparent",
-    "--color-bronze": "#cd7f32",
-    "--color-bronze-glow": "transparent",
-    "--shadow-subtle": "rgba(0, 0, 0, 0.15)",
-    "--color-cyan-glow-strong": "rgba(0, 240, 255, 0.4)",
-    "--color-lime": "#a3e635",
-    "--color-lime-glow-strong": "rgba(163, 230, 53, 0.4)",
-    "--color-error-glow-strong": "rgba(255, 69, 0, 0.4)",
     "--ui-scale": scale, // fluid calc(var(--base-foo) * var(--ui-scale))
     "--globe-flag-scale": Math.max(scale, 1.12),
   };
@@ -636,6 +620,16 @@ export const SPACE_RGB_COMPONENTS = {
     glitchCyan: [0, 255, 255],
   },
 };
+// Canvas FX (fireworks, XP orbs) and Learn selection read the live CSS tokens so they
+// follow the theme; the hex values are first-paint / test fallbacks only.
+const resolveTokenColor = (name, fallback) => {
+  if (typeof document === "undefined") return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+};
+
+export const resolveActiveAccentColor = () =>
+  resolveTokenColor("--accent", getAccentOverrides().accent);
+
 // Standardized retro TV glitch shader effect parameters and state rules
 export const GLITCH_EFFECT_SETTINGS = {
   speedTimeFactor: 28.0,
@@ -643,7 +637,9 @@ export const GLITCH_EFFECT_SETTINGS = {
   scanlineAmplitude: 5.0,
   colorSuccess: [0.176, 1.0, 0.659],
   foundGreenSurface: "#2dffa8",
-  selectionHighlight: "#2dffa8",
+  get selectionHighlight() {
+    return resolveActiveAccentColor();
+  },
   foundMountainColor: "#2dffa8",
   colorError: [1.0, 0.27, 0.0], // Orange-red
   // Extruded side walls share the cap's effect pipeline, opaque and slightly
@@ -669,16 +665,16 @@ export const GLITCH_EFFECT_SETTINGS = {
 };
 
 export const AVATAR_COLORS = {
-  cyan: "#00f0ff",
-  magenta: "#ff007f",
-  green: "#00ff88",
-  yellow: "#ffeb3b",
-  purple: "#bd00ff",
-  orange: "#ff5722",
-  blue: "#2196f3",
-  lime: "#a3e635",
-  pink: "#f472b6",
-  amber: "#fbbf24",
+  cyan: "#52b5aa",
+  magenta: "#c87a98",
+  green: "#7fa36b",
+  yellow: "#e6dccb",
+  purple: "#9b85c2",
+  orange: "#d97c54",
+  blue: "#6d9bc7",
+  lime: "#9cc285",
+  pink: "#d48fa6",
+  amber: "#d4be96",
 };
 
 const GAME_XP_COLORS = {
@@ -687,13 +683,6 @@ const GAME_XP_COLORS = {
   greenOuter: "#5f7f4f",
   yellowInner: "#52b5aa",
   yellowOuter: "#2f6f68",
-};
-
-// Canvas FX (fireworks, XP orbs) read the live CSS tokens so they follow the
-// theme; the hex values are first-paint / test fallbacks only.
-const resolveTokenColor = (name, fallback) => {
-  if (typeof document === "undefined") return fallback;
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 };
 
 export const getFireworkColors = () =>

@@ -19,8 +19,6 @@
   --success-soft: rgba(127, 163, 107, 0.14);
 
   --gold: #e6dccb;
-  --gold-soft: rgba(230, 220, 203, 0.12);
-  --gold-light: #f4eee3;
 
   --warning: #e08a3c;
   --warning-soft: rgba(224, 138, 60, 0.12);
@@ -30,7 +28,7 @@
   --highlight-soft: rgba(255, 255, 255, 0.06);
   --subtle-tint-strong: rgba(255, 255, 255, 0.16);
 
-  /* GLITCH & NEON EFFECTS */
+  /* GLITCH & SCANLINE EFFECTS */
   --glitch-magenta: rgba(255, 0, 127, 0.6);
   --glitch-magenta-soft: rgba(255, 0, 127, 0.5);
   --glitch-cyan: rgba(0, 240, 255, 0.6);
@@ -57,7 +55,6 @@
   --radius-sm: 4px;
   --radius-md: calc(var(--radius-sm) + var(--spacing-xs));
   --radius-lg: calc(var(--radius-md) + var(--spacing-xs) * 1.5);
-  --radius-full: 9999px;
 
   --spacing-xxs: 2px;
   --spacing-xs: 4px;
@@ -107,18 +104,7 @@
   --xp-yellow-outer: #6b665c;
 
   --xp-black: #000000;
-  --xp-bar-bg: #161b22;
-  --xp-bar-border-light: #3a4048;
-  --xp-bar-border-dark: #262b33;
-
   --xp-shadow-heavy: rgba(0, 0, 0, 0.8);
-  --xp-shadow-medium: rgba(0, 0, 0, 0.5);
-  --xp-shadow-light: rgba(0, 0, 0, 0.4);
-
-  --xp-green-glow: rgba(127, 163, 107, 0.25);
-  --xp-green-fill-top: #a9cc93;
-  --xp-green-fill-bottom: #5f7f4f;
-  --xp-green-fill-overlay: rgba(0, 0, 0, 0.15);
 
   --xp-error-bg: rgba(255, 69, 0, 0.1);
   --xp-error-border: rgba(255, 69, 0, 0.3);
@@ -127,10 +113,8 @@
 
   /* ELEVATION — themed shadows for floating surfaces.
      --shadow-card: carousel deck cards (dark keeps the historical opaque black
-     halo that masks the globe behind the stack).
-     --logo-halo: home logo drop-shadows separating it from the globe. */
+     shadow that masks the globe behind the stack). */
   --shadow-card: 0 12px 28px rgba(5, 7, 10, 0.7);
-  --logo-halo: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.45));
 }
 
 /* Visible keyboard focus (mouse/touch clicks keep a clean look via :focus-visible) */

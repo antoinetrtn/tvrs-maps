@@ -207,19 +207,9 @@
     padding: var(--spacing-lg);
   }
 
-  /* Atlas plate pattern consistent at bigger size (graticule 40px, rings near icon) */
+  /* Atlas plate pattern consistent at bigger size (orthogonal graticule 40px) */
   .deck-mode-card .card-plate-pattern {
     background:
-      radial-gradient(
-        circle at calc(100% - 48px) 48px,
-        transparent 0 20px,
-        color-mix(in srgb, var(--accent) 10%, transparent) 20px 21px,
-        transparent 21px 32px,
-        color-mix(in srgb, var(--accent) 7%, transparent) 32px 33px,
-        transparent 33px 44px,
-        color-mix(in srgb, var(--accent) 4%, transparent) 44px 45px,
-        transparent 45px
-      ),
       repeating-linear-gradient(
         90deg,
         color-mix(in srgb, var(--text-main) 3%, transparent) 0 1px,

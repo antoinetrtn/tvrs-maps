@@ -383,9 +383,8 @@
   color: var(--text-main);
 }
 
-/* Trophy animation & glow styles */
+/* Trophy tier styles (sober hierarchy, no glow) */
 .trophy-icon {
-  filter: drop-shadow(0 2px 4px var(--shadow-subtle));
   transition: transform var(--transition-spring);
 }
 
@@ -394,38 +393,18 @@
 }
 
 .trophy-gold {
-  animation: trophy-glow-gold 2s infinite alternate;
+  color: var(--accent);
 }
 .trophy-silver {
-  animation: trophy-glow-silver 2s infinite alternate;
+  color: var(--text-main);
 }
 .trophy-bronze {
-  animation: trophy-glow-bronze 2s infinite alternate;
+  color: var(--text-muted);
+  opacity: 0.85;
 }
-
-@keyframes trophy-glow-gold {
-  0% {
-    filter: drop-shadow(0 0 2px var(--color-gold-glow));
-  }
-  100% {
-    filter: drop-shadow(0 0 10px var(--color-gold-glow));
-  }
-}
-@keyframes trophy-glow-silver {
-  0% {
-    filter: drop-shadow(0 0 2px var(--color-silver-glow));
-  }
-  100% {
-    filter: drop-shadow(0 0 10px var(--color-silver-glow));
-  }
-}
-@keyframes trophy-glow-bronze {
-  0% {
-    filter: drop-shadow(0 0 2px var(--color-bronze-glow));
-  }
-  100% {
-    filter: drop-shadow(0 0 10px var(--color-bronze-glow));
-  }
+.trophy-grey {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
 /* Gamification End Screen XP Card */
