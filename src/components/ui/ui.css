@@ -324,11 +324,21 @@
 .ui-toast-viewport {
   position: fixed;
   left: 50%;
-  top: calc(var(--spacing-md) + env(safe-area-inset-top, 0px));
+  bottom: calc(var(--control-lg) + var(--spacing-xl) + var(--safe-bottom));
   width: min(92vw, 420px);
   z-index: var(--z-toast);
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+@media (min-width: 769px) {
+  .ui-toast-viewport {
+    left: auto;
+    right: var(--spacing-lg);
+    bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+    width: min(380px, calc(100vw - var(--spacing-lg) * 2));
+    transform: none;
+  }
 }
 
 .ui-toast {
@@ -374,7 +384,7 @@
 
 .ui-toast-title {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-main);
   line-height: 1.2;
 }
@@ -405,7 +415,7 @@
 @keyframes ui-toast-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(6px);
   }
 }
 
