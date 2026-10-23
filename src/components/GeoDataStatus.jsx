@@ -40,7 +40,7 @@ export default function GeoDataStatus({ status, onRetry, lang }) {
 
   if (status === "error") {
     return (
-      <div className="geo-status-wrapper">
+      <div className="geo-status-wrapper is-blocking">
         <ErrorState
           title={t("geo_error_title")}
           hint={t("geo_error_hint")}
