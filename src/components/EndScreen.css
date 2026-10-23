@@ -48,7 +48,7 @@
   font-size: var(--font-size-3xl);
   margin: 0;
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
@@ -354,7 +354,7 @@
 
 .history-title {
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   margin: 0 0 var(--spacing-sm) 0;
   letter-spacing: 0.05em;
@@ -378,7 +378,7 @@
 
 .history-score-value {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--font-size-base);
   color: var(--text-main);
 }
@@ -436,14 +436,14 @@
 .xp-level-title {
   font-family: var(--font-display);
   font-size: var(--font-size-lg);
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-main);
 }
 
 .xp-gain-badge {
   font-family: var(--font-display);
   font-size: var(--font-size-md);
-  font-weight: 900;
+  font-weight: 600;
   color: var(--success);
 }
 
@@ -455,7 +455,7 @@
 .end-screen-level-up-banner {
   font-family: var(--font-display);
   font-size: var(--font-size-xl);
-  font-weight: 900;
+  font-weight: 600;
   align-self: center;
   color: var(--accent);
   padding: var(--spacing-xxs) var(--spacing-sm);

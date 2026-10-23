@@ -54,7 +54,7 @@
 
 .section-label {
   font-size: var(--font-size-sm);
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.5px;
 }
@@ -191,7 +191,7 @@
   z-index: 2; /* ensure rank badge stays above the centered avatar */
   font-family: var(--font-display);
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: 600;
   width: 12px;
   height: 12px;
   border-radius: var(--radius-sm);
@@ -267,7 +267,7 @@
   color: var(--accent-contrast);
   font-family: var(--font-display);
   font-size: calc(0.62rem * var(--ui-scale, 1));
-  font-weight: 900;
+  font-weight: 600;
   padding: 1px var(--spacing-xs);
   border-radius: 0;
   border: 1px solid var(--bg-color);
@@ -337,7 +337,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(3rem, 5vw, 5rem);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 0.95;
   white-space: pre-line;
   color: var(--text-main);

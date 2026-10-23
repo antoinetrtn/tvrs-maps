@@ -6,7 +6,7 @@
 }
 
 .auth-row-btn {
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--font-size-sm);
 }
 
@@ -67,7 +67,7 @@
 }
 
 .auth-modal-submit-btn {
-  font-weight: 700;
+  font-weight: 600;
   padding: var(--spacing-ms) var(--spacing-sm);
   font-size: var(--font-size-sm);
 }

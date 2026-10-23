@@ -17,7 +17,7 @@
   display: block;
   font-size: var(--font-size-xs);
   font-family: var(--font-main);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
