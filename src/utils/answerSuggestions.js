@@ -148,9 +148,11 @@ function dedupeMatches(matches, foundSet) {
         display: item.display,
         subtext: item.subtext,
         found,
+        exact: match.tier <= 1,
       });
-    } else if (!found) {
-      deduplicated[existingIdx].found = false;
+    } else {
+      if (!found) deduplicated[existingIdx].found = false;
+      if (match.tier <= 1) deduplicated[existingIdx].exact = true;
     }
   }
 

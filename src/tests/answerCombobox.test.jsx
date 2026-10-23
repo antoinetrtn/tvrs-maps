@@ -116,12 +116,28 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     return { ...view, input, island: view.container.querySelector(".input-island") };
   };
 
-  it("Entrée sans choix dans la liste => aucune validation, texte conservé, rejet + indice", () => {
-    const { container, input, island } = typeAndEnter({ selectedCountry: "FRA" }, "France");
+  it.each(["France", "france", "FRANCE"])(
+    "nom exact '%s' + Entrée avec sélection => valide directement",
+    (text) => {
+      const { input } = typeAndEnter({ selectedCountry: "FRA" }, text);
+      fireEvent.keyDown(input, { key: "Enter" });
+      expect(onEnterMock).toHaveBeenCalledWith("France");
+      expect(input.value).toBe("");
+    }
+  );
+
+  it("nom exact + Entrée sans sélection sur le globe => rien n'est validé", () => {
+    const { input } = typeAndEnter({ selectedCountry: null }, "France");
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onEnterMock).not.toHaveBeenCalled();
+  });
+
+  it("saisie partielle + Entrée sans choix => aucune validation, texte conservé, rejet + indice", () => {
+    const { container, input, island } = typeAndEnter({ selectedCountry: "FRA" }, "Fran");
     fireEvent.keyDown(input, { key: "Enter" });
 
     expect(onEnterMock).not.toHaveBeenCalled();
-    expect(input.value).toBe("France");
+    expect(input.value).toBe("Fran");
     expect(island.classList.contains("is-rejected")).toBe(true);
     expect(container.querySelector('[aria-live="polite"]').textContent).toContain(
       "Choisis un pays dans la liste"
@@ -286,7 +302,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
   });
 
   it("Entrée répétée sans choix rejoue le shake (classe retirée puis remise)", async () => {
-    const { input, island } = typeAndEnter({ selectedCountry: "FRA" }, "France");
+    const { input, island } = typeAndEnter({ selectedCountry: "FRA" }, "Fran");
     fireEvent.keyDown(input, { key: "Enter" });
     expect(island.classList.contains("is-rejected")).toBe(true);
 

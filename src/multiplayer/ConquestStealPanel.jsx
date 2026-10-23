@@ -4,6 +4,7 @@ import Button from "../components/ui/Button.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
 import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import TextField from "../components/ui/TextField.jsx";
+import { ANSWER_INPUT_PROPS } from "../utils/answerField";
 
 /** Harder steal challenge: type the capital, or pick the right flag among four. */
 const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) => {
@@ -25,6 +26,7 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
 
   return (
     <form
+      autoComplete="off"
       className="conquest-steal"
       onSubmit={(e) => {
         e.preventDefault();
@@ -51,9 +53,7 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
           className="conquest-input"
           value={value}
           placeholder={t.stealPlaceholder}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
+          {...ANSWER_INPUT_PROPS}
           onChange={(e) => setValue(e.target.value)}
         />
       )}

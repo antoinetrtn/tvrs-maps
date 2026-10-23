@@ -8,10 +8,12 @@
  *    qu'un pays soit sélectionné sur le globe ou non.
  * 2. Aucune suggestion n'est pré-surlignée par défaut (activeIndex = -1) :
  *    Entrée n'auto-valide jamais la première suggestion par accident.
- * 3. La validation d'une réponse se fait EXCLUSIVEMENT par le choix d'une suggestion :
+ * 3. La validation d'une réponse passe toujours par une entrée de la liste :
  *    - Clic ou tap direct sur une option dans la liste.
  *    - Flèches Haut/Bas pour surligner une option, puis validation avec Entrée.
- *    Entrée sur le texte brut tapé sans suggestion surlignée ne valide JAMAIS la réponse.
+ *    - Entrée sans option surlignée : valide si la saisie correspond EXACTEMENT
+ *      (casse/accents ignorés, alias inclus) au nom d'une suggestion (ex. « france »).
+ *    Une saisie partielle non exacte ne valide jamais.
  *    Dans ce cas, un rejet visuel sobre (shake) est déclenché sans vider le texte, avec l'indice
  *    "select_on_globe_hint" si aucune sélection n'est active, sinon "pick_in_list_hint".
  * 4. Lors du choix d'une suggestion (choose) :
@@ -87,6 +89,11 @@ function handleEnterKey({
 
   if (isOpen && activeIndex >= 0 && activeIndex < suggestions.length) {
     choose(activeIndex);
+    return;
+  }
+  const exactIdx = requireSelection ? -1 : suggestions.findIndex((s) => s.exact);
+  if (exactIdx >= 0) {
+    choose(exactIdx);
   } else {
     const hint = requireSelection ? "select_on_globe_hint" : "pick_in_list_hint";
     triggerReject(hint);
