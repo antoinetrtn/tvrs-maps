@@ -41,29 +41,65 @@ export default defineConfig({
     chunkSizeWarningLimit: 1200,
     rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (!id.includes("node_modules")) return;
-          if (id.includes("/react/") || id.includes("/react-dom/")) {
-            return "vendor-react";
-          }
+        // Vite 8 / Rolldown: `manualChunks` wraps a single dynamic group with
+        // `includeDependenciesRecursively: true`, so whichever group is seen
+        // first ("vendor" / "vendor-globe") swallows `three` and `vendor-three`
+        // is never emitted. Use `codeSplitting.groups` ordered by priority from
+        // leaf libraries up to consumers so each chunk claims its own modules
+        // without circular chunk imports or duplicated `three` (`Object3D`).
+        //
+        // Note on `vendor-webgpu`: a true runtime-deferred load of `three/webgpu`
+        // and `three/tsl` (only when `globeRendererFlag` selects WebGPU) is not
+        // possible without patching `node_modules`, because `three-globe`
+        // (`dist/three-globe.mjs`) and `three-render-objects`
+        // (`dist/three-render-objects.mjs`) have top-level static imports of
+        // `three/webgpu` and `three/tsl`, and WebGPU is also the default
+        // renderer on initial mount. We isolate `three.webgpu.js` + `three.tsl.js`
+        // into a dedicated cacheable `vendor-webgpu` chunk instead.
+        chunkFileNames(chunkInfo) {
           if (
-            id.includes("/three/") ||
-            id.includes("/three-globe/") ||
-            id.includes("/three-render-objects/") ||
-            id.includes("/three-slippy-map-globe/")
+            chunkInfo.facadeModuleId &&
+            /node_modules[\\/]@supabase[\\/]/.test(chunkInfo.facadeModuleId)
           ) {
-            return "vendor-three";
+            return "assets/vendor-supabase-[hash].js";
           }
-          if (
-            id.includes("/react-globe.gl/") ||
-            id.includes("/globe.gl/") ||
-            id.includes("/kapsule/") ||
-            id.includes("/d3-") ||
-            id.includes("/h3-js/")
-          ) {
-            return "vendor-globe";
-          }
-          return "vendor";
+          return "assets/[name]-[hash].js";
+        },
+        codeSplitting: {
+          groups: [
+            {
+              name: "vendor-react",
+              test: (id) =>
+                id.includes("\0vite/preload-helper") ||
+                /node_modules[\\/](?:react|react-dom|scheduler)[\\/]/.test(id),
+              priority: 60,
+            },
+            {
+              name: "vendor-three",
+              test: (id) =>
+                /node_modules[\\/]three[\\/]/.test(id) && !/three\.(?:webgpu|tsl)/.test(id),
+              priority: 50,
+            },
+            {
+              name: "vendor-webgpu",
+              test: /node_modules[\\/]three[\\/]build[\\/]three\.(?:webgpu|tsl)/,
+              priority: 40,
+            },
+            {
+              name: "vendor",
+              test: (id) =>
+                /node_modules[\\/]/.test(id) &&
+                !/node_modules[\\/](?:@supabase|tslib|iceberg-js|base64-arraybuffer|ws|react-globe\.gl|globe\.gl|three-globe|three-render-objects|three-slippy-map-globe|three-conic-polygon-geometry|three-geojson-geometry|kapsule|float-tooltip|d3-|delaunator|robust-predicates|internmap|h3-js)[\\/]/.test(
+                  id
+                ),
+              priority: 20,
+            },
+            {
+              name: "vendor-globe",
+              test: /node_modules[\\/](?:react-globe\.gl|globe\.gl|three-globe|three-render-objects|three-slippy-map-globe|three-conic-polygon-geometry|three-geojson-geometry|kapsule|float-tooltip|d3-|delaunator|robust-predicates|internmap|h3-js)[\\/]/,
+              priority: 10,
+            },
+          ],
         },
       },
     },

@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getLeaderboard,
   getProfile,
+  getSupabase,
   getUserRecords,
   isSupabaseConfigured,
   submitLeaderboardScore,
-  supabase,
   upsertProfile,
   upsertUserRecord,
 } from "../services/supabaseClient";
@@ -147,24 +147,29 @@ export function useUserProfile() {
 
   // Listen to Supabase Auth State changes
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured) return undefined;
 
-    supabase.auth
-      .getSession()
-      .then(({ data: { session: activeSession } }) => {
-        setSession(profileSession(activeSession));
-        return;
+    let cancelled = false;
+    let subscription = null;
+
+    getSupabase()
+      .then((supabase) => {
+        if (cancelled || !supabase) return null;
+        const { data } = supabase.auth.onAuthStateChange((_event, activeSession) => {
+          if (!cancelled) setSession(profileSession(activeSession));
+        });
+        subscription = data?.subscription || null;
+        return supabase.auth.getSession();
+      })
+      .then((res) => {
+        if (!cancelled && res?.data) setSession(profileSession(res.data.session));
+        return null;
       })
       .catch(() => {});
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, activeSession) => {
-      setSession(profileSession(activeSession));
-    });
-
     return () => {
-      subscription.unsubscribe();
+      cancelled = true;
+      subscription?.unsubscribe();
     };
   }, []);
 

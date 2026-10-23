@@ -49,6 +49,9 @@ jobs:
       - name: Build Project
         run: npm run build
 
+      - name: Bundle budget (initial JS gzip)
+        run: npm run check:bundle
+
   sql:
     name: Conquest SQL tests
     runs-on: ubuntu-latest
