@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
 import { showToast } from "../components/ui/Toast.jsx";
+import { ANSWER_INPUT_PROPS } from "../utils/answerField";
 import { HudFeed, HudTopBar } from "./ConquestHudParts.jsx";
 import {
   computeStandings,
@@ -203,16 +204,14 @@ const HudAnswer = ({
         onCancel={cancelSteal}
       />
     ) : (
-      <form onSubmit={submit}>
+      <form onSubmit={submit} autoComplete="off">
         <input
           ref={inputRef}
+          {...ANSWER_INPUT_PROPS}
           className="conquest-input"
           value={answer}
           disabled={phase !== "live"}
           placeholder={t.inputPlaceholder}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
           onChange={(e) => setAnswer(e.target.value)}
         />
       </form>
