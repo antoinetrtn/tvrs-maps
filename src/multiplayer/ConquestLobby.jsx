@@ -1,6 +1,6 @@
 import "./ConquestReady.css";
 
-import { Copy, Crown, ExternalLink, Trophy, Users } from "pixelarticons/react";
+import { Copy, Crown, ExternalLink } from "pixelarticons/react";
 import React, { useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
@@ -8,10 +8,8 @@ import ErrorState from "../components/ui/ErrorState.jsx";
 import IconButton from "../components/ui/IconButton.jsx";
 import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
-import TabBar from "../components/ui/TabBar.jsx";
 import TextField from "../components/ui/TextField.jsx";
 import { showToast } from "../components/ui/Toast.jsx";
-import ConquestLeaderboard from "./ConquestLeaderboard.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
@@ -250,7 +248,6 @@ export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => 
 const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
   const t = conquestText(lang);
   const { match, players, userId, online, busy, error } = conquest;
-  const [lobbyTab, setLobbyTab] = useState("room");
   const isHost = match?.host_id === userId;
   const me = players.find((player) => player.user_id === userId);
   const allReady = players.length >= 2 && players.every((player) => player.ready);
@@ -263,40 +260,21 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
         <div className="conquest-header-row">
           <h2 className="conquest-title">{t.title}</h2>
           <div className="conquest-header-actions">
-            {onRules && <ConquestRulesButton lang={lang} onClick={onRules} />}
             {onBack && <PanelCloseButton label={t.close} onClick={onBack} />}
           </div>
         </div>
-        <p className="conquest-subtitle">{t.subtitle}</p>
+        <p className="conquest-subtitle">
+          {t.subtitle}
+          {onRules && (
+            <>
+              {" · "}
+              <ConquestRulesButton lang={lang} onClick={onRules} />
+            </>
+          )}
+        </p>
       </header>
       {!match ? (
-        <>
-          <TabBar
-            level={2}
-            label={t.title}
-            value={lobbyTab}
-            onChange={setLobbyTab}
-            options={[
-              {
-                value: "room",
-                label: t.tabRoom || t.room,
-                icon: <Users width={14} height={14} aria-hidden="true" />,
-              },
-              {
-                value: "board",
-                label: t.tabBoard || t.boardTitle,
-                icon: <Trophy width={14} height={14} aria-hidden="true" />,
-              },
-            ]}
-          />
-          {lobbyTab === "board" ? (
-            <div className="conquest-lobby-board">
-              <ConquestLeaderboard lang={lang} isSignedIn={Boolean(userId)} />
-            </div>
-          ) : (
-            <LobbyEntry t={t} busy={busy} onCreate={conquest.create} onJoin={conquest.join} />
-          )}
-        </>
+        <LobbyEntry t={t} busy={busy} onCreate={conquest.create} onJoin={conquest.join} />
       ) : (
         <>
           <SettingsSection title={t.room} hideTitle>

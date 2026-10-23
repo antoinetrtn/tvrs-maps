@@ -104,9 +104,9 @@ export const translations = {
     data_table: "Tableau des données",
     learn_mode_countries: "Pays",
     learn_mode_capitals: "Villes",
-    learn_mode_rivers_mountains: "Mont. & riv.",
-    learn_mode_departments: "Dépt.",
-    learn_mode_us_states: "États",
+    learn_mode_rivers_mountains: "Montagnes & rivières",
+    learn_mode_departments: "Départements",
+    learn_mode_us_states: "États US",
     // Focus Badge Prompts
     department_prefix: "Département {code}",
 
@@ -338,9 +338,9 @@ export const translations = {
     data_table: "Data table",
     learn_mode_countries: "Countries",
     learn_mode_capitals: "Cities",
-    learn_mode_rivers_mountains: "Peaks & rivers",
-    learn_mode_departments: "Depts.",
-    learn_mode_us_states: "States",
+    learn_mode_rivers_mountains: "Mountains & rivers",
+    learn_mode_departments: "Departments",
+    learn_mode_us_states: "US States",
     labels_montagnes: "Mountains",
 
     // Focus Badge Prompts

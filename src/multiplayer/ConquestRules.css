@@ -109,21 +109,20 @@
   }
 }
 
-.conquest-rules-open-btn {
-  gap: var(--spacing-xs);
-  min-height: var(--control-sm);
-  padding: 0 var(--spacing-sm);
+.conquest-rules-link {
+  min-height: 0;
+  padding: 0;
+  border: 0;
   background: transparent;
-  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
 
-.conquest-rules-open-btn:hover,
-.conquest-rules-open-btn:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.conquest-rules-open-btn svg {
+.conquest-rules-link:hover,
+.conquest-rules-link:focus-visible {
   color: var(--accent);
 }
 
@@ -132,9 +131,4 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--spacing-sm);
-}
-
-.conquest-header-row .conquest-rules-open-btn {
-  margin-left: auto;
-  flex-shrink: 0;
 }
