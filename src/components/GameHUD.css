@@ -551,6 +551,16 @@
   pointer-events: auto;
 }
 
+/* Timer and score share one reading scale: same display size, tabular digits. */
+.timer-pill .mini-pill-val {
+  font-size: var(--font-size-lg);
+  color: var(--text-main);
+}
+
+.timer-low .mini-pill-val {
+  color: inherit;
+}
+
 .hud-top-left .score-pill {
   margin-left: var(--spacing-sm);
 }

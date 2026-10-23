@@ -9,6 +9,12 @@
   z-index: var(--z-overlay);
 }
 
+/* Error blocks the app underneath: a scrim catches taps so "Play" can't start on a dead map. */
+.geo-status-wrapper.is-blocking {
+  pointer-events: auto;
+  background: var(--overlay-bg);
+}
+
 .geo-status-wrapper > .ui-state {
   max-width: min(320px, calc(100vw - 32px));
   padding: var(--spacing-lg);
