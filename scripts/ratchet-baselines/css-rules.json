@@ -7,7 +7,7 @@
   },
   "duration-raw": {
     "src/App.css": 1,
-    "src/components/EndScreen.css": 7,
+    "src/components/EndScreen.css": 1,
     "src/components/GameHUD.css": 4,
     "src/components/GameHUDLives.css": 1,
     "src/components/LeaderboardScreen.css": 1,

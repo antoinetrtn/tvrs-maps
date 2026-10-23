@@ -424,3 +424,43 @@
     animation: none;
   }
 }
+
+/* ---- Achievement stack ----
+   Ordered column (unlock order), max 3 cards, each one enters after the previous
+   (stepped cascade from motion.css). Mobile: top, the end screen reserves its height
+   through --achievement-stack-h. Wide desktop: top-right, outside the 600px result column. */
+.achievement-stack {
+  position: fixed;
+  top: calc(var(--spacing-md) + var(--safe-top));
+  left: 50%;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: min(92vw, 380px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+@media (min-width: 1281px) {
+  .achievement-stack {
+    width: min(380px, calc((100vw - 600px) / 2 - var(--spacing-lg) * 2));
+    top: calc(var(--spacing-lg) + var(--safe-top));
+    right: var(--spacing-lg);
+    left: auto;
+    transform: none;
+  }
+}
+
+.achievement-stack-item {
+  pointer-events: auto;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--dur-base))
+    backwards;
+}
+
+.achievement-stack-item .ui-toast {
+  animation: none;
+}

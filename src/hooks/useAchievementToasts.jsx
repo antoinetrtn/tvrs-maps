@@ -1,32 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-import InvaderAvatar from "../components/InvaderAvatar.jsx";
-import { showToast } from "../components/ui/Toast.jsx";
+/** Max achievements visible at once; the rest wait in the queue (single ordered queue). */
+export const ACHIEVEMENT_STACK_MAX = 3;
 
 /**
- * Achievement queue rendered through the single kit toast: achievements are shown one at a time
- * and the next one appears once the previous toast is dismissed (timeout, close or replaced).
+ * Achievement queue. Up to ACHIEVEMENT_STACK_MAX cards are shown at the same time, stacked in
+ * unlock order; when one is dismissed (timeout or close) the next queued one takes its place.
  */
 export default function useAchievementToasts() {
   const [queue, setQueue] = useState([]);
-  const active = queue[0] || null;
-  const shownRef = useRef(null);
+  const idRef = useRef(0);
 
-  const addAchievementToQueue = useCallback((a) => setQueue((prev) => [...prev, a]), []);
-  const closeAchievement = useCallback(() => setQueue((prev) => prev.slice(1)), []);
+  const addAchievementToQueue = useCallback((a) => {
+    idRef.current += 1;
+    const id = idRef.current;
+    setQueue((prev) => [...prev, { ...a, id }]);
+  }, []);
 
-  useEffect(() => {
-    if (!active || shownRef.current === active) return;
-    shownRef.current = active;
-    const { title, message, invaderId, color } = active;
-    showToast({
-      title,
-      message,
-      icon: <InvaderAvatar invaderId={invaderId} color={color} size={36} />,
-      duration: 4000,
-      onDismiss: closeAchievement,
-    });
-  }, [active, closeAchievement]);
+  const dismissAchievement = useCallback(
+    (id) => setQueue((prev) => prev.filter((a) => a.id !== id)),
+    []
+  );
 
-  return { addAchievementToQueue };
+  return {
+    addAchievementToQueue,
+    achievements: queue.slice(0, ACHIEVEMENT_STACK_MAX),
+    dismissAchievement,
+  };
 }
