@@ -2,6 +2,7 @@ import "./App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import AchievementStack from "./components/AchievementStack.jsx";
 import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
@@ -92,7 +93,8 @@ function App() {
   const isScreenGlitching = useScreenGlitch(currentScreen);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const { addAchievementToQueue } = useAchievementToasts();
+  const { addAchievementToQueue, achievements, dismissAchievement } = useAchievementToasts();
+  if (import.meta.env.DEV) globalThis.__TVRS_PUSH_ACHIEVEMENT__ = addAchievementToQueue;
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
@@ -498,6 +500,7 @@ function App() {
       )}
 
       <ToastViewport />
+      <AchievementStack achievements={achievements} onDismiss={dismissAchievement} />
       <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
       <AuthModal
         isOpen={showAuthModal}
