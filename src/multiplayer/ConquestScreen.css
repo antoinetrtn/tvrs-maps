@@ -72,14 +72,6 @@
   flex-shrink: 0;
 }
 
-.conquest-lobby-board {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  max-height: 280px;
-  overflow-y: auto;
-}
-
 .conquest-title {
   margin: 0;
   font-family: var(--font-display);

@@ -130,8 +130,6 @@ const PAIRS = {
   forfeitNote: ["Abandon", "Forfeit"],
   forfeitNoteFull: ["Partie terminée par abandon", "Match ended by forfeit"],
   resuming: ["Reprise de ta partie…", "Resuming your match…"],
-  tabRoom: ["Salon", "Room"],
-  tabBoard: ["Classement", "Ranking"],
   close: ["Fermer", "Close"],
   feedEmpty: ["Aucune capture pour l'instant", "No captures yet"],
 };

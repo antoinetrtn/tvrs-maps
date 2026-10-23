@@ -182,7 +182,7 @@ describe("LearnModeToggles (TabBar integration)", () => {
     const countriesTab = screen.getByRole("tab", { name: "Pays" });
     expect(countriesTab.getAttribute("aria-selected")).toBe("true");
 
-    const statesTab = screen.getByRole("tab", { name: "États" });
+    const statesTab = screen.getByRole("tab", { name: "États US" });
     fireEvent.click(statesTab);
     expect(onChange).toHaveBeenCalledWith("us_states");
   });

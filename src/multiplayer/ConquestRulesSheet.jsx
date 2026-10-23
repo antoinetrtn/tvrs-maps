@@ -61,16 +61,12 @@ const ICON_PATHS = {
   elo: "M3 4h2v17H3V4zm0 15h18v2H3v-2zm4-5h2v5H7v-5zm4-3h2v8h-2v-8zm4-3h2v11h-2V8zm4-3h2v14h-2V5z",
 };
 
-const HELP_PATH =
-  "M4 2h8v2H4V2zM2 4h2v4H2V4zm10 0h2v4h-2V4zm-2 4h2v2h-2V8zM8 10h2v2H8v-2zm0 4h2v2H8v-2z";
-
-/** « ? Règles » button used by the lobby and the in-match HUD. */
+/** Discreet « Règles » text link at the end of the lobby subtitle (no framed button). */
 export function ConquestRulesButton({ lang, onClick }) {
   const t = getConquestRulesText(lang);
   return (
-    <Button variant="secondary" size="sm" className="conquest-rules-open-btn" onClick={onClick}>
-      {makeIcon(HELP_PATH, 16)}
-      <span>{t.open}</span>
+    <Button variant="ghost" size="sm" className="conquest-rules-link" onClick={onClick}>
+      {t.open}
     </Button>
   );
 }
