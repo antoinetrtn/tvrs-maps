@@ -1,15 +1,14 @@
 /**
  * Pixel world map for the Conquest rules illustration (48 x 16 cells, one cell = one "country").
  * '.' ocean, 'f' neutral/free, 'a' captured by you in scene 2 (France / Western Europe),
- * 'o' opponent territory (kept in scene 3-5), 's' opponent territory captured in scene 3
- * and stolen by you with a stepped wipe + square shield in scene 4.
+ * 's' captured by the opponent in scene 3 and stolen by you with a stepped wipe + shield in scene 4.
  */
 export const MAP_ASCII = [
   "...............ffff.............................",
   ".....fffffffff.fffff........ffffffffffffffff....",
   "....fffffffffff.fff.....fffff.fffffffffffffff...",
-  "...fffoooofffff......ffffffffffffffffffffffff...",
-  "...fffooooffff.......faaaaffffffssssffffffff.ff.",
+  "...ffffffffffff......ffffffffffffffffffffffff...",
+  "...fffffffffff.......faaaaffffffssssffffffff.ff.",
   "....fffffffff........faaaaffffffssssffffffff.ff.",
   ".....fffffff.........faaaaffffffssssfffffff.....",
   "......fffff...........ffffffffffffffffffff......",

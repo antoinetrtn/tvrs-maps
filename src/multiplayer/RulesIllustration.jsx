@@ -22,14 +22,6 @@ const DEFAULT_LABELS = {
   captions: DEFAULT_CAPTIONS,
 };
 
-function TimerBar() {
-  return (
-    <div className="ri-timer-track" aria-hidden="true">
-      <div className="ri-timer-fill" />
-    </div>
-  );
-}
-
 function Hud({ labels }) {
   return (
     <div className="ri-hud">
@@ -48,23 +40,23 @@ function Hud({ labels }) {
             <span className="ri-delta-you-10">+10</span>
             <span className="ri-delta-you-15">+15</span>
           </span>
-          <span className="ri-win-mark" />
         </span>
+        <span className="ri-win-mark" aria-hidden="true" />
         <span className="ri-win-line" aria-hidden="true" />
       </div>
 
-      <span className="ri-score-sep" aria-hidden="true">
-        –
-      </span>
+      <div className="ri-timer-track" aria-hidden="true">
+        <div className="ri-timer-fill" />
+      </div>
 
       <div className="ri-player ri-player-adv">
         <span className="ri-score-group" aria-hidden="true">
-          <span className="ri-delta ri-delta-adv">
-            <span className="ri-delta-adv-10">+10</span>
-          </span>
           <span className="ri-score ri-score-adv">
             <span className="ri-score-adv-0">0</span>
             <span className="ri-score-adv-10">10</span>
+          </span>
+          <span className="ri-delta ri-delta-adv">
+            <span className="ri-delta-adv-10">+10</span>
           </span>
         </span>
         <span className="ri-legend-item">
@@ -85,9 +77,15 @@ function WorldMap({ paths }) {
       shapeRendering="crispEdges"
       aria-hidden="true"
     >
+      <defs>
+        <pattern id="ri-adv-pattern" width="1" height="1" patternUnits="userSpaceOnUse">
+          <rect width="1" height="1" className="ri-adv-cell-base" />
+          <rect x="0.25" y="0.25" width="0.5" height="0.5" className="ri-adv-cell-cut" />
+        </pattern>
+      </defs>
+
       <path className="ri-map-neutral" d={paths.all} />
       <path className="ri-map-you" d={paths.a} />
-      <path className="ri-map-adv" d={paths.o} />
       <path className="ri-map-steal-adv" d={paths.s} />
       <path className="ri-map-steal-you" d={paths.s} />
 
@@ -150,11 +148,10 @@ export default function RulesIllustration({ labels }) {
   const l = labels ? { ...DEFAULT_LABELS, ...labels } : DEFAULT_LABELS;
   const prefersReduced = usePrefersReducedMotion();
   const rootRef = useRef(null);
-  const [inView, setInView] = useState(() => typeof IntersectionObserver === "undefined");
+  const [inView, setInView] = useState(true);
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") {
-      setInView(true);
       return undefined;
     }
     const node = rootRef.current;
@@ -182,7 +179,6 @@ export default function RulesIllustration({ labels }) {
 
   return (
     <div ref={rootRef} className={classNames} role="img" aria-label={l.alt}>
-      <TimerBar />
       <Hud labels={l} />
       <WorldMap paths={paths} />
       <FooterBar labels={l} />

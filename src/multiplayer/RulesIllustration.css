@@ -22,11 +22,22 @@
   border: 1px solid var(--glass-border);
 }
 
-/* 1. Top timer bar */
+/* 1. Top scoreboard + 2-player legend + center timer bar */
+
+.ri-hud {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--spacing-ms);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--glass-border);
+  line-height: 1;
+}
 
 .ri-timer-track {
   width: 100%;
-  height: 2px;
+  height: 3px;
   background: var(--glass-border);
   overflow: hidden;
 }
@@ -39,23 +50,10 @@
   transform: scaleX(0.35);
 }
 
-/* 2. Top scoreboard + 2-player legend */
-
-.ri-hud {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding-bottom: var(--spacing-xxs);
-  border-bottom: 1px solid var(--glass-border);
-  line-height: 1;
-}
-
 .ri-player {
   position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--spacing-xs);
   padding-bottom: 3px;
 }
@@ -76,10 +74,12 @@
 }
 
 .ri-swatch {
+  position: relative;
   display: inline-block;
   width: 8px;
   height: 8px;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .ri-swatch-you {
@@ -88,19 +88,29 @@
 
 .ri-swatch-opponent {
   background: var(--ri-adv);
+  opacity: 0.72;
+}
+
+.ri-swatch-opponent::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background: var(--bg-color);
 }
 
 .ri-score-group {
+  position: relative;
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--spacing-xs);
+  align-items: center;
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
 }
 
 .ri-score {
   display: inline-grid;
+  width: 2.2ch;
   font-size: var(--font-size-md);
+  font-variant-numeric: tabular-nums;
 }
 
 .ri-score > span {
@@ -109,12 +119,12 @@
 
 .ri-score-you {
   color: var(--accent);
-  text-align: right;
+  text-align: left;
 }
 
 .ri-score-adv {
   color: var(--ri-adv);
-  text-align: left;
+  text-align: right;
 }
 
 /* Static base = end of scene 4 (25 – 10) */
@@ -130,12 +140,21 @@
 }
 
 .ri-delta {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
   display: inline-grid;
-  font-size: var(--font-size-xs);
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .ri-delta > span {
   grid-area: 1 / 1;
+  text-align: center;
 }
 
 .ri-delta-you {
@@ -150,12 +169,7 @@
 .ri-delta-you-15,
 .ri-delta-adv-10 {
   opacity: 0;
-}
-
-.ri-score-sep {
-  font-family: var(--font-display);
-  font-size: var(--font-size-sm);
-  color: var(--text-muted);
+  transform: translate(-50%, 0);
 }
 
 .ri-win-mark {
@@ -179,7 +193,7 @@
   opacity: 0;
 }
 
-/* 3. Pixel world map (square cells only) */
+/* 2. Pixel world map (square cells only) */
 
 .ri-map {
   display: block;
@@ -193,6 +207,15 @@
   stroke-width: 0.14;
 }
 
+.ri-adv-cell-base {
+  fill: var(--ri-adv);
+  opacity: 0.65;
+}
+
+.ri-adv-cell-cut {
+  fill: var(--bg-color);
+}
+
 .ri-map-neutral {
   fill: var(--text-muted);
   opacity: 0.22;
@@ -203,9 +226,8 @@
   opacity: 1;
 }
 
-.ri-map-adv,
 .ri-map-steal-adv {
-  fill: var(--ri-adv);
+  fill: url(#ri-adv-pattern);
   opacity: 1;
 }
 
@@ -374,7 +396,7 @@
   animation: ri-country-you var(--ri-loop) var(--steps-row) infinite;
 }
 
-.rules-illu.is-playing:not(.is-static) :where(.ri-map-adv, .ri-map-steal-adv) {
+.rules-illu.is-playing:not(.is-static) :where(.ri-map-steal-adv) {
   animation: ri-country-adv var(--ri-loop) var(--steps-row) infinite;
 }
 
@@ -821,17 +843,22 @@
   0%,
   28% {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translate(-50%, 2px);
   }
   29%,
-  36.5% {
+  32% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, -1px);
   }
-  37%,
+  33%,
+  35.5% {
+    opacity: 1;
+    transform: translate(-50%, -3px);
+  }
+  36%,
   100% {
     opacity: 0;
-    transform: translateY(0);
+    transform: translate(-50%, -4px);
   }
 }
 
@@ -839,17 +866,22 @@
   0%,
   44% {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translate(-50%, 2px);
   }
   45%,
-  55% {
+  48.5% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, -1px);
   }
-  56%,
+  49%,
+  52.5% {
+    opacity: 1;
+    transform: translate(-50%, -3px);
+  }
+  53%,
   100% {
     opacity: 0;
-    transform: translateY(0);
+    transform: translate(-50%, -4px);
   }
 }
 
@@ -857,17 +889,22 @@
   0%,
   70% {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translate(-50%, 2px);
   }
   71%,
-  79% {
+  74% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate(-50%, -1px);
   }
-  80%,
+  75%,
+  77.5% {
+    opacity: 1;
+    transform: translate(-50%, -3px);
+  }
+  78%,
   100% {
     opacity: 0;
-    transform: translateY(0);
+    transform: translate(-50%, -4px);
   }
 }
 
