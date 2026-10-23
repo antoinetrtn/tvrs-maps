@@ -32,7 +32,7 @@ function extractInitialJsAssets(indexHtml) {
       /\bhref=["']([^"']+)["']/i;
     const attrMatch = tag.match(isEntryScript || isModulePreload || /^$/);
     const rawUrl = attrMatch?.[1];
-    if (rawUrl && rawUrl.endsWith(".js")) {
+    if (rawUrl?.endsWith(".js")) {
       const cleanRel = rawUrl.replace(/^\//, "");
       if (!urls.includes(cleanRel)) {
         urls.push(cleanRel);
@@ -46,7 +46,8 @@ function formatKb(bytes) {
   return `${(bytes / 1000).toFixed(2)} kB`;
 }
 
-function checkBundleBudget(dirArg = process.argv[2] || "dist") {
+// Fixed output directory (no CLI argument: avoids path traversal).
+function checkBundleBudget(dirArg = "dist") {
   const distDir = resolveDistDir(dirArg);
   const indexHtmlPath = path.join(distDir, "index.html");
 
