@@ -13,6 +13,9 @@ describe("answer input attributes", () => {
     expect(input.getAttribute("autocorrect")).toBe("off");
     expect(input.getAttribute("autocapitalize")).toBe("off");
     expect(input.getAttribute("spellcheck")).toBe("false");
+    expect(input.getAttribute("writingsuggestions")).toBe("false");
+    expect(input.getAttribute("enterkeyhint")).toBe("done");
+    expect(input.getAttribute("data-bwignore")).toBe("true");
   });
 
   it("uses a random, non-guessable field name per session", () => {

@@ -12,6 +12,16 @@
  *   it nothing to match.
  * - autoCorrect/autoCapitalize/spellCheck off: honoured by iOS Safari and
  *   Chrome. Gboard's own predictions can still appear (keyboard-side).
+ * - writingsuggestions="false": HTML attribute (Safari 18+, Chrome 129+)
+ *   that turns off the browser/OS inline "writing suggestions" (ghost-text
+ *   completion, Apple Intelligence). Unknown to older engines (no-op).
+ * - data-*-ignore: opt out of LastPass, 1Password, Bitwarden, Dashlane.
+ *
+ * Not controllable from a web page: Gboard / Samsung Keyboard / SwiftKey
+ * suggestion strip (Chromium bug 41424366), user text shortcuts, dictation.
+ * Avoid: type="password" hack (password managers, a11y), type="search"
+ * (iOS inline predictions persist), type="url"/"email" (wrong layout),
+ * autocomplete="one-time-code" (SMS code bar / OTP autofill).
  */
 const randomSuffix = () => {
   const bytes = new Uint8Array(6);
@@ -30,7 +40,10 @@ export const ANSWER_INPUT_PROPS = Object.freeze({
   autoCorrect: "off",
   autoCapitalize: "off",
   spellCheck: false,
+  writingsuggestions: "false",
   "data-lpignore": "true",
   "data-1p-ignore": "true",
   "data-form-type": "other",
+  "data-bwignore": "true",
+  "data-dashlane-ignore": "true",
 });
