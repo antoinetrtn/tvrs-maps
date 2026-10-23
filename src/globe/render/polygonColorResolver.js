@@ -146,6 +146,24 @@ export function shouldUseRegionalUnfoundLand({ isEndScreen, isFound, isSelected 
   return !isEndScreen && !isFound && !isSelected;
 }
 
+const END_MISSED_ERROR_TINT = {
+  light: 0.16,
+  dark: 0.2,
+};
+
+/**
+ * End screen: missed countries stay on a quiet, flat land surface with a
+ * subtle warm tint instead of running the TV static shader across the globe.
+ */
+export function resolveEndMissedColor({ mapBase, UI_COLORS, lerpColor, isLight = false }) {
+  const base = mapBase || UI_COLORS?.mapBase;
+  if (!UI_COLORS?.error || typeof lerpColor !== "function") {
+    return base;
+  }
+  const amount = isLight ? END_MISSED_ERROR_TINT.light : END_MISSED_ERROR_TINT.dark;
+  return lerpColor(base, UI_COLORS.error, amount);
+}
+
 export function resolveCountryCapColor({
   admin,
   region: _region,
@@ -167,7 +185,12 @@ export function resolveCountryCapColor({
 
   if (isEndScreen) {
     if (isFound) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-    return UI_COLORS.error;
+    return resolveEndMissedColor({
+      mapBase,
+      UI_COLORS,
+      lerpColor: _lerpColor,
+      isLight: _isLight,
+    });
   }
 
   if (isLearn) {
@@ -209,14 +232,13 @@ export function resolvePolygonShaderMode({
   const isFound = foundSet.has(admin);
   const isLearn = mode === "learn";
   const isPlay = !isLearn && !isHomeScreen && !isEndScreen;
-  const isEndMissed = isEndScreen && !isFound;
   const playSelectedShader = isPlay && isIsolated && (isError || isSuccess || !isFound);
   const homeSelectedShader = isHomeScreen && isIsolated;
-  const isPrevShader = isPrevTransitioning && !isFound;
+  const isPrevShader = !isEndScreen && isPrevTransitioning && !isFound;
 
   const useShader =
     (kind === "cap" || kind === "side") &&
-    (playSelectedShader || homeSelectedShader || isPrevShader || isEndMissed);
+    (playSelectedShader || homeSelectedShader || isPrevShader);
 
   return {
     useShader,
@@ -400,7 +422,16 @@ export function resolveRestingColorForFeature({
   lerpColor,
 }) {
   if (isEndScreen) {
-    const base = isFound ? (isPerfectScore ? UI_COLORS.gold : UI_COLORS.success) : UI_COLORS.error;
+    const base = isFound
+      ? isPerfectScore
+        ? UI_COLORS.gold
+        : UI_COLORS.success
+      : resolveEndMissedColor({
+          mapBase: UI_COLORS.mapBase,
+          UI_COLORS,
+          lerpColor,
+          isLight,
+        });
     if (kind === "cap") {
       return base;
     }

@@ -81,7 +81,6 @@ export function useGlobeAnimationLoop({
   const selectedCountryRef = useRef(null);
   const isErrorRef = useRef(false);
   const isSuccessRef = useRef(false);
-  const isEndScreenRef = useRef(false);
 
   const kickLoop = () => {
     if (animFrameIdRef.current == null && sceneWaitTimeoutRef.current == null) {
@@ -92,7 +91,6 @@ export function useGlobeAnimationLoop({
   selectedCountryRef.current = selectedCountry;
   isErrorRef.current = isError;
   isSuccessRef.current = isSuccess;
-  isEndScreenRef.current = isEndScreen;
 
   useEffect(() => {
     needsGraticuleStyleRef.current = true;
@@ -132,7 +130,6 @@ export function useGlobeAnimationLoop({
       const imperativeFeedback = globeFeedbackRef?.current;
       const currentIsError = isErrorRef.current || Boolean(imperativeFeedback?.isError);
       const currentIsSuccess = isSuccessRef.current || Boolean(imperativeFeedback?.isSuccess);
-      const currentIsEndScreen = isEndScreenRef.current;
 
       const isUrgentAnim =
         currentIsError ||
@@ -182,8 +179,7 @@ export function useGlobeAnimationLoop({
       const hasAnimatedShaders = getAnimatedPolygonMaterialCount() > 0;
       const needsSharedTime =
         hasAnimatedShaders &&
-        (currentIsEndScreen ||
-          currentIsError ||
+        (currentIsError ||
           currentIsSuccess ||
           Boolean(transitioningPreviousCountryRef?.current) ||
           selectedHasShader);
@@ -329,8 +325,7 @@ export function useGlobeAnimationLoop({
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;
               if (shader.uniforms.uFadeProgress) {
-                const isMissedOnEnd = currentIsEndScreen && !foundSet.has(prevCountry);
-                shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : 1.0;
+                shader.uniforms.uFadeProgress.value = 1.0;
               }
             }
           });
@@ -356,8 +351,7 @@ export function useGlobeAnimationLoop({
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;
               if (shader.uniforms.uFadeProgress) {
-                const isMissedOnEnd = currentIsEndScreen && !foundSet.has(prevCountry);
-                shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : fadeProgress;
+                shader.uniforms.uFadeProgress.value = fadeProgress;
               }
               if (shader.uniforms.uSelectInTransition) {
                 shader.uniforms.uSelectInTransition.value = 0.0;

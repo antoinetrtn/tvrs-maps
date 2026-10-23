@@ -3,6 +3,7 @@ import "./XpOrbsAnimation.css";
 import React, { useEffect, useRef } from "react";
 
 import { getXpOrbColors } from "../config/designSystem";
+import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
 
 const XpOrbsAnimation = ({
   sourceRef,
@@ -13,15 +14,23 @@ const XpOrbsAnimation = ({
   active = true,
 }) => {
   const canvasRef = useRef(null);
+  const reducedMotion = usePrefersReducedMotion();
+  const onOrbCollectRef = useRef(onOrbCollect);
+  const onCompleteRef = useRef(onComplete);
+  onOrbCollectRef.current = onOrbCollect;
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    if (!active || !sourceRef?.current || !targetRef?.current) return;
+    if (!active) return undefined;
+    if (reducedMotion) {
+      if (onCompleteRef.current) onCompleteRef.current();
+      return undefined;
+    }
+    if (!sourceRef?.current || !targetRef?.current) return undefined;
 
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const ctx = canvas?.getContext("2d");
+    if (!ctx) return undefined;
 
     const orbColors = getXpOrbColors(); // live --xp-* tokens
 
@@ -89,7 +98,7 @@ const XpOrbsAnimation = ({
         if (this.progress >= 1) {
           this.progress = 1;
           this.collected = true;
-          if (onOrbCollect) onOrbCollect();
+          if (onOrbCollectRef.current) onOrbCollectRef.current();
           return;
         }
 
@@ -153,7 +162,7 @@ const XpOrbsAnimation = ({
       });
 
       if (allCollected) {
-        if (onComplete) onComplete();
+        if (onCompleteRef.current) onCompleteRef.current();
       } else {
         animationFrameId = requestAnimationFrame(tick);
       }
@@ -165,7 +174,9 @@ const XpOrbsAnimation = ({
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", resizeCanvas);
     };
-  }, [active, sourceRef, targetRef, count, onOrbCollect, onComplete]);
+  }, [active, reducedMotion, sourceRef, targetRef, count]);
+
+  if (reducedMotion) return null;
 
   return <canvas ref={canvasRef} className="xp-orbs-canvas" />;
 };

@@ -29,6 +29,7 @@ import {
   isSameAdmin,
   mutedFoundGreen,
   resolveCountryCapColor,
+  resolveEndMissedColor,
   resolveFoundCountryColor,
   resolveFoundCountryStroke,
   resolveGhostVeil,
@@ -159,7 +160,13 @@ export function useGlobePolygons({
         const admin = getFeatureAdmin(d);
         if (d.isGhostCountry)
           return getGhostWorldColor(countryDataMap[admin]?.region || "Americas");
-        if (isEndScreen && !foundSet.has(admin)) return UI_COLORS.error;
+        if (isEndScreen && !foundSet.has(admin))
+          return resolveEndMissedColor({
+            mapBase: UI_COLORS.mapBase,
+            UI_COLORS,
+            lerpColor,
+            isLight,
+          });
 
         const isDeptFound = foundSet.has(admin);
         const isDeptSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
@@ -437,31 +444,22 @@ export function useGlobePolygons({
         return getRegionalLandColor(region);
       }
 
-      let baseColor;
-      if (isEndScreen) {
-        baseColor = isFound
-          ? isPerfectScore
-            ? UI_COLORS.gold
-            : UI_COLORS.success
-          : UI_COLORS.error;
-      } else {
-        baseColor = resolveCountryCapColor({
-          admin,
-          region,
-          mode,
-          foundSet,
-          selectedCountry,
-          isError,
-          isSuccess,
-          isEndScreen,
-          isPerfectScore,
-          isLearn: mode === "learn",
-          isLight,
-          UI_COLORS,
-          lerpColor,
-          mapBase: UI_COLORS.mapBase,
-        });
-      }
+      const baseColor = resolveCountryCapColor({
+        admin,
+        region,
+        mode,
+        foundSet,
+        selectedCountry,
+        isError,
+        isSuccess,
+        isEndScreen,
+        isPerfectScore,
+        isLearn: mode === "learn",
+        isLight,
+        UI_COLORS,
+        lerpColor,
+        mapBase: UI_COLORS.mapBase,
+      });
 
       const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
       if (kind === "side") {
