@@ -30,10 +30,9 @@ afterEach(() => {
 });
 
 describe("accent presets", () => {
-  it("offers 5-6 presets with a non-teal default", () => {
+  it("offers only bone (default) and teal", () => {
     const ids = Object.keys(ACCENT_PRESETS);
-    expect(ids.length).toBeGreaterThanOrEqual(5);
-    expect(ids.length).toBeLessThanOrEqual(6);
+    expect(ids.sort()).toEqual(["bone", "teal"]);
     expect(DEFAULT_ACCENT).not.toBe("teal");
     expect(isValidAccent(DEFAULT_ACCENT)).toBe(true);
   });
@@ -57,7 +56,8 @@ describe("accent presets", () => {
   it("falls back to the default for unknown ids", () => {
     expect(resolveAccentId("nope")).toBe(DEFAULT_ACCENT);
     expect(resolveAccentId(null)).toBe(DEFAULT_ACCENT);
-    expect(resolveAccentId("cyan")).toBe("cyan");
+    expect(resolveAccentId("cyan")).toBe(DEFAULT_ACCENT);
+    expect(resolveAccentId("teal")).toBe("teal");
   });
 });
 
@@ -66,18 +66,19 @@ describe("accent persistence", () => {
     expect(readStoredAccent(localStorage, KEY)).toBe("bone");
   });
 
-  it("preserves previously saved magenta and cyan for existing users", () => {
-    localStorage.setItem(KEY, "magenta");
-    expect(readStoredAccent(localStorage, KEY)).toBe("magenta");
-
-    localStorage.setItem(KEY, "cyan");
-    expect(readStoredAccent(localStorage, KEY)).toBe("cyan");
-  });
+  it.each(["magenta", "cyan", "acid", "signal"])(
+    "migrates the retired %s preset to bone and rewrites storage",
+    (retired) => {
+      localStorage.setItem(KEY, retired);
+      expect(readStoredAccent(localStorage, KEY)).toBe("bone");
+      expect(localStorage.getItem(KEY)).toBe("bone");
+    }
+  );
 
   it("persists and reads back a valid accent", () => {
-    expect(persistAccent(localStorage, KEY, "acid")).toBe("acid");
-    expect(localStorage.getItem(KEY)).toBe("acid");
-    expect(readStoredAccent(localStorage, KEY)).toBe("acid");
+    expect(persistAccent(localStorage, KEY, "teal")).toBe("teal");
+    expect(localStorage.getItem(KEY)).toBe("teal");
+    expect(readStoredAccent(localStorage, KEY)).toBe("teal");
   });
 
   it("ignores corrupted stored values", () => {
@@ -95,31 +96,31 @@ describe("accent persistence", () => {
       },
     };
     expect(readStoredAccent(broken, KEY)).toBe(DEFAULT_ACCENT);
-    expect(persistAccent(broken, KEY, "signal")).toBe("signal");
+    expect(persistAccent(broken, KEY, "teal")).toBe("teal");
   });
 });
 
 describe("accent tokens", () => {
   it("drives CSS variables (button, focus, stamps, xp)", () => {
-    setActiveAccent("signal");
+    setActiveAccent("teal");
     const vars = getThemeCssVariables("dark", "monochrome");
-    expect(vars["--accent"]).toBe(ACCENT_PRESETS.signal.accent);
-    expect(vars["--accent-hover"]).toBe(ACCENT_PRESETS.signal.hover);
-    expect(vars["--accent-contrast"]).toBe(ACCENT_PRESETS.signal.contrast);
-    expect(vars["--xp-yellow-inner"]).toBe(ACCENT_PRESETS.signal.accent);
+    expect(vars["--accent"]).toBe(ACCENT_PRESETS.teal.accent);
+    expect(vars["--accent-hover"]).toBe(ACCENT_PRESETS.teal.hover);
+    expect(vars["--accent-contrast"]).toBe(ACCENT_PRESETS.teal.contrast);
+    expect(vars["--xp-yellow-inner"]).toBe(ACCENT_PRESETS.teal.accent);
   });
 
   it("drives globe colours (selection ring, grid)", () => {
-    setActiveAccent("cyan");
+    setActiveAccent("teal");
     const colors = getThemeColors("monochrome", "dark");
-    expect(colors.selectionRingColor).toBe(ACCENT_PRESETS.cyan.accent);
-    expect(colors.graticule).toBe(ACCENT_PRESETS.cyan.grid);
-    expect(colors.gridDot).toContain(ACCENT_PRESETS.cyan.rgb);
+    expect(colors.selectionRingColor).toBe(ACCENT_PRESETS.teal.accent);
+    expect(colors.graticule).toBe(ACCENT_PRESETS.teal.grid);
+    expect(colors.gridDot).toContain(ACCENT_PRESETS.teal.rgb);
   });
 
   it("overrides contain no gold/yellow", () => {
-    const o = getAccentOverrides("magenta");
-    expect(o.gold).toBe(ACCENT_PRESETS.magenta.accent);
+    const o = getAccentOverrides("teal");
+    expect(o.gold).toBe(ACCENT_PRESETS.teal.accent);
   });
 
   it("resolves monochrome@bone accent to bone preset accent", () => {

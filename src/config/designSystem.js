@@ -627,8 +627,7 @@ const resolveTokenColor = (name, fallback) => {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 };
 
-export const resolveActiveAccentColor = () =>
-  resolveTokenColor("--accent", getAccentOverrides().accent);
+const resolveActiveAccentColor = () => resolveTokenColor("--accent", getAccentOverrides().accent);
 
 // Standardized retro TV glitch shader effect parameters and state rules
 export const GLITCH_EFFECT_SETTINGS = {

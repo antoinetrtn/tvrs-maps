@@ -38,8 +38,6 @@ export const resolveAccentId = (id) => (isValidAccent(id) ? id : DEFAULT_ACCENT)
 
 let activeAccent = DEFAULT_ACCENT;
 
-export const getActiveAccent = () => activeAccent;
-
 export const setActiveAccent = (id) => {
   activeAccent = resolveAccentId(id);
   return activeAccent;
