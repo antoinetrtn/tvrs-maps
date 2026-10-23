@@ -263,14 +263,14 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       );
 
       act(() => {
-        setActiveAccent("magenta");
+        setActiveAccent("teal");
       });
-      const { result: magentaRes } = renderPolygons({
+      const { result: accentRes } = renderPolygons({
         globeTheme: "monochrome",
         selectedCountry: "France",
       });
-      expect(summarizeFeatureOutput(magentaRes.current, FEATURE_FRANCE).stroke).toBe(
-        ACCENT_PRESETS.magenta.accent
+      expect(summarizeFeatureOutput(accentRes.current, FEATURE_FRANCE).stroke).toBe(
+        ACCENT_PRESETS.teal.accent
       );
 
       // CHARACTERIZATION: current behavior — globeTheme="default" is not in GLOBE_THEMES, so
