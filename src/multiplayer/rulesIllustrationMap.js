@@ -1,43 +1,42 @@
 /**
- * Pixel world map for the rules illustration (48 x 20 cells, one cell = one "country").
- * '.' ocean, 'f' free, 'a' yours, 'o' opponent, 's' yours + shielded, 'n' the country that
- * gets captured in the loop (free at the start of the loop, yours afterwards).
+ * Pixel world map for the Conquest rules illustration (48 x 16 cells, one cell = one "country").
+ * '.' ocean, 'f' neutral/free, 'a' captured by you in scene 2 (France / Western Europe),
+ * 'o' opponent territory (kept in scene 3-5), 's' opponent territory captured in scene 3
+ * and stolen by you with a stepped wipe + square shield in scene 4.
  */
 export const MAP_ASCII = [
   "...............ffff.............................",
-  ".....fffffffff.fffff........ffffooooooooofff....",
-  "....fffffffffff.fff.....fffff.ffoooooooooffff...",
-  "...aaaffssfffff......faaaffffffffffffffffffff...",
-  "...aaaffssffff.......faaaffffffffffffaaaaaff.ff.",
-  "....aafffffff..........aaffffffffffffaaaaaff.ff.",
-  ".....fffffff...........ffffffffffffffaaaaaf.....",
-  "......fffff...........nnnfffffffffffffffff......",
-  "........fff..........fnnnfffffffffoooffff.......",
-  ".........fff.........fnnnffffffff.ooo...........",
-  "...........fffff......ffoooooofff..oo.ffff......",
-  "..........fffaaaa......fooooooff.......fffff....",
-  "..........fffaaaaf......oooooof.................",
-  "...........ffaaaaf......ffffff..........ffffff..",
-  "............ffffff.......aaaaf.f.......foooooof.",
-  "............oooff........aaaa..........foooooof.",
-  "............ooof..........aaa...........oooooo..",
-  "............ooo..........................ffff...",
-  "............oo..................................",
-  "............ff..................................",
+  ".....fffffffff.fffff........ffffffffffffffff....",
+  "....fffffffffff.fff.....fffff.fffffffffffffff...",
+  "...fffoooofffff......ffffffffffffffffffffffff...",
+  "...fffooooffff.......faaaaffffffssssffffffff.ff.",
+  "....fffffffff........faaaaffffffssssffffffff.ff.",
+  ".....fffffff.........faaaaffffffssssfffffff.....",
+  "......fffff...........ffffffffffffffffffff......",
+  "........fff..........ffffffffffffff.fffff.......",
+  ".........fff.........fffffffffffff..fff.........",
+  "...........fffff......ffffffffffff...fffff......",
+  "..........ffffffff.....fffffffff.......fffff....",
+  "..........fffffffff.....fffffff.................",
+  "...........ffffffff.....ffffff..........ffffff..",
+  "............ffffff.......fffff.f.......ffffffff.",
+  "............ffff..........fff...........ffffff..",
 ];
 
 export const MAP_COLS = 48;
 export const MAP_ROWS = MAP_ASCII.length;
 
-/** One path per map letter: every land cell is its own 1x1 subpath (the stroke separates them). */
+/** One path per map letter plus `all` for the full neutral base layer. */
 export function buildLetterPaths(map = MAP_ASCII) {
-  const paths = { a: "", o: "", f: "", s: "", n: "" };
+  const paths = { all: "", f: "", a: "", o: "", s: "" };
   for (let r = 0; r < map.length; r += 1) {
     const row = map[r];
     for (let c = 0; c < row.length; c += 1) {
       const ch = row[c];
       if (paths[ch] !== undefined) {
-        paths[ch] += `M${c} ${r}h1v1h-1z`;
+        const cell = `M${c} ${r}h1v1h-1z`;
+        paths[ch] += cell;
+        paths.all += cell;
       }
     }
   }

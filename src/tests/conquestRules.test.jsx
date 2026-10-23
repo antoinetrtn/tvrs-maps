@@ -162,7 +162,7 @@ describe("RulesIllustration", () => {
     const illustration = illustrations[0];
     expect(illustration.getAttribute("role")).toBe("img");
     expect(illustration.getAttribute("aria-label")).toContain("Conquête");
-    expect(illustration.querySelectorAll(".ri-legend-item")).toHaveLength(4);
+    expect(illustration.querySelectorAll(".ri-legend-item")).toHaveLength(2);
 
     const grid = document.querySelector(".conquest-rules-grid");
     expect(

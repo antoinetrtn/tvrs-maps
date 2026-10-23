@@ -8,11 +8,18 @@ const RULES = {
     close: "Fermer les règles",
     open: "Règles",
     illustration: {
-      alt: "Aperçu d'une partie de Conquête : deux joueurs se disputent les pays d'une carte du monde.",
-      you: "Toi",
-      opponent: "Adversaire",
-      free: "Libre",
-      shielded: "Protégé",
+      alt: "Déroulement d'un match de Conquête 1v1 : sélection et capture d'un pays (+10), tour adverse (+10), vol par défi avec bouclier (+15) et victoire 25 à 10 à la fin du chrono.",
+      you: "TOI",
+      opponent: "ADV",
+      country: "France",
+      captions: {
+        select: "Sélectionne",
+        name: "Nomme",
+        captured: "Capturé +10",
+        opponent: "Tour adverse",
+        steal: "Vole +15",
+        end: "Fin du chrono",
+      },
     },
     sections: [
       [
@@ -55,11 +62,18 @@ const RULES = {
     close: "Close rules",
     open: "Rules",
     illustration: {
-      alt: "Overview of a Conquest match: two players fight over the countries of a world map.",
-      you: "You",
-      opponent: "Opponent",
-      free: "Free",
-      shielded: "Shielded",
+      alt: "How a 1v1 Conquest match unfolds: select and capture a country (+10), opponent turn (+10), steal via quiz with shield (+15), and 25 to 10 victory when the timer runs out.",
+      you: "YOU",
+      opponent: "OPP",
+      country: "France",
+      captions: {
+        select: "Select",
+        name: "Name it",
+        captured: "Captured +10",
+        opponent: "Opponent turn",
+        steal: "Steal +15",
+        end: "Time up",
+      },
     },
     sections: [
       [
