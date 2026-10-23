@@ -124,14 +124,7 @@ const ConquestEnd = ({ lang, conquest, onExit }) => {
 
   return (
     <div className="conquest-panel conquest-surface conquest-end px-cascade">
-      <EndHeader
-        winner={winner}
-        userId={userId}
-        t={t}
-        result={result}
-        elo={elo}
-        onExit={onExit}
-      />
+      <EndHeader winner={winner} userId={userId} t={t} result={result} elo={elo} onExit={onExit} />
       <EndBoard standings={standings} userId={userId} t={t} />
       <p className="conquest-hint">{t.rematchHint}</p>
       <Button variant="primary" block onClick={onExit} aria-label={t.back} title={t.back}>
