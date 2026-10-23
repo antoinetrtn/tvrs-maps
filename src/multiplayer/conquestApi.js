@@ -1,7 +1,8 @@
-import { supabase } from "../services/supabaseClient";
+import { getSupabase } from "../services/supabaseClient";
 
 /** Returns the current auth user id, signing in anonymously for guests. */
 export async function ensureConquestUser() {
+  const supabase = await getSupabase();
   const { data } = await supabase.auth.getSession();
   if (data?.session?.user?.id) return data.session.user.id;
   const { data: anon, error } = await supabase.auth.signInAnonymously();
@@ -11,11 +12,13 @@ export async function ensureConquestUser() {
 
 /** Current auth user id without creating an anonymous account (resume path). */
 export async function getExistingConquestUser() {
+  const supabase = await getSupabase();
   const { data } = await supabase.auth.getSession();
   return data?.session?.user?.id || null;
 }
 
 async function rpc(name, params) {
+  const supabase = await getSupabase();
   const { data, error } = await supabase.rpc(name, params);
   if (error) throw error;
   return data;
@@ -69,21 +72,41 @@ export const getConquestState = (matchId) => rpc("conquest_get_state", { p_match
  * tell the other players to resync after any validated server write.
  */
 export function openConquestChannel(code, userId, { onSync, onPresence, onStatus, onCursor }) {
-  const channel = supabase.channel(`conquest:${code}`, {
-    config: { presence: { key: userId }, broadcast: { self: false } },
-  });
-  channel
-    .on("broadcast", { event: "sync" }, (message) => onSync(message?.payload || {}))
-    .on("presence", { event: "sync" }, () => onPresence(Object.keys(channel.presenceState())))
-    // Spatial cursors: ephemeral camera positions, never persisted.
-    .on("broadcast", { event: "cursor" }, (message) => onCursor?.(message?.payload || {}))
-    .subscribe((status) => {
-      onStatus?.(status);
-      if (status === "SUBSCRIBED") channel.track({ online_at: new Date().toISOString() });
-    });
+  let activeClient = null;
+  let channel = null;
+  let closed = false;
+
+  const ready = getSupabase()
+    .then((supabase) => {
+      if (closed || !supabase) return null;
+      activeClient = supabase;
+      channel = supabase.channel(`conquest:${code}`, {
+        config: { presence: { key: userId }, broadcast: { self: false } },
+      });
+      channel
+        .on("broadcast", { event: "sync" }, (message) => onSync(message?.payload || {}))
+        .on("presence", { event: "sync" }, () => onPresence(Object.keys(channel.presenceState())))
+        // Spatial cursors: ephemeral camera positions, never persisted.
+        .on("broadcast", { event: "cursor" }, (message) => onCursor?.(message?.payload || {}))
+        .subscribe((status) => {
+          onStatus?.(status);
+          if (status === "SUBSCRIBED") channel.track({ online_at: new Date().toISOString() });
+        });
+      return channel;
+    })
+    .catch(() => null);
+
+  const send = (event, payload) =>
+    channel
+      ? channel.send({ type: "broadcast", event, payload })
+      : ready.then((ch) => ch?.send({ type: "broadcast", event, payload }));
+
   return {
-    notify: (payload = {}) => channel.send({ type: "broadcast", event: "sync", payload }),
-    sendCursor: (payload) => channel.send({ type: "broadcast", event: "cursor", payload }),
-    close: () => supabase.removeChannel(channel),
+    notify: (payload = {}) => send("sync", payload),
+    sendCursor: (payload) => send("cursor", payload),
+    close: () => {
+      closed = true;
+      if (activeClient && channel) activeClient.removeChannel(channel);
+    },
   };
 }

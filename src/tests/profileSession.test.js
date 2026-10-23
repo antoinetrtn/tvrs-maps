@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../services/supabaseClient", () => ({ isSupabaseConfigured: false, supabase: null }));
+vi.mock("../services/supabaseClient", () => ({
+  isSupabaseConfigured: false,
+  getSupabase: () => Promise.resolve(null),
+}));
 
 import { profileSession } from "../hooks/useUserProfile";
 

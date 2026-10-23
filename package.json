@@ -31,7 +31,8 @@
     "supabase:link": "npx supabase link --project-ref tehmjpgghrqjmdfakiic",
     "supabase:pull": "npx supabase db pull",
     "supabase:push": "npx supabase db push",
-    "supabase:migration": "npx supabase migration new"
+    "supabase:migration": "npx supabase migration new",
+    "check:bundle": "node scripts/check-bundle-budget.mjs dist"
   },
   "keywords": [],
   "author": "",
