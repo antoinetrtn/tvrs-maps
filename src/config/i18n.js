@@ -70,14 +70,12 @@ export const translations = {
     theme_light_blackout_hint: "Indisponible avec le globe Monochrome",
     interface_scale: "Taille de l'interface",
     scale_auto: "Auto",
-
     // Game HUD Placeholders
     search_placeholder: "Rechercher...",
     answer_placeholder: "Votre réponse...",
     to_guess: "À deviner !",
     preview_capital: "Capitale :",
     preview_region: "Région :",
-
     // Game HUD Controls & Tooltips
     home: "Accueil",
     return_home: "Retour à l'accueil",
@@ -92,7 +90,6 @@ export const translations = {
     pick_in_list_hint: "Choisis un pays dans la liste",
     answer_placeholder_select: "Sélectionne sur le globe",
     suggestion_found: "trouvé",
-
     // Learn Toggles
     show_country_labels: "Afficher les labels des pays",
     labels_pays: "Labels pays",
@@ -110,7 +107,6 @@ export const translations = {
     learn_mode_rivers_mountains: "Mont. & riv.",
     learn_mode_departments: "Dépt.",
     learn_mode_us_states: "États",
-
     // Focus Badge Prompts
     department_prefix: "Département {code}",
 

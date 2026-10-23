@@ -7,7 +7,7 @@
  */
 
 export const PLAY_MODES = ["countries", "capitals", "departments", "us_states", "rivers_mountains"];
-export const LEARN_SUB_MODES = PLAY_MODES;
+const LEARN_SUB_MODES = PLAY_MODES;
 export const DEFAULT_LEARN_SUB_MODE = "countries";
 
 const GAME_MODES_CONFIG = {
