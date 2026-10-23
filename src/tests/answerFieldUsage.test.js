@@ -21,9 +21,13 @@ describe("champs de saisie de pays", () => {
       autoCorrect: "off",
       autoCapitalize: "off",
       spellCheck: false,
+      writingsuggestions: "false",
+      enterKeyHint: "done",
       "data-lpignore": "true",
       "data-1p-ignore": "true",
       "data-form-type": "other",
+      "data-bwignore": "true",
+      "data-dashlane-ignore": "true",
     });
   });
 
@@ -31,5 +35,9 @@ describe("champs de saisie de pays", () => {
     const src = readFileSync(file, "utf8");
     expect(src).toContain("{...ANSWER_INPUT_PROPS}");
     expect(src).not.toMatch(/autoComplete="(on|one-time-code|cc-|new-password)/);
+    // Rien ne doit réactiver correcteur / suggestions / majuscule après le spread.
+    expect(src).not.toMatch(
+      /(autoCorrect|autoCapitalize)="on"|spellCheck(=\{true\}|="true")|type="(search|password|url|email)"/
+    );
   });
 });
