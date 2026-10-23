@@ -1,23 +1,32 @@
 /** Section order (icons are keyed by id in ConquestRulesSheet). */
 const SECTION_IDS = ["match", "capture", "shield", "steal", "failedSteal", "bonus", "end", "elo"];
 
+/** Video beats of the rules clip, in playback order (see RulesIllustration). */
+const BEAT_KEYS = ["capture", "opponent", "steal", "end"];
+
+const illustration = (alt, [you, opponent], beats) => ({
+  alt,
+  you,
+  opponent,
+  captions: Object.fromEntries(BEAT_KEYS.map((key, i) => [key, beats[i]])),
+});
+
 const RULES = {
   fr: {
     title: "Règles de Conquête",
     subtitle: "Guide rapide du mode 1v1",
     close: "Fermer les règles",
     open: "Règles",
-    illustration: {
-      alt: "Extrait d'une partie de Conquête 1v1 sur le globe : tu nommes le Brésil et le captures, l'adversaire prend le Canada, tu le lui voles en trouvant son drapeau.",
-      you: "Toi",
-      opponent: "Adversaire",
-      captions: {
-        capture: "Nomme un pays libre · +10",
-        opponent: "Tour adverse",
-        steal: "Vole-le : trouve le drapeau · +15",
-        end: "Le plus de points à la fin gagne",
-      },
-    },
+    illustration: illustration(
+      "Extrait d'une partie de Conquête 1v1 sur le globe : tu nommes le Brésil et le captures, l'adversaire prend le Canada, tu le lui voles en trouvant son drapeau.",
+      ["Toi", "Adversaire"],
+      [
+        "Nomme un pays libre · +10",
+        "Tour adverse",
+        "Vole-le : trouve le drapeau · +15",
+        "Le plus de points à la fin gagne",
+      ]
+    ),
     sections: [
       [
         "Match",
@@ -58,17 +67,16 @@ const RULES = {
     subtitle: "Quick guide to 1v1 mode",
     close: "Close rules",
     open: "Rules",
-    illustration: {
-      alt: "Clip of a 1v1 Conquest match on the globe: you name Brazil and capture it, your opponent takes Canada, you steal it by finding its flag.",
-      you: "You",
-      opponent: "Opponent",
-      captions: {
-        capture: "Name a free country · +10",
-        opponent: "Opponent's turn",
-        steal: "Steal it: find the flag · +15",
-        end: "Most points at the end wins",
-      },
-    },
+    illustration: illustration(
+      "Clip of a 1v1 Conquest match on the globe: you name Brazil and capture it, your opponent takes Canada, you steal it by finding its flag.",
+      ["You", "Opponent"],
+      [
+        "Name a free country · +10",
+        "Opponent's turn",
+        "Steal it: find the flag · +15",
+        "Most points at the end wins",
+      ]
+    ),
     sections: [
       [
         "Match",

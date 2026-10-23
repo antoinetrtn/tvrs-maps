@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CONQUEST_PLAYER_COLORS } from "../config/designSystem";
 import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
+import { getConquestRulesText } from "./conquestRulesText";
 
 /** The demo video shows the real "teal" player colour: the legend uses the same source. */
 const FRAME_STYLE = { "--ri-you": CONQUEST_PLAYER_COLORS.teal };
@@ -15,19 +16,8 @@ const POSTER_SRC = "/conquest-demo/conquete-demo-poster.webp";
 const BEAT_KEYS = ["capture", "opponent", "steal", "end"];
 const STEAL_BEAT_INDEX = 2;
 
-const DEFAULT_CAPTIONS = {
-  capture: "Nomme un pays libre · +10",
-  opponent: "Tour adverse",
-  steal: "Vole-le : trouve le drapeau · +15",
-  end: "Le plus de points à la fin gagne",
-};
-
-const DEFAULT_LABELS = {
-  alt: "Extrait d'une partie de Conquête 1v1 sur le globe : tu nommes le Brésil et le captures, l'adversaire prend le Canada, tu le lui voles en trouvant son drapeau.",
-  you: "Toi",
-  opponent: "Adversaire",
-  captions: DEFAULT_CAPTIONS,
-};
+const DEFAULT_LABELS = getConquestRulesText("fr").illustration;
+const DEFAULT_CAPTIONS = DEFAULT_LABELS.captions;
 
 function getBeatIndex(time) {
   if (!Number.isFinite(time) || time < 4.2) {
