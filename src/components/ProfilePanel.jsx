@@ -392,7 +392,7 @@ const ProfilePanel = ({
                 onChange={setChallengesFilter}
               />
 
-              <div className="badges-grid scrollbar-styled">
+              <div className="badges-grid px-cascade scrollbar-styled">
                 {filteredChallenges.map((ch) => {
                   const isUnlocked = unlockedBadges.includes(ch.id);
                   const isSelected = selectedChallengeId === ch.id;

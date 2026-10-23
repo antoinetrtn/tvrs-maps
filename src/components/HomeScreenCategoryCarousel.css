@@ -215,7 +215,7 @@
   flex-direction: column;
   gap: var(--spacing-xs);
   min-height: 64px;
-  transition: transform var(--dur-slow) var(--ease-spring);
+  transition: transform var(--dur-slow) var(--ease-out);
   text-align: left;
 }
 
