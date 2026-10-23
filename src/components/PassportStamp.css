@@ -16,7 +16,7 @@
   font-weight: 600;
   transform: rotate(-3deg);
   opacity: 0.92;
-  animation: stamp-in var(--dur-stamp) var(--ease-spring) var(--dur-pop) both;
+  animation: stamp-in var(--dur-stamp) var(--steps-snap) var(--dur-pop) both;
   pointer-events: auto;
 }
 

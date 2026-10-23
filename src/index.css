@@ -117,8 +117,10 @@
   --shadow-card: 0 12px 28px rgba(5, 7, 10, 0.7);
 }
 
-/* Visible keyboard focus (mouse/touch clicks keep a clean look via :focus-visible) */
-:focus-visible {
+/* Visible keyboard focus (mouse/touch clicks keep a clean look via :focus-visible).
+   Text fields draw their own single contour (accent border + hard ink shadow), so the
+   global ring skips them: one outline, never two. */
+:focus-visible:not(.ui-textfield) {
   outline: 2px solid var(--accent) !important;
   outline-offset: 2px;
 }

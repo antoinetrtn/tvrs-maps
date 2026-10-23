@@ -18,7 +18,7 @@
   transform: translate3d(var(--card-x, 0px), var(--card-y, 0px), 0) rotateZ(var(--card-rot, 0deg))
     scale(var(--card-scale-eff, 1));
   transition:
-    transform var(--dur-base) var(--ease-spring),
+    transform var(--dur-base) var(--ease-out),
     border-color var(--dur-fast) ease,
     box-shadow var(--dur-fast) ease,
     opacity var(--dur-fast) ease-out;
@@ -81,7 +81,7 @@
 
 .deck-stage[data-release="settle"] .deck-mode-card {
   transition:
-    transform var(--dur-settle) var(--ease-spring),
+    transform var(--dur-settle) var(--ease-out),
     border-color var(--dur-settle) ease,
     box-shadow var(--dur-settle) ease !important;
 }

@@ -587,7 +587,7 @@
 
 /* Score increase: a short ink-stamp "tick" — one bump, no glitch */
 .score-increased-flash {
-  animation: score-tick 0.35s var(--ease-spring);
+  animation: score-tick var(--dur-pop) var(--steps-snap);
   color: var(--success) !important;
 }
 

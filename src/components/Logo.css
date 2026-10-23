@@ -47,7 +47,7 @@
 
 /* Bouncy effect for Desktop HUD Logo */
 .hud-logo-clickable {
-  transition: transform 0.4s var(--ease-spring);
+  transition: transform var(--dur-slow) var(--steps-snap);
   display: flex;
   align-items: center;
   justify-content: center;

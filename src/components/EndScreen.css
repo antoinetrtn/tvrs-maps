@@ -463,7 +463,7 @@
   outline: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
-  animation: stamp-in 0.45s var(--ease-spring) both;
+  animation: stamp-in var(--dur-stamp) var(--steps-snap) both;
 }
 
 @media (max-width: 640px) {

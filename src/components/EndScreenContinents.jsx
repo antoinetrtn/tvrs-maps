@@ -30,7 +30,7 @@ const EndScreenContinents = ({
       </span>
     </span>
 
-    <span className="progress-bars-grid">
+    <span className="progress-bars-grid px-cascade">
       {order
         .filter((reg) => reg !== "Unknown" && stats[reg].total > 0)
         .map((region) => {
