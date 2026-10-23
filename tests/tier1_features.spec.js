@@ -148,7 +148,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await expect(dataPanel).toBeVisible();
   });
 
-  // 10. Learn Sub-Mode Carousel Navigation
+  // 10. Learn Sub-Mode TabBar Navigation
   test("T1-MODE-10: Learn Mode Sub-Mode Carousel Navigation", async ({ guestPage: page }) => {
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await topCard.locator(".card-learn-btn").click();
@@ -156,11 +156,12 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     const learnControl = page.locator(".learn-carousel-control");
     await expect(learnControl).toBeVisible();
 
-    const nextSubModeBtn = learnControl.locator(".learn-carousel-arrow").nth(1);
+    const nextSubModeBtn = learnControl.locator('[role="tab"]').nth(1);
     await nextSubModeBtn.click();
     await page.waitForTimeout(150);
 
-    const label = learnControl.locator(".learn-carousel-label");
+    await expect(nextSubModeBtn).toHaveAttribute("aria-selected", "true");
+    const label = nextSubModeBtn.locator(".tab-bar-label");
     await expect(label).toBeVisible();
   });
 

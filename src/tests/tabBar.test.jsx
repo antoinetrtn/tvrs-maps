@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import React, { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import GameDataPanelRow from "../components/GameDataPanelRow";
+import LearnModeToggles from "../components/LearnModeToggles";
 import TabBar from "../components/ui/TabBar";
 
 const OPTIONS = [
@@ -163,5 +165,70 @@ describe("TabBar", () => {
 
     // Target = 300 + 40 - 100 = 240
     expect(track.scrollLeft).toBe(240);
+  });
+});
+
+describe("LearnModeToggles (TabBar integration)", () => {
+  it("renders all 5 learn sub-modes on the shared level-2 TabBar and switches sub-mode", () => {
+    const onChange = vi.fn();
+    render(<LearnModeToggles learnSubMode="countries" onLearnSubModeChange={onChange} lang="fr" />);
+
+    const tablist = screen.getByRole("tablist", { name: "Apprendre" });
+    expect(tablist).toBeTruthy();
+
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs).toHaveLength(5);
+
+    const countriesTab = screen.getByRole("tab", { name: "Pays" });
+    expect(countriesTab.getAttribute("aria-selected")).toBe("true");
+
+    const statesTab = screen.getByRole("tab", { name: "États" });
+    fireEvent.click(statesTab);
+    expect(onChange).toHaveBeenCalledWith("us_states");
+  });
+
+  it("falls back to countries when learnSubMode is unknown", () => {
+    render(
+      <LearnModeToggles learnSubMode="invalid_mode" onLearnSubModeChange={() => {}} lang="en" />
+    );
+    expect(screen.getByRole("tab", { name: "Countries" }).getAttribute("aria-selected")).toBe(
+      "true"
+    );
+  });
+});
+
+describe("GameDataPanelRow layout stability", () => {
+  const sampleRow = {
+    key: "France",
+    name: "France",
+    sublabel: "Paris",
+    iso2: "FR",
+    found: false,
+    revealed: true,
+  };
+
+  it("keeps .data-panel-row-status mounted when selected in learn mode", () => {
+    const { container, rerender } = render(
+      <GameDataPanelRow
+        row={sampleRow}
+        isSelected={false}
+        mode="learn"
+        onSelect={() => {}}
+        unrevealedLabel="???"
+      />
+    );
+    expect(container.querySelector(".data-panel-row-status")).toBeTruthy();
+
+    rerender(
+      <GameDataPanelRow
+        row={sampleRow}
+        isSelected
+        mode="learn"
+        onSelect={() => {}}
+        unrevealedLabel="???"
+      />
+    );
+    expect(container.querySelector(".data-panel-row-status")).toBeTruthy();
+    expect(container.querySelector(".data-panel-row.selected")).toBeTruthy();
   });
 });

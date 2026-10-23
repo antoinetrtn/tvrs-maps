@@ -61,6 +61,7 @@
 .dg-block-body > .ui-settings-section,
 .dg-block-body > .ui-slider,
 .dg-block-body > .ui-options,
+.dg-block-body > .tab-bar,
 .dg-block-body > .lb-notice,
 .dg-block-body > .ui-state {
   flex-basis: 100%;

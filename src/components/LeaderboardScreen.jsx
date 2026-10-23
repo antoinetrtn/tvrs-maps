@@ -3,6 +3,7 @@ import "./ui/ui.css";
 
 import {
   Clock,
+  Earth,
   Flag,
   Gamepad,
   Globe,
@@ -15,6 +16,7 @@ import {
 } from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
 
+import { PLAY_MODES } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { isConquestEnabled } from "../multiplayer/conquestConfig";
 import ConquestLeaderboard from "../multiplayer/ConquestLeaderboard.jsx";
@@ -33,6 +35,7 @@ const MODE_ICONS = {
   countries: <Globe width={16} height={16} aria-hidden="true" />,
   capitals: <MapPin width={16} height={16} aria-hidden="true" />,
   departments: <Hash width={14} height={14} aria-hidden="true" />,
+  us_states: <Earth width={16} height={16} aria-hidden="true" />,
   rivers_mountains: <TreePine width={16} height={16} aria-hidden="true" />,
 };
 
@@ -288,10 +291,10 @@ const LeaderboardScreen = ({
   const isSignedIn = Boolean(session?.user);
 
   const renderGlobalContent = () => {
-    if (!isSupabaseConfigured) return <EmptyState title={t("not_connected")} srOnly />;
-    if (loading) return <LoadingState title={t("connecting")} srOnly />;
+    if (!isSupabaseConfigured) return <EmptyState title={t("not_connected")} />;
+    if (loading) return <LoadingState title={t("connecting")} />;
     if (error) return <ErrorState title={error} />;
-    if (scoresData.length === 0) return <EmptyState title={t("empty_leaderboard")} srOnly />;
+    if (scoresData.length === 0) return <EmptyState title={t("empty_leaderboard")} />;
     return (
       <LeaderboardList label={t("global_leaderboard")}>
         {scoresData.map((row, index) => (
@@ -309,7 +312,7 @@ const LeaderboardScreen = ({
   };
 
   const renderHistoryContent = () => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured && historyData.length === 0) {
       return (
         <EmptyState
           title={t("not_connected")}
@@ -318,13 +321,12 @@ const LeaderboardScreen = ({
               ? "Connectez-vous pour voir l'historique complet de vos parties."
               : "Sign in to see your complete game history."
           }
-          srOnly
         />
       );
     }
 
     if (historyLoading) {
-      return <LoadingState title={t("connecting")} srOnly />;
+      return <LoadingState title={t("connecting")} />;
     }
 
     if (historyError) {
@@ -332,7 +334,7 @@ const LeaderboardScreen = ({
     }
 
     if (historyData.length === 0) {
-      return <EmptyState title={t("no_records_yet")} srOnly />;
+      return <EmptyState title={t("no_records_yet")} />;
     }
 
     return (
@@ -407,18 +409,19 @@ const LeaderboardScreen = ({
               <TabBar
                 level={2}
                 label={t("game_modes") || "Modes"}
-                options={["countries", "capitals", "departments", "rivers_mountains"].map(
-                  (mKey) => {
-                    const full = t(`mode_${mKey}`);
-                    const short = t(`mode_${mKey}_short`) || full;
-                    return {
-                      value: mKey,
-                      label: short,
-                      title: full,
-                      icon: MODE_ICONS[mKey],
-                    };
-                  }
-                )}
+                options={PLAY_MODES.map((mKey) => {
+                  const full = t(`mode_${mKey}`);
+                  const shortKey = `mode_${mKey}_short`;
+                  const translatedShort = t(shortKey);
+                  const short =
+                    translatedShort && translatedShort !== shortKey ? translatedShort : full;
+                  return {
+                    value: mKey,
+                    label: short,
+                    title: full,
+                    icon: MODE_ICONS[mKey],
+                  };
+                })}
                 value={colMode}
                 onChange={setColMode}
               />

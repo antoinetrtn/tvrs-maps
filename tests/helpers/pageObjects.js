@@ -114,8 +114,9 @@ export class GameDataPanel {
     this.panel = page.locator(".game-data-panel");
     this.searchInput = page.locator(".data-panel-search-input");
     this.learnCarousel = page.locator(".learn-carousel-control");
-    this.learnNextArrow = page.locator(".learn-carousel-arrow").nth(1);
-    this.learnPrevArrow = page.locator(".learn-carousel-arrow").nth(0);
-    this.dataRows = page.locator(".data-panel-table div[data-country-key]");
+    this.learnTabs = this.learnCarousel.locator('[role="tab"]');
+    this.learnNextArrow = this.learnTabs.nth(1);
+    this.learnPrevArrow = this.learnTabs.nth(0);
+    this.dataRows = page.locator(".data-panel-table [data-country-key]");
   }
 }

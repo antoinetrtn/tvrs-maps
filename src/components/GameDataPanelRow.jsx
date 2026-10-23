@@ -10,7 +10,6 @@ const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) 
   // The flag is always visible (it already shows on the globe labels);
   // only the name stays scrambled until the country is found.
   const showFlag = Boolean(row.iso2);
-  const showLearnStatus = mode === "learn" && !isSelected;
   const isLearnSelected = mode === "learn" && isSelected;
 
   return (
@@ -22,17 +21,15 @@ const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) 
       onClick={() => onSelect(row.key)}
       title={isRevealed ? row.name : unrevealedLabel}
     >
-      {(mode !== "learn" || showLearnStatus) && (
-        <span className="data-panel-row-status" aria-hidden="true">
-          {mode === "learn" ? (
-            <span className="status-dot" />
-          ) : row.found ? (
-            <Check width={14} height={14} />
-          ) : (
-            <Minus width={14} height={14} />
-          )}
-        </span>
-      )}
+      <span className="data-panel-row-status" aria-hidden="true">
+        {mode === "learn" ? (
+          <span className="status-dot" />
+        ) : row.found ? (
+          <Check width={14} height={14} />
+        ) : (
+          <Minus width={14} height={14} />
+        )}
+      </span>
       {showFlag && (
         <img
           src={`/flags/${row.iso2.toLowerCase()}.svg`}
