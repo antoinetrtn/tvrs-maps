@@ -1,14 +1,6 @@
-/* Conquête 1v1 rules — 8-second stepped story in 5 scenes:
-   1. (0–1.2s / 0–15%)       Neutral map, TOI vs ADV (0 – 0)
-   2. (1.2–3.0s / 15–37.5%)  Select country, type "France", capture (+10 → 10 – 0)
-   3. (3.0–4.6s / 37.5–57.5%) Opponent turn, grey territory (+10 → 10 – 10)
-   4. (4.6–6.4s / 57.5–80%)  Steal target + 6-square quiz + stepped wipe + square shield (+15 → 25 – 10)
-   5. (6.4–8.0s / 80–100%)   Timer runs out, final score 25 – 10 with TOI highlighted, fade to 1
-   Base styles = end of scene 4 (static reduced-motion frame: both colours + shield, 25 – 10). */
+/* Conquête 1v1 rules — looping gameplay capture (480x300, 16:10, pixelated) */
 
 .rules-illu {
-  --ri-loop: 8s;
-  --ri-caret-loop: 0.6s;
   --ri-adv: var(--text-secondary, var(--text-muted));
   display: flex;
   flex-direction: column;
@@ -16,46 +8,15 @@
   width: 100%;
   max-width: 520px;
   margin: 0 auto var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-ms);
   box-sizing: border-box;
-  background: var(--bg-color);
-  border: 1px solid var(--glass-border);
 }
 
-/* 1. Top scoreboard + 2-player legend + center timer bar */
-
-.ri-hud {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+.ri-legend {
+  display: flex;
   align-items: center;
-  gap: var(--spacing-ms);
-  padding-top: var(--spacing-sm);
-  padding-bottom: var(--spacing-xs);
-  border-bottom: 1px solid var(--glass-border);
+  justify-content: space-between;
+  gap: var(--spacing-sm);
   line-height: 1;
-}
-
-.ri-timer-track {
-  width: 100%;
-  height: 3px;
-  background: var(--glass-border);
-  overflow: hidden;
-}
-
-.ri-timer-fill {
-  width: 100%;
-  height: 100%;
-  background: var(--accent);
-  transform-origin: left center;
-  transform: scaleX(0.35);
-}
-
-.ri-player {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding-bottom: 3px;
 }
 
 .ri-legend-item {
@@ -66,15 +27,13 @@
   font-size: var(--font-size-xs);
   font-weight: 600;
   color: var(--text-main);
-  letter-spacing: 0.04em;
 }
 
-.ri-player-adv .ri-legend-item {
+.ri-legend-item-opponent {
   color: var(--ri-adv);
 }
 
 .ri-swatch {
-  position: relative;
   display: inline-block;
   width: 8px;
   height: 8px;
@@ -83,305 +42,85 @@
 }
 
 .ri-swatch-you {
-  background: var(--accent);
+  background: var(--ri-you, var(--accent));
 }
 
 .ri-swatch-opponent {
-  background: var(--ri-adv);
-  opacity: 0.72;
+  background: repeating-conic-gradient(var(--ri-adv) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px;
 }
 
-.ri-swatch-opponent::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  background: var(--bg-color);
-}
-
-.ri-score-group {
+.ri-frame {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.ri-score {
-  display: inline-grid;
-  width: 2.2ch;
-  font-size: var(--font-size-md);
-  font-variant-numeric: tabular-nums;
-}
-
-.ri-score > span {
-  grid-area: 1 / 1;
-}
-
-.ri-score-you {
-  color: var(--accent);
-  text-align: left;
-}
-
-.ri-score-adv {
-  color: var(--ri-adv);
-  text-align: right;
-}
-
-/* Static base = end of scene 4 (25 – 10) */
-.ri-score-you-0,
-.ri-score-you-10,
-.ri-score-adv-0 {
-  opacity: 0;
-}
-
-.ri-score-you-25,
-.ri-score-adv-10 {
-  opacity: 1;
-}
-
-.ri-delta {
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  display: inline-grid;
-  font-family: var(--font-display);
-  font-size: var(--font-size-2xs);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.ri-delta > span {
-  grid-area: 1 / 1;
-  text-align: center;
-}
-
-.ri-delta-you {
-  color: var(--accent);
-}
-
-.ri-delta-adv {
-  color: var(--ri-adv);
-}
-
-.ri-delta-you-10,
-.ri-delta-you-15,
-.ri-delta-adv-10 {
-  opacity: 0;
-  transform: translate(-50%, 0);
-}
-
-.ri-win-mark {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  background: var(--accent);
-  opacity: 0;
-  align-self: center;
-}
-
-.ri-win-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background: var(--accent);
-  transform-origin: left center;
-  transform: scaleX(0);
-  opacity: 0;
-}
-
-/* 2. Pixel world map (square cells only) */
-
-.ri-map {
+.ri-media {
   display: block;
   width: 100%;
-  max-height: 112px;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
 }
-
-.ri-map path {
-  stroke: var(--bg-color);
-  stroke-width: 0.14;
-}
-
-.ri-adv-cell-base {
-  fill: var(--ri-adv);
-  opacity: 0.65;
-}
-
-.ri-adv-cell-cut {
-  fill: var(--bg-color);
-}
-
-.ri-map-neutral {
-  fill: var(--text-muted);
-  opacity: 0.22;
-}
-
-.ri-map-you {
-  fill: var(--accent);
-  opacity: 1;
-}
-
-.ri-map-steal-adv {
-  fill: url(#ri-adv-pattern);
-  opacity: 1;
-}
-
-.ri-map-steal-you {
-  fill: var(--accent);
-  transform-box: fill-box;
-  clip-path: inset(0 0 0 0);
-}
-
-.ri-select {
-  fill: none;
-  stroke-width: 0.35;
-  opacity: 0;
-}
-
-.ri-select-you,
-.ri-select-steal {
-  stroke: var(--accent);
-}
-
-.ri-select-adv {
-  stroke: var(--ri-adv);
-}
-
-.ri-shield {
-  opacity: 1;
-}
-
-.ri-shield-plate {
-  fill: var(--bg-color);
-  stroke: var(--accent);
-  stroke-width: 0.35;
-}
-
-.ri-shield-core {
-  fill: var(--accent);
-  stroke: none;
-}
-
-/* 4. Footer: caption · action slot (typing / 6-square quiz) · 5-step squares */
 
 .ri-footer {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  min-height: 22px;
-  padding-top: var(--spacing-xxs);
-  border-top: 1px solid var(--glass-border);
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  min-height: 18px;
 }
 
 .ri-captions {
   display: inline-grid;
   align-items: center;
-  justify-self: start;
+  min-width: 0;
   font-family: var(--font-main);
   font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
+  color: var(--ri-adv);
 }
 
 .ri-cap {
   grid-area: 1 / 1;
   opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
-/* Static base shows scene 4 caption */
-.ri-cap-steal {
-  opacity: 1;
-  color: var(--text-main);
-}
-
-.ri-action-slot {
-  display: inline-grid;
-  place-items: center;
-  justify-self: center;
-  min-height: 20px;
-}
-
-.ri-action-slot > * {
-  grid-area: 1 / 1;
-}
-
-.ri-field {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  height: 20px;
-  padding: 0 var(--spacing-xs);
-  border: 1px solid var(--glass-border-strong);
-  background: var(--glass-bg);
-  font-family: var(--font-main);
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--text-main);
-  opacity: 0;
-}
-
-.ri-typed {
-  display: inline-block;
-}
-
-.ri-caret {
-  display: inline-block;
-  width: 4px;
-  height: 10px;
-  background: var(--accent);
-}
-
-.ri-quiz {
-  display: inline-grid;
-  grid-template-columns: repeat(3, 7px);
-  grid-template-rows: repeat(2, 7px);
-  gap: 2px;
-  opacity: 0;
-}
-
-.ri-quiz-cell {
-  position: relative;
-  display: block;
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--glass-border-strong);
-  background: var(--glass-bg);
-  box-sizing: border-box;
-}
-
-.ri-quiz-pick {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: var(--accent);
+.ri-cap.is-active {
   opacity: 1;
 }
 
 .ri-steps {
   display: inline-flex;
   align-items: center;
-  justify-self: end;
-  gap: 4px;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
 }
 
 .ri-step {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: var(--accent);
-  opacity: 0.22;
+  border: 1px solid var(--ri-adv);
+  background: transparent;
+  box-sizing: border-box;
+  transition:
+    background-color var(--dur-fast) var(--steps-press),
+    border-color var(--dur-fast) var(--steps-press);
 }
 
-/* Static base = scene 4 (first 4 squares filled) */
-.ri-step-1,
-.ri-step-2,
-.ri-step-3,
-.ri-step-4 {
-  opacity: 1;
+.ri-step.is-filled {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ri-cap,
+  .ri-step {
+    transition: none;
+  }
 }

@@ -39,6 +39,10 @@ describe("ConquestRulesSheet", () => {
       window.localStorage.clear();
     } catch {}
     vi.restoreAllMocks();
+    if (typeof HTMLMediaElement !== "undefined") {
+      vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.resolve());
+      vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    }
   });
 
   it("renders modal dialog in French with highlighted numbers and close button", () => {
@@ -154,6 +158,14 @@ describe("useConquestRulesAutoOpen", () => {
 });
 
 describe("RulesIllustration", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    if (typeof HTMLMediaElement !== "undefined") {
+      vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.resolve());
+      vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    }
+  });
+
   it("renders one illustration above the rule cards, with a legend and an accessible label", () => {
     render(<ConquestRulesSheet open={true} onClose={vi.fn()} lang="fr" />);
 
@@ -184,8 +196,57 @@ describe("RulesIllustration", () => {
       expect(illustration.classList.contains("is-static")).toBe(true);
       expect(illustration.classList.contains("is-playing")).toBe(false);
       expect(illustration.getAttribute("aria-label")).toContain("Conquest");
+      expect(illustration.querySelector("video")).toBeNull();
+      expect(illustration.querySelector("img")).toBeTruthy();
+      expect(illustration.querySelector(".ri-cap.is-active")?.textContent).toBe(
+        "Steal it: find the flag · +15"
+      );
+      expect(illustration.querySelectorAll(".ri-step.is-filled")).toHaveLength(4);
     } finally {
       window.matchMedia = original;
+    }
+  });
+
+  it("lazily mounts video sources on intersection and syncs captions to currentTime", () => {
+    const originalIO = window.IntersectionObserver;
+    let observerCallback = null;
+    window.IntersectionObserver = vi.fn().mockImplementation(function (cb) {
+      observerCallback = cb;
+      this.observe = vi.fn();
+      this.disconnect = vi.fn();
+    });
+
+    try {
+      render(<ConquestRulesSheet open={true} onClose={vi.fn()} lang="fr" />);
+      const illustration = document.querySelector(".rules-illu");
+      const video = illustration.querySelector("video");
+      expect(video).toBeTruthy();
+      expect(video.querySelectorAll("source")).toHaveLength(0);
+      expect(illustration.classList.contains("is-playing")).toBe(false);
+
+      act(() => {
+        observerCallback?.([{ isIntersecting: true }]);
+      });
+      expect(video.querySelectorAll("source")).toHaveLength(2);
+      expect(illustration.classList.contains("is-playing")).toBe(true);
+      expect(illustration.querySelector(".ri-cap.is-active")?.textContent).toBe(
+        "Nomme un pays libre · +10"
+      );
+      expect(illustration.querySelectorAll(".ri-step.is-filled")).toHaveLength(1);
+
+      Object.defineProperty(video, "currentTime", { value: 7.0, writable: true });
+      fireEvent.timeUpdate(video);
+      expect(illustration.querySelector(".ri-cap.is-active")?.textContent).toBe(
+        "Vole-le : trouve le drapeau · +15"
+      );
+      expect(illustration.querySelectorAll(".ri-step.is-filled")).toHaveLength(3);
+
+      act(() => {
+        observerCallback?.([{ isIntersecting: false }]);
+      });
+      expect(illustration.classList.contains("is-playing")).toBe(false);
+    } finally {
+      window.IntersectionObserver = originalIO;
     }
   });
 });

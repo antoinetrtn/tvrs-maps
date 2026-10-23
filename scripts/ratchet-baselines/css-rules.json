@@ -21,7 +21,6 @@
     "src/components/TrainingSheet.css": 1,
     "src/globe/GlobeMap.css": 1,
     "src/multiplayer/ConquestHud.css": 1,
-    "src/multiplayer/RulesIllustration.css": 2,
     "src/styles/glitchMoments.css": 6
   },
   "glow-shadow": {
@@ -69,7 +68,6 @@
     "src/components/ui/ui.css": 1,
     "src/dev/DevGallery.css": 4,
     "src/index.css": 4,
-    "src/multiplayer/RulesIllustration.css": 1,
     "src/styles/motion.css": 6,
     "src/styles/panelSystem.css": 16
   },
