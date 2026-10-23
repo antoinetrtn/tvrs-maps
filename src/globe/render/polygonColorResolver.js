@@ -146,7 +146,7 @@ export function shouldUseRegionalUnfoundLand({ isEndScreen, isFound, isSelected 
   return !isEndScreen && !isFound && !isSelected;
 }
 
-export const END_MISSED_ERROR_TINT = {
+const END_MISSED_ERROR_TINT = {
   light: 0.16,
   dark: 0.2,
 };
@@ -156,7 +156,7 @@ export const END_MISSED_ERROR_TINT = {
  * subtle warm tint instead of running the TV static shader across the globe.
  */
 export function resolveEndMissedColor({ mapBase, UI_COLORS, lerpColor, isLight = false }) {
-  const base = mapBase || UI_COLORS?.mapBase || "#34423d";
+  const base = mapBase || UI_COLORS?.mapBase;
   if (!UI_COLORS?.error || typeof lerpColor !== "function") {
     return base;
   }

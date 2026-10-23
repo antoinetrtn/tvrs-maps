@@ -324,7 +324,7 @@
 .ui-toast-viewport {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--control-lg) + var(--spacing-xl) + var(--safe-bottom));
+  bottom: calc(var(--control-lg) * 3 + var(--spacing-xl) + var(--spacing-md) + var(--safe-bottom));
   width: min(92vw, 420px);
   z-index: var(--z-toast);
   transform: translateX(-50%);

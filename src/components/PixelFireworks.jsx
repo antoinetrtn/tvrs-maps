@@ -13,9 +13,7 @@ const PixelFireworks = ({ duration = 6000 }) => {
     if (reducedMotion) return undefined;
 
     const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas?.getContext("2d");
     if (!ctx) return undefined;
 
     const RETRO_COLORS = getFireworkColors();
