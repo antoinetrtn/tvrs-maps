@@ -21,8 +21,10 @@ export const translations = {
     mode_departments: "Départements",
     mode_departments_short: "Départements",
     mode_us_states: "États américains",
+    mode_us_states_short: "États US",
     mode_rivers_mountains: "Reliefs & Fleuves",
     mode_rivers_mountains_short: "Reliefs",
+    game_modes: "Modes de jeu",
     mode_learn: "Apprendre",
     mode_rules: "Règles",
     card_train_short: "Entraîner",
@@ -68,14 +70,12 @@ export const translations = {
     theme_light_blackout_hint: "Indisponible avec le globe Monochrome",
     interface_scale: "Taille de l'interface",
     scale_auto: "Auto",
-
     // Game HUD Placeholders
     search_placeholder: "Rechercher...",
     answer_placeholder: "Votre réponse...",
     to_guess: "À deviner !",
     preview_capital: "Capitale :",
     preview_region: "Région :",
-
     // Game HUD Controls & Tooltips
     home: "Accueil",
     return_home: "Retour à l'accueil",
@@ -90,7 +90,6 @@ export const translations = {
     pick_in_list_hint: "Choisis un pays dans la liste",
     answer_placeholder_select: "Sélectionne sur le globe",
     suggestion_found: "trouvé",
-
     // Learn Toggles
     show_country_labels: "Afficher les labels des pays",
     labels_pays: "Labels pays",
@@ -108,7 +107,6 @@ export const translations = {
     learn_mode_rivers_mountains: "Mont. & riv.",
     learn_mode_departments: "Dépt.",
     learn_mode_us_states: "États",
-
     // Focus Badge Prompts
     department_prefix: "Département {code}",
 
@@ -256,8 +254,10 @@ export const translations = {
     mode_departments: "Departments",
     mode_departments_short: "Departments",
     mode_us_states: "US States",
+    mode_us_states_short: "US States",
     mode_rivers_mountains: "Rivers & Peaks",
     mode_rivers_mountains_short: "Peaks",
+    game_modes: "Game modes",
     mode_learn: "Learn",
     mode_rules: "Rules",
     card_train_short: "Train",

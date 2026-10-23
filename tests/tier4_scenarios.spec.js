@@ -72,10 +72,10 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     const learnControl = page.locator(".learn-carousel-control");
     await expect(learnControl).toBeVisible();
 
-    // Cycle learn sub-modes
-    const nextArrow = learnControl.locator(".learn-carousel-arrow").nth(1);
-    for (let i = 0; i < 3; i++) {
-      await nextArrow.click();
+    // Cycle learn sub-modes via TabBar tabs
+    const tabs = learnControl.locator('[role="tab"]');
+    for (let i = 1; i <= 3; i++) {
+      await tabs.nth(i).click();
       await page.waitForTimeout(100);
     }
 

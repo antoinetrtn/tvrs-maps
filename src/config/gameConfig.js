@@ -6,8 +6,8 @@
  * lives here so a single mode can't drift visually from the others.
  */
 
-const PLAY_MODES = ["countries", "capitals", "departments", "rivers_mountains", "us_states"];
-const LEARN_SUB_MODES = ["countries", "capitals", "rivers_mountains", "departments", "us_states"];
+export const PLAY_MODES = ["countries", "capitals", "departments", "us_states", "rivers_mountains"];
+const LEARN_SUB_MODES = PLAY_MODES;
 export const DEFAULT_LEARN_SUB_MODE = "countries";
 
 const GAME_MODES_CONFIG = {

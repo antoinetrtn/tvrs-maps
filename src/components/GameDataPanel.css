@@ -1,6 +1,6 @@
 .game-data-panel {
-  --selection-green: var(--selection-highlight, var(--accent));
-  --selection-green-soft: color-mix(in srgb, var(--selection-green) 16%, transparent);
+  --selection-green: var(--accent);
+  --selection-green-soft: var(--accent-soft);
   display: flex;
   flex-direction: column;
   background: var(--bg-color);
@@ -80,7 +80,7 @@
 .data-panel-title {
   font-family: var(--font-display);
   font-size: var(--font-size-base);
-  font-weight: 900;
+  font-weight: 600;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -109,37 +109,6 @@
   background: var(--bg-color);
 }
 
-.data-panel-toolbar .learn-carousel-control {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: var(--spacing-sm);
-}
-
-.learn-carousel-arrow {
-  background: var(--glass-border);
-  color: var(--text-main);
-}
-
-.learn-carousel-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  font-family: inherit;
-  font-weight: 700;
-  font-size: var(--font-size-base);
-  color: var(--accent);
-  text-shadow: 0 0 8px var(--accent-soft);
-}
-
-.learn-carousel-icon {
-  display: flex;
-  align-items: center;
-}
-
 .data-panel-scroll {
   flex: 1;
   overflow-y: auto;
@@ -155,7 +124,7 @@
 .data-panel-search-sticky {
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: var(--z-raised-5);
   padding: var(--spacing-sm) var(--spacing-md);
   border-bottom: 1px solid var(--glass-border);
   background: var(--bg-color);
@@ -187,7 +156,7 @@
   position: sticky;
   top: var(--data-panel-search-offset);
   background: var(--bg-color);
-  z-index: 4;
+  z-index: var(--z-raised-4);
   margin-bottom: var(--spacing-xxs);
   box-shadow: 0 1px 0 var(--glass-border);
 }
@@ -203,7 +172,7 @@
 .data-panel-region-name {
   font-family: var(--font-display);
   font-size: var(--font-size-sm);
-  font-weight: 700;
+  font-weight: 600;
   margin: 0;
   flex: 1;
 }
@@ -227,6 +196,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   width: 100%;
+  min-height: 36px;
   padding: var(--spacing-xs) var(--spacing-sm);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -236,46 +206,38 @@
   font-size: var(--font-size-sm);
   text-align: left;
   cursor: pointer;
+  box-sizing: border-box;
   transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    opacity var(--transition-fast),
-    padding var(--transition-emphasized),
-    grid-template-columns var(--transition-emphasized);
+    background-color var(--dur-fast) var(--steps-snap),
+    border-color var(--dur-fast) var(--steps-snap),
+    color var(--dur-fast) var(--steps-snap),
+    opacity var(--dur-fast) var(--steps-snap);
 }
 
 .data-panel-row.has-flag {
   grid-template-columns: 20px auto 1fr auto;
 }
 
-.data-panel-row:hover {
-  background: var(--glass-hover);
-  border-color: var(--glass-border);
+@media (hover: hover) {
+  .data-panel-row:hover:not(.selected) {
+    background: var(--glass-hover);
+    border-color: var(--glass-border);
+  }
 }
 
 .data-panel-row.selected {
-  padding: var(--spacing-md);
-  min-height: 56px;
   background: var(--selection-green-soft);
-  border-color: color-mix(in srgb, var(--selection-green) 45%, var(--glass-border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--selection-green) 12%, transparent);
-  font-size: var(--font-size-md);
-}
-
-.data-panel-row.learn-selected.has-flag {
-  grid-template-columns: auto 1fr auto;
-  gap: var(--spacing-md);
-}
-
-/* Rivières/montagnes : pas de drapeau ni point → 2 colonnes nom + détail */
-.data-panel-row.learn-selected:not(.has-flag) {
-  grid-template-columns: 1fr auto;
-  gap: var(--spacing-md);
+  border-color: var(--selection-green);
+  box-shadow: inset 3px 0 0 var(--selection-green);
 }
 
 .data-panel-row.selected .data-panel-row-name {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--selection-green);
+}
+
+.data-panel-row.selected .status-dot {
+  background: var(--selection-green);
 }
 
 .data-panel-row.missed:not(.revealed) {
@@ -314,23 +276,13 @@
   width: 28px;
   height: 21px;
   object-fit: cover;
-  border-radius: 3px;
+  border-radius: var(--radius-xs, 2px);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
   flex-shrink: 0;
-  transition:
-    width var(--transition-emphasized),
-    height var(--transition-emphasized),
-    box-shadow var(--transition-emphasized);
 }
 
 .data-panel-row.selected .data-panel-row-flag {
-  width: 52px;
-  height: 39px;
-  border-color: color-mix(in srgb, var(--selection-green) 35%, var(--glass-border));
-  box-shadow:
-    var(--glass-shadow),
-    0 0 10px color-mix(in srgb, var(--selection-green) 30%, transparent);
+  border-color: var(--selection-green);
 }
 
 .data-panel-row-name {
@@ -355,7 +307,7 @@
 }
 
 /* Mobile/tablet sheet layout for .side panels (matches desktop breakpoint logic) */
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
   .game-data-panel.side {
     top: auto;
     left: 0;

@@ -12,6 +12,7 @@
 .tab-bar {
   position: relative;
   display: flex;
+  width: 100%;
   min-width: 0;
 }
 
@@ -24,7 +25,7 @@
   bottom: 0;
   width: 12px;
   pointer-events: none;
-  z-index: 2;
+  z-index: var(--z-raised-2);
   opacity: 0;
 }
 
@@ -74,9 +75,9 @@
   touch-action: manipulation;
   border-radius: var(--radius-sm);
   transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
+    background-color var(--dur-fast) var(--steps-snap),
+    color var(--dur-fast) var(--steps-snap),
+    border-color var(--dur-fast) var(--steps-snap);
 }
 
 .tab-bar-tab svg {
@@ -117,7 +118,7 @@
 
 .tab-bar-l1 .tab-bar-tab {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
   flex: 1 0 auto;
   min-height: 44px;
   padding: 0 var(--spacing-sm);
@@ -126,7 +127,7 @@
   color: var(--text-muted);
   font-family: var(--font-main);
   font-size: var(--font-size-sm);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Active tab plate (fallback before indicator measurement, e.g. jsdom/SSR) */
@@ -136,9 +137,11 @@
   color: var(--text-main);
 }
 
-.tab-bar-l1 .tab-bar-tab:hover:not(.active):not(:disabled) {
-  background: var(--glass-hover);
-  color: var(--text-main);
+@media (hover: hover) {
+  .tab-bar-l1 .tab-bar-tab:hover:not(.active):not(:disabled) {
+    background: var(--glass-hover);
+    color: var(--text-main);
+  }
 }
 
 /* Animated indicator plate */
@@ -146,7 +149,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 0;
+  z-index: var(--z-base);
   width: var(--tab-w);
   height: var(--tab-h);
   transform: translate(var(--tab-x), var(--tab-y));
@@ -189,13 +192,13 @@
   position: relative;
   flex: 0 0 auto;
   min-height: 36px;
-  padding: 6px var(--spacing-ms);
+  padding: 6px var(--spacing-sm);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   color: var(--text-muted);
   font-family: var(--font-display);
   font-size: var(--font-size-xs);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 @media (pointer: coarse), (max-width: 768px) {
@@ -210,7 +213,9 @@
   color: var(--text-main);
 }
 
-.tab-bar-l2 .tab-bar-tab:hover:not(.active):not(:disabled) {
-  background: var(--glass-hover);
-  color: var(--text-main);
+@media (hover: hover) {
+  .tab-bar-l2 .tab-bar-tab:hover:not(.active):not(:disabled) {
+    background: var(--glass-hover);
+    color: var(--text-main);
+  }
 }
