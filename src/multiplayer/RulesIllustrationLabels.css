@@ -1,0 +1,362 @@
+/* Conquête rules animation — keyframes for scores, end scene, captions, steps. */
+/* Scores & deltas */
+@keyframes ri-score-you-0 {
+  0%,
+  28% {
+    opacity: 1;
+  }
+  29%,
+  95% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes ri-score-you-10 {
+  0%,
+  28% {
+    opacity: 0;
+  }
+  29%,
+  70% {
+    opacity: 1;
+  }
+  71%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-score-you-25 {
+  0%,
+  70% {
+    opacity: 0;
+  }
+  71%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-score-adv-0 {
+  0%,
+  44% {
+    opacity: 1;
+  }
+  45%,
+  95% {
+    opacity: 0;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes ri-score-adv-10 {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  45%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-delta-you-10 {
+  0%,
+  28% {
+    opacity: 0;
+    transform: translate(-50%, 2px);
+  }
+  29%,
+  32% {
+    opacity: 1;
+    transform: translate(-50%, -1px);
+  }
+  33%,
+  35.5% {
+    opacity: 1;
+    transform: translate(-50%, -3px);
+  }
+  36%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+}
+
+@keyframes ri-delta-adv-10 {
+  0%,
+  44% {
+    opacity: 0;
+    transform: translate(-50%, 2px);
+  }
+  45%,
+  48.5% {
+    opacity: 1;
+    transform: translate(-50%, -1px);
+  }
+  49%,
+  52.5% {
+    opacity: 1;
+    transform: translate(-50%, -3px);
+  }
+  53%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+}
+
+@keyframes ri-delta-you-15 {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translate(-50%, 2px);
+  }
+  71%,
+  74% {
+    opacity: 1;
+    transform: translate(-50%, -1px);
+  }
+  75%,
+  77.5% {
+    opacity: 1;
+    transform: translate(-50%, -3px);
+  }
+  78%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+}
+
+/* Scene 5 (80–100%): end of timer, winner highlight on TOI side */
+@keyframes ri-win-mark {
+  0%,
+  79.9% {
+    opacity: 0;
+  }
+  80%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-win-line {
+  0%,
+  79.9% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  80% {
+    opacity: 1;
+    transform: scaleX(0);
+    animation-timing-function: var(--steps-shutter);
+  }
+  84%,
+  95% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  96%,
+  100% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+
+@keyframes ri-adv-dim {
+  0%,
+  79.9% {
+    opacity: 1;
+  }
+  80%,
+  95% {
+    opacity: 0.45;
+  }
+  96%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Captions */
+@keyframes ri-cap-select {
+  0%,
+  14.9% {
+    opacity: 0;
+  }
+  15%,
+  20.9% {
+    opacity: 1;
+  }
+  21%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-cap-name {
+  0%,
+  20.9% {
+    opacity: 0;
+  }
+  21%,
+  28.9% {
+    opacity: 1;
+  }
+  29%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-cap-captured {
+  0%,
+  28.9% {
+    opacity: 0;
+  }
+  29%,
+  37.4% {
+    opacity: 1;
+  }
+  37.5%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-cap-opponent {
+  0%,
+  37.4% {
+    opacity: 0;
+  }
+  37.5%,
+  57.4% {
+    opacity: 1;
+  }
+  57.5%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-cap-steal {
+  0%,
+  57.4% {
+    opacity: 0;
+  }
+  57.5%,
+  79.9% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ri-cap-end {
+  0%,
+  79.9% {
+    opacity: 0;
+  }
+  80%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 5-square step indicator */
+@keyframes ri-step-1 {
+  0%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0.22;
+  }
+}
+
+@keyframes ri-step-2 {
+  0%,
+  14.9% {
+    opacity: 0.22;
+  }
+  15%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0.22;
+  }
+}
+
+@keyframes ri-step-3 {
+  0%,
+  37.4% {
+    opacity: 0.22;
+  }
+  37.5%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0.22;
+  }
+}
+
+@keyframes ri-step-4 {
+  0%,
+  57.4% {
+    opacity: 0.22;
+  }
+  57.5%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0.22;
+  }
+}
+
+@keyframes ri-step-5 {
+  0%,
+  79.9% {
+    opacity: 0.22;
+  }
+  80%,
+  95% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    opacity: 0.22;
+  }
+}

@@ -1,4 +1,7 @@
 import "./RulesIllustration.css";
+import "./RulesIllustrationPlay.css";
+import "./RulesIllustrationScenes.css";
+import "./RulesIllustrationLabels.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
