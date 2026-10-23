@@ -132,4 +132,9 @@ describe("ConquestHud", () => {
     fireEvent.submit(input.closest("form"));
     expect(conquest.claim).toHaveBeenCalledWith("France");
   });
+
+  it("shows empty feed message when there are no events", () => {
+    setupHud({ conquest: { events: [] } });
+    expect(screen.getByText(/Aucune capture/)).toBeTruthy();
+  });
 });

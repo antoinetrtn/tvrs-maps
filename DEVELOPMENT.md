@@ -29,6 +29,9 @@ Avant d'écrire ou de pousser du code, assurez-vous de respecter les commandes s
     npm run dev:5001
     ```
     *Note : Le port standard `5173` est intentionnellement banni pour éviter des conflits ou des problèmes de cache. Utilisez toujours le port `5001`.*
+*   **Aperçu UI Conquête sans backend (DEV uniquement)** :
+    Ajoutez `?conquestPreview=lobby|live|finished` (ou `idle|countdown|home`, options `&ready=1&waiting=1&urgent=1&lockout=1`) à l'URL locale (`http://localhost:5001/?conquestPreview=live`).
+    Ce mode alimente l'interface Conquête avec un état local interactif sans aucun appel réseau ni RPC Supabase, et est exclu du build de production (`import.meta.env.DEV` + import dynamique).
 
 ### Validation Locale
 Avant de pousser vos modifications, vous **devez** exécuter le script de validation globale :

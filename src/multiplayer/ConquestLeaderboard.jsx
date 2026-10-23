@@ -7,6 +7,7 @@ import EmptyState from "../components/ui/EmptyState";
 import ErrorState from "../components/ui/ErrorState";
 import LoadingState from "../components/ui/LoadingState";
 import { getConquestLeaderboard } from "./conquestApi";
+import { readConquestPreview } from "./conquestConfig";
 import { conquestText } from "./conquestText";
 
 /** "9V · 2D · 1N · 14 vols" — letters come from the « V / D / N » label. */
@@ -36,7 +37,11 @@ const ConquestLeaderboard = ({ lang = "fr", isSignedIn = false }) => {
 
   useEffect(() => {
     let alive = true;
-    getConquestLeaderboard(50)
+    const load =
+      import.meta.env.DEV && readConquestPreview()
+        ? import("./conquestDevPreview").then((m) => m.getPreviewConquestLeaderboard())
+        : getConquestLeaderboard(50);
+    load
       .then((data) => alive && setBoard(data || { top: [], me: null }))
       .catch((err) => alive && setError(err?.message || String(err)));
     return () => {

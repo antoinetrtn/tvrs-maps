@@ -1,14 +1,17 @@
 import "./ConquestReady.css";
 
-import { Copy, Crown, ExternalLink } from "pixelarticons/react";
+import { Copy, Crown, ExternalLink, Trophy, Users } from "pixelarticons/react";
 import React, { useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
 import ErrorState from "../components/ui/ErrorState.jsx";
 import IconButton from "../components/ui/IconButton.jsx";
+import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
+import TabBar from "../components/ui/TabBar.jsx";
 import TextField from "../components/ui/TextField.jsx";
 import { showToast } from "../components/ui/Toast.jsx";
+import ConquestLeaderboard from "./ConquestLeaderboard.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
@@ -21,6 +24,7 @@ const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
       <Button
         variant="primary"
         block
+        loading={busy}
         disabled={busy}
         onClick={onCreate}
         aria-label={t.createFull || t.create}
@@ -50,6 +54,7 @@ const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
         <Button
           type="submit"
           variant="secondary"
+          loading={busy}
           disabled={busy || code.length < 6}
           aria-label={t.join}
           title={t.join}
@@ -106,8 +111,8 @@ const RoomShare = ({ t, code }) => {
           {code}
         </span>
         <IconButton
-          variant="glass"
-          size="lg"
+          variant="outline"
+          size="md"
           label={t.copyCode}
           className="conquest-icon-btn"
           onClick={onCopy}
@@ -116,12 +121,13 @@ const RoomShare = ({ t, code }) => {
         </IconButton>
         <Button
           variant="secondary"
+          size="md"
           className="conquest-share-btn"
+          icon={<ExternalLink width={16} height={16} aria-hidden="true" />}
           onClick={onShare}
           aria-label={t.share}
           title={t.share}
         >
-          <ExternalLink width={16} height={16} aria-hidden="true" />
           <span>{t.share}</span>
         </Button>
       </div>
@@ -178,12 +184,13 @@ const PlayerList = ({ t, players, match, userId, online }) => (
     ))}
     {players.length < 2 && (
       <SettingsRow>
-        <div className="conquest-player-chip conquest-player-chip--empty" aria-label={t.waiting}>
+        <div
+          className="conquest-player-chip conquest-player-chip--empty"
+          role="status"
+          aria-label={t.waiting}
+        >
           <span className="conquest-swatch conquest-swatch--empty" aria-hidden="true" />
-          <span className="conquest-player-name" aria-hidden="true">
-            …
-          </span>
-          <span className="sr-only">{t.waiting}</span>
+          <span className="conquest-player-waiting">{t.waiting}</span>
         </div>
       </SettingsRow>
     )}
@@ -210,7 +217,7 @@ const LobbyFooter = ({ t, isHost, me, allReady, busy, conquest }) => (
         {t.startMatch}
       </Button>
     ) : (
-      <p className="conquest-hint sr-only">{t.waitingHost}</p>
+      <p className="conquest-hint">{t.waitingHost}</p>
     )}
   </div>
 );
@@ -243,6 +250,7 @@ export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => 
 const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
   const t = conquestText(lang);
   const { match, players, userId, online, busy, error } = conquest;
+  const [lobbyTab, setLobbyTab] = useState("room");
   const isHost = match?.host_id === userId;
   const me = players.find((player) => player.user_id === userId);
   const allReady = players.length >= 2 && players.every((player) => player.ready);
@@ -254,12 +262,41 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
       <header className="conquest-header">
         <div className="conquest-header-row">
           <h2 className="conquest-title">{t.title}</h2>
-          {onRules && <ConquestRulesButton lang={lang} onClick={onRules} />}
+          <div className="conquest-header-actions">
+            {onRules && <ConquestRulesButton lang={lang} onClick={onRules} />}
+            {onBack && <PanelCloseButton label={t.close} onClick={onBack} />}
+          </div>
         </div>
-        <p className="conquest-subtitle sr-only">{t.subtitle}</p>
+        <p className="conquest-subtitle">{t.subtitle}</p>
       </header>
       {!match ? (
-        <LobbyEntry t={t} busy={busy} onCreate={conquest.create} onJoin={conquest.join} />
+        <>
+          <TabBar
+            level={2}
+            label={t.title}
+            value={lobbyTab}
+            onChange={setLobbyTab}
+            options={[
+              {
+                value: "room",
+                label: t.tabRoom || t.room,
+                icon: <Users width={14} height={14} aria-hidden="true" />,
+              },
+              {
+                value: "board",
+                label: t.tabBoard || t.boardTitle,
+                icon: <Trophy width={14} height={14} aria-hidden="true" />,
+              },
+            ]}
+          />
+          {lobbyTab === "board" ? (
+            <div className="conquest-lobby-board">
+              <ConquestLeaderboard lang={lang} isSignedIn={Boolean(userId)} />
+            </div>
+          ) : (
+            <LobbyEntry t={t} busy={busy} onCreate={conquest.create} onJoin={conquest.join} />
+          )}
+        </>
       ) : (
         <>
           <SettingsSection title={t.room} hideTitle>
@@ -276,12 +313,7 @@ const ConquestLobby = ({ lang, conquest, onBack, onRules }) => {
           />
         </>
       )}
-      {error &&
-        (match ? (
-          <p className="conquest-error">{error}</p>
-        ) : (
-          <ErrorState title={error} hint={t.joinErrorHint} />
-        ))}
+      {error && <ErrorState title={error} hint={match ? undefined : t.joinErrorHint} />}
       <Button
         variant="secondary"
         block

@@ -1,4 +1,4 @@
-import { isConquestEnabled } from "./conquestConfig";
+import { isConquestEnabled, readConquestPreview } from "./conquestConfig";
 import { normalizeRoomCode } from "./conquestLogic";
 
 /** Query parameter carried by Conquête invite links: https://<host>/?conquest=CODE */
@@ -34,6 +34,7 @@ const isOpenedFromInvite = () => isConquestEnabled() && Boolean(readConquestCode
 
 /** No auth prompt for explicit guests nor for invitees (the join signs them in anonymously). */
 export const isGuestLaunch = () => {
+  if (readConquestPreview()) return true;
   try {
     if (globalThis.localStorage?.getItem("tvrs-guest-mode") === "true") return true;
   } catch {

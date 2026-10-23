@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
+import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import TextField from "../components/ui/TextField.jsx";
 
 /** Harder steal challenge: type the capital, or pick the right flag among four. */
@@ -30,9 +31,12 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
         if (value.trim()) onAnswer(value.trim());
       }}
     >
-      <span className="conquest-label">
-        {isFlag ? t.stealFlag : t.stealCapital} {name} ?
-      </span>
+      <div className="conquest-steal-header">
+        <span className="conquest-label">
+          {isFlag ? t.stealFlag : t.stealCapital} {name} ?
+        </span>
+        <PanelCloseButton label={t.stealCancel} onClick={onCancel} />
+      </div>
       {isFlag ? (
         <OptionGroup
           className="conquest-flag-options"
