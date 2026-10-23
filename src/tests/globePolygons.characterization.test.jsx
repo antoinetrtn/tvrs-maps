@@ -427,8 +427,15 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       });
       const franceMissedEnd = summarizeFeatureOutput(endRes.current, FEATURE_FRANCE);
       const spainFoundEnd = summarizeFeatureOutput(endRes.current, FEATURE_SPAIN);
-      expect(franceMissedEnd.color).toBe(endRes.current.UI_COLORS.error);
-      expect(franceMissedEnd.capMaterial.userData.isGlitchShaderCap).toBe(true);
+      // Audit lot 4: missed countries sit on a sober tinted surface, no TV-static shader.
+      expect(franceMissedEnd.color).toBe(
+        endRes.current.lerpColor(
+          endRes.current.UI_COLORS.mapBase,
+          endRes.current.UI_COLORS.error,
+          0.2
+        )
+      );
+      expect(franceMissedEnd.capMaterial.userData.isGlitchShaderCap).toBe(false);
       expect(spainFoundEnd.color).toBe(endRes.current.UI_COLORS.success);
       expect(spainFoundEnd.capMaterial.userData.isGlitchShaderCap).toBe(false);
 
@@ -450,7 +457,7 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
         foundSet: new Set(["Spain"]),
       });
       const franceMissedSatEnd = summarizeFeatureOutput(endSatRes.current, FEATURE_FRANCE);
-      expect(franceMissedSatEnd.capMaterial.userData.isGlitchShaderCap).toBe(true);
+      expect(franceMissedSatEnd.capMaterial.userData.isGlitchShaderCap).toBe(false);
       expect(franceMissedSatEnd.capMaterial.visible).toBe(false);
 
       // CHARACTERIZATION: current behavior — on the end screen in regional mode, found features

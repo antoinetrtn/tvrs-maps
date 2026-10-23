@@ -484,10 +484,10 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
           isPerfectScore: false,
           isRegionalMode: false,
           isLight: false,
-          UI_COLORS: { error: uiColors.error, black: uiColors.black },
+          UI_COLORS: { mapBase: "#34423d", error: uiColors.error, black: uiColors.black },
           lerpColor: lerpMock,
         })
-      ).toBe(`${uiColors.error}->${uiColors.black}@0.06`);
+      ).toBe(`#34423d->${uiColors.error}@0.2->${uiColors.black}@0.06`);
     });
   });
 });
