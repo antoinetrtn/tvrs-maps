@@ -1,102 +1,78 @@
 import "./RulesIllustration.css";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { CONQUEST_PLAYER_COLORS } from "../config/designSystem";
 import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
-import { buildLetterPaths, MAP_ASCII, MAP_COLS, MAP_ROWS } from "./rulesIllustrationMap";
+import { getConquestRulesText } from "./conquestRulesText";
 
-const DEFAULT_LABELS = {
-  alt: "Aperçu d'une partie de Conquête : deux joueurs se disputent les pays d'une carte du monde.",
-  you: "Toi",
-  opponent: "Adversaire",
-  free: "Libre",
-  shielded: "Protégé",
-};
+/** The demo video shows the real "teal" player colour: the legend uses the same source. */
+const FRAME_STYLE = { "--ri-you": CONQUEST_PLAYER_COLORS.teal };
 
-function Hud() {
-  return (
-    <div className="ri-hud">
-      <span className="ri-hud-side">
-        <span className="ri-dot ri-dot-you" />
-        <span className="ri-score">
-          <span className="ri-score-before">30</span>
-          <span className="ri-score-after">40</span>
-        </span>
-      </span>
-      <span className="ri-timer">10:00</span>
-      <span className="ri-hud-side">
-        <span className="ri-score ri-score-opponent">20</span>
-        <span className="ri-dot ri-dot-opponent" />
-      </span>
-    </div>
-  );
+const WEBM_SRC = "/conquest-demo/conquete-demo.webm";
+const MP4_SRC = "/conquest-demo/conquete-demo.mp4";
+const POSTER_SRC = "/conquest-demo/conquete-demo-poster.webp";
+
+const BEAT_KEYS = ["capture", "opponent", "steal", "end"];
+const STEAL_BEAT_INDEX = 2;
+
+const DEFAULT_LABELS = getConquestRulesText("fr").illustration;
+const DEFAULT_CAPTIONS = DEFAULT_LABELS.captions;
+
+function getBeatIndex(time) {
+  if (!Number.isFinite(time) || time < 4.2) {
+    return 0;
+  }
+  if (time < 6.6) {
+    return 1;
+  }
+  if (time < 10.2) {
+    return 2;
+  }
+  return 3;
 }
 
-function WorldMap({ paths }) {
-  return (
-    <svg
-      className="ri-map"
-      viewBox={`2 0 ${MAP_COLS - 3} ${MAP_ROWS}`}
-      width="100%"
-      shapeRendering="crispEdges"
-      aria-hidden="true"
-    >
-      <path className="ri-map-free" d={paths.f} />
-      <path className="ri-map-you" d={paths.a} />
-      <path className="ri-map-opponent" d={paths.o} />
-      <path className="ri-map-you" d={paths.s} />
-      <path className="ri-map-captured" d={paths.n} />
-      <g className="ri-shield-pulse">
-        <rect x="7" y="2" width="4" height="4" className="ri-ring" />
-        <rect x="6" y="1" width="6" height="6" className="ri-ring ri-ring-outer" />
-      </g>
-      <text x="21.2" y="9" textAnchor="end" className="ri-pop-points">
-        +10
-      </text>
-    </svg>
-  );
+function safePlay(video) {
+  if (!video || typeof video.play !== "function") {
+    return;
+  }
+  try {
+    const promise = video.play();
+    if (promise && typeof promise.catch === "function") {
+      promise.catch(() => {});
+    }
+  } catch {}
 }
 
-function TypingField() {
-  return (
-    <div className="ri-field">
-      <span className="ri-typed">France</span>
-      <span className="ri-caret" />
-    </div>
-  );
-}
-
-function IllustrationLegend({ labels }) {
-  return (
-    <div className="ri-legend">
-      <span className="ri-legend-item">
-        <span className="ri-swatch ri-swatch-you" aria-hidden="true" />
-        <span>{labels.you}</span>
-      </span>
-      <span className="ri-legend-item">
-        <span className="ri-swatch ri-swatch-opponent" aria-hidden="true" />
-        <span>{labels.opponent}</span>
-      </span>
-      <span className="ri-legend-item">
-        <span className="ri-swatch ri-swatch-free" aria-hidden="true" />
-        <span>{labels.free}</span>
-      </span>
-      <span className="ri-legend-item">
-        <span className="ri-swatch ri-swatch-shielded" aria-hidden="true" />
-        <span>{labels.shielded}</span>
-      </span>
-    </div>
-  );
+function safePause(video) {
+  if (!video || typeof video.pause !== "function") {
+    return;
+  }
+  try {
+    video.pause();
+  } catch {}
 }
 
 export default function RulesIllustration({ labels }) {
-  const l = labels || DEFAULT_LABELS;
+  const l = labels ? { ...DEFAULT_LABELS, ...labels } : DEFAULT_LABELS;
+  const captions = l.captions ? { ...DEFAULT_CAPTIONS, ...l.captions } : DEFAULT_CAPTIONS;
   const prefersReduced = usePrefersReducedMotion();
   const rootRef = useRef(null);
+  const videoRef = useRef(null);
+
   const [inView, setInView] = useState(() => typeof IntersectionObserver === "undefined");
+  const [hasEntered, setHasEntered] = useState(() => typeof IntersectionObserver === "undefined");
+  const [docHidden, setDocHidden] = useState(
+    () => typeof document !== "undefined" && document.hidden === true
+  );
+  const [beat, setBeat] = useState(0);
 
   useEffect(() => {
+    if (prefersReduced) {
+      return undefined;
+    }
     if (typeof IntersectionObserver === "undefined") {
+      setHasEntered(true);
       setInView(true);
       return undefined;
     }
@@ -104,17 +80,62 @@ export default function RulesIllustration({ labels }) {
     if (!node) {
       return undefined;
     }
-    const observer = new IntersectionObserver(([entry]) => {
-      setInView(entry?.isIntersecting ?? true);
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const visible = Boolean(entry?.isIntersecting);
+        setInView(visible);
+        if (visible) {
+          setHasEntered(true);
+        }
+      },
+      { threshold: 0.25 }
+    );
     observer.observe(node);
     return () => {
       observer.disconnect();
     };
+  }, [prefersReduced]);
+
+  useEffect(() => {
+    if (prefersReduced || typeof document === "undefined") {
+      return undefined;
+    }
+    const handleVisibility = () => {
+      setDocHidden(document.hidden === true);
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [prefersReduced]);
+
+  const isPlaying = !prefersReduced && inView && !docHidden;
+
+  useEffect(() => {
+    if (prefersReduced || !hasEntered) {
+      return;
+    }
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+    if (isPlaying) {
+      safePlay(video);
+    } else {
+      safePause(video);
+    }
+  }, [isPlaying, hasEntered, prefersReduced]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+    const nextBeat = getBeatIndex(video.currentTime);
+    setBeat((prev) => (prev === nextBeat ? prev : nextBeat));
   }, []);
 
-  const paths = useMemo(() => buildLetterPaths(MAP_ASCII), []);
-  const isPlaying = inView && !prefersReduced;
+  const activeBeat = prefersReduced ? STEAL_BEAT_INDEX : beat;
   const classNames = [
     "rules-illu",
     isPlaying ? "is-playing" : "",
@@ -124,11 +145,58 @@ export default function RulesIllustration({ labels }) {
     .join(" ");
 
   return (
-    <div ref={rootRef} className={classNames} role="img" aria-label={l.alt}>
-      <Hud />
-      <WorldMap paths={paths} />
-      <TypingField />
-      <IllustrationLegend labels={l} />
-    </div>
+    <figure ref={rootRef} className={classNames} style={FRAME_STYLE} role="img" aria-label={l.alt}>
+      <div className="ri-legend" aria-hidden="true">
+        <span className="ri-legend-item">
+          <span className="ri-swatch ri-swatch-you" />
+          <span>{l.you}</span>
+        </span>
+        <span className="ri-legend-item ri-legend-item-opponent">
+          <span>{l.opponent}</span>
+          <span className="ri-swatch ri-swatch-opponent" />
+        </span>
+      </div>
+
+      <div className="ri-frame" aria-hidden="true">
+        {prefersReduced ? (
+          <img className="ri-media" src={POSTER_SRC} alt="" aria-hidden="true" />
+        ) : (
+          <video
+            ref={videoRef}
+            className="ri-media"
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={POSTER_SRC}
+            aria-hidden="true"
+            onTimeUpdate={handleTimeUpdate}
+          >
+            {hasEntered && (
+              <>
+                <source src={WEBM_SRC} type="video/webm" />
+                <source src={MP4_SRC} type="video/mp4" />
+              </>
+            )}
+          </video>
+        )}
+      </div>
+
+      <figcaption className="ri-footer" aria-hidden="true">
+        <div className="ri-captions">
+          {BEAT_KEYS.map((key, idx) => (
+            <span key={key} className={`ri-cap${idx === activeBeat ? " is-active" : ""}`}>
+              {captions[key]}
+            </span>
+          ))}
+        </div>
+        <div className="ri-steps">
+          {BEAT_KEYS.map((key, idx) => {
+            const filled = prefersReduced || idx <= activeBeat;
+            return <span key={key} className={`ri-step${filled ? " is-filled" : ""}`} />;
+          })}
+        </div>
+      </figcaption>
+    </figure>
   );
 }

@@ -1,357 +1,126 @@
-/* Conquête rules — one illustration that presents the game at a glance.
-   Square cells, stepped motion, colours from tokens only. Base styles = the complete
-   final frame (what reduced-motion users see); the loop is layered on top while playing. */
+/* Conquête 1v1 rules — looping gameplay capture (480x300, 16:10, pixelated) */
 
 .rules-illu {
-  --ri-loop: 6s;
+  --ri-adv: var(--text-secondary, var(--text-muted));
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  width: 100%;
-  max-width: 420px;
-  margin: 0 auto var(--spacing-md);
-  padding: var(--spacing-sm);
-  box-sizing: border-box;
-  background: var(--bg-color);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-}
-
-/* HUD (mirrors the in-match HUD: score · timer · score) */
-
-.ri-hud {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-sm);
-  padding-bottom: var(--spacing-sm);
-  border-bottom: 1px solid var(--glass-border);
-  font-family: var(--font-display);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.ri-hud-side {
-  display: inline-flex;
-  align-items: center;
   gap: var(--spacing-xs);
-  min-width: 4.5em;
-}
-
-.ri-hud-side:last-child {
-  justify-content: flex-end;
-}
-
-.ri-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  flex-shrink: 0;
-}
-
-.ri-dot-you {
-  background: var(--accent);
-}
-
-.ri-dot-opponent {
-  background: var(--warning);
-}
-
-.ri-score {
-  display: inline-grid;
-  font-size: var(--font-size-lg);
-  color: var(--accent);
-}
-
-.ri-score > span {
-  grid-area: 1 / 1;
-}
-
-.ri-score-opponent {
-  color: var(--warning);
-}
-
-.ri-timer {
-  font-size: var(--font-size-lg);
-  color: var(--text-main);
-}
-
-.ri-score-before {
-  visibility: hidden;
-}
-
-/* World map */
-
-.ri-map {
-  display: block;
   width: 100%;
-  height: auto;
-}
-
-.ri-map path {
-  stroke: var(--bg-color);
-  stroke-width: 0.14;
-}
-
-.ri-map-free {
-  fill: var(--text-muted);
-  fill-opacity: 0.3;
-}
-
-.ri-map-you,
-.ri-map-captured {
-  fill: var(--accent);
-}
-
-.ri-map-opponent {
-  fill: var(--warning);
-}
-
-.ri-ring {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 0.4;
-}
-
-.ri-ring-outer {
-  stroke-opacity: 0.55;
-}
-
-.ri-shield-pulse {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.ri-pop-points {
-  font-family: var(--font-display);
-  font-size: 3px;
-  fill: var(--accent);
-  stroke: none;
-}
-
-/* Typing field (mirrors the answer field of the match HUD) */
-
-.ri-field {
-  display: flex;
-  align-items: center;
-  align-self: center;
-  gap: 2px;
-  width: min(70%, 220px);
-  height: 30px;
-  padding: 0 var(--spacing-sm);
+  max-width: 520px;
+  margin: 0 auto var(--spacing-md);
   box-sizing: border-box;
-  border: 1px solid var(--glass-border-strong);
-  font-family: var(--font-display);
-  font-size: var(--font-size-md);
-  color: var(--text-main);
 }
-
-.ri-typed {
-  display: inline-block;
-}
-
-.ri-caret {
-  display: inline-block;
-  width: 2px;
-  height: 14px;
-  background: var(--accent);
-}
-
-/* Legend */
 
 .ri-legend {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs) var(--spacing-md);
-  font-family: var(--font-main);
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  line-height: 1;
 }
 
 .ri-legend-item {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
+  font-family: var(--font-main);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.ri-legend-item-opponent {
+  color: var(--ri-adv);
 }
 
 .ri-swatch {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   flex-shrink: 0;
   box-sizing: border-box;
 }
 
 .ri-swatch-you {
-  background: var(--accent);
+  background: var(--ri-you, var(--accent));
 }
 
 .ri-swatch-opponent {
-  background: var(--warning);
+  background: repeating-conic-gradient(var(--ri-adv) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px;
 }
 
-.ri-swatch-free {
-  background: var(--text-muted);
-  opacity: 0.3;
+.ri-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.ri-swatch-shielded {
+.ri-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.ri-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  min-height: 18px;
+}
+
+.ri-captions {
+  display: inline-grid;
+  align-items: center;
+  min-width: 0;
+  font-family: var(--font-main);
+  font-size: var(--font-size-xs);
+  color: var(--ri-adv);
+}
+
+.ri-cap {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.ri-cap.is-active {
+  opacity: 1;
+}
+
+.ri-steps {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid var(--accent);
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
 }
 
-.ri-swatch-shielded::after {
-  content: "";
-  display: block;
-  width: 4px;
-  height: 4px;
+.ri-step {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ri-adv);
+  background: transparent;
+  box-sizing: border-box;
+  transition:
+    background-color var(--dur-fast) var(--steps-press),
+    border-color var(--dur-fast) var(--steps-press);
+}
+
+.ri-step.is-filled {
   background: var(--accent);
-}
-
-/* Loop: type "France" → the country flashes → becomes yours (+10, score 30 → 40) → reset */
-
-.rules-illu.is-playing:not(.is-static) .ri-typed {
-  animation: ri-type var(--ri-loop) steps(1, end) infinite;
-}
-
-.rules-illu.is-playing:not(.is-static) .ri-caret {
-  animation: ri-caret 0.8s steps(1, end) infinite;
-}
-
-.rules-illu.is-playing:not(.is-static) .ri-map-captured {
-  animation: ri-capture var(--ri-loop) steps(1, end) infinite;
-}
-
-.rules-illu.is-playing:not(.is-static) .ri-pop-points {
-  animation: ri-pop var(--ri-loop) steps(1, end) infinite;
-}
-
-.rules-illu.is-playing:not(.is-static) .ri-score-before {
-  animation: ri-score-before var(--ri-loop) steps(1, end) infinite;
-}
-
-.rules-illu.is-playing:not(.is-static) .ri-score-after {
-  animation: ri-score-after var(--ri-loop) steps(1, end) infinite;
-}
-
-.rules-illu.is-playing:not(.is-static) .ri-shield-pulse {
-  animation: ri-shield 1.2s steps(1, end) infinite;
-}
-
-@keyframes ri-type {
-  0%,
-  9% {
-    clip-path: inset(0 100% 0 0);
-  }
-  10% {
-    clip-path: inset(0 100% 0 0);
-    animation-timing-function: steps(6, end);
-  }
-  35%,
-  89% {
-    clip-path: inset(0 0 0 0);
-  }
-  90%,
-  100% {
-    clip-path: inset(0 100% 0 0);
-  }
-}
-
-@keyframes ri-caret {
-  0%,
-  49% {
-    visibility: visible;
-  }
-  50%,
-  100% {
-    visibility: hidden;
-  }
-}
-
-@keyframes ri-capture {
-  0%,
-  44% {
-    fill: var(--text-muted);
-    fill-opacity: 0.3;
-  }
-  45% {
-    fill: var(--text-main);
-    fill-opacity: 1;
-  }
-  46%,
-  89% {
-    fill: var(--accent);
-    fill-opacity: 1;
-  }
-  90%,
-  100% {
-    fill: var(--text-muted);
-    fill-opacity: 0.3;
-  }
-}
-
-@keyframes ri-pop {
-  0%,
-  45% {
-    visibility: hidden;
-  }
-  46%,
-  85% {
-    visibility: visible;
-  }
-  86%,
-  100% {
-    visibility: hidden;
-  }
-}
-
-@keyframes ri-score-before {
-  0%,
-  45% {
-    visibility: visible;
-  }
-  46%,
-  89% {
-    visibility: hidden;
-  }
-  90%,
-  100% {
-    visibility: visible;
-  }
-}
-
-@keyframes ri-score-after {
-  0%,
-  45% {
-    visibility: hidden;
-  }
-  46%,
-  89% {
-    visibility: visible;
-  }
-  90%,
-  100% {
-    visibility: hidden;
-  }
-}
-
-@keyframes ri-shield {
-  0%,
-  49% {
-    transform: scale(1);
-  }
-  50%,
-  100% {
-    transform: scale(1.14);
-  }
+  border-color: var(--accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rules-illu * {
-    animation: none !important;
+  .ri-cap,
+  .ri-step {
+    transition: none;
   }
 }
