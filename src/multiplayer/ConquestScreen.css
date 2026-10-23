@@ -51,30 +51,33 @@
   white-space: nowrap;
 }
 
-.conquest-rules-open-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--control-lg);
-  height: var(--control-lg);
-  min-height: var(--control-lg);
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.conquest-rules-open-btn span {
-  clip-path: inset(50%);
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
 .conquest-header {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+}
+
+.conquest-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.conquest-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.conquest-lobby-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 280px;
+  overflow-y: auto;
 }
 
 .conquest-title {
@@ -233,7 +236,7 @@
   display: inline-flex;
   align-items: center;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .conquest-stat {
@@ -243,7 +246,13 @@
 }
 
 .conquest-player-chip--empty {
-  opacity: 0.5;
+  opacity: 0.7;
+}
+
+.conquest-player-waiting {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .conquest-swatch--empty {

@@ -14,7 +14,6 @@
     "src/components/Logo.css": 13,
     "src/components/TrainingSheet.css": 1,
     "src/globe/GlobeMap.css": 1,
-    "src/multiplayer/ConquestHud.css": 1,
     "src/styles/glitchMoments.css": 6
   },
   "hover-unguarded": {
@@ -30,7 +29,6 @@
     "src/components/ProfilePanel.css": 4,
     "src/components/ui/ui.css": 3,
     "src/globe/GlobeMap.css": 1,
-    "src/multiplayer/ConquestHud.css": 1,
     "src/multiplayer/ConquestRules.css": 1,
     "src/styles/panelSystem.css": 1
   },
@@ -61,8 +59,6 @@
     "src/components/ProfilePanel.css": 6,
     "src/globe/GlobeMap.css": 6,
     "src/index.css": 2,
-    "src/multiplayer/ConquestHud.css": 3,
-    "src/multiplayer/ConquestReady.css": 3,
     "src/styles/panelSystem.css": 1
   }
 }

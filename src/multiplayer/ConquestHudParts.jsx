@@ -110,6 +110,7 @@ export const HudTopBar = ({ standings, userId, phase, clockMs, t }) => {
 export const HudFeed = ({ feed, onFocusCountry, t }) => (
   <aside className="conquest-feed conquest-surface" aria-live="polite">
     <span className="conquest-sr-only">{t.feed}</span>
+    {feed.length === 0 ? <p className="conquest-feed-empty">{t.feedEmpty}</p> : null}
     <ul>
       {feed.map((line) => (
         <li key={line.id}>
