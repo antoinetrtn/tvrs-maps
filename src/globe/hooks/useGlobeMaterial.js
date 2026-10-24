@@ -21,21 +21,18 @@ const applyBlackoutOceanShader = (shader) => {
   shader.vertexShader = `
     varying vec3 vWorldNormal;
     varying vec3 vWorldPos;
-    varying vec2 vUv;
-    ${shader.vertexShader.replace(
-      "#include <begin_vertex>",
-      `#include <begin_vertex>
+        ${shader.vertexShader.replace(
+          "#include <begin_vertex>",
+          `#include <begin_vertex>
       vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
       vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-      vUv = uv;
       `
-    )}
+        )}
   `;
   shader.fragmentShader = `
     varying vec3 vWorldNormal;
     varying vec3 vWorldPos;
-    varying vec2 vUv;
-    uniform vec3 uRimColor;
+        uniform vec3 uRimColor;
     uniform float uRimStrength;
     uniform float uPixelScale;
     uniform float uTime;
@@ -48,68 +45,88 @@ const applyBlackoutOceanShader = (shader) => {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
     }
 
-    float oceanValueNoise(vec2 p) {
-      vec2 i = floor(p);
-      vec2 f = fract(p);
-      vec2 u = f * f * (3.0 - 2.0 * f);
-      float n00 = oceanCellHash(i);
-      float n10 = oceanCellHash(i + vec2(1.0, 0.0));
-      float n01 = oceanCellHash(i + vec2(0.0, 1.0));
-      float n11 = oceanCellHash(i + vec2(1.0, 1.0));
-      return mix(mix(n00, n10, u.x), mix(n01, n11, u.x), u.y);
-    }
-
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      // 3D sphere-anchored latitude-compensated pixel-art grid (rotates with the Earth,
-      // snaps by power-of-2 zoom octaves from camera altitude so pixels stay ~2.8 CSS px)
-      float rawLat = (vUv.y - 0.5) * 3.14159265;
-      float rawLng = (vUv.x - 0.5) * 6.2831853;
+      // Minimalist monochrome pixel-wave / ASCII wavelet ocean shader
+      // Latitude-compensated spherical cell grid (~7.5 CSS px cells at default zoom,
+      // subdivided into a crisp 5x5 pixel-art bitmap for ~, -, and · wavelets)
+      vec3 sphereDir = normalize(vWorldNormal);
+      float rawLat = asin(clamp(sphereDir.y, -1.0, 1.0));
+      float rawLng = atan(sphereDir.z, sphereDir.x);
+      float latNorm = rawLat / 3.14159265 + 0.5;
       float camAlt = max(length(cameraPosition) - 100.0, 15.0);
-      float zoomOctave = exp2(floor(log2(clamp(220.0 / camAlt, 1.0, 8.0)) + 0.5));
-      float resLat = 56.0 * zoomOctave;
+      float zoomOctave = exp2(floor(log2(clamp(230.0 / camAlt, 1.0, 8.0)) + 0.5));
+      float resLat = 48.0 * zoomOctave;
 
-      float pxRow = floor(rawLat * resLat);
-      float rowLat = (pxRow + 0.5) / resLat;
-      float colsPerRad = max(floor(resLat * cos(rowLat) + 0.5), 8.0);
-      float pxCol = floor(rawLng * colsPerRad);
-      vec2 spherePx = vec2(pxCol, pxRow);
-      float bayer = bayer4x4(spherePx);
+      float cellRow = floor(rawLat * resLat);
+      float rowLat = (cellRow + 0.5) / resLat;
+      float colsPerRad = max(floor(resLat * cos(rowLat) * 1.15 + 0.5), 8.0);
+      float cellCol = floor(rawLng * colsPerRad);
 
-      // Coarse terraced bathymetric plateaus evaluated at quantized pixel center
-      // (zero sinusoidal waves, zero per-pixel white noise so Bayer 4x4 tiles stay pure)
-      vec2 qSphere = vec2((pxCol + 0.5) / colsPerRad, rowLat);
-      float bathyMacro = oceanValueNoise(qSphere * 2.4 + vec2(1.7, 3.1));
-      float bathyMid = oceanValueNoise(qSphere * 5.2 + vec2(8.3, 4.9));
-      float bathymetry = bathyMacro * 0.62 + bathyMid * 0.38;
+      // Integer sub-pixel coordinates [0..4] inside each 5x5 pixel-art cell
+      vec2 cellUv = vec2(fract(rawLng * colsPerRad), fract(rawLat * resLat));
+      vec2 subPx = floor(cellUv * 5.0);
+      float sx = subPx.x;
+      float sy = subPx.y;
 
-      // Stepped spherical depth/limb shading
+      vec2 cellId = vec2(cellCol, cellRow);
+      float cellHash = oceanCellHash(cellId);
+
+      // Gentle ocean swell & slow horizontal wavelet drift
+      vec2 qSphere = vec2((cellCol + 0.5) / colsPerRad, rowLat);
+      float swellA = sin(qSphere.x * 11.0 + uTime * 0.65 + sin(qSphere.y * 6.0) * 1.4) *
+                     cos(qSphere.y * 9.0 - uTime * 0.32);
+      float swellB = cos(qSphere.x * 17.0 - uTime * 0.48 + qSphere.y * 5.0);
+      float swell = swellA * 0.65 + swellB * 0.35;
+
+      // Sparse minimalist presence (~24% of cells carry a tiny wavelet or dot; 76% empty ocean)
+      float waveActive = step(-0.08, swell) * step(0.62, cellHash);
+
+      // Animated 1-pixel vertical bob on the tilde crest so wavelets ripple gently in place
+      float bob = step(0.0, sin(uTime * 1.9 + cellHash * 6.2831853 + qSphere.x * 12.0));
+
+      // Crisp 5x5 pixel-art bitmap glyphs:
+      // 1) Tilde wave (~): 4-pixel horizontal ripple across columns 0..3
+      float tildeY = (sx < 0.5) ? 2.0 : ((sx < 1.5) ? (2.0 + bob) : ((sx < 2.5) ? 2.0 : (2.0 - (1.0 - bob))));
+      float isTilde = step(sx, 3.5) * (1.0 - step(0.5, abs(sy - tildeY)));
+
+      // 2) Short ripple dash (-): 3-pixel horizontal bar at columns 1..3, row 2
+      float isDash = step(0.5, sx) * step(sx, 3.5) * (1.0 - step(0.5, abs(sy - 2.0)));
+
+      // 3) Single pixel sea-foam dot (·): center pixel (2, 2)
+      float isDot = (1.0 - step(0.5, abs(sx - 2.0))) * (1.0 - step(0.5, abs(sy - 2.0)));
+
+      float glyphType = fract(cellHash * 19.7);
+      float glyph = (glyphType < 0.50) ? isTilde : ((glyphType < 0.80) ? isDash : isDot);
+
+      // Subtle breathing modulation per wavelet
+      float breath = 0.68 + 0.32 * sin(uTime * 1.4 + cellHash * 6.2831853);
+      float wavePixel = waveActive * glyph * breath;
+
+      // Delicate dithered horizon limb (only near the outer silhouette of the globe)
       vec3 viewDir = normalize(cameraPosition - vWorldPos);
       float viewIncidence = clamp(dot(vWorldNormal, viewDir), 0.0, 1.0);
-      float limb = pow(clamp(1.0 - viewIncidence, 0.0, 1.0), 1.35);
+      vec2 globalSubPx = cellId * 5.0 + subPx;
+      float bayer = bayer4x4(globalSubPx);
+      float limb = pow(clamp(1.0 - viewIncidence, 0.0, 1.0), 2.2);
+      float limbBit = step(bayer + 0.12, limb * 0.52) * 0.09;
 
-      // Quantize into discrete Bayer 4x4 dither levels (1/16 sparse stipple in deep basins
-      // up to 8/16 crisp pixel-art checkerboard on bathymetric plateaus and limb)
-      float rawField = bathymetry * 0.78 + limb * 0.45 + uGlobeMotion * 0.04;
-      float bayerSteps = floor(clamp(rawField * 12.0 - 0.8, 2.0, 9.0));
-      float ditherTone = bayerSteps / 16.0;
-      float trameBit = step(bayer + 0.01, ditherTone);
+      // Monochrome pixel-wavelet luminance (~0.21 on lit wavelet pixels above dark sea base,
+      // crisp and readable as tiny pixel waves while keeping 96% of ocean pixels deep black)
+      float pixelAlpha = wavePixel * (0.145 + uRimStrength * 0.34) + limbBit;
+      vec3 waveRgb = mix(vec3(0.78, 0.82, 0.86), uRimColor, 0.45) * pixelAlpha;
 
-      // Crisp pixel-art dot contrast on deep ocean (clearly visible pixels, calm overall density)
-      vec3 ditheredRim = uRimColor * (trameBit * (0.16 + uRimStrength * 0.68));
-
-      // Subtle dithered Equator and Tropics reference lines
-      float latWidth = max(fwidth(vUv.y), 0.0005);
-      float eqLine = clamp(1.0 - abs(vUv.y - 0.5) / latWidth, 0.0, 1.0);
-      float tropicLine = clamp(1.0 - abs(abs(vUv.y - 0.5) - 23.44 / 180.0) / latWidth, 0.0, 1.0);
+      // Fine dithered Equator and Tropics reference lines
+      float latWidth = max(fwidth(latNorm), 0.00045);
+      float eqLine = clamp(1.0 - abs(latNorm - 0.5) / latWidth, 0.0, 1.0);
+      float tropicLine = clamp(1.0 - abs(abs(latNorm - 0.5) - 23.44 / 180.0) / latWidth, 0.0, 1.0);
       float specialLines = max(eqLine, tropicLine);
-      float specialDither = step(bayer + 0.03, specialLines * 0.65) * 0.08;
-
+      float specialDither = step(bayer + 0.05, specialLines * 0.55) * 0.06;
       vec3 graticuleColor = mix(vec3(0.55, 0.65, 0.75), uRimColor, 0.45);
-      vec3 graticuleRgb = graticuleColor * (specialDither * (0.08 + uRimStrength * 0.35));
+      vec3 graticuleRgb = graticuleColor * (specialDither * (0.07 + uRimStrength * 0.28));
 
-      gl_FragColor.rgb += ditheredRim + graticuleRgb;
+      gl_FragColor.rgb += waveRgb + graticuleRgb;
       `
     )}
   `;

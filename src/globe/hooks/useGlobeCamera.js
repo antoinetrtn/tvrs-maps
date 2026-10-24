@@ -261,9 +261,11 @@ export function useGlobeCamera(props) {
     let wheelHandler = null,
       touchZoomHandler = null;
 
-    if (globeEl.current) {
+    let retryTimer = null;
+    const attachControlsAndListeners = (attempt = 0) => {
+      if (!globeEl.current) return;
       try {
-        const renderer = globeEl.current.renderer();
+        const renderer = globeEl.current.renderer?.();
         if (renderer) {
           const pixelRatio = Math.min(perfProfile?.pixelRatio || 1, MAX_GLOBE_PIXEL_RATIO);
           if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
@@ -272,7 +274,7 @@ export function useGlobeCamera(props) {
           polygonGlitchUniforms.uPixelScale.value =
             GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
         }
-        const controls = globeEl.current.controls();
+        const controls = globeEl.current.controls?.();
         if (controls) {
           controlsRef = controls;
           controls.autoRotate = shouldAutoRotate;
@@ -318,12 +320,16 @@ export function useGlobeCamera(props) {
             domRef.addEventListener("touchstart", touchZoomHandler, { passive: true });
             domRef.addEventListener("touchmove", touchZoomHandler, { passive: true });
           }
+          syncGlobeCameraAndZoomLimits(globeEl.current, controlsRef);
+        } else if (attempt < 15) {
+          retryTimer = setTimeout(() => attachControlsAndListeners(attempt + 1), 60);
         }
-        syncGlobeCameraAndZoomLimits(globeEl.current, controlsRef);
       } catch {}
-    }
+    };
+    attachControlsAndListeners(0);
 
     return () => {
+      if (retryTimer != null) clearTimeout(retryTimer);
       try {
         controlsRef?.removeEventListener("change", changeHandler);
         controlsRef?.removeEventListener("start", startHandler);

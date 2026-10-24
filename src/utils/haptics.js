@@ -4,11 +4,11 @@ import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 export const ZOOM_HAPTIC_DETENTS = 28;
 // In Chromium Blink (vibration_controller.cc), calling Vibrate() while is_running_ is true
 // sends a Mojo Cancel() IPC to Android VibratorManagerService before scheduling the next
-// pulse after a main-thread timer. A 28ms pulse + 135ms cooldown guarantees is_running_
-// returns to false well before the next tick during 3D globe rendering.
+// pulse after a main-thread timer. A 35ms pulse + 135ms cooldown guarantees is_running_
+// returns to false well before the next tick while giving ERM/LRA motors time to spin up.
 const ZOOM_HAPTIC_COOLDOWN_MS = 135;
-export const ZOOM_HAPTIC_TICK_MS = 28;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 55;
+export const ZOOM_HAPTIC_TICK_MS = 35;
+export const ZOOM_HAPTIC_BOUNDARY_MS = 60;
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 280;
 const ZOOM_PINCH_STEP_PX = 18;
 const ZOOM_WHEEL_STEP_DELTA = 36;
@@ -54,12 +54,6 @@ function triggerIosSwitchHaptic() {
 export function primeHapticsOnUserGesture() {
   if (typeof window === "undefined") return;
   ensureIosHapticSwitch();
-  // On Android Chrome (where navigator.vibrate is supported), avoid opening an active
-  // WebAudio AAudio output stream on every touchstart, which can suppress or mask
-  // hardware vibrator pulses on Android OEM audio HALs.
-  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-    return;
-  }
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return;
   try {
@@ -68,28 +62,31 @@ export function primeHapticsOnUserGesture() {
   } catch {}
 }
 
-function playTactileAudioTick(isBoundary = false) {
-  if (typeof window === "undefined") return false;
+function ensureRunningAudioCtx() {
+  if (typeof window === "undefined") return null;
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!AudioCtx) return false;
+  if (!AudioCtx) return null;
+  sharedAudioCtx ||= new AudioCtx();
+  if (sharedAudioCtx.state === "suspended") {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx.state === "running" ? sharedAudioCtx : null;
+}
+
+function playTactileAudioTick(isBoundary = false) {
   try {
-    if (!sharedAudioCtx) {
-      sharedAudioCtx = new AudioCtx();
-    }
-    if (sharedAudioCtx.state === "suspended") {
-      sharedAudioCtx.resume().catch(() => {});
-    }
-    if (sharedAudioCtx.state !== "running") return false;
-    const now = sharedAudioCtx.currentTime;
-    const osc = sharedAudioCtx.createOscillator();
-    const gain = sharedAudioCtx.createGain();
+    const ctx = ensureRunningAudioCtx();
+    if (!ctx) return false;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.type = "triangle";
     osc.frequency.setValueAtTime(isBoundary ? 135 : 108, now);
     osc.frequency.exponentialRampToValueAtTime(isBoundary ? 48 : 38, now + 0.008);
     gain.gain.setValueAtTime(isBoundary ? 0.036 : 0.024, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.0085);
     osc.connect(gain);
-    gain.connect(sharedAudioCtx.destination);
+    gain.connect(ctx.destination);
     osc.start(now);
     osc.stop(now + 0.009);
     return true;
@@ -153,8 +150,11 @@ export function triggerSubtleHapticTick(
 ) {
   if (prefersReducedMotion()) return false;
   const vibrated = tryNativeVibrate(nav, durationMs);
-  if (vibrated) return true;
-  return playTactileAudioTick(durationMs >= ZOOM_HAPTIC_BOUNDARY_MS);
+  // Always run the ultra-short 8ms low-frequency tactile audio tick alongside native vibrate:
+  // on Android devices where OS Touch feedback / Ringer / Battery Saver silences the physical
+  // vibrator despite navigator.vibrate() returning true, the tactile click still gives feedback.
+  const audioClicked = playTactileAudioTick(durationMs >= ZOOM_HAPTIC_BOUNDARY_MS);
+  return Boolean(vibrated || audioClicked);
 }
 
 /**
@@ -248,8 +248,10 @@ export function createZoomHapticTracker({
         return { pulsed: false, detent, reason: "seeded" };
       }
 
-      const atMin = altitude <= minAltitude + BOUNDARY_EPS;
-      const atMax = altitude >= maxAltitude - BOUNDARY_EPS;
+      const safeMin = Math.max(0.01, minAltitude);
+      const safeMax = Math.max(safeMin + 0.01, maxAltitude);
+      const atMin = altitude <= safeMin + BOUNDARY_EPS;
+      const atMax = altitude >= safeMax - BOUNDARY_EPS;
       const boundary = atMin ? "min" : atMax ? "max" : null;
 
       const isNewBoundary = Boolean(boundary && boundary !== lastBoundary);
@@ -257,7 +259,7 @@ export function createZoomHapticTracker({
         lastBoundary = boundary;
         lastDetent = detent;
       }
-      if (isNewBoundary && now - lastPulseAt < cooldownMs) {
+      if (isNewBoundary && now - lastPulseAt < cooldownMs * 0.75) {
         return { pulsed: false, detent, boundary, reason: "cooldown" };
       }
       if (isNewBoundary) {
@@ -265,7 +267,6 @@ export function createZoomHapticTracker({
         const ok = vibrate(ZOOM_HAPTIC_BOUNDARY_MS);
         return { pulsed: Boolean(ok), detent, boundary, duration: ZOOM_HAPTIC_BOUNDARY_MS };
       }
-
       if (!boundary) {
         lastBoundary = null;
       }

@@ -2,6 +2,8 @@ import "./Button.css";
 
 import React from "react";
 
+import { primeHapticsOnUserGesture, triggerSubtleHapticTick } from "../../utils/haptics";
+
 const VARIANTS = ["glass", "outline", "ghost", "danger"];
 const SIZES = ["sm", "md", "lg"];
 
@@ -24,6 +26,7 @@ const IconButton = React.forwardRef(function IconButton(
     type = "button",
     className = "",
     title,
+    onClick,
     children,
     ...rest
   },
@@ -43,6 +46,12 @@ const IconButton = React.forwardRef(function IconButton(
     .filter(Boolean)
     .join(" ");
 
+  const handleClick = (event) => {
+    primeHapticsOnUserGesture();
+    triggerSubtleHapticTick();
+    onClick?.(event);
+  };
+
   return (
     <button
       ref={ref}
@@ -50,6 +59,7 @@ const IconButton = React.forwardRef(function IconButton(
       className={classes}
       aria-label={label}
       title={title !== undefined ? title : label}
+      onClick={handleClick}
       {...rest}
     >
       {children}

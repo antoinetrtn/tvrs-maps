@@ -101,74 +101,109 @@ export function countryGrainOutputNode() {
   return grainNode;
 }
 
-let oceanMotionNode = null;
+let oceanTimeNode = null;
 
-const oceanValueNoise = Fn(([p]) => {
-  const i = floor(p);
-  const f = fract(p);
-  const u = f.mul(f).mul(float(3.0).sub(f.mul(2.0)));
-  const n00 = hash(i);
-  const n10 = hash(i.add(vec2(1.0, 0.0)));
-  const n01 = hash(i.add(vec2(0.0, 1.0)));
-  const n11 = hash(i.add(vec2(1.0, 1.0)));
-  return mix(mix(n00, n10, u.x), mix(n01, n11, u.x), u.y);
-});
-
-/** blackoutOceanOutputNode: 3D sphere-anchored pixel-art Bayer 4x4 ocean dithering */
+/** blackoutOceanOutputNode: minimalist monochrome 5x5 pixel-art wavelet / ASCII ocean */
 export function blackoutOceanOutputNode(
   rimColor = new THREE.Color(0.85, 0.88, 0.92),
   rimStrength = 0.07
 ) {
-  const uGlobeMotion = (oceanMotionNode ||= mirrorUniform(polygonGlitchUniforms.uGlobeMotion));
+  const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
   return Fn(() => {
-    const uvCoords = uv();
-    const rawLat = uvCoords.y.sub(0.5).mul(3.14159265);
-    const rawLng = uvCoords.x.sub(0.5).mul(6.2831853);
+    const sphereDir = normalize(normalWorld);
+    const rawLat = asin(clamp(sphereDir.y, -1.0, 1.0));
+    const rawLng = atan(sphereDir.z, sphereDir.x);
+    const latNorm = rawLat.div(3.14159265).add(0.5);
     const camAlt = max(length(cameraPosition).sub(100.0), 15.0);
-    const zoomOctave = exp2(floor(log2(clamp(float(220.0).div(camAlt), 1.0, 8.0)).add(0.5)));
-    const resLat = float(56.0).mul(zoomOctave);
+    const zoomOctave = exp2(floor(log2(clamp(float(230.0).div(camAlt), 1.0, 8.0)).add(0.5)));
+    const resLat = float(48.0).mul(zoomOctave);
 
-    const pxRow = floor(rawLat.mul(resLat));
-    const rowLat = pxRow.add(0.5).div(resLat);
-    const colsPerRad = max(floor(resLat.mul(cos(rowLat)).add(0.5)), 8.0);
-    const pxCol = floor(rawLng.mul(colsPerRad));
-    const spherePx = vec2(pxCol, pxRow);
-    const bayer = bayer4x4(spherePx);
+    const cellRow = floor(rawLat.mul(resLat));
+    const rowLat = cellRow.add(0.5).div(resLat);
+    const colsPerRad = max(floor(resLat.mul(cos(rowLat)).mul(1.15).add(0.5)), 8.0);
+    const cellCol = floor(rawLng.mul(colsPerRad));
 
-    const qSphere = vec2(pxCol.add(0.5).div(colsPerRad), rowLat);
-    const bathyMacro = oceanValueNoise(qSphere.mul(2.4).add(vec2(1.7, 3.1)));
-    const bathyMid = oceanValueNoise(qSphere.mul(5.2).add(vec2(8.3, 4.9)));
-    const bathymetry = bathyMacro.mul(0.62).add(bathyMid.mul(0.38));
+    const cellUv = vec2(fract(rawLng.mul(colsPerRad)), fract(rawLat.mul(resLat)));
+    const subPx = floor(cellUv.mul(5.0));
+    const sx = subPx.x;
+    const sy = subPx.y;
+
+    const cellId = vec2(cellCol, cellRow);
+    const cellHash = hash(cellId);
+
+    const qSphere = vec2(cellCol.add(0.5).div(colsPerRad), rowLat);
+    const swellA = sin(
+      qSphere.x
+        .mul(11.0)
+        .add(uTimeNode.mul(0.65))
+        .add(sin(qSphere.y.mul(6.0)).mul(1.4))
+    ).mul(cos(qSphere.y.mul(9.0).sub(uTimeNode.mul(0.32))));
+    const swellB = cos(qSphere.x.mul(17.0).sub(uTimeNode.mul(0.48)).add(qSphere.y.mul(5.0)));
+    const swell = swellA.mul(0.65).add(swellB.mul(0.35));
+
+    const waveActive = step(float(-0.08), swell).mul(step(float(0.62), cellHash));
+    const bob = step(
+      float(0.0),
+      sin(uTimeNode.mul(1.9).add(cellHash.mul(6.2831853)).add(qSphere.x.mul(12.0)))
+    );
+
+    const tildeY = select(
+      sx.lessThan(0.5),
+      float(2.0),
+      select(
+        sx.lessThan(1.5),
+        float(2.0).add(bob),
+        select(sx.lessThan(2.5), float(2.0), float(2.0).sub(float(1.0).sub(bob)))
+      )
+    );
+    const isTilde = step(sx, 3.5).mul(float(1.0).sub(step(0.5, abs(sy.sub(tildeY)))));
+    const isDash = step(0.5, sx)
+      .mul(step(sx, 3.5))
+      .mul(float(1.0).sub(step(0.5, abs(sy.sub(2.0)))));
+    const isDot = float(1.0)
+      .sub(step(0.5, abs(sx.sub(2.0))))
+      .mul(float(1.0).sub(step(0.5, abs(sy.sub(2.0)))));
+
+    const glyphType = fract(cellHash.mul(19.7));
+    const glyph = select(
+      glyphType.lessThan(0.5),
+      isTilde,
+      select(glyphType.lessThan(0.8), isDash, isDot)
+    );
+
+    const breath = sin(uTimeNode.mul(1.4).add(cellHash.mul(6.2831853)))
+      .mul(0.32)
+      .add(0.68);
+    const wavePixel = waveActive.mul(glyph).mul(breath);
 
     const n = normalize(normalWorld);
     const viewDir = normalize(cameraPosition.sub(positionWorld));
     const viewIncidence = clamp(dot(n, viewDir), 0.0, 1.0);
-    const limb = pow(clamp(float(1.0).sub(viewIncidence), 0.0, 1.0), 1.35);
-
-    const rawField = bathymetry.mul(0.78).add(limb.mul(0.45)).add(uGlobeMotion.mul(0.04));
-    const bayerSteps = floor(clamp(rawField.mul(12.0).sub(0.8), 2.0, 9.0));
-    const ditherTone = bayerSteps.div(16.0);
-    const trameBit = step(bayer.add(0.01), ditherTone);
+    const globalSubPx = cellId.mul(5.0).add(subPx);
+    const bayer = bayer4x4(globalSubPx);
+    const limb = pow(clamp(float(1.0).sub(viewIncidence), 0.0, 1.0), 2.2);
+    const limbBit = step(bayer.add(0.12), limb.mul(0.52)).mul(0.09);
 
     const rimColorVec = vec3(rimColor.r, rimColor.g, rimColor.b);
-    const rimRgb = rimColorVec.mul(trameBit.mul(float(rimStrength).mul(0.68).add(0.16)));
+    const pixelAlpha = wavePixel.mul(float(rimStrength).mul(0.34).add(0.145)).add(limbBit);
+    const waveRgb = mix(vec3(0.78, 0.82, 0.86), rimColorVec, 0.45).mul(pixelAlpha);
 
-    const latWidth = max(fwidth(uvCoords.y), 0.0005);
-    const eqLine = clamp(float(1.0).sub(abs(uvCoords.y.sub(0.5)).div(latWidth)), 0.0, 1.0);
+    const latWidth = max(fwidth(latNorm), 0.00045);
+    const eqLine = clamp(float(1.0).sub(abs(latNorm.sub(0.5)).div(latWidth)), 0.0, 1.0);
     const tropicLine = clamp(
-      float(1.0).sub(abs(abs(uvCoords.y.sub(0.5)).sub(23.44 / 180.0)).div(latWidth)),
+      float(1.0).sub(abs(abs(latNorm.sub(0.5)).sub(23.44 / 180.0)).div(latWidth)),
       0.0,
       1.0
     );
     const specialLines = max(eqLine, tropicLine);
-    const specialDither = step(bayer.add(0.03), specialLines.mul(0.65)).mul(0.08);
+    const specialDither = step(bayer.add(0.05), specialLines.mul(0.55)).mul(0.06);
 
     const graticuleColor = mix(vec3(0.55, 0.65, 0.75), rimColorVec, 0.45);
     const graticuleRgb = graticuleColor.mul(
-      specialDither.mul(float(rimStrength).mul(0.35).add(0.08))
+      specialDither.mul(float(rimStrength).mul(0.28).add(0.07))
     );
 
-    return displayOutput(litDisplayColor().add(rimRgb).add(graticuleRgb));
+    return displayOutput(litDisplayColor().add(waveRgb).add(graticuleRgb));
   })();
 }
 
