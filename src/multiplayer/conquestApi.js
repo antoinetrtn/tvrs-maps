@@ -53,6 +53,18 @@ export const stealConquestCountry = (matchId, answer) =>
 export const cancelStealChallenge = (matchId) =>
   rpc("conquest_cancel_steal", { p_match_id: matchId });
 
+export const requestFortifyChallenge = (matchId, countryId) =>
+  rpc("conquest_fortify_challenge", { p_match_id: matchId, p_country_id: countryId });
+
+export const fortifyConquestCountry = (matchId, answer) =>
+  rpc("conquest_fortify", { p_match_id: matchId, p_answer: answer });
+
+export const cancelFortifyChallenge = (matchId) =>
+  rpc("conquest_cancel_fortify", { p_match_id: matchId });
+
+/** Rematch from the end screen: creates or joins the linked lobby, already ready. */
+export const rematchConquestMatch = (matchId) => rpc("conquest_rematch", { p_match_id: matchId });
+
 export const leaveConquestMatch = (matchId) => rpc("conquest_leave_match", { p_match_id: matchId });
 
 /** Latest lobby/live match of the current user, or null. */
