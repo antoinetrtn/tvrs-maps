@@ -604,20 +604,34 @@ export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fal
   return colors[regionCode] || fallbackColor;
 };
 
+// SpaceBackground canvas: strictly monochrome (bone / slate / muted teal). The legacy
+// keys (cyan, magenta, glitch*) are kept as aliases so any older lookup stays valid.
 export const SPACE_RGB_COMPONENTS = {
   light: {
-    normal: [15, 23, 42],
-    cyan: [15, 23, 42],
-    magenta: [15, 23, 42],
-    glitchRed: [255, 80, 80],
-    glitchCyan: [80, 255, 255],
+    normal: [44, 50, 58],
+    cyan: [46, 104, 98],
+    magenta: [58, 54, 48],
+    glitchRed: [72, 66, 58],
+    glitchCyan: [86, 98, 104],
+    dust: [112, 120, 126],
+    ivory: [36, 34, 30],
+    accent: [46, 104, 98],
+    reticle: [118, 128, 132],
+    dither: [96, 120, 118],
+    vignette: [62, 66, 72],
   },
   dark: {
-    normal: [255, 255, 255],
-    cyan: [0, 240, 255],
-    magenta: [255, 0, 127],
-    glitchRed: [255, 0, 110],
-    glitchCyan: [0, 255, 255],
+    normal: [237, 230, 214],
+    cyan: [124, 186, 178],
+    magenta: [246, 240, 226],
+    glitchRed: [214, 204, 186],
+    glitchCyan: [104, 142, 140],
+    dust: [110, 120, 124],
+    ivory: [246, 240, 226],
+    accent: [124, 186, 178],
+    reticle: [70, 84, 86],
+    dither: [52, 82, 82],
+    vignette: [6, 8, 11],
   },
 };
 // Canvas FX (fireworks, XP orbs) and Learn selection read the live CSS tokens so they

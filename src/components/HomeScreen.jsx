@@ -120,7 +120,7 @@ const HomeScreen = ({
 
         <div className="home-bottom-right" role="toolbar" aria-label={t("settings")}>
           <GlassIconButton
-            className="home-podium-widget glass-panel home-dock-segment"
+            className="home-podium-widget home-dock-segment"
             onClick={(e) => {
               e.stopPropagation();
               setLeaderboardOpen((prev) => !prev);
@@ -134,34 +134,28 @@ const HomeScreen = ({
           >
             <div className="home-podium-spots">
               <div className="widget-spot rank-2">
-                <div className="widget-avatar">
-                  <InvaderAvatar
-                    invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
-                    color={displayExplorers[1].profiles?.avatar_color || "cyan"}
-                    size={20}
-                  />
-                </div>
                 <span className="widget-rank-num">2</span>
+                <InvaderAvatar
+                  invaderId={displayExplorers[1].profiles?.avatar_id || "invader_1"}
+                  color="currentColor"
+                  size={16}
+                />
               </div>
               <div className="widget-spot rank-1">
-                <div className="widget-avatar">
-                  <InvaderAvatar
-                    invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
-                    color={displayExplorers[0].profiles?.avatar_color || "cyan"}
-                    size={20}
-                  />
-                </div>
                 <span className="widget-rank-num">1</span>
+                <InvaderAvatar
+                  invaderId={displayExplorers[0].profiles?.avatar_id || "invader_1"}
+                  color="currentColor"
+                  size={16}
+                />
               </div>
               <div className="widget-spot rank-3">
-                <div className="widget-avatar">
-                  <InvaderAvatar
-                    invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
-                    color={displayExplorers[2].profiles?.avatar_color || "cyan"}
-                    size={20}
-                  />
-                </div>
                 <span className="widget-rank-num">3</span>
+                <InvaderAvatar
+                  invaderId={displayExplorers[2].profiles?.avatar_id || "invader_1"}
+                  color="currentColor"
+                  size={16}
+                />
               </div>
             </div>
           </GlassIconButton>

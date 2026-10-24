@@ -13,6 +13,8 @@ import { riversMountainsDataMap } from "../../data/riversMountainsData";
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { getCanonicalPosition } from "../../utils/utils";
 import {
+  animateGlobePov,
+  cancelGlobePovTween,
   clampGlobeAltitude,
   frameBoundsAltitude,
   GLOBE_MIN_ALTITUDE,
@@ -20,24 +22,18 @@ import {
   REGIONAL_MIN_ALTITUDE,
   setGlobeMinAltitude,
   syncGlobeCameraAndZoomLimits,
+  syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 import { CAMERA_MS, cameraDuration, selectCameraDuration } from "./cameraTiming";
 import { getHomeDesktopPov } from "./homePov";
 
 const ORBIT_POLE_GUARD_ANGLE = 0.005;
-// Hard ceiling on the WebGL backing-store density (fill-rate on DPR-3 phones).
 const MAX_GLOBE_PIXEL_RATIO = 2;
-// iOS Safari's collapsing toolbar changes innerHeight by roughly 50-110px while
-// scrolling/gesturing; resizing the WebGL canvas for that causes a visible
-// flash. Height shrinks below this are ignored unless the width also changed.
 const TOOLBAR_HEIGHT_TOLERANCE_PX = 140;
 
-// Selecting a department zooms to this fraction of the region framing.
 const REGIONAL_PICK_ZOOM = 0.6;
 
-// A new run lands on a random region anchor (jittered) instead of always the
-// same Europe-facing view.
 const getRandomGameStartView = () => {
   const base = GAME_START_VIEWPOINTS[Math.floor(Math.random() * GAME_START_VIEWPOINTS.length)];
   const jitter = () => (Math.random() * 2 - 1) * GAME_START_VIEW_JITTER_DEG;
@@ -49,8 +45,6 @@ const getCustomModePointOfView = (mode, learnSubMode, viewport, isPanelOpen) => 
   if (!config?.viewPoint) return null;
   const isMobile = viewport.width < BREAKPOINTS.mobile;
   if (config.bounds && viewport.width > 0 && viewport.height > 0) {
-    // Fit the region to the visible area: the side panel eats ~30% of the
-    // width on desktop, the bottom HUD ~20% of the height on mobile.
     const panelFactor = isPanelOpen && viewport.width >= BREAKPOINTS.desktop ? 0.7 : 1;
     const aspect = (viewport.width * panelFactor) / viewport.height;
     const visibleHeight = isMobile ? 0.8 : 1;
@@ -68,11 +62,6 @@ const getCustomModePointOfView = (mode, learnSubMode, viewport, isPanelOpen) => 
   };
 };
 
-/**
- * Mobile keyboard: vertical px shift that moves the canvas centre onto the
- * centre of the visible viewport (visualViewport), so the selected country —
- * always aimed at the canvas centre — lands in the visible part of the screen.
- */
 export const getKeyboardShift = ({ viewport, isKeyboardMode, isHomeScreen, canvasHeight }) => {
   if (isHomeScreen || !isKeyboardMode || viewport.width >= BREAKPOINTS.mobile) return 0;
   const visibleCenter = (viewport.top || 0) + viewport.height / 2;
@@ -104,8 +93,6 @@ const buildSelectedCountryCameraTarget = ({
     currentPOV && Number.isFinite(currentPOV.altitude) ? currentPOV.altitude : fallbackAltitude;
   const isKeyboardOpen = isMobile && isKeyboardMode;
   const bottomHUDRatio = isMobile ? 0.15 : 0;
-  // Keyboard open: the globe wrapper itself is shifted in screen space to the
-  // visible viewport (getKeyboardShift), so no latitude fudge on top of it.
   const occlusionRatio = isKeyboardOpen ? 0 : bottomHUDRatio;
   const visibleHeightDegrees = 36 * preservedAltitude;
   const latOffset = isHomeScreen ? 0 : -visibleHeightDegrees * (occlusionRatio * 0.7);
@@ -118,8 +105,6 @@ const buildSelectedCountryCameraTarget = ({
     isAntarctica && currentPOV && Number.isFinite(currentPOV.lng) ? currentPOV.lng : (useLng ?? 0);
   const antarcticaAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.5) : isMobile ? 1.7 : 1.35;
 
-  // Regional maps: the first selection keeps the whole-region framing; later
-  // picks glide in towards the department/state (never back out).
   if (customPOV && !isHomeScreen && !isAntarctica) {
     return {
       lat: targetLat,
@@ -156,7 +141,8 @@ const applyIdleCameraPointOfView = ({
 }) => {
   const reduced = prefersReducedMotion();
   if (isEndScreen) {
-    globeEl.current.pointOfView(
+    animateGlobePov(
+      globeEl.current,
       customPOV
         ? customPOV
         : { lat: 20, lng: 0, altitude: viewport.width < BREAKPOINTS.mobile ? 2.2 : 1.8 },
@@ -168,19 +154,20 @@ const applyIdleCameraPointOfView = ({
   if (isHomeScreen) {
     const isMobile = viewport.width < BREAKPOINTS.mobile;
     const targetPov = isMobile ? { lat: 18, lng: 20, altitude: 2.2 } : getHomeDesktopPov(viewport);
-    globeEl.current?.pointOfView?.(targetPov, cameraDuration(CAMERA_MS.home, reduced));
+    animateGlobePov(globeEl.current, targetPov, cameraDuration(CAMERA_MS.home, reduced));
     return;
   }
 
   if (customPOV) {
     const ms = wasHomeScreen ? CAMERA_MS.gameStart : CAMERA_MS.customPov;
-    globeEl.current?.pointOfView?.(customPOV, cameraDuration(ms, reduced));
+    animateGlobePov(globeEl.current, customPOV, cameraDuration(ms, reduced));
     return;
   }
 
   if (wasHomeScreen) {
     const startView = getRandomGameStartView();
-    globeEl.current?.pointOfView?.(
+    animateGlobePov(
+      globeEl.current,
       {
         lat: startView.lat,
         lng: startView.lng,
@@ -189,6 +176,63 @@ const applyIdleCameraPointOfView = ({
       cameraDuration(CAMERA_MS.gameStart, reduced)
     );
   }
+};
+
+const readGlobeAltitude = (globe) => {
+  try {
+    return globe?.pointOfView?.()?.altitude;
+  } catch {
+    return undefined;
+  }
+};
+
+const createOrbitControlHandlers = ({
+  globeEl,
+  controls,
+  isInteractingRef,
+  isMobileRef,
+  isRegionalMapRef,
+  isHomeScreen,
+  setZoomLevel,
+  setCameraPOV,
+}) => {
+  const changeHandler = () => {
+    syncGlobeControlsForAltitude(controls, readGlobeAltitude(globeEl.current), {
+      isMobile: isMobileRef.current,
+      isRegionalMap: isRegionalMapRef.current,
+    });
+    if (isInteractingRef.current) return;
+    const pov = readClampedGlobePov(globeEl.current);
+    if (!pov) return;
+    setZoomLevel((prev) => {
+      if (Math.abs(prev - pov.altitude) > 0.08) return pov.altitude;
+      return prev;
+    });
+    setCameraPOV((prev) => {
+      const threshold = isHomeScreen ? 15 : 10;
+      if (Math.abs(prev.lat - pov.lat) > threshold || Math.abs(prev.lng - pov.lng) > threshold) {
+        return { lat: pov.lat, lng: pov.lng };
+      }
+      return prev;
+    });
+  };
+
+  const startHandler = () => {
+    isInteractingRef.current = true;
+    cancelGlobePovTween(globeEl.current);
+  };
+
+  const endHandler = () => {
+    isInteractingRef.current = false;
+    const pov = readClampedGlobePov(globeEl.current);
+    if (!pov) return;
+    setZoomLevel(pov.altitude);
+    setCameraPOV((prev) =>
+      prev.lat === pov.lat && prev.lng === pov.lng ? prev : { lat: pov.lat, lng: pov.lng }
+    );
+  };
+
+  return { changeHandler, startHandler, endHandler };
 };
 
 export function useGlobeCamera({
@@ -220,15 +264,18 @@ export function useGlobeCamera({
   const isRegionalMapRef = useRef(false);
   const isRegionalMap = Boolean(getActiveModeConfig(mode, learnSubMode)?.bounds);
   isRegionalMapRef.current = isRegionalMap;
+  const isMobileRef = useRef(false);
+  isMobileRef.current = Boolean(perfProfile?.isMobile);
 
-  // Regional maps: allow a closer zoom floor and zoom towards the pointer, so
-  // small departments are easy to reach with the wheel or a pinch.
   useEffect(() => {
     setGlobeMinAltitude(isRegionalMap ? REGIONAL_MIN_ALTITUDE : GLOBE_MIN_ALTITUDE);
     const controls = globeEl.current?.controls?.();
     if (!controls) return;
-    controls.zoomToCursor = isRegionalMap;
     syncGlobeCameraAndZoomLimits(globeEl.current, controls);
+    syncGlobeControlsForAltitude(controls, readGlobeAltitude(globeEl.current), {
+      isMobile: isMobileRef.current,
+      isRegionalMap,
+    });
     if (!isRegionalMap) readClampedGlobePov(globeEl.current);
   }, [isRegionalMap, globeEl]);
 
@@ -245,11 +292,7 @@ export function useGlobeCamera({
           const pixelRatio = Math.min(perfProfile?.pixelRatio || 1, MAX_GLOBE_PIXEL_RATIO);
           if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
           renderer.sortObjects = true;
-          // Shader error checking calls getProgramInfoLog synchronously after
-          // every link, stalling the main thread on each new material variant.
           if (import.meta.env.PROD) renderer.debug.checkShaderErrors = false;
-          // Keep the screen-space glitch grain the same visual size regardless
-          // of the device's capped pixel ratio.
           polygonGlitchUniforms.uPixelScale.value =
             GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
         }
@@ -262,48 +305,25 @@ export function useGlobeCamera({
           controls.enableZoom = true;
           controls.enableDamping = true;
           controls.dampingFactor = perfProfile?.isMobile ? 0.12 : 0.08;
-          controls.rotateSpeed = perfProfile?.isMobile ? 0.75 : 0.9;
-          controls.zoomSpeed = perfProfile?.isMobile ? 0.75 : 1;
-          controls.zoomToCursor = isRegionalMapRef.current;
           controls.minPolarAngle = ORBIT_POLE_GUARD_ANGLE;
           controls.maxPolarAngle = Math.PI - ORBIT_POLE_GUARD_ANGLE;
           syncGlobeCameraAndZoomLimits(globeEl.current, controls);
+          // Bounded rotate/zoom speeds + zoomToCursor (regional maps only).
+          syncGlobeControlsForAltitude(controls, readGlobeAltitude(globeEl.current), {
+            isMobile: Boolean(perfProfile?.isMobile),
+            isRegionalMap: isRegionalMapRef.current,
+          });
 
-          changeHandler = () => {
-            if (isInteractingRef.current) return;
-            const pov = readClampedGlobePov(globeEl.current);
-            if (!pov) return;
-            setZoomLevel((prev) => {
-              if (Math.abs(prev - pov.altitude) > 0.08) return pov.altitude;
-              return prev;
-            });
-            setCameraPOV((prev) => {
-              const threshold = isHomeScreen ? 15 : 10;
-              if (
-                Math.abs(prev.lat - pov.lat) > threshold ||
-                Math.abs(prev.lng - pov.lng) > threshold
-              ) {
-                return { lat: pov.lat, lng: pov.lng };
-              }
-              return prev;
-            });
-          };
-
-          startHandler = () => {
-            isInteractingRef.current = true;
-          };
-
-          endHandler = () => {
-            isInteractingRef.current = false;
-            const pov = readClampedGlobePov(globeEl.current);
-            if (!pov) return;
-            setZoomLevel(pov.altitude);
-            // Keep the previous object when nothing moved, so a tap without a
-            // drag doesn't re-render the whole globe tree.
-            setCameraPOV((prev) =>
-              prev.lat === pov.lat && prev.lng === pov.lng ? prev : { lat: pov.lat, lng: pov.lng }
-            );
-          };
+          ({ changeHandler, startHandler, endHandler } = createOrbitControlHandlers({
+            globeEl,
+            controls,
+            isInteractingRef,
+            isMobileRef,
+            isRegionalMapRef,
+            isHomeScreen,
+            setZoomLevel,
+            setCameraPOV,
+          }));
 
           controls.addEventListener("change", changeHandler);
           controls.addEventListener("start", startHandler);
@@ -374,16 +394,16 @@ export function useGlobeCamera({
           targetChanged;
 
         if (selectionChanged || (onlyViewportNudge && !isInteractingRef.current)) {
-          // A viewport nudge (keyboard open/close on mobile) recenters the same
-          // country: glide it a touch slower on mobile so a large keyboard
-          // offset doesn't snap the globe. Real selection changes keep their
-          // snappier timing.
           const duration = selectCameraDuration({
             isHomeScreen,
             onlyViewportNudge,
             isMobile: Boolean(perfProfile?.isMobile),
           });
-          globeEl.current.pointOfView(target, cameraDuration(duration, prefersReducedMotion()));
+          animateGlobePov(
+            globeEl.current,
+            target,
+            cameraDuration(duration, prefersReducedMotion())
+          );
           lastTargetRef.current = target;
         }
       }
@@ -453,9 +473,6 @@ export function useGlobeCamera({
   };
   const globeWidth = Math.max(320, maxWindowWidthRef.current);
   const globeHeight = maxWindowHeightRef.current;
-  // Same canvas size on home and in game: the extra width is symmetric (the
-  // wrapper is shifted by -offset), so the globe stays centered either way,
-  // and starting a game no longer reallocates the WebGL drawing buffer.
   const homeGlobeOffset =
     !isKeyboardMode && maxWindowWidthRef.current >= 769
       ? Math.round(maxWindowWidthRef.current * 0.14)

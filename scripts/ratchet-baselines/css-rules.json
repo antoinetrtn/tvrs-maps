@@ -52,7 +52,7 @@
   "z-index-raw": {
     "src/components/EndScreen.css": 3,
     "src/components/GameHUD.css": 4,
-    "src/components/HomeScreen.css": 4,
+    "src/components/HomeScreen.css": 3,
     "src/components/HomeScreenCarouselMotion.css": 2,
     "src/components/HomeScreenCategoryCarousel.css": 4,
     "src/components/LeaderboardScreen.css": 1,

@@ -4,10 +4,8 @@
   },
   "jsx-a11y/control-has-associated-label": {
     "src/components/PixelFireworks.jsx": 1,
-    "src/components/SpaceBackground.jsx": 1,
     "src/components/ui/Slider.jsx": 1,
-    "src/components/XpOrbsAnimation.jsx": 1,
-    "src/multiplayer/ConquestHud.jsx": 1
+    "src/components/XpOrbsAnimation.jsx": 1
   },
   "jsx-a11y/no-static-element-interactions": {
     "src/components/HomeScreen.jsx": 1
