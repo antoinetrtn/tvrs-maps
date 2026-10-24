@@ -66,10 +66,10 @@ export function countryBorderOutputNode() {
       const borderStep = step(float(0.35), fract(arcPhase.add(bayer.mul(0.35))));
       const brightStep = mix(float(0.92), float(1.12), borderStep);
       const lit = litDisplayColor();
-      const isFoundBorder = step(float(0.55), lit.y)
-        .mul(float(1.0).sub(step(float(0.35), lit.x)))
-        .mul(step(lit.z, float(0.65)));
-      const borderColor = mix(lit, vec3(0.88, 0.62, 0.22), isFoundBorder);
+      const isFoundBorder = step(float(0.28), lit.y)
+        .mul(step(lit.z.mul(1.3), lit.y))
+        .mul(step(lit.x.mul(2.2), lit.z));
+      const borderColor = mix(lit, vec3(0.98, 0.76, 0.28), isFoundBorder);
       const rgb = borderColor.mul(brightStep);
       return displayOutput(rgb, output.a);
     })();

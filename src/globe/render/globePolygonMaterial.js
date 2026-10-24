@@ -87,15 +87,28 @@ export function applyCountrySurfaceGrainShader(shader) {
       float parallelLine = clamp(1.0 - topoDist.y, 0.0, 1.0);
       float crossTick = clamp(1.0 - max(topoDist.x, topoDist.y) * 0.6, 0.0, 1.0);
 
-      // Blackout -> Awakened country surface & living city-lights network
+      // Blackout -> Awakened country surface & living city-lights network (Solo & Conquête 1v1)
       float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-      float isAwakenedCap = step(0.55, gl_FragColor.g) * (1.0 - step(0.85, gl_FragColor.r)) * step(surfaceLuma, 0.78);
-      float isUnfoundDarkCap = 1.0 - smoothstep(0.32, 0.50, surfaceLuma);
+      float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
+      float minC = min(gl_FragColor.r, min(gl_FragColor.g, gl_FragColor.b));
+      float chroma = maxC - minC;
+      float isSoloFound = step(0.45, gl_FragColor.g)
+        * step(gl_FragColor.b * 1.32, gl_FragColor.g)
+        * step(gl_FragColor.r * 2.2, gl_FragColor.b);
+      float isConquestOwned = (1.0 - isSoloFound) * step(0.15, chroma) * step(0.36, maxC);
+      float isAwakenedCap = max(isSoloFound, isConquestOwned);
+      float isUnfoundDarkCap = (1.0 - isAwakenedCap) * (1.0 - smoothstep(0.44, 0.58, surfaceLuma));
       float cityPower = clamp(max(isAwakenedCap, uShowcaseLights * isUnfoundDarkCap), 0.0, 1.0);
 
-      float blackoutDim = mix(1.0, 0.78, (1.0 - uShowcaseLights) * isUnfoundDarkCap);
-      vec3 awakenedLand = vec3(0.24, 0.22, 0.19) + vec3(0.045, 0.032, 0.012) * (1.0 - ndv);
-      vec3 landSurface = mix(gl_FragColor.rgb * blackoutDim, awakenedLand, isAwakenedCap);
+      float blackoutDim = mix(1.0, 0.38, (1.0 - uShowcaseLights) * isUnfoundDarkCap);
+      vec3 unfoundLand = gl_FragColor.rgb * blackoutDim;
+      vec3 soloAwakenedLand = vec3(0.48, 0.34, 0.15) + vec3(0.15, 0.10, 0.04) * (1.0 - ndv);
+      vec3 conquestAwakenedLand = gl_FragColor.rgb * 0.84 + gl_FragColor.rgb * 0.22 * (1.0 - ndv);
+      vec3 landSurface = mix(
+        mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
+        soloAwakenedLand,
+        isSoloFound
+      );
       vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
       vec3 baseLit = landSurface * limbFactor + engrave;
 
@@ -111,11 +124,27 @@ export function applyCountrySurfaceGrainShader(shader) {
       float tierArterial = (1.0 - tierPinpoint) * step(0.55, cityDensity);
       float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.25, cityDensity);
 
-      vec3 auraColor = vec3(0.54, 0.30, 0.09);
-      vec3 withAura = mix(baseLit, max(baseLit, auraColor), cityAura * 0.28 * cityPower);
-      vec3 colorOuterTentacle = vec3(0.86, 0.47, 0.14);
-      vec3 colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.78, 0.28), cityHash2);
-      vec3 colorMetroHeart = mix(vec3(1.0, 0.91, 0.62), vec3(1.0, 0.98, 0.86), smoothstep(0.82, 1.0, cityDensity));
+      vec3 auraColor = mix(
+        vec3(0.68, 0.40, 0.12),
+        max(baseLit * 1.35, vec3(0.75, 0.55, 0.22)),
+        isConquestOwned * 0.5
+      );
+      vec3 withAura = mix(baseLit, max(baseLit, auraColor), cityAura * 0.32 * cityPower);
+      vec3 colorOuterTentacle = mix(
+        vec3(0.94, 0.54, 0.16),
+        vec3(1.0, 0.84, 0.48),
+        isConquestOwned * 0.45
+      );
+      vec3 colorMainArterial = mix(
+        mix(vec3(0.98, 0.72, 0.18), vec3(1.0, 0.84, 0.34), cityHash2),
+        vec3(1.0, 0.94, 0.72),
+        isConquestOwned * 0.55
+      );
+      vec3 colorMetroHeart = mix(
+        vec3(1.0, 0.94, 0.70),
+        vec3(1.0, 0.99, 0.92),
+        smoothstep(0.82, 1.0, cityDensity)
+      );
       vec3 sparkColor = tierPinpoint * colorMetroHeart
         + tierArterial * colorMainArterial
         + tierTentacle * colorOuterTentacle;
@@ -157,8 +186,10 @@ export function applyCountryBorderDitherShader(shader) {
       float bayer = bayer4x4(floor(vec2(borderLng * 180.0, borderLat * 180.0)));
       float arcPhase = dot(vBorderWorldPos, vec3(0.24, 0.36, 0.48));
       float borderStep = step(0.35, fract(arcPhase + bayer * 0.35));
-      float isFoundBorder = step(0.55, gl_FragColor.g) * (1.0 - step(0.35, gl_FragColor.r)) * step(gl_FragColor.b, 0.65);
-      vec3 borderColor = mix(gl_FragColor.rgb, vec3(0.88, 0.62, 0.22), isFoundBorder);
+      float isFoundBorder = step(0.28, gl_FragColor.g)
+        * step(gl_FragColor.b * 1.30, gl_FragColor.g)
+        * step(gl_FragColor.r * 2.2, gl_FragColor.b);
+      vec3 borderColor = mix(gl_FragColor.rgb, vec3(0.98, 0.76, 0.28), isFoundBorder);
       gl_FragColor.rgb = borderColor * mix(0.92, 1.12, borderStep);
       `
     )}

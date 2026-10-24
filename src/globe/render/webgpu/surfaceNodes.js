@@ -66,7 +66,7 @@ export function createStandardMaterial(params) {
     : new THREE.MeshStandardMaterial(params);
 }
 
-function buildCityLightsLayer(cartUv, baseLit, cityPower, uTimeNode) {
+function buildCityLightsLayer(cartUv, baseLit, cityPower, isConquestOwned, uTimeNode) {
   const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
   const capitalSample = texture(getCapitalLightsTexture(), cartUv);
   const cityDensity = capitalSample.r;
@@ -83,13 +83,25 @@ function buildCityLightsLayer(cartUv, baseLit, cityPower, uTimeNode) {
   const tierArterial = float(1.0).sub(tierPinpoint).mul(step(0.55, cityDensity));
   const tierTentacle = float(1.0).sub(max(tierPinpoint, tierArterial)).mul(step(0.25, cityDensity));
 
-  const auraColor = vec3(0.54, 0.3, 0.09);
-  const withAura = mix(baseLit, max(baseLit, auraColor), cityAura.mul(0.28).mul(cityPower));
-  const colorOuterTentacle = vec3(0.86, 0.47, 0.14);
-  const colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.78, 0.28), cityHash2);
+  const auraColor = mix(
+    vec3(0.68, 0.4, 0.12),
+    max(baseLit.mul(1.35), vec3(0.75, 0.55, 0.22)),
+    isConquestOwned.mul(0.5)
+  );
+  const withAura = mix(baseLit, max(baseLit, auraColor), cityAura.mul(0.32).mul(cityPower));
+  const colorOuterTentacle = mix(
+    vec3(0.94, 0.54, 0.16),
+    vec3(1.0, 0.84, 0.48),
+    isConquestOwned.mul(0.45)
+  );
+  const colorMainArterial = mix(
+    mix(vec3(0.98, 0.72, 0.18), vec3(1.0, 0.84, 0.34), cityHash2),
+    vec3(1.0, 0.94, 0.72),
+    isConquestOwned.mul(0.55)
+  );
   const colorMetroHeart = mix(
-    vec3(1.0, 0.91, 0.62),
-    vec3(1.0, 0.98, 0.86),
+    vec3(1.0, 0.94, 0.7),
+    vec3(1.0, 0.99, 0.92),
     smoothstep(0.82, 1.0, cityDensity)
   );
   const sparkColor = tierPinpoint
@@ -135,27 +147,43 @@ export function countryGrainOutputNode() {
       ));
       const lit = litDisplayColor();
       const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
-      const isAwakenedCap = step(float(0.55), lit.y)
-        .mul(float(1.0).sub(step(float(0.85), lit.x)))
-        .mul(step(surfaceLuma, float(0.78)));
-      const isUnfoundDarkCap = float(1.0).sub(smoothstep(0.32, 0.5, surfaceLuma));
+      const maxC = max(lit.x, max(lit.y, lit.z));
+      const minC = min(lit.x, min(lit.y, lit.z));
+      const chroma = maxC.sub(minC);
+      const isSoloFound = step(float(0.45), lit.y)
+        .mul(step(lit.z.mul(1.32), lit.y))
+        .mul(step(lit.x.mul(2.2), lit.z));
+      const isConquestOwned = float(1.0)
+        .sub(isSoloFound)
+        .mul(step(float(0.15), chroma))
+        .mul(step(float(0.36), maxC));
+      const isAwakenedCap = max(isSoloFound, isConquestOwned);
+      const isUnfoundDarkCap = float(1.0)
+        .sub(isAwakenedCap)
+        .mul(float(1.0).sub(smoothstep(0.44, 0.58, surfaceLuma)));
       const cityPower = clamp(max(isAwakenedCap, uShowcaseNode.mul(isUnfoundDarkCap)), 0.0, 1.0);
 
       const blackoutDim = mix(
         float(1.0),
-        float(0.78),
+        float(0.38),
         float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap)
       );
-      const awakenedLand = vec3(0.24, 0.22, 0.19).add(
-        vec3(0.045, 0.032, 0.012).mul(float(1.0).sub(ndv))
+      const unfoundLand = lit.mul(blackoutDim);
+      const soloAwakenedLand = vec3(0.48, 0.34, 0.15).add(
+        vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
       );
-      const landSurface = mix(lit.mul(blackoutDim), awakenedLand, isAwakenedCap);
+      const conquestAwakenedLand = lit.mul(0.84).add(lit.mul(0.22).mul(float(1.0).sub(ndv)));
+      const landSurface = mix(
+        mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
+        soloAwakenedLand,
+        isSoloFound
+      );
       const engrave = landSurface
         .mul(parallelLine.mul(0.04).add(crossTick.mul(0.09)))
         .add(vec3(rimSheen));
       const baseLit = landSurface.mul(limbFactor).add(engrave);
 
-      const capRgb = buildCityLightsLayer(cartUv, baseLit, cityPower, uTimeNode);
+      const capRgb = buildCityLightsLayer(cartUv, baseLit, cityPower, isConquestOwned, uTimeNode);
       const sideRgb = landSurface.mul(0.58);
       const rgb = mix(capRgb, sideRgb, isSideWall);
       return displayOutput(rgb);

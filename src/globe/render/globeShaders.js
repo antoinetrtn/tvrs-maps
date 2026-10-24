@@ -223,7 +223,7 @@ export const GLITCH_FRAGMENT_BODY = `
 
   float staticColor = mix(baseMin, baseMax, noise) * sphereShade + scanline + bayerStipple;
   vec3 staticVec = vec3(staticColor);
-  vec3 foundRestingColor = ((uTheme > 0.5) && (uIsSatellite < 0.5)) ? vec3(0.28, 0.25, 0.20) : uFoundGreen;
+  vec3 foundRestingColor = ((uTheme > 0.5) && (uIsSatellite < 0.5)) ? vec3(0.48, 0.34, 0.15) : uFoundGreen;
 
   // Caps and extruded side walls share one effect pipeline; sides are shaded
   // slightly darker below so the extrusion keeps its depth cue.
