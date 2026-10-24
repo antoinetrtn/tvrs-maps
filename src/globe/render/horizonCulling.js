@@ -9,6 +9,8 @@
  * spherical cap (centre direction + angular radius) per feature.
  */
 
+import { stylePolygonBorderLine } from "./globePolygonMaterial";
+
 const DEG = Math.PI / 180;
 // Extra angle so extruded caps / borders near the limb never pop.
 const HORIZON_MARGIN = 4 * DEG;
@@ -90,7 +92,11 @@ export function cullPolygonsBeyondHorizon(scene, camera, globeRadius = 100) {
     if (obj.__globeObjType === "polygon") {
       const visible = isCapVisible(featureCap(obj.__data), camPos, globeRadius);
       if (obj.visible !== visible) obj.visible = visible;
-      if (!visible) hidden += 1;
+      if (!visible) {
+        hidden += 1;
+      } else if (obj.children?.[1]) {
+        stylePolygonBorderLine(obj.children[1]);
+      }
       return;
     }
     for (const child of obj.children) visit(child);

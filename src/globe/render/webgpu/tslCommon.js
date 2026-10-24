@@ -11,7 +11,10 @@
 import * as THREE from "three";
 import {
   dot,
+  float,
+  floor,
   fract,
+  mod,
   output,
   sin,
   sRGBTransferEOTF,
@@ -26,6 +29,17 @@ export const hash = (p) => fract(sin(dot(p, vec2(127.1, 311.7))).mul(43758.54531
 
 /** GLSL `fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)`. */
 export const hashGrain = (p) => fract(sin(dot(p, vec2(12.9898, 78.233))).mul(43758.5453));
+
+/**
+ * 4x4 Bayer ordered-dither threshold in [0.0, 0.9375] (exact [0..15]/16 values).
+ * Uses pure float/mod/floor math (no integer bitops) for universal WebGPU TSL compilation.
+ */
+const b2 = (v) => v.x.mul(2.0).add(v.y.mul(float(3.0).sub(v.x.mul(4.0))));
+export const bayer4x4 = (px) => {
+  const p0 = floor(mod(px, 2.0));
+  const p1 = floor(mod(floor(px.mul(0.5)), 2.0));
+  return b2(p0).mul(4.0).add(b2(p1)).div(16.0);
+};
 
 const toDisplay = (rgb) => sRGBTransferOETF(rgb);
 export const fromDisplay = (rgb) => sRGBTransferEOTF(rgb);
