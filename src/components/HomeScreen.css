@@ -144,79 +144,80 @@
   pointer-events: auto;
   width: auto;
   height: var(--control-lg);
-  display: flex;
+  padding: 0;
+  display: inline-flex;
   align-items: center;
-  gap: var(--spacing-md);
-  /* Podium tight centering */
-  padding: 0 var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.home-podium-spots {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  gap: 0;
 }
 
 .widget-spot {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--subtle-tint);
-  border: 1px solid var(--glass-border);
-}
-
-/* Avatar centering (absolute + translate like profile icon) */
-.widget-avatar {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.widget-spot.rank-1 {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.widget-spot.rank-2 {
-  border-color: var(--glass-border-strong);
-  background: var(--subtle-tint);
-}
-.widget-spot.rank-3 {
-  border-color: var(--glass-border);
+  gap: var(--spacing-xs);
+  height: 100%;
+  padding: 0 var(--spacing-sm);
+  position: relative;
+  border: 0;
   background: transparent;
 }
 
-.widget-rank-num {
-  position: absolute;
-  bottom: -4px;
-  right: -4px;
-  z-index: 2; /* ensure rank badge stays above the centered avatar */
-  font-family: var(--font-display);
-  font-size: var(--font-size-2xs);
-  font-weight: 600;
-  width: 12px;
-  height: 12px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--bg-color);
-  background: var(--text-main);
-  border: 1px solid var(--glass-border);
+.widget-spot + .widget-spot {
+  border-left: 1px solid var(--glass-border);
 }
 
-.widget-spot.rank-1 .widget-rank-num {
+.widget-spot.rank-1 {
+  color: var(--accent);
+}
+
+.widget-spot.rank-1::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: var(--spacing-xs);
+  right: var(--spacing-xs);
+  height: 2px;
   background: var(--accent);
-  color: var(--accent-contrast);
-  border-color: var(--bg-color);
 }
-.widget-spot.rank-2 .widget-rank-num {
-  background: var(--text-main);
-  color: var(--bg-color);
-  border-color: var(--bg-color);
+
+.widget-spot.rank-2 {
+  color: var(--text-main);
 }
-.widget-spot.rank-3 .widget-rank-num {
-  background: var(--bg-color);
+
+.widget-spot.rank-3 {
   color: var(--text-muted);
-  border-color: var(--glass-border-strong);
+}
+
+.widget-rank-num {
+  position: static;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: auto;
+  height: auto;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  line-height: 1;
+  color: currentColor;
+}
+
+.home-podium-widget:active .widget-spot,
+.home-podium-widget:active .widget-rank-num {
+  color: var(--accent-contrast);
+}
+
+.home-podium-widget:active .widget-spot.rank-1::after {
+  background: var(--accent-contrast);
 }
 
 /* Level badge inside profile glass button */

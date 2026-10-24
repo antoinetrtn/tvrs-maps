@@ -6,17 +6,7 @@
   display: none;
 }
 
-.home-podium-spots {
-  display: contents;
-}
-
 @media (min-width: 769px) {
-  .home-podium-spots {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-  }
-
   .home-bottom-right {
     position: fixed;
     bottom: var(--spacing-lg);
@@ -59,32 +49,6 @@
       background var(--dur-fast) linear,
       border-color var(--dur-fast) linear,
       color var(--dur-fast) linear;
-  }
-
-  /* Podium spots on desktop */
-  .home-bottom-right .widget-spot {
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-sm);
-    box-shadow: none;
-  }
-
-  .home-bottom-right .widget-spot.rank-1,
-  .home-bottom-right .widget-spot.rank-2,
-  .home-bottom-right .widget-spot.rank-3 {
-    box-shadow: none;
-  }
-
-  .home-bottom-right .widget-spot.rank-1 {
-    border-color: var(--accent);
-  }
-
-  .home-bottom-right .widget-spot.rank-2 {
-    border-color: var(--glass-border-strong);
-  }
-
-  .home-bottom-right .widget-spot.rank-3 {
-    border-color: var(--glass-border);
   }
 
   /* Level badge on profile button */
@@ -159,6 +123,15 @@
   .home-bottom-right .home-dock-segment:active .home-dock-label {
     color: var(--accent-contrast);
   }
+
+  .home-bottom-right .home-podium-widget:active .widget-spot,
+  .home-bottom-right .home-podium-widget:active .widget-rank-num {
+    color: var(--accent-contrast);
+  }
+
+  .home-bottom-right .home-podium-widget:active .widget-spot.rank-1::after {
+    background: var(--accent-contrast);
+  }
 }
 
 /* 769px to 1279px: icons only + custom stepped tooltip */
@@ -180,7 +153,7 @@
 
   .home-bottom-right .home-podium-widget {
     width: auto;
-    padding: 0 var(--spacing-sm);
+    padding: 0;
   }
 
   .home-bottom-right .home-dock-segment::after {
@@ -238,6 +211,11 @@
     padding: 0 var(--spacing-md);
     gap: var(--spacing-sm);
     width: auto;
+  }
+
+  .home-bottom-right .home-podium-widget {
+    padding: 0 var(--spacing-md) 0 0;
+    gap: var(--spacing-sm);
   }
 
   .home-bottom-right .home-dock-segment::after {
