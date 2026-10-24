@@ -36,6 +36,7 @@ function applyFoundMeshStyle(material, isMeshFound) {
 export function applyCountrySurfaceGrainShader(shader) {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+  shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.vertexShader = `
     varying vec3 vDitherWorldNormal;
@@ -60,6 +61,7 @@ export function applyCountrySurfaceGrainShader(shader) {
     varying vec3 vViewDir;
     uniform float uPixelScale;
     uniform float uTime;
+    uniform float uShowcaseLights;
     uniform sampler2D uCapitalLightsMap;
     ${GLSL_BAYER_4X4_FN}
     float cityCellHash(vec2 p) {
@@ -84,37 +86,46 @@ export function applyCountrySurfaceGrainShader(shader) {
       vec2 topoDist = abs(fract(topoGrid + 0.5) - 0.5) / max(fwidth(topoGrid), vec2(0.001));
       float parallelLine = clamp(1.0 - topoDist.y, 0.0, 1.0);
       float crossTick = clamp(1.0 - max(topoDist.x, topoDist.y) * 0.6, 0.0, 1.0);
-      vec3 engrave = gl_FragColor.rgb * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
 
-      // Discreet pixel-art capital & urban agglomeration night lights seen from space
+      // Blackout -> Awakened country surface & living city-lights network
+      float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+      float isAwakenedCap = step(0.55, gl_FragColor.g) * (1.0 - step(0.85, gl_FragColor.r)) * step(surfaceLuma, 0.78);
+      float isUnfoundDarkCap = 1.0 - smoothstep(0.32, 0.50, surfaceLuma);
+      float cityPower = clamp(max(isAwakenedCap, uShowcaseLights * isUnfoundDarkCap), 0.0, 1.0);
+
+      float blackoutDim = mix(1.0, 0.78, (1.0 - uShowcaseLights) * isUnfoundDarkCap);
+      vec3 awakenedLand = vec3(0.24, 0.22, 0.19) + vec3(0.045, 0.032, 0.012) * (1.0 - ndv);
+      vec3 landSurface = mix(gl_FragColor.rgb * blackoutDim, awakenedLand, isAwakenedCap);
+      vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
+      vec3 baseLit = landSurface * limbFactor + engrave;
+
       vec2 cityCellId = floor(cartUv * vec2(3600.0, 1800.0));
       vec2 capitalSample = texture2D(uCapitalLightsMap, cartUv).rg;
       float cityDensity = capitalSample.r;
       float cityAura = capitalSample.g;
       float cityHash = cityCellHash(cityCellId);
       float cityHash2 = cityCellHash(cityCellId + vec2(37.2, 91.7));
-      float cityTwinkle = 0.93 + 0.07 * sin(uTime * 2.1 + cityHash * 6.2831853);
+      float trafficWave = 0.80 + 0.20 * sin(uTime * 2.8 - cityAura * 8.5 + cityHash * 6.2831853);
+      float satTwinkle = 0.78 + 0.22 * sin(uTime * 4.2 + cityHash2 * 6.2831853);
       float tierPinpoint = step(0.82, cityDensity);
       float tierArterial = (1.0 - tierPinpoint) * step(0.55, cityDensity);
       float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.25, cityDensity);
-      float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-      float darkRestMask = 1.0 - smoothstep(0.38, 0.58, surfaceLuma);
-      vec3 baseLit = gl_FragColor.rgb * limbFactor + engrave;
-      vec3 auraColor = vec3(0.48, 0.26, 0.08);
-      vec3 withAura = mix(baseLit, max(baseLit, auraColor), cityAura * 0.22 * darkRestMask);
-      vec3 colorOuterTentacle = vec3(0.85, 0.46, 0.14);
-      vec3 colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.76, 0.26), cityHash2);
-      vec3 colorMetroHeart = mix(vec3(1.0, 0.91, 0.62), vec3(1.0, 0.97, 0.84), smoothstep(0.82, 1.0, cityDensity));
+
+      vec3 auraColor = vec3(0.54, 0.30, 0.09);
+      vec3 withAura = mix(baseLit, max(baseLit, auraColor), cityAura * 0.28 * cityPower);
+      vec3 colorOuterTentacle = vec3(0.86, 0.47, 0.14);
+      vec3 colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.78, 0.28), cityHash2);
+      vec3 colorMetroHeart = mix(vec3(1.0, 0.91, 0.62), vec3(1.0, 0.98, 0.86), smoothstep(0.82, 1.0, cityDensity));
       vec3 sparkColor = tierPinpoint * colorMetroHeart
         + tierArterial * colorMainArterial
         + tierTentacle * colorOuterTentacle;
       float sparkAlpha = (
-        tierPinpoint * 0.96 +
-        tierArterial * (0.76 + 0.14 * cityHash2) +
-        tierTentacle * (0.48 + 0.22 * cityHash2)
-      ) * cityTwinkle * darkRestMask;
+        tierPinpoint * 0.98 +
+        tierArterial * (0.78 + 0.16 * cityHash2) * trafficWave +
+        tierTentacle * (0.50 + 0.24 * cityHash2) * satTwinkle
+      ) * cityPower;
       vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
-      vec3 sideRgb = gl_FragColor.rgb * 0.58;
+      vec3 sideRgb = landSurface * 0.58;
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
       `
     )}
@@ -146,7 +157,9 @@ export function applyCountryBorderDitherShader(shader) {
       float bayer = bayer4x4(floor(vec2(borderLng * 180.0, borderLat * 180.0)));
       float arcPhase = dot(vBorderWorldPos, vec3(0.24, 0.36, 0.48));
       float borderStep = step(0.35, fract(arcPhase + bayer * 0.35));
-      gl_FragColor.rgb *= mix(0.92, 1.12, borderStep);
+      float isFoundBorder = step(0.55, gl_FragColor.g) * (1.0 - step(0.35, gl_FragColor.r)) * step(gl_FragColor.b, 0.65);
+      vec3 borderColor = mix(gl_FragColor.rgb, vec3(0.88, 0.62, 0.22), isFoundBorder);
+      gl_FragColor.rgb = borderColor * mix(0.92, 1.12, borderStep);
       `
     )}
   `;
@@ -234,6 +247,7 @@ export function getPolygonMaterialForFeature({
   foundStyle = getGlobePrefs().foundStyle, // Settings: "mesh" = found caps as a line mesh
   ghostVeil = 0, // Satellite regional modes: opacity of the dark veil over the rest of the world
 }) {
+  polygonGlitchUniforms.uShowcaseLights.value = isHomeScreen || isEndScreen ? 1.0 : 0.0;
   const isSameAdmin = (a, b) => {
     if (!a || !b) return false;
     if (a === b) return true;

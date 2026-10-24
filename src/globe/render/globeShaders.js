@@ -157,12 +157,14 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
     // White-hot flicker on the blocks still resolving.
     float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
-    vec3 hot = mix(vec3(1.0), uFoundGreen, 0.2) * flick;
+    bool isMonoAwakening = (theme > 0.5) && (uIsSatellite < 0.5);
+    vec3 targetTone = isMonoAwakening ? vec3(0.96, 0.68, 0.22) : uFoundGreen;
+    vec3 hot = mix(vec3(1.0, 0.97, 0.86), targetTone, 0.25) * flick;
     // Single fast scanline sweep down the country during the burst.
     float sweep = step(fract(worldPos.y * 0.18 - p * 2.8), 0.22)
       * (1.0 - smoothstep(0.3, 0.8, p)) * 0.7;
-    // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
-    vec3 baseGreen = mix(hot, uFoundGreen, resolved) + uFoundGreen * sweep;
+    // Ends on targetTone so the handoff to the found state is seamless.
+    vec3 baseGreen = mix(hot, targetTone, resolved) + targetTone * sweep;
 
     // Extremely strong lime-cyan-magenta chromatic split during the resolve phase
     if (p < 0.85) {
@@ -221,6 +223,7 @@ export const GLITCH_FRAGMENT_BODY = `
 
   float staticColor = mix(baseMin, baseMax, noise) * sphereShade + scanline + bayerStipple;
   vec3 staticVec = vec3(staticColor);
+  vec3 foundRestingColor = ((uTheme > 0.5) && (uIsSatellite < 0.5)) ? vec3(0.28, 0.25, 0.20) : uFoundGreen;
 
   // Caps and extruded side walls share one effect pipeline; sides are shaded
   // slightly darker below so the extrusion keeps its depth cue.
@@ -232,7 +235,7 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (uIsSelection > 0.5) {
     finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
   } else if (uIsFound > 0.5) {
-    finalColor = uFoundGreen;
+    finalColor = foundRestingColor;
   } else {
     finalColor = staticVec;
   }
@@ -290,7 +293,7 @@ export const GLITCH_FRAGMENT_BODY = `
   }
 
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
-  vec3 settleColor = mix(litRestingColor, uFoundGreen * sideShade, step(0.5, uIsFound));
+  vec3 settleColor = mix(litRestingColor, foundRestingColor * sideShade, step(0.5, uIsFound));
 
   // Clean uniform surface without noisy surface blotches
 
@@ -300,7 +303,7 @@ export const GLITCH_FRAGMENT_BODY = `
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
   } else if (isFoundSurface) {
-    gl_FragColor.rgb = uFoundGreen * sideShade;
+    gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
     if (uIsSatellite > 0.5) {
       gl_FragColor.rgb = glitchColor;
