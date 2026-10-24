@@ -7,16 +7,21 @@ import * as THREE from "three";
 import {
   clamp,
   dot,
+  floor,
   max,
+  mix,
   normalLocal,
   positionView,
   pow,
+  screenCoordinate,
   smoothstep,
   sRGBTransferEOTF,
   transformNormalToView,
   uniform,
 } from "three/tsl";
 import { MeshBasicNodeMaterial } from "three/webgpu";
+
+import { bayer4x4 } from "./webgpu/tslCommon";
 
 /**
  * Port of FRESNEL_VERTEX/FRAGMENT_SHADER (globeShaders.js). Exposes the same
@@ -31,7 +36,10 @@ export function createFresnelGlowNodeMaterial({ color = 0x64b5f6, coef = 1, powe
   // the world-space one; it skewed the rim and over-brightened the halo).
   const normal = transformNormalToView(normalLocal).normalize();
   const x = clamp(dot(normal, positionView.normalize()), 0, 1);
-  const intensity = pow(smoothstep(0, 0.62, x), max(1.8, uPower.mul(2))).mul(uCoef);
+  const rawIntensity = pow(smoothstep(0, 0.62, x), max(1.8, uPower.mul(2))).mul(uCoef);
+  const bayer = bayer4x4(floor(screenCoordinate.xy.mul(0.5)));
+  const dithered = floor(rawIntensity.mul(5.0).add(bayer)).div(5.0);
+  const intensity = mix(rawIntensity, dithered, 0.82);
 
   const material = new MeshBasicNodeMaterial({
     transparent: true,

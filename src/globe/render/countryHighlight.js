@@ -230,15 +230,29 @@ function polygonsBounds(polygons) {
   return { minLng, maxLng, minLat, maxLat };
 }
 
-/** 2×2 checker, `phase` picks which diagonal is opaque (alphaMap reads green). */
+const BAYER_4X4 = [
+  [0, 8, 2, 10],
+  [12, 4, 14, 6],
+  [3, 11, 1, 9],
+  [15, 7, 13, 5],
+];
+
+/** 4×4 Bayer dither, `phase` picks complementary halves (alphaMap reads green/alpha). */
 const ditherCache = new Map();
 function ditherTexture(phase) {
   let tex = ditherCache.get(phase);
   if (tex) return tex;
   const on = [255, 255, 255, 255];
   const off = [0, 0, 0, 255];
-  const px = phase === 0 ? [on, off, off, on] : [off, on, on, off];
-  tex = new THREE.DataTexture(new Uint8Array(px.flat()), 2, 2, THREE.RGBAFormat);
+  const px = [];
+  for (let y = 0; y < 4; y++) {
+    for (let x = 0; x < 4; x++) {
+      const val = BAYER_4X4[y][x];
+      const isOpaque = phase % 2 === 0 ? val < 8 : val >= 8;
+      px.push(isOpaque ? on : off);
+    }
+  }
+  tex = new THREE.DataTexture(new Uint8Array(px.flat()), 4, 4, THREE.RGBAFormat);
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.NearestFilter;
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;

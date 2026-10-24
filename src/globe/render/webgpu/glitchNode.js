@@ -30,7 +30,7 @@ import {
   vec4,
 } from "three/tsl";
 
-import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
+import { bayer4x4, fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 const PI = 3.14159;
 
@@ -186,6 +186,7 @@ function glitchBase(u, lit) {
   const t = time.mul(glitchAmp.mul(62).add(28));
 
   const fragPx = screenCoordinate.xy.mul(u.uPixelScale);
+  const bayer = bayer4x4(floor(fragPx));
   const blockUv = floor(fragPx.mul(0.24));
   const noiseUv = fragPx.mul(0.28);
   const noiseCoarse = hash(blockUv.add(sin(t)));
@@ -198,7 +199,8 @@ function glitchBase(u, lit) {
   const scanline = sin(fragPx.y.mul(1.05).add(time.mul(glitchAmp.mul(14).add(6)))).mul(
     select(light, float(0.03), float(0.048))
   );
-  const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline)).toVar();
+  const bayerStipple = bayer.sub(0.46875).mul(select(light, float(0.06), float(0.09)));
+  const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline).add(bayerStipple)).toVar();
 
   const finalColor = vec3(staticVec).toVar();
   If(on(u.uIsError), () => {
@@ -215,13 +217,13 @@ function glitchBase(u, lit) {
     });
   const sideShade = mix(1.0, u.uSideShade, step(0.5, u.uIsSide));
   finalColor.mulAssign(sideShade);
-  return { transitionActive, glitchAmp, fragPx, blockUv, staticVec, finalColor, sideShade };
+  return { transitionActive, glitchAmp, fragPx, blockUv, staticVec, finalColor, sideShade, bayer };
 }
 
 /** Deselection dissolve: threshold noise, tears and the chroma-split colour. */
 function glitchDissolve(u, base) {
   const time = u.uTime;
-  const { transitionActive, glitchAmp, fragPx, blockUv, finalColor } = base;
+  const { transitionActive, glitchAmp, fragPx, blockUv, finalColor, bayer } = base;
   const dissolveBlock = floor(fragPx.mul(0.21)).add(
     vec2(sin(time.mul(58)), cos(time.mul(41)))
       .mul(glitchAmp)
@@ -230,6 +232,7 @@ function glitchDissolve(u, base) {
   const tn1 = hash(dissolveBlock);
   const tn2 = hash(dissolveBlock.mul(1.9).add(time.mul(3.7)));
   const transitionNoise = mix(tn1, tn2, glitchAmp.max(0.35).mul(0.55));
+  const ditherDissolve = mix(transitionNoise, bayer, 0.28);
   const horizontalTear = step(
     0.78,
     sin(fragPx.y.mul(0.038).add(time.mul(glitchAmp.mul(95).add(48))))
@@ -239,13 +242,13 @@ function glitchDissolve(u, base) {
   const glitchThreshold = u.uFadeProgress.toVar();
   const glitchColor = vec3(finalColor).toVar();
   If(on(transitionActive), () => {
-    glitchThreshold.addAssign(transitionNoise.sub(0.5).mul(glitchAmp.mul(0.3).add(0.46)));
+    glitchThreshold.addAssign(ditherDissolve.sub(0.5).mul(glitchAmp.mul(0.3).add(0.46)));
     glitchThreshold.assign(
       clamp(glitchThreshold.sub(horizontalTear.mul(0.16)).add(verticalGlitch.mul(0.12)), 0, 1)
     );
   });
   If(on(transitionActive).and(on(u.uIsFound).not()), () => {
-    const chroma = transitionNoise.sub(0.5).mul(0.28).mul(glitchAmp);
+    const chroma = ditherDissolve.sub(0.5).mul(0.28).mul(glitchAmp);
     glitchColor.assign(
       vec3(
         clamp(finalColor.x.add(chroma), 0, 1),
@@ -266,7 +269,7 @@ function createGlitchOutputNode(u) {
     const time = u.uTime;
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, fragPx, blockUv, staticVec, sideShade } = base;
+    const { transitionActive, fragPx, blockUv, staticVec, sideShade, bayer } = base;
     const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
 
     const settleColor = mix(lit, u.uFoundGreen.mul(sideShade), step(0.5, u.uIsFound)).toVar();
@@ -275,7 +278,8 @@ function createGlitchOutputNode(u) {
       .mul(0.06);
     staticVec.addAssign(surfaceNoise);
     settleColor.addAssign(surfaceNoise.mul(0.7));
-    const blockVal = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
+    const blockValRaw = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
+    const blockVal = mix(blockValRaw, bayer, 0.22);
     const edgeGlow = edgeGlowAt(blockUv, time).mul(1.6);
 
     const feedback = on(u.uIsError).or(on(u.uIsSuccess));

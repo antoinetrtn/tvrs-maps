@@ -4,6 +4,7 @@ import { attribute } from "three/tsl";
 
 import { getThemeColors, GLOBE_FX_DEFAULTS } from "../../config/designSystem";
 import { useAppTheme } from "../../hooks/useAppTheme";
+import { GLSL_BAYER_4X4_FN } from "../render/globeShaders";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 import {
   blackoutOceanOutputNode,
@@ -13,6 +14,7 @@ import {
 } from "../render/webgpu/surfaceNodes";
 
 const applyBlackoutOceanShader = (shader) => {
+  shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.vertexShader = `
     varying vec3 vWorldNormal;
     varying vec3 vWorldPos;
@@ -32,32 +34,62 @@ const applyBlackoutOceanShader = (shader) => {
     varying vec2 vUv;
     uniform vec3 uRimColor;
     uniform float uRimStrength;
+    uniform float uPixelScale;
+
+    ${GLSL_BAYER_4X4_FN}
 
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      // 1. Grille géographique haute fréquence identique au mode satellite (crée le moirage de diffraction)
-      vec2 gridUv = vUv * vec2(16384.0, 8192.0);
-      vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5);
-      float gridLine = smoothstep(0.0, 0.08, min(gridFract.x, gridFract.y));
+      vec2 px = floor(gl_FragCoord.xy * uPixelScale * 0.5);
+      float bayer = bayer4x4(px);
 
-      // 2. Bruit de capteur par bloc
-      vec2 blockId = floor(gridUv);
-      float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
-
-      // 3. Éclairage neutre monochrome & réactivité à la rotation
+      // 1. Curvature & spherical lighting
       vec3 viewDir = normalize(cameraPosition - vWorldPos);
       float viewIncidence = clamp(dot(vWorldNormal, viewDir), 0.0, 1.0);
-      float lightFacing = max(0.0, dot(vWorldNormal, normalize(vec3(1.0, 1.5, 2.0))));
-      float rimLight = pow(1.0 - viewIncidence, 3.5);
+      float lightFacing = clamp(dot(vWorldNormal, normalize(vec3(-0.55, 0.45, 0.70))), 0.0, 1.0);
+      float limb = pow(1.0 - viewIncidence, 1.85);
 
-      // Superposition du moirage de grille très adouci + bruit neutre + halo gris acier
-      vec3 moireGrid = vec3(0.88, 0.92, 0.96) * (1.0 - gridLine) * 0.055 * (0.6 + 0.5 * lightFacing);
-      vec3 sensorNoise = vec3((noise - 0.5) * 0.025);
-      // CRT halo: accent-tinted rim (Monochrome), neutral steel otherwise.
-      vec3 neutralRim = uRimColor * rimLight * uRimStrength;
+      // Bayer 4x4 ordered-dithered tonal steps toward the horizon limb
+      float oceanShade = limb * (0.65 + 0.35 * lightFacing);
+      float quantizedLimb = floor(oceanShade * 5.0 + bayer) / 5.0;
+      float grazingStipple = step(0.85, limb) * step(bayer, (limb - 0.85) * 6.0) * 0.08;
+      vec3 ditheredRim = uRimColor * ((quantizedLimb + grazingStipple) * uRimStrength * 3.2);
 
-      gl_FragColor.rgb += moireGrid + sensorNoise + neutralRim;
+      // 2. Cartographic graticule & micro-stipple (equirectangular vUv)
+      // 15-degree lat/lon grid (24 x 12 cells around the sphere)
+      vec2 gridUv15 = vUv * vec2(24.0, 12.0);
+      vec2 gridPx15 = max(fwidth(gridUv15), vec2(0.0008));
+      vec2 lineDist15 = abs(fract(gridUv15 + 0.5) - 0.5) / gridPx15;
+      float line15 = clamp(1.0 - min(lineDist15.x, lineDist15.y), 0.0, 1.0);
+      float gridDither = step(bayer * 0.75 + 0.1, line15);
+
+      // Major 30-degree accents
+      vec2 gridUv30 = vUv * vec2(12.0, 6.0);
+      vec2 gridPx30 = max(fwidth(gridUv30), vec2(0.0008));
+      vec2 lineDist30 = abs(fract(gridUv30 + 0.5) - 0.5) / gridPx30;
+      float line30 = clamp(1.0 - min(lineDist30.x, lineDist30.y), 0.0, 1.0);
+      gridDither = max(gridDither, step(bayer * 0.55, line30));
+
+      // Subtle 5-degree subgrid ticks at intersections (72 x 36 cells)
+      vec2 subGridUv = vUv * vec2(72.0, 36.0);
+      vec2 subDist = abs(fract(subGridUv + 0.5) - 0.5) / max(fwidth(subGridUv), vec2(0.001));
+      float subTick = clamp(1.0 - max(subDist.x, subDist.y) * 0.5, 0.0, 1.0) * step(min(subDist.x, subDist.y), 0.8);
+      float tickDither = step(bayer, subTick * 0.45) * 0.035;
+
+      // Highlighted Equator (latitude 0 -> vUv.y = 0.5) and Tropics (23.44 deg)
+      float latWidth = max(fwidth(vUv.y), 0.0004);
+      float eqDist = abs(vUv.y - 0.5) / latWidth;
+      float eqLine = clamp(1.0 - eqDist, 0.0, 1.0);
+      float tropicDist = abs(abs(vUv.y - 0.5) - 23.44 / 180.0) / latWidth;
+      float tropicLine = clamp(1.0 - tropicDist, 0.0, 1.0);
+      float specialLines = max(eqLine, tropicLine);
+      float specialDither = step(bayer, specialLines * 1.1) * 0.08;
+
+      vec3 graticuleColor = mix(vec3(0.55, 0.65, 0.75), uRimColor, 0.45);
+      vec3 graticuleRgb = graticuleColor * (gridDither * 0.075 + tickDither + specialDither * (0.06 + uRimStrength * 0.5));
+
+      gl_FragColor.rgb += ditheredRim + graticuleRgb;
       `
     )}
   `;
@@ -225,11 +257,17 @@ export function useGlobeMaterial(options = {}) {
       });
       const rimColor = new THREE.Color(UI_COLORS.oceanRimColor || GLOBE_FX_DEFAULTS.oceanRimColor);
       const rimStrength = Number(UI_COLORS.oceanRimStrength) || 0.07;
-      if (mat.isNodeMaterial) mat.outputNode = blackoutOceanOutputNode(rimColor, rimStrength);
+      if (mat.isNodeMaterial)
+        mat.outputNode = blackoutOceanOutputNode(
+          rimColor,
+          rimStrength,
+          polygonGlitchUniforms.uPixelScale
+        );
       else
         mat.onBeforeCompile = (shader) => {
           shader.uniforms.uRimColor = { value: rimColor };
           shader.uniforms.uRimStrength = { value: rimStrength };
+          shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
           applyBlackoutOceanShader(shader);
         };
       return mat;

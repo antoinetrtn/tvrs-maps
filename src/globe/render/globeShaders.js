@@ -9,6 +9,33 @@
  * driven from GlobeMap's lighting + animation code.
  */
 
+/**
+ * Exact 4x4 Bayer matrix lookup in [0, 15/16].
+ * Periodic mod 4 in x and y, matching SpaceBackground.jsx's BAYER_4X4 matrix.
+ */
+export function evaluateBayer4x4(x, y) {
+  const xi = ((Math.floor(x) % 4) + 4) % 4;
+  const yi = ((Math.floor(y) % 4) + 4) % 4;
+  const p0x = xi % 2;
+  const p0y = yi % 2;
+  const p1x = Math.floor(xi / 2) % 2;
+  const p1y = Math.floor(yi / 2) % 2;
+  const b0 = p0x * 2 + p0y * (3 - 4 * p0x);
+  const b1 = p1x * 2 + p1y * (3 - 4 * p1x);
+  return (4 * b0 + b1) / 16;
+}
+
+export const GLSL_BAYER_4X4_FN = `
+  float bayer2x2(vec2 v) {
+    return v.x * 2.0 + v.y * (3.0 - 4.0 * v.x);
+  }
+  float bayer4x4(vec2 px) {
+    vec2 p0 = floor(mod(px, 2.0));
+    vec2 p1 = floor(mod(floor(px * 0.5), 2.0));
+    return (4.0 * bayer2x2(p0) + bayer2x2(p1)) / 16.0;
+  }
+`;
+
 // Pass the view-space normal and position through to the fragment stage so the
 // fragment shader can compute a true perspective Fresnel term per pixel.
 export const FRESNEL_VERTEX_SHADER = `
@@ -30,6 +57,7 @@ export const FRESNEL_FRAGMENT_SHADER = `
   uniform vec3 glowColor;
   uniform float coef;
   uniform float power;
+  ${GLSL_BAYER_4X4_FN}
   void main() {
     vec3 normal = normalize(vAtmosphereNormal);
     vec3 viewDir = normalize(vAtmosphereViewPos);
@@ -46,7 +74,11 @@ export const FRESNEL_FRAGMENT_SHADER = `
 
     // Higher exponent creates a more gentle, soft, and diffuse gradient transition
     float exponent = max(1.8, power * 2.0);
-    float intensity = pow(edgeFade, exponent) * coef;
+    float rawIntensity = pow(edgeFade, exponent) * coef;
+
+    float bayer = bayer4x4(floor(gl_FragCoord.xy * 0.5));
+    float dithered = floor(rawIntensity * 5.0 + bayer) / 5.0;
+    float intensity = mix(rawIntensity, dithered, 0.82);
 
     gl_FragColor = vec4(glowColor, intensity);
   }
@@ -85,6 +117,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsSatellite;
   uniform vec3 uGlitchTintA;
   uniform vec3 uGlitchTintB;
+  ${GLSL_BAYER_4X4_FN}
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
@@ -163,6 +196,7 @@ export const GLITCH_FRAGMENT_BODY = `
 
   // DPR-normalized screen coords: same visual grain size on mobile and desktop.
   vec2 fragPx = gl_FragCoord.xy * uPixelScale;
+  float bayer = bayer4x4(floor(fragPx));
 
   vec2 blockUv = floor(fragPx * 0.24);
   vec2 noiseUv = fragPx * 0.28;
@@ -174,8 +208,9 @@ export const GLITCH_FRAGMENT_BODY = `
   float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
   float scanline = sin(fragPx.y * 1.05 + uTime * (6.0 + glitchAmp * 14.0))
     * ((uIsLight > 0.5) ? 0.03 : 0.048);
+  float bayerStipple = (bayer - 0.46875) * ((uIsLight > 0.5) ? 0.06 : 0.09);
 
-  float staticColor = mix(baseMin, baseMax, noise) + scanline;
+  float staticColor = mix(baseMin, baseMax, noise) + scanline + bayerStipple;
   vec3 staticVec = vec3(staticColor);
 
   // Caps and extruded side walls share one effect pipeline; sides are shaded
@@ -200,6 +235,7 @@ export const GLITCH_FRAGMENT_BODY = `
   float transitionNoise = hash(dissolveBlock);
   float transitionNoise2 = hash(dissolveBlock * 1.9 + uTime * 3.7);
   transitionNoise = mix(transitionNoise, transitionNoise2, 0.55 * max(glitchAmp, 0.35));
+  transitionNoise = mix(transitionNoise, bayer, 0.28);
 
   float horizontalTear = step(0.78, sin(fragPx.y * 0.038 + uTime * (48.0 + glitchAmp * 95.0)));
   float verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x * 0.07), floor(uTime * 24.0))));
@@ -253,6 +289,7 @@ export const GLITCH_FRAGMENT_BODY = `
   settleColor += vec3(countrySurfaceNoise * 0.7);
 
   float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
+  blockVal = mix(blockVal, bayer, 0.22);
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
