@@ -11,7 +11,7 @@ import {
 import { countryDataMap } from "../../data/gameData";
 import { riversMountainsDataMap } from "../../data/riversMountainsData";
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
-import { createZoomHapticTracker } from "../../utils/haptics";
+import { createZoomHapticTracker, primeHapticsOnUserGesture } from "../../utils/haptics";
 import { getCanonicalPosition } from "../../utils/utils";
 import {
   animateGlobePov,
@@ -306,6 +306,7 @@ export function useGlobeCamera(props) {
           if (domRef?.addEventListener) {
             wheelHandler = (e) => zoomHapticTracker?.onWheelDelta(e?.deltaY);
             touchZoomHandler = (e) => {
+              if (e?.type === "touchstart") primeHapticsOnUserGesture();
               const t = e?.touches;
               if ((t?.length ?? 0) >= 2) {
                 zoomHapticTracker?.onPinchDistance(

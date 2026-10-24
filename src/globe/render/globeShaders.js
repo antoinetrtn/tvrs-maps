@@ -76,7 +76,7 @@ export const FRESNEL_FRAGMENT_SHADER = `
     float exponent = max(1.8, power * 2.0);
     float rawIntensity = pow(edgeFade, exponent) * coef;
 
-    vec2 rimCell = floor((normal.xy * 0.5 + 0.5) * 240.0);
+    vec2 rimCell = floor((normal.xy * 0.5 + 0.5) * 960.0);
     float bayer = bayer4x4(rimCell);
     float dithered = floor(rawIntensity * 5.0 + bayer) / 5.0;
     float intensity = mix(rawIntensity, dithered, 0.82);
