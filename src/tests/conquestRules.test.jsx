@@ -55,7 +55,7 @@ describe("ConquestRulesSheet", () => {
     expect(dialog.getAttribute("aria-labelledby")).toBe("conquest-rules-title");
 
     expect(screen.getByText("Règles de Conquête")).toBeTruthy();
-    expect(screen.getByText("Bouclier")).toBeTruthy();
+    expect(screen.getByText("Protection")).toBeTruthy();
 
     const strongNumbers = screen.getAllByText("+10 pts");
     expect(strongNumbers.length).toBeGreaterThan(0);

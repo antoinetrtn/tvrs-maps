@@ -338,8 +338,6 @@ function describeFortifyRefusal(reason, name, fr) {
 }
 
 /** Fortify steps (server rules mirror): step 1 → +30 s, step 2 → +60 s. */
-export const CONQUEST_FORTIFY_MAX_LEVEL = 2;
-
 /**
  * Running shields for the globe countdown: [{ id, ms, level, mine, ownerId }],
  * soonest first. `level` = fortify steps done (0 after a capture).

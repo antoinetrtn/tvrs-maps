@@ -14,6 +14,7 @@ import {
 } from "./conquestFocus";
 import { clearConquestParam, readConquestCode } from "./conquestLink";
 import ConquestScreen from "./ConquestScreen.jsx";
+import ConquestShieldLayer from "./ConquestShieldLayer.jsx";
 import { hasStoredConquestMatch, useConquestMatch } from "./useConquestMatch";
 
 const EMPTY_FOUND = [];
@@ -164,6 +165,7 @@ export function useConquestLayer({
           countriesData={sessionView.globeProps.countriesData}
           selectedCountryId={focus?.id || null}
         />
+        <ConquestShieldLayer conquest={activeConquest} />
         <ConquestScreen
           lang={lang}
           conquest={activeConquest}

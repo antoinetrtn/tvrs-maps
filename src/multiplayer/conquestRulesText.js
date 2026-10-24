@@ -37,8 +37,8 @@ const RULES = {
         "Tape le nom d'un pays LIBRE → il est à toi, +10 pts. Le premier à valider l'emporte. 3 noms inconnus d'affilée → bloqué 2 s.",
       ],
       [
-        "Bouclier",
-        "Chaque pays capturé ou volé reçoit un bouclier de 30 s (20 s pour le leader). Un pays protégé (anneau pulsant) est involable.",
+        "Protection",
+        "Capture = 20 s de bouclier (pays involable). Re-clique ton pays : drapeau ou capitale = +30 s ; puis l'autre = +1 min. Un pays volé perd ses renforts.",
       ],
       [
         "Vol",
@@ -87,8 +87,8 @@ const RULES = {
         "Type the name of a FREE country → it's yours, +10 pts. First to submit wins it. Typing 3 unknown names in a row → blocked 2 s.",
       ],
       [
-        "Shield",
-        "Every country you capture or steal gets a shield for 30 s (only 20 s if you're the leader). A shielded country (pulsing ring) can't be stolen.",
+        "Protection",
+        "Capture = 20 s shield (country cannot be stolen). Click your country again: flag or capital = +30 s; then the other = +1 min. A stolen country loses its reinforcements.",
       ],
       [
         "Steal",

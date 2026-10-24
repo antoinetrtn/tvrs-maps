@@ -3,6 +3,7 @@ import "./ConquestCursors.css";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
+import { countryDataMap } from "../data/gameData";
 import {
   createCountryHighlight,
   featurePolygons,
@@ -251,7 +252,10 @@ function updateHighlight(state, entry, ctx) {
   const country = resolve(target.country);
   const slot = country ? slots.get(target.userId) : null;
   const alt = country && country === selfCountry ? HIGHLIGHT_ALT_UNDER_SELF : HIGHLIGHT_ALT;
-  const key = country ? `${country}|${entry.color}|${slot?.slot}|${slot?.count}|${alt}` : "";
+  const name = target.player?.display_name || "";
+  const key = country
+    ? `${country}|${entry.color}|${slot?.slot}|${slot?.count}|${alt}|${name}`
+    : "";
   if (key !== entry.hlKey) {
     entry.hl?.handle.dispose();
     entry.hl = null;
@@ -259,14 +263,17 @@ function updateHighlight(state, entry, ctx) {
     if (country) {
       const polygons = featurePolygons(features.get(country));
       if (polygons.length) {
+        const centroid = countryDataMap[country] || polygonsAnchor(polygons);
         const handle = createCountryHighlight(polygons, {
           color: entry.color,
           alt,
           slot: slot.slot,
           count: slot.count,
+          name,
+          centroid,
         });
         state.group.add(handle.group);
-        entry.hl = { handle, country, anchorLL: polygonsAnchor(polygons), alt };
+        entry.hl = { handle, country, anchorLL: centroid, alt };
       }
     }
   }
@@ -277,14 +284,17 @@ function updateHighlight(state, entry, ctx) {
   entry.hl.handle.setOpacity(opacity);
   entry.hl.handle.setPixelUnit(unit);
 
+  const a = entry.hl.anchorLL ? llToXyz(entry.hl.anchorLL.lat, entry.hl.anchorLL.lng, 1) : null;
+  const beyond = !a || !onScreen || isBeyondHorizon(a, _cam, GLOBE_RADIUS);
+  entry.hl.handle.update?.({ camera, visible: !beyond });
+
   // Link: dotted arc from the cursor pin to the country's anchor point. Both
   // ends must be in view (the link is drawn over the globe, not depth-tested).
   if (!entry.link) {
     entry.link = createCursorLink({ color: entry.color });
     state.group.add(entry.link.group);
   }
-  const a = entry.hl.anchorLL ? llToXyz(entry.hl.anchorLL.lat, entry.hl.anchorLL.lng, 1) : null;
-  if (!a || !onScreen || isBeyondHorizon(a, _cam, GLOBE_RADIUS)) {
+  if (beyond) {
     entry.link.hide();
     return;
   }

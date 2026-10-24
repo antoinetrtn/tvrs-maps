@@ -1,3 +1,4 @@
+import { conquestCursorStore } from "./conquestCursors";
 import { normalizeRoomCode } from "./conquestLogic";
 import { markRulesSeen } from "./useConquestRulesAutoOpen";
 
@@ -15,6 +16,8 @@ function readPreviewOptions(loc = globalThis.location) {
       empty: q.get("empty") === "1",
       lockout: q.get("lockout") === "1",
       rules: q.get("rules") === "1",
+      rematch: q.get("rematch") === "1",
+      fortify: q.get("fortify") === "1",
       error: q.get("error") || "",
     };
   } catch {
@@ -26,12 +29,14 @@ function readPreviewOptions(loc = globalThis.location) {
       empty: false,
       lockout: false,
       rules: false,
+      rematch: false,
+      fortify: false,
       error: "",
     };
   }
 }
 
-function buildPreviewMatch(phase, baseMs, urgent) {
+function buildPreviewMatch(phase, baseMs, urgent, rematch = false) {
   if (phase === "idle" || phase === "home") return null;
   const isLobby = phase === "lobby";
   const isCountdown = phase === "countdown";
@@ -56,6 +61,7 @@ function buildPreviewMatch(phase, baseMs, urgent) {
     status: isLobby ? "lobby" : isFinished ? "finished" : "live",
     started_at: startedAt,
     ends_at: endsAt,
+    rematch_id: isFinished && rematch ? "preview-rematch-lobby" : null,
     result: isFinished
       ? {
           winner: "me",
@@ -101,12 +107,23 @@ function buildPreviewClaims(phase, baseMs, empty) {
     {
       country_id: "France",
       owner_id: "me",
-      shield_until: new Date(baseMs + 25000).toISOString(),
+      fortify_level: 1,
+      shield_until: new Date(baseMs + 48000).toISOString(),
     },
-    { country_id: "Spain", owner_id: "me", shield_until: null },
-    { country_id: "Portugal", owner_id: "me", shield_until: null },
-    { country_id: "Germany", owner_id: "opp", shield_until: null },
-    { country_id: "Italy", owner_id: "opp", shield_until: null },
+    {
+      country_id: "Germany",
+      owner_id: "opp",
+      fortify_level: 0,
+      shield_until: new Date(baseMs + 12000).toISOString(),
+    },
+    {
+      country_id: "Italy",
+      owner_id: "opp",
+      fortify_level: 0,
+      shield_until: new Date(baseMs + 4000).toISOString(),
+    },
+    { country_id: "Spain", owner_id: "me", fortify_level: 0, shield_until: null },
+    { country_id: "Portugal", owner_id: "me", fortify_level: 0, shield_until: null },
   ];
 }
 
@@ -195,9 +212,10 @@ export function createConquestPreview({
 
   const baseMs = Date.now();
   let currentPhase = initialPhase === "home" ? "lobby" : initialPhase;
+  let activeFortifyCountry = null;
   let state = {
     userId: "me",
-    match: buildPreviewMatch(currentPhase, baseMs, opts.urgent),
+    match: buildPreviewMatch(currentPhase, baseMs, opts.urgent, opts.rematch),
     players: buildPreviewPlayers(currentPhase, displayName, opts),
     claims: buildPreviewClaims(currentPhase, baseMs, opts.empty),
     events: buildPreviewEvents(currentPhase, baseMs, opts.empty, opts.lockout),
@@ -209,6 +227,22 @@ export function createConquestPreview({
     busy: false,
   };
 
+  const updateOpponentCursor = () => {
+    if (currentPhase === "live") {
+      conquestCursorStore.receive(
+        {
+          userId: "opp",
+          lat: 51.1657,
+          lng: 10.4515,
+          country: "Germany",
+        },
+        { selfId: "me", playerIds: new Set(["me", "opp"]), now: Date.now() }
+      );
+    }
+  };
+  updateOpponentCursor();
+  const cursorTimer = setInterval(updateOpponentCursor, 2000);
+
   const emit = (patch) => {
     state = { ...state, ...patch };
     onChange?.(getSnapshot());
@@ -217,8 +251,10 @@ export function createConquestPreview({
   const setPhase = (nextPhase, extra = {}) => {
     currentPhase = nextPhase;
     const now = Date.now();
+    if (nextPhase !== "live") conquestCursorStore.clear();
+    else updateOpponentCursor();
     emit({
-      match: buildPreviewMatch(nextPhase, now, opts.urgent),
+      match: buildPreviewMatch(nextPhase, now, opts.urgent, opts.rematch),
       players: buildPreviewPlayers(nextPhase, displayName, opts),
       claims: buildPreviewClaims(nextPhase, now, opts.empty),
       events: buildPreviewEvents(nextPhase, now, opts.empty, opts.lockout),
@@ -236,7 +272,7 @@ export function createConquestPreview({
         emit({ error: "Salon introuvable" });
         return null;
       }
-      const match = { ...buildPreviewMatch("lobby", Date.now(), false), code };
+      const match = { ...buildPreviewMatch("lobby", Date.now(), false, opts.rematch), code };
       setPhase("lobby", { match });
       return match;
     },
@@ -286,7 +322,48 @@ export function createConquestPreview({
     }),
     steal: async () => ({ ok: true, country_id: "Germany" }),
     cancelSteal: async () => null,
-    leave: () => setPhase("idle"),
+    requestFortify: async (countryId) => {
+      activeFortifyCountry = countryId;
+      const claim = state.claims.find((c) => c.country_id === countryId);
+      const lvl = Number(claim?.fortify_level) || 0;
+      const bonus = lvl === 0 ? 30 : 60;
+      return {
+        ok: true,
+        country_id: countryId,
+        mode: "fortify",
+        kind: lvl === 0 ? "flag" : "capital",
+        options: ["FR", "ES", "DE", "IT"],
+        bonus_seconds: bonus,
+        expires_at: new Date(Date.now() + 20000).toISOString(),
+      };
+    },
+    fortify: async () => {
+      const countryId = activeFortifyCountry || "France";
+      const now = Date.now();
+      const nextClaims = state.claims.map((c) => {
+        if (c.country_id !== countryId) return c;
+        const curLvl = Number(c.fortify_level) || 0;
+        const nextLvl = Math.min(2, curLvl + 1);
+        const bonusMs = (nextLvl === 1 ? 30 : 60) * 1000;
+        const curUntil = c.shield_until ? new Date(c.shield_until).getTime() : now;
+        const nextUntil = new Date(Math.max(now, curUntil) + bonusMs).toISOString();
+        return { ...c, fortify_level: nextLvl, shield_until: nextUntil };
+      });
+      emit({ claims: nextClaims });
+      return { ok: true, country_id: countryId };
+    },
+    cancelFortify: async () => null,
+    rematch: async () => {
+      setPhase("lobby");
+      const players = state.players.map((p) => ({ ...p, ready: true }));
+      emit({ players });
+      return state.match;
+    },
+    leave: () => {
+      clearInterval(cursorTimer);
+      conquestCursorStore.clear();
+      setPhase("idle");
+    },
     refresh: async () => {},
     sendCursor: () => {},
   };

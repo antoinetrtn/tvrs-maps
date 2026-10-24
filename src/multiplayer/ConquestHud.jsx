@@ -195,6 +195,7 @@ const HudAnswer = ({
   setAnswer,
   phase,
   onFocusCountry,
+  myColor,
 }) => (
   <div className={`conquest-answer ${challenge ? "conquest-surface has-challenge" : ""}`}>
     {lockouts.length > 0 && (
@@ -228,6 +229,7 @@ const HudAnswer = ({
         countryName={countryName}
         onAnswer={answerSteal}
         onCancel={cancelSteal}
+        myColor={myColor}
       />
     ) : (
       <form onSubmit={submit} autoComplete="off">
@@ -295,6 +297,9 @@ const ConquestHud = ({
     inputRef,
   });
 
+  const myPlayer = players?.find((p) => p.user_id === userId);
+  const myColor = myPlayer ? getPaletteEntry(myPlayer.color)?.hex : undefined;
+
   return (
     <div className="conquest-hud">
       <HudTopBar standings={standings} userId={userId} phase={phase} clockMs={clockMs} t={t} />
@@ -314,6 +319,7 @@ const ConquestHud = ({
         setAnswer={setAnswer}
         phase={phase}
         onFocusCountry={onFocusCountry}
+        myColor={myColor}
       />
     </div>
   );
