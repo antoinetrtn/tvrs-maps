@@ -46,7 +46,7 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       expect(franceNeutral.color).toBe(neutralRes.current.REGION_COLORS.Europe);
       expect(brazilNeutral.color).toBe(neutralRes.current.REGION_COLORS.Americas);
       expect(brazilNeutral.color).toBe(neutralRes.current.UI_COLORS.mapBase);
-      expect(franceNeutral.color).not.toBe(brazilNeutral.color);
+      expect(franceNeutral.color).toBe(brazilNeutral.color);
       expect(franceNeutral.altitude).toBe(POLYGON_ALTITUDE.base);
       expect(franceNeutral.strokeWidth).toBe(1.6);
       expect(franceNeutral.capMaterial.userData).toEqual({
@@ -91,7 +91,7 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       // getPolygonColor from the region surface color to UI_COLORS.mapBase,
       // while the cap material switches to the isolated glitch shader using restingColor.
       expect(franceSelected.color).toBe(selectedRes.current.UI_COLORS.mapBase);
-      expect(franceSelected.color).not.toBe(franceNeutral.color);
+      expect(franceSelected.color).toBe(franceNeutral.color);
       expect(franceSelected.stroke).toBe(selectedRes.current.UI_COLORS.accent);
       expect(franceSelected.strokeWidth).toBe(7.5);
       expect(franceSelected.altitude).toBe(POLYGON_ALTITUDE.selected);

@@ -215,9 +215,9 @@ exports[`useGlobePolygons characterization — Full Matrix Snapshots > freezes t
       },
       {
         "admin": "France",
-        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#2f3d38 em:#2f3d38@0.05 sh:false fc:false",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:false fc:false",
         "capUniforms": null,
-        "colors": "#2f3d38 | side:#2e3b37 | stroke:#4a5550 | base:#2f3d38/#2e3b37",
+        "colors": "#34423d | side:#33403b | stroke:#4a5550 | base:#34423d/#2e3b37",
         "metrics": "alt:0.0012 | w:1.6 | res:1.5",
         "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
       },
@@ -236,9 +236,9 @@ exports[`useGlobePolygons characterization — Full Matrix Snapshots > freezes t
       },
       {
         "admin": "Spain",
-        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#2f3d38 em:#2f3d38@0.05 sh:false fc:false",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:false fc:false",
         "capUniforms": null,
-        "colors": "#2f3d38 | side:#2e3b37 | stroke:#4a5550 | base:#2f3d38/#2e3b37",
+        "colors": "#34423d | side:#33403b | stroke:#4a5550 | base:#34423d/#2e3b37",
         "metrics": "alt:0.0012 | w:1.6 | res:1.5",
         "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
       },

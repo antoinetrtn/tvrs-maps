@@ -16,6 +16,8 @@ import {
 const applyBlackoutOceanShader = (shader) => {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+  shader.uniforms.uGlobeMotion = polygonGlitchUniforms.uGlobeMotion;
+  shader.uniforms.uGlobeVelocity = polygonGlitchUniforms.uGlobeVelocity;
   shader.vertexShader = `
     varying vec3 vWorldNormal;
     varying vec3 vWorldPos;
@@ -37,6 +39,8 @@ const applyBlackoutOceanShader = (shader) => {
     uniform float uRimStrength;
     uniform float uPixelScale;
     uniform float uTime;
+    uniform float uGlobeMotion;
+    uniform vec2 uGlobeVelocity;
 
     ${GLSL_BAYER_4X4_FN}
 
@@ -46,17 +50,31 @@ const applyBlackoutOceanShader = (shader) => {
       float camDist = length(cameraPosition);
       float subGridVis = 1.0 - smoothstep(180.0, 260.0, camDist);
 
-      // 3D sphere-anchored dither cells on the ocean surface + animated current swell
+      // Zoom-adaptive fine dither grid so stipple cells stay crisp 1px particles at any zoom
       float oceanLat = (vUv.y - 0.5) * 3.14159265;
       float oceanLng = (vUv.x - 0.5) * 6.2831853;
-      vec2 waveDrift = vec2(uTime * 0.85, sin(oceanLng * 4.0 + uTime * 0.7) * 0.65);
-      vec2 px = floor(vUv * vec2(480.0, 240.0) + waveDrift);
+      float gridDensity = mix(5200.0, 2200.0, clamp((camDist - 108.0) / 170.0, 0.0, 1.0));
+      vec2 px = floor(vUv * vec2(gridDensity, gridDensity * 0.5));
       float bayer = bayer4x4(px);
 
-      float wave1 = sin(oceanLng * 12.0 + oceanLat * 8.0 - uTime * 1.65);
-      float wave2 = cos(oceanLng * 18.0 - oceanLat * 14.0 + uTime * 1.25);
-      float waveField = (wave1 * 0.6 + wave2 * 0.4) * 0.5 + 0.5;
-      float waveDither = step(bayer, waveField * 0.46) * (0.042 + uRimStrength * 0.35);
+      // Magnetic-field / ocean-gyre streamfunction reacting to globe motion & angular velocity
+      vec2 velShift = uGlobeVelocity * (1.6 + uGlobeMotion * 2.4);
+      float fLat = oceanLat + velShift.y * 0.35;
+      float fLng = oceanLng + velShift.x * 0.35;
+
+      float gyre1 = sin(fLng * 3.0 + sin(fLat * 4.0) * 0.65) * cos(fLat * 2.5);
+      float gyre2 = cos(fLng * 5.0 - fLat * 3.0 + sin(fLng * 2.0) * 0.5) * 0.55;
+      float streamPsi = fLat * 3.8 + gyre1 * 0.95 + gyre2 * 0.65;
+
+      // Crisp magnetic flux lines + travelling current dashes along the streamlines
+      float fluxWave = 0.5 + 0.5 * cos(streamPsi * 18.0);
+      float fluxLine = pow(fluxWave, 3.2);
+      float dashPhase = fLng * 36.0 - gyre1 * 14.0 - uTime * (2.2 + uGlobeMotion * 6.5);
+      float fluxDash = smoothstep(-0.15, 0.72, sin(dashPhase));
+      float motionRipple = uGlobeMotion * (0.4 + 0.6 * sin(streamPsi * 26.0 - uTime * 8.0));
+
+      float magneticCurrent = fluxLine * (0.38 + 0.62 * fluxDash) + motionRipple * 0.28;
+      float waveDither = step(bayer, magneticCurrent * 0.72) * (0.048 + uRimStrength * 0.42 + uGlobeMotion * 0.045);
 
       // 1. Curvature & spherical lighting
       vec3 viewDir = normalize(cameraPosition - vWorldPos);
@@ -64,8 +82,8 @@ const applyBlackoutOceanShader = (shader) => {
       float lightFacing = clamp(dot(vWorldNormal, normalize(vec3(-0.55, 0.45, 0.70))), 0.0, 1.0);
       float limb = pow(1.0 - viewIncidence, 1.85);
 
-      // Bayer 4x4 ordered-dithered tonal steps toward the horizon limb + animated wave shimmer
-      float oceanShade = limb * (0.65 + 0.35 * lightFacing) + waveField * 0.12;
+      // Bayer 4x4 ordered-dithered tonal steps toward the horizon limb + magnetic current shimmer
+      float oceanShade = limb * (0.65 + 0.35 * lightFacing) + magneticCurrent * 0.14;
       float quantizedLimb = floor(oceanShade * 5.0 + bayer) / 5.0;
       float grazingStipple = step(0.85, limb) * step(bayer, (limb - 0.85) * 6.0) * 0.08;
       vec3 ditheredRim = uRimColor * ((quantizedLimb + grazingStipple) * uRimStrength * 3.2 + waveDither);

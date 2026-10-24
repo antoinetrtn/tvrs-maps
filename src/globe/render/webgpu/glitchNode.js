@@ -277,15 +277,11 @@ function createGlitchOutputNode(u) {
     const time = u.uTime;
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, fragPx, blockUv, staticVec, sideShade, bayer } = base;
+    const { transitionActive, blockUv, staticVec, sideShade, bayer } = base;
     const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
 
     const settleColor = mix(lit, u.uFoundGreen.mul(sideShade), step(0.5, u.uIsFound)).toVar();
-    const surfaceNoise = hash(floor(fragPx.mul(3.2)).add(vec2(0.12, 0.45)))
-      .sub(0.5)
-      .mul(0.022);
-    staticVec.addAssign(surfaceNoise);
-    settleColor.addAssign(surfaceNoise.mul(0.7));
+    // Clean uniform surface without noisy surface blotches
     const blockValRaw = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
     const blockVal = mix(blockValRaw, bayer, 0.22);
     const edgeGlow = edgeGlowAt(blockUv, time).mul(1.6);
@@ -317,11 +313,7 @@ function createGlitchOutputNode(u) {
       });
     // (The GLSL soft select-in branch is unreachable: it needs transitionActive,
     // already handled above.)
-    rgb.addAssign(
-      hash(floor(fragPx.mul(3.6)).add(vec2(0.4, 0.7)))
-        .sub(0.5)
-        .mul(0.018)
-    );
+    // Clean cartographic finish
 
     // Alpha branch (satellite dissolve fades the cap out, block by block).
     const alpha = float(1).toVar();

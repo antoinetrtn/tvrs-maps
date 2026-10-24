@@ -1,13 +1,47 @@
 import { GLOBE_MAX_ALTITUDE, GLOBE_MIN_ALTITUDE } from "../globe/render/globeAltitude";
 import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 
-export const ZOOM_HAPTIC_DETENTS = 16;
-const ZOOM_HAPTIC_COOLDOWN_MS = 50;
-export const ZOOM_HAPTIC_TICK_MS = 2;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 5;
+export const ZOOM_HAPTIC_DETENTS = 28;
+const ZOOM_HAPTIC_COOLDOWN_MS = 38;
+export const ZOOM_HAPTIC_TICK_MS = 10;
+export const ZOOM_HAPTIC_BOUNDARY_MS = 18;
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 240;
+const ZOOM_PINCH_STEP_PX = 14;
+const ZOOM_WHEEL_STEP_DELTA = 36;
 
 const BOUNDARY_EPS = 0.004;
+
+let sharedAudioCtx = null;
+
+function playTactileAudioTick(isBoundary = false) {
+  if (typeof window === "undefined") return false;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return false;
+  try {
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    if (sharedAudioCtx.state !== "running") return false;
+    const now = sharedAudioCtx.currentTime;
+    const osc = sharedAudioCtx.createOscillator();
+    const gain = sharedAudioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(isBoundary ? 165 : 135, now);
+    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 62 : 52, now + 0.0045);
+    gain.gain.setValueAtTime(isBoundary ? 0.028 : 0.018, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.005);
+    osc.connect(gain);
+    gain.connect(sharedAudioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.0055);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Maps an altitude in [minAltitude, maxAltitude] to a discrete logarithmic detent
@@ -31,26 +65,32 @@ export function computeZoomDetentIndex(
 }
 
 /**
- * Triggers a very subtle haptic micro-pulse via navigator.vibrate when supported
- * and when prefers-reduced-motion is not active.
+ * Triggers a subtle haptic pulse via navigator.vibrate (10ms tick / 18ms boundary,
+ * above the ~8ms spin-up threshold of mobile LRA/ERM motors) plus an ultra-short
+ * tactile audio micro-click fallback when prefers-reduced-motion is not active.
  */
 export function triggerSubtleHapticTick(
   durationMs = ZOOM_HAPTIC_TICK_MS,
   nav = typeof navigator !== "undefined" ? navigator : null
 ) {
   if (prefersReducedMotion()) return false;
-  if (!nav || typeof nav.vibrate !== "function") return false;
-  try {
-    return Boolean(nav.vibrate(durationMs));
-  } catch {
-    return false;
+  let vibrated = false;
+  if (nav && typeof nav.vibrate === "function") {
+    try {
+      vibrated = Boolean(nav.vibrate(durationMs));
+    } catch {
+      vibrated = false;
+    }
   }
+  const audioClicked = playTactileAudioTick(durationMs >= ZOOM_HAPTIC_BOUNDARY_MS);
+  return vibrated || audioClicked;
 }
 
 /**
- * Stateful tracker for globe zoom detents. Only fires during an active user zoom
- * gesture (wheel / trackpad pinch / 2-finger touch pinch / double-tap zoom drag),
- * never during 1-finger pan/rotation or programmatic pointOfView camera animations.
+ * Stateful tracker for globe zoom detents. Supports both synchronous DOM-event
+ * gesture stepping (onPinchDistance / onWheelDelta inside touchmove / wheel so
+ * mobile browsers honor navigator.vibrate in user-gesture context) and altitude
+ * detent tracking.
  */
 export function createZoomHapticTracker({
   detents = ZOOM_HAPTIC_DETENTS,
@@ -62,6 +102,8 @@ export function createZoomHapticTracker({
   let lastBoundary = null;
   let lastPulseAt = -Infinity;
   let activeUntil = -Infinity;
+  let lastPinchBucket = null;
+  let wheelAccum = 0;
 
   return {
     markZoomGesture(now = performance.now()) {
@@ -71,6 +113,46 @@ export function createZoomHapticTracker({
       activeUntil = -Infinity;
       lastDetent = null;
       lastBoundary = null;
+      lastPinchBucket = null;
+      wheelAccum = 0;
+    },
+    onPinchDistance(distancePx, { now = performance.now(), stepPx = ZOOM_PINCH_STEP_PX } = {}) {
+      if (!Number.isFinite(distancePx) || distancePx <= 0 || stepPx <= 0) {
+        return { pulsed: false, reason: "invalid-distance" };
+      }
+      activeUntil = Math.max(activeUntil, now + activeWindowMs);
+      const bucket = Math.floor(distancePx / stepPx);
+      if (lastPinchBucket === null) {
+        lastPinchBucket = bucket;
+        return { pulsed: false, reason: "seeded", bucket };
+      }
+      if (bucket === lastPinchBucket) {
+        return { pulsed: false, reason: "same-bucket", bucket };
+      }
+      lastPinchBucket = bucket;
+      if (now - lastPulseAt < cooldownMs) {
+        return { pulsed: false, reason: "cooldown", bucket };
+      }
+      lastPulseAt = now;
+      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
+      return { pulsed: Boolean(ok), duration: ZOOM_HAPTIC_TICK_MS, bucket };
+    },
+    onWheelDelta(deltaY, { now = performance.now(), stepDelta = ZOOM_WHEEL_STEP_DELTA } = {}) {
+      if (!Number.isFinite(deltaY) || deltaY === 0 || stepDelta <= 0) {
+        return { pulsed: false, reason: "invalid-delta" };
+      }
+      activeUntil = Math.max(activeUntil, now + activeWindowMs);
+      wheelAccum += Math.abs(deltaY);
+      if (wheelAccum < stepDelta) {
+        return { pulsed: false, reason: "accumulating" };
+      }
+      wheelAccum %= stepDelta;
+      if (now - lastPulseAt < cooldownMs) {
+        return { pulsed: false, reason: "cooldown" };
+      }
+      lastPulseAt = now;
+      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
+      return { pulsed: Boolean(ok), duration: ZOOM_HAPTIC_TICK_MS };
     },
     onAltitudeChange(
       altitude,

@@ -1,12 +1,14 @@
 /**
  * TSL ports of the remaining onBeforeCompile effects (WebGPU renderer only):
- * country surface grain, blackout ocean, satellite sensor grid, mountain
- * glitch. Each mirrors its GLSL source line by line (see the GLSL next to the
- * call sites) and runs in display space like the original (tslCommon.js).
+ * country surface relief, blackout ocean magnetic currents, satellite sensor grid,
+ * mountain glitch. Each mirrors its GLSL source line by line (see the GLSL next to
+ * the call sites) and runs in display space like the original (tslCommon.js).
  */
 import * as THREE from "three";
 import {
   abs,
+  asin,
+  atan,
   cameraPosition,
   clamp,
   cos,
@@ -62,7 +64,7 @@ export function createStandardMaterial(params) {
 }
 
 let grainNode = null;
-/** countryGrainOutputNode: 3D sphere-anchored smooth country shading + micro-grain (no screen-space squares) */
+/** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
 export function countryGrainOutputNode() {
   if (!grainNode) {
     grainNode = Fn(() => {
@@ -72,27 +74,23 @@ export function countryGrainOutputNode() {
 
       const viewDir = normalize(cameraPosition.sub(positionWorld));
       const ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
-      const keyLightDir = normalize(vec3(-0.45, 0.55, 0.7));
-      const keyLight = clamp(dot(sphereNormal, keyLightDir), 0.0, 1.0);
-      const litLevel = clamp(ndv.mul(0.68).add(keyLight.mul(0.32)), 0.0, 1.0);
-      const shadeFactor = mix(float(0.76), float(1.08), smoothstep(0.05, 0.95, litLevel));
+      const limbFactor = mix(float(0.95), float(1.02), smoothstep(0.0, 0.65, ndv));
+      const rimSheen = pow(float(1.0).sub(ndv), 3.2).mul(0.045);
 
-      const sphereCoord = sphereNormal.xz
-        .mul(420.0)
-        .add(vec2(sphereNormal.y.mul(310.0), sphereNormal.x.mul(190.0)));
-      const sphereCell = floor(sphereCoord);
-      const sphereFrac = smoothstep(0.0, 1.0, fract(sphereCoord));
-      const g00 = hashGrain(sphereCell);
-      const g10 = hashGrain(sphereCell.add(vec2(1.0, 0.0)));
-      const g01 = hashGrain(sphereCell.add(vec2(0.0, 1.0)));
-      const g11 = hashGrain(sphereCell.add(vec2(1.0, 1.0)));
-      const microGrain = mix(mix(g00, g10, sphereFrac.x), mix(g01, g11, sphereFrac.x), sphereFrac.y)
-        .sub(0.5)
-        .mul(0.018);
+      const cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
+      const cLng = atan(sphereNormal.z, sphereNormal.x);
+      const cartUv = vec2(cLng.div(6.2831853).add(0.5), cLat.div(3.14159265).add(0.5));
+      const topoGrid = cartUv.mul(vec2(72.0, 36.0));
+      const topoDist = abs(fract(topoGrid.add(0.5)).sub(0.5)).div(
+        max(fwidth(topoGrid), vec2(0.001))
+      );
+      const parallelLine = clamp(float(1.0).sub(topoDist.y), 0.0, 1.0);
+      const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
 
       const lit = litDisplayColor();
-      const capRgb = lit.mul(shadeFactor).add(vec3(microGrain));
-      const sideRgb = lit.mul(0.84);
+      const engrave = lit.mul(parallelLine.mul(0.04).add(crossTick.mul(0.09))).add(vec3(rimSheen));
+      const capRgb = lit.mul(limbFactor).add(engrave);
+      const sideRgb = lit.mul(0.58);
 
       const rgb = mix(capRgb, sideRgb, isSideWall);
       return displayOutput(rgb);
@@ -102,28 +100,64 @@ export function countryGrainOutputNode() {
 }
 
 let oceanTimeNode = null;
-/** blackoutOceanOutputNode: 3D sphere-anchored animated Bayer 4x4 ordered-dither ocean + cartographic graticule */
+let oceanMotionNode = null;
+let oceanVelocityNode = null;
+
+/** blackoutOceanOutputNode: fine-scale magnetic-field ocean currents + cartographic graticule */
 export function blackoutOceanOutputNode(
   rimColor = new THREE.Color(0.85, 0.88, 0.92),
   rimStrength = 0.07,
   _uPixelScale = polygonGlitchUniforms.uPixelScale
 ) {
   const uTime = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
+  const uGlobeMotion = (oceanMotionNode ||= mirrorUniform(polygonGlitchUniforms.uGlobeMotion));
+  const uGlobeVelocity = (oceanVelocityNode ||= mirrorUniform(
+    polygonGlitchUniforms.uGlobeVelocity
+  ));
   return Fn(() => {
     const uvCoords = uv();
-    const oceanLat = uvCoords.y.sub(0.5).mul(3.14159265);
-    const oceanLng = uvCoords.x.sub(0.5).mul(6.2831853);
-    const waveDrift = vec2(uTime.mul(0.85), sin(oceanLng.mul(4.0).add(uTime.mul(0.7))).mul(0.65));
-    const px = floor(uvCoords.mul(vec2(480.0, 240.0)).add(waveDrift));
-    const bayer = bayer4x4(px);
     const camDist = length(cameraPosition);
     const subGridVis = float(1.0).sub(smoothstep(180.0, 260.0, camDist));
 
-    const wave1 = sin(oceanLng.mul(12.0).add(oceanLat.mul(8.0)).sub(uTime.mul(1.65)));
-    const wave2 = cos(oceanLng.mul(18.0).sub(oceanLat.mul(14.0)).add(uTime.mul(1.25)));
-    const waveField = wave1.mul(0.6).add(wave2.mul(0.4)).mul(0.5).add(0.5);
-    const waveDither = step(bayer, waveField.mul(0.46)).mul(
-      float(rimStrength).mul(0.35).add(0.042)
+    const oceanLat = uvCoords.y.sub(0.5).mul(3.14159265);
+    const oceanLng = uvCoords.x.sub(0.5).mul(6.2831853);
+    const gridDensity = mix(
+      float(5200.0),
+      float(2200.0),
+      clamp(camDist.sub(108.0).div(170.0), 0.0, 1.0)
+    );
+    const px = floor(uvCoords.mul(vec2(gridDensity, gridDensity.mul(0.5))));
+    const bayer = bayer4x4(px);
+
+    const velShift = uGlobeVelocity.mul(float(1.6).add(uGlobeMotion.mul(2.4)));
+    const fLat = oceanLat.add(velShift.y.mul(0.35));
+    const fLng = oceanLng.add(velShift.x.mul(0.35));
+
+    const gyre1 = sin(fLng.mul(3.0).add(sin(fLat.mul(4.0)).mul(0.65))).mul(cos(fLat.mul(2.5)));
+    const gyre2 = cos(
+      fLng
+        .mul(5.0)
+        .sub(fLat.mul(3.0))
+        .add(sin(fLng.mul(2.0)).mul(0.5))
+    ).mul(0.55);
+    const streamPsi = fLat.mul(3.8).add(gyre1.mul(0.95)).add(gyre2.mul(0.65));
+
+    const fluxWave = cos(streamPsi.mul(18.0)).mul(0.5).add(0.5);
+    const fluxLine = pow(fluxWave, 3.2);
+    const dashPhase = fLng
+      .mul(36.0)
+      .sub(gyre1.mul(14.0))
+      .sub(uTime.mul(float(2.2).add(uGlobeMotion.mul(6.5))));
+    const fluxDash = smoothstep(-0.15, 0.72, sin(dashPhase));
+    const motionRipple = uGlobeMotion.mul(
+      sin(streamPsi.mul(26.0).sub(uTime.mul(8.0)))
+        .mul(0.6)
+        .add(0.4)
+    );
+
+    const magneticCurrent = fluxLine.mul(fluxDash.mul(0.62).add(0.38)).add(motionRipple.mul(0.28));
+    const waveDither = step(bayer, magneticCurrent.mul(0.72)).mul(
+      float(rimStrength).mul(0.42).add(0.048).add(uGlobeMotion.mul(0.045))
     );
 
     // 1. Curvature & spherical lighting
@@ -133,7 +167,7 @@ export function blackoutOceanOutputNode(
     const lightFacing = clamp(dot(n, normalize(vec3(-0.55, 0.45, 0.7))), 0.0, 1.0);
     const limb = pow(float(1.0).sub(viewIncidence), 1.85);
 
-    const oceanShade = limb.mul(lightFacing.mul(0.35).add(0.65)).add(waveField.mul(0.12));
+    const oceanShade = limb.mul(lightFacing.mul(0.35).add(0.65)).add(magneticCurrent.mul(0.14));
     const quantizedLimb = floor(oceanShade.mul(5.0).add(bayer)).div(5.0);
     const limbStipple = step(bayer, oceanShade.mul(1.35)).mul(0.45);
 
