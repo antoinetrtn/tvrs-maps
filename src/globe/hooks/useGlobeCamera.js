@@ -21,6 +21,7 @@ import {
   readClampedGlobePov,
   REGIONAL_MIN_ALTITUDE,
   setGlobeMinAltitude,
+  syncCameraMapProjection,
   syncGlobeCameraAndZoomLimits,
   syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
@@ -197,10 +198,12 @@ const createOrbitControlHandlers = ({
   setCameraPOV,
 }) => {
   const changeHandler = () => {
-    syncGlobeControlsForAltitude(controls, readGlobeAltitude(globeEl.current), {
+    const currentAlt = readGlobeAltitude(globeEl.current);
+    syncGlobeControlsForAltitude(controls, currentAlt, {
       isMobile: isMobileRef.current,
       isRegionalMap: isRegionalMapRef.current,
     });
+    syncCameraMapProjection(globeEl.current, currentAlt);
     if (isInteractingRef.current) return;
     const pov = readClampedGlobePov(globeEl.current);
     if (!pov) return;

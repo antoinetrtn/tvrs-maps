@@ -32,6 +32,7 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
+import { focusAnswerInputSafely, shieldAutofillText } from "../utils/answerField";
 import {
   buildSuggestionIndex,
   getAnswerSuggestions,
@@ -179,13 +180,7 @@ export default function useAnswerCombobox({
   );
 
   const restoreFocus = useCallback(() => {
-    if (inputRef?.current) {
-      try {
-        inputRef.current.focus({ preventScroll: true });
-      } catch {
-        inputRef.current.focus();
-      }
-    }
+    focusAnswerInputSafely(inputRef);
   }, [inputRef]);
 
   const commitSuccess = useCallback(() => {
@@ -348,7 +343,7 @@ export default function useAnswerCombobox({
   const listProps = {
     id: listId,
     role: "listbox",
-    "aria-label": t ? t("quiz_answer") : "Réponse du quiz",
+    "aria-label": shieldAutofillText(t ? t("quiz_answer") : "Réponse du quiz"),
   };
 
   return {

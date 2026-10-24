@@ -41,7 +41,9 @@ const applyBlackoutOceanShader = (shader) => {
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      vec2 px = floor(gl_FragCoord.xy * uPixelScale * 0.5);
+      vec2 px = floor(gl_FragCoord.xy / 3.0);
+      float camDist = length(cameraPosition);
+      float subGridVis = 1.0 - smoothstep(180.0, 260.0, camDist);
       float bayer = bayer4x4(px);
 
       // 1. Curvature & spherical lighting
@@ -75,7 +77,7 @@ const applyBlackoutOceanShader = (shader) => {
       vec2 subGridUv = vUv * vec2(72.0, 36.0);
       vec2 subDist = abs(fract(subGridUv + 0.5) - 0.5) / max(fwidth(subGridUv), vec2(0.001));
       float subTick = clamp(1.0 - max(subDist.x, subDist.y) * 0.5, 0.0, 1.0) * step(min(subDist.x, subDist.y), 0.8);
-      float tickDither = step(bayer, subTick * 0.45) * 0.035;
+      float tickDither = step(bayer, subTick * 0.45) * 0.035 * subGridVis;
 
       // Highlighted Equator (latitude 0 -> vUv.y = 0.5) and Tropics (23.44 deg)
       float latWidth = max(fwidth(vUv.y), 0.0004);

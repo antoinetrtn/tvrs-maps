@@ -7,6 +7,8 @@
 import * as THREE from "three";
 import {
   abs,
+  asin,
+  atan,
   cameraPosition,
   clamp,
   dot,
@@ -62,39 +64,40 @@ export function createStandardMaterial(params) {
 }
 
 let grainNode = null;
-/** countryGrainOutputNode: 3D Spherical Bayer 4x4 Ordered-Dither + Cartographic Halftone */
+/** countryGrainOutputNode: 3D Spherical Bayer 4x4 Ordered-Dither + Zoom-Aware Cartographic Detail */
 export function countryGrainOutputNode() {
   if (!grainNode) {
     grainNode = Fn(() => {
-      const uPixelScale = mirrorUniform(polygonGlitchUniforms.uPixelScale);
-      const px = floor(screenCoordinate.xy.mul(uPixelScale.mul(0.5)));
-      const pxFine = floor(screenCoordinate.xy.mul(uPixelScale));
-      const bayer = bayer4x4(px);
-      const bayerFine = bayer4x4(pxFine);
+      const ditherCell = floor(screenCoordinate.xy.div(3.0));
+      const bayer = bayer4x4(ditherCell);
 
       const sphereNormal = normalize(positionWorld);
       const geomNormal = normalize(normalWorld);
       const isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
 
       const viewDir = normalize(cameraPosition.sub(positionWorld));
+      const camDist = length(cameraPosition);
+      const zoomDetail = float(1.0).sub(smoothstep(135.0, 220.0, camDist));
       const ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
-      const ndl = clamp(dot(sphereNormal, normalize(vec3(-0.55, 0.45, 0.7))), 0.0, 1.0);
+      const keyLightDir = normalize(vec3(-0.45, 0.55, 0.7));
+      const keyLight = clamp(dot(sphereNormal, keyLightDir), 0.0, 1.0);
+      const litLevel = clamp(ndv.mul(0.68).add(keyLight.mul(0.32)), 0.0, 1.0);
+      const quantShade = floor(litLevel.mul(3.0).add(bayer)).div(3.0);
+      const shadeFactor = mix(float(0.56), float(1.12), quantShade);
 
-      const sphereShade = clamp(pow(ndv, 0.65).mul(ndl.mul(0.32).add(0.68)), 0.0, 1.0);
-      const quantizedShade = floor(sphereShade.mul(5.0).add(bayer)).div(5.0);
-      const limbDither = step(bayer, smoothstep(0.06, 0.72, sphereShade));
-      const shadeFactor = mix(float(0.26), float(1.08), mix(limbDither, quantizedShade, 0.55));
-
-      const bayerCentered = bayer.sub(0.46875).mul(0.14);
-      const cellGrain = hashGrain(px).sub(0.5).mul(0.03);
+      const bayerCentered = bayer.sub(0.46875);
+      const lat = asin(clamp(sphereNormal.y, -1.0, 1.0));
+      const lng = atan(sphereNormal.z, sphereNormal.x);
+      const hatchUv = vec2(lng, lat).mul(20.0);
+      const hatchGrid = abs(fract(hatchUv.add(0.5)).sub(0.5));
+      const hatchLine = step(0.44, max(hatchGrid.x, hatchGrid.y)).mul(0.028).mul(zoomDetail);
+      const surfaceGrain = bayerCentered
+        .mul(mix(0.05, 0.11, zoomDetail))
+        .add(hatchLine.mul(step(0.5, bayer)));
 
       const lit = litDisplayColor();
-      const capRgb = lit.mul(shadeFactor).add(bayerCentered.add(cellGrain));
-
-      const sideStipple = step(0.62, bayerFine);
-      const sideRgb = mix(lit.mul(0.18), lit.mul(1.65).add(vec3(0.18)), sideStipple).mul(
-        mix(float(0.45), float(1.0), limbDither)
-      );
+      const capRgb = lit.mul(shadeFactor).add(vec3(surfaceGrain));
+      const sideRgb = lit.mul(mix(float(0.72), float(0.94), step(0.5, bayer)));
 
       const rgb = mix(capRgb, sideRgb, isSideWall);
       return displayOutput(rgb);
@@ -107,12 +110,13 @@ export function countryGrainOutputNode() {
 export function blackoutOceanOutputNode(
   rimColor = new THREE.Color(0.85, 0.88, 0.92),
   rimStrength = 0.07,
-  uPixelScale = polygonGlitchUniforms.uPixelScale
+  _uPixelScale = polygonGlitchUniforms.uPixelScale
 ) {
   return Fn(() => {
-    const pixelScale = uPixelScale?.isNode ? uPixelScale : mirrorUniform(uPixelScale);
-    const px = floor(screenCoordinate.xy.mul(pixelScale.mul(0.5)));
+    const px = floor(screenCoordinate.xy.div(3.0));
     const bayer = bayer4x4(px);
+    const camDist = length(cameraPosition);
+    const subGridVis = float(1.0).sub(smoothstep(180.0, 260.0, camDist));
 
     // 1. Curvature & spherical lighting
     const n = normalize(normalWorld);
@@ -154,7 +158,7 @@ export function blackoutOceanOutputNode(
     const subTick = clamp(float(1.0).sub(max(subDist.x, subDist.y).mul(0.5)), 0.0, 1.0).mul(
       step(min(subDist.x, subDist.y), 0.8)
     );
-    const tickDither = step(bayer, subTick.mul(0.45)).mul(0.035);
+    const tickDither = step(bayer, subTick.mul(0.45)).mul(0.035).mul(subGridVis);
 
     const latWidth = max(fwidth(uvCoords.y), 0.0004);
     const eqDist = abs(uvCoords.y.sub(0.5)).div(latWidth);

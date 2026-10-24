@@ -19,8 +19,53 @@ export function setGlobeMinAltitude(altitude) {
   currentMinAltitude = altitude;
 }
 
-const CAMERA_FOV_DEG = 50; // three-globe default vertical FOV
+export const CAMERA_FOV_DEG = 50; // three-globe default vertical FOV
+export const MAP_FLATTEN_START_ALTITUDE = 1.15;
+export const MAP_FLATTEN_MIN_FOV_DEG = 24;
 const FRAME_MARGIN = 1.12;
+
+const smoothstep01 = (t) => {
+  const x = Math.max(0, Math.min(1, t));
+  return x * x * (3 - 2 * x);
+};
+
+/**
+ * Progressive "flat map / unwrap" factor in [0, 1] as the player zooms in close
+ * (Google Maps style transition from 3D globe at altitude >= 1.15 to planar-feeling
+ * map projection down to minAltitude).
+ */
+export function computeMapFlattenFactor(altitude) {
+  if (!Number.isFinite(altitude) || altitude >= MAP_FLATTEN_START_ALTITUDE) return 0;
+  const clamped = Math.max(currentMinAltitude, altitude);
+  const span = Math.max(0.05, MAP_FLATTEN_START_ALTITUDE - currentMinAltitude);
+  return smoothstep01((MAP_FLATTEN_START_ALTITUDE - clamped) / span);
+}
+
+/**
+ * Effective vertical camera FOV in degrees. Progressively narrows from 50° down to
+ * 24° when zooming in close so the visible country patch loses spherical perspective
+ * barrel distortion and reads like a flat 2D Mercator map plane while keeping
+ * three-globe raycasting and continuous -180° <-> +180° wrap-around intact.
+ */
+export function computeEffectiveCameraFov(altitude) {
+  const flattenFactor = computeMapFlattenFactor(altitude);
+  return CAMERA_FOV_DEG - (CAMERA_FOV_DEG - MAP_FLATTEN_MIN_FOV_DEG) * flattenFactor;
+}
+
+export function syncCameraMapProjection(globeEl, altitude) {
+  const camera = globeEl?.camera?.();
+  if (!camera) return null;
+  const flattenFactor = computeMapFlattenFactor(altitude);
+  const targetFov = computeEffectiveCameraFov(altitude);
+  if (typeof camera.fov === "number" && Math.abs(camera.fov - targetFov) > 0.05) {
+    camera.fov = targetFov;
+    camera.updateProjectionMatrix?.();
+  }
+  if (camera.up && typeof camera.up.set === "function") {
+    camera.up.set(0, 1, 0);
+  }
+  return { flattenFactor, fov: targetFov };
+}
 
 /**
  * Altitude (in globe radii) that fits a lat/lng box in a viewport of the given
@@ -66,6 +111,7 @@ function applyGlobeZoomLimits(controls) {
   if (!controls) return;
   controls.minDistance = GLOBE_RADIUS * (1 + currentMinAltitude);
   controls.maxDistance = GLOBE_MAX_DISTANCE;
+  controls.screenSpacePanning = true;
 }
 
 export function syncGlobeCameraAndZoomLimits(globeEl, controls) {
@@ -73,16 +119,14 @@ export function syncGlobeCameraAndZoomLimits(globeEl, controls) {
   if (!camera) return null;
   camera.near = GLOBE_CAMERA_NEAR;
   camera.far = GLOBE_CAMERA_FAR;
+  if (camera.up && typeof camera.up.set === "function") {
+    camera.up.set(0, 1, 0);
+  }
   camera.clearViewOffset?.();
   camera.updateProjectionMatrix();
   applyGlobeZoomLimits(controls);
   return camera;
 }
-
-const smoothstep01 = (t) => {
-  const x = Math.max(0, Math.min(1, t));
-  return x * x * (3 - 2 * x);
-};
 
 /** Pull the orbit camera back inside [minDistance, maxDistance] if it escaped. */
 function clampControlsCameraDistance(controls) {
@@ -111,6 +155,11 @@ export function syncGlobeControlsForAltitude(
   controls.zoomToCursor = Boolean(isRegionalMap);
 
   const clampedAlt = clampGlobeAltitude(altitude);
+  const flattenFactor = computeMapFlattenFactor(clampedAlt);
+  const polarMargin = 0.005 + 0.075 * flattenFactor;
+  controls.minPolarAngle = polarMargin;
+  controls.maxPolarAngle = Math.PI - polarMargin;
+
   const span = GLOBE_MAX_ALTITUDE - currentMinAltitude;
   const t = smoothstep01(span > 0 ? (clampedAlt - currentMinAltitude) / span : 0);
   const device = isMobile ? "mobile" : "desktop";
@@ -154,6 +203,7 @@ export function animateGlobePov(globeEl, pov, durationMs = 0) {
   if (!globeEl?.pointOfView || !pov) return;
   const ms = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
   povTweenEndsAt = ms ? nowMs() + ms : 0;
+  syncCameraMapProjection(globeEl, pov.altitude);
   globeEl.pointOfView(pov, ms);
 }
 
@@ -172,9 +222,8 @@ export function cancelGlobePovTween(globeEl) {
   if (!wasActive || !globeEl?.pointOfView) return false;
   const pov = globeEl.pointOfView();
   if (!pov || !Number.isFinite(pov.lat) || !Number.isFinite(pov.lng)) return false;
-  globeEl.pointOfView(
-    { lat: pov.lat, lng: pov.lng, altitude: clampGlobeAltitude(pov.altitude) },
-    0
-  );
+  const clampedAlt = clampGlobeAltitude(pov.altitude);
+  globeEl.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: clampedAlt }, 0);
+  syncCameraMapProjection(globeEl, clampedAlt);
   return true;
 }
