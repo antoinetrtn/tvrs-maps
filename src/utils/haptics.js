@@ -3,8 +3,8 @@ import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 
 export const ZOOM_HAPTIC_DETENTS = 28;
 const ZOOM_HAPTIC_COOLDOWN_MS = 38;
-export const ZOOM_HAPTIC_TICK_MS = 10;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 18;
+export const ZOOM_HAPTIC_TICK_MS = 16;
+export const ZOOM_HAPTIC_BOUNDARY_MS = 26;
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 240;
 const ZOOM_PINCH_STEP_PX = 14;
 const ZOOM_WHEEL_STEP_DELTA = 36;
@@ -12,6 +12,54 @@ const ZOOM_WHEEL_STEP_DELTA = 36;
 const BOUNDARY_EPS = 0.004;
 
 let sharedAudioCtx = null;
+let iosHapticLabel = null;
+
+function ensureIosHapticSwitch() {
+  if (typeof document === "undefined" || !document.body) return null;
+  if (iosHapticLabel && iosHapticLabel.isConnected) return iosHapticLabel;
+  try {
+    const label = document.createElement("label");
+    label.setAttribute("aria-hidden", "true");
+    label.style.cssText =
+      "position:fixed;top:-99px;left:-99px;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.setAttribute("switch", "");
+    label.appendChild(input);
+    document.body.appendChild(label);
+    iosHapticLabel = label;
+    return label;
+  } catch {
+    return null;
+  }
+}
+
+function triggerIosSwitchHaptic() {
+  const label = ensureIosHapticSwitch();
+  if (!label) return false;
+  try {
+    label.click();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function primeHapticsOnUserGesture() {
+  if (typeof window === "undefined") return;
+  ensureIosHapticSwitch();
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+    try {
+      navigator.vibrate(0);
+    } catch {}
+  }
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return;
+  try {
+    sharedAudioCtx ||= new AudioCtx();
+    if (sharedAudioCtx.state === "suspended") sharedAudioCtx.resume().catch(() => {});
+  } catch {}
+}
 
 function playTactileAudioTick(isBoundary = false) {
   if (typeof window === "undefined") return false;
@@ -29,14 +77,14 @@ function playTactileAudioTick(isBoundary = false) {
     const osc = sharedAudioCtx.createOscillator();
     const gain = sharedAudioCtx.createGain();
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(isBoundary ? 165 : 135, now);
-    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 62 : 52, now + 0.0045);
-    gain.gain.setValueAtTime(isBoundary ? 0.028 : 0.018, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.005);
+    osc.frequency.setValueAtTime(isBoundary ? 150 : 120, now);
+    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 54 : 44, now + 0.0055);
+    gain.gain.setValueAtTime(isBoundary ? 0.032 : 0.022, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.006);
     osc.connect(gain);
     gain.connect(sharedAudioCtx.destination);
     osc.start(now);
-    osc.stop(now + 0.0055);
+    osc.stop(now + 0.0065);
     return true;
   } catch {
     return false;
@@ -45,8 +93,7 @@ function playTactileAudioTick(isBoundary = false) {
 
 /**
  * Maps an altitude in [minAltitude, maxAltitude] to a discrete logarithmic detent
- * index in [0, detents] so equal perceptual zoom steps trigger uniform tactile ticks
- * (like sliding a control in Figma).
+ * index in [0, detents] so equal perceptual zoom steps trigger uniform tactile ticks.
  */
 export function computeZoomDetentIndex(
   altitude,
@@ -65,32 +112,30 @@ export function computeZoomDetentIndex(
 }
 
 /**
- * Triggers a subtle haptic pulse via navigator.vibrate (10ms tick / 18ms boundary,
- * above the ~8ms spin-up threshold of mobile LRA/ERM motors) plus an ultra-short
- * tactile audio micro-click fallback when prefers-reduced-motion is not active.
+ * Triggers a subtle haptic pulse via navigator.vibrate (Android), iOS 17.4+ switch
+ * Taptic Engine fallback (iPhone Safari), and WebAudio tactile micro-click.
  */
+function tryNativeVibrate(nav, durationMs) {
+  if (!nav || typeof nav.vibrate !== "function") return triggerIosSwitchHaptic();
+  try {
+    return Boolean(nav.vibrate(durationMs));
+  } catch {
+    return false;
+  }
+}
+
 export function triggerSubtleHapticTick(
   durationMs = ZOOM_HAPTIC_TICK_MS,
   nav = typeof navigator !== "undefined" ? navigator : null
 ) {
   if (prefersReducedMotion()) return false;
-  let vibrated = false;
-  if (nav && typeof nav.vibrate === "function") {
-    try {
-      vibrated = Boolean(nav.vibrate(durationMs));
-    } catch {
-      vibrated = false;
-    }
-  }
+  const vibrated = tryNativeVibrate(nav, durationMs);
   const audioClicked = playTactileAudioTick(durationMs >= ZOOM_HAPTIC_BOUNDARY_MS);
   return vibrated || audioClicked;
 }
 
 /**
- * Stateful tracker for globe zoom detents. Supports both synchronous DOM-event
- * gesture stepping (onPinchDistance / onWheelDelta inside touchmove / wheel so
- * mobile browsers honor navigator.vibrate in user-gesture context) and altitude
- * detent tracking.
+ * Stateful tracker for globe zoom detents.
  */
 export function createZoomHapticTracker({
   detents = ZOOM_HAPTIC_DETENTS,
@@ -158,55 +203,58 @@ export function createZoomHapticTracker({
       altitude,
       {
         now = performance.now(),
-        isZoomGesture = false,
         minAltitude = GLOBE_MIN_ALTITUDE,
         maxAltitude = GLOBE_MAX_ALTITUDE,
       } = {}
     ) {
-      if (!Number.isFinite(altitude)) return { pulsed: false, reason: "invalid-altitude" };
-      if (isZoomGesture) {
-        activeUntil = Math.max(activeUntil, now + activeWindowMs);
-      }
-      const gestureActive = isZoomGesture || now <= activeUntil;
       const detent = computeZoomDetentIndex(altitude, { minAltitude, maxAltitude, detents });
-      if (!gestureActive) {
+      if (detent === null) return { pulsed: false, detent: null };
+
+      if (now > activeUntil) {
         lastDetent = detent;
         lastBoundary = null;
-        return { pulsed: false, reason: "inactive", detent };
+        return { pulsed: false, detent, reason: "inactive" };
+      }
+
+      if (lastDetent === null) {
+        lastDetent = detent;
+        return { pulsed: false, detent, reason: "seeded" };
       }
 
       const atMin = altitude <= minAltitude + BOUNDARY_EPS;
       const atMax = altitude >= maxAltitude - BOUNDARY_EPS;
       const boundary = atMin ? "min" : atMax ? "max" : null;
 
-      if (lastDetent === null) {
-        lastDetent = detent;
+      const isNewBoundary = Boolean(boundary && boundary !== lastBoundary);
+      if (isNewBoundary) {
         lastBoundary = boundary;
-        return { pulsed: false, reason: "seeded", detent };
+        lastDetent = detent;
+      }
+      if (isNewBoundary && now - lastPulseAt < cooldownMs) {
+        return { pulsed: false, detent, boundary, reason: "cooldown" };
+      }
+      if (isNewBoundary) {
+        lastPulseAt = now;
+        const ok = vibrate(ZOOM_HAPTIC_BOUNDARY_MS);
+        return { pulsed: Boolean(ok), detent, boundary, duration: ZOOM_HAPTIC_BOUNDARY_MS };
       }
 
-      const crossedBoundary = boundary !== null && boundary !== lastBoundary;
-      const crossedDetent = detent !== lastDetent;
+      if (!boundary) {
+        lastBoundary = null;
+      }
+
+      if (detent === lastDetent) {
+        return { pulsed: false, detent, reason: "same-detent" };
+      }
+
       lastDetent = detent;
-      lastBoundary = boundary;
-
-      if (!crossedBoundary && !crossedDetent) {
-        return { pulsed: false, reason: "same-detent", detent };
-      }
-
       if (now - lastPulseAt < cooldownMs) {
-        return { pulsed: false, reason: "cooldown", detent };
+        return { pulsed: false, detent, reason: "cooldown" };
       }
 
       lastPulseAt = now;
-      const duration = crossedBoundary ? ZOOM_HAPTIC_BOUNDARY_MS : ZOOM_HAPTIC_TICK_MS;
-      const ok = vibrate(duration);
-      return {
-        pulsed: Boolean(ok),
-        duration,
-        boundary,
-        detent,
-      };
+      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
+      return { pulsed: Boolean(ok), detent, duration: ZOOM_HAPTIC_TICK_MS };
     },
   };
 }

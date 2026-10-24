@@ -47,79 +47,47 @@ const applyBlackoutOceanShader = (shader) => {
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      float camDist = length(cameraPosition);
-      float subGridVis = 1.0 - smoothstep(180.0, 260.0, camDist);
-
-      // Zoom-adaptive fine dither grid so stipple cells stay crisp 1px particles at any zoom
+      // Fine 1px ordered Bayer 4x4 pixel-art trame (no coarse background grid or velocity slosh)
       float oceanLat = (vUv.y - 0.5) * 3.14159265;
       float oceanLng = (vUv.x - 0.5) * 6.2831853;
-      float gridDensity = mix(5200.0, 2200.0, clamp((camDist - 108.0) / 170.0, 0.0, 1.0));
-      vec2 px = floor(vUv * vec2(gridDensity, gridDensity * 0.5));
+      float latCos = max(cos(oceanLat), 0.25);
+      float eqLng = oceanLng * latCos;
+      vec2 px = floor(gl_FragCoord.xy * uPixelScale);
       float bayer = bayer4x4(px);
 
-      // Magnetic-field / ocean-gyre streamfunction reacting to globe motion & angular velocity
-      vec2 velShift = uGlobeVelocity * (1.6 + uGlobeMotion * 2.4);
-      float fLat = oceanLat + velShift.y * 0.35;
-      float fLng = oceanLng + velShift.x * 0.35;
+      // Calm, sculptural oceanic magnetic gyres anchored to the 3D Earth with cos(lat) aspect correction
+      float gyre1 = sin(eqLng * 2.2 + sin(oceanLat * 3.0) * 0.75) * cos(oceanLat * 1.8);
+      float gyre2 = cos(eqLng * 3.2 - oceanLat * 2.2 + sin(oceanLng * 2.0) * 0.5) * 0.65;
+      float streamPsi = oceanLat * 2.5 + gyre1 * 1.15 + gyre2 * 0.75;
 
-      float gyre1 = sin(fLng * 3.0 + sin(fLat * 4.0) * 0.65) * cos(fLat * 2.5);
-      float gyre2 = cos(fLng * 5.0 - fLat * 3.0 + sin(fLng * 2.0) * 0.5) * 0.55;
-      float streamPsi = fLat * 3.8 + gyre1 * 0.95 + gyre2 * 0.65;
+      // Full Bayer 4x4 tonal range (0 -> 15/16) so ribbons render true checkerboard & cross-hatch trame
+      float ribbonWave = 0.5 + 0.5 * cos(streamPsi * 4.2 - uTime * 0.15);
+      float ribbonProfile = smoothstep(0.14, 0.86, ribbonWave);
+      float alongStream = 0.78 + 0.22 * sin(eqLng * 3.2 - gyre1 * 2.2 - uTime * 0.22);
+      float currentTone = ribbonProfile * alongStream * 0.68;
 
-      // Crisp magnetic flux lines + travelling current dashes along the streamlines
-      float fluxWave = 0.5 + 0.5 * cos(streamPsi * 18.0);
-      float fluxLine = pow(fluxWave, 3.2);
-      float dashPhase = fLng * 36.0 - gyre1 * 14.0 - uTime * (2.2 + uGlobeMotion * 6.5);
-      float fluxDash = smoothstep(-0.15, 0.72, sin(dashPhase));
-      float motionRipple = uGlobeMotion * (0.4 + 0.6 * sin(streamPsi * 26.0 - uTime * 8.0));
-
-      float magneticCurrent = fluxLine * (0.38 + 0.62 * fluxDash) + motionRipple * 0.28;
-      float waveDither = step(bayer, magneticCurrent * 0.72) * (0.048 + uRimStrength * 0.42 + uGlobeMotion * 0.045);
-
-      // 1. Curvature & spherical lighting
+      // Spherical curvature & limb gradient unified into the same 1-bit Bayer 4x4 trame
       vec3 viewDir = normalize(cameraPosition - vWorldPos);
       float viewIncidence = clamp(dot(vWorldNormal, viewDir), 0.0, 1.0);
       float lightFacing = clamp(dot(vWorldNormal, normalize(vec3(-0.55, 0.45, 0.70))), 0.0, 1.0);
-      float limb = pow(1.0 - viewIncidence, 1.85);
+      float limb = pow(1.0 - viewIncidence, 1.75);
+      float limbTone = smoothstep(0.08, 0.92, limb) * (0.62 + 0.24 * lightFacing);
 
-      // Bayer 4x4 ordered-dithered tonal steps toward the horizon limb + magnetic current shimmer
-      float oceanShade = limb * (0.65 + 0.35 * lightFacing) + magneticCurrent * 0.14;
-      float quantizedLimb = floor(oceanShade * 5.0 + bayer) / 5.0;
-      float grazingStipple = step(0.85, limb) * step(bayer, (limb - 0.85) * 6.0) * 0.08;
-      vec3 ditheredRim = uRimColor * ((quantizedLimb + grazingStipple) * uRimStrength * 3.2 + waveDither);
+      float ditherTone = clamp(max(currentTone, limbTone) + currentTone * limbTone * 0.35 + uGlobeMotion * 0.03, 0.0, 0.86);
+      float trameBit = step(bayer + 0.04, ditherTone);
+      vec3 ditheredRim = uRimColor * (trameBit * (0.20 + uRimStrength * 1.95));
 
-      // 2. Cartographic graticule & micro-stipple (equirectangular vUv)
-      // 15-degree lat/lon grid (24 x 12 cells around the sphere)
-      vec2 gridUv15 = vUv * vec2(24.0, 12.0);
-      vec2 gridPx15 = max(fwidth(gridUv15), vec2(0.0008));
-      vec2 lineDist15 = abs(fract(gridUv15 + 0.5) - 0.5) / gridPx15;
-      float line15 = clamp(1.0 - min(lineDist15.x, lineDist15.y), 0.0, 1.0);
-      float gridDither = step(bayer * 0.75 + 0.1, line15);
-
-      // Major 30-degree accents
-      vec2 gridUv30 = vUv * vec2(12.0, 6.0);
-      vec2 gridPx30 = max(fwidth(gridUv30), vec2(0.0008));
-      vec2 lineDist30 = abs(fract(gridUv30 + 0.5) - 0.5) / gridPx30;
-      float line30 = clamp(1.0 - min(lineDist30.x, lineDist30.y), 0.0, 1.0);
-      gridDither = max(gridDither, step(bayer * 0.55, line30));
-
-      // Subtle 5-degree subgrid ticks at intersections (72 x 36 cells)
-      vec2 subGridUv = vUv * vec2(72.0, 36.0);
-      vec2 subDist = abs(fract(subGridUv + 0.5) - 0.5) / max(fwidth(subGridUv), vec2(0.001));
-      float subTick = clamp(1.0 - max(subDist.x, subDist.y) * 0.5, 0.0, 1.0) * step(min(subDist.x, subDist.y), 0.8);
-      float tickDither = step(bayer, subTick * 0.45) * 0.035 * subGridVis;
-
-      // Highlighted Equator (latitude 0 -> vUv.y = 0.5) and Tropics (23.44 deg)
+      // Subtle dithered Equator and Tropics reference lines
       float latWidth = max(fwidth(vUv.y), 0.0004);
       float eqDist = abs(vUv.y - 0.5) / latWidth;
       float eqLine = clamp(1.0 - eqDist, 0.0, 1.0);
       float tropicDist = abs(abs(vUv.y - 0.5) - 23.44 / 180.0) / latWidth;
       float tropicLine = clamp(1.0 - tropicDist, 0.0, 1.0);
       float specialLines = max(eqLine, tropicLine);
-      float specialDither = step(bayer, specialLines * 1.1) * 0.08;
+      float specialDither = step(bayer + 0.04, specialLines * 0.95) * 0.065;
 
       vec3 graticuleColor = mix(vec3(0.55, 0.65, 0.75), uRimColor, 0.45);
-      vec3 graticuleRgb = graticuleColor * (gridDither * 0.075 + tickDither + specialDither * (0.06 + uRimStrength * 0.5));
+      vec3 graticuleRgb = graticuleColor * (specialDither * (0.06 + uRimStrength * 0.5));
 
       gl_FragColor.rgb += ditheredRim + graticuleRgb;
       `

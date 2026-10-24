@@ -28,6 +28,7 @@ import {
   positionLocal,
   positionWorld,
   pow,
+  screenCoordinate,
   select,
   sin,
   smoothstep,
@@ -101,123 +102,85 @@ export function countryGrainOutputNode() {
 
 let oceanTimeNode = null;
 let oceanMotionNode = null;
-let oceanVelocityNode = null;
+let oceanPixelScaleNode = null;
 
-/** blackoutOceanOutputNode: fine-scale magnetic-field ocean currents + cartographic graticule */
+/** blackoutOceanOutputNode: fine-scale magnetic-field ocean currents + 1-bit Bayer 4x4 pixel-art trame */
 export function blackoutOceanOutputNode(
   rimColor = new THREE.Color(0.85, 0.88, 0.92),
   rimStrength = 0.07,
-  _uPixelScale = polygonGlitchUniforms.uPixelScale
+  uPixelScale = polygonGlitchUniforms.uPixelScale
 ) {
   const uTime = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
   const uGlobeMotion = (oceanMotionNode ||= mirrorUniform(polygonGlitchUniforms.uGlobeMotion));
-  const uGlobeVelocity = (oceanVelocityNode ||= mirrorUniform(
-    polygonGlitchUniforms.uGlobeVelocity
-  ));
+  const pixelScale = (oceanPixelScaleNode ||= mirrorUniform(uPixelScale));
   return Fn(() => {
     const uvCoords = uv();
-    const camDist = length(cameraPosition);
-    const subGridVis = float(1.0).sub(smoothstep(180.0, 260.0, camDist));
-
     const oceanLat = uvCoords.y.sub(0.5).mul(3.14159265);
     const oceanLng = uvCoords.x.sub(0.5).mul(6.2831853);
-    const gridDensity = mix(
-      float(5200.0),
-      float(2200.0),
-      clamp(camDist.sub(108.0).div(170.0), 0.0, 1.0)
-    );
-    const px = floor(uvCoords.mul(vec2(gridDensity, gridDensity.mul(0.5))));
+    const latCos = max(cos(oceanLat), 0.25);
+    const eqLng = oceanLng.mul(latCos);
+
+    // Fine 1px ordered Bayer 4x4 pixel-art trame (no coarse background grid or velocity slosh)
+    const px = floor(screenCoordinate.xy.mul(pixelScale));
     const bayer = bayer4x4(px);
 
-    const velShift = uGlobeVelocity.mul(float(1.6).add(uGlobeMotion.mul(2.4)));
-    const fLat = oceanLat.add(velShift.y.mul(0.35));
-    const fLng = oceanLng.add(velShift.x.mul(0.35));
-
-    const gyre1 = sin(fLng.mul(3.0).add(sin(fLat.mul(4.0)).mul(0.65))).mul(cos(fLat.mul(2.5)));
+    // Calm, sculptural oceanic magnetic gyres anchored to the 3D Earth with cos(lat) aspect correction
+    const gyre1 = sin(eqLng.mul(2.2).add(sin(oceanLat.mul(3.0)).mul(0.75))).mul(
+      cos(oceanLat.mul(1.8))
+    );
     const gyre2 = cos(
-      fLng
-        .mul(5.0)
-        .sub(fLat.mul(3.0))
-        .add(sin(fLng.mul(2.0)).mul(0.5))
-    ).mul(0.55);
-    const streamPsi = fLat.mul(3.8).add(gyre1.mul(0.95)).add(gyre2.mul(0.65));
+      eqLng
+        .mul(3.2)
+        .sub(oceanLat.mul(2.2))
+        .add(sin(oceanLng.mul(2.0)).mul(0.5))
+    ).mul(0.65);
+    const streamPsi = oceanLat.mul(2.5).add(gyre1.mul(1.15)).add(gyre2.mul(0.75));
 
-    const fluxWave = cos(streamPsi.mul(18.0)).mul(0.5).add(0.5);
-    const fluxLine = pow(fluxWave, 3.2);
-    const dashPhase = fLng
-      .mul(36.0)
-      .sub(gyre1.mul(14.0))
-      .sub(uTime.mul(float(2.2).add(uGlobeMotion.mul(6.5))));
-    const fluxDash = smoothstep(-0.15, 0.72, sin(dashPhase));
-    const motionRipple = uGlobeMotion.mul(
-      sin(streamPsi.mul(26.0).sub(uTime.mul(8.0)))
-        .mul(0.6)
-        .add(0.4)
-    );
+    // Full Bayer 4x4 tonal range (0 -> 15/16) so ribbons render true checkerboard & cross-hatch trame
+    const ribbonWave = cos(streamPsi.mul(4.2).sub(uTime.mul(0.15)))
+      .mul(0.5)
+      .add(0.5);
+    const ribbonProfile = smoothstep(0.14, 0.86, ribbonWave);
+    const alongStream = sin(eqLng.mul(3.2).sub(gyre1.mul(2.2)).sub(uTime.mul(0.22)))
+      .mul(0.22)
+      .add(0.78);
+    const currentTone = ribbonProfile.mul(alongStream).mul(0.68);
 
-    const magneticCurrent = fluxLine.mul(fluxDash.mul(0.62).add(0.38)).add(motionRipple.mul(0.28));
-    const waveDither = step(bayer, magneticCurrent.mul(0.72)).mul(
-      float(rimStrength).mul(0.42).add(0.048).add(uGlobeMotion.mul(0.045))
-    );
-
-    // 1. Curvature & spherical lighting
+    // Spherical curvature & limb gradient unified into the same 1-bit Bayer 4x4 trame
     const n = normalize(normalWorld);
     const viewDir = normalize(cameraPosition.sub(positionWorld));
     const viewIncidence = clamp(dot(n, viewDir), 0.0, 1.0);
     const lightFacing = clamp(dot(n, normalize(vec3(-0.55, 0.45, 0.7))), 0.0, 1.0);
-    const limb = pow(float(1.0).sub(viewIncidence), 1.85);
+    const limb = pow(float(1.0).sub(viewIncidence), 1.75);
+    const limbTone = smoothstep(0.08, 0.92, limb).mul(lightFacing.mul(0.24).add(0.62));
 
-    const oceanShade = limb.mul(lightFacing.mul(0.35).add(0.65)).add(magneticCurrent.mul(0.14));
-    const quantizedLimb = floor(oceanShade.mul(5.0).add(bayer)).div(5.0);
-    const limbStipple = step(bayer, oceanShade.mul(1.35)).mul(0.45);
+    const ditherTone = clamp(
+      max(currentTone, limbTone)
+        .add(currentTone.mul(limbTone).mul(0.35))
+        .add(uGlobeMotion.mul(0.03)),
+      0.0,
+      0.86
+    );
+    const trameBit = step(bayer.add(0.04), ditherTone);
 
     const rimColorVec = vec3(rimColor.r, rimColor.g, rimColor.b);
-    const rimRgb = rimColorVec.mul(
-      quantizedLimb.mul(0.75).add(limbStipple).mul(float(rimStrength).mul(3.2)).add(waveDither)
-    );
-    const midLimbRing = rimColorVec.mul(
-      step(bayer, smoothstep(0.18, 0.78, limb).mul(0.65)).mul(0.035)
-    );
+    const rimRgb = rimColorVec.mul(trameBit.mul(float(rimStrength).mul(1.95).add(0.2)));
 
-    // 2. Graticule
-    const gridUv15 = uvCoords.mul(vec2(24.0, 12.0));
-    const gridPx15 = max(fwidth(gridUv15), vec2(0.0008));
-    const lineDist15 = abs(fract(gridUv15.add(0.5)).sub(0.5)).div(gridPx15);
-    const line15 = clamp(float(1.0).sub(min(lineDist15.x, lineDist15.y)), 0.0, 1.0);
-    const gridDither = step(bayer.mul(0.75).add(0.1), line15).toVar();
-
-    const gridUv30 = uvCoords.mul(vec2(12.0, 6.0));
-    const gridPx30 = max(fwidth(gridUv30), vec2(0.0008));
-    const lineDist30 = abs(fract(gridUv30.add(0.5)).sub(0.5)).div(gridPx30);
-    const line30 = clamp(float(1.0).sub(min(lineDist30.x, lineDist30.y)), 0.0, 1.0);
-    gridDither.assign(max(gridDither, step(bayer.mul(0.55), line30)));
-
-    const subGridUv = uvCoords.mul(vec2(72.0, 36.0));
-    const subDist = abs(fract(subGridUv.add(0.5)).sub(0.5)).div(
-      max(fwidth(subGridUv), vec2(0.001))
-    );
-    const subTick = clamp(float(1.0).sub(max(subDist.x, subDist.y).mul(0.5)), 0.0, 1.0).mul(
-      step(min(subDist.x, subDist.y), 0.8)
-    );
-    const tickDither = step(bayer, subTick.mul(0.45)).mul(0.035).mul(subGridVis);
-
+    // Subtle dithered Equator and Tropics reference lines
     const latWidth = max(fwidth(uvCoords.y), 0.0004);
     const eqDist = abs(uvCoords.y.sub(0.5)).div(latWidth);
     const eqLine = clamp(float(1.0).sub(eqDist), 0.0, 1.0);
     const tropicDist = abs(abs(uvCoords.y.sub(0.5)).sub(23.44 / 180.0)).div(latWidth);
     const tropicLine = clamp(float(1.0).sub(tropicDist), 0.0, 1.0);
     const specialLines = max(eqLine, tropicLine);
-    const specialDither = step(bayer, specialLines.mul(1.1)).mul(0.08);
+    const specialDither = step(bayer.add(0.04), specialLines.mul(0.95)).mul(0.065);
 
     const graticuleColor = mix(vec3(0.55, 0.65, 0.75), rimColorVec, 0.45);
     const graticuleRgb = graticuleColor.mul(
-      gridDither
-        .mul(0.075)
-        .add(tickDither.mul(1.4))
-        .add(specialDither.mul(float(rimStrength).mul(0.6).add(0.09)))
+      specialDither.mul(float(rimStrength).mul(0.5).add(0.06))
     );
 
-    return displayOutput(litDisplayColor().add(rimRgb).add(midLimbRing).add(graticuleRgb));
+    return displayOutput(litDisplayColor().add(rimRgb).add(graticuleRgb));
   })();
 }
 
