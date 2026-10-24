@@ -1,0 +1,466 @@
+/* Control inks: dark well + hard pixel shadow derived from the theme bg (no bright borders). */
+:root {
+  --ui-ink: color-mix(in srgb, var(--bg-color) 45%, black);
+  --ui-well: color-mix(in srgb, var(--bg-color) 75%, black);
+}
+
+/* ==========================================================================
+   UI kit — pixel/glitch primitives (Slider, Switch, OptionGroup, Settings*).
+   Square-ish (radius-sm), 1px ink borders, hard 2px offset shadows, accent
+   from the user-selected preset. No glows, no fills behind whole groups.
+   ========================================================================== */
+
+/* ---- Settings section / row ---- */
+.ui-settings-section {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-ms);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+}
+
+.ui-settings-title {
+  margin: 0 0 var(--spacing-ms);
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.ui-settings-title.sr-only {
+  margin: -1px;
+}
+
+.ui-settings-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.ui-settings-row--inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.ui-settings-row--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.ui-settings-text {
+  min-width: 0;
+}
+
+.ui-settings-label {
+  display: block;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.ui-settings-desc {
+  margin: var(--spacing-xxs) 0 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.ui-settings-control {
+  flex-shrink: 0;
+}
+
+.ui-settings-row--stacked .ui-settings-control {
+  width: 100%;
+}
+
+/* ---- Icon stepper button (−/+) ---- */
+.ui-icon-step {
+  border-color: var(--glass-border-strong);
+  color: var(--text-main);
+}
+
+/* ---- Slider ---- */
+.ui-slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.ui-slider-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.ui-slider-value {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.ui-slider-body {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.ui-slider-input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-lg); /* generous touch target */
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Track: recessed ink well with a subtle panel line; accent fill up to --fill */
+.ui-slider-input::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(
+    to right,
+    var(--accent) 0 var(--fill),
+    var(--ui-well) var(--fill) 100%
+  );
+  box-shadow: inset 1px 1px 0 var(--ui-ink);
+}
+
+.ui-slider-input::-moz-range-track {
+  height: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--ui-well);
+  box-shadow: inset 1px 1px 0 var(--ui-ink);
+}
+
+.ui-slider-input::-moz-range-progress {
+  height: 8px;
+  background: var(--accent);
+}
+
+/* Thumb: accent pixel block, ink outline + hard ink shadow (no bright border) */
+.ui-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border: 2px solid var(--ui-ink);
+  border-radius: 0;
+  background: var(--accent);
+  box-shadow: 2px 2px 0 var(--ui-ink);
+  transition: transform var(--transition-instant);
+}
+
+.ui-slider-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--ui-ink);
+  border-radius: 0;
+  background: var(--accent);
+  box-shadow: 2px 2px 0 var(--ui-ink);
+}
+
+.ui-slider-input:hover::-webkit-slider-thumb {
+  background: var(--accent-hover);
+}
+
+.ui-slider-input:active::-webkit-slider-thumb {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ui-ink);
+}
+
+/* Focus ring moves to the thumb (global :focus-visible uses !important) */
+.ui-slider-input:focus-visible {
+  outline-color: transparent !important;
+}
+
+.ui-slider-input:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.ui-slider-input:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---- Switch ---- */
+.ui-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 0;
+  background: var(--ui-well);
+  box-shadow: inset 2px 2px 0 var(--ui-ink);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+/* Invisible 44px hit area around the compact visual */
+.ui-switch::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--control-lg) - 28px) / -2) -4px;
+}
+
+.ui-switch-knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  background: var(--text-muted);
+  transition:
+    transform var(--transition-spring),
+    background-color var(--transition-fast);
+}
+
+.ui-switch:hover:not(:disabled) {
+  border-color: var(--glass-border-strong);
+}
+
+.ui-switch.is-on {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: 2px 2px 0 var(--ui-ink);
+}
+
+.ui-switch.is-on .ui-switch-knob {
+  transform: translateX(24px);
+  background: var(--accent-contrast);
+}
+
+.ui-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.ui-switch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---- OptionGroup (matches the accent swatches) ---- */
+.ui-options {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--spacing-xs);
+}
+
+.ui-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  min-height: var(--control-lg);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.ui-option:hover:not(.active) {
+  border-color: var(--glass-border-strong);
+  color: var(--text-main);
+}
+
+.ui-option.active {
+  border-color: var(--accent);
+  color: var(--text-main);
+}
+
+/* Square marker: hollow when off, accent pixel when on */
+.ui-option-mark {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--ui-well);
+}
+
+.ui-option.active .ui-option-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.ui-option svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ui-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-switch-knob {
+    transition: none;
+  }
+}
+
+/* ---- Toast ---- */
+.ui-toast-viewport {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--control-lg) * 3 + var(--spacing-xl) + var(--spacing-md) + var(--safe-bottom));
+  width: min(92vw, 420px);
+  z-index: var(--z-toast);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+@media (min-width: 769px) {
+  .ui-toast-viewport {
+    left: auto;
+    right: var(--spacing-lg);
+    bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+    width: min(380px, calc(100vw - var(--spacing-lg) * 2));
+    transform: none;
+  }
+}
+
+.ui-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  box-shadow: 2px 2px 0 var(--ui-ink);
+  color: var(--text-main);
+  font-size: var(--font-size-sm);
+  pointer-events: auto;
+  animation: ui-toast-in var(--dur-fast) var(--steps-snap);
+}
+
+.ui-toast--success {
+  border-left-color: var(--color-success, var(--success, var(--accent)));
+}
+
+.ui-toast--error {
+  border-left-color: var(--error, var(--accent));
+}
+
+.ui-toast-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-toast-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.ui-toast-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.ui-toast-message {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.ui-toast-action,
+.ui-toast-close {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: 0;
+  background: var(--ui-well);
+  color: var(--text-main);
+}
+
+.ui-toast-action {
+  font-family: var(--font-display);
+  color: var(--accent);
+  box-shadow: 2px 2px 0 var(--ui-ink);
+}
+
+@keyframes ui-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-toast {
+    animation: none;
+  }
+}
+
+/* ---- Achievement stack ----
+   Ordered column (unlock order), max 3 cards, each one enters after the previous
+   (stepped cascade from motion.css). Mobile: top, the end screen reserves its height
+   through --achievement-stack-h. Wide desktop: top-right, outside the 600px result column. */
+.achievement-stack {
+  position: fixed;
+  top: calc(var(--spacing-md) + var(--safe-top));
+  left: 50%;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: min(92vw, 380px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+@media (min-width: 1281px) {
+  .achievement-stack {
+    width: min(380px, calc((100vw - 600px) / 2 - var(--spacing-lg) * 2));
+    top: calc(var(--spacing-lg) + var(--safe-top));
+    right: var(--spacing-lg);
+    left: auto;
+    transform: none;
+  }
+}
+
+.achievement-stack-item {
+  pointer-events: auto;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--dur-base))
+    backwards;
+}
+
+.achievement-stack-item .ui-toast {
+  animation: none;
+}

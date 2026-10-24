@@ -1,0 +1,111 @@
+/* Conquête — screen-edge hints for opponents whose cursor is out of sight.
+   Square pixel marker in the player's colour + short tag, appears in steps. */
+.cq-hints {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-conquest-cursors); /* under the conquest panels (20), over the globe */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cq-hint {
+  --c: var(--accent);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-main);
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform;
+}
+
+.cq-hint.is-on {
+  visibility: visible;
+  opacity: 1;
+  animation: cq-hint-in var(--dur-fast) var(--steps-snap);
+}
+
+.cq-hint.is-left {
+  flex-direction: row-reverse;
+}
+
+.cq-hint__block {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--c);
+}
+
+/* Nub: one extra square on the side the cursor lies on (8 compass slots). */
+.cq-hint__block::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--c);
+}
+
+.cq-hint[data-dir="0"] .cq-hint__block::after {
+  right: -4px;
+  top: 2.5px;
+}
+.cq-hint[data-dir="1"] .cq-hint__block::after {
+  right: -4px;
+  top: -4px;
+}
+.cq-hint[data-dir="2"] .cq-hint__block::after {
+  left: 2.5px;
+  top: -4px;
+}
+.cq-hint[data-dir="3"] .cq-hint__block::after {
+  left: -4px;
+  top: -4px;
+}
+.cq-hint[data-dir="4"] .cq-hint__block::after {
+  left: -4px;
+  top: 2.5px;
+}
+.cq-hint[data-dir="5"] .cq-hint__block::after {
+  left: -4px;
+  bottom: -4px;
+}
+.cq-hint[data-dir="6"] .cq-hint__block::after {
+  left: 2.5px;
+  bottom: -4px;
+}
+.cq-hint[data-dir="7"] .cq-hint__block::after {
+  right: -4px;
+  bottom: -4px;
+}
+
+.cq-hint__name {
+  padding: 2px 3px;
+  background: var(--bg-color);
+  box-shadow: inset 2px 0 0 var(--c);
+  padding-left: 5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cq-hint.is-left .cq-hint__name {
+  box-shadow: inset -2px 0 0 var(--c);
+  padding-left: 3px;
+  padding-right: 5px;
+}
+
+@keyframes cq-hint-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}

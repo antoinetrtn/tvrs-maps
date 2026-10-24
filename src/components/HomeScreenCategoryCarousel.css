@@ -1,31 +1,11 @@
-@keyframes retroDeckGlitchIn {
-  0% {
+@keyframes atlasDeckIn {
+  from {
     opacity: 0;
-    transform: scale(0.95) translate3d(0, 10px, 0);
-    filter: contrast(1.3) brightness(1.2) hue-rotate(90deg);
-    clip-path: inset(5% 0 15% 0);
+    transform: translate3d(0, 8px, 0);
   }
-  25% {
-    opacity: 0.8;
-    transform: scale(1.02) translate3d(-3px, -2px, 0);
-    filter: contrast(1.15) brightness(1.1) hue-rotate(0deg);
-    clip-path: inset(0 3% 0 0);
-  }
-  55% {
+  to {
     opacity: 1;
-    transform: scale(0.99) translate3d(2px, 1px, 0);
-    filter: contrast(1.05) brightness(1.05);
-    clip-path: inset(0 0 0 0);
-  }
-  80% {
-    transform: scale(1.005) translate3d(-1px, 0, 0);
-    filter: contrast(1) brightness(1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translate3d(0, 0, 0);
-    filter: none;
-    clip-path: none;
+    transform: none;
   }
 }
 
@@ -40,11 +20,11 @@
   margin: 0 auto;
   padding: 0;
   user-select: none;
-  animation: retroDeckGlitchIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: atlasDeckIn var(--dur-slow) var(--ease-out) both;
 }
 
 .cards-deck-wrapper.is-user-dragging .deck-arrow {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 .deck-click-zone {
@@ -54,11 +34,10 @@
   width: 75px;
   height: 250px;
   z-index: 180;
-  cursor: pointer;
   display: flex;
   align-items: center;
   pointer-events: none;
-  background: transparent !important;
+  background: transparent;
 }
 
 .deck-click-zone.left {
@@ -73,20 +52,24 @@
   padding-right: 6px;
 }
 
-.deck-click-zone:hover {
-  background: transparent !important;
+@media (hover: none) and (pointer: coarse) {
+  .deck-click-zone {
+    display: none;
+  }
 }
 
-.deck-click-zone:hover .deck-arrow {
+.deck-arrow:focus-visible,
+.deck-click-zone:focus-visible .deck-arrow,
+.ui-icon-btn.deck-arrow:focus-visible {
   opacity: 1;
   color: var(--accent);
   border-color: var(--accent);
-  transform: scale(1.15);
-  box-shadow: 0 0 12px var(--accent-soft);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .deck-click-zone:active .deck-arrow {
-  transform: scale(0.92);
+  transform: var(--press-offset);
 }
 
 .deck-arrow {
@@ -96,20 +79,18 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-full);
+  border-radius: 0;
   border: 1px solid var(--glass-border-strong);
   background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
   color: var(--text-main);
   opacity: 0.55;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--bg-color) 60%, transparent);
+  box-shadow: none;
   pointer-events: auto;
-  cursor: pointer;
   transition:
-    color var(--transition-spring),
-    border-color var(--transition-spring),
-    opacity var(--transition-spring),
-    transform var(--transition-spring),
-    box-shadow var(--transition-spring);
+    color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear,
+    opacity var(--dur-fast) linear,
+    transform var(--dur-micro) var(--steps-press);
 }
 
 .deck-arrow::after {
@@ -121,11 +102,11 @@
 .deck-stage {
   position: relative;
   width: 320px;
-  height: 270px;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: none !important;
+  touch-action: none;
   cursor: grab;
 }
 
@@ -137,48 +118,44 @@
 /* Individual Stacked Card Base - Mysterious Dark Technical Card */
 .deck-mode-card {
   position: absolute;
-  top: 20px;
+  top: 18px;
   width: 320px;
-  height: 250px;
+  height: 216px;
   padding: 1.25rem;
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
   background-color: var(--bg-color) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--bg-color) 70%, transparent);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
-  will-change: transform, opacity;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
 .deck-mode-card.is-top-card {
-  height: 250px;
+  height: 216px;
   border-color: color-mix(in srgb, var(--text-main) 22%, transparent);
-  box-shadow:
-    0 14px 40px color-mix(in srgb, var(--bg-color) 85%, transparent),
-    0 0 1px color-mix(in srgb, var(--text-main) 30%, transparent);
+  box-shadow: var(--shadow-card);
 }
 
 .deck-mode-card.is-stacked-card {
   cursor: pointer;
-  height: 250px;
+  height: 216px;
   border-color: color-mix(in srgb, var(--text-main) 14%, transparent);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--bg-color) 50%, transparent);
+  box-shadow: var(--glass-shadow);
   transition:
-    transform 160ms cubic-bezier(0.1, 0.9, 0.2, 1),
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease-out;
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    opacity var(--dur-fast) ease-out;
 }
 
 .deck-mode-card.is-stacked-card:hover {
-  filter: brightness(1.2);
   border-color: color-mix(in srgb, var(--text-main) 25%, transparent);
 }
 
@@ -186,44 +163,49 @@
   pointer-events: none;
 }
 
-/* Scanline Overlay */
-.card-scanline-layer {
+/* Atlas plate: faint orthogonal graticule, framed by a double rule */
+.card-plate-pattern {
   position: absolute;
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: repeating-linear-gradient(
-    0deg,
-    color-mix(in srgb, var(--text-main) 3%, transparent) 0px,
-    color-mix(in srgb, var(--text-main) 3%, transparent) 1px,
-    transparent 1px,
-    transparent 4px
-  );
   z-index: 1;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      transparent 1px 32px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      transparent 1px 32px
+    );
 }
 
-.card-parallax-bg {
+.card-plate-pattern::after {
+  content: "";
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: inherit;
-  transition: transform 400ms cubic-bezier(0.18, 0.9, 0.26, 1.15);
-  z-index: 0;
+  inset: var(--spacing-xs);
+  border: 1px solid color-mix(in srgb, var(--text-main) 10%, transparent);
+  border-radius: var(--radius-sm);
 }
 
-.card-ambient-glow {
-  position: absolute;
-  top: -30%;
-  left: -20%;
-  width: 140%;
-  height: 140%;
-  background: radial-gradient(
-    circle at 50% 30%,
-    color-mix(in srgb, var(--text-main) 6%, transparent) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
+.card-plate-meta {
+  font-family: var(--font-display);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.card-plate-number {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  color: var(--accent);
 }
 
 .card-content {
@@ -231,8 +213,9 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  transition: transform 400ms cubic-bezier(0.18, 0.9, 0.26, 1.15);
+  gap: var(--spacing-xs);
+  min-height: 64px;
+  transition: transform var(--dur-slow) var(--ease-out);
   text-align: left;
 }
 
@@ -240,17 +223,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--spacing-ms);
   width: 100%;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--spacing-xs);
 }
 
 .card-mode-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
-  opacity: 1;
+  color: var(--accent);
+  opacity: 0.9;
   flex-shrink: 0;
 }
 
@@ -258,30 +241,21 @@
   flex: 1;
   font-family: var(--font-display);
   font-size: var(--font-size-2xl);
-  font-weight: 700;
+  font-weight: 600;
   color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
   margin: 0;
   line-height: 1.3;
   white-space: pre-line;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-transform: none;
-  text-shadow: 0 2px 6px color-mix(in srgb, var(--bg-color) 70%, transparent);
 }
 
 .card-desc {
-  font-family: var(--font-main);
-  font-size: var(--font-size-base);
-  color: color-mix(in srgb, var(--text-muted) 92%, var(--text-main));
-  margin: 0.25rem 0 0 0;
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin: 0;
 }
 
 .card-actions {
@@ -289,61 +263,63 @@
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--spacing-sm);
   margin-top: auto;
 }
 
 .card-play-btn {
   flex: 1;
+  min-width: 0;
+  padding: 0 var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  height: 48px;
+  gap: var(--spacing-sm);
+  height: var(--control-lg);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--text-main) 14%, var(--bg-color));
-  color: var(--text-main);
-  font-family: var(--font-display) !important;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-family: var(--font-display);
   font-size: var(--font-size-base);
-  font-weight: 800;
-  border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
-  cursor: pointer;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--bg-color) 60%, transparent);
-  transition: all var(--transition-spring);
+  font-weight: 600;
+  border: 1.5px solid var(--accent);
+  box-shadow: none;
 }
 
 .card-play-btn span {
-  font-family: var(--font-display) !important;
+  font-family: var(--font-display);
 }
 
 .card-play-btn:hover {
-  background: color-mix(in srgb, var(--text-main) 22%, var(--bg-color));
-  border-color: color-mix(in srgb, var(--text-main) 50%, transparent);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px color-mix(in srgb, var(--bg-color) 80%, transparent);
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 var(--text-main);
 }
 
 .card-play-btn:active {
-  transform: translateY(0) scale(0.97);
+  transform: var(--press-offset);
+  box-shadow: 1px 1px 0 var(--text-main);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
 .card-learn-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
+  width: var(--control-lg);
+  height: var(--control-lg);
+  min-width: var(--control-lg);
+  padding: 0;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
   border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
   background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
   color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-spring);
 }
 
-.card-learn-btn:hover {
+.card-learn-btn:hover,
+.ui-btn.card-learn-btn:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--text-main) 38%, transparent);
   color: var(--text-main);
   background: color-mix(in srgb, var(--text-main) 12%, var(--bg-color));
@@ -351,7 +327,31 @@
 }
 
 .card-learn-btn:active {
-  transform: translateY(0) scale(0.95);
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
+}
+
+/* Carte Conquête : « Règles » remplace le bouton Apprendre (bouton icône carré 44px) */
+.card-rules-btn,
+.card-train-btn {
+  width: var(--control-lg);
+  height: var(--control-lg);
+  min-width: var(--control-lg);
+  padding: 0;
+}
+
+.card-train-btn svg {
+  transition: transform var(--dur-micro) var(--steps-press);
+}
+
+.card-train-btn:hover svg {
+  transform: translate(1px, 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-train-btn:hover svg {
+    transform: none;
+  }
 }
 
 /* Dots Row - Pixel Squares */
@@ -359,24 +359,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--spacing-md);
   margin-top: 1.25rem;
   width: 100%;
 }
 
 .deck-dot {
-  width: 5px;
-  height: 5px;
+  position: relative;
+  width: 6px;
+  height: 6px;
   border-radius: 0;
   background: color-mix(in srgb, var(--text-muted) 45%, transparent);
   opacity: 0.5;
   border: none;
   cursor: pointer;
   padding: 0;
+  box-shadow: none;
   transition:
-    background var(--transition-normal),
-    opacity var(--transition-normal),
-    transform var(--transition-normal);
+    width var(--dur-fast) var(--steps-snap),
+    background var(--dur-fast) linear,
+    opacity var(--dur-fast) linear;
+}
+
+.deck-dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: var(--control-md);
+  min-height: var(--control-md);
 }
 
 .deck-dot:hover {
@@ -385,12 +397,12 @@
 }
 
 .deck-dot.active {
-  width: 7px;
-  height: 7px;
+  width: 16px;
+  height: 6px;
   border-radius: 0;
   background: var(--accent);
   opacity: 1;
-  box-shadow: 0 0 6px var(--accent-soft);
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
@@ -401,19 +413,26 @@
 
   .deck-stage {
     width: 100%;
-    height: 259px;
+    height: 200px;
   }
 
+  /* Compact mobile card: no dead band between the title and the actions. */
   .deck-mode-card,
   .deck-mode-card.is-top-card,
   .deck-mode-card.is-stacked-card {
-    height: 235px;
+    height: 180px;
     top: 12px;
+  }
+
+  .card-mode-icon {
+    padding: var(--spacing-xs);
+    border: 1px solid var(--glass-border);
+    border-radius: 0;
   }
 
   .deck-mode-card {
     width: min(100% - 28px, 320px);
-    padding: 1rem;
+    padding: var(--spacing-md);
   }
 
   .deck-click-zone.left {

@@ -1,0 +1,104 @@
+/* Dialog — shared modal surfaces (src/components/ui/Dialog.jsx).
+   Replaces the former .dialog-panel / .dialog-card rules of panelSystem.css and the duplicated
+   .training-sheet-* and .conquest-rules-* backdrop / scrim / dialog rules.
+   - modal : centered card (.dialog-panel backdrop class kept as a hook + .dialog-card surface)
+   - sheet : bottom sheet below 640 px, centered card above (width via --ui-sheet-width,
+             height cap via --ui-sheet-max-h, set by the consumer's own class).
+   Stepped entrance (steps()), square corners, hard shadows, no glow, blur <= 4 px (--blur-scrim). */
+
+/* ──── Backdrop ──── */
+.ui-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--settings-backdrop-bg);
+  backdrop-filter: var(--blur-scrim);
+  -webkit-backdrop-filter: var(--blur-scrim);
+  animation: ui-fade-in var(--dur-fast) linear;
+}
+
+.ui-dialog-backdrop--sheet {
+  align-items: flex-end;
+  padding: 0;
+}
+
+/* Click-away layer: sits under the surface, never focusable. */
+.ui-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.ui-dialog {
+  position: relative;
+}
+
+/* ──── Modal card ──── */
+.dialog-card {
+  width: 380px;
+  max-width: 90vw;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 4px 4px 0 var(--black);
+  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
+}
+
+/* ──── Sheet (bottom sheet on mobile, centered card on desktop) ──── */
+.ui-dialog--sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  max-height: 85dvh;
+  margin: 0;
+  padding: 0;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-strong);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  box-shadow: none;
+  color: var(--text-main);
+  font-family: var(--font-main);
+  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
+}
+
+.ui-dialog--sheet button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@media (min-width: 640px) {
+  .ui-dialog-backdrop--sheet {
+    align-items: center;
+    padding: var(--spacing-lg);
+  }
+
+  .ui-dialog--sheet {
+    width: min(var(--ui-sheet-width, 480px), calc(100vw - var(--spacing-xl)));
+    max-height: min(85dvh, var(--ui-sheet-max-h, 640px));
+    border-bottom: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: 4px 4px 0 var(--black);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog-backdrop,
+  .dialog-card,
+  .ui-dialog--sheet {
+    animation: none;
+  }
+}

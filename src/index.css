@@ -1,62 +1,60 @@
 :root {
   /* COLORS - Core (Blackout dark is the default — keep these in sync with
      THEME_OVERRIDES.blackout.dark so first paint matches before React mounts) */
-  --bg-color: #000000;
-  --black: #000000;
-  --text-main: #ffffff;
-  --text-muted: #888888;
-  --text-inverse: #000000;
+  --bg-color: #0e1116;
+  --black: #0e1116;
+  --text-main: #ede6d6;
+  --text-muted: #8f948f;
+  --text-inverse: #0e1116;
 
   /* COLORS - Semantic */
-  --accent: #ffffff;
-  --accent-hover: #cccccc;
-  --accent-soft: rgba(255, 255, 255, 0.15);
-  --accent-contrast: #000000;
-  --accent-glow: #ffffff;
+  /* Default accent = ACCENT_PRESETS.bone (src/config/accentPresets.js) */
+  --accent: #e6dccb;
+  --accent-hover: #f4eee3;
+  --accent-soft: rgba(230, 220, 203, 0.16);
+  --accent-contrast: #0e1116;
+  --accent-glow: #e6dccb;
 
-  --success: #ffffff;
-  --success-soft: rgba(255, 255, 255, 0.12);
+  --success: #7fa36b;
+  --success-soft: rgba(127, 163, 107, 0.14);
 
-  --gold: #cccccc;
-  --gold-soft: rgba(255, 255, 255, 0.08);
-  --gold-light: #eeeeee;
+  --gold: #e6dccb;
 
-  --warning: #888888;
-  --warning-soft: rgba(255, 255, 255, 0.08);
+  --warning: #e08a3c;
+  --warning-soft: rgba(224, 138, 60, 0.12);
 
-  --error: #ff4500;
-  --error-soft: rgba(255, 69, 0, 0.08);
+  --error: #d9543b;
+  --error-soft: rgba(217, 84, 59, 0.1);
   --highlight-soft: rgba(255, 255, 255, 0.06);
   --subtle-tint-strong: rgba(255, 255, 255, 0.16);
 
-  /* GLITCH & NEON EFFECTS */
+  /* GLITCH & SCANLINE EFFECTS */
   --glitch-magenta: rgba(255, 0, 127, 0.6);
   --glitch-magenta-soft: rgba(255, 0, 127, 0.5);
   --glitch-cyan: rgba(0, 240, 255, 0.6);
   --glitch-cyan-soft: rgba(0, 240, 255, 0.5);
   --scanline-color: rgba(255, 255, 255, 0.05);
-  --home-card-bg: rgba(10, 10, 10, 0.94);
+  --home-card-bg: rgba(22, 27, 34, 0.96);
   --home-scanline: rgba(0, 0, 0, 0.22);
 
   /* GLASSMORPHISM */
-  --glass-bg: rgba(15, 15, 15, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-border-strong: rgba(255, 255, 255, 0.25);
-  --glass-hover: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-  --glass-shadow-strong: 0 24px 58px rgba(0, 0, 0, 0.6);
-  --glass-shadow-drag: 0 34px 86px rgba(0, 0, 0, 0.7);
-  --glass-blur: blur(24px) saturate(200%);
-  --glass-blur-compact: blur(12px) saturate(140%);
-  --overlay-bg: rgba(0, 0, 0, 0.85);
+  --glass-bg: rgba(22, 27, 34, 0.94);
+  --glass-border: rgba(237, 230, 214, 0.14);
+  --glass-border-strong: rgba(237, 230, 214, 0.26);
+  --glass-hover: rgba(237, 230, 214, 0.07);
+  --glass-shadow: 0 8px 24px rgba(5, 7, 10, 0.55);
+  --glass-shadow-strong: 0 12px 32px rgba(5, 7, 10, 0.55);
+  --glass-shadow-drag: 0 20px 48px rgba(5, 7, 10, 0.6);
+  --glass-blur: blur(4px);
+  --glass-blur-compact: blur(3px);
+  --overlay-bg: rgba(14, 17, 22, 0.85);
   --settings-backdrop-bg: rgba(0, 0, 0, 0.45);
-  --modal-header-bg: rgba(15, 15, 15, 0.6);
+  --modal-header-bg: rgba(22, 27, 34, 0.92);
 
   /* DESIGN SYSTEM TOKENS */
   --radius-sm: 4px;
   --radius-md: calc(var(--radius-sm) + var(--spacing-xs));
   --radius-lg: calc(var(--radius-md) + var(--spacing-xs) * 1.5);
-  --radius-full: 9999px;
 
   --spacing-xxs: 2px;
   --spacing-xs: 4px;
@@ -66,9 +64,10 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
 
-  --font-main: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-main: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   /* Display face for headings, scores, timers and large numerals */
-  --font-display: "Bitcount Single", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display:
+    "Bitcount Single", "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* TYPOGRAPHY SCALE — canonical steps (keep in sync with STYLE_TOKENS.fontSize
      in designSystem.js). Off-scale sizes still hardcoded in component sheets
@@ -99,36 +98,35 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* GAMIFICATION & XP COLORS */
-  --xp-green-inner: #55ff55;
-  --xp-green-outer: #00aa00;
-  --xp-yellow-inner: #ffff55;
-  --xp-yellow-outer: #7f7f00;
+  --xp-green-inner: #9cc285;
+  --xp-green-outer: #5f7f4f;
+  --xp-yellow-inner: #e6dccb;
+  --xp-yellow-outer: #6b665c;
 
   --xp-black: #000000;
-  --xp-bar-bg: #111111;
-  --xp-bar-border-light: #555555;
-  --xp-bar-border-dark: #333333;
-
   --xp-shadow-heavy: rgba(0, 0, 0, 0.8);
-  --xp-shadow-medium: rgba(0, 0, 0, 0.5);
-  --xp-shadow-light: rgba(0, 0, 0, 0.4);
-
-  --xp-green-glow: rgba(85, 255, 85, 0.25);
-  --xp-green-fill-top: #7fff7f;
-  --xp-green-fill-bottom: #00aa00;
-  --xp-green-fill-overlay: rgba(0, 0, 0, 0.15);
 
   --xp-error-bg: rgba(255, 69, 0, 0.1);
   --xp-error-border: rgba(255, 69, 0, 0.3);
-  --xp-success-bg: rgba(0, 240, 255, 0.1);
-  --xp-success-border: rgba(0, 240, 255, 0.3);
+  --xp-success-bg: rgba(127, 163, 107, 0.1);
+  --xp-success-border: rgba(127, 163, 107, 0.3);
 
   /* ELEVATION — themed shadows for floating surfaces.
      --shadow-card: carousel deck cards (dark keeps the historical opaque black
-     halo that masks the globe behind the stack).
-     --logo-halo: home logo drop-shadows separating it from the globe. */
-  --shadow-card: 0 16px 36px #000000;
-  --logo-halo: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.45));
+     shadow that masks the globe behind the stack). */
+  --shadow-card: 0 12px 28px rgba(5, 7, 10, 0.7);
+}
+
+/* Visible keyboard focus (mouse/touch clicks keep a clean look via :focus-visible).
+   Text fields draw their own single contour (accent border + hard ink shadow), so the
+   global ring skips them: one outline, never two. */
+:focus-visible:not(.ui-textfield) {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 * {
@@ -137,7 +135,6 @@
   box-sizing: border-box;
   font-family: var(--font-main);
   -webkit-tap-highlight-color: transparent;
-  outline: none !important;
 }
 
 input,
@@ -145,12 +142,11 @@ button,
 textarea,
 select {
   -webkit-tap-highlight-color: transparent;
-  outline: none !important;
 }
 
 /* Explicitly target the quiz input by its ID to kill the browser default */
 #q-resp-field {
-  outline: none !important;
+  outline: none !important; /* css-rules-allow: outline-none, important — focus is shown by .input-island:focus-within */
   box-shadow: none !important;
   border: none !important;
   -webkit-appearance: none !important;
@@ -163,6 +159,7 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* iOS URL bar: dvh twin of the 100vh fallback */
   overflow-x: hidden; /* BLOCK HORIZONTAL SCROLL */
   overflow-y: hidden; /* BLOCK VERTICAL SCROLL ON BODY (App handles it) */
   position: fixed; /* BLOCK NATIVE SCROLL PUSH */
@@ -195,7 +192,7 @@ body {
   .settings-trigger-btn,
   .profile-trigger-btn,
   .leaderboard-trigger-btn,
-  .hud-btn-circular,
+  .hud-btn,
   .hud-mini-pill,
   .central-island-panel,
   .focus-mini-pill,
@@ -230,7 +227,7 @@ body {
     .glass-icon-btn:not(.profile-trigger-btn),
     .settings-trigger-btn,
     .leaderboard-trigger-btn,
-    .hud-btn-circular,
+    .hud-btn,
     .hud-mini-pill,
     .learn-toggle-btn,
     .central-island-panel,
@@ -255,32 +252,34 @@ body {
     color var(--transition-normal);
 }
 
-.btn-icon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast);
+/* Shared button primitives (ui/Button, ui/IconButton)
+   live in components/ui/Button.css, loaded right after this file from main.jsx. */
+
+/* Pixel identity: Bitcount carries titles, stamps, plates and HUD.
+   Long proper nouns (country names in lists) use Space Grotesk (--font-main)
+   to stay legible at list sizes, where the pixel face turns into mush. */
+.data-panel-title,
+.data-panel-region-name,
+.history-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
-.btn-icon:hover {
-  background: var(--glass-border);
-  color: var(--text-main);
+.data-panel-row-name {
+  font-family: var(--font-main);
+  font-weight: 500;
 }
 
-.btn-icon.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+/* Texte réservé aux lecteurs d'écran : invisible mais annoncé (allègement du texte de l'UI). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
-
-/* Shared button primitives (.glass-icon-btn triggers, .btn-primary/.btn-secondary,
-   btn-hover-flicker/modalEnter keyframes, .glitch-hover/.btn-active utilities)
-   live in styles/buttons.css, loaded right after this file from main.jsx. */

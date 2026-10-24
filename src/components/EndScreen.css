@@ -10,7 +10,7 @@
   align-items: center;
   pointer-events: none;
   /* Let globe interactions through if needed, but we'll re-enable on content */
-  font-family: var(--font-main, "Inter", system-ui, sans-serif);
+  font-family: var(--font-main);
 }
 
 .end-screen-content {
@@ -25,10 +25,12 @@
      (no visible change when nothing overflows). */
   overflow-y: auto;
   padding: max(40px, calc(20px + var(--safe-top))) 20px max(20px, var(--safe-bottom));
-  background: radial-gradient(
-    circle at center,
-    transparent 0%,
-    color-mix(in srgb, var(--bg-color) 40%, transparent) 100%
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg-color) 55%, transparent) 0%,
+    transparent 28%,
+    transparent 62%,
+    color-mix(in srgb, var(--bg-color) 60%, transparent) 100%
   );
   color: var(--text-main);
   text-align: center;
@@ -43,40 +45,51 @@
 
 .end-screen-header h1 {
   font-family: var(--font-display);
-  font-size: 3rem;
+  font-size: var(--font-size-3xl);
   margin: 0;
   color: var(--text-main);
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* --- Travel journal header --- */
+.journal-kicker {
+  font-family: var(--font-display);
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.journal-stamps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
 }
 
 /* Restore chip — shown while the end screen is minimized over the globe */
 .end-screen-restore-chip {
   position: absolute;
   bottom: calc(var(--spacing-lg) + var(--safe-bottom));
-  /* Centered via auto margins — the slideUp animation owns the transform. */
+  /* Centered via auto margins — the entry animation owns the transform. */
   left: 0;
   right: 0;
   margin-inline: auto;
   width: fit-content;
   z-index: 6;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-sm);
   min-height: var(--control-lg);
   padding: var(--spacing-xs) var(--spacing-lg);
-  border-radius: var(--radius-full);
-  font-family: var(--font-main);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-md);
-  font-weight: 600;
-  color: var(--text-main);
-  cursor: pointer;
   pointer-events: auto;
-  animation: slideUp var(--transition-emphasized) both;
+  --i: 0;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
   transition:
     color var(--transition-fast),
     border-color var(--transition-fast),
-    transform var(--transition-spring);
+    transform var(--transition-fast);
 }
 
 .end-screen-restore-chip:hover {
@@ -92,10 +105,7 @@
 }
 
 .perfect-game .end-screen-header h1 {
-  background: linear-gradient(to bottom, var(--gold-light), var(--gold));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 15px var(--gold-soft));
+  color: var(--gold);
 }
 
 .end-screen-spacer {
@@ -117,9 +127,11 @@
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  animation: slideUp var(--transition-emphasized) both;
-  animation-delay: 0.2s;
-  cursor: pointer;
+  --i: 1;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
+  text-align: left;
+  font-weight: normal;
+  color: var(--text-main);
   transition:
     transform var(--transition-layout),
     box-shadow var(--transition-normal),
@@ -132,6 +144,7 @@
     var(--glass-shadow-strong),
     0 0 0 1px var(--highlight-soft) inset;
   transform: translateY(-2px);
+  background: var(--glass-bg);
 }
 
 .progress-bars-header {
@@ -145,7 +158,7 @@
   font-family: var(--font-display);
   font-weight: 200;
   font-variant-numeric: tabular-nums;
-  font-size: 1.05rem;
+  font-size: var(--font-size-base);
   color: var(--success);
 }
 
@@ -173,32 +186,12 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-md);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInSimple {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  width: 100%;
 }
 
 .end-screen-header {
-  animation: fadeInSimple 0.8s ease both;
+  --i: 0;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
 }
 
 /* No background band here — the buttons carry their own glass surface. */
@@ -208,8 +201,8 @@
   margin: 0 auto var(--spacing-md);
   display: flex;
   justify-content: center;
-  animation: fadeInSimple 0.8s ease both;
-  animation-delay: 0.4s;
+  --i: 4;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
   position: sticky;
   bottom: 0;
   z-index: 5;
@@ -266,44 +259,39 @@
 }
 
 .progress-track {
+  display: block;
   position: relative;
   width: 48px;
   height: 4px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--subtle-tint-strong);
   overflow: hidden;
 }
 
 .progress-fill {
+  display: block;
   height: 100%;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--continent-color);
-  transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: width 1s var(--ease-out);
 }
 
 .end-screen-actions {
   gap: var(--spacing-sm);
 }
 
-.end-screen-actions .btn-primary,
-.end-screen-actions .btn-secondary {
+.end-screen-actions .ui-btn {
   flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: var(--spacing-xs);
 }
 
 /* Over the globe, the quiet secondary needs its own glass surface + blur
    to stay readable without any backdrop band. */
-.end-screen-actions .btn-secondary,
-.end-screen-actions .btn-primary {
+.end-screen-actions .ui-btn--secondary {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
 }
-
-/* .btn-primary lives in index.css (shared with ProfilePanel and AuthModal). */
 
 /* Narrow / short viewports: scrollable content + sticky home button */
 @media (max-width: 900px), (max-height: 720px) {
@@ -312,7 +300,8 @@
     pointer-events: auto;
     justify-content: flex-start;
     gap: var(--spacing-md);
-    padding-top: max(var(--spacing-md), var(--safe-top));
+    /* Room for the achievement stack (top) so it never covers the title. */
+    padding-top: calc(max(var(--spacing-md), var(--safe-top)) + var(--achievement-stack-h, 0px));
     padding-bottom: max(var(--spacing-lg), var(--safe-bottom));
     -webkit-overflow-scrolling: touch;
   }
@@ -349,14 +338,14 @@
   -webkit-backdrop-filter: var(--glass-blur-compact);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  animation: slideUp var(--transition-emphasized) both;
-  animation-delay: 0.3s;
+  --i: 3;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
   pointer-events: auto;
 }
 
 .history-title {
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   margin: 0 0 var(--spacing-sm) 0;
   letter-spacing: 0.05em;
@@ -380,75 +369,33 @@
 
 .history-score-value {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--font-size-base);
   color: var(--text-main);
 }
 
-/* Trophy animation & glow styles */
+/* Trophy tier styles (sober hierarchy, no glow) */
 .trophy-icon {
-  filter: drop-shadow(0 2px 4px var(--shadow-subtle));
-  transition: transform var(--transition-spring);
+  transition: transform var(--transition-fast);
 }
 
 .history-score-item:hover .trophy-icon {
-  transform: scale(1.2) rotate(8deg);
+  transform: translateY(-1px);
 }
 
 .trophy-gold {
-  animation: trophy-glow-gold 2s infinite alternate;
+  color: var(--accent);
 }
 .trophy-silver {
-  animation: trophy-glow-silver 2s infinite alternate;
+  color: var(--text-main);
 }
 .trophy-bronze {
-  animation: trophy-glow-bronze 2s infinite alternate;
+  color: var(--text-muted);
+  opacity: 0.85;
 }
-
-@keyframes trophy-glow-gold {
-  0% {
-    filter: drop-shadow(0 0 2px var(--color-gold-glow));
-  }
-  100% {
-    filter: drop-shadow(0 0 10px var(--color-gold-glow));
-  }
-}
-@keyframes trophy-glow-silver {
-  0% {
-    filter: drop-shadow(0 0 2px var(--color-silver-glow));
-  }
-  100% {
-    filter: drop-shadow(0 0 10px var(--color-silver-glow));
-  }
-}
-@keyframes trophy-glow-bronze {
-  0% {
-    filter: drop-shadow(0 0 2px var(--color-bronze-glow));
-  }
-  100% {
-    filter: drop-shadow(0 0 10px var(--color-bronze-glow));
-  }
-}
-
-/* Personal Best Badge — quiet gold pill, no pulse */
-.new-pb-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  max-width: min(90vw, 320px);
-  white-space: nowrap;
-  margin: var(--spacing-sm) auto 0;
-  padding: var(--spacing-xxs) var(--spacing-md);
-  background: color-mix(in srgb, var(--color-gold) 10%, transparent);
-  color: var(--color-gold);
-  border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
-  border-radius: var(--radius-full);
-  font-family: var(--font-main);
-  font-weight: 700;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  pointer-events: auto;
+.trophy-grey {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
 /* Gamification End Screen XP Card */
@@ -462,8 +409,8 @@
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  animation: slideUp var(--transition-emphasized) both;
-  animation-delay: 0.25s;
+  --i: 2;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
@@ -479,64 +426,35 @@
 
 .xp-level-title {
   font-family: var(--font-display);
-  font-size: 1.2rem;
-  font-weight: 900;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
   color: var(--text-main);
 }
 
 .xp-gain-badge {
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 900;
-  color: var(--xp-green-inner);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--success);
 }
 
 /* Level Up shake & glitched text animations */
 .level-up-shake {
-  animation: level-up-shake-anim 0.4s ease-out both !important;
-  border-color: var(--xp-green-inner) !important;
-  box-shadow: 0 0 20px var(--xp-green-glow) !important;
+  border-color: var(--accent) !important;
 }
 
 .end-screen-level-up-banner {
   font-family: var(--font-display);
   font-size: var(--font-size-xl);
-  font-weight: 900;
-  color: var(--xp-yellow-inner);
-  animation: level-up-flicker 0.2s steps(2) infinite alternate;
-  text-shadow:
-    -1px 0 var(--glitch-magenta),
-    1px 0 var(--glitch-cyan);
-}
-
-@keyframes level-up-shake-anim {
-  0% {
-    transform: scale(1);
-  }
-  20% {
-    transform: scale(1.04) rotate(1deg);
-  }
-  40% {
-    transform: scale(1.02) rotate(-1deg);
-  }
-  60% {
-    transform: scale(1.03) rotate(1deg);
-  }
-  80% {
-    transform: scale(1.01) rotate(0);
-  }
-  100% {
-    transform: scale(1) rotate(0);
-  }
-}
-
-@keyframes level-up-flicker {
-  0% {
-    opacity: 0.9;
-  }
-  100% {
-    opacity: 1;
-  }
+  font-weight: 600;
+  align-self: center;
+  color: var(--accent);
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border: 2px solid var(--accent);
+  outline: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+  animation: stamp-in var(--dur-stamp) var(--steps-snap) both;
 }
 
 @media (max-width: 640px) {
@@ -544,5 +462,12 @@
   .end-screen-history {
     width: calc(100% - 40px);
     padding: var(--spacing-sm);
+  }
+}
+
+/* Achievement stack is top-centred up to 1280px: keep the title clear of it. */
+@media (min-width: 769px) and (max-width: 1280px) {
+  .end-screen-content {
+    padding-top: calc(max(40px, calc(20px + var(--safe-top))) + var(--achievement-stack-h, 0px));
   }
 }

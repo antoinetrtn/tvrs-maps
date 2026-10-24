@@ -1,0 +1,126 @@
+/* Conquête 1v1 rules — looping gameplay capture (480x300, 16:10, pixelated) */
+
+.rules-illu {
+  --ri-adv: var(--text-secondary, var(--text-muted));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto var(--spacing-md);
+  box-sizing: border-box;
+}
+
+.ri-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  line-height: 1;
+}
+
+.ri-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-family: var(--font-main);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.ri-legend-item-opponent {
+  color: var(--ri-adv);
+}
+
+.ri-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.ri-swatch-you {
+  background: var(--ri-you, var(--accent));
+}
+
+.ri-swatch-opponent {
+  background: repeating-conic-gradient(var(--ri-adv) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px;
+}
+
+.ri-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ri-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.ri-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  min-height: 18px;
+}
+
+.ri-captions {
+  display: inline-grid;
+  align-items: center;
+  min-width: 0;
+  font-family: var(--font-main);
+  font-size: var(--font-size-xs);
+  color: var(--ri-adv);
+}
+
+.ri-cap {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.ri-cap.is-active {
+  opacity: 1;
+}
+
+.ri-steps {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.ri-step {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ri-adv);
+  background: transparent;
+  box-sizing: border-box;
+  transition:
+    background-color var(--dur-fast) var(--steps-press),
+    border-color var(--dur-fast) var(--steps-press);
+}
+
+.ri-step.is-filled {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ri-cap,
+  .ri-step {
+    transition: none;
+  }
+}

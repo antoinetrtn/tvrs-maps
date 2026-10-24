@@ -1,0 +1,134 @@
+/* Conquest rules modal dialog / bottom sheet */
+
+/* Surface geometry (backdrop, scrim, sheet/card switch) comes from ui/Dialog.css. */
+.conquest-rules-dialog {
+  --ui-sheet-width: 640px;
+  --ui-sheet-max-h: 720px;
+}
+
+.conquest-rules-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-sm);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.conquest-rules-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+}
+
+.conquest-rules-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: 500;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+}
+
+.conquest-rules-subtitle {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.conquest-rules-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--spacing-md) var(--spacing-lg);
+  padding-bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+}
+
+.conquest-rules-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-sm);
+}
+
+.conquest-rules-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-ms);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 var(--black);
+}
+
+.conquest-rules-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.conquest-rules-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.conquest-rules-card-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.conquest-rules-card-text {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.conquest-rules-highlight {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+@media (min-width: 640px) {
+  .conquest-rules-body {
+    padding-bottom: var(--spacing-lg);
+  }
+
+  .conquest-rules-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.conquest-rules-link {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.conquest-rules-link:hover,
+.conquest-rules-link:focus-visible {
+  color: var(--accent);
+}
+
+.conquest-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}

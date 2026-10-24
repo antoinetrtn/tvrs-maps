@@ -1,5 +1,29 @@
 import { expect, test } from "./helpers/fixtures.js";
 
+test.describe("Carte Conquête de l'accueil", () => {
+  test("T1-CQ-01: Conquête est la première carte et celle affichée par défaut", async ({
+    freshGuestPage: page,
+  }) => {
+    const topCard = page.locator(".deck-mode-card.is-top-card");
+    await expect(topCard).toHaveAttribute("data-mode", "conquest");
+    await expect(page.locator(".deck-dots-row .deck-dot").first()).toHaveClass(/active/);
+    // Le bandeau « Conquête 1v1 — Nouveau » n'existe plus
+    await expect(page.locator(".conquest-home-entry")).toHaveCount(0);
+  });
+
+  test("T1-CQ-02: « Règles » remplace Apprendre et ouvre la notice de Conquête", async ({
+    freshGuestPage: page,
+  }) => {
+    const topCard = page.locator(".deck-mode-card.is-top-card");
+    await expect(topCard.locator(".card-learn-btn")).toHaveCount(1);
+    await expect(topCard.locator(".card-rules-btn")).toContainText(/règles/i);
+    await topCard.locator(".card-rules-btn").click();
+    await expect(page.locator(".conquest-rules-dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".conquest-rules-dialog")).toHaveCount(0);
+  });
+});
+
 test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 1. Countries Mode Launch
   test("T1-MODE-01: Launch Countries Game Mode", async ({ guestPage: page }) => {
@@ -14,7 +38,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 2. Capitals Mode Launch
   test("T1-MODE-02: Launch Capitals Game Mode", async ({ guestPage: page }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(1).click();
+    await dots.nth(2).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -30,7 +54,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     guestPage: page,
   }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(2).click();
+    await dots.nth(3).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -50,7 +74,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     guestPage: page,
   }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(3).click();
+    await dots.nth(4).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -70,7 +94,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     guestPage: page,
   }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(4).click();
+    await dots.nth(5).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -88,7 +112,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 6. Carousel Navigation Next
   test("T1-MODE-06: Carousel Right Arrow Navigation", async ({ guestPage: page }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(1).click();
+    await dots.nth(2).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -98,7 +122,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 7. Carousel Navigation Prev
   test("T1-MODE-07: Carousel Left Arrow Navigation", async ({ guestPage: page }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(4).click();
+    await dots.nth(5).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -108,7 +132,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 8. Carousel Indicator Dots Direct Selection
   test("T1-MODE-08: Carousel Indicator Dots Direct Selection", async ({ guestPage: page }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(3).click();
+    await dots.nth(4).click();
     await page.waitForTimeout(200);
 
     const topCardMode = await page.locator(".deck-mode-card.is-top-card").getAttribute("data-mode");
@@ -124,7 +148,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await expect(dataPanel).toBeVisible();
   });
 
-  // 10. Learn Sub-Mode Carousel Navigation
+  // 10. Learn Sub-Mode TabBar Navigation
   test("T1-MODE-10: Learn Mode Sub-Mode Carousel Navigation", async ({ guestPage: page }) => {
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await topCard.locator(".card-learn-btn").click();
@@ -132,11 +156,12 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     const learnControl = page.locator(".learn-carousel-control");
     await expect(learnControl).toBeVisible();
 
-    const nextSubModeBtn = learnControl.locator(".learn-carousel-arrow").nth(1);
+    const nextSubModeBtn = learnControl.locator('[role="tab"]').nth(1);
     await nextSubModeBtn.click();
     await page.waitForTimeout(150);
 
-    const label = learnControl.locator(".learn-carousel-label");
+    await expect(nextSubModeBtn).toHaveAttribute("aria-selected", "true");
+    const label = nextSubModeBtn.locator(".tab-bar-label");
     await expect(label).toBeVisible();
   });
 

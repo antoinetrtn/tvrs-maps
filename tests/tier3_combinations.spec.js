@@ -96,7 +96,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     guestPage: page,
   }) => {
     const dots = page.locator(".deck-dots-row .deck-dot");
-    await dots.nth(4).click();
+    await dots.nth(5).click();
     await page.waitForTimeout(200);
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
@@ -119,7 +119,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await expect(inputField).toBeVisible();
 
     // Click home logo to return to home screen
-    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .hud-btn-circular").first();
+    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .hud-btn").first();
     await homeLogo.click();
 
     const topCard = page.locator(".deck-mode-card.is-top-card");

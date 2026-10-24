@@ -1,6 +1,6 @@
 import React from "react";
 
-import GlobeMap from "../globe/GlobeMap.jsx";
+import GlobeMap from "../globe/GlobeMapHost.jsx";
 import EndScreen from "./EndScreen.jsx";
 import GameDataPanel from "./GameDataPanel.jsx";
 import GameHUD from "./GameHUD.jsx";

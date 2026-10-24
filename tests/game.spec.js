@@ -24,7 +24,8 @@ test.describe("TVRS Maps E2E Game Flow Baseline", () => {
   });
 
   test("should start game in countries mode", async ({ page }) => {
-    // Verify top card is countries mode or select it
+    // La carte Conquête est la première : on choisit « Pays du Monde » via les points du carrousel
+    await page.locator(".deck-dots-row .deck-dot").nth(1).click();
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "countries");
 

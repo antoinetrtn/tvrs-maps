@@ -34,8 +34,44 @@ jobs:
       - name: Run Quality Check (Lint, custom rules & Knip)
         run: npm run lint
 
+      - name: Check design tokens
+        run: npm run check:tokens
+
+      - name: Check CSS rules (ratchet)
+        run: npm run check:css-rules
+
+      - name: Check a11y lint (ratchet)
+        run: npm run check:a11y
+
       - name: Run Tests
         run: npm run test:run
 
       - name: Build Project
         run: npm run build
+
+      - name: Bundle budget (initial JS gzip)
+        run: npm run check:bundle
+
+  sql:
+    name: Conquest SQL tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Run SQL tests on a throwaway database
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash scripts/test-conquest-sql.sh

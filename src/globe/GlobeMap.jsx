@@ -1,6 +1,6 @@
 import "./GlobeMap.css";
 
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import Globe from "react-globe.gl";
 
 import SpaceBackground from "../components/SpaceBackground";
@@ -15,6 +15,11 @@ import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLabels } from "./hooks/useGlobeLabels";
+import {
+  useGlobeContextLoss,
+  useGlobeNativeTouch,
+  useGlobeVisibilityPause,
+} from "./hooks/useGlobeLifecycle";
 import { useGlobeLighting } from "./hooks/useGlobeLighting";
 import { useGlobeMapData } from "./hooks/useGlobeMapData";
 import { useGlobeMarkers } from "./hooks/useGlobeMarkers";
@@ -37,7 +42,13 @@ import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
+import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
+import { isGlobeHoverRaycastNeeded } from "./render/pointerRaycast";
+import SatelliteImageryLayer from "./SatelliteImageryLayer.jsx";
+
+// Module-level for a stable identity (an inline arrow rebuilt the lighting rig each render).
+const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
 
 const GlobeMap = (props) => {
   const {
@@ -70,12 +81,11 @@ const GlobeMap = (props) => {
   const t = useTranslation(lang);
 
   const globeEl = useRef();
+  const globeContainerRef = useRef(null);
   const globeContentWrapperRef = useRef(null);
   const lastCameraPOVRef = useRef({ lat: 0, lng: 0 });
   const lastZoomRef = useRef(2.5);
   const canonicalRef = useRef({});
-
-  const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode);
 
   const {
     isDepartmentMode,
@@ -93,17 +103,19 @@ const GlobeMap = (props) => {
     perfProfile,
   });
 
-  const isLight = theme === "light";
+  const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode, gameDataMap);
 
+  const isLight = theme === "light";
   const {
     selectableFeatureIndex,
     countrySizes,
     _renderCountriesData,
-    _visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,
     modeTransitionRef,
+    transitionStep,
+    transitionLive,
   } = useGlobeRenderPipeline({
     isDepartmentMode,
     isUsStatesMode,
@@ -119,7 +131,6 @@ const GlobeMap = (props) => {
     perfProfile,
     canonicalRef,
   });
-
   const {
     getPolygonCapMaterial,
     getPolygonSideMaterial,
@@ -146,6 +157,7 @@ const GlobeMap = (props) => {
     selectedCountry,
     foundSet,
     foundList,
+    conquestOverlay: props.conquestOverlay,
     isHomeScreen,
     isEndScreen,
     isDepartmentMode,
@@ -156,6 +168,7 @@ const GlobeMap = (props) => {
     selectionTransition,
     gameDataMap,
     modeTransitionRef,
+    transitionStep,
   });
 
   const {
@@ -172,7 +185,7 @@ const GlobeMap = (props) => {
     UI_COLORS,
     perfProfile,
     globeTheme,
-    safeColor: (c) => getOpaqueThreeColor(c),
+    safeColor: safeOpaqueColor,
   });
 
   const { zoomLevel, cameraPOV, globeRenderWidth, globeHeight, homeGlobeOffset, globePanelShift } =
@@ -225,6 +238,13 @@ const GlobeMap = (props) => {
     isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
   });
+
+  useGlobeNativeTouch(globeContainerRef, { handleTouchStart, handleTouchMove, handleTouchEnd });
+  useGlobeVisibilityPause(globeEl);
+  useGlobeShaderWarmup(
+    globeEl,
+    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}|${globeTheme}|${theme}`
+  );
 
   const { globePathsData } = useGlobePaths({
     mode,
@@ -300,6 +320,7 @@ const GlobeMap = (props) => {
     getRingRepeatWrapped,
     getSelectionEffectAltitude,
   } = useGlobeRings({
+    extraRings: props.conquestOverlay?.rings,
     mode,
     isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
@@ -315,6 +336,7 @@ const GlobeMap = (props) => {
   });
 
   const { getBiomeAssetsData, getBiomeAltitude, createBiomeThreeObject } = useGlobeBiomes({
+    globeEl,
     mode,
     gameDataMap,
     selectedCountry,
@@ -361,23 +383,21 @@ const GlobeMap = (props) => {
     updateGlobeLighting,
   });
 
-  const getPolygonCurvatureResolutionWrapped = useCallback(
-    (d) => (d.isGhostCountry ? 1 : getPolygonCurvatureResolution(d)),
-    [getPolygonCurvatureResolution]
-  );
-
   const getObjectRotationWrapped = useCallback(() => [90, 0, 0], []);
   const getLatWrapped = useCallback((d) => d.lat, []);
   const getLngWrapped = useCallback((d) => d.lng, []);
 
+  const attachContextLossHandlers = useGlobeContextLoss(globeEl);
+
   const handleGlobeReady = useCallback(() => {
+    attachContextLossHandlers();
     styleGlobeGraticules();
     updateGlobeLighting();
     if (typeof window !== "undefined") {
       window.__TVRS_GLOBE_EL__ = globeEl.current;
       window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
     }
-  }, [styleGlobeGraticules, updateGlobeLighting, sharedMaterialsRef]);
+  }, [attachContextLossHandlers, styleGlobeGraticules, updateGlobeLighting, sharedMaterialsRef]);
 
   if (typeof window !== "undefined") {
     window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
@@ -386,6 +406,19 @@ const GlobeMap = (props) => {
     }
   }
 
+  // Hover raycast only where a click handler needs it (see pointerRaycast.js).
+  const hoverRaycastEnabled = isGlobeHoverRaycastNeeded({
+    isHomeScreen,
+    isRiversMountainsMode,
+    profileEnabled: perfProfile?.enablePointerInteraction,
+  });
+  useEffect(() => {
+    if (hoverRaycastEnabled) return;
+    // globe.gl keeps its "clickable" pointer cursor until the next hover event,
+    // which never comes once the raycast is off.
+    globeEl.current?.renderer?.()?.domElement?.classList.remove("clickable");
+  }, [hoverRaycastEnabled]);
+
   const activeAtmosphereColor = useMemo(
     () => getOpaqueThreeColor(UI_COLORS.atmosphere),
     [UI_COLORS.atmosphere]
@@ -393,14 +426,12 @@ const GlobeMap = (props) => {
 
   return (
     <div
-      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
+      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""} ${String(globeTheme).startsWith("monochrome") ? "crt" : ""}`}
     >
       <div
         className={`globe-container ${theme}`}
+        ref={globeContainerRef}
         style={{ width: "100%", height: "100%", position: "relative" }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -437,40 +468,9 @@ const GlobeMap = (props) => {
               opacity: 0.6,
             }}
           />
-
-          {!UI_COLORS.isBlackoutTheme && (
-            <>
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-20%",
-                  left: "-20%",
-                  width: "140%",
-                  height: "140%",
-                  background: isLight
-                    ? `radial-gradient(circle at 30% 30%, var(--decor-glow-primary) 0%, var(--decor-glow-primary-end) 60%)`
-                    : `radial-gradient(circle at 30% 30%, var(--decor-glow-primary) 0%, var(--decor-glow-primary-end) 70%)`,
-                  filter: "blur(80px)",
-                  opacity: 0.7,
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "-20%",
-                  right: "-20%",
-                  width: "100%",
-                  height: "100%",
-                  background: isLight
-                    ? `radial-gradient(circle at 70% 70%, var(--decor-glow-secondary) 0%, var(--decor-glow-secondary-end) 50%)`
-                    : `radial-gradient(circle at 70% 70%, var(--decor-glow-secondary) 0%, var(--decor-glow-secondary-end) 60%)`,
-                  filter: "blur(100px)",
-                  opacity: 0.5,
-                }}
-              />
-            </>
-          )}
+          {/* The two 80 px and 100 px blurred decorative gradients were removed:
+              their `--decor-glow-*` variables are defined nowhere, so they painted
+              nothing (background: none) while still costing a full-screen blur layer. */}
         </div>
         <div
           ref={globeContentWrapperRef}
@@ -479,7 +479,7 @@ const GlobeMap = (props) => {
             background: "transparent",
             width: globeRenderWidth,
             left: -homeGlobeOffset,
-            "--globe-panel-shift": `${globePanelShift}px`,
+            "--globe-panel-shift": `${globePanelShift.x}px`,
           }}
         >
           <Globe
@@ -498,10 +498,10 @@ const GlobeMap = (props) => {
             showGraticules={true}
             rendererConfig={globeRendererConfig}
             animateIn={false}
-            enablePointerInteraction={perfProfile?.enablePointerInteraction !== false}
+            enablePointerInteraction={hoverRaycastEnabled}
             polygonsData={polygonsData}
             polygonGeoJsonGeometry="renderGeometry"
-            polygonCapCurvatureResolution={getPolygonCurvatureResolutionWrapped}
+            polygonCapCurvatureResolution={getPolygonCurvatureResolution}
             polygonAltitude={getPolygonAltitude}
             polygonCapColor={getPolygonCapColorWrapped}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}
@@ -510,7 +510,8 @@ const GlobeMap = (props) => {
             polygonStrokeColor={getPolygonStrokeColorWrapped}
             polygonStrokeWidth={getPolygonStrokeWidth}
             polygonAltitudeUpdateMs={50}
-            polygonsTransitionDuration={GLITCH_SELECTION_TRANSITION_MS}
+            // No altitude tween while a layer cross-fade is live (new polygons start at full height).
+            polygonsTransitionDuration={transitionLive ? 0 : GLITCH_SELECTION_TRANSITION_MS}
             pointsData={markersData}
             pointLat="lat"
             pointLng="lng"
@@ -562,6 +563,7 @@ const GlobeMap = (props) => {
             onBackgroundClick={handleBackgroundClick}
           />
         </div>
+        <SatelliteImageryLayer globeEl={globeEl} globeTheme={globeTheme} />
       </div>
     </div>
   );

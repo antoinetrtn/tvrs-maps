@@ -21,38 +21,9 @@
 }
 
 /* Avatar Preview Level Tag */
-.avatar-preview-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: var(--spacing-sm);
-}
-
-.avatar-glow {
-  padding: var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  background: var(--subtle-tint);
-  border: 1px solid var(--glass-border);
-  display: flex;
-  position: relative;
-  box-shadow: 0 0 10px var(--accent-soft);
-}
 
 /* (.avatar-glow::after halo removed: it referenced --glow-color, a token that
    never existed, so the invalid border made the pseudo-element render nothing) */
-
-.avatar-preview-level {
-  position: absolute;
-  bottom: -8px;
-  background: var(--text-main);
-  color: var(--bg-color);
-  font-family: var(--font-display);
-  font-size: 0.65rem;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--bg-color);
-  box-shadow: 0 2px 4px var(--shadow-subtle);
-}
 
 /* Form layouts */
 .form-group {
@@ -64,33 +35,14 @@
 }
 
 .form-group label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-family: var(--font-main);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
-.form-group input {
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-family: var(--font-main);
-  font-size: var(--font-size-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-  border-radius: var(--radius-sm);
-  outline: none;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent-soft);
+.profile-form-header .ui-textfield-field {
+  margin-bottom: var(--spacing-md);
 }
 
 /* Unified Grid: 4 columns for Avatars, Colors and Badges */
@@ -116,11 +68,6 @@
   -webkit-overflow-scrolling: touch;
   align-content: start;
   height: auto;
-}
-
-.color-form-group {
-  flex-shrink: 0;
-  margin-top: auto;
 }
 
 .avatar-option {
@@ -149,7 +96,8 @@
 
 .avatar-option.active {
   border-color: var(--accent);
-  box-shadow: 0 0 8px var(--accent-soft);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .avatar-lock-overlay {
@@ -170,46 +118,10 @@
 }
 
 .avatar-lock-overlay .lock-lvl {
-  font-size: 0.55rem;
-  font-weight: 900;
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
   color: var(--text-muted);
   font-family: var(--font-display);
-}
-
-.color-selector-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-xs);
-  width: 100%;
-}
-
-.color-option {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  border: 2px solid transparent;
-  /* --option-color is expected as an inline custom prop on each swatch;
-     transparent fallback keeps the historical no-value rendering */
-  background-color: var(--option-color, transparent);
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-  padding: 0;
-  box-shadow: 0 0 4px var(--shadow-subtle);
-  flex-shrink: 0;
-}
-
-.color-option:hover {
-  transform: scale(1.08);
-}
-
-.color-option.active {
-  border-color: var(--text-main);
-  box-shadow: 0 0 8px var(--option-color, transparent);
 }
 
 /* Stats tab */
@@ -222,20 +134,13 @@
   overflow: hidden;
 }
 
-.stats-sticky-header {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-}
-
 /* XP progress card */
 .xp-progression-card {
   padding: var(--spacing-md);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .xp-card-header {
@@ -249,62 +154,28 @@
   background: var(--subtle-tint);
   border: 1px solid var(--glass-border);
   padding: var(--spacing-xs);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   display: flex;
 }
 
 .xp-level-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .xp-level-title {
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 900;
+  font-size: var(--font-size-md);
+  font-weight: 600;
   color: var(--text-main);
+  text-transform: none;
 }
 
 .xp-total-count {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
-}
-
-.minecraft-xp-bar-container {
-  width: 100%;
-  height: 20px;
-  background: var(--xp-bar-bg);
-  border: 2px solid var(--xp-bar-border-light);
-  box-shadow: inset 0 2px 4px var(--xp-shadow-light);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.minecraft-xp-bar-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(
-    180deg,
-    var(--xp-green-fill-top) 0%,
-    var(--xp-green-inner) 50%,
-    var(--xp-green-fill-bottom) 100%
-  );
-  transition: width 0.4s ease-out;
-}
-
-.minecraft-xp-bar-text {
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  font-weight: 900;
-  color: var(--xp-black);
-  z-index: 2;
-  /* --xp-shadow-soft never existed (only -light/-medium/-heavy); the invalid
-     var() meant no text-shadow was ever painted, so none is declared */
+  text-transform: none;
 }
 
 /* Quick Stats Grid */
@@ -322,11 +193,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .stat-label {
-  font-size: 0.65rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   text-align: center;
 }
@@ -334,7 +205,7 @@
 .stat-value {
   font-family: var(--font-display);
   font-size: var(--font-size-md);
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-main);
 }
 
@@ -353,10 +224,15 @@
   grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-sm);
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: var(--spacing-xs);
   align-content: start;
+  padding: var(--spacing-xs);
+  margin-inline: calc(-1 * var(--spacing-xs));
+  scroll-padding: var(--spacing-xs);
+  box-sizing: border-box;
 }
 
 .badge-item-btn {
@@ -364,7 +240,7 @@
   padding: 0;
   background: var(--glass-bg);
   border: 1px solid var(--badge-color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -373,22 +249,22 @@
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
+    color var(--transition-fast);
 }
 
 .badge-item-btn:hover {
   background: var(--glass-hover);
-  transform: translateY(-1px);
+  border-color: var(--text-main);
 }
 
 .badge-item-btn.unlocked {
-  box-shadow: inset 0 0 10px var(--badge-color-glow);
+  background: color-mix(in srgb, var(--badge-color-border) 14%, var(--glass-bg));
+  box-shadow: none;
 }
 
 .badge-item-btn.selected {
-  border-color: var(--text-main) !important;
-  box-shadow: 0 0 10px var(--text-main);
+  border-color: var(--text-main);
+  box-shadow: inset 0 0 0 2px var(--text-main);
 }
 
 .badge-lock-badge {
@@ -398,7 +274,7 @@
   width: 14px;
   height: 14px;
   background: var(--xp-shadow-heavy);
-  border-radius: 50%;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -413,7 +289,8 @@
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -431,7 +308,8 @@
   padding: var(--spacing-xs);
   background: var(--subtle-tint);
   border: 1px dashed var(--badge-detail-color);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -441,24 +319,24 @@
 .badge-detail-title-block {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-xxs);
 }
 
 .badge-detail-name {
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 900;
+  font-size: var(--font-size-md);
+  font-weight: 600;
   color: var(--text-main);
   margin: 0;
 }
 
 .badge-detail-status {
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
 }
 
 .badge-detail-status.unlocked {
-  color: var(--glitch-cyan);
+  color: var(--success);
 }
 
 .badge-detail-status.locked {
@@ -466,7 +344,7 @@
 }
 
 .badge-detail-description {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   line-height: 1.4;
   margin: 0;
@@ -475,13 +353,9 @@
 /* Form Actions */
 .form-submit-btn {
   width: 100%;
-  box-sizing: border-box;
-  font-family: var(--font-main);
-  font-weight: 700;
-  padding: 12px 24px;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  padding: var(--spacing-ms) var(--spacing-lg);
   border: none;
-  cursor: pointer;
   background: var(--text-main);
   color: var(--bg-color);
   transition:
@@ -499,7 +373,7 @@
 .form-feedback {
   padding: var(--spacing-xs);
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   margin-top: var(--spacing-xs);
   text-align: center;
   border: 1px solid transparent;
@@ -514,7 +388,7 @@
 .form-feedback.success {
   background: var(--xp-success-bg);
   border-color: var(--xp-success-border);
-  color: var(--glitch-cyan);
+  color: var(--success);
 }
 
 /* Responsive adjustments for mobile */
@@ -553,39 +427,25 @@
   gap: var(--spacing-md);
   text-align: center;
   max-width: 280px;
-  background: var(--glass-bg) !important;
+  background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px var(--xp-shadow-heavy);
-  animation: blur-zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes blur-zoom-in {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  box-shadow: var(--glass-shadow-strong);
+  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
 }
 
 .profile-blur-text {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
   color: var(--text-main);
   margin: 0;
   line-height: 1.4;
 }
 
 .profile-blur-btn {
-  font-family: var(--font-main);
-  font-weight: 700;
-  padding: 8px var(--spacing-md);
+  font-weight: 600;
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: var(--font-size-sm);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
 }
 
 .profile-customization-container.blurred {
@@ -605,20 +465,9 @@
 }
 
 .profile-signout-link {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-family: var(--font-main);
-  cursor: pointer;
+  font-size: var(--font-size-xs);
   text-decoration: underline;
   opacity: 0.75;
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-  padding: var(--spacing-xs);
 }
 
 .profile-signout-link:hover {
@@ -658,27 +507,19 @@
 
   /* Remove nested scrolling inside the avatar selector on mobile */
   .avatar-grid {
-    overflow-y: visible !important;
-    height: auto !important;
-    flex: none !important;
-    padding-right: 0 !important;
+    overflow-y: visible;
+    height: auto;
+    flex: none;
+    padding-right: 0;
   }
 
   .avatar-form-group {
-    overflow: visible !important;
-    flex: none !important;
-    min-height: 0 !important;
+    overflow: visible;
+    flex: none;
+    min-height: 0;
   }
 
   /* Increase color options touch targets on mobile */
-  .color-option {
-    width: 38px !important;
-    height: 38px !important;
-  }
-
-  .color-selector-grid {
-    gap: var(--spacing-md) !important;
-  }
 }
 
 /* Profile form structure - Flex layouts */
@@ -760,19 +601,9 @@ form.profile-form {
   flex-shrink: 0;
 }
 
-/* Success Glow Effect on Save */
+/* Success state on Save (crisp fill, no glow) */
 .form-submit-btn.save-success-glow {
-  background: var(--xp-green-inner) !important;
-  color: var(--xp-black) !important;
-  border-color: var(--xp-green-inner) !important;
-  animation: success-pulse-glow 0.8s ease-in-out infinite alternate;
-}
-
-@keyframes success-pulse-glow {
-  from {
-    box-shadow: 0 0 4px var(--xp-green-glow);
-  }
-  to {
-    box-shadow: 0 0 15px var(--xp-green-inner);
-  }
+  background: var(--success) !important;
+  color: var(--bg-color) !important;
+  border-color: var(--success) !important;
 }

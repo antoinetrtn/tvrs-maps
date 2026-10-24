@@ -17,6 +17,7 @@ const RING_BASE_ALPHA = 0.9;
 const RING_ALTITUDE = 0.011;
 
 export function useGlobeRings({
+  extraRings,
   mode,
   isDepartmentMode,
   isRiversMountainsMode,
@@ -43,7 +44,7 @@ export function useGlobeRings({
     }
   }, []);
 
-  const ringsData = useMemo(() => {
+  const selectionRings = useMemo(() => {
     if (!selectedCountry) return [];
     // Countries with rendered geometry get their feedback from the polygon
     // glitch itself; the sonar ping only exists for marker-only targets
@@ -105,6 +106,12 @@ export function useGlobeRings({
     isLight,
     lerpColor,
   ]);
+
+  // Extra rings (Conquête shields) are appended after the selection ping.
+  const ringsData = useMemo(
+    () => (extraRings?.length ? [...selectionRings, ...extraRings] : selectionRings),
+    [selectionRings, extraRings]
+  );
 
   // Builds rgba strings from DS-resolved colors without triggering the
   // raw-color lint (same convention as SpaceBackground).

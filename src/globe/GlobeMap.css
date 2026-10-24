@@ -1,4 +1,10 @@
 /* Globe presentation: shell, labels, content wrapper and studio overlay */
+.globe-container,
+.globe-container canvas {
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
 .globe-map-shell {
   position: absolute;
   inset: 0;
@@ -21,7 +27,7 @@
 }
 
 .globe-label-element {
-  animation: label-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: label-appear 0.3s var(--ease-out) forwards;
 }
 
 .globe-content-wrapper {
@@ -29,13 +35,14 @@
   --globe-panel-shift: 0px;
   --globe-nudge-x: 0px;
   --globe-nudge-y: 0px;
+  --globe-keyboard-shift: 0px;
   position: relative;
   width: 100%;
   height: 100%;
   z-index: 1;
   transform: translate3d(
     calc(var(--globe-layout-x) + var(--globe-panel-shift) + var(--globe-nudge-x)),
-    var(--globe-nudge-y),
+    calc(var(--globe-keyboard-shift) + var(--globe-nudge-y)),
     0
   );
   will-change: transform;
@@ -86,10 +93,75 @@
 @media (min-width: 769px) {
   .globe-map-shell.home-layout .globe-content-wrapper {
     /* Shift globe into the right pane between the home card and screen edge */
-    --globe-layout-x: clamp(120px, 14vw, 260px);
+    --globe-layout-x: clamp(140px, 17vw, 380px);
   }
 
   .globe-map-shell.game-layout .globe-content-wrapper {
     --globe-layout-x: 0px;
   }
+}
+
+/* Monochrome CRT screen: static scanlines + curved-glass vignette. One
+   composited layer above the canvas (no canvas filter, no animation, so it
+   is cheap and already reduced-motion safe). The accent halo itself lives in
+   the renderer (atmosphere glow + ocean rim). */
+.globe-map-shell.crt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* Fine, faint phosphor lines (1px every 2px). They fade out toward the
+     centre so the play area stays clean and only the rim reads as "CRT". */
+  background: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--bg-color) 14%, transparent) 0 1px,
+    transparent 1px 2px
+  );
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 30%, var(--bg-color) 95%);
+  mask-image: radial-gradient(ellipse at center, transparent 30%, var(--bg-color) 95%);
+}
+
+/* Soft curved-glass vignette, kept separate from the masked scanlines. */
+.globe-map-shell.crt::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 64%,
+    color-mix(in srgb, var(--bg-color) 32%, transparent) 100%
+  );
+}
+
+/* NASA GIBS acknowledgement for the progressive satellite tiles. */
+.globe-imagery-credit {
+  position: absolute;
+  left: 8px;
+  bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+  z-index: 2;
+  font-size: 9px;
+  line-height: 1.2;
+  color: var(--text-muted);
+  opacity: 0.55;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+/* Home on mobile: the action bar owns the bottom edge, so the credit sits
+   top-right under the status bar / notch instead. */
+@media (max-width: 768px) {
+  .globe-map-shell.home-layout .globe-imagery-credit {
+    top: calc(var(--spacing-xs) + env(safe-area-inset-top, 0px));
+    right: var(--spacing-sm);
+    bottom: auto;
+    left: auto;
+  }
+}
+
+.globe-imagery-credit:hover,
+.globe-imagery-credit:focus-visible {
+  opacity: 1;
 }

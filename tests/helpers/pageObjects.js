@@ -74,15 +74,24 @@ export class GameHUD {
     this.fullHearts = page.locator(".PixelHeart.heart-full");
     this.lostHearts = page.locator(".PixelHeart.heart-lost");
     this.suggestionsList = page.locator(".suggestions-list");
-    this.suggestionItems = page.locator(".suggestion-item");
-    this.prevBtn = page.locator(".hud-btn-circular.prev-btn");
-    this.nextBtn = page.locator(".hud-btn-circular.next-btn");
+    this.suggestionItems = page.locator("[role=option]");
+    this.prevBtn = page.locator(".hud-btn.prev-btn");
+    this.nextBtn = page.locator(".hud-btn.next-btn");
     this.homeLogo = page.locator(".hud-logo-clickable");
-    this.stopBtn = page.locator(".hud-top-right .hud-btn-circular");
+    this.stopBtn = page.locator(".hud-top-right .hud-btn");
   }
 
   async enterAnswer(answerText) {
     await this.inputField.fill(answerText);
+    try {
+      await this.page
+        .locator(".suggestion-item")
+        .first()
+        .waitFor({ state: "visible", timeout: 250 });
+      await this.inputField.press("ArrowDown");
+    } catch {
+      // Pas de suggestion apparue
+    }
     await this.inputField.press("Enter");
   }
 }
@@ -93,8 +102,8 @@ export class EndScreen {
     this.overlay = page.locator(".end-screen-overlay");
     this.headerTitle = page.locator(".end-screen-header h1");
     this.scoreDisplay = page.locator(".final-score-inline");
-    this.exploreGlobeBtn = page.locator(".end-screen-actions .btn-secondary");
-    this.homeBtn = page.locator(".end-screen-actions .btn-primary");
+    this.exploreGlobeBtn = page.locator(".end-screen-actions .ui-btn--secondary");
+    this.homeBtn = page.locator(".end-screen-actions .ui-btn--primary");
     this.restoreChip = page.locator(".end-screen-restore-chip");
   }
 }
@@ -105,8 +114,9 @@ export class GameDataPanel {
     this.panel = page.locator(".game-data-panel");
     this.searchInput = page.locator(".data-panel-search-input");
     this.learnCarousel = page.locator(".learn-carousel-control");
-    this.learnNextArrow = page.locator(".learn-carousel-arrow").nth(1);
-    this.learnPrevArrow = page.locator(".learn-carousel-arrow").nth(0);
-    this.dataRows = page.locator(".data-panel-table div[data-country-key]");
+    this.learnTabs = this.learnCarousel.locator('[role="tab"]');
+    this.learnNextArrow = this.learnTabs.nth(1);
+    this.learnPrevArrow = this.learnTabs.nth(0);
+    this.dataRows = page.locator(".data-panel-table [data-country-key]");
   }
 }

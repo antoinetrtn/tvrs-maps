@@ -1,0 +1,163 @@
+/* Conquête lobby — per-player ready pips + the big "Je suis prêt" footer CTA. */
+/* Per-player ready indicator: square pip + label (read-only, the CTA below acts). */
+.conquest-ready-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.conquest-ready-pip {
+  width: 8px;
+  height: 8px;
+  border: 1px solid currentColor;
+  background: transparent;
+}
+
+.conquest-ready-label.is-ready .conquest-ready-pip {
+  background: currentColor;
+  animation: px-ready-pip var(--dur-fast) var(--steps-snap);
+}
+
+@keyframes px-ready-pip {
+  from {
+    transform: scale(1.5);
+    opacity: 0.4;
+  }
+}
+
+.conquest-ready-label.is-ready {
+  color: var(--success);
+}
+
+/* ──── Lobby footer + ready CTA ────
+   One big square button at the bottom of the room. Not ready: accent block.
+   Ready: success outline "Prêt ✓ / Annuler"; a stepped fill sweeps in once.
+   Sticky inside the scrolling panel so it never leaves the thumb zone. */
+.conquest-lobby-footer {
+  position: sticky;
+  bottom: calc(-1 * var(--spacing-lg));
+  z-index: var(--z-raised);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin: 0 calc(-1 * var(--spacing-lg));
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+.conquest-ready-cta {
+  position: relative;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  min-height: 64px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  overflow: hidden;
+  box-shadow: 4px 4px 0 var(--black);
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+}
+
+.conquest-ready-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+  background: var(--bg-color);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.conquest-ready-cta > * {
+  position: relative;
+  z-index: var(--z-raised);
+}
+
+.conquest-ready-cta-main {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.conquest-ready-cta-sub {
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.conquest-ready-cta:active:not(:disabled),
+.ui-btn.conquest-ready-cta:active:not(:disabled) {
+  transform: var(--press-offset);
+  box-shadow: 1px 1px 0 var(--black);
+}
+
+.conquest-ready-cta.is-ready {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.conquest-ready-cta.is-ready::before {
+  transform: scaleX(1);
+  animation: px-ready-fill var(--dur-base) var(--steps-snap);
+}
+
+@keyframes px-ready-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Once ready and the host can start, the start button takes the lead. */
+.conquest-ready-cta.is-quiet {
+  min-height: var(--control-lg);
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .conquest-ready-cta:hover:not(:disabled),
+  .ui-btn.conquest-ready-cta:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 var(--black);
+  }
+
+  .conquest-ready-cta.is-ready:hover,
+  .ui-btn.conquest-ready-cta.is-ready:hover {
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  .conquest-ready-cta.is-quiet:hover,
+  .ui-btn.conquest-ready-cta.is-quiet:hover {
+    min-height: var(--control-lg);
+    box-shadow: none;
+  }
+}
+
+.conquest-ready-cta.is-quiet .conquest-ready-cta-main {
+  font-size: var(--font-size-base);
+}
+
+.conquest-ready-cta.is-quiet .conquest-ready-cta-sub {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  /* Room lobby: bottom sheet so the ready button sits in the thumb zone. */
+  .conquest-panel.conquest-panel--room {
+    align-self: flex-end;
+    width: 100vw;
+    max-height: calc(100dvh - var(--spacing-lg));
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    box-shadow: none;
+  }
+
+  .conquest-panel--room .conquest-lobby-footer {
+    padding-bottom: calc(var(--spacing-md) + var(--safe-bottom));
+  }
+}

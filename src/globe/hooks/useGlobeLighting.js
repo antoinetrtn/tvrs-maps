@@ -3,7 +3,27 @@ import * as THREE from "three";
 
 import { getOpaqueThreeColor, GLOBE_STYLE } from "../../config/designSystem";
 import { PERFORMANCE } from "../../config/gameConstants";
+import { createFresnelGlowNodeMaterial } from "../render/globeNodeMaterials";
+import { isGlobeWebGPU } from "../render/globeRendererFlag";
 import { FRESNEL_FRAGMENT_SHADER, FRESNEL_VERTEX_SHADER } from "../render/globeShaders";
+
+// The WebGPU renderer (experimental flag) needs the TSL port of the glow.
+function createGlowMaterial() {
+  if (isGlobeWebGPU()) return createFresnelGlowNodeMaterial();
+  return new THREE.ShaderMaterial({
+    vertexShader: FRESNEL_VERTEX_SHADER,
+    fragmentShader: FRESNEL_FRAGMENT_SHADER,
+    uniforms: {
+      glowColor: { value: new THREE.Color(0x64b5f6) },
+      coef: { value: 1.0 },
+      power: { value: 1.2 },
+    },
+    transparent: true,
+    blending: THREE.NormalBlending,
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
+}
 
 export function useGlobeLighting({
   globeEl,
@@ -82,19 +102,7 @@ export function useGlobeLighting({
         : PERFORMANCE.innerGlowSegments.desktop;
       const innerGlow = new THREE.Mesh(
         new THREE.SphereGeometry(114.0, glowSegments, glowSegments),
-        new THREE.ShaderMaterial({
-          vertexShader: FRESNEL_VERTEX_SHADER,
-          fragmentShader: FRESNEL_FRAGMENT_SHADER,
-          uniforms: {
-            glowColor: { value: new THREE.Color(0x64b5f6) },
-            coef: { value: 1.0 },
-            power: { value: 1.2 },
-          },
-          transparent: true,
-          blending: THREE.NormalBlending,
-          side: THREE.BackSide,
-          depthWrite: false,
-        })
+        createGlowMaterial()
       );
       innerGlow.name = "globe-inner-glow";
       innerGlow.position.set(0, 0, 0);
@@ -129,13 +137,10 @@ export function useGlobeLighting({
     studioRight.visible = !UI_COLORS.isBlackoutTheme;
     innerGlow.visible = true;
 
-    if (justCreatedLighting) {
-      scene.traverse((obj) => {
-        if (obj.isLight && !obj.name.startsWith("globe-")) {
-          obj.intensity = 0;
-        }
-      });
-    }
+    // globe.gl's own ambient + directional lights stay as they are. They used
+    // to be zeroed here, but only when the rig was rebuilt *after* globe.gl had
+    // added them, i.e. on a live theme switch and never on a fresh load: the
+    // globe then looked darker than after a refresh (Antoine's theme bug).
 
     if (UI_COLORS.isBlackoutTheme) {
       // Blackout theme: brighter uniform ambient to make country polygons visible on flat dark globe

@@ -1,11 +1,15 @@
 import "./AuthModal.css";
 
-import { ArrowLeft, Close, Earth, Gamepad, User } from "pixelarticons/react";
+import { ArrowLeft, Earth, Gamepad, User } from "pixelarticons/react";
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 
 import { useTranslation } from "../config/i18n";
 import { signInWithEmail, signInWithGoogle, signUpWithEmail } from "../services/supabaseClient";
+import Button from "./ui/Button";
+import Dialog, { DialogTitle } from "./ui/Dialog";
+import IconButton from "./ui/IconButton";
+import PanelCloseButton from "./ui/PanelCloseButton";
+import TextField from "./ui/TextField";
 
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {
   const t = useTranslation(lang);
@@ -200,96 +204,120 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
   // (lint ratchet: max depth ≤5). Each step is a self-contained block.
   const renderInitialFlow = () => (
     <div className="auth-modal-initial-flow">
-      <button type="button" onClick={() => setStep("email")} className="auth-row-btn tvrs-btn">
-        <User width={16} height={16} className="auth-btn-icon" />
-        <span>Compte TVRS</span>
-      </button>
+      <Button
+        variant="secondary"
+        size="lg"
+        block
+        onClick={() => setStep("email")}
+        className="auth-row-btn tvrs-btn"
+      >
+        <User width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
+        <span>{t("auth_tvrs_account")}</span>
+      </Button>
 
-      <button type="button" onClick={handleGoogleSignIn} className="auth-row-btn google-btn">
-        <Earth width={16} height={16} className="auth-btn-icon" />
-        <span>Continuer avec Google</span>
-      </button>
+      <Button
+        variant="secondary"
+        size="lg"
+        block
+        onClick={handleGoogleSignIn}
+        className="auth-row-btn google-btn"
+      >
+        <Earth width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
+        <span>{t("auth_google")}</span>
+      </Button>
 
-      <button type="button" onClick={onGuest} className="auth-row-btn guest-btn">
-        <Gamepad width={16} height={16} className="auth-btn-icon" />
-        <span>Continuer en invité (Guest)</span>
-      </button>
+      <Button
+        variant="secondary"
+        size="lg"
+        block
+        onClick={onGuest}
+        className="auth-row-btn guest-btn"
+        aria-label={t("auth_guest")}
+        title={t("auth_guest")}
+      >
+        <Gamepad width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
+        <span>{t("auth_guest_short")}</span>
+      </Button>
     </div>
   );
 
   const renderEmailStep = () => (
     <form onSubmit={handleEmailNext} className="auth-modal-form">
-      <div className="form-group">
-        <label>{t("auth_email")}</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Ex: jean.dupont@gmail.com"
-          className="glass-panel"
-          disabled={loading}
-          required
-          autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
-        />
-      </div>
-      <button type="submit" disabled={loading} className="btn-primary auth-modal-submit-btn">
+      <TextField
+        label={t("auth_email")}
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Ex: jean.dupont@gmail.com"
+        className="glass-panel"
+        disabled={loading}
+        required
+        autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
+      />
+      <Button type="submit" variant="primary" loading={loading} className="auth-modal-submit-btn">
         {loading ? "Vérification..." : "Continuer"}
-      </button>
+      </Button>
     </form>
   );
 
   const renderPasswordStep = () => (
     <form onSubmit={handleSubmit} className="auth-modal-form">
-      <div className="form-group">
-        <label>{t("auth_email")}</label>
-        <input type="email" value={email} className="glass-panel disabled-input" disabled />
-      </div>
+      <TextField
+        label={t("auth_email")}
+        type="email"
+        value={email}
+        className="glass-panel disabled-input"
+        disabled
+      />
 
-      <div className="form-group">
-        <label>{t("auth_password")}</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          className="glass-panel"
-          disabled={loading}
-          required
-          autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
-        />
-      </div>
+      <TextField
+        label={t("auth_password")}
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="••••••••"
+        className="glass-panel"
+        disabled={loading}
+        required
+        autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
+      />
 
-      <button
+      <Button
         type="submit"
-        disabled={loading || isCooldown}
-        className="btn-primary auth-modal-submit-btn"
+        variant="primary"
+        loading={loading}
+        disabled={isCooldown}
+        className="auth-modal-submit-btn"
       >
         {loading ? t("saving") : isCooldown ? "Attendez..." : passwordButtonLabel}
-      </button>
+      </Button>
     </form>
   );
 
   if (!isOpen) return null;
 
   const title =
-    step === "initial" ? "Authentification" : step === "email" ? "Compte TVRS" : t("auth_password");
+    step === "initial"
+      ? t("auth_modal_title")
+      : step === "email"
+        ? t("auth_tvrs_account")
+        : t("auth_password");
 
   const renderHeader = () => (
     <div className="panel-header">
       {step !== "initial" && (
-        <button
-          type="button"
+        <IconButton
+          variant="ghost"
+          size="sm"
+          label={t("back")}
           className="panel-back-btn"
           onClick={step === "email" ? resetFlow : goBackToEmail}
-          title={t("back")}
         >
           <ArrowLeft width={18} height={18} />
-        </button>
+        </IconButton>
       )}
-      <h2 className="panel-title">{title}</h2>
-      <button className="panel-close-btn" onClick={onClose} title={t("close")}>
-        <Close width={18} height={18} />
-      </button>
+      <DialogTitle className="panel-title">{title}</DialogTitle>
+      <PanelCloseButton label={t("close")} onClick={onClose} iconSize={18} />
     </div>
   );
 
@@ -303,16 +331,13 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           ? renderPasswordStep()
           : null;
 
-  return createPortal(
-    <div className={`dialog-panel ${theme}`} onClick={onClose}>
-      <div className="dialog-card" onClick={(e) => e.stopPropagation()}>
-        {renderHeader()}
-        {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
-        {successMsg && <div className="form-feedback success">{successMsg}</div>}
-        {stepContent}
-      </div>
-    </div>,
-    document.body
+  return (
+    <Dialog onClose={onClose} theme={theme}>
+      {renderHeader()}
+      {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
+      {successMsg && <div className="form-feedback success">{successMsg}</div>}
+      {stepContent}
+    </Dialog>
   );
 };
 
