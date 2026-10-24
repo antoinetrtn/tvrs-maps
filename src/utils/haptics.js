@@ -2,17 +2,22 @@ import { GLOBE_MAX_ALTITUDE, GLOBE_MIN_ALTITUDE } from "../globe/render/globeAlt
 import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 
 export const ZOOM_HAPTIC_DETENTS = 28;
-const ZOOM_HAPTIC_COOLDOWN_MS = 38;
-export const ZOOM_HAPTIC_TICK_MS = 16;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 26;
-const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 240;
-const ZOOM_PINCH_STEP_PX = 14;
+const ZOOM_HAPTIC_COOLDOWN_MS = 85;
+// Chrome Android VibrationManagerImpl drives the motor at DEFAULT_AMPLITUDE (no PMIC
+// overdrive), so pulses under ~30ms are swallowed by LRA/ERM inertia and Binder IPC
+// latency. 42ms / 65ms with an 85ms cooldown ensures every pulse completes uncancelled.
+export const ZOOM_HAPTIC_TICK_MS = 42;
+export const ZOOM_HAPTIC_BOUNDARY_MS = 65;
+const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 260;
+const ZOOM_PINCH_STEP_PX = 16;
 const ZOOM_WHEEL_STEP_DELTA = 36;
+const MIN_NATIVE_VIBRATE_INTERVAL_MS = 80;
 
 const BOUNDARY_EPS = 0.004;
 
 let sharedAudioCtx = null;
 let iosHapticLabel = null;
+let lastNativeVibrateAt = -Infinity;
 
 function ensureIosHapticSwitch() {
   if (typeof document === "undefined" || !document.body) return null;
@@ -48,11 +53,8 @@ function triggerIosSwitchHaptic() {
 export function primeHapticsOnUserGesture() {
   if (typeof window === "undefined") return;
   ensureIosHapticSwitch();
-  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-    try {
-      navigator.vibrate(0);
-    } catch {}
-  }
+  // Never call navigator.vibrate(0) here: in Chromium, vibrate(0) dispatches a Mojo
+  // Cancel() IPC to Android VibratorManagerService that aborts in-flight vibrations.
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return;
   try {
@@ -77,14 +79,14 @@ function playTactileAudioTick(isBoundary = false) {
     const osc = sharedAudioCtx.createOscillator();
     const gain = sharedAudioCtx.createGain();
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(isBoundary ? 150 : 120, now);
-    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 54 : 44, now + 0.0055);
-    gain.gain.setValueAtTime(isBoundary ? 0.032 : 0.022, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.006);
+    osc.frequency.setValueAtTime(isBoundary ? 135 : 108, now);
+    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 48 : 38, now + 0.008);
+    gain.gain.setValueAtTime(isBoundary ? 0.036 : 0.024, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.0085);
     osc.connect(gain);
     gain.connect(sharedAudioCtx.destination);
     osc.start(now);
-    osc.stop(now + 0.0065);
+    osc.stop(now + 0.009);
     return true;
   } catch {
     return false;
@@ -117,8 +119,17 @@ export function computeZoomDetentIndex(
  */
 function tryNativeVibrate(nav, durationMs) {
   if (!nav || typeof nav.vibrate !== "function") return triggerIosSwitchHaptic();
+  const isGlobalNavigator = typeof navigator !== "undefined" && nav === navigator;
+  const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+  if (isGlobalNavigator && now - lastNativeVibrateAt < MIN_NATIVE_VIBRATE_INTERVAL_MS) {
+    return true;
+  }
   try {
-    return Boolean(nav.vibrate(durationMs));
+    const ok = Boolean(nav.vibrate(durationMs));
+    if (ok && isGlobalNavigator) {
+      lastNativeVibrateAt = now;
+    }
+    return ok;
   } catch {
     return false;
   }
@@ -203,10 +214,14 @@ export function createZoomHapticTracker({
       altitude,
       {
         now = performance.now(),
+        isZoomGesture = false,
         minAltitude = GLOBE_MIN_ALTITUDE,
         maxAltitude = GLOBE_MAX_ALTITUDE,
       } = {}
     ) {
+      if (isZoomGesture) {
+        activeUntil = Math.max(activeUntil, now + activeWindowMs);
+      }
       const detent = computeZoomDetentIndex(altitude, { minAltitude, maxAltitude, detents });
       if (detent === null) return { pulsed: false, detent: null };
 
