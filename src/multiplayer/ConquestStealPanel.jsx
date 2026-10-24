@@ -11,6 +11,11 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
   const [value, setValue] = useState("");
   const name = countryName(challenge.country_id);
   const isFlag = challenge.kind === "flag";
+  // Same panel for a steal and for reinforcing my own country (+30 s / +1 min).
+  const isFortify = challenge.mode === "fortify";
+  const submitLabel = isFortify
+    ? `${t.fortifyOffer} +${challenge.bonus_seconds || 0} s`
+    : t.stealOffer;
   // alt = position only: naming the flag would give the answer away.
   const flagOptions = (challenge.options || []).map((iso, index) => ({
     value: iso,
@@ -27,7 +32,7 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
   return (
     <form
       autoComplete="off"
-      className="conquest-steal"
+      className={`conquest-steal${isFortify ? " is-fortify" : ""}`}
       onSubmit={(e) => {
         e.preventDefault();
         if (value.trim()) onAnswer(value.trim());
@@ -62,7 +67,7 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel }) =
           {t.stealCancel}
         </Button>
         <Button type="submit" variant="primary" disabled={!value.trim()}>
-          {t.stealOffer}
+          {submitLabel}
         </Button>
       </div>
     </form>
