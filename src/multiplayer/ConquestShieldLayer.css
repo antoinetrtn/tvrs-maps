@@ -22,7 +22,7 @@
   background: conic-gradient(
     from 0deg,
     var(--shield-color) calc(var(--shield-step) * 12.5%),
-    var(--surface-border) 0
+    var(--glass-border-strong) 0
   );
   will-change: transform;
 }
@@ -85,7 +85,7 @@
   width: 3px;
   height: 3px;
   border-radius: 0;
-  background: var(--surface-border);
+  background: var(--glass-border-strong);
 }
 
 .cq-shield-badge__pip.is-filled {
