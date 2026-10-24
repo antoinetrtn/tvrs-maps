@@ -81,7 +81,7 @@ export function countryGrainOutputNode() {
       const rimSheen = pow(float(1.0).sub(ndv), 3.2).mul(0.045);
 
       const cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-      const cLng = atan(sphereNormal.z, sphereNormal.x);
+      const cLng = atan(sphereNormal.x, sphereNormal.z);
       const cartUv = vec2(cLng.div(6.2831853).add(0.5), cLat.div(3.14159265).add(0.5));
       const topoGrid = cartUv.mul(vec2(72.0, 36.0));
       const topoDist = abs(fract(topoGrid.add(0.5)).sub(0.5)).div(
@@ -91,31 +91,29 @@ export function countryGrainOutputNode() {
       const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
 
       const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
+      const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
       const cityDensity = texture(getCapitalLightsTexture(), cartUv).r;
-      const camAlt = max(length(cameraPosition).sub(100.0), 15.0);
-      const zoomOctave = exp2(floor(log2(clamp(float(230.0).div(camAlt), 1.0, 8.0)).add(0.5)));
-      const cityRes = float(180.0).mul(zoomOctave);
-      const cityRow = floor(cLat.mul(cityRes));
-      const cityRowLat = cityRow.add(0.5).div(cityRes);
-      const cityCols = max(floor(cityRes.mul(cos(cityRowLat)).add(0.5)), 16.0);
-      const cityCol = floor(cLng.mul(cityCols));
-      const cityCellId = vec2(cityCol, cityRow);
-      const cityBayer = bayer4x4(cityCellId);
       const cityHash = hash(cityCellId);
-      const cityTwinkle = sin(uTimeNode.mul(1.8).add(cityHash.mul(6.2831853)))
-        .mul(0.14)
-        .add(0.86);
-      const urbanCluster = smoothstep(0.04, 0.88, cityDensity).mul(
-        step(0.14, cityHash).mul(0.48).add(0.52)
-      );
-      const cityPixelOn = step(cityBayer.add(0.04), urbanCluster.mul(0.86));
-      const coreBoost = smoothstep(0.45, 0.94, cityDensity).mul(0.24);
-
+      const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
+      const cityTwinkle = sin(uTimeNode.mul(2.1).add(cityHash.mul(6.2831853)))
+        .mul(0.08)
+        .add(0.92);
+      const tierPinpoint = step(0.88, cityDensity);
+      const tierCore = float(1.0).sub(tierPinpoint).mul(step(0.72, cityDensity));
+      const tierMidSpark = float(1.0).sub(max(tierPinpoint, tierCore)).mul(step(0.6, cityDensity));
+      const tierOuterSpark = float(1.0)
+        .sub(max(max(tierPinpoint, tierCore), tierMidSpark))
+        .mul(step(0.45, cityDensity));
       const lit = litDisplayColor();
       const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
-      const darkRestMask = float(1.0).sub(smoothstep(0.26, 0.48, surfaceLuma));
-      const cityIntensity = cityPixelOn.mul(coreBoost.add(0.15)).mul(cityTwinkle).mul(darkRestMask);
-      const cityGlow = vec3(0.92, 0.89, 0.82).mul(cityIntensity);
+      const darkRestMask = float(1.0).sub(smoothstep(0.38, 0.58, surfaceLuma));
+      const cityGlow = tierPinpoint
+        .mul(vec3(0.6, 0.55, 0.42))
+        .add(tierCore.mul(vec3(0.46, 0.42, 0.32)).mul(cityHash2.mul(0.1).add(0.9)))
+        .add(tierMidSpark.mul(vec3(0.34, 0.31, 0.23)).mul(cityHash2.mul(0.15).add(0.85)))
+        .add(tierOuterSpark.mul(vec3(0.22, 0.2, 0.15)).mul(cityHash2.mul(0.2).add(0.8)))
+        .mul(cityTwinkle)
+        .mul(darkRestMask);
 
       const engrave = lit.mul(parallelLine.mul(0.04).add(crossTick.mul(0.09))).add(vec3(rimSheen));
       const capRgb = lit.mul(limbFactor).add(engrave).add(cityGlow);

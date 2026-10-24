@@ -2,8 +2,104 @@ import * as THREE from "three";
 
 import { countryDataMap } from "../../data/gameData";
 
-const TEX_WIDTH = 512;
-const TEX_HEIGHT = 256;
+// 10 texels per degree (0.10° per texel) -> 1 texel ≈ 1px–1.5px on screen at continent zoom
+const TEX_WIDTH = 3600;
+const TEX_HEIGHT = 1800;
+
+// Skip micro-territories and tiny island dependencies so they don't crowd neighboring capitals
+const MICRO_TERRITORIES = new Set([
+  "Aland",
+  "Andorra",
+  "Anguilla",
+  "Aruba",
+  "Bermuda",
+  "British Virgin Islands",
+  "Cayman Islands",
+  "Cook Islands",
+  "Curaçao",
+  "Dominica",
+  "Falkland Islands",
+  "Faroe Islands",
+  "French Polynesia",
+  "Gibraltar",
+  "Greenland",
+  "Grenada",
+  "Guam",
+  "Guernsey",
+  "Isle of Man",
+  "Jersey",
+  "Kiribati",
+  "Liechtenstein",
+  "Macao",
+  "Maldives",
+  "Malta",
+  "Marshall Islands",
+  "Federated States of Micronesia",
+  "Monaco",
+  "Montserrat",
+  "Nauru",
+  "New Caledonia",
+  "Niue",
+  "Norfolk Island",
+  "Northern Mariana Islands",
+  "Palau",
+  "Pitcairn Islands",
+  "Saint Barthelemy",
+  "Saint Helena",
+  "Saint Kitts and Nevis",
+  "Saint Lucia",
+  "Saint Martin",
+  "Saint Pierre and Miquelon",
+  "Saint Vincent and the Grenadines",
+  "American Samoa",
+  "Samoa",
+  "San Marino",
+  "Sao Tome and Principe",
+  "Seychelles",
+  "Sint Maarten",
+  "Solomon Islands",
+  "Tonga",
+  "Turks and Caicos Islands",
+  "Tuvalu",
+  "United States Virgin Islands",
+  "Vanuatu",
+  "Vatican",
+  "Wallis and Futuna",
+]);
+
+// Compact capitals in tightly packed regions get a slightly tighter reach so neighbors stay distinct
+const COMPACT_CAPITALS = new Set([
+  "Albania",
+  "Armenia",
+  "Bosnia and Herzegovina",
+  "Brunei",
+  "Burundi",
+  "Cyprus",
+  "Djibouti",
+  "Equatorial Guinea",
+  "Estonia",
+  "Gambia",
+  "Georgia",
+  "Kosovo",
+  "Kuwait",
+  "Latvia",
+  "Lebanon",
+  "Lesotho",
+  "Lithuania",
+  "Luxembourg",
+  "Moldova",
+  "Montenegro",
+  "North Macedonia",
+  "Palestine",
+  "Qatar",
+  "Rwanda",
+  "Slovakia",
+  "Slovenia",
+  "Swaziland",
+  "Switzerland",
+  "Timor-Leste",
+  "Trinidad and Tobago",
+]);
 
 let sharedCapitalLightsTexture = null;
 
@@ -12,80 +108,97 @@ function hash1(n) {
   return x - Math.floor(x);
 }
 
-function stampUrbanCluster(data, n, cosLat) {
-  const rLng = n.r / cosLat;
-  const yMin = Math.max(0, Math.floor(((n.lat - n.r + 90) / 180) * TEX_HEIGHT));
-  const yMax = Math.min(TEX_HEIGHT - 1, Math.ceil(((n.lat + n.r + 90) / 180) * TEX_HEIGHT));
-  const xCenter = Math.floor(((-n.lng + 180) / 360) * TEX_WIDTH);
-  const xSpan = Math.ceil((rLng / 360) * TEX_WIDTH);
-  const invR = 1 / n.r;
+function setTexelMax(data, x, y, val) {
+  if (y < 0 || y >= TEX_HEIGHT) return;
+  const wx = ((x % TEX_WIDTH) + TEX_WIDTH) % TEX_WIDTH;
+  const idx = (y * TEX_WIDTH + wx) * 4;
+  if (val > data[idx]) {
+    data[idx] = val;
+    data[idx + 1] = val;
+    data[idx + 2] = val;
+    data[idx + 3] = 255;
+  }
+}
 
-  for (let y = yMin; y <= yMax; y++) {
-    const dLat = ((y + 0.5) / TEX_HEIGHT) * 180 - 90 - n.lat;
-    const dLat2 = dLat * dLat;
-    for (let dx = -xSpan; dx <= xSpan; dx++) {
-      const x = (((xCenter + dx) % TEX_WIDTH) + TEX_WIDTH) % TEX_WIDTH;
-      // In Three.js polar2Cartesian: cLng = atan2(z, x) = -lng * DEG -> lng = -cLng / DEG
-      const pLng = 180 - ((x + 0.5) / TEX_WIDTH) * 360;
-      let dLon = Math.abs(pLng - n.lng);
-      if (dLon > 180) dLon = 360 - dLon;
-      const dLonScaled = dLon * cosLat;
-      const dist = Math.sqrt(dLat2 + dLonScaled * dLonScaled);
-      if (dist >= n.r) continue;
-      const t = 1 - dist * invR;
-      const encoded = Math.min(255, Math.round(t * t * n.w * 255));
-      const idx = (y * TEX_WIDTH + x) * 4;
-      if (encoded > data[idx]) {
-        data[idx] = encoded;
-        data[idx + 1] = encoded;
-        data[idx + 2] = encoded;
-        data[idx + 3] = 255;
-      }
+function stampDot(data, lat, lng, dLatDeg, dLonScaledDeg, cosLat, val) {
+  const pLat = lat + dLatDeg;
+  const pLng = lng + dLonScaledDeg / cosLat;
+  const y = Math.floor(((pLat + 90) / 180) * TEX_HEIGHT);
+  const x = Math.floor(((pLng + 180) / 360) * TEX_WIDTH);
+  setTexelMax(data, x, y, val);
+  if (cosLat < 0.72) {
+    setTexelMax(data, x + 1, y, val);
+  }
+}
+
+function stampCapitalStarCluster(data, lat, lng, seed, cosLat, isCompact) {
+  const y0 = Math.floor(((lat + 90) / 180) * TEX_HEIGHT);
+  const x0 = Math.floor(((lng + 180) / 360) * TEX_WIDTH);
+
+  // 1. Crisp pinpoint core right on the exact capital GPS coordinate (100% intensity = 255)
+  setTexelMax(data, x0, y0, 255);
+  // Tight 1-texel cross/cluster heart around the exact center (~8-10 km)
+  const dxStep = Math.max(1, Math.round(1 / cosLat));
+  setTexelMax(data, x0 + dxStep, y0, 245);
+  setTexelMax(data, x0, y0 + 1, 245);
+  if (!isCompact) {
+    setTexelMax(data, x0 - dxStep, y0, 235);
+    setTexelMax(data, x0, y0 - 1, 235);
+  }
+
+  // 2. Delicate, discrete 1px starry filaments & isolated satellite pinpricks radiating outward
+  // Notice we place discrete dots at stepped distances so dark land remains visible between sparks!
+  const numRays = isCompact ? 4 : 6;
+  for (let r = 0; r < numRays; r++) {
+    const baseAngle = (r / numRays) * Math.PI * 2;
+    const angle = baseAngle + (hash1(seed + r * 13.7) - 0.5) * 0.45;
+    const curve = (hash1(seed + r * 29.3) - 0.5) * 0.35;
+
+    // Inner highway spark (~0.18°–0.24° from center)
+    const d1 = (isCompact ? 0.15 : 0.18) + hash1(seed + r * 41.1) * 0.06;
+    const a1 = angle + curve * 0.4;
+    stampDot(data, lat, lng, Math.sin(a1) * d1, Math.cos(a1) * d1, cosLat, 205);
+
+    // Mid suburban satellite spark (~0.30°–0.38° from center, separated by dark gap)
+    if (hash1(seed + r * 59.3) > 0.15) {
+      const d2 = (isCompact ? 0.25 : 0.31) + hash1(seed + r * 71.9) * 0.07;
+      const a2 = angle + curve * 0.8;
+      stampDot(data, lat, lng, Math.sin(a2) * d2, Math.cos(a2) * d2, cosLat, 170);
+    }
+
+    // Outer isolated 1px pinprick (~0.44°–0.56° from center, only on main corridors)
+    if (!isCompact && hash1(seed + r * 83.7) > 0.35) {
+      const d3 = 0.43 + hash1(seed + r * 97.1) * 0.12;
+      const a3 = angle + curve * 1.15;
+      stampDot(data, lat, lng, Math.sin(a3) * d3, Math.cos(a3) * d3, cosLat, 140);
     }
   }
 }
 
 /**
- * Lazily builds a 512x256 equirectangular DataTexture of urban agglomeration density
- * around each country's capital (plus deterministic satellite metropolitan clusters).
- * Sampled by the country surface shader to render discreet pixel-art night-light zones
- * seen from space.
+ * Lazily builds a 3600x1800 NearestFilter DataTexture (0.10 deg/texel) of crisp,
+ * starry pixel-art capital night lights (bright pinpoint core + discrete 1px satellite sparks).
  */
 export function getCapitalLightsTexture() {
   if (sharedCapitalLightsTexture) return sharedCapitalLightsTexture;
 
   const data = new Uint8Array(TEX_WIDTH * TEX_HEIGHT * 4);
 
-  Object.values(countryDataMap).forEach((info) => {
+  Object.entries(countryDataMap).forEach(([admin, info]) => {
+    if (MICRO_TERRITORIES.has(admin)) return;
     if (!Number.isFinite(info.lat) || !Number.isFinite(info.lng) || !info.capital) return;
     const lat = info.lat;
     const lng = info.lng;
     const cosLat = Math.max(0.22, Math.cos((lat * Math.PI) / 180));
     const seed = lat * 13.37 + lng * 7.91;
-
-    // Main capital metropolitan core (~2.3 deg radius) + 4 satellite urban corridors
-    stampUrbanCluster(data, { lat, lng, r: 2.75, w: 1.0 }, cosLat);
-    for (let s = 0; s < 4; s++) {
-      const angle = hash1(seed + s * 11.3) * Math.PI * 2;
-      const dist = 0.55 + hash1(seed + s * 23.7) * 1.25;
-      stampUrbanCluster(
-        data,
-        {
-          lat: lat + Math.sin(angle) * dist * 0.85,
-          lng: lng + (Math.cos(angle) * dist) / cosLat,
-          r: 1.35 + hash1(seed + s * 37.1) * 0.75,
-          w: 0.62 + hash1(seed + s * 53.9) * 0.32,
-        },
-        cosLat
-      );
-    }
+    stampCapitalStarCluster(data, lat, lng, seed, cosLat, COMPACT_CAPITALS.has(admin));
   });
 
   const tex = new THREE.DataTexture(data, TEX_WIDTH, TEX_HEIGHT, THREE.RGBAFormat);
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
-  tex.magFilter = THREE.LinearFilter;
-  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.NearestFilter;
+  tex.minFilter = THREE.NearestFilter;
   tex.flipY = false;
   tex.generateMipmaps = false;
   tex.needsUpdate = true;
