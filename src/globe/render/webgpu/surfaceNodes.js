@@ -81,7 +81,7 @@ export function countryGrainOutputNode() {
       const rimSheen = pow(float(1.0).sub(ndv), 3.2).mul(0.045);
 
       const cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-      const cLng = atan(sphereNormal.z, sphereNormal.x);
+      const cLng = atan(sphereNormal.x, sphereNormal.z);
       const cartUv = vec2(cLng.div(6.2831853).add(0.5), cLat.div(3.14159265).add(0.5));
       const topoGrid = cartUv.mul(vec2(72.0, 36.0));
       const topoDist = abs(fract(topoGrid.add(0.5)).sub(0.5)).div(
@@ -91,34 +91,45 @@ export function countryGrainOutputNode() {
       const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
 
       const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
-      const cityDensity = texture(getCapitalLightsTexture(), cartUv).r;
-      const camAlt = max(length(cameraPosition).sub(100.0), 15.0);
-      const zoomOctave = exp2(floor(log2(clamp(float(230.0).div(camAlt), 1.0, 8.0)).add(0.5)));
-      const cityRes = float(180.0).mul(zoomOctave);
-      const cityRow = floor(cLat.mul(cityRes));
-      const cityRowLat = cityRow.add(0.5).div(cityRes);
-      const cityCols = max(floor(cityRes.mul(cos(cityRowLat)).add(0.5)), 16.0);
-      const cityCol = floor(cLng.mul(cityCols));
-      const cityCellId = vec2(cityCol, cityRow);
-      const cityBayer = bayer4x4(cityCellId);
+      const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
+      const capitalSample = texture(getCapitalLightsTexture(), cartUv);
+      const cityDensity = capitalSample.r;
+      const cityAura = capitalSample.g;
       const cityHash = hash(cityCellId);
-      const cityTwinkle = sin(uTimeNode.mul(1.8).add(cityHash.mul(6.2831853)))
-        .mul(0.14)
-        .add(0.86);
-      const urbanCluster = smoothstep(0.04, 0.88, cityDensity).mul(
-        step(0.14, cityHash).mul(0.48).add(0.52)
-      );
-      const cityPixelOn = step(cityBayer.add(0.04), urbanCluster.mul(0.86));
-      const coreBoost = smoothstep(0.45, 0.94, cityDensity).mul(0.24);
-
+      const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
+      const cityTwinkle = sin(uTimeNode.mul(2.1).add(cityHash.mul(6.2831853)))
+        .mul(0.07)
+        .add(0.93);
+      const tierPinpoint = step(0.82, cityDensity);
+      const tierArterial = float(1.0).sub(tierPinpoint).mul(step(0.55, cityDensity));
+      const tierTentacle = float(1.0)
+        .sub(max(tierPinpoint, tierArterial))
+        .mul(step(0.25, cityDensity));
       const lit = litDisplayColor();
       const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
-      const darkRestMask = float(1.0).sub(smoothstep(0.26, 0.48, surfaceLuma));
-      const cityIntensity = cityPixelOn.mul(coreBoost.add(0.15)).mul(cityTwinkle).mul(darkRestMask);
-      const cityGlow = vec3(0.92, 0.89, 0.82).mul(cityIntensity);
-
+      const darkRestMask = float(1.0).sub(smoothstep(0.38, 0.58, surfaceLuma));
       const engrave = lit.mul(parallelLine.mul(0.04).add(crossTick.mul(0.09))).add(vec3(rimSheen));
-      const capRgb = lit.mul(limbFactor).add(engrave).add(cityGlow);
+      const baseLit = lit.mul(limbFactor).add(engrave);
+      const auraColor = vec3(0.48, 0.26, 0.08);
+      const withAura = mix(baseLit, max(baseLit, auraColor), cityAura.mul(0.22).mul(darkRestMask));
+      const colorOuterTentacle = vec3(0.85, 0.46, 0.14);
+      const colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.76, 0.26), cityHash2);
+      const colorMetroHeart = mix(
+        vec3(1.0, 0.91, 0.62),
+        vec3(1.0, 0.97, 0.84),
+        smoothstep(0.82, 1.0, cityDensity)
+      );
+      const sparkColor = tierPinpoint
+        .mul(colorMetroHeart)
+        .add(tierArterial.mul(colorMainArterial))
+        .add(tierTentacle.mul(colorOuterTentacle));
+      const sparkAlpha = tierPinpoint
+        .mul(0.96)
+        .add(tierArterial.mul(cityHash2.mul(0.14).add(0.76)))
+        .add(tierTentacle.mul(cityHash2.mul(0.22).add(0.48)))
+        .mul(cityTwinkle)
+        .mul(darkRestMask);
+      const capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
       const sideRgb = lit.mul(0.58);
 
       const rgb = mix(capRgb, sideRgb, isSideWall);

@@ -78,7 +78,7 @@ export function applyCountrySurfaceGrainShader(shader) {
       float rimSheen = pow(1.0 - ndv, 3.2) * 0.045;
 
       float cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-      float cLng = atan(sphereNormal.z, sphereNormal.x);
+      float cLng = atan(sphereNormal.x, sphereNormal.z);
       vec2 cartUv = vec2(cLng / 6.2831853 + 0.5, cLat / 3.14159265 + 0.5);
       vec2 topoGrid = cartUv * vec2(72.0, 36.0);
       vec2 topoDist = abs(fract(topoGrid + 0.5) - 0.5) / max(fwidth(topoGrid), vec2(0.001));
@@ -87,27 +87,33 @@ export function applyCountrySurfaceGrainShader(shader) {
       vec3 engrave = gl_FragColor.rgb * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
 
       // Discreet pixel-art capital & urban agglomeration night lights seen from space
-      float cityDensity = texture2D(uCapitalLightsMap, cartUv).r;
-      float camAlt = max(length(cameraPosition) - 100.0, 15.0);
-      float zoomOctave = exp2(floor(log2(clamp(230.0 / camAlt, 1.0, 8.0)) + 0.5));
-      float cityRes = 180.0 * zoomOctave;
-      float cityRow = floor(cLat * cityRes);
-      float cityRowLat = (cityRow + 0.5) / cityRes;
-      float cityCols = max(floor(cityRes * cos(cityRowLat) + 0.5), 16.0);
-      float cityCol = floor(cLng * cityCols);
-      vec2 cityCellId = vec2(cityCol, cityRow);
-      float cityBayer = bayer4x4(cityCellId);
+      vec2 cityCellId = floor(cartUv * vec2(3600.0, 1800.0));
+      vec2 capitalSample = texture2D(uCapitalLightsMap, cartUv).rg;
+      float cityDensity = capitalSample.r;
+      float cityAura = capitalSample.g;
       float cityHash = cityCellHash(cityCellId);
-      float cityTwinkle = 0.86 + 0.14 * sin(uTime * 1.8 + cityHash * 6.2831853);
-      float urbanCluster = smoothstep(0.04, 0.88, cityDensity) * (0.52 + 0.48 * step(0.14, cityHash));
-      float cityPixelOn = step(cityBayer + 0.04, urbanCluster * 0.86);
-      float coreBoost = smoothstep(0.45, 0.94, cityDensity) * 0.24;
+      float cityHash2 = cityCellHash(cityCellId + vec2(37.2, 91.7));
+      float cityTwinkle = 0.93 + 0.07 * sin(uTime * 2.1 + cityHash * 6.2831853);
+      float tierPinpoint = step(0.82, cityDensity);
+      float tierArterial = (1.0 - tierPinpoint) * step(0.55, cityDensity);
+      float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.25, cityDensity);
       float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-      float darkRestMask = 1.0 - smoothstep(0.26, 0.48, surfaceLuma);
-      float cityIntensity = cityPixelOn * (0.15 + coreBoost) * cityTwinkle * darkRestMask;
-      vec3 cityGlow = vec3(0.92, 0.89, 0.82) * cityIntensity;
-
-      vec3 capRgb = gl_FragColor.rgb * limbFactor + engrave + cityGlow;
+      float darkRestMask = 1.0 - smoothstep(0.38, 0.58, surfaceLuma);
+      vec3 baseLit = gl_FragColor.rgb * limbFactor + engrave;
+      vec3 auraColor = vec3(0.48, 0.26, 0.08);
+      vec3 withAura = mix(baseLit, max(baseLit, auraColor), cityAura * 0.22 * darkRestMask);
+      vec3 colorOuterTentacle = vec3(0.85, 0.46, 0.14);
+      vec3 colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.76, 0.26), cityHash2);
+      vec3 colorMetroHeart = mix(vec3(1.0, 0.91, 0.62), vec3(1.0, 0.97, 0.84), smoothstep(0.82, 1.0, cityDensity));
+      vec3 sparkColor = tierPinpoint * colorMetroHeart
+        + tierArterial * colorMainArterial
+        + tierTentacle * colorOuterTentacle;
+      float sparkAlpha = (
+        tierPinpoint * 0.96 +
+        tierArterial * (0.76 + 0.14 * cityHash2) +
+        tierTentacle * (0.48 + 0.22 * cityHash2)
+      ) * cityTwinkle * darkRestMask;
+      vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
       vec3 sideRgb = gl_FragColor.rgb * 0.58;
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
       `
