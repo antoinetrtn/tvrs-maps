@@ -7,6 +7,8 @@
 import * as THREE from "three";
 import {
   abs,
+  asin,
+  atan,
   clamp,
   cos,
   float,
@@ -18,9 +20,9 @@ import {
   materialReference,
   mix,
   modelViewProjection,
+  normalize,
   positionLocal,
   positionWorld,
-  screenCoordinate,
   select,
   sin,
   smoothstep,
@@ -185,21 +187,27 @@ function glitchBase(u, lit) {
     .mul(selectInScale);
   const t = time.mul(glitchAmp.mul(62).add(28));
 
-  const fragPx = screenCoordinate.xy.mul(u.uPixelScale);
+  const sphereDir = normalize(positionWorld);
+  const sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
+  const sphereLng = atan(sphereDir.z, sphereDir.x);
+  const fragPx = vec2(sphereLng.mul(cos(sphereLat.mul(0.65))), sphereLat).mul(520.0);
   const bayer = bayer4x4(floor(fragPx));
-  const blockUv = floor(fragPx.mul(0.24));
-  const noiseUv = fragPx.mul(0.28);
+  const blockUv = floor(fragPx.mul(0.85));
+  const noiseUv = fragPx.mul(2.4);
   const noiseCoarse = hash(blockUv.add(sin(t)));
-  const noiseFine = hash(noiseUv.add(vec2(cos(t.mul(1.6)), sin(t.mul(0.95)))));
-  const noise = mix(noiseCoarse, noiseFine, 0.4);
+  const noiseFine = hash(floor(noiseUv).add(vec2(cos(t.mul(1.6)), sin(t.mul(0.95)))));
+  const noise = mix(noiseFine, noiseCoarse, transitionActive.mul(0.35));
 
   const light = on(u.uIsLight);
-  const baseMin = select(light, float(0.65), float(0.12));
-  const baseMax = select(light, float(0.98), float(0.68));
-  const scanline = sin(fragPx.y.mul(1.05).add(time.mul(glitchAmp.mul(14).add(6)))).mul(
-    select(light, float(0.03), float(0.048))
+  const baseMin = select(light, float(0.76), float(0.36));
+  const baseMax = select(light, float(0.94), float(0.54));
+  const scanline = sin(fragPx.y.mul(2.2).add(time.mul(glitchAmp.mul(14).add(5)))).mul(
+    select(light, float(0.018), float(0.026))
   );
-  const bayerStipple = bayer.sub(0.46875).mul(select(light, float(0.06), float(0.09)));
+  const bayerStipple = bayer
+    .sub(0.46875)
+    .mul(select(light, float(0.025), float(0.035)))
+    .mul(transitionActive);
   const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline).add(bayerStipple)).toVar();
 
   const finalColor = vec3(staticVec).toVar();
@@ -273,9 +281,9 @@ function createGlitchOutputNode(u) {
     const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
 
     const settleColor = mix(lit, u.uFoundGreen.mul(sideShade), step(0.5, u.uIsFound)).toVar();
-    const surfaceNoise = hash(fragPx.mul(0.42).add(vec2(0.12, 0.45)))
+    const surfaceNoise = hash(floor(fragPx.mul(3.2)).add(vec2(0.12, 0.45)))
       .sub(0.5)
-      .mul(0.06);
+      .mul(0.022);
     staticVec.addAssign(surfaceNoise);
     settleColor.addAssign(surfaceNoise.mul(0.7));
     const blockValRaw = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
@@ -310,9 +318,9 @@ function createGlitchOutputNode(u) {
     // (The GLSL soft select-in branch is unreachable: it needs transitionActive,
     // already handled above.)
     rgb.addAssign(
-      hash(fragPx.mul(0.38).add(vec2(0.4, 0.7)))
+      hash(floor(fragPx.mul(3.6)).add(vec2(0.4, 0.7)))
         .sub(0.5)
-        .mul(0.055)
+        .mul(0.018)
     );
 
     // Alpha branch (satellite dissolve fades the cap out, block by block).

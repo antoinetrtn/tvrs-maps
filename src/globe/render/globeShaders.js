@@ -76,7 +76,8 @@ export const FRESNEL_FRAGMENT_SHADER = `
     float exponent = max(1.8, power * 2.0);
     float rawIntensity = pow(edgeFade, exponent) * coef;
 
-    float bayer = bayer4x4(floor(gl_FragCoord.xy * 0.5));
+    vec2 rimCell = floor((normal.xy * 0.5 + 0.5) * 240.0);
+    float bayer = bayer4x4(rimCell);
     float dithered = floor(rawIntensity * 5.0 + bayer) / 5.0;
     float intensity = mix(rawIntensity, dithered, 0.82);
 
@@ -194,23 +195,32 @@ export const GLITCH_FRAGMENT_BODY = `
   float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159)) * selectInScale;
   float t = uTime * (28.0 + glitchAmp * 62.0);
 
-  // DPR-normalized screen coords: same visual grain size on mobile and desktop.
-  vec2 fragPx = gl_FragCoord.xy * uPixelScale;
+  // 3D sphere-anchored surface coordinates so scanlines, dither, and glitch blocks
+  // live on the globe surface and rotate/zoom naturally with the Earth.
+  vec3 sphereDir = normalize(vWorldPosition);
+  float sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
+  float sphereLng = atan(sphereDir.z, sphereDir.x);
+  vec2 fragPx = vec2(sphereLng * cos(sphereLat * 0.65), sphereLat) * 520.0;
   float bayer = bayer4x4(floor(fragPx));
 
-  vec2 blockUv = floor(fragPx * 0.24);
-  vec2 noiseUv = fragPx * 0.28;
+  vec2 blockUv = floor(fragPx * 0.85);
+  vec2 noiseUv = fragPx * 2.4;
   float noiseCoarse = hash(blockUv + sin(t));
-  float noiseFine = hash(noiseUv + vec2(cos(t * 1.6), sin(t * 0.95)));
-  float noise = mix(noiseCoarse, noiseFine, 0.4);
+  float noiseFine = hash(floor(noiseUv) + vec2(cos(t * 1.6), sin(t * 0.95)));
+  float noise = mix(noiseFine, noiseCoarse, 0.35 * transitionActive);
 
-  float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
-  float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
-  float scanline = sin(fragPx.y * 1.05 + uTime * (6.0 + glitchAmp * 14.0))
-    * ((uIsLight > 0.5) ? 0.03 : 0.048);
-  float bayerStipple = (bayer - 0.46875) * ((uIsLight > 0.5) ? 0.06 : 0.09);
+  vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+  float ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
+  float keyLight = clamp(dot(sphereDir, normalize(vec3(-0.45, 0.55, 0.70))), 0.0, 1.0);
+  float sphereShade = mix(0.72, 1.08, smoothstep(0.05, 0.95, ndv * 0.68 + keyLight * 0.32));
 
-  float staticColor = mix(baseMin, baseMax, noise) + scanline + bayerStipple;
+  float baseMin = (uIsLight > 0.5) ? 0.76 : 0.36;
+  float baseMax = (uIsLight > 0.5) ? 0.94 : 0.54;
+  float scanline = sin(fragPx.y * 2.2 + uTime * (5.0 + glitchAmp * 14.0))
+    * ((uIsLight > 0.5) ? 0.018 : 0.026);
+  float bayerStipple = (bayer - 0.46875) * ((uIsLight > 0.5) ? 0.025 : 0.035) * transitionActive;
+
+  float staticColor = mix(baseMin, baseMax, noise) * sphereShade + scanline + bayerStipple;
   vec3 staticVec = vec3(staticColor);
 
   // Caps and extruded side walls share one effect pipeline; sides are shaded
@@ -284,7 +294,7 @@ export const GLITCH_FRAGMENT_BODY = `
   vec3 settleColor = mix(litRestingColor, uFoundGreen * sideShade, step(0.5, uIsFound));
 
   // Micro-grain noise sur la surface de tous les pays
-  float countrySurfaceNoise = (hash(fragPx * 0.42 + vec2(0.12, 0.45)) - 0.5) * 0.06;
+  float countrySurfaceNoise = (hash(floor(fragPx * 3.2) + vec2(0.12, 0.45)) - 0.5) * 0.022;
   staticVec += vec3(countrySurfaceNoise);
   settleColor += vec3(countrySurfaceNoise * 0.7);
 
@@ -319,7 +329,7 @@ export const GLITCH_FRAGMENT_BODY = `
   }
 
   // Grain TV tactile micro-subtil sur l'intégralité des faces des pays
-  float surfaceGrain = (hash(fragPx * 0.38 + vec2(0.4, 0.7)) - 0.5) * 0.055;
+  float surfaceGrain = (hash(floor(fragPx * 3.6) + vec2(0.4, 0.7)) - 0.5) * 0.018;
   gl_FragColor.rgb += vec3(surfaceGrain);
 
   if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {

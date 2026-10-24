@@ -1,9 +1,16 @@
 import { useCallback, useRef } from "react";
 
 import { BREAKPOINTS } from "../../config/gameConstants";
+import { createZoomHapticTracker } from "../../utils/haptics";
 import { perfTracker } from "../../utils/perfTracker";
 import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
-import { clampGlobeAltitude, syncCameraMapProjection } from "../render/globeAltitude";
+import {
+  clampGlobeAltitude,
+  getGlobeMinAltitude,
+  GLOBE_MAX_ALTITUDE,
+  syncCameraMapProjection,
+  syncGlobeControlsForAltitude,
+} from "../render/globeAltitude";
 
 // Double-tap-and-drag zoom: the second tap must land quickly and close to the first.
 const DOUBLE_TAP_MS = 280;
@@ -53,6 +60,10 @@ export function useGlobeInteractions({
   const isZoomDragging = useRef(false);
   const startY = useRef(0);
   const savedControlsEnabledRef = useRef(true);
+  const zoomDragHapticRef = useRef(null);
+  if (!zoomDragHapticRef.current) {
+    zoomDragHapticRef.current = createZoomHapticTracker();
+  }
 
   const pointerNudgeRafRef = useRef(null);
   const pendingNudgeRef = useRef(null);
@@ -167,6 +178,7 @@ export function useGlobeInteractions({
   const restoreRotateAfterZoomDrag = useCallback(() => {
     if (!isZoomDragging.current) return;
     isZoomDragging.current = false;
+    zoomDragHapticRef.current?.clearZoomGesture();
     try {
       const controls = globeEl.current?.controls?.();
       if (controls) controls.enableRotate = savedControlsEnabledRef.current;
@@ -229,14 +241,25 @@ export function useGlobeInteractions({
       if (!touch) return;
       const deltaY = touch.clientY - startY.current;
       const currentPOV = globeEl.current.pointOfView();
-      const zoomSpeed = 0.005;
-      const newAlt = clampGlobeAltitude(currentPOV.altitude - deltaY * zoomSpeed);
+      const zoomScale = Math.pow(0.996, deltaY);
+      const newAlt = clampGlobeAltitude(currentPOV.altitude * zoomScale);
       globeEl.current.pointOfView({ altitude: newAlt }, 0);
       syncCameraMapProjection(globeEl.current, newAlt);
+      syncGlobeControlsForAltitude(globeEl.current.controls?.(), newAlt, {
+        isMobile: Boolean(perfProfile?.isMobile),
+        isRegionalMap: Boolean(
+          isDepartmentMode || mode === "us_states" || mode?.includes("us_states")
+        ),
+      });
+      zoomDragHapticRef.current?.onAltitudeChange(newAlt, {
+        isZoomGesture: true,
+        minAltitude: getGlobeMinAltitude(),
+        maxAltitude: GLOBE_MAX_ALTITUDE,
+      });
       startY.current = touch.clientY;
       e.preventDefault();
     },
-    [globeEl, restoreRotateAfterZoomDrag]
+    [globeEl, isDepartmentMode, mode, perfProfile?.isMobile, restoreRotateAfterZoomDrag]
   );
 
   const handleTouchEnd = useCallback(

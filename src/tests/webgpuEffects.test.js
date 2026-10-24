@@ -9,7 +9,11 @@ import {
   applyCountrySurfaceGrainShader,
   stylePolygonBorderLine,
 } from "../globe/render/globePolygonMaterial";
-import { evaluateBayer4x4 } from "../globe/render/globeShaders";
+import {
+  evaluateBayer4x4,
+  FRESNEL_FRAGMENT_SHADER,
+  GLITCH_FRAGMENT_BODY,
+} from "../globe/render/globeShaders";
 import { polygonGlitchUniforms } from "../globe/render/polygonGlitchShader";
 import { attachGlitchNodes } from "../globe/render/webgpu/glitchNode";
 import {
@@ -136,7 +140,8 @@ describe("WebGPU effect ports", () => {
     expect(shader.vertexShader).toContain("vDitherWorldNormal");
     expect(shader.vertexShader).toContain("vDitherWorldPos");
     expect(shader.vertexShader).not.toContain("vSnapGrid");
-    expect(shader.fragmentShader).toContain("bayer4x4");
+    expect(shader.fragmentShader).not.toContain("gl_FragCoord");
+    expect(shader.fragmentShader).toContain("sphereCell");
     expect(shader.fragmentShader).toContain("isSideWall");
   });
 
@@ -150,9 +155,13 @@ describe("WebGPU effect ports", () => {
     expect(shader.uniforms.uPixelScale).toBe(polygonGlitchUniforms.uPixelScale);
     expect(shader.vertexShader).toContain("vBorderWorldPos");
     expect(shader.vertexShader).not.toContain("vSnapGrid");
+    expect(shader.fragmentShader).not.toContain("gl_FragCoord");
     expect(shader.fragmentShader).toContain("bayer4x4");
     expect(shader.fragmentShader).toContain("borderStep");
     expect(shader.fragmentShader).not.toContain("discard");
+    expect(GLITCH_FRAGMENT_BODY).not.toContain("gl_FragCoord");
+    expect(GLITCH_FRAGMENT_BODY).toContain("sphereDir");
+    expect(FRESNEL_FRAGMENT_SHADER).not.toContain("gl_FragCoord");
   });
 
   it("styles polygon border LineSegments with Bayer dither", () => {

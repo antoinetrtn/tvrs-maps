@@ -6,23 +6,39 @@ import {
   CAMERA_FOV_DEG,
   cancelGlobePovTween,
   clampGlobeAltitude,
+  computeAltitudeDampingFactor,
+  computeAltitudeZoomSpeed,
   computeEffectiveCameraFov,
   computeMapFlattenFactor,
+  computeSurfaceTrackingRotateSpeed,
   GLOBE_MAX_ALTITUDE,
   GLOBE_MAX_DISTANCE,
   GLOBE_MIN_ALTITUDE,
+  installLockedControlSpeeds,
   isGlobePovTweenActive,
   MAP_FLATTEN_MIN_FOV_DEG,
   MAP_FLATTEN_START_ALTITUDE,
   readClampedGlobePov,
+  REGIONAL_MIN_ALTITUDE,
+  setGlobeMinAltitude,
+  SURFACE_TRACK_GAIN,
   syncCameraMapProjection,
   syncGlobeCameraAndZoomLimits,
   syncGlobeControlsForAltitude,
 } from "../globe/render/globeAltitude";
+import {
+  computeZoomDetentIndex,
+  createZoomHapticTracker,
+  triggerSubtleHapticTick,
+  ZOOM_HAPTIC_BOUNDARY_MS,
+  ZOOM_HAPTIC_DETENTS,
+  ZOOM_HAPTIC_TICK_MS,
+} from "../utils/haptics";
 
 describe("globeAltitude", () => {
   describe("clampGlobeAltitude", () => {
     it("clamps below the zoom floor", () => {
+      setGlobeMinAltitude(GLOBE_MIN_ALTITUDE);
       expect(clampGlobeAltitude(0)).toBe(GLOBE_MIN_ALTITUDE);
       expect(clampGlobeAltitude(0.1)).toBe(GLOBE_MIN_ALTITUDE);
       expect(clampGlobeAltitude(-0.5)).toBe(GLOBE_MIN_ALTITUDE);
@@ -85,12 +101,13 @@ describe("globeAltitude", () => {
     });
   });
 
-  describe("syncGlobeControlsForAltitude", () => {
+  describe("syncGlobeControlsForAltitude & 1:1 surface-tracking physics", () => {
     const createMockControls = (initialDistance = 250) => {
       let currentDistance = initialDistance;
       return {
         rotateSpeed: 1,
         zoomSpeed: 1,
+        dampingFactor: 0.1,
         zoomToCursor: false,
         minDistance: 122,
         maxDistance: 500,
@@ -115,29 +132,66 @@ describe("globeAltitude", () => {
       expect(controls.zoomToCursor).toBe(true);
     });
 
-    it("calculates bounded rotateSpeed and zoomSpeed for desktop and mobile", () => {
-      const desktopControls = createMockControls();
-      // At min altitude (floor)
-      const minDesktop = syncGlobeControlsForAltitude(desktopControls, GLOBE_MIN_ALTITUDE, {
-        isMobile: false,
-      });
-      expect(minDesktop.rotateSpeed).toBeCloseTo(0.18, 2);
-      expect(minDesktop.zoomSpeed).toBeCloseTo(0.35, 2);
+    it("computes exact 1:1 surface-tracking rotateSpeed at close zoom so a 100px drag moves ~100px on screen", () => {
+      setGlobeMinAltitude(GLOBE_MIN_ALTITUDE);
+      const clientHeight = 800;
+      const dragPx = 100;
+      const ds = dragPx / clientHeight;
 
-      // At max altitude (ceiling)
-      const maxDesktop = syncGlobeControlsForAltitude(desktopControls, GLOBE_MAX_ALTITUDE, {
-        isMobile: false,
-      });
-      expect(maxDesktop.rotateSpeed).toBeCloseTo(0.8, 2);
-      expect(maxDesktop.zoomSpeed).toBeCloseTo(0.85, 2);
-
-      // Mobile at ceiling
-      const mobileControls = createMockControls();
-      const maxMobile = syncGlobeControlsForAltitude(mobileControls, GLOBE_MAX_ALTITUDE, {
+      // World min altitude (0.22)
+      const fovAt022 = computeEffectiveCameraFov(GLOBE_MIN_ALTITUDE);
+      const speed022 = computeSurfaceTrackingRotateSpeed(GLOBE_MIN_ALTITUDE, {
+        fovDeg: fovAt022,
         isMobile: true,
       });
-      expect(maxMobile.rotateSpeed).toBeCloseTo(0.65, 2);
-      expect(maxMobile.zoomSpeed).toBeCloseTo(0.7, 2);
+      // OrbitControls rotates by dPhi = 2 * PI * rotateSpeed * ds
+      const dPhi022 = 2 * Math.PI * speed022 * ds;
+      // Visible surface height in globe radii is 2 * altitude * tan(fov/2)
+      const visibleRadii022 = 2 * GLOBE_MIN_ALTITUDE * Math.tan((fovAt022 * Math.PI) / 360);
+      const screenDisplacementPx022 = (dPhi022 / visibleRadii022) * clientHeight;
+      expect(screenDisplacementPx022).toBeCloseTo(dragPx * SURFACE_TRACK_GAIN, 1);
+      expect(speed022).toBeLessThan(0.025);
+
+      // Regional min altitude (0.08)
+      setGlobeMinAltitude(REGIONAL_MIN_ALTITUDE);
+      const fovAt008 = computeEffectiveCameraFov(REGIONAL_MIN_ALTITUDE);
+      const speed008 = computeSurfaceTrackingRotateSpeed(REGIONAL_MIN_ALTITUDE, {
+        fovDeg: fovAt008,
+        isMobile: true,
+      });
+      const dPhi008 = 2 * Math.PI * speed008 * ds;
+      const visibleRadii008 = 2 * REGIONAL_MIN_ALTITUDE * Math.tan((fovAt008 * Math.PI) / 360);
+      const screenDisplacementPx008 = (dPhi008 / visibleRadii008) * clientHeight;
+      expect(screenDisplacementPx008).toBeCloseTo(dragPx * SURFACE_TRACK_GAIN, 1);
+      expect(speed008).toBeLessThan(0.01);
+      setGlobeMinAltitude(GLOBE_MIN_ALTITUDE);
+    });
+
+    it("locks rotateSpeed and zoomSpeed against external clobbering by globe.gl's internal change listener", () => {
+      const controls = createMockControls();
+      const synced = syncGlobeControlsForAltitude(controls, GLOBE_MIN_ALTITUDE, { isMobile: true });
+      expect(controls.rotateSpeed).toBeCloseTo(synced.rotateSpeed, 5);
+      expect(controls.zoomSpeed).toBeCloseTo(synced.zoomSpeed, 5);
+
+      // Simulate globe.gl's internal listener trying to overwrite rotateSpeed = pov.altitude * 0.3
+      controls.rotateSpeed = GLOBE_MIN_ALTITUDE * 0.3;
+      controls.zoomSpeed = Math.sqrt(GLOBE_MIN_ALTITUDE) * 0.5;
+
+      // Locked descriptors preserve our 1:1 surface-tracking speed
+      expect(controls.rotateSpeed).toBeCloseTo(synced.rotateSpeed, 5);
+      expect(controls.zoomSpeed).toBeCloseTo(synced.zoomSpeed, 5);
+
+      // Max altitude reaches bounded ceiling
+      const maxMobile = syncGlobeControlsForAltitude(controls, GLOBE_MAX_ALTITUDE, {
+        isMobile: true,
+      });
+      expect(maxMobile.rotateSpeed).toBeCloseTo(0.62, 1);
+      expect(maxMobile.zoomSpeed).toBeCloseTo(0.68, 2);
+      expect(computeAltitudeDampingFactor(GLOBE_MIN_ALTITUDE, { isMobile: true })).toBeGreaterThan(
+        computeAltitudeDampingFactor(GLOBE_MAX_ALTITUDE, { isMobile: true })
+      );
+      expect(computeAltitudeZoomSpeed(GLOBE_MIN_ALTITUDE, { isMobile: true })).toBeLessThan(0.1);
+      installLockedControlSpeeds(null);
     });
 
     it("clamps escaped camera distance back inside [minDistance, maxDistance]", () => {
@@ -240,7 +294,7 @@ describe("globeAltitude", () => {
       expect(computeMapFlattenFactor(GLOBE_MIN_ALTITUDE)).toBeCloseTo(1, 5);
     });
 
-    it("progressively narrows camera FOV from 50 deg to 24 deg as player zooms in", () => {
+    it("progressively narrows camera FOV from 50 deg to 26 deg as player zooms in", () => {
       expect(computeEffectiveCameraFov(2.5)).toBe(CAMERA_FOV_DEG);
       expect(computeEffectiveCameraFov(GLOBE_MIN_ALTITUDE)).toBeCloseTo(MAP_FLATTEN_MIN_FOV_DEG, 4);
       const mockCam = {
@@ -253,6 +307,60 @@ describe("globeAltitude", () => {
       expect(mockCam.fov).toBeCloseTo(MAP_FLATTEN_MIN_FOV_DEG, 4);
       expect(mockCam.up.set).toHaveBeenCalledWith(0, 1, 0);
       expect(mockCam.updateProjectionMatrix).toHaveBeenCalled();
+    });
+  });
+
+  describe("Figma-style subtle zoom-detent haptics", () => {
+    it("maps altitude logarithmically to discrete detent indices", () => {
+      expect(computeZoomDetentIndex(GLOBE_MIN_ALTITUDE)).toBe(0);
+      expect(computeZoomDetentIndex(GLOBE_MAX_ALTITUDE)).toBe(ZOOM_HAPTIC_DETENTS);
+      const midDetent = computeZoomDetentIndex(1.0);
+      expect(midDetent).toBeGreaterThan(3);
+      expect(midDetent).toBeLessThan(ZOOM_HAPTIC_DETENTS - 2);
+      expect(computeZoomDetentIndex(NaN)).toBeNull();
+    });
+
+    it("pulses only during active user zoom gestures, enforces cooldown, and gives a firmer tick on min/max bounds", () => {
+      const pulses = [];
+      const tracker = createZoomHapticTracker({
+        cooldownMs: 50,
+        vibrate: (ms) => {
+          pulses.push(ms);
+          return true;
+        },
+      });
+
+      // Inactive camera movement (1-finger pan or programmatic tween) never pulses
+      expect(tracker.onAltitudeChange(2.5, { now: 100 }).pulsed).toBe(false);
+      expect(tracker.onAltitudeChange(1.5, { now: 180 }).pulsed).toBe(false);
+      expect(pulses).toEqual([]);
+
+      // User starts a wheel / pinch zoom gesture
+      tracker.markZoomGesture(200);
+      // Crossing into a closer detent triggers a 2ms micro-pulse
+      const step1 = tracker.onAltitudeChange(1.1, { now: 210 });
+      expect(step1.pulsed).toBe(true);
+      expect(step1.duration).toBe(ZOOM_HAPTIC_TICK_MS);
+
+      // Immediate crossing within cooldown (< 50ms) is suppressed
+      const cooldownStep = tracker.onAltitudeChange(0.8, { now: 230 });
+      expect(cooldownStep.pulsed).toBe(false);
+      expect(cooldownStep.reason).toBe("cooldown");
+
+      // After cooldown, hitting the exact minAltitude floor triggers a 5ms boundary stop tick
+      const floorStep = tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 275 });
+      expect(floorStep.pulsed).toBe(true);
+      expect(floorStep.duration).toBe(ZOOM_HAPTIC_BOUNDARY_MS);
+      expect(floorStep.boundary).toBe("min");
+
+      // Clearing gesture stops further pulses
+      tracker.clearZoomGesture();
+      expect(tracker.onAltitudeChange(1.8, { now: 400 }).pulsed).toBe(false);
+      expect(
+        triggerSubtleHapticTick(2, {
+          vibrate: (ms) => ms === 2,
+        })
+      ).toBe(true);
     });
   });
 

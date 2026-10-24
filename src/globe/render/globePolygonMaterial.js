@@ -66,30 +66,23 @@ export function applyCountrySurfaceGrainShader(shader) {
 
       vec3 viewDir = normalize(cameraPosition - vDitherWorldPos);
       vec3 wNorm = sphereNormal;
-      float camDist = length(cameraPosition);
-      float zoomDetail = 1.0 - smoothstep(135.0, 220.0, camDist);
       float ndv = clamp(dot(wNorm, viewDir), 0.0, 1.0);
-      float terminatorBand = smoothstep(0.72, 0.18, ndv);
-
-      vec2 ditherCell = floor(gl_FragCoord.xy / 3.0);
-      float bayer = bayer4x4(ditherCell);
       vec3 keyLightDir = normalize(vec3(-0.45, 0.55, 0.70));
       float keyLight = clamp(dot(wNorm, keyLightDir), 0.0, 1.0);
       float litLevel = clamp(ndv * 0.68 + keyLight * 0.32, 0.0, 1.0);
-      float quantShade = floor(litLevel * 3.0 + bayer) / 3.0;
-      float shadeFactor = mix(0.56, 1.12, quantShade);
+      float shadeFactor = mix(0.76, 1.08, smoothstep(0.05, 0.95, litLevel));
 
-      float bayerCentered = bayer - 0.46875;
-      float lat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-      float lng = atan(sphereNormal.z, sphereNormal.x);
-      vec2 hatchUv = vec2(lng, lat) * 20.0;
-      vec2 hatchGrid = abs(fract(hatchUv + 0.5) - 0.5);
-      float hatchLine = step(0.44, max(hatchGrid.x, hatchGrid.y)) * 0.028 * zoomDetail;
-      float grainBase = bayerCentered * mix(0.05, 0.11, zoomDetail) + hatchLine * step(0.5, bayer);
-      float surfaceGrain = grainBase;
+      vec2 sphereCoord = sphereNormal.xz * 420.0 + vec2(sphereNormal.y * 310.0, sphereNormal.x * 190.0);
+      vec2 sphereCell = floor(sphereCoord);
+      vec2 sphereFrac = smoothstep(0.0, 1.0, fract(sphereCoord));
+      float g00 = fract(sin(dot(sphereCell, vec2(12.9898, 78.233))) * 43758.5453);
+      float g10 = fract(sin(dot(sphereCell + vec2(1.0, 0.0), vec2(12.9898, 78.233))) * 43758.5453);
+      float g01 = fract(sin(dot(sphereCell + vec2(0.0, 1.0), vec2(12.9898, 78.233))) * 43758.5453);
+      float g11 = fract(sin(dot(sphereCell + vec2(1.0, 1.0), vec2(12.9898, 78.233))) * 43758.5453);
+      float microGrain = (mix(mix(g00, g10, sphereFrac.x), mix(g01, g11, sphereFrac.x), sphereFrac.y) - 0.5) * 0.018;
 
-      vec3 capRgb = gl_FragColor.rgb * shadeFactor + vec3(surfaceGrain);
-      vec3 sideRgb = gl_FragColor.rgb * mix(0.72, 0.94, step(0.5, bayer));
+      vec3 capRgb = gl_FragColor.rgb * shadeFactor + vec3(microGrain);
+      vec3 sideRgb = gl_FragColor.rgb * 0.84;
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
       `
     )}
@@ -115,10 +108,13 @@ export function applyCountryBorderDitherShader(shader) {
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      float bayer = bayer4x4(floor(gl_FragCoord.xy / 2.0));
+      vec3 borderDir = normalize(vBorderWorldPos);
+      float borderLat = asin(clamp(borderDir.y, -1.0, 1.0));
+      float borderLng = atan(borderDir.z, borderDir.x);
+      float bayer = bayer4x4(floor(vec2(borderLng * 180.0, borderLat * 180.0)));
       float arcPhase = dot(vBorderWorldPos, vec3(0.24, 0.36, 0.48));
-      float borderStep = step(0.35, fract(arcPhase + bayer * 0.5));
-      gl_FragColor.rgb *= mix(0.88, 1.16, borderStep);
+      float borderStep = step(0.35, fract(arcPhase + bayer * 0.35));
+      gl_FragColor.rgb *= mix(0.92, 1.12, borderStep);
       `
     )}
   `;

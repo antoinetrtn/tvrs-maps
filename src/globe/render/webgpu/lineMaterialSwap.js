@@ -12,16 +12,20 @@
  */
 import * as THREE from "three";
 import {
+  asin,
+  atan,
+  clamp,
   dot,
   float,
   floor,
   Fn,
   fract,
   mix,
+  normalize,
   output,
   positionWorld,
-  screenCoordinate,
   step,
+  vec2,
   vec3,
 } from "three/tsl";
 import { Line2NodeMaterial, LineBasicNodeMaterial } from "three/webgpu";
@@ -54,10 +58,13 @@ let borderNode = null;
 export function countryBorderOutputNode() {
   if (!borderNode) {
     borderNode = Fn(() => {
-      const bayer = bayer4x4(floor(screenCoordinate.xy.div(2.0)));
+      const borderDir = normalize(positionWorld);
+      const borderLat = asin(clamp(borderDir.y, -1.0, 1.0));
+      const borderLng = atan(borderDir.z, borderDir.x);
+      const bayer = bayer4x4(floor(vec2(borderLng.mul(180.0), borderLat.mul(180.0))));
       const arcPhase = dot(positionWorld, vec3(0.24, 0.36, 0.48));
-      const borderStep = step(float(0.35), fract(arcPhase.add(bayer.mul(0.5))));
-      const brightStep = mix(float(0.88), float(1.16), borderStep);
+      const borderStep = step(float(0.35), fract(arcPhase.add(bayer.mul(0.35))));
+      const brightStep = mix(float(0.92), float(1.12), borderStep);
       const lit = litDisplayColor();
       const rgb = lit.mul(brightStep);
       return displayOutput(rgb, output.a);

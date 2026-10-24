@@ -15,6 +15,7 @@ import {
 
 const applyBlackoutOceanShader = (shader) => {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+  shader.uniforms.uTime = polygonGlitchUniforms.uTime;
   shader.vertexShader = `
     varying vec3 vWorldNormal;
     varying vec3 vWorldPos;
@@ -35,16 +36,27 @@ const applyBlackoutOceanShader = (shader) => {
     uniform vec3 uRimColor;
     uniform float uRimStrength;
     uniform float uPixelScale;
+    uniform float uTime;
 
     ${GLSL_BAYER_4X4_FN}
 
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      vec2 px = floor(gl_FragCoord.xy / 3.0);
       float camDist = length(cameraPosition);
       float subGridVis = 1.0 - smoothstep(180.0, 260.0, camDist);
+
+      // 3D sphere-anchored dither cells on the ocean surface + animated current swell
+      float oceanLat = (vUv.y - 0.5) * 3.14159265;
+      float oceanLng = (vUv.x - 0.5) * 6.2831853;
+      vec2 waveDrift = vec2(uTime * 0.85, sin(oceanLng * 4.0 + uTime * 0.7) * 0.65);
+      vec2 px = floor(vUv * vec2(480.0, 240.0) + waveDrift);
       float bayer = bayer4x4(px);
+
+      float wave1 = sin(oceanLng * 12.0 + oceanLat * 8.0 - uTime * 1.65);
+      float wave2 = cos(oceanLng * 18.0 - oceanLat * 14.0 + uTime * 1.25);
+      float waveField = (wave1 * 0.6 + wave2 * 0.4) * 0.5 + 0.5;
+      float waveDither = step(bayer, waveField * 0.46) * (0.042 + uRimStrength * 0.35);
 
       // 1. Curvature & spherical lighting
       vec3 viewDir = normalize(cameraPosition - vWorldPos);
@@ -52,11 +64,11 @@ const applyBlackoutOceanShader = (shader) => {
       float lightFacing = clamp(dot(vWorldNormal, normalize(vec3(-0.55, 0.45, 0.70))), 0.0, 1.0);
       float limb = pow(1.0 - viewIncidence, 1.85);
 
-      // Bayer 4x4 ordered-dithered tonal steps toward the horizon limb
-      float oceanShade = limb * (0.65 + 0.35 * lightFacing);
+      // Bayer 4x4 ordered-dithered tonal steps toward the horizon limb + animated wave shimmer
+      float oceanShade = limb * (0.65 + 0.35 * lightFacing) + waveField * 0.12;
       float quantizedLimb = floor(oceanShade * 5.0 + bayer) / 5.0;
       float grazingStipple = step(0.85, limb) * step(bayer, (limb - 0.85) * 6.0) * 0.08;
-      vec3 ditheredRim = uRimColor * ((quantizedLimb + grazingStipple) * uRimStrength * 3.2);
+      vec3 ditheredRim = uRimColor * ((quantizedLimb + grazingStipple) * uRimStrength * 3.2 + waveDither);
 
       // 2. Cartographic graticule & micro-stipple (equirectangular vUv)
       // 15-degree lat/lon grid (24 x 12 cells around the sphere)
@@ -270,6 +282,8 @@ export function useGlobeMaterial(options = {}) {
           shader.uniforms.uRimColor = { value: rimColor };
           shader.uniforms.uRimStrength = { value: rimStrength };
           shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+          shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+          mat.userData.shader = shader;
           applyBlackoutOceanShader(shader);
         };
       return mat;
