@@ -44,63 +44,70 @@ const applyBlackoutOceanShader = (shader) => {
 
     ${GLSL_BAYER_4X4_FN}
 
+    float oceanCellHash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }
+
+    float oceanValueNoise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      float n00 = oceanCellHash(i);
+      float n10 = oceanCellHash(i + vec2(1.0, 0.0));
+      float n01 = oceanCellHash(i + vec2(0.0, 1.0));
+      float n11 = oceanCellHash(i + vec2(1.0, 1.0));
+      return mix(mix(n00, n10, u.x), mix(n01, n11, u.x), u.y);
+    }
+
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      // Crisp ~2 CSS px integer pixel-art blocks for Bayer 4x4 dithering (zero Moiré waves)
-      float pxStep = max(floor(2.0 / max(uPixelScale, 0.25) + 0.5), 2.0);
-      vec2 ditherPx = floor(gl_FragCoord.xy / pxStep);
-      float bayer = bayer4x4(ditherPx);
-
-      // Quantize spherical coordinates into orthogonal latitude-stepped 3D pixel-art cells
-      // (rowCos is constant within each latitude row so cells are true rectangles on the 3D globe)
+      // 3D sphere-anchored latitude-compensated pixel-art grid (rotates with the Earth,
+      // snaps by power-of-2 zoom octaves from camera altitude so pixels stay ~2.8 CSS px)
       float rawLat = (vUv.y - 0.5) * 3.14159265;
       float rawLng = (vUv.x - 0.5) * 6.2831853;
+      float camAlt = max(length(cameraPosition) - 100.0, 15.0);
+      float zoomOctave = exp2(floor(log2(clamp(220.0 / camAlt, 1.0, 8.0)) + 0.5));
+      float resLat = 56.0 * zoomOctave;
 
-      float macroRow = floor(rawLat * 14.0);
-      float macroCos = max(cos((macroRow + 0.5) / 14.0), 0.25);
-      float macroCol = floor(rawLng * macroCos * 14.0);
-      vec2 macroCell = vec2(macroCol, macroRow);
+      float pxRow = floor(rawLat * resLat);
+      float rowLat = (pxRow + 0.5) / resLat;
+      float colsPerRad = max(floor(resLat * cos(rowLat) + 0.5), 8.0);
+      float pxCol = floor(rawLng * colsPerRad);
+      vec2 spherePx = vec2(pxCol, pxRow);
+      float bayer = bayer4x4(spherePx);
 
-      float midRow = floor(rawLat * 32.0);
-      float midCos = max(cos((midRow + 0.5) / 32.0), 0.25);
-      float midCol = floor(rawLng * midCos * 32.0);
-      vec2 midCell = vec2(midCol, midRow);
+      // Coarse terraced bathymetric plateaus evaluated at quantized pixel center
+      // (zero sinusoidal waves, zero per-pixel white noise so Bayer 4x4 tiles stay pure)
+      vec2 qSphere = vec2((pxCol + 0.5) / colsPerRad, rowLat);
+      float bathyMacro = oceanValueNoise(qSphere * 2.4 + vec2(1.7, 3.1));
+      float bathyMid = oceanValueNoise(qSphere * 5.2 + vec2(8.3, 4.9));
+      float bathymetry = bathyMacro * 0.62 + bathyMid * 0.38;
 
-      float microRow = floor(rawLat * 72.0);
-      float microCos = max(cos((microRow + 0.5) / 72.0), 0.25);
-      float microCol = floor(rawLng * microCos * 72.0);
-      vec2 microCell = vec2(microCol, microRow);
-
-      // Stepped pixel-art cell hashes (no continuous smoothstep or sinusoidal wave ribbons)
-      float hMacro = fract(sin(dot(macroCell, vec2(127.1, 311.7))) * 43758.5453123);
-      float hMid = fract(sin(dot(midCell, vec2(269.5, 183.3))) * 43758.5453123);
-      float hMicro = fract(sin(dot(microCell, vec2(12.9898, 78.233))) * 43758.5453);
-      float cellField = hMacro * 0.52 + hMid * 0.33 + hMicro * 0.15;
-
-      // Stepped spherical depth/limb shading (quantized to discrete pixel-art bands)
+      // Stepped spherical depth/limb shading
       vec3 viewDir = normalize(cameraPosition - vWorldPos);
       float viewIncidence = clamp(dot(vWorldNormal, viewDir), 0.0, 1.0);
-      float steppedLimb = floor(clamp(1.0 - viewIncidence, 0.0, 1.0) * 6.0) / 6.0;
+      float limb = pow(clamp(1.0 - viewIncidence, 0.0, 1.0), 1.35);
 
-      // Combine stepped cell field + stepped limb into canonical Bayer 4x4 densities (0/16..4/16)
-      float combinedField = cellField * 0.72 + steppedLimb * 0.48;
-      float bayerSteps = floor(clamp((combinedField - 0.28) * 5.2, 0.0, 4.0));
-      float ditherTone = (bayerSteps / 16.0) + uGlobeMotion * 0.015;
-      float trameBit = step(bayer + 0.02, ditherTone);
+      // Quantize into discrete Bayer 4x4 dither levels (1/16 sparse stipple in deep basins
+      // up to 8/16 crisp pixel-art checkerboard on bathymetric plateaus and limb)
+      float rawField = bathymetry * 0.78 + limb * 0.45 + uGlobeMotion * 0.04;
+      float bayerSteps = floor(clamp(rawField * 12.0 - 0.8, 2.0, 9.0));
+      float ditherTone = bayerSteps / 16.0;
+      float trameBit = step(bayer + 0.01, ditherTone);
 
-      // Discreet dark slate pixel-art dots on deep ocean (darker than continents)
-      vec3 ditheredRim = uRimColor * (trameBit * (0.055 + uRimStrength * 0.34));
+      // Crisp pixel-art dot contrast on deep ocean (clearly visible pixels, calm overall density)
+      vec3 ditheredRim = uRimColor * (trameBit * (0.16 + uRimStrength * 0.68));
 
       // Subtle dithered Equator and Tropics reference lines
-      float latWidth = max(fwidth(vUv.y), 0.0004);
+      float latWidth = max(fwidth(vUv.y), 0.0005);
       float eqLine = clamp(1.0 - abs(vUv.y - 0.5) / latWidth, 0.0, 1.0);
       float tropicLine = clamp(1.0 - abs(abs(vUv.y - 0.5) - 23.44 / 180.0) / latWidth, 0.0, 1.0);
       float specialLines = max(eqLine, tropicLine);
-      float specialDither = step(bayer + 0.03, specialLines * 0.65) * 0.05;
+      float specialDither = step(bayer + 0.03, specialLines * 0.65) * 0.08;
 
       vec3 graticuleColor = mix(vec3(0.55, 0.65, 0.75), uRimColor, 0.45);
-      vec3 graticuleRgb = graticuleColor * (specialDither * (0.04 + uRimStrength * 0.22));
+      vec3 graticuleRgb = graticuleColor * (specialDither * (0.08 + uRimStrength * 0.35));
 
       gl_FragColor.rgb += ditheredRim + graticuleRgb;
       `

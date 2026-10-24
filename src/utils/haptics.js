@@ -2,16 +2,17 @@ import { GLOBE_MAX_ALTITUDE, GLOBE_MIN_ALTITUDE } from "../globe/render/globeAlt
 import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 
 export const ZOOM_HAPTIC_DETENTS = 28;
-const ZOOM_HAPTIC_COOLDOWN_MS = 85;
-// Chrome Android VibrationManagerImpl drives the motor at DEFAULT_AMPLITUDE (no PMIC
-// overdrive), so pulses under ~30ms are swallowed by LRA/ERM inertia and Binder IPC
-// latency. 42ms / 65ms with an 85ms cooldown ensures every pulse completes uncancelled.
-export const ZOOM_HAPTIC_TICK_MS = 42;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 65;
-const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 260;
-const ZOOM_PINCH_STEP_PX = 16;
+// In Chromium Blink (vibration_controller.cc), calling Vibrate() while is_running_ is true
+// sends a Mojo Cancel() IPC to Android VibratorManagerService before scheduling the next
+// pulse after a main-thread timer. A 28ms pulse + 135ms cooldown guarantees is_running_
+// returns to false well before the next tick during 3D globe rendering.
+const ZOOM_HAPTIC_COOLDOWN_MS = 135;
+export const ZOOM_HAPTIC_TICK_MS = 28;
+export const ZOOM_HAPTIC_BOUNDARY_MS = 55;
+const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 280;
+const ZOOM_PINCH_STEP_PX = 18;
 const ZOOM_WHEEL_STEP_DELTA = 36;
-const MIN_NATIVE_VIBRATE_INTERVAL_MS = 80;
+const MIN_NATIVE_VIBRATE_INTERVAL_MS = 130;
 
 const BOUNDARY_EPS = 0.004;
 
@@ -53,8 +54,12 @@ function triggerIosSwitchHaptic() {
 export function primeHapticsOnUserGesture() {
   if (typeof window === "undefined") return;
   ensureIosHapticSwitch();
-  // Never call navigator.vibrate(0) here: in Chromium, vibrate(0) dispatches a Mojo
-  // Cancel() IPC to Android VibratorManagerService that aborts in-flight vibrations.
+  // On Android Chrome (where navigator.vibrate is supported), avoid opening an active
+  // WebAudio AAudio output stream on every touchstart, which can suppress or mask
+  // hardware vibrator pulses on Android OEM audio HALs.
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+    return;
+  }
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return;
   try {
@@ -115,10 +120,17 @@ export function computeZoomDetentIndex(
 
 /**
  * Triggers a subtle haptic pulse via navigator.vibrate (Android), iOS 17.4+ switch
- * Taptic Engine fallback (iPhone Safari), and WebAudio tactile micro-click.
+ * Taptic Engine fallback (iPhone Safari), or WebAudio tactile micro-click fallback.
  */
 function tryNativeVibrate(nav, durationMs) {
   if (!nav || typeof nav.vibrate !== "function") return triggerIosSwitchHaptic();
+  if (
+    typeof nav.userActivation === "object" &&
+    nav.userActivation &&
+    !nav.userActivation.hasBeenActive
+  ) {
+    return false;
+  }
   const isGlobalNavigator = typeof navigator !== "undefined" && nav === navigator;
   const now = typeof performance !== "undefined" ? performance.now() : Date.now();
   if (isGlobalNavigator && now - lastNativeVibrateAt < MIN_NATIVE_VIBRATE_INTERVAL_MS) {
@@ -141,8 +153,8 @@ export function triggerSubtleHapticTick(
 ) {
   if (prefersReducedMotion()) return false;
   const vibrated = tryNativeVibrate(nav, durationMs);
-  const audioClicked = playTactileAudioTick(durationMs >= ZOOM_HAPTIC_BOUNDARY_MS);
-  return vibrated || audioClicked;
+  if (vibrated) return true;
+  return playTactileAudioTick(durationMs >= ZOOM_HAPTIC_BOUNDARY_MS);
 }
 
 /**

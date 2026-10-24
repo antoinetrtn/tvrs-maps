@@ -181,7 +181,7 @@ const createOrbitControlHandlers = (ctx) => {
       isRegionalMap: isRegionalMapRef.current,
     });
     syncCameraMapProjection(globeEl.current, currentAlt);
-    if (zoomHapticTracker && !isGlobePovTweenActive()) {
+    if (zoomHapticTracker && isInteractingRef.current && !isGlobePovTweenActive()) {
       zoomHapticTracker.onAltitudeChange(currentAlt, {
         minAltitude: getGlobeMinAltitude(),
         maxAltitude: GLOBE_MAX_ALTITUDE,
