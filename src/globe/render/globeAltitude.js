@@ -19,9 +19,14 @@ export function setGlobeMinAltitude(altitude) {
   currentMinAltitude = altitude;
 }
 
+export function getGlobeMinAltitude() {
+  return currentMinAltitude;
+}
+
 export const CAMERA_FOV_DEG = 50; // three-globe default vertical FOV
-export const MAP_FLATTEN_START_ALTITUDE = 1.15;
-export const MAP_FLATTEN_MIN_FOV_DEG = 24;
+export const MAP_FLATTEN_START_ALTITUDE = 1.25;
+export const MAP_FLATTEN_MIN_FOV_DEG = 26;
+export const SURFACE_TRACK_GAIN = 1.05;
 const FRAME_MARGIN = 1.12;
 
 const smoothstep01 = (t) => {
@@ -31,7 +36,7 @@ const smoothstep01 = (t) => {
 
 /**
  * Progressive "flat map / unwrap" factor in [0, 1] as the player zooms in close
- * (Google Maps style transition from 3D globe at altitude >= 1.15 to planar-feeling
+ * (Google Maps style transition from 3D globe at altitude >= 1.25 to planar-feeling
  * map projection down to minAltitude).
  */
 export function computeMapFlattenFactor(altitude) {
@@ -43,7 +48,7 @@ export function computeMapFlattenFactor(altitude) {
 
 /**
  * Effective vertical camera FOV in degrees. Progressively narrows from 50° down to
- * 24° when zooming in close so the visible country patch loses spherical perspective
+ * 26° when zooming in close so the visible country patch loses spherical perspective
  * barrel distortion and reads like a flat 2D Mercator map plane while keeping
  * three-globe raycasting and continuous -180° <-> +180° wrap-around intact.
  */
@@ -65,6 +70,121 @@ export function syncCameraMapProjection(globeEl, altitude) {
     camera.up.set(0, 1, 0);
   }
   return { flattenFactor, fov: targetFov };
+}
+
+/**
+ * Exact 1:1 surface-tracking OrbitControls rotateSpeed.
+ *
+ * Because the camera orbits the center of the Earth (radius R = 100) from distance
+ * D = R * (1 + altitude), the distance from the camera to the surface under the
+ * cursor is h = R * altitude, and the visible surface height on screen is:
+ *   H_surface = 2 * R * altitude * tan(fov / 2)
+ * A vertical drag of fraction ds = dy / clientHeight should move the surface by
+ * arc-length dL = R * dPhi = ds * H_surface, which requires:
+ *   dPhi = 2 * altitude * tan(fov / 2) * ds
+ * Since Three.js OrbitControls rotates by dPhi = 2 * PI * rotateSpeed * ds, exact
+ * 1:1 finger-to-surface tracking requires:
+ *   rotateSpeed = (altitude * tan(fov / 2)) / PI
+ */
+export function computeSurfaceTrackingRotateSpeed(
+  altitude,
+  { fovDeg = computeEffectiveCameraFov(altitude), isMobile = false } = {}
+) {
+  const clampedAlt = clampGlobeAltitude(altitude);
+  const safeFov = Number.isFinite(fovDeg) && fovDeg > 1 ? fovDeg : CAMERA_FOV_DEG;
+  const halfFovTan = Math.tan((safeFov * Math.PI) / 360);
+  const exact1to1Speed = (clampedAlt * halfFovTan) / Math.PI;
+  const maxRotate = isMobile ? 0.65 : 0.8;
+  return Math.max(0.004, Math.min(maxRotate, exact1to1Speed * SURFACE_TRACK_GAIN));
+}
+
+/**
+ * Proportional zoom speed scaled smoothly with altitude so pinch-zoom and trackpad
+ * wheel zoom near the surface never jump violently across altitudes.
+ */
+export function computeAltitudeZoomSpeed(altitude, { isMobile = false } = {}) {
+  const clampedAlt = clampGlobeAltitude(altitude);
+  const maxZoom = isMobile ? 0.68 : 0.85;
+  const minZoom = isMobile ? 0.055 : 0.07;
+  const proportional = clampedAlt * (isMobile ? 0.32 : 0.38);
+  return Math.max(minZoom, Math.min(maxZoom, proportional));
+}
+
+/**
+ * Altitude-aware damping factor: tighter damping when zoomed in close so the map
+ * stops where the user's finger stops instead of coasting past small countries.
+ */
+export function computeAltitudeDampingFactor(altitude, { isMobile = false } = {}) {
+  const flattenFactor = computeMapFlattenFactor(altitude);
+  const farDamping = isMobile ? 0.12 : 0.08;
+  const closeDamping = isMobile ? 0.28 : 0.22;
+  return farDamping + (closeDamping - farDamping) * flattenFactor;
+}
+
+const LOCKED_SPEED_SYMBOL = Symbol.for("tvrs.lockedControlsSpeed");
+
+/**
+ * Installs property interceptors on the OrbitControls instance so globe.gl's own
+ * internal `controls.addEventListener("change", () => { controls.rotateSpeed = pov.altitude * 0.3; ... })`
+ * cannot overwrite our 1:1 surface-tracking rotateSpeed and proportional zoomSpeed.
+ */
+export function installLockedControlSpeeds(controls, initialRotate = 0.3, initialZoom = 0.3) {
+  if (!controls || typeof controls !== "object") return;
+  if (controls[LOCKED_SPEED_SYMBOL]) return;
+
+  let lockedRotate = Number.isFinite(controls.rotateSpeed) ? controls.rotateSpeed : initialRotate;
+  let lockedZoom = Number.isFinite(controls.zoomSpeed) ? controls.zoomSpeed : initialZoom;
+
+  try {
+    Object.defineProperty(controls, LOCKED_SPEED_SYMBOL, {
+      value: {
+        setRotate(v) {
+          if (Number.isFinite(v) && v > 0) lockedRotate = v;
+        },
+        setZoom(v) {
+          if (Number.isFinite(v) && v > 0) lockedZoom = v;
+        },
+      },
+      configurable: true,
+      enumerable: false,
+    });
+
+    Object.defineProperty(controls, "rotateSpeed", {
+      get() {
+        return lockedRotate;
+      },
+      set(_ignoredExternalAssignment) {
+        // Ignore direct assignments from globe.gl's internal change listener (pov.altitude * 0.3)
+      },
+      configurable: true,
+      enumerable: true,
+    });
+
+    Object.defineProperty(controls, "zoomSpeed", {
+      get() {
+        return lockedZoom;
+      },
+      set(_ignoredExternalAssignment) {
+        // Ignore direct assignments from globe.gl's internal change listener (Math.sqrt(pov.altitude) * 0.5)
+      },
+      configurable: true,
+      enumerable: true,
+    });
+  } catch {
+    // Fallback if object is non-configurable in a mock
+  }
+}
+
+function setControlSpeedsInternal(controls, rotateSpeed, zoomSpeed) {
+  installLockedControlSpeeds(controls, rotateSpeed, zoomSpeed);
+  const lock = controls?.[LOCKED_SPEED_SYMBOL];
+  if (lock) {
+    lock.setRotate(rotateSpeed);
+    lock.setZoom(zoomSpeed);
+  } else if (controls) {
+    controls.rotateSpeed = rotateSpeed;
+    controls.zoomSpeed = zoomSpeed;
+  }
 }
 
 /**
@@ -93,14 +213,6 @@ const GLOBE_CAMERA_FAR = Math.max(2000, GLOBE_MAX_DISTANCE * 4);
 
 /** Tolerance before readClampedGlobePov writes the camera back (avoids micro-snaps). */
 const POV_CLAMP_TOLERANCE = 0.002;
-
-/** Bounded OrbitControls speed curve (replaces globe.gl's unbounded per-change curve). */
-const CONTROL_SPEED = {
-  rotateMin: 0.18,
-  rotateMax: { mobile: 0.65, desktop: 0.8 },
-  zoomMin: 0.35,
-  zoomMax: { mobile: 0.7, desktop: 0.85 },
-};
 
 export function clampGlobeAltitude(altitude) {
   if (!Number.isFinite(altitude)) return 2.5;
@@ -139,10 +251,10 @@ function clampControlsCameraDistance(controls) {
 }
 
 /**
- * Enforce zoom limits and a bounded, altitude-aware speed curve on the orbit
- * controls. globe.gl's own `change` listener sets rotateSpeed = alt × 0.3 and
- * zoomSpeed = √alt × 0.5 (unbounded); calling this from a later `change`
- * listener overrides it on every frame, including mid-pinch / mid-wheel.
+ * Enforce zoom limits and an exact 1:1 surface-tracking speed curve on the orbit
+ * controls. Also locks `rotateSpeed` and `zoomSpeed` against globe.gl's internal
+ * listener so close-zoom panning tracks the user's finger 1:1 instead of flinging
+ * the globe around the Earth's center.
  */
 export function syncGlobeControlsForAltitude(
   controls,
@@ -156,17 +268,22 @@ export function syncGlobeControlsForAltitude(
 
   const clampedAlt = clampGlobeAltitude(altitude);
   const flattenFactor = computeMapFlattenFactor(clampedAlt);
+  const fovDeg = computeEffectiveCameraFov(clampedAlt);
   const polarMargin = 0.005 + 0.075 * flattenFactor;
   controls.minPolarAngle = polarMargin;
   controls.maxPolarAngle = Math.PI - polarMargin;
 
-  const span = GLOBE_MAX_ALTITUDE - currentMinAltitude;
-  const t = smoothstep01(span > 0 ? (clampedAlt - currentMinAltitude) / span : 0);
-  const device = isMobile ? "mobile" : "desktop";
-  const { rotateMin, rotateMax, zoomMin, zoomMax } = CONTROL_SPEED;
-  controls.rotateSpeed = rotateMin + (rotateMax[device] - rotateMin) * t;
-  controls.zoomSpeed = zoomMin + (zoomMax[device] - zoomMin) * t;
-  return { rotateSpeed: controls.rotateSpeed, zoomSpeed: controls.zoomSpeed };
+  const rotateSpeed = computeSurfaceTrackingRotateSpeed(clampedAlt, { fovDeg, isMobile });
+  const zoomSpeed = computeAltitudeZoomSpeed(clampedAlt, { isMobile });
+  setControlSpeedsInternal(controls, rotateSpeed, zoomSpeed);
+  controls.dampingFactor = computeAltitudeDampingFactor(clampedAlt, { isMobile });
+
+  return {
+    rotateSpeed: controls.rotateSpeed,
+    zoomSpeed: controls.zoomSpeed,
+    dampingFactor: controls.dampingFactor,
+    fovDeg,
+  };
 }
 
 /**

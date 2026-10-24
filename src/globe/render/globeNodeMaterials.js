@@ -13,11 +13,11 @@ import {
   normalLocal,
   positionView,
   pow,
-  screenCoordinate,
   smoothstep,
   sRGBTransferEOTF,
   transformNormalToView,
   uniform,
+  vec2,
 } from "three/tsl";
 import { MeshBasicNodeMaterial } from "three/webgpu";
 
@@ -37,7 +37,8 @@ export function createFresnelGlowNodeMaterial({ color = 0x64b5f6, coef = 1, powe
   const normal = transformNormalToView(normalLocal).normalize();
   const x = clamp(dot(normal, positionView.normalize()), 0, 1);
   const rawIntensity = pow(smoothstep(0, 0.62, x), max(1.8, uPower.mul(2))).mul(uCoef);
-  const bayer = bayer4x4(floor(screenCoordinate.xy.mul(0.5)));
+  const rimCell = floor(normal.xy.mul(0.5).add(0.5).mul(vec2(240.0, 240.0)));
+  const bayer = bayer4x4(rimCell);
   const dithered = floor(rawIntensity.mul(5.0).add(bayer)).div(5.0);
   const intensity = mix(rawIntensity, dithered, 0.82);
 

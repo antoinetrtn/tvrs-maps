@@ -7,10 +7,9 @@
 import * as THREE from "three";
 import {
   abs,
-  asin,
-  atan,
   cameraPosition,
   clamp,
+  cos,
   dot,
   float,
   floor,
@@ -27,7 +26,6 @@ import {
   positionLocal,
   positionWorld,
   pow,
-  screenCoordinate,
   select,
   sin,
   smoothstep,
@@ -64,40 +62,37 @@ export function createStandardMaterial(params) {
 }
 
 let grainNode = null;
-/** countryGrainOutputNode: 3D Spherical Bayer 4x4 Ordered-Dither + Zoom-Aware Cartographic Detail */
+/** countryGrainOutputNode: 3D sphere-anchored smooth country shading + micro-grain (no screen-space squares) */
 export function countryGrainOutputNode() {
   if (!grainNode) {
     grainNode = Fn(() => {
-      const ditherCell = floor(screenCoordinate.xy.div(3.0));
-      const bayer = bayer4x4(ditherCell);
-
       const sphereNormal = normalize(positionWorld);
       const geomNormal = normalize(normalWorld);
       const isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
 
       const viewDir = normalize(cameraPosition.sub(positionWorld));
-      const camDist = length(cameraPosition);
-      const zoomDetail = float(1.0).sub(smoothstep(135.0, 220.0, camDist));
       const ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
       const keyLightDir = normalize(vec3(-0.45, 0.55, 0.7));
       const keyLight = clamp(dot(sphereNormal, keyLightDir), 0.0, 1.0);
       const litLevel = clamp(ndv.mul(0.68).add(keyLight.mul(0.32)), 0.0, 1.0);
-      const quantShade = floor(litLevel.mul(3.0).add(bayer)).div(3.0);
-      const shadeFactor = mix(float(0.56), float(1.12), quantShade);
+      const shadeFactor = mix(float(0.76), float(1.08), smoothstep(0.05, 0.95, litLevel));
 
-      const bayerCentered = bayer.sub(0.46875);
-      const lat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-      const lng = atan(sphereNormal.z, sphereNormal.x);
-      const hatchUv = vec2(lng, lat).mul(20.0);
-      const hatchGrid = abs(fract(hatchUv.add(0.5)).sub(0.5));
-      const hatchLine = step(0.44, max(hatchGrid.x, hatchGrid.y)).mul(0.028).mul(zoomDetail);
-      const surfaceGrain = bayerCentered
-        .mul(mix(0.05, 0.11, zoomDetail))
-        .add(hatchLine.mul(step(0.5, bayer)));
+      const sphereCoord = sphereNormal.xz
+        .mul(420.0)
+        .add(vec2(sphereNormal.y.mul(310.0), sphereNormal.x.mul(190.0)));
+      const sphereCell = floor(sphereCoord);
+      const sphereFrac = smoothstep(0.0, 1.0, fract(sphereCoord));
+      const g00 = hashGrain(sphereCell);
+      const g10 = hashGrain(sphereCell.add(vec2(1.0, 0.0)));
+      const g01 = hashGrain(sphereCell.add(vec2(0.0, 1.0)));
+      const g11 = hashGrain(sphereCell.add(vec2(1.0, 1.0)));
+      const microGrain = mix(mix(g00, g10, sphereFrac.x), mix(g01, g11, sphereFrac.x), sphereFrac.y)
+        .sub(0.5)
+        .mul(0.018);
 
       const lit = litDisplayColor();
-      const capRgb = lit.mul(shadeFactor).add(vec3(surfaceGrain));
-      const sideRgb = lit.mul(mix(float(0.72), float(0.94), step(0.5, bayer)));
+      const capRgb = lit.mul(shadeFactor).add(vec3(microGrain));
+      const sideRgb = lit.mul(0.84);
 
       const rgb = mix(capRgb, sideRgb, isSideWall);
       return displayOutput(rgb);
@@ -106,17 +101,30 @@ export function countryGrainOutputNode() {
   return grainNode;
 }
 
-/** blackoutOceanOutputNode: Bayer 4x4 ordered-dither ocean limb & terminator + cartographic graticule */
+let oceanTimeNode = null;
+/** blackoutOceanOutputNode: 3D sphere-anchored animated Bayer 4x4 ordered-dither ocean + cartographic graticule */
 export function blackoutOceanOutputNode(
   rimColor = new THREE.Color(0.85, 0.88, 0.92),
   rimStrength = 0.07,
   _uPixelScale = polygonGlitchUniforms.uPixelScale
 ) {
+  const uTime = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
   return Fn(() => {
-    const px = floor(screenCoordinate.xy.div(3.0));
+    const uvCoords = uv();
+    const oceanLat = uvCoords.y.sub(0.5).mul(3.14159265);
+    const oceanLng = uvCoords.x.sub(0.5).mul(6.2831853);
+    const waveDrift = vec2(uTime.mul(0.85), sin(oceanLng.mul(4.0).add(uTime.mul(0.7))).mul(0.65));
+    const px = floor(uvCoords.mul(vec2(480.0, 240.0)).add(waveDrift));
     const bayer = bayer4x4(px);
     const camDist = length(cameraPosition);
     const subGridVis = float(1.0).sub(smoothstep(180.0, 260.0, camDist));
+
+    const wave1 = sin(oceanLng.mul(12.0).add(oceanLat.mul(8.0)).sub(uTime.mul(1.65)));
+    const wave2 = cos(oceanLng.mul(18.0).sub(oceanLat.mul(14.0)).add(uTime.mul(1.25)));
+    const waveField = wave1.mul(0.6).add(wave2.mul(0.4)).mul(0.5).add(0.5);
+    const waveDither = step(bayer, waveField.mul(0.46)).mul(
+      float(rimStrength).mul(0.35).add(0.042)
+    );
 
     // 1. Curvature & spherical lighting
     const n = normalize(normalWorld);
@@ -125,20 +133,19 @@ export function blackoutOceanOutputNode(
     const lightFacing = clamp(dot(n, normalize(vec3(-0.55, 0.45, 0.7))), 0.0, 1.0);
     const limb = pow(float(1.0).sub(viewIncidence), 1.85);
 
-    const oceanShade = limb.mul(lightFacing.mul(0.35).add(0.65));
+    const oceanShade = limb.mul(lightFacing.mul(0.35).add(0.65)).add(waveField.mul(0.12));
     const quantizedLimb = floor(oceanShade.mul(5.0).add(bayer)).div(5.0);
     const limbStipple = step(bayer, oceanShade.mul(1.35)).mul(0.45);
 
     const rimColorVec = vec3(rimColor.r, rimColor.g, rimColor.b);
     const rimRgb = rimColorVec.mul(
-      quantizedLimb.mul(0.75).add(limbStipple).mul(float(rimStrength).mul(3.2))
+      quantizedLimb.mul(0.75).add(limbStipple).mul(float(rimStrength).mul(3.2)).add(waveDither)
     );
     const midLimbRing = rimColorVec.mul(
       step(bayer, smoothstep(0.18, 0.78, limb).mul(0.65)).mul(0.035)
     );
 
     // 2. Graticule
-    const uvCoords = uv();
     const gridUv15 = uvCoords.mul(vec2(24.0, 12.0));
     const gridPx15 = max(fwidth(gridUv15), vec2(0.0008));
     const lineDist15 = abs(fract(gridUv15.add(0.5)).sub(0.5)).div(gridPx15);
