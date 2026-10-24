@@ -1,148 +1,15 @@
 import * as THREE from "three";
 
 import { countryDataMap } from "../../data/gameData";
-
+import {
+  COMPACT_CAPITALS,
+  MAJOR_METROPOLISES,
+  MICRO_TERRITORIES,
+  SECONDARY_CITIES_BY_COUNTRY,
+} from "./capitalLightsData";
 // 10 texels per degree (0.10° per texel) -> 1 texel ≈ 1px–1.5px on screen at continent zoom
 const TEX_WIDTH = 3600;
 const TEX_HEIGHT = 1800;
-
-// Skip micro-territories and tiny island dependencies so they don't crowd neighboring capitals
-const MICRO_TERRITORIES = new Set([
-  "Aland",
-  "Andorra",
-  "Anguilla",
-  "Aruba",
-  "Bermuda",
-  "British Virgin Islands",
-  "Cayman Islands",
-  "Cook Islands",
-  "Curaçao",
-  "Dominica",
-  "Falkland Islands",
-  "Faroe Islands",
-  "French Polynesia",
-  "Gibraltar",
-  "Greenland",
-  "Grenada",
-  "Guam",
-  "Guernsey",
-  "Isle of Man",
-  "Jersey",
-  "Kiribati",
-  "Liechtenstein",
-  "Macao",
-  "Maldives",
-  "Malta",
-  "Marshall Islands",
-  "Federated States of Micronesia",
-  "Monaco",
-  "Montserrat",
-  "Nauru",
-  "New Caledonia",
-  "Niue",
-  "Norfolk Island",
-  "Northern Mariana Islands",
-  "Palau",
-  "Pitcairn Islands",
-  "Saint Barthelemy",
-  "Saint Helena",
-  "Saint Kitts and Nevis",
-  "Saint Lucia",
-  "Saint Martin",
-  "Saint Pierre and Miquelon",
-  "Saint Vincent and the Grenadines",
-  "American Samoa",
-  "Samoa",
-  "San Marino",
-  "Sao Tome and Principe",
-  "Seychelles",
-  "Sint Maarten",
-  "Solomon Islands",
-  "Tonga",
-  "Turks and Caicos Islands",
-  "Tuvalu",
-  "United States Virgin Islands",
-  "Vanuatu",
-  "Vatican",
-  "Wallis and Futuna",
-]);
-
-// Compact capitals in tightly packed regions get a slightly tighter reach so neighbors stay distinct
-const COMPACT_CAPITALS = new Set([
-  "Albania",
-  "Armenia",
-  "Bosnia and Herzegovina",
-  "Brunei",
-  "Burundi",
-  "Cyprus",
-  "Djibouti",
-  "Equatorial Guinea",
-  "Estonia",
-  "Gambia",
-  "Georgia",
-  "Kosovo",
-  "Kuwait",
-  "Latvia",
-  "Lebanon",
-  "Lesotho",
-  "Lithuania",
-  "Luxembourg",
-  "Moldova",
-  "Montenegro",
-  "North Macedonia",
-  "Palestine",
-  "Qatar",
-  "Rwanda",
-  "Slovakia",
-  "Slovenia",
-  "Swaziland",
-  "Switzerland",
-  "Timor-Leste",
-  "Trinidad and Tobago",
-]);
-
-// Major sprawling metropolises get slightly longer highway tentacles
-const MAJOR_METROPOLISES = new Set([
-  "Argentina",
-  "Australia",
-  "Austria",
-  "Belgium",
-  "Brazil",
-  "Canada",
-  "Chile",
-  "China",
-  "Colombia",
-  "Czechia",
-  "Egypt",
-  "France",
-  "Germany",
-  "Greece",
-  "Hungary",
-  "India",
-  "Indonesia",
-  "Iran",
-  "Italy",
-  "Japan",
-  "Mexico",
-  "Netherlands",
-  "Nigeria",
-  "Peru",
-  "Poland",
-  "Portugal",
-  "Romania",
-  "Russia",
-  "Saudi Arabia",
-  "South Africa",
-  "South Korea",
-  "Spain",
-  "Sweden",
-  "Thailand",
-  "Turkey",
-  "Ukraine",
-  "United Kingdom",
-  "United States of America",
-  "Vietnam",
-]);
 
 const STEP_DEG = 0.088;
 
@@ -183,21 +50,22 @@ function stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode) {
   const y0 = Math.floor(((lat + 90) / 180) * TEX_HEIGHT);
   const x0 = Math.floor(((lng + 180) / 360) * TEX_WIDTH);
   const dxStep = Math.max(1, Math.round(1 / cosLat));
-  const auraSteps = scaleMode === "compact" ? 5 : scaleMode === "major" ? 8 : 6;
+  const auraSteps =
+    scaleMode === "secondary" ? 4 : scaleMode === "compact" ? 5 : scaleMode === "major" ? 8 : 6;
 
   for (let dy = -auraSteps; dy <= auraSteps; dy++) {
     for (let dx = -auraSteps; dx <= auraSteps; dx++) {
       const dist = Math.hypot(dx, dy);
       if (dist > auraSteps) continue;
       const falloff = 1 - dist / auraSteps;
-      const gVal = Math.round(Math.pow(falloff, 1.55) * 225);
+      const gVal = Math.round(Math.pow(falloff, 1.55) * (scaleMode === "secondary" ? 190 : 225));
       let rVal = 0;
       if (dist <= 0.8) {
-        rVal = 255;
+        rVal = scaleMode === "secondary" ? 236 : 255;
       } else if (dist <= 1.65) {
         const n = hash1(seed + dx * 19.3 + dy * 37.1);
-        rVal = n > 0.18 ? Math.round(225 + n * 28) : 185;
-      } else if (dist <= 2.6 && scaleMode !== "compact") {
+        rVal = n > 0.18 ? Math.round((scaleMode === "secondary" ? 202 : 225) + n * 28) : 180;
+      } else if (dist <= 2.6 && scaleMode !== "compact" && scaleMode !== "secondary") {
         const n = hash1(seed + dx * 43.7 + dy * 61.9);
         if (n > 0.52) rVal = Math.round(170 + (n - 0.52) * 90);
       }
@@ -307,6 +175,7 @@ function stampPrimaryTentacle(
       s === Math.max(3, Math.round(totalSteps * 0.36)) && hash1(seed + t * 211.9) > 0.22;
     const shouldFork2 =
       scaleMode !== "compact" &&
+      scaleMode !== "secondary" &&
       s === Math.max(6, Math.round(totalSteps * 0.64)) &&
       hash1(seed + t * 263.3) > 0.38;
 
@@ -327,7 +196,7 @@ function stampPrimaryTentacle(
     }
   }
 
-  const satCount = scaleMode === "compact" ? 1 : 2;
+  const satCount = scaleMode === "compact" || scaleMode === "secondary" ? 1 : 2;
   for (let k = 0; k < satCount; k++) {
     const satDist = (0.35 + hash1(seed + t * 521.7 + k * 67.3) * 0.58) * totalSteps * STEP_DEG;
     const satAng =
@@ -343,18 +212,50 @@ function stampPrimaryTentacle(
 function stampCapitalTentacularWeb(data, lat, lng, seed, cosLat, scaleMode) {
   stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode);
 
-  const numTentacles = scaleMode === "compact" ? 5 : scaleMode === "major" ? 7 : 6;
-  const maxStepsBase = scaleMode === "compact" ? 11 : scaleMode === "major" ? 23 : 17;
+  const numTentacles =
+    scaleMode === "secondary" ? 4 : scaleMode === "compact" ? 5 : scaleMode === "major" ? 7 : 6;
+  const maxStepsBase =
+    scaleMode === "secondary" ? 9 : scaleMode === "compact" ? 11 : scaleMode === "major" ? 23 : 17;
 
   for (let t = 0; t < numTentacles; t++) {
     stampPrimaryTentacle(data, lat, lng, seed, cosLat, scaleMode, t, numTentacles, maxStepsBase);
   }
 }
 
+function stampInterCityCorridor(data, lat1, lng1, lat2, lng2, seed) {
+  const cosLat = Math.max(0.22, Math.cos(((lat1 + lat2) * 0.5 * Math.PI) / 180));
+  const dLat = lat2 - lat1;
+  const dLonScaled = (lng2 - lng1) * cosLat;
+  const distDeg = Math.hypot(dLat, dLonScaled);
+  if (distDeg < 0.7 || distDeg > 9.5) return;
+
+  const steps = Math.max(8, Math.round(distDeg / 0.14));
+  const nx = -dLat / distDeg;
+  const ny = dLonScaled / distDeg;
+  const arcAmp = Math.min(0.65, distDeg * 0.085) * (hash1(seed + 71.3) > 0.5 ? 1 : -1);
+
+  for (let i = 2; i < steps - 1; i++) {
+    const p = i / steps;
+    const wave = Math.sin(p * Math.PI) * arcAmp;
+    const jitter = (hash1(seed + i * 29.7) - 0.5) * 0.05;
+    const curLat = lat1 + dLat * p + nx * (wave + jitter);
+    const curLng = lng1 + (dLonScaled * p + ny * (wave + jitter)) / cosLat;
+
+    const rRand = hash1(seed + i * 53.1);
+    const isTownBead = i % 4 === 0 || rRand > 0.55;
+    if (isTownBead) {
+      const endFade = 1 - Math.abs(p - 0.5) * 0.55;
+      const rVal = Math.round((i % 4 === 0 ? 155 : 112) * endFade);
+      const gVal = Math.round(52 * endFade);
+      stampIsoPoint(data, curLat, curLng, cosLat, rVal, gVal);
+    }
+  }
+}
+
 /**
  * Lazily builds a 3600x1800 NearestFilter DataTexture (0.10 deg/texel) of crisp,
- * tentacular pixel-art capital night lights:
- * - R channel: crisp 1px dendritic highway tentacles, satellite hubs & bright metropolitan core
+ * tentacular pixel-art capital & secondary city night lights:
+ * - R channel: crisp 1px dendritic highway tentacles, inter-city corridors, & bright metropolitan core
  * - G channel: warm nocturnal sodium-amber urban ground aura
  */
 export function getCapitalLightsTexture() {
@@ -375,6 +276,16 @@ export function getCapitalLightsTexture() {
         ? "major"
         : "normal";
     stampCapitalTentacularWeb(data, lat, lng, seed, cosLat, scaleMode);
+
+    const secondaryList = SECONDARY_CITIES_BY_COUNTRY[admin];
+    if (secondaryList) {
+      secondaryList.forEach(([sLat, sLng], idx) => {
+        const sCosLat = Math.max(0.22, Math.cos((sLat * Math.PI) / 180));
+        const sSeed = sLat * 17.23 + sLng * 11.41 + idx * 31.7;
+        stampCapitalTentacularWeb(data, sLat, sLng, sSeed, sCosLat, "secondary");
+        stampInterCityCorridor(data, lat, lng, sLat, sLng, seed + idx * 97.3);
+      });
+    }
   });
 
   const tex = new THREE.DataTexture(data, TEX_WIDTH, TEX_HEIGHT, THREE.RGBAFormat);

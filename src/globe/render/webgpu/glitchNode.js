@@ -138,25 +138,27 @@ function successEffect(u, time, blockUv, worldPos) {
   const blockNoise = hash(blockUv.mul(0.5).add(17.0));
   const resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
   const flick = mix(0.7, 1.35, hash(blockUv.add(floor(time.mul(60)))));
-  const hot = mix(vec3(1.0), u.uFoundGreen, 0.2).mul(flick);
+  const isMonoAwakening = u.uTheme.greaterThan(0.5).and(u.uIsSatellite.lessThan(0.5));
+  const targetTone = select(isMonoAwakening, vec3(0.96, 0.68, 0.22), u.uFoundGreen);
+  const hot = mix(vec3(1.0, 0.97, 0.86), targetTone, 0.25).mul(flick);
   const sweep = step(fract(worldPos.y.mul(0.18).sub(p.mul(2.8))), 0.22)
     .mul(float(1).sub(smoothstep(0.3, 0.8, p)))
     .mul(0.7);
-  const baseGreen = mix(hot, u.uFoundGreen, resolved).add(u.uFoundGreen.mul(sweep)).toVar();
+  const baseTone = mix(hot, targetTone, resolved).add(targetTone.mul(sweep)).toVar();
   If(p.lessThan(0.85), () => {
     const burstChroma = float(1)
       .sub(p)
-      .mul(0.55)
+      .mul(0.45)
       .mul(hash(blockUv.add(time.mul(12))).sub(0.5));
-    baseGreen.assign(
+    baseTone.assign(
       vec3(
-        clamp(baseGreen.x.add(burstChroma.mul(0.6)), 0, 1),
-        clamp(baseGreen.y.add(abs(burstChroma).mul(0.3)), 0, 1),
-        clamp(baseGreen.z.sub(burstChroma.mul(0.8)), 0, 1)
+        clamp(baseTone.x.add(burstChroma.mul(0.6)), 0, 1),
+        clamp(baseTone.y.add(abs(burstChroma).mul(0.25)), 0, 1),
+        clamp(baseTone.z.sub(burstChroma.mul(0.7)), 0, 1)
       )
     );
   });
-  return baseGreen;
+  return baseTone;
 }
 
 function selectionEffect(finalColor, green, time, theme, worldPos) {
@@ -209,6 +211,8 @@ function glitchBase(u, lit) {
     .mul(select(light, float(0.025), float(0.035)))
     .mul(transitionActive);
   const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline).add(bayerStipple)).toVar();
+  const isMonoAwakening = on(u.uTheme).and(on(u.uIsSatellite).not());
+  const foundRestingColor = select(isMonoAwakening, vec3(0.48, 0.34, 0.15), u.uFoundGreen);
 
   const finalColor = vec3(staticVec).toVar();
   If(on(u.uIsError), () => {
@@ -221,11 +225,21 @@ function glitchBase(u, lit) {
       finalColor.assign(selectionEffect(lit, u.uFoundGreen, time, u.uTheme, positionWorld));
     })
     .ElseIf(on(u.uIsFound), () => {
-      finalColor.assign(u.uFoundGreen);
+      finalColor.assign(foundRestingColor);
     });
   const sideShade = mix(1.0, u.uSideShade, step(0.5, u.uIsSide));
   finalColor.mulAssign(sideShade);
-  return { transitionActive, glitchAmp, fragPx, blockUv, staticVec, finalColor, sideShade, bayer };
+  return {
+    transitionActive,
+    glitchAmp,
+    fragPx,
+    blockUv,
+    staticVec,
+    finalColor,
+    sideShade,
+    bayer,
+    foundRestingColor,
+  };
 }
 
 /** Deselection dissolve: threshold noise, tears and the chroma-split colour. */
@@ -277,10 +291,10 @@ function createGlitchOutputNode(u) {
     const time = u.uTime;
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, blockUv, staticVec, sideShade, bayer } = base;
+    const { transitionActive, blockUv, staticVec, sideShade, bayer, foundRestingColor } = base;
     const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
 
-    const settleColor = mix(lit, u.uFoundGreen.mul(sideShade), step(0.5, u.uIsFound)).toVar();
+    const settleColor = mix(lit, foundRestingColor.mul(sideShade), step(0.5, u.uIsFound)).toVar();
     // Clean uniform surface without noisy surface blotches
     const blockValRaw = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
     const blockVal = mix(blockValRaw, bayer, 0.22);
@@ -297,7 +311,7 @@ function createGlitchOutputNode(u) {
       rgb.assign(glitchColor);
     })
       .ElseIf(isFoundSurface, () => {
-        rgb.assign(u.uFoundGreen.mul(sideShade));
+        rgb.assign(foundRestingColor.mul(sideShade));
       })
       .ElseIf(transiting.and(satellite), () => {
         rgb.assign(glitchColor);

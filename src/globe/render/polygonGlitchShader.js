@@ -15,6 +15,8 @@ import { attachGlitchNodes } from "./webgpu/glitchNode";
 export const polygonGlitchUniforms = {
   uTime: { value: 0 },
   uFoundGreen: { value: getFoundGreenThreeColor().clone() },
+  // 1 when on Home/End screen (planet-wide city-lights showcase), 0 during active gameplay (blackout -> awaken).
+  uShowcaseLights: { value: 1 },
   // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
   uPixelScale: { value: 1 },
   // Deselection tear colours: cyan/magenta, accent-derived on the Monochrome globe.

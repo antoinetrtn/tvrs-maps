@@ -66,7 +66,58 @@ export function createStandardMaterial(params) {
     : new THREE.MeshStandardMaterial(params);
 }
 
+function buildCityLightsLayer(cartUv, baseLit, cityPower, isConquestOwned, uTimeNode) {
+  const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
+  const capitalSample = texture(getCapitalLightsTexture(), cartUv);
+  const cityDensity = capitalSample.r;
+  const cityAura = capitalSample.g;
+  const cityHash = hash(cityCellId);
+  const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
+  const trafficWave = sin(uTimeNode.mul(2.8).sub(cityAura.mul(8.5)).add(cityHash.mul(6.2831853)))
+    .mul(0.2)
+    .add(0.8);
+  const satTwinkle = sin(uTimeNode.mul(4.2).add(cityHash2.mul(6.2831853)))
+    .mul(0.22)
+    .add(0.78);
+  const tierPinpoint = step(0.82, cityDensity);
+  const tierArterial = float(1.0).sub(tierPinpoint).mul(step(0.55, cityDensity));
+  const tierTentacle = float(1.0).sub(max(tierPinpoint, tierArterial)).mul(step(0.25, cityDensity));
+
+  const auraColor = mix(
+    vec3(0.68, 0.4, 0.12),
+    max(baseLit.mul(1.35), vec3(0.75, 0.55, 0.22)),
+    isConquestOwned.mul(0.5)
+  );
+  const withAura = mix(baseLit, max(baseLit, auraColor), cityAura.mul(0.32).mul(cityPower));
+  const colorOuterTentacle = mix(
+    vec3(0.94, 0.54, 0.16),
+    vec3(1.0, 0.84, 0.48),
+    isConquestOwned.mul(0.45)
+  );
+  const colorMainArterial = mix(
+    mix(vec3(0.98, 0.72, 0.18), vec3(1.0, 0.84, 0.34), cityHash2),
+    vec3(1.0, 0.94, 0.72),
+    isConquestOwned.mul(0.55)
+  );
+  const colorMetroHeart = mix(
+    vec3(1.0, 0.94, 0.7),
+    vec3(1.0, 0.99, 0.92),
+    smoothstep(0.82, 1.0, cityDensity)
+  );
+  const sparkColor = tierPinpoint
+    .mul(colorMetroHeart)
+    .add(tierArterial.mul(colorMainArterial))
+    .add(tierTentacle.mul(colorOuterTentacle));
+  const sparkAlpha = tierPinpoint
+    .mul(0.98)
+    .add(tierArterial.mul(cityHash2.mul(0.16).add(0.78)).mul(trafficWave))
+    .add(tierTentacle.mul(cityHash2.mul(0.24).add(0.5)).mul(satTwinkle))
+    .mul(cityPower);
+  return mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
+}
+
 let grainNode = null;
+let showcaseLightsNode = null;
 /** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
 export function countryGrainOutputNode() {
   if (!grainNode) {
@@ -91,47 +142,49 @@ export function countryGrainOutputNode() {
       const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
 
       const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
-      const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
-      const capitalSample = texture(getCapitalLightsTexture(), cartUv);
-      const cityDensity = capitalSample.r;
-      const cityAura = capitalSample.g;
-      const cityHash = hash(cityCellId);
-      const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
-      const cityTwinkle = sin(uTimeNode.mul(2.1).add(cityHash.mul(6.2831853)))
-        .mul(0.07)
-        .add(0.93);
-      const tierPinpoint = step(0.82, cityDensity);
-      const tierArterial = float(1.0).sub(tierPinpoint).mul(step(0.55, cityDensity));
-      const tierTentacle = float(1.0)
-        .sub(max(tierPinpoint, tierArterial))
-        .mul(step(0.25, cityDensity));
+      const uShowcaseNode = (showcaseLightsNode ||= mirrorUniform(
+        polygonGlitchUniforms.uShowcaseLights
+      ));
       const lit = litDisplayColor();
       const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
-      const darkRestMask = float(1.0).sub(smoothstep(0.38, 0.58, surfaceLuma));
-      const engrave = lit.mul(parallelLine.mul(0.04).add(crossTick.mul(0.09))).add(vec3(rimSheen));
-      const baseLit = lit.mul(limbFactor).add(engrave);
-      const auraColor = vec3(0.48, 0.26, 0.08);
-      const withAura = mix(baseLit, max(baseLit, auraColor), cityAura.mul(0.22).mul(darkRestMask));
-      const colorOuterTentacle = vec3(0.85, 0.46, 0.14);
-      const colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.76, 0.26), cityHash2);
-      const colorMetroHeart = mix(
-        vec3(1.0, 0.91, 0.62),
-        vec3(1.0, 0.97, 0.84),
-        smoothstep(0.82, 1.0, cityDensity)
-      );
-      const sparkColor = tierPinpoint
-        .mul(colorMetroHeart)
-        .add(tierArterial.mul(colorMainArterial))
-        .add(tierTentacle.mul(colorOuterTentacle));
-      const sparkAlpha = tierPinpoint
-        .mul(0.96)
-        .add(tierArterial.mul(cityHash2.mul(0.14).add(0.76)))
-        .add(tierTentacle.mul(cityHash2.mul(0.22).add(0.48)))
-        .mul(cityTwinkle)
-        .mul(darkRestMask);
-      const capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
-      const sideRgb = lit.mul(0.58);
+      const maxC = max(lit.x, max(lit.y, lit.z));
+      const minC = min(lit.x, min(lit.y, lit.z));
+      const chroma = maxC.sub(minC);
+      const isSoloFound = step(float(0.45), lit.y)
+        .mul(step(lit.z.mul(1.32), lit.y))
+        .mul(step(lit.x.mul(2.2), lit.z));
+      const isConquestOwned = float(1.0)
+        .sub(isSoloFound)
+        .mul(step(float(0.15), chroma))
+        .mul(step(float(0.36), maxC));
+      const isAwakenedCap = max(isSoloFound, isConquestOwned);
+      const isUnfoundDarkCap = float(1.0)
+        .sub(isAwakenedCap)
+        .mul(float(1.0).sub(smoothstep(0.44, 0.58, surfaceLuma)));
+      const cityPower = clamp(max(isAwakenedCap, uShowcaseNode.mul(isUnfoundDarkCap)), 0.0, 1.0);
 
+      const blackoutDim = mix(
+        float(1.0),
+        float(0.38),
+        float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap)
+      );
+      const unfoundLand = lit.mul(blackoutDim);
+      const soloAwakenedLand = vec3(0.48, 0.34, 0.15).add(
+        vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
+      );
+      const conquestAwakenedLand = lit.mul(0.84).add(lit.mul(0.22).mul(float(1.0).sub(ndv)));
+      const landSurface = mix(
+        mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
+        soloAwakenedLand,
+        isSoloFound
+      );
+      const engrave = landSurface
+        .mul(parallelLine.mul(0.04).add(crossTick.mul(0.09)))
+        .add(vec3(rimSheen));
+      const baseLit = landSurface.mul(limbFactor).add(engrave);
+
+      const capRgb = buildCityLightsLayer(cartUv, baseLit, cityPower, isConquestOwned, uTimeNode);
+      const sideRgb = landSurface.mul(0.58);
       const rgb = mix(capRgb, sideRgb, isSideWall);
       return displayOutput(rgb);
     })();
