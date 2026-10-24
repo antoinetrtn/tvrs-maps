@@ -37,69 +37,59 @@ export function applyCountrySurfaceGrainShader(shader) {
   shader.vertexShader = `
     varying vec3 vDitherWorldNormal;
     varying vec3 vDitherWorldPos;
+    varying vec3 vWorldPos;
+    varying vec3 vViewDir;
     uniform float uPixelScale;
-    ${shader.vertexShader
-      .replace(
-        "#include <begin_vertex>",
-        `#include <begin_vertex>
-      float vPosLen = length(position);
-      vec3 vRadDir = position / max(vPosLen, 1e-4);
-      float isSideVert = step(abs(dot(normalize(normal), vRadDir)), 0.55) * step(50.0, vPosLen);
-      transformed += normalize(normal) * (isSideVert * 0.38);
+    ${shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
       vDitherWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
       vDitherWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+      vWorldPos = vDitherWorldPos;
+      vViewDir = cameraPosition - vDitherWorldPos;
       `
-      )
-      .replace(
-        "#include <project_vertex>",
-        `#include <project_vertex>
-      vec2 vSnapGrid = vec2(155.0);
-      gl_Position.xy = floor(gl_Position.xy / gl_Position.w * vSnapGrid + 0.5) / vSnapGrid * gl_Position.w;
-      `
-      )}
+    )}
   `;
   shader.fragmentShader = `
     varying vec3 vDitherWorldNormal;
     varying vec3 vDitherWorldPos;
+    varying vec3 vWorldPos;
+    varying vec3 vViewDir;
     uniform float uPixelScale;
     ${GLSL_BAYER_4X4_FN}
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      vec2 px = floor(gl_FragCoord.xy * uPixelScale * 0.5);
-      vec2 pxFine = floor(gl_FragCoord.xy * uPixelScale);
-      float bayer = bayer4x4(px);
-      float bayerFine = bayer4x4(pxFine);
-
       vec3 sphereNormal = normalize(vDitherWorldPos);
       vec3 geomNormal = normalize(vDitherWorldNormal);
       float isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
 
-      if (isSideWall > 0.5 && mix(bayer, bayerFine, 0.35) < 0.42) {
-        discard;
-      }
-
       vec3 viewDir = normalize(cameraPosition - vDitherWorldPos);
-      float ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
-      float ndl = clamp(dot(sphereNormal, normalize(vec3(-0.55, 0.45, 0.70))), 0.0, 1.0);
+      vec3 wNorm = sphereNormal;
+      float camDist = length(cameraPosition);
+      float zoomDetail = 1.0 - smoothstep(135.0, 220.0, camDist);
+      float ndv = clamp(dot(wNorm, viewDir), 0.0, 1.0);
+      float terminatorBand = smoothstep(0.72, 0.18, ndv);
 
-      float sphereShade = clamp(pow(ndv, 0.65) * (0.68 + 0.32 * ndl), 0.0, 1.0);
-      float quantizedShade = floor(sphereShade * 5.0 + bayer) / 5.0;
-      float limbDither = step(bayer, smoothstep(0.06, 0.72, sphereShade));
-      float shadeFactor = mix(0.26, 1.08, mix(limbDither, quantizedShade, 0.55));
+      vec2 ditherCell = floor(gl_FragCoord.xy / 3.0);
+      float bayer = bayer4x4(ditherCell);
+      vec3 keyLightDir = normalize(vec3(-0.45, 0.55, 0.70));
+      float keyLight = clamp(dot(wNorm, keyLightDir), 0.0, 1.0);
+      float litLevel = clamp(ndv * 0.68 + keyLight * 0.32, 0.0, 1.0);
+      float quantShade = floor(litLevel * 3.0 + bayer) / 3.0;
+      float shadeFactor = mix(0.56, 1.12, quantShade);
 
-      float bayerCentered = (bayer - 0.46875) * 0.14;
-      float cellGrain = (fract(sin(dot(px, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.03;
-      vec3 capRgb = gl_FragColor.rgb * shadeFactor + vec3(bayerCentered + cellGrain);
+      float bayerCentered = bayer - 0.46875;
+      float lat = asin(clamp(sphereNormal.y, -1.0, 1.0));
+      float lng = atan(sphereNormal.z, sphereNormal.x);
+      vec2 hatchUv = vec2(lng, lat) * 20.0;
+      vec2 hatchGrid = abs(fract(hatchUv + 0.5) - 0.5);
+      float hatchLine = step(0.44, max(hatchGrid.x, hatchGrid.y)) * 0.028 * zoomDetail;
+      float grainBase = bayerCentered * mix(0.05, 0.11, zoomDetail) + hatchLine * step(0.5, bayer);
+      float surfaceGrain = grainBase;
 
-      float worldGrad = length(fwidth(vDitherWorldPos));
-      float edgeBand = smoothstep(0.35, 1.15, worldGrad);
-      float edgeStipple = step(0.45, bayerFine);
-      capRgb = mix(capRgb, mix(capRgb * 0.35, capRgb * 1.45 + vec3(0.12), edgeStipple), edgeBand * 0.65);
-
-      float sideStipple = step(0.62, bayerFine);
-      vec3 sideBase = mix(gl_FragColor.rgb * 0.18, gl_FragColor.rgb * 1.65 + vec3(0.18), sideStipple);
-      vec3 sideRgb = sideBase * mix(0.45, 1.0, limbDither);
+      vec3 capRgb = gl_FragColor.rgb * shadeFactor + vec3(surfaceGrain);
+      vec3 sideRgb = gl_FragColor.rgb * mix(0.72, 0.94, step(0.5, bayer));
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
       `
     )}
@@ -111,20 +101,12 @@ export function applyCountryBorderDitherShader(shader) {
   shader.vertexShader = `
     varying vec3 vBorderWorldPos;
     uniform float uPixelScale;
-    ${shader.vertexShader
-      .replace(
-        "#include <begin_vertex>",
-        `#include <begin_vertex>
+    ${shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
       vBorderWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
       `
-      )
-      .replace(
-        "#include <project_vertex>",
-        `#include <project_vertex>
-      vec2 vSnapGrid = vec2(155.0);
-      gl_Position.xy = floor(gl_Position.xy / gl_Position.w * vSnapGrid + 0.5) / vSnapGrid * gl_Position.w;
-      `
-      )}
+    )}
   `;
   shader.fragmentShader = `
     varying vec3 vBorderWorldPos;
@@ -133,17 +115,10 @@ export function applyCountryBorderDitherShader(shader) {
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
-      vec2 px = floor(gl_FragCoord.xy * uPixelScale * 0.5);
-      vec2 pxFine = floor(gl_FragCoord.xy * uPixelScale);
-      float bayer = bayer4x4(px);
-      float bayerFine = bayer4x4(pxFine);
-
-      vec3 worldCell = floor(vBorderWorldPos * 2.6);
-      float cellHash = fract(sin(dot(worldCell.xy + worldCell.z, vec2(12.9898, 78.233))) * 43758.5453);
-
-      float stippleMask = step(0.38, mix(bayer, cellHash, 0.35));
-      if (stippleMask < 0.5) discard;
-      gl_FragColor.rgb = gl_FragColor.rgb * mix(0.75, 1.65, step(0.5, bayerFine)) + vec3(step(0.72, bayer) * 0.16);
+      float bayer = bayer4x4(floor(gl_FragCoord.xy / 2.0));
+      float arcPhase = dot(vBorderWorldPos, vec3(0.24, 0.36, 0.48));
+      float borderStep = step(0.35, fract(arcPhase + bayer * 0.5));
+      gl_FragColor.rgb *= mix(0.88, 1.16, borderStep);
       `
     )}
   `;

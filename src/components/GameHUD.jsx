@@ -9,7 +9,11 @@ import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
 import useAnswerCombobox from "../hooks/useAnswerCombobox";
-import { ANSWER_INPUT_PROPS } from "../utils/answerField";
+import {
+  ANSWER_INPUT_PROPS,
+  focusAnswerInputSafely,
+  shieldAutofillText,
+} from "../utils/answerField";
 import AnswerSuggestionList from "./AnswerSuggestionList";
 import Logo from "./Logo";
 import { PixelHeart } from "./PixelHeart";
@@ -81,14 +85,7 @@ const GameHUD = ({
   // Guarantee text input focus on game launch, restart, or mode change
   useEffect(() => {
     const focusInput = () => {
-      const el = extInputRef?.current;
-      if (el && document.activeElement !== el) {
-        try {
-          el.focus({ preventScroll: true });
-        } catch {
-          el.focus();
-        }
-      }
+      focusAnswerInputSafely(extInputRef);
     };
 
     focusInput();
@@ -446,7 +443,10 @@ const GameHUD = ({
               </IconButton>
             )}
 
-            <div
+            <form
+              autoComplete="off"
+              data-form-type="other"
+              onSubmit={(e) => e.preventDefault()}
               className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""} ${isRejected ? "is-rejected" : ""}`}
             >
               <input
@@ -454,11 +454,11 @@ const GameHUD = ({
                 {...ANSWER_INPUT_PROPS}
                 {...inputProps}
                 id="q-resp-field"
-                placeholder={placeholderText}
+                placeholder={shieldAutofillText(placeholderText)}
                 className="input-field"
-                aria-label={t("quiz_answer")}
+                aria-label={shieldAutofillText(t("quiz_answer"))}
               />
-            </div>
+            </form>
 
             {isFocusedCountry && mode !== "learn" && (
               <IconButton

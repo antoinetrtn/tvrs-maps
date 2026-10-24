@@ -3,13 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 import { isDoubleTapZoomStart } from "../globe/hooks/useGlobeInteractions";
 import {
   animateGlobePov,
+  CAMERA_FOV_DEG,
   cancelGlobePovTween,
   clampGlobeAltitude,
+  computeEffectiveCameraFov,
+  computeMapFlattenFactor,
   GLOBE_MAX_ALTITUDE,
   GLOBE_MAX_DISTANCE,
   GLOBE_MIN_ALTITUDE,
   isGlobePovTweenActive,
+  MAP_FLATTEN_MIN_FOV_DEG,
+  MAP_FLATTEN_START_ALTITUDE,
   readClampedGlobePov,
+  syncCameraMapProjection,
   syncGlobeCameraAndZoomLimits,
   syncGlobeControlsForAltitude,
 } from "../globe/render/globeAltitude";
@@ -221,6 +227,32 @@ describe("globeAltitude", () => {
       expect(isGlobePovTweenActive()).toBe(false);
 
       expect(cancelGlobePovTween(null)).toBe(false);
+    });
+  });
+
+  describe("progressive map flattening (Google Maps feel at close zoom)", () => {
+    it("keeps flattenFactor at 0 when zoomed out and ramps to 1 at minAltitude", () => {
+      expect(computeMapFlattenFactor(2.5)).toBe(0);
+      expect(computeMapFlattenFactor(MAP_FLATTEN_START_ALTITUDE)).toBe(0);
+      const mid = computeMapFlattenFactor(0.6);
+      expect(mid).toBeGreaterThan(0.2);
+      expect(mid).toBeLessThan(0.9);
+      expect(computeMapFlattenFactor(GLOBE_MIN_ALTITUDE)).toBeCloseTo(1, 5);
+    });
+
+    it("progressively narrows camera FOV from 50 deg to 24 deg as player zooms in", () => {
+      expect(computeEffectiveCameraFov(2.5)).toBe(CAMERA_FOV_DEG);
+      expect(computeEffectiveCameraFov(GLOBE_MIN_ALTITUDE)).toBeCloseTo(MAP_FLATTEN_MIN_FOV_DEG, 4);
+      const mockCam = {
+        fov: CAMERA_FOV_DEG,
+        up: { set: vi.fn() },
+        updateProjectionMatrix: vi.fn(),
+      };
+      const res = syncCameraMapProjection({ camera: () => mockCam }, GLOBE_MIN_ALTITUDE);
+      expect(res.flattenFactor).toBeCloseTo(1, 4);
+      expect(mockCam.fov).toBeCloseTo(MAP_FLATTEN_MIN_FOV_DEG, 4);
+      expect(mockCam.up.set).toHaveBeenCalledWith(0, 1, 0);
+      expect(mockCam.updateProjectionMatrix).toHaveBeenCalled();
     });
   });
 

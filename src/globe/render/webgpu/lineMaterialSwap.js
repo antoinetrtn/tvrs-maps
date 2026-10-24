@@ -7,8 +7,8 @@
  *
  * It also draws polygon boundary strokes with LineSegments + LineBasicMaterial.
  * Under WebGPU we swap LineBasicMaterial to LineBasicNodeMaterial and attach
- * a Bayer 4x4 stippled outputNode so country borders have the same tactile
- * pixel-dithered aesthetic as the land caps.
+ * a continuous Bayer 4x4 pixel-sheen outputNode so country borders stay
+ * razor-sharp and unbroken on mobile and desktop.
  */
 import * as THREE from "three";
 import {
@@ -21,15 +21,12 @@ import {
   output,
   positionWorld,
   screenCoordinate,
-  sin,
   step,
-  vec2,
   vec3,
 } from "three/tsl";
 import { Line2NodeMaterial, LineBasicNodeMaterial } from "three/webgpu";
 
-import { polygonGlitchUniforms } from "../polygonGlitchShader";
-import { bayer4x4, displayOutput, litDisplayColor, mirrorUniform } from "./tslCommon";
+import { bayer4x4, displayOutput, litDisplayColor } from "./tslCommon";
 
 export function toLine2NodeMaterial(lineMaterial) {
   const material = new Line2NodeMaterial({
@@ -53,27 +50,17 @@ export function toLine2NodeMaterial(lineMaterial) {
 }
 
 let borderNode = null;
-/** WebGPU outputNode for dithered/stippled country border LineSegments */
+/** WebGPU outputNode for continuous Bayer-modulated country border LineSegments */
 export function countryBorderOutputNode() {
   if (!borderNode) {
     borderNode = Fn(() => {
-      const uPixelScale = mirrorUniform(polygonGlitchUniforms.uPixelScale);
-      const px = floor(screenCoordinate.xy.mul(uPixelScale.mul(0.5)));
-      const pxFine = floor(screenCoordinate.xy.mul(uPixelScale));
-      const bayer = bayer4x4(px);
-      const bayerFine = bayer4x4(pxFine);
-
-      const worldCell = floor(positionWorld.mul(2.6));
-      const cellHash = fract(
-        sin(dot(worldCell.xy.add(worldCell.z), vec2(12.9898, 78.233))).mul(43758.5453)
-      );
-
-      const stippleMask = step(0.28, mix(bayer, cellHash, 0.35));
-      const brightStep = mix(float(0.65), float(1.45), step(0.48, bayerFine));
+      const bayer = bayer4x4(floor(screenCoordinate.xy.div(2.0)));
+      const arcPhase = dot(positionWorld, vec3(0.24, 0.36, 0.48));
+      const borderStep = step(float(0.35), fract(arcPhase.add(bayer.mul(0.5))));
+      const brightStep = mix(float(0.88), float(1.16), borderStep);
       const lit = litDisplayColor();
-      const rgb = lit.mul(brightStep).add(vec3(step(0.78, bayer).mul(0.12)));
-      const alpha = output.a.mul(mix(float(0.18), float(1.0), stippleMask));
-      return displayOutput(rgb, alpha);
+      const rgb = lit.mul(brightStep);
+      return displayOutput(rgb, output.a);
     })();
   }
   return borderNode;

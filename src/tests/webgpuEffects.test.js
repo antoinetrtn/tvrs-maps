@@ -135,7 +135,7 @@ describe("WebGPU effect ports", () => {
     expect(shader.uniforms.uPixelScale).toBe(polygonGlitchUniforms.uPixelScale);
     expect(shader.vertexShader).toContain("vDitherWorldNormal");
     expect(shader.vertexShader).toContain("vDitherWorldPos");
-    expect(shader.vertexShader).toContain("vSnapGrid");
+    expect(shader.vertexShader).not.toContain("vSnapGrid");
     expect(shader.fragmentShader).toContain("bayer4x4");
     expect(shader.fragmentShader).toContain("isSideWall");
   });
@@ -149,9 +149,10 @@ describe("WebGPU effect ports", () => {
     applyCountryBorderDitherShader(shader);
     expect(shader.uniforms.uPixelScale).toBe(polygonGlitchUniforms.uPixelScale);
     expect(shader.vertexShader).toContain("vBorderWorldPos");
-    expect(shader.vertexShader).toContain("vSnapGrid");
+    expect(shader.vertexShader).not.toContain("vSnapGrid");
     expect(shader.fragmentShader).toContain("bayer4x4");
-    expect(shader.fragmentShader).toContain("stippleMask");
+    expect(shader.fragmentShader).toContain("borderStep");
+    expect(shader.fragmentShader).not.toContain("discard");
   });
 
   it("styles polygon border LineSegments with Bayer dither", () => {

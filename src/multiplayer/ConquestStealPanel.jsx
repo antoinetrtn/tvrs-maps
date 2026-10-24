@@ -4,7 +4,7 @@ import Button from "../components/ui/Button.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
 import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import TextField from "../components/ui/TextField.jsx";
-import { ANSWER_INPUT_PROPS } from "../utils/answerField";
+import { ANSWER_INPUT_PROPS, shieldAutofillText } from "../utils/answerField";
 
 /** Harder steal challenge: type the capital, or pick the right flag among four. */
 const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel, myColor }) => {
@@ -60,7 +60,7 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel, myC
           variant="outline"
           className="conquest-input"
           value={value}
-          placeholder={t.stealPlaceholder}
+          placeholder={shieldAutofillText(t.stealPlaceholder)}
           {...ANSWER_INPUT_PROPS}
           onChange={(e) => setValue(e.target.value)}
         />

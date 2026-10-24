@@ -5,7 +5,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
 import { showToast } from "../components/ui/Toast.jsx";
-import { ANSWER_INPUT_PROPS } from "../utils/answerField";
+import {
+  ANSWER_INPUT_PROPS,
+  focusAnswerInputSafely,
+  shieldAutofillText,
+} from "../utils/answerField";
 import { HudFeed, HudTopBar } from "./ConquestHudParts.jsx";
 import {
   computeStandings,
@@ -163,7 +167,7 @@ function useCountryClickHandler({
       void openSteal(countryId);
     } else if (action === "free") {
       showToast({ message: t.clickFree, tone: "success" });
-      inputRef.current?.focus();
+      focusAnswerInputSafely(inputRef);
     } else if (action === "mine") {
       void openFortify(countryId);
     } else {
@@ -240,6 +244,7 @@ const HudAnswer = ({
           value={answer}
           disabled={phase !== "live"}
           placeholder={t.inputPlaceholder}
+          aria-label={shieldAutofillText(t.inputPlaceholder)}
           onChange={(e) => setAnswer(e.target.value)}
         />
       </form>

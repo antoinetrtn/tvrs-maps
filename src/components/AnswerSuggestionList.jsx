@@ -2,6 +2,8 @@ import "./AnswerSuggestionList.css";
 
 import React from "react";
 
+import { shieldAutofillText } from "../utils/answerField";
+
 function handleOptionKeyDown(e, idx, onSelect) {
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
@@ -23,7 +25,7 @@ const AnswerSuggestionList = ({
       id={id}
       role="listbox"
       tabIndex={-1}
-      aria-label={t ? t("quiz_answer") : "Réponse du quiz"}
+      aria-label={shieldAutofillText(t ? t("quiz_answer") : "Réponse du quiz")}
       className="suggestions-list animation-fade-in"
       onMouseDown={(e) => e.preventDefault()}
     >

@@ -3,7 +3,7 @@ import { useCallback, useRef } from "react";
 import { BREAKPOINTS } from "../../config/gameConstants";
 import { perfTracker } from "../../utils/perfTracker";
 import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
-import { clampGlobeAltitude } from "../render/globeAltitude";
+import { clampGlobeAltitude, syncCameraMapProjection } from "../render/globeAltitude";
 
 // Double-tap-and-drag zoom: the second tap must land quickly and close to the first.
 const DOUBLE_TAP_MS = 280;
@@ -232,6 +232,7 @@ export function useGlobeInteractions({
       const zoomSpeed = 0.005;
       const newAlt = clampGlobeAltitude(currentPOV.altitude - deltaY * zoomSpeed);
       globeEl.current.pointOfView({ altitude: newAlt }, 0);
+      syncCameraMapProjection(globeEl.current, newAlt);
       startY.current = touch.clientY;
       e.preventDefault();
     },
