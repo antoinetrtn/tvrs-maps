@@ -253,13 +253,13 @@ export function useGlobeCamera(props) {
   }, [isRegionalMap, globeEl]);
 
   useEffect(() => {
-    let controlsReference = null,
-      domElementReference = null;
+    let controlsRef = null,
+      domRef = null;
     let changeHandler = null,
       startHandler = null,
       endHandler = null;
     let wheelHandler = null,
-      touchStartZoomHandler = null;
+      touchZoomHandler = null;
 
     if (globeEl.current) {
       try {
@@ -272,10 +272,9 @@ export function useGlobeCamera(props) {
           polygonGlitchUniforms.uPixelScale.value =
             GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
         }
-
         const controls = globeEl.current.controls();
         if (controls) {
-          controlsReference = controls;
+          controlsRef = controls;
           controls.autoRotate = shouldAutoRotate;
           controls.autoRotateSpeed = 0.3;
           controls.enableZoom = true;
@@ -288,7 +287,6 @@ export function useGlobeCamera(props) {
             isMobile: Boolean(perfProfile?.isMobile),
             isRegionalMap: isRegionalMapRef.current,
           });
-
           const zoomHapticTracker = zoomHapticTrackerRef.current;
           ({ changeHandler, startHandler, endHandler } = createOrbitControlHandlers({
             globeEl,
@@ -301,41 +299,38 @@ export function useGlobeCamera(props) {
             setCameraPOV,
             zoomHapticTracker,
           }));
-
           controls.addEventListener("change", changeHandler);
           controls.addEventListener("start", startHandler);
           controls.addEventListener("end", endHandler);
-
-          domElementReference = controls.domElement || globeEl.current.renderer?.()?.domElement;
-          if (domElementReference?.addEventListener) {
-            wheelHandler = () => zoomHapticTracker?.markZoomGesture();
-            touchStartZoomHandler = (e) => {
-              if ((e?.touches?.length ?? 0) >= 2) zoomHapticTracker?.markZoomGesture();
+          domRef = controls.domElement || globeEl.current.renderer?.()?.domElement;
+          if (domRef?.addEventListener) {
+            wheelHandler = (e) => zoomHapticTracker?.onWheelDelta(e?.deltaY);
+            touchZoomHandler = (e) => {
+              const t = e?.touches;
+              if ((t?.length ?? 0) >= 2) {
+                zoomHapticTracker?.onPinchDistance(
+                  Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)
+                );
+              }
             };
-            domElementReference.addEventListener("wheel", wheelHandler, { passive: true });
-            domElementReference.addEventListener("touchstart", touchStartZoomHandler, {
-              passive: true,
-            });
+            domRef.addEventListener("wheel", wheelHandler, { passive: true });
+            domRef.addEventListener("touchstart", touchZoomHandler, { passive: true });
+            domRef.addEventListener("touchmove", touchZoomHandler, { passive: true });
           }
         }
-
-        syncGlobeCameraAndZoomLimits(globeEl.current, controlsReference);
+        syncGlobeCameraAndZoomLimits(globeEl.current, controlsRef);
       } catch {}
     }
 
     return () => {
-      if (controlsReference) {
-        try {
-          if (changeHandler) controlsReference.removeEventListener("change", changeHandler);
-          if (startHandler) controlsReference.removeEventListener("start", startHandler);
-          if (endHandler) controlsReference.removeEventListener("end", endHandler);
-          if (domElementReference?.removeEventListener) {
-            if (wheelHandler) domElementReference.removeEventListener("wheel", wheelHandler);
-            if (touchStartZoomHandler)
-              domElementReference.removeEventListener("touchstart", touchStartZoomHandler);
-          }
-        } catch {}
-      }
+      try {
+        controlsRef?.removeEventListener("change", changeHandler);
+        controlsRef?.removeEventListener("start", startHandler);
+        controlsRef?.removeEventListener("end", endHandler);
+        domRef?.removeEventListener("wheel", wheelHandler);
+        domRef?.removeEventListener("touchstart", touchZoomHandler);
+        domRef?.removeEventListener("touchmove", touchZoomHandler);
+      } catch {}
     };
   }, [shouldAutoRotate, perfProfile?.pixelRatio, perfProfile?.isMobile, isHomeScreen, globeEl]);
 

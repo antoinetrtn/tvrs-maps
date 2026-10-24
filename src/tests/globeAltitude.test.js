@@ -353,12 +353,21 @@ describe("globeAltitude", () => {
       expect(floorStep.duration).toBe(ZOOM_HAPTIC_BOUNDARY_MS);
       expect(floorStep.boundary).toBe("min");
 
+      // Synchronous 2-finger pinch distance & wheel delta steppers
+      expect(tracker.onPinchDistance(100, { now: 500, stepPx: 14 }).pulsed).toBe(false);
+      const pinchTick = tracker.onPinchDistance(118, { now: 560, stepPx: 14 });
+      expect(pinchTick.pulsed).toBe(true);
+      expect(pinchTick.duration).toBe(ZOOM_HAPTIC_TICK_MS);
+      expect(tracker.onWheelDelta(20, { now: 620, stepDelta: 36 }).pulsed).toBe(false);
+      const wheelTick = tracker.onWheelDelta(20, { now: 680, stepDelta: 36 });
+      expect(wheelTick.pulsed).toBe(true);
+
       // Clearing gesture stops further pulses
       tracker.clearZoomGesture();
-      expect(tracker.onAltitudeChange(1.8, { now: 400 }).pulsed).toBe(false);
+      expect(tracker.onAltitudeChange(1.8, { now: 800 }).pulsed).toBe(false);
       expect(
-        triggerSubtleHapticTick(2, {
-          vibrate: (ms) => ms === 2,
+        triggerSubtleHapticTick(ZOOM_HAPTIC_TICK_MS, {
+          vibrate: (ms) => ms === ZOOM_HAPTIC_TICK_MS,
         })
       ).toBe(true);
     });

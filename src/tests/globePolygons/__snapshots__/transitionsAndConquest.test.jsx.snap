@@ -1,3 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`useGlobePolygons characterization — Conquest, Mode Transitions, and Selection Transitions > Mode (layer) transitions across transitionStep = 0, mid, and end > characterizes exiting regional mode (departments -> countries) and regional-to-regional transitions 1`] = `"#182b2f"`;
+exports[`useGlobePolygons characterization — Conquest, Mode Transitions, and Selection Transitions > Mode (layer) transitions across transitionStep = 0, mid, and end > characterizes exiting regional mode (departments -> countries) and regional-to-regional transitions 1`] = `"#192c30"`;

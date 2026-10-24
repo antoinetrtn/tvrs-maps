@@ -55,10 +55,14 @@ export const displayOutput = (rgb, alpha = output.a) => vec4(fromDisplay(rgb), a
  * existing JS (shader clock, feedback, transitions) keeps driving both paths.
  */
 export function mirrorUniform(holder) {
-  const initial = holder.value?.isColor ? new THREE.Color().copy(holder.value) : holder.value;
+  const initial = holder.value?.isColor
+    ? new THREE.Color().copy(holder.value)
+    : holder.value?.isVector2
+      ? new THREE.Vector2().copy(holder.value)
+      : holder.value;
   const node = uniform(initial);
   node.onRenderUpdate(() => {
-    if (holder.value?.isColor) {
+    if (holder.value?.isColor || holder.value?.isVector2) {
       node.value.copy(holder.value);
       return node.value;
     }

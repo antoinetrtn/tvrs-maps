@@ -291,13 +291,13 @@ const GLOBE_THEMES = {
     continents: {
       surface: {
         dark: {
-          Europe: "#2f3d38",
+          Europe: "#34423d",
           Americas: "#34423d",
-          Africa: "#3a4640",
-          Oceania: "#3e4a43",
-          Asia: "#424d45",
-          Antarctic: "#4c5650",
-          France: "#2f3d38",
+          Africa: "#34423d",
+          Oceania: "#34423d",
+          Asia: "#34423d",
+          Antarctic: "#34423d",
+          France: "#34423d",
           Unknown: "#34423d",
         },
       },

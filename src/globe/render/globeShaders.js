@@ -211,8 +211,7 @@ export const GLITCH_FRAGMENT_BODY = `
 
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
   float ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
-  float keyLight = clamp(dot(sphereDir, normalize(vec3(-0.45, 0.55, 0.70))), 0.0, 1.0);
-  float sphereShade = mix(0.72, 1.08, smoothstep(0.05, 0.95, ndv * 0.68 + keyLight * 0.32));
+  float sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
 
   float baseMin = (uIsLight > 0.5) ? 0.76 : 0.36;
   float baseMax = (uIsLight > 0.5) ? 0.94 : 0.54;
@@ -293,10 +292,7 @@ export const GLITCH_FRAGMENT_BODY = `
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
   vec3 settleColor = mix(litRestingColor, uFoundGreen * sideShade, step(0.5, uIsFound));
 
-  // Micro-grain noise sur la surface de tous les pays
-  float countrySurfaceNoise = (hash(floor(fragPx * 3.2) + vec2(0.12, 0.45)) - 0.5) * 0.022;
-  staticVec += vec3(countrySurfaceNoise);
-  settleColor += vec3(countrySurfaceNoise * 0.7);
+  // Clean uniform surface without noisy surface blotches
 
   float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
   blockVal = mix(blockVal, bayer, 0.22);
@@ -328,9 +324,7 @@ export const GLITCH_FRAGMENT_BODY = `
     gl_FragColor.rgb = staticVec * sideShade;
   }
 
-  // Grain TV tactile micro-subtil sur l'intégralité des faces des pays
-  float surfaceGrain = (hash(floor(fragPx * 3.6) + vec2(0.4, 0.7)) - 0.5) * 0.018;
-  gl_FragColor.rgb += vec3(surfaceGrain);
+  // Clean cartographic finish
 
   if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {
     gl_FragColor.a = 1.0;

@@ -65,24 +65,21 @@ export function applyCountrySurfaceGrainShader(shader) {
       float isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
 
       vec3 viewDir = normalize(cameraPosition - vDitherWorldPos);
-      vec3 wNorm = sphereNormal;
-      float ndv = clamp(dot(wNorm, viewDir), 0.0, 1.0);
-      vec3 keyLightDir = normalize(vec3(-0.45, 0.55, 0.70));
-      float keyLight = clamp(dot(wNorm, keyLightDir), 0.0, 1.0);
-      float litLevel = clamp(ndv * 0.68 + keyLight * 0.32, 0.0, 1.0);
-      float shadeFactor = mix(0.76, 1.08, smoothstep(0.05, 0.95, litLevel));
+      float ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
+      float limbFactor = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
+      float rimSheen = pow(1.0 - ndv, 3.2) * 0.045;
 
-      vec2 sphereCoord = sphereNormal.xz * 420.0 + vec2(sphereNormal.y * 310.0, sphereNormal.x * 190.0);
-      vec2 sphereCell = floor(sphereCoord);
-      vec2 sphereFrac = smoothstep(0.0, 1.0, fract(sphereCoord));
-      float g00 = fract(sin(dot(sphereCell, vec2(12.9898, 78.233))) * 43758.5453);
-      float g10 = fract(sin(dot(sphereCell + vec2(1.0, 0.0), vec2(12.9898, 78.233))) * 43758.5453);
-      float g01 = fract(sin(dot(sphereCell + vec2(0.0, 1.0), vec2(12.9898, 78.233))) * 43758.5453);
-      float g11 = fract(sin(dot(sphereCell + vec2(1.0, 1.0), vec2(12.9898, 78.233))) * 43758.5453);
-      float microGrain = (mix(mix(g00, g10, sphereFrac.x), mix(g01, g11, sphereFrac.x), sphereFrac.y) - 0.5) * 0.018;
+      float cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
+      float cLng = atan(sphereNormal.z, sphereNormal.x);
+      vec2 cartUv = vec2(cLng / 6.2831853 + 0.5, cLat / 3.14159265 + 0.5);
+      vec2 topoGrid = cartUv * vec2(72.0, 36.0);
+      vec2 topoDist = abs(fract(topoGrid + 0.5) - 0.5) / max(fwidth(topoGrid), vec2(0.001));
+      float parallelLine = clamp(1.0 - topoDist.y, 0.0, 1.0);
+      float crossTick = clamp(1.0 - max(topoDist.x, topoDist.y) * 0.6, 0.0, 1.0);
+      vec3 engrave = gl_FragColor.rgb * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
 
-      vec3 capRgb = gl_FragColor.rgb * shadeFactor + vec3(microGrain);
-      vec3 sideRgb = gl_FragColor.rgb * 0.84;
+      vec3 capRgb = gl_FragColor.rgb * limbFactor + engrave;
+      vec3 sideRgb = gl_FragColor.rgb * 0.58;
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
       `
     )}

@@ -23,6 +23,9 @@ export const polygonGlitchUniforms = {
   // Success flash timeline — stamped (in uTime seconds) when a guess lands.
   uSuccessStart: { value: -10 },
   uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
+  // Globe camera motion reactivity for magnetic ocean currents.
+  uGlobeMotion: { value: 0 },
+  uGlobeVelocity: { value: new THREE.Vector2(0, 0) },
 };
 
 const animatedPolygonMaterials = new Set();

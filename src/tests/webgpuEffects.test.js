@@ -141,7 +141,8 @@ describe("WebGPU effect ports", () => {
     expect(shader.vertexShader).toContain("vDitherWorldPos");
     expect(shader.vertexShader).not.toContain("vSnapGrid");
     expect(shader.fragmentShader).not.toContain("gl_FragCoord");
-    expect(shader.fragmentShader).toContain("sphereCell");
+    expect(shader.fragmentShader).toContain("topoGrid");
+    expect(shader.fragmentShader).toContain("engrave");
     expect(shader.fragmentShader).toContain("isSideWall");
   });
 

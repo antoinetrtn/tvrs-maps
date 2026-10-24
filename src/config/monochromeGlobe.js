@@ -71,7 +71,8 @@ export const buildMonochromePalette = (accentId) => {
   const paper = isPaperAccent(accent);
   const landTarget = paper ? 0.14 : 0.09;
   const base = mixForLuminance(accent, landTarget);
-  const land = REGION_LIGHTNESS.map((k) => mixHex(INK, accent, Math.min(1, base * k)));
+  const uniformLandShade = mixHex(INK, accent, Math.min(1, base));
+  const land = REGIONS.map(() => uniformLandShade);
   // High-contrast label/gauge tones (>= 4.5:1 against dark glass panels).
   const labelTarget = paper ? 0.52 : 0.36;
   const labelBase = mixForLuminance(accent, labelTarget);
