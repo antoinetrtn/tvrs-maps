@@ -1,7 +1,11 @@
 import { useCallback, useRef } from "react";
 
 import { BREAKPOINTS } from "../../config/gameConstants";
-import { createZoomHapticTracker, primeHapticsOnUserGesture } from "../../utils/haptics";
+import {
+  createZoomHapticTracker,
+  primeHapticsOnUserGesture,
+  triggerSubtleHapticTick,
+} from "../../utils/haptics";
 import { perfTracker } from "../../utils/perfTracker";
 import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
 import {
@@ -72,6 +76,7 @@ export function useGlobeInteractions({
     (admin) => {
       if (onCountrySelect) {
         if (!admin || gameDataMap[admin]) {
+          if (admin) triggerSubtleHapticTick();
           onCountrySelect(admin);
         }
       }
@@ -192,12 +197,6 @@ export function useGlobeInteractions({
         // Two fingers: hand the pinch to OrbitControls, untouched.
         hadMultiTouchRef.current = true;
         restoreRotateAfterZoomDrag();
-        zoomDragHapticRef.current?.onPinchDistance(
-          Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          )
-        );
         lastTapRef.current = 0;
         lastTapPosRef.current = null;
         return;
@@ -241,12 +240,6 @@ export function useGlobeInteractions({
         hadMultiTouchRef.current = true;
         lastTapRef.current = 0;
         restoreRotateAfterZoomDrag();
-        zoomDragHapticRef.current?.onPinchDistance(
-          Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          )
-        );
         return;
       }
       if (!isZoomDragging.current || !globeEl.current) return;

@@ -13,6 +13,7 @@ import {
   clamp,
   cos,
   dot,
+  exp2,
   float,
   floor,
   Fn,
@@ -20,6 +21,7 @@ import {
   fwidth,
   If,
   length,
+  log2,
   max,
   min,
   mix,
@@ -28,7 +30,6 @@ import {
   positionLocal,
   positionWorld,
   pow,
-  screenCoordinate,
   select,
   sin,
   smoothstep,
@@ -102,60 +103,57 @@ export function countryGrainOutputNode() {
 
 let oceanMotionNode = null;
 
-/** blackoutOceanOutputNode: fine-scale magnetic-field ocean currents + 1-bit Bayer 4x4 pixel-art trame */
-let oceanPixelScaleNode = null;
+const oceanValueNoise = Fn(([p]) => {
+  const i = floor(p);
+  const f = fract(p);
+  const u = f.mul(f).mul(float(3.0).sub(f.mul(2.0)));
+  const n00 = hash(i);
+  const n10 = hash(i.add(vec2(1.0, 0.0)));
+  const n01 = hash(i.add(vec2(0.0, 1.0)));
+  const n11 = hash(i.add(vec2(1.0, 1.0)));
+  return mix(mix(n00, n10, u.x), mix(n01, n11, u.x), u.y);
+});
 
-/** blackoutOceanOutputNode: discreet stepped 3D pixel-art Bayer 4x4 ocean dithering */
+/** blackoutOceanOutputNode: 3D sphere-anchored pixel-art Bayer 4x4 ocean dithering */
 export function blackoutOceanOutputNode(
   rimColor = new THREE.Color(0.85, 0.88, 0.92),
-  rimStrength = 0.07,
-  uPixelScale = polygonGlitchUniforms.uPixelScale
+  rimStrength = 0.07
 ) {
   const uGlobeMotion = (oceanMotionNode ||= mirrorUniform(polygonGlitchUniforms.uGlobeMotion));
-  const pixelScale = (oceanPixelScaleNode ||= mirrorUniform(uPixelScale));
   return Fn(() => {
     const uvCoords = uv();
-    const pxStep = max(floor(float(2.0).div(max(pixelScale, 0.25)).add(0.5)), 2.0);
-    const ditherPx = floor(screenCoordinate.xy.div(pxStep));
-    const bayer = bayer4x4(ditherPx);
-
     const rawLat = uvCoords.y.sub(0.5).mul(3.14159265);
     const rawLng = uvCoords.x.sub(0.5).mul(6.2831853);
+    const camAlt = max(length(cameraPosition).sub(100.0), 15.0);
+    const zoomOctave = exp2(floor(log2(clamp(float(220.0).div(camAlt), 1.0, 8.0)).add(0.5)));
+    const resLat = float(56.0).mul(zoomOctave);
 
-    const macroRow = floor(rawLat.mul(14.0));
-    const macroCos = max(cos(macroRow.add(0.5).div(14.0)), 0.25);
-    const macroCol = floor(rawLng.mul(macroCos).mul(14.0));
-    const macroCell = vec2(macroCol, macroRow);
+    const pxRow = floor(rawLat.mul(resLat));
+    const rowLat = pxRow.add(0.5).div(resLat);
+    const colsPerRad = max(floor(resLat.mul(cos(rowLat)).add(0.5)), 8.0);
+    const pxCol = floor(rawLng.mul(colsPerRad));
+    const spherePx = vec2(pxCol, pxRow);
+    const bayer = bayer4x4(spherePx);
 
-    const midRow = floor(rawLat.mul(32.0));
-    const midCos = max(cos(midRow.add(0.5).div(32.0)), 0.25);
-    const midCol = floor(rawLng.mul(midCos).mul(32.0));
-    const midCell = vec2(midCol, midRow);
-
-    const microRow = floor(rawLat.mul(72.0));
-    const microCos = max(cos(microRow.add(0.5).div(72.0)), 0.25);
-    const microCol = floor(rawLng.mul(microCos).mul(72.0));
-    const microCell = vec2(microCol, microRow);
-
-    const hMacro = hash(macroCell);
-    const hMid = hash(midCell.add(vec2(19.0, 47.0)));
-    const hMicro = hashGrain(microCell);
-    const cellField = hMacro.mul(0.52).add(hMid.mul(0.33)).add(hMicro.mul(0.15));
+    const qSphere = vec2(pxCol.add(0.5).div(colsPerRad), rowLat);
+    const bathyMacro = oceanValueNoise(qSphere.mul(2.4).add(vec2(1.7, 3.1)));
+    const bathyMid = oceanValueNoise(qSphere.mul(5.2).add(vec2(8.3, 4.9)));
+    const bathymetry = bathyMacro.mul(0.62).add(bathyMid.mul(0.38));
 
     const n = normalize(normalWorld);
     const viewDir = normalize(cameraPosition.sub(positionWorld));
     const viewIncidence = clamp(dot(n, viewDir), 0.0, 1.0);
-    const steppedLimb = floor(clamp(float(1.0).sub(viewIncidence), 0.0, 1.0).mul(6.0)).div(6.0);
+    const limb = pow(clamp(float(1.0).sub(viewIncidence), 0.0, 1.0), 1.35);
 
-    const combinedField = cellField.mul(0.72).add(steppedLimb.mul(0.48));
-    const bayerSteps = floor(clamp(combinedField.sub(0.28).mul(5.2), 0.0, 4.0));
-    const ditherTone = bayerSteps.div(16.0).add(uGlobeMotion.mul(0.015));
-    const trameBit = step(bayer.add(0.02), ditherTone);
+    const rawField = bathymetry.mul(0.78).add(limb.mul(0.45)).add(uGlobeMotion.mul(0.04));
+    const bayerSteps = floor(clamp(rawField.mul(12.0).sub(0.8), 2.0, 9.0));
+    const ditherTone = bayerSteps.div(16.0);
+    const trameBit = step(bayer.add(0.01), ditherTone);
 
     const rimColorVec = vec3(rimColor.r, rimColor.g, rimColor.b);
-    const rimRgb = rimColorVec.mul(trameBit.mul(float(rimStrength).mul(0.34).add(0.055)));
+    const rimRgb = rimColorVec.mul(trameBit.mul(float(rimStrength).mul(0.68).add(0.16)));
 
-    const latWidth = max(fwidth(uvCoords.y), 0.0004);
+    const latWidth = max(fwidth(uvCoords.y), 0.0005);
     const eqLine = clamp(float(1.0).sub(abs(uvCoords.y.sub(0.5)).div(latWidth)), 0.0, 1.0);
     const tropicLine = clamp(
       float(1.0).sub(abs(abs(uvCoords.y.sub(0.5)).sub(23.44 / 180.0)).div(latWidth)),
@@ -163,11 +161,11 @@ export function blackoutOceanOutputNode(
       1.0
     );
     const specialLines = max(eqLine, tropicLine);
-    const specialDither = step(bayer.add(0.03), specialLines.mul(0.65)).mul(0.05);
+    const specialDither = step(bayer.add(0.03), specialLines.mul(0.65)).mul(0.08);
 
     const graticuleColor = mix(vec3(0.55, 0.65, 0.75), rimColorVec, 0.45);
     const graticuleRgb = graticuleColor.mul(
-      specialDither.mul(float(rimStrength).mul(0.22).add(0.04))
+      specialDither.mul(float(rimStrength).mul(0.35).add(0.08))
     );
 
     return displayOutput(litDisplayColor().add(rimRgb).add(graticuleRgb));
