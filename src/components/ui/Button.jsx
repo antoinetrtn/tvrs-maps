@@ -2,6 +2,8 @@ import "./Button.css";
 
 import React from "react";
 
+import { primeHapticsOnUserGesture, triggerSubtleHapticTick } from "../../utils/haptics";
+
 const VARIANTS = ["primary", "secondary", "ghost", "danger"];
 const SIZES = ["sm", "md", "lg"];
 
@@ -53,6 +55,8 @@ const Button = React.forwardRef(function Button(
       event.preventDefault();
       return;
     }
+    primeHapticsOnUserGesture();
+    triggerSubtleHapticTick();
     onClick?.(event);
   };
 
