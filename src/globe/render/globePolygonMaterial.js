@@ -88,24 +88,32 @@ export function applyCountrySurfaceGrainShader(shader) {
 
       // Discreet pixel-art capital & urban agglomeration night lights seen from space
       vec2 cityCellId = floor(cartUv * vec2(3600.0, 1800.0));
-      float cityDensity = texture2D(uCapitalLightsMap, cartUv).r;
+      vec2 capitalSample = texture2D(uCapitalLightsMap, cartUv).rg;
+      float cityDensity = capitalSample.r;
+      float cityAura = capitalSample.g;
       float cityHash = cityCellHash(cityCellId);
       float cityHash2 = cityCellHash(cityCellId + vec2(37.2, 91.7));
-      float cityTwinkle = 0.92 + 0.08 * sin(uTime * 2.1 + cityHash * 6.2831853);
-      float tierPinpoint = step(0.88, cityDensity);
-      float tierCore = (1.0 - tierPinpoint) * step(0.72, cityDensity);
-      float tierMidSpark = (1.0 - max(tierPinpoint, tierCore)) * step(0.60, cityDensity);
-      float tierOuterSpark = (1.0 - max(max(tierPinpoint, tierCore), tierMidSpark)) * step(0.45, cityDensity);
+      float cityTwinkle = 0.93 + 0.07 * sin(uTime * 2.1 + cityHash * 6.2831853);
+      float tierPinpoint = step(0.82, cityDensity);
+      float tierArterial = (1.0 - tierPinpoint) * step(0.55, cityDensity);
+      float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.25, cityDensity);
       float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
       float darkRestMask = 1.0 - smoothstep(0.38, 0.58, surfaceLuma);
-      vec3 cityGlow = (
-        tierPinpoint * vec3(0.60, 0.55, 0.42) +
-        tierCore * vec3(0.46, 0.42, 0.32) * (0.90 + 0.10 * cityHash2) +
-        tierMidSpark * vec3(0.34, 0.31, 0.23) * (0.85 + 0.15 * cityHash2) +
-        tierOuterSpark * vec3(0.22, 0.20, 0.15) * (0.80 + 0.20 * cityHash2)
+      vec3 baseLit = gl_FragColor.rgb * limbFactor + engrave;
+      vec3 auraColor = vec3(0.48, 0.26, 0.08);
+      vec3 withAura = mix(baseLit, max(baseLit, auraColor), cityAura * 0.22 * darkRestMask);
+      vec3 colorOuterTentacle = vec3(0.85, 0.46, 0.14);
+      vec3 colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.76, 0.26), cityHash2);
+      vec3 colorMetroHeart = mix(vec3(1.0, 0.91, 0.62), vec3(1.0, 0.97, 0.84), smoothstep(0.82, 1.0, cityDensity));
+      vec3 sparkColor = tierPinpoint * colorMetroHeart
+        + tierArterial * colorMainArterial
+        + tierTentacle * colorOuterTentacle;
+      float sparkAlpha = (
+        tierPinpoint * 0.96 +
+        tierArterial * (0.76 + 0.14 * cityHash2) +
+        tierTentacle * (0.48 + 0.22 * cityHash2)
       ) * cityTwinkle * darkRestMask;
-
-      vec3 capRgb = gl_FragColor.rgb * limbFactor + engrave + cityGlow;
+      vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
       vec3 sideRgb = gl_FragColor.rgb * 0.58;
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
       `

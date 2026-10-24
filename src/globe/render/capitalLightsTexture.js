@@ -101,6 +101,51 @@ const COMPACT_CAPITALS = new Set([
   "Trinidad and Tobago",
 ]);
 
+// Major sprawling metropolises get slightly longer highway tentacles
+const MAJOR_METROPOLISES = new Set([
+  "Argentina",
+  "Australia",
+  "Austria",
+  "Belgium",
+  "Brazil",
+  "Canada",
+  "Chile",
+  "China",
+  "Colombia",
+  "Czechia",
+  "Egypt",
+  "France",
+  "Germany",
+  "Greece",
+  "Hungary",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Italy",
+  "Japan",
+  "Mexico",
+  "Netherlands",
+  "Nigeria",
+  "Peru",
+  "Poland",
+  "Portugal",
+  "Romania",
+  "Russia",
+  "Saudi Arabia",
+  "South Africa",
+  "South Korea",
+  "Spain",
+  "Sweden",
+  "Thailand",
+  "Turkey",
+  "Ukraine",
+  "United Kingdom",
+  "United States of America",
+  "Vietnam",
+]);
+
+const STEP_DEG = 0.088;
+
 let sharedCapitalLightsTexture = null;
 
 function hash1(n) {
@@ -108,76 +153,209 @@ function hash1(n) {
   return x - Math.floor(x);
 }
 
-function setTexelMax(data, x, y, val) {
+function setTexelRG(data, x, y, rVal, gVal) {
   if (y < 0 || y >= TEX_HEIGHT) return;
   const wx = ((x % TEX_WIDTH) + TEX_WIDTH) % TEX_WIDTH;
   const idx = (y * TEX_WIDTH + wx) * 4;
-  if (val > data[idx]) {
-    data[idx] = val;
-    data[idx + 1] = val;
-    data[idx + 2] = val;
-    data[idx + 3] = 255;
-  }
+  if (rVal > data[idx]) data[idx] = rVal;
+  if (gVal > data[idx + 1]) data[idx + 1] = gVal;
+  data[idx + 3] = 255;
 }
 
-function stampDot(data, lat, lng, dLatDeg, dLonScaledDeg, cosLat, val) {
-  const pLat = lat + dLatDeg;
-  const pLng = lng + dLonScaledDeg / cosLat;
-  const y = Math.floor(((pLat + 90) / 180) * TEX_HEIGHT);
-  const x = Math.floor(((pLng + 180) / 360) * TEX_WIDTH);
-  setTexelMax(data, x, y, val);
+function stampIsoPoint(data, lat, lng, cosLat, rVal, gVal) {
+  const y = Math.floor(((lat + 90) / 180) * TEX_HEIGHT);
+  const x = Math.floor(((lng + 180) / 360) * TEX_WIDTH);
+  setTexelRG(data, x, y, rVal, gVal);
   if (cosLat < 0.72) {
-    setTexelMax(data, x + 1, y, val);
+    setTexelRG(data, x + 1, y, rVal, gVal);
+  }
+  if (gVal > 28) {
+    const neighborG = Math.round(gVal * 0.58);
+    const dx = cosLat < 0.72 ? 2 : 1;
+    setTexelRG(data, x - 1, y, 0, neighborG);
+    setTexelRG(data, x + dx, y, 0, neighborG);
+    setTexelRG(data, x, y - 1, 0, neighborG);
+    setTexelRG(data, x, y + 1, 0, neighborG);
   }
 }
 
-function stampCapitalStarCluster(data, lat, lng, seed, cosLat, isCompact) {
+function stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode) {
   const y0 = Math.floor(((lat + 90) / 180) * TEX_HEIGHT);
   const x0 = Math.floor(((lng + 180) / 360) * TEX_WIDTH);
-
-  // 1. Crisp pinpoint core right on the exact capital GPS coordinate (100% intensity = 255)
-  setTexelMax(data, x0, y0, 255);
-  // Tight 1-texel cross/cluster heart around the exact center (~8-10 km)
   const dxStep = Math.max(1, Math.round(1 / cosLat));
-  setTexelMax(data, x0 + dxStep, y0, 245);
-  setTexelMax(data, x0, y0 + 1, 245);
-  if (!isCompact) {
-    setTexelMax(data, x0 - dxStep, y0, 235);
-    setTexelMax(data, x0, y0 - 1, 235);
+  const auraSteps = scaleMode === "compact" ? 5 : scaleMode === "major" ? 8 : 6;
+
+  for (let dy = -auraSteps; dy <= auraSteps; dy++) {
+    for (let dx = -auraSteps; dx <= auraSteps; dx++) {
+      const dist = Math.hypot(dx, dy);
+      if (dist > auraSteps) continue;
+      const falloff = 1 - dist / auraSteps;
+      const gVal = Math.round(Math.pow(falloff, 1.55) * 225);
+      let rVal = 0;
+      if (dist <= 0.8) {
+        rVal = 255;
+      } else if (dist <= 1.65) {
+        const n = hash1(seed + dx * 19.3 + dy * 37.1);
+        rVal = n > 0.18 ? Math.round(225 + n * 28) : 185;
+      } else if (dist <= 2.6 && scaleMode !== "compact") {
+        const n = hash1(seed + dx * 43.7 + dy * 61.9);
+        if (n > 0.52) rVal = Math.round(170 + (n - 0.52) * 90);
+      }
+      for (let sx = 0; sx < dxStep; sx++) {
+        setTexelRG(data, x0 + dx * dxStep + sx, y0 + dy, rVal, gVal);
+      }
+    }
+  }
+}
+
+function stampSubBranch(
+  data,
+  lng,
+  cosLat,
+  seed,
+  t,
+  s,
+  startLat,
+  startLonScaled,
+  startAngle,
+  remSteps,
+  isFirstFork
+) {
+  const forkSign = hash1(seed + t * 307.1 + s) > 0.5 ? 1 : -1;
+  let bAngle = startAngle + forkSign * (0.52 + hash1(seed + t * 349.7 + s) * 0.38);
+  const branchSteps = Math.max(
+    4,
+    Math.round(remSteps * (0.55 + hash1(seed + t * 389.3 + s) * 0.3))
+  );
+  let bLat = startLat;
+  let bLonScaled = startLonScaled;
+
+  for (let bs = 1; bs <= branchSteps; bs++) {
+    const bProg = bs / branchSteps;
+    bAngle += (hash1(seed + t * 431.1 + s * 13 + bs * 23.9) - 0.5) * 0.28;
+    bLat += Math.sin(bAngle) * STEP_DEG;
+    bLonScaled += Math.cos(bAngle) * STEP_DEG;
+    const bRand = hash1(seed + t * 479.3 + s * 19 + bs * 41.1);
+    if (bRand <= 0.78 - bProg * 0.22) {
+      const bR = Math.max(76, Math.round((1 - bProg * 0.52) * (isFirstFork ? 172 : 145)));
+      const bG = Math.max(24, Math.round((1 - bProg * 0.75) * 95));
+      stampIsoPoint(data, bLat, lng + bLonScaled / cosLat, cosLat, bR, bG);
+    }
+  }
+}
+
+function stampPrimaryTentacle(
+  data,
+  lat,
+  lng,
+  seed,
+  cosLat,
+  scaleMode,
+  t,
+  numTentacles,
+  maxStepsBase
+) {
+  const baseAngle = (t / numTentacles) * Math.PI * 2;
+  let angle = baseAngle + (hash1(seed + t * 13.7) - 0.5) * 0.52;
+  const totalSteps = Math.round(maxStepsBase * (0.68 + hash1(seed + t * 29.3) * 0.52));
+  const curlBias = (hash1(seed + t * 41.9) - 0.5) * 0.095;
+
+  let curLat = lat;
+  let curLonScaled = 0;
+
+  for (let s = 1; s <= totalSteps; s++) {
+    const progress = s / totalSteps;
+    angle += (hash1(seed + t * 101.3 + s * 17.7) - 0.5) * 0.26 + curlBias;
+    curLat += Math.sin(angle) * STEP_DEG;
+    curLonScaled += Math.cos(angle) * STEP_DEG;
+    const curLng = lng + curLonScaled / cosLat;
+
+    const stepRand = hash1(seed + t * 157.1 + s * 31.3);
+    const isNodeHub =
+      (Math.abs(progress - 0.38) < 0.07 || Math.abs(progress - 0.74) < 0.07) &&
+      hash1(seed + t * 193.7 + Math.round(progress * 10)) > 0.25;
+
+    const keepProb = progress < 0.35 ? 0.94 : progress < 0.75 ? 0.8 : 0.64;
+    if (isNodeHub || stepRand <= keepProb) {
+      const baseIntensity =
+        progress < 0.25
+          ? 232 - progress * 140
+          : progress < 0.65
+            ? 198 - (progress - 0.25) * 165
+            : 132 - (progress - 0.65) * 130;
+      const rVal = Math.max(
+        78,
+        Math.min(248, Math.round(isNodeHub ? Math.max(baseIntensity + 28, 195) : baseIntensity))
+      );
+      const gVal = Math.max(30, Math.round((1 - progress * 0.78) * 155));
+      stampIsoPoint(data, curLat, curLng, cosLat, rVal, gVal);
+
+      if (isNodeHub) {
+        const sideAng = angle + (stepRand > 0.5 ? 1.4 : -1.4);
+        stampIsoPoint(
+          data,
+          curLat + Math.sin(sideAng) * 0.085,
+          curLng + (Math.cos(sideAng) * 0.085) / cosLat,
+          cosLat,
+          Math.max(125, rVal - 32),
+          Math.round(gVal * 0.8)
+        );
+      }
+    }
+
+    const shouldFork1 =
+      s === Math.max(3, Math.round(totalSteps * 0.36)) && hash1(seed + t * 211.9) > 0.22;
+    const shouldFork2 =
+      scaleMode !== "compact" &&
+      s === Math.max(6, Math.round(totalSteps * 0.64)) &&
+      hash1(seed + t * 263.3) > 0.38;
+
+    if (shouldFork1 || shouldFork2) {
+      stampSubBranch(
+        data,
+        lng,
+        cosLat,
+        seed,
+        t,
+        s,
+        curLat,
+        curLonScaled,
+        angle,
+        totalSteps - s,
+        shouldFork1
+      );
+    }
   }
 
-  // 2. Delicate, discrete 1px starry filaments & isolated satellite pinpricks radiating outward
-  // Notice we place discrete dots at stepped distances so dark land remains visible between sparks!
-  const numRays = isCompact ? 4 : 6;
-  for (let r = 0; r < numRays; r++) {
-    const baseAngle = (r / numRays) * Math.PI * 2;
-    const angle = baseAngle + (hash1(seed + r * 13.7) - 0.5) * 0.45;
-    const curve = (hash1(seed + r * 29.3) - 0.5) * 0.35;
+  const satCount = scaleMode === "compact" ? 1 : 2;
+  for (let k = 0; k < satCount; k++) {
+    const satDist = (0.35 + hash1(seed + t * 521.7 + k * 67.3) * 0.58) * totalSteps * STEP_DEG;
+    const satAng =
+      baseAngle +
+      (0.35 + hash1(seed + t * 569.1 + k * 89.7) * 0.35) * ((Math.PI * 2) / numTentacles);
+    const sLat = lat + Math.sin(satAng) * satDist;
+    const sLng = lng + (Math.cos(satAng) * satDist) / cosLat;
+    const sR = Math.round(92 + hash1(seed + t * 613.3 + k * 107.9) * 58);
+    stampIsoPoint(data, sLat, sLng, cosLat, sR, 36);
+  }
+}
 
-    // Inner highway spark (~0.18°–0.24° from center)
-    const d1 = (isCompact ? 0.15 : 0.18) + hash1(seed + r * 41.1) * 0.06;
-    const a1 = angle + curve * 0.4;
-    stampDot(data, lat, lng, Math.sin(a1) * d1, Math.cos(a1) * d1, cosLat, 205);
+function stampCapitalTentacularWeb(data, lat, lng, seed, cosLat, scaleMode) {
+  stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode);
 
-    // Mid suburban satellite spark (~0.30°–0.38° from center, separated by dark gap)
-    if (hash1(seed + r * 59.3) > 0.15) {
-      const d2 = (isCompact ? 0.25 : 0.31) + hash1(seed + r * 71.9) * 0.07;
-      const a2 = angle + curve * 0.8;
-      stampDot(data, lat, lng, Math.sin(a2) * d2, Math.cos(a2) * d2, cosLat, 170);
-    }
+  const numTentacles = scaleMode === "compact" ? 5 : scaleMode === "major" ? 7 : 6;
+  const maxStepsBase = scaleMode === "compact" ? 11 : scaleMode === "major" ? 23 : 17;
 
-    // Outer isolated 1px pinprick (~0.44°–0.56° from center, only on main corridors)
-    if (!isCompact && hash1(seed + r * 83.7) > 0.35) {
-      const d3 = 0.43 + hash1(seed + r * 97.1) * 0.12;
-      const a3 = angle + curve * 1.15;
-      stampDot(data, lat, lng, Math.sin(a3) * d3, Math.cos(a3) * d3, cosLat, 140);
-    }
+  for (let t = 0; t < numTentacles; t++) {
+    stampPrimaryTentacle(data, lat, lng, seed, cosLat, scaleMode, t, numTentacles, maxStepsBase);
   }
 }
 
 /**
  * Lazily builds a 3600x1800 NearestFilter DataTexture (0.10 deg/texel) of crisp,
- * starry pixel-art capital night lights (bright pinpoint core + discrete 1px satellite sparks).
+ * tentacular pixel-art capital night lights:
+ * - R channel: crisp 1px dendritic highway tentacles, satellite hubs & bright metropolitan core
+ * - G channel: warm nocturnal sodium-amber urban ground aura
  */
 export function getCapitalLightsTexture() {
   if (sharedCapitalLightsTexture) return sharedCapitalLightsTexture;
@@ -191,7 +369,12 @@ export function getCapitalLightsTexture() {
     const lng = info.lng;
     const cosLat = Math.max(0.22, Math.cos((lat * Math.PI) / 180));
     const seed = lat * 13.37 + lng * 7.91;
-    stampCapitalStarCluster(data, lat, lng, seed, cosLat, COMPACT_CAPITALS.has(admin));
+    const scaleMode = COMPACT_CAPITALS.has(admin)
+      ? "compact"
+      : MAJOR_METROPOLISES.has(admin)
+        ? "major"
+        : "normal";
+    stampCapitalTentacularWeb(data, lat, lng, seed, cosLat, scaleMode);
   });
 
   const tex = new THREE.DataTexture(data, TEX_WIDTH, TEX_HEIGHT, THREE.RGBAFormat);

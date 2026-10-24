@@ -92,31 +92,44 @@ export function countryGrainOutputNode() {
 
       const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
       const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
-      const cityDensity = texture(getCapitalLightsTexture(), cartUv).r;
+      const capitalSample = texture(getCapitalLightsTexture(), cartUv);
+      const cityDensity = capitalSample.r;
+      const cityAura = capitalSample.g;
       const cityHash = hash(cityCellId);
       const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
       const cityTwinkle = sin(uTimeNode.mul(2.1).add(cityHash.mul(6.2831853)))
-        .mul(0.08)
-        .add(0.92);
-      const tierPinpoint = step(0.88, cityDensity);
-      const tierCore = float(1.0).sub(tierPinpoint).mul(step(0.72, cityDensity));
-      const tierMidSpark = float(1.0).sub(max(tierPinpoint, tierCore)).mul(step(0.6, cityDensity));
-      const tierOuterSpark = float(1.0)
-        .sub(max(max(tierPinpoint, tierCore), tierMidSpark))
-        .mul(step(0.45, cityDensity));
+        .mul(0.07)
+        .add(0.93);
+      const tierPinpoint = step(0.82, cityDensity);
+      const tierArterial = float(1.0).sub(tierPinpoint).mul(step(0.55, cityDensity));
+      const tierTentacle = float(1.0)
+        .sub(max(tierPinpoint, tierArterial))
+        .mul(step(0.25, cityDensity));
       const lit = litDisplayColor();
       const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
       const darkRestMask = float(1.0).sub(smoothstep(0.38, 0.58, surfaceLuma));
-      const cityGlow = tierPinpoint
-        .mul(vec3(0.6, 0.55, 0.42))
-        .add(tierCore.mul(vec3(0.46, 0.42, 0.32)).mul(cityHash2.mul(0.1).add(0.9)))
-        .add(tierMidSpark.mul(vec3(0.34, 0.31, 0.23)).mul(cityHash2.mul(0.15).add(0.85)))
-        .add(tierOuterSpark.mul(vec3(0.22, 0.2, 0.15)).mul(cityHash2.mul(0.2).add(0.8)))
+      const engrave = lit.mul(parallelLine.mul(0.04).add(crossTick.mul(0.09))).add(vec3(rimSheen));
+      const baseLit = lit.mul(limbFactor).add(engrave);
+      const auraColor = vec3(0.48, 0.26, 0.08);
+      const withAura = mix(baseLit, max(baseLit, auraColor), cityAura.mul(0.22).mul(darkRestMask));
+      const colorOuterTentacle = vec3(0.85, 0.46, 0.14);
+      const colorMainArterial = mix(vec3(0.96, 0.65, 0.14), vec3(1.0, 0.76, 0.26), cityHash2);
+      const colorMetroHeart = mix(
+        vec3(1.0, 0.91, 0.62),
+        vec3(1.0, 0.97, 0.84),
+        smoothstep(0.82, 1.0, cityDensity)
+      );
+      const sparkColor = tierPinpoint
+        .mul(colorMetroHeart)
+        .add(tierArterial.mul(colorMainArterial))
+        .add(tierTentacle.mul(colorOuterTentacle));
+      const sparkAlpha = tierPinpoint
+        .mul(0.96)
+        .add(tierArterial.mul(cityHash2.mul(0.14).add(0.76)))
+        .add(tierTentacle.mul(cityHash2.mul(0.22).add(0.48)))
         .mul(cityTwinkle)
         .mul(darkRestMask);
-
-      const engrave = lit.mul(parallelLine.mul(0.04).add(crossTick.mul(0.09))).add(vec3(rimSheen));
-      const capRgb = lit.mul(limbFactor).add(engrave).add(cityGlow);
+      const capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
       const sideRgb = lit.mul(0.58);
 
       const rgb = mix(capRgb, sideRgb, isSideWall);
