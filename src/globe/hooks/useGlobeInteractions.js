@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 
 import { BREAKPOINTS } from "../../config/gameConstants";
-import { createZoomHapticTracker } from "../../utils/haptics";
+import { createZoomHapticTracker, primeHapticsOnUserGesture } from "../../utils/haptics";
 import { perfTracker } from "../../utils/perfTracker";
 import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
 import {
@@ -187,10 +187,17 @@ export function useGlobeInteractions({
 
   const handleTouchStart = useCallback(
     (e) => {
+      primeHapticsOnUserGesture();
       if (e.touches.length > 1) {
         // Two fingers: hand the pinch to OrbitControls, untouched.
         hadMultiTouchRef.current = true;
         restoreRotateAfterZoomDrag();
+        zoomDragHapticRef.current?.onPinchDistance(
+          Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          )
+        );
         lastTapRef.current = 0;
         lastTapPosRef.current = null;
         return;
@@ -230,13 +237,19 @@ export function useGlobeInteractions({
 
   const handleTouchMove = useCallback(
     (e) => {
-      if (!isZoomDragging.current || !globeEl.current) return;
       if (e.touches.length > 1) {
         hadMultiTouchRef.current = true;
         lastTapRef.current = 0;
         restoreRotateAfterZoomDrag();
+        zoomDragHapticRef.current?.onPinchDistance(
+          Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          )
+        );
         return;
       }
+      if (!isZoomDragging.current || !globeEl.current) return;
       const touch = e.touches[0];
       if (!touch) return;
       const deltaY = touch.clientY - startY.current;
@@ -265,6 +278,9 @@ export function useGlobeInteractions({
   const handleTouchEnd = useCallback(
     (e) => {
       restoreRotateAfterZoomDrag();
+      if ((e?.touches?.length ?? 0) < 2) {
+        zoomDragHapticRef.current?.clearZoomGesture();
+      }
       // Lifting one finger of a pinch must not count as the first tap of a
       // double tap (it would turn the next touch into a zoom-drag).
       if (hadMultiTouchRef.current || (e?.touches?.length ?? 0) > 0) {

@@ -100,84 +100,74 @@ export function countryGrainOutputNode() {
   return grainNode;
 }
 
-let oceanTimeNode = null;
 let oceanMotionNode = null;
-let oceanPixelScaleNode = null;
 
 /** blackoutOceanOutputNode: fine-scale magnetic-field ocean currents + 1-bit Bayer 4x4 pixel-art trame */
+let oceanPixelScaleNode = null;
+
+/** blackoutOceanOutputNode: discreet stepped 3D pixel-art Bayer 4x4 ocean dithering */
 export function blackoutOceanOutputNode(
   rimColor = new THREE.Color(0.85, 0.88, 0.92),
   rimStrength = 0.07,
   uPixelScale = polygonGlitchUniforms.uPixelScale
 ) {
-  const uTime = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
   const uGlobeMotion = (oceanMotionNode ||= mirrorUniform(polygonGlitchUniforms.uGlobeMotion));
   const pixelScale = (oceanPixelScaleNode ||= mirrorUniform(uPixelScale));
   return Fn(() => {
     const uvCoords = uv();
-    const oceanLat = uvCoords.y.sub(0.5).mul(3.14159265);
-    const oceanLng = uvCoords.x.sub(0.5).mul(6.2831853);
-    const latCos = max(cos(oceanLat), 0.25);
-    const eqLng = oceanLng.mul(latCos);
+    const pxStep = max(floor(float(2.0).div(max(pixelScale, 0.25)).add(0.5)), 2.0);
+    const ditherPx = floor(screenCoordinate.xy.div(pxStep));
+    const bayer = bayer4x4(ditherPx);
 
-    // Fine 1px ordered Bayer 4x4 pixel-art trame (no coarse background grid or velocity slosh)
-    const px = floor(screenCoordinate.xy.mul(pixelScale));
-    const bayer = bayer4x4(px);
+    const rawLat = uvCoords.y.sub(0.5).mul(3.14159265);
+    const rawLng = uvCoords.x.sub(0.5).mul(6.2831853);
 
-    // Calm, sculptural oceanic magnetic gyres anchored to the 3D Earth with cos(lat) aspect correction
-    const gyre1 = sin(eqLng.mul(2.2).add(sin(oceanLat.mul(3.0)).mul(0.75))).mul(
-      cos(oceanLat.mul(1.8))
-    );
-    const gyre2 = cos(
-      eqLng
-        .mul(3.2)
-        .sub(oceanLat.mul(2.2))
-        .add(sin(oceanLng.mul(2.0)).mul(0.5))
-    ).mul(0.65);
-    const streamPsi = oceanLat.mul(2.5).add(gyre1.mul(1.15)).add(gyre2.mul(0.75));
+    const macroRow = floor(rawLat.mul(14.0));
+    const macroCos = max(cos(macroRow.add(0.5).div(14.0)), 0.25);
+    const macroCol = floor(rawLng.mul(macroCos).mul(14.0));
+    const macroCell = vec2(macroCol, macroRow);
 
-    // Full Bayer 4x4 tonal range (0 -> 15/16) so ribbons render true checkerboard & cross-hatch trame
-    const ribbonWave = cos(streamPsi.mul(4.2).sub(uTime.mul(0.15)))
-      .mul(0.5)
-      .add(0.5);
-    const ribbonProfile = smoothstep(0.14, 0.86, ribbonWave);
-    const alongStream = sin(eqLng.mul(3.2).sub(gyre1.mul(2.2)).sub(uTime.mul(0.22)))
-      .mul(0.22)
-      .add(0.78);
-    const currentTone = ribbonProfile.mul(alongStream).mul(0.68);
+    const midRow = floor(rawLat.mul(32.0));
+    const midCos = max(cos(midRow.add(0.5).div(32.0)), 0.25);
+    const midCol = floor(rawLng.mul(midCos).mul(32.0));
+    const midCell = vec2(midCol, midRow);
 
-    // Spherical curvature & limb gradient unified into the same 1-bit Bayer 4x4 trame
+    const microRow = floor(rawLat.mul(72.0));
+    const microCos = max(cos(microRow.add(0.5).div(72.0)), 0.25);
+    const microCol = floor(rawLng.mul(microCos).mul(72.0));
+    const microCell = vec2(microCol, microRow);
+
+    const hMacro = hash(macroCell);
+    const hMid = hash(midCell.add(vec2(19.0, 47.0)));
+    const hMicro = hashGrain(microCell);
+    const cellField = hMacro.mul(0.52).add(hMid.mul(0.33)).add(hMicro.mul(0.15));
+
     const n = normalize(normalWorld);
     const viewDir = normalize(cameraPosition.sub(positionWorld));
     const viewIncidence = clamp(dot(n, viewDir), 0.0, 1.0);
-    const lightFacing = clamp(dot(n, normalize(vec3(-0.55, 0.45, 0.7))), 0.0, 1.0);
-    const limb = pow(float(1.0).sub(viewIncidence), 1.75);
-    const limbTone = smoothstep(0.08, 0.92, limb).mul(lightFacing.mul(0.24).add(0.62));
+    const steppedLimb = floor(clamp(float(1.0).sub(viewIncidence), 0.0, 1.0).mul(6.0)).div(6.0);
 
-    const ditherTone = clamp(
-      max(currentTone, limbTone)
-        .add(currentTone.mul(limbTone).mul(0.35))
-        .add(uGlobeMotion.mul(0.03)),
-      0.0,
-      0.86
-    );
-    const trameBit = step(bayer.add(0.04), ditherTone);
+    const combinedField = cellField.mul(0.72).add(steppedLimb.mul(0.48));
+    const bayerSteps = floor(clamp(combinedField.sub(0.28).mul(5.2), 0.0, 4.0));
+    const ditherTone = bayerSteps.div(16.0).add(uGlobeMotion.mul(0.015));
+    const trameBit = step(bayer.add(0.02), ditherTone);
 
     const rimColorVec = vec3(rimColor.r, rimColor.g, rimColor.b);
-    const rimRgb = rimColorVec.mul(trameBit.mul(float(rimStrength).mul(1.95).add(0.2)));
+    const rimRgb = rimColorVec.mul(trameBit.mul(float(rimStrength).mul(0.34).add(0.055)));
 
-    // Subtle dithered Equator and Tropics reference lines
     const latWidth = max(fwidth(uvCoords.y), 0.0004);
-    const eqDist = abs(uvCoords.y.sub(0.5)).div(latWidth);
-    const eqLine = clamp(float(1.0).sub(eqDist), 0.0, 1.0);
-    const tropicDist = abs(abs(uvCoords.y.sub(0.5)).sub(23.44 / 180.0)).div(latWidth);
-    const tropicLine = clamp(float(1.0).sub(tropicDist), 0.0, 1.0);
+    const eqLine = clamp(float(1.0).sub(abs(uvCoords.y.sub(0.5)).div(latWidth)), 0.0, 1.0);
+    const tropicLine = clamp(
+      float(1.0).sub(abs(abs(uvCoords.y.sub(0.5)).sub(23.44 / 180.0)).div(latWidth)),
+      0.0,
+      1.0
+    );
     const specialLines = max(eqLine, tropicLine);
-    const specialDither = step(bayer.add(0.04), specialLines.mul(0.95)).mul(0.065);
+    const specialDither = step(bayer.add(0.03), specialLines.mul(0.65)).mul(0.05);
 
     const graticuleColor = mix(vec3(0.55, 0.65, 0.75), rimColorVec, 0.45);
     const graticuleRgb = graticuleColor.mul(
-      specialDither.mul(float(rimStrength).mul(0.5).add(0.06))
+      specialDither.mul(float(rimStrength).mul(0.22).add(0.04))
     );
 
     return displayOutput(litDisplayColor().add(rimRgb).add(graticuleRgb));
