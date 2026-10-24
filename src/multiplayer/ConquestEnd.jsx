@@ -7,7 +7,13 @@ import Button from "../components/ui/Button.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings.jsx";
-import { computeStandings, computeWinner, eloChange, formatEloDelta } from "./conquestLogic";
+import {
+  computeStandings,
+  computeWinner,
+  eloChange,
+  formatEloDelta,
+  rematchState,
+} from "./conquestLogic";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
 import { conquestText } from "./conquestText";
 
@@ -121,15 +127,34 @@ const ConquestEnd = ({ lang, conquest, onExit }) => {
     () => computeWinner(players, claims, bonuses, result),
     [players, claims, bonuses, result]
   );
+  const state = rematchState(match);
+  const opponent = players?.find((p) => p.user_id !== userId);
 
   return (
     <div className="conquest-panel conquest-surface conquest-end px-cascade">
       <EndHeader winner={winner} userId={userId} t={t} result={result} elo={elo} onExit={onExit} />
       <EndBoard standings={standings} userId={userId} t={t} />
-      <p className="conquest-hint">{t.rematchHint}</p>
-      <Button variant="primary" block onClick={onExit} aria-label={t.back} title={t.back}>
+      {state === "join" && (
+        <p className="conquest-rematch-waiting">
+          {opponent ? `${opponent.display_name} ${t.rematchWaiting}` : t.rematchWaiting}
+        </p>
+      )}
+      {state && (
+        <Button
+          variant="primary"
+          block
+          disabled={conquest?.busy}
+          onClick={() => conquest?.rematch?.()}
+          aria-label={state === "join" ? t.rematchJoin : t.rematch}
+          title={state === "join" ? t.rematchJoin : t.rematch}
+        >
+          {state === "join" ? t.rematchJoin : t.rematch}
+        </Button>
+      )}
+      <Button variant="secondary" block onClick={onExit} aria-label={t.back} title={t.back}>
         {t.back}
       </Button>
+      <p className="conquest-hint">{t.rematchHint}</p>
     </div>
   );
 };

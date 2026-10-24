@@ -71,8 +71,17 @@ function useConquestActions({
     guarded(async () => {
       const res = await conquest.requestSteal(cid);
       setStealTarget(null);
-      if (res?.ok) setChallenge(res);
+      if (res?.ok) setChallenge({ ...res, mode: "steal" });
       else if (res) showToast({ message: refusal(res), tone: "error" });
+    });
+
+  // Re-click on my own country: reinforcement challenge (flag or capital).
+  const openFortify = (cid) =>
+    guarded(async () => {
+      if (!conquest.requestFortify) return;
+      const res = await conquest.requestFortify(cid);
+      if (res?.ok) setChallenge({ ...res, mode: "fortify" });
+      else if (res) showToast({ message: refusal({ ...res, mode: "fortify" }), tone: "error" });
     });
 
   const submit = (e) => {
@@ -95,6 +104,15 @@ function useConquestActions({
 
   const answerSteal = (val) =>
     guarded(async () => {
+      if (challenge?.mode === "fortify") {
+        const res = await conquest.fortify(val);
+        setChallenge(null);
+        if (res?.ok) {
+          const message = `${countryName(res.country_id)} ${t.fortified} +${res.bonus_seconds} s`;
+          showToast({ message, tone: "success" });
+        } else if (res) showToast({ message: refusal({ ...res, mode: "fortify" }), tone: "error" });
+        return;
+      }
       const res = await conquest.steal(val);
       setChallenge(null);
       if (res?.ok) {
@@ -106,12 +124,17 @@ function useConquestActions({
 
   const cancelSteal = () =>
     guarded(async () => {
+      if (challenge?.mode === "fortify") {
+        setChallenge(null);
+        await conquest.cancelFortify?.();
+        return;
+      }
       const res = await conquest.cancelSteal();
       setChallenge(null);
       if (res) showToast({ message: refusal(res), tone: "error" });
     });
 
-  return { stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal };
+  return { stealTarget, challenge, openSteal, openFortify, submit, answerSteal, cancelSteal };
 }
 
 function useCountryClickHandler({
@@ -123,6 +146,7 @@ function useCountryClickHandler({
   countryClickRef,
   onSelectCountry,
   openSteal,
+  openFortify,
   countryName,
   lang,
   players,
@@ -140,8 +164,10 @@ function useCountryClickHandler({
     } else if (action === "free") {
       showToast({ message: t.clickFree, tone: "success" });
       inputRef.current?.focus();
+    } else if (action === "mine") {
+      void openFortify(countryId);
     } else {
-      const reason = action === "mine" ? "already_yours" : "shielded";
+      const reason = "shielded";
       showToast({ message: refusal({ reason, country_id: countryId }), tone: "error" });
     }
   };
@@ -169,6 +195,7 @@ const HudAnswer = ({
   setAnswer,
   phase,
   onFocusCountry,
+  myColor,
 }) => (
   <div className={`conquest-answer ${challenge ? "conquest-surface has-challenge" : ""}`}>
     {lockouts.length > 0 && (
@@ -202,6 +229,7 @@ const HudAnswer = ({
         countryName={countryName}
         onAnswer={answerSteal}
         onCancel={cancelSteal}
+        myColor={myColor}
       />
     ) : (
       <form onSubmit={submit} autoComplete="off">
@@ -240,7 +268,7 @@ const ConquestHud = ({
     [players, claims, bonuses]
   );
   const feed = useConquestFeed(events, players, countryName, lang);
-  const { stealTarget, challenge, openSteal, submit, answerSteal, cancelSteal } =
+  const { stealTarget, challenge, openSteal, openFortify, submit, answerSteal, cancelSteal } =
     useConquestActions({
       conquest,
       phase,
@@ -261,12 +289,16 @@ const ConquestHud = ({
     countryClickRef,
     onSelectCountry,
     openSteal,
+    openFortify,
     countryName,
     lang,
     players,
     t,
     inputRef,
   });
+
+  const myPlayer = players?.find((p) => p.user_id === userId);
+  const myColor = myPlayer ? getPaletteEntry(myPlayer.color)?.hex : undefined;
 
   return (
     <div className="conquest-hud">
@@ -287,6 +319,7 @@ const ConquestHud = ({
         setAnswer={setAnswer}
         phase={phase}
         onFocusCountry={onFocusCountry}
+        myColor={myColor}
       />
     </div>
   );

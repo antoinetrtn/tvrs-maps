@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  cancelFortifyChallenge,
   cancelStealChallenge,
   claimConquestCountry,
   createConquestMatch,
   ensureConquestUser,
+  fortifyConquestCountry,
   getConquestState,
   getExistingConquestUser,
   getMyActiveConquestMatch,
   joinConquestMatch,
   leaveConquestMatch,
   openConquestChannel,
+  rematchConquestMatch,
+  requestFortifyChallenge,
   requestStealChallenge,
   setConquestReady,
   startConquestMatch,
@@ -29,6 +33,7 @@ import {
 const RESYNC_DEGRADED_MS = 5000;
 // Filet de sécurité court, un broadcast perdu ne doit pas laisser le globe périmé plus de 5 s.
 const RESYNC_REALTIME_MS = 5000;
+const RESYNC_FINISHED_MS = 8000;
 const SYNC_DEBOUNCE_MS = 250;
 const CLOCK_SAMPLES = 5;
 export const CONQUEST_STORAGE_KEY = "tvrs-conquest-match";
@@ -269,6 +274,38 @@ export function useConquestMatch({ lang, displayName }) {
     [callGame]
   );
 
+  const requestFortify = useCallback(
+    (countryId) => callGame((id) => requestFortifyChallenge(id, countryId), null),
+    [callGame]
+  );
+  const fortify = useCallback(
+    (answer) => callGame((id) => fortifyConquestCountry(id, answer), "fortify"),
+    [callGame]
+  );
+  const cancelFortify = useCallback(
+    () => callGame((id) => cancelFortifyChallenge(id), null),
+    [callGame]
+  );
+
+  /**
+   * « Rejouer » : creates (or joins) the rematch lobby linked to the finished
+   * match, already ready, and tells the opponent through the old channel.
+   */
+  const rematch = useCallback(
+    () =>
+      run(async () => {
+        const oldId = matchIdRef.current;
+        const uid = userId || (await ensureConquestUser());
+        if (!oldId) return null;
+        const next = await rematchConquestMatch(oldId);
+        channelRef.current?.notify({ kind: "rematch", match_id: next.id });
+        await enterMatch(next, uid);
+        channelRef.current?.notify({ kind: "join" });
+        return next;
+      }),
+    [run, userId, enterMatch]
+  );
+
   const reset = useCallback(() => {
     clearTimeout(syncTimerRef.current);
     channelRef.current?.close();
@@ -295,9 +332,16 @@ export function useConquestMatch({ lang, displayName }) {
 
   // Safety net: periodic resync (missed broadcasts, server-side timer end).
   const status = state.match?.status;
+  // Still polled on the end screen (slowly) so a rematch offer shows up.
   useEffect(() => {
-    if (!status || status === "finished") return undefined;
-    const id = setInterval(refresh, realtimeUp ? RESYNC_REALTIME_MS : RESYNC_DEGRADED_MS);
+    if (!status) return undefined;
+    const every =
+      status === "finished"
+        ? RESYNC_FINISHED_MS
+        : realtimeUp
+          ? RESYNC_REALTIME_MS
+          : RESYNC_DEGRADED_MS;
+    const id = setInterval(refresh, every);
     return () => clearInterval(id);
   }, [status, refresh, realtimeUp]);
 
@@ -351,6 +395,10 @@ export function useConquestMatch({ lang, displayName }) {
     requestSteal,
     steal,
     cancelSteal,
+    requestFortify,
+    fortify,
+    cancelFortify,
+    rematch,
     leave,
     refresh,
     sendCursor,

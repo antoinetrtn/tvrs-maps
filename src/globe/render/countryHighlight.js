@@ -8,12 +8,14 @@
 import * as THREE from "three";
 import ConicPolygonGeometry from "three-conic-polygon-geometry";
 
+import { CONQUEST_CURSOR_STYLE } from "../../config/designSystem";
+
 const GLOBE_RADIUS = 100;
 const DEG = Math.PI / 180;
 /** Longest ribbon segment (rad): long borders are subdivided to hug the sphere. */
 const MAX_SEGMENT_RAD = 2.5 * DEG;
 /** Outline: half width / slot spacing in screen px (the ribbon is rebuilt per zoom bucket). */
-const RIBBON_HALF_PX = 0.9;
+const RIBBON_HALF_PX = 1.6;
 const SLOT_INSET_PX = 5;
 const ZOOM_BUCKET = 1.35;
 /** Dither cell (degrees of the country's bounding box). */
@@ -246,13 +248,76 @@ function ditherTexture(phase) {
   return tex;
 }
 
+const PIXEL_FONT = "'Bitcount Single', monospace";
+const LABEL_FONT_PX = 10;
+const STRIP_W = 2;
+
+function makePinnedTagTexture(name, color) {
+  if (typeof document === "undefined") return { texture: null, w: 20, h: 10 };
+  const ratio =
+    typeof window !== "undefined"
+      ? Math.min(3, Math.max(1, Math.round(window.devicePixelRatio || 1)))
+      : 1;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const fontPx = LABEL_FONT_PX * ratio;
+  const font = `500 ${fontPx}px ${PIXEL_FONT}`;
+  ctx.font = font;
+  const cleanName = String(name || "?").slice(0, 12);
+  const text = `▸ ${cleanName}`;
+  const textW = Math.ceil(ctx.measureText(text).width);
+  const padX = 3 * ratio;
+  const padY = 2 * ratio;
+  const w = textW + (padX * 2 + STRIP_W * ratio);
+  const h = fontPx + padY * 2;
+  canvas.width = w;
+  canvas.height = h;
+  ctx.font = font;
+
+  // Background
+  ctx.fillStyle = CONQUEST_CURSOR_STYLE.tagBg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Left accent strip in player colour
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, STRIP_W * ratio, h);
+
+  // Prefix ▸ in player colour
+  ctx.textBaseline = "middle";
+  const arrowX = padX + STRIP_W * ratio;
+  ctx.fillStyle = color;
+  ctx.fillText("▸ ", arrowX, h / 2 + 0.5 * ratio);
+  const arrowW = ctx.measureText("▸ ").width;
+
+  // Display name in light crisp text
+  ctx.fillStyle = CONQUEST_CURSOR_STYLE.tagText;
+  ctx.fillText(cleanName, arrowX + arrowW, h / 2 + 0.5 * ratio);
+
+  const img = ctx.getImageData(0, 0, w, h);
+  for (let i = 3; i < img.data.length; i += 4) {
+    img.data[i] = img.data[i] > 80 ? 255 : 0;
+  }
+  ctx.putImageData(img, 0, 0);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
+
+  return { texture, w: w / ratio, h: h / ratio };
+}
+
 /**
  * Highlight set for one (country, player): surface meshes + outline mesh.
  * `slot`/`count` come from assignHighlightSlots: alone on the country the
  * surface is a flat tint, shared it becomes a dither whose phase depends on
  * the slot (two players interleave exactly, never hide each other).
  */
-export function createCountryHighlight(polygons, { color, alt, slot = 0, count = 1 }) {
+export function createCountryHighlight(
+  polygons,
+  { color, alt, slot = 0, count = 1, name = "", centroid = null }
+) {
   const group = new THREE.Group();
   group.name = "conquest-country-highlight";
   const owned = [];
@@ -300,9 +365,36 @@ export function createCountryHighlight(polygons, { color, alt, slot = 0, count =
   group.add(ribbon);
   owned.push(ribbonMat);
   materials.push(ribbonMat);
+
+  let tagAnchor = null;
+  const anchorPoint = centroid || (polygons.length ? polygonsAnchor(polygons) : null);
+  if (name && anchorPoint && Number.isFinite(anchorPoint.lat) && Number.isFinite(anchorPoint.lng)) {
+    const tagTex = makePinnedTagTexture(name, color);
+    if (tagTex.texture) {
+      tagAnchor = new THREE.Group();
+      tagAnchor.name = "conquest-opponent-tag";
+      const tagR = surfaceRadius(alt + 0.003);
+      llToXyz(anchorPoint.lat, anchorPoint.lng, tagR, tagAnchor.position);
+      const tagGeo = new THREE.PlaneGeometry(tagTex.w, tagTex.h);
+      const tagMat = new THREE.MeshBasicMaterial({
+        map: tagTex.texture,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const tagMesh = new THREE.Mesh(tagGeo, tagMat);
+      tagMesh.renderOrder = 15;
+      tagAnchor.add(tagMesh);
+      group.add(tagAnchor);
+      owned.push(tagTex.texture, tagGeo, tagMat);
+      materials.push(tagMat);
+    }
+  }
+
   let bucket = null;
   // Constant on-screen outline: rebuilt only when the zoom crosses a bucket.
   const setPixelUnit = (unit) => {
+    tagAnchor?.scale.setScalar(unit);
     const b = Math.round(Math.log(Math.max(unit, 1e-4)) / Math.log(ZOOM_BUCKET));
     if (b === bucket) return;
     bucket = b;
@@ -320,6 +412,12 @@ export function createCountryHighlight(polygons, { color, alt, slot = 0, count =
   return {
     group,
     setPixelUnit,
+    update({ camera, visible }) {
+      if (tagAnchor) {
+        if (camera) tagAnchor.quaternion.copy(camera.quaternion);
+        tagAnchor.visible = Boolean(visible);
+      }
+    },
     setOpacity(o) {
       materials.forEach((m, i) => (m.opacity = baseOpacity[i] * o));
     },

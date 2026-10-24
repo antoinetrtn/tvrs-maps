@@ -303,6 +303,13 @@
   flex-direction: column;
   gap: var(--spacing-sm);
 }
+.conquest-steal.is-fortify {
+  border-left: 2px solid var(--my-color, var(--accent));
+  padding-left: var(--spacing-xs);
+}
+.conquest-steal.is-fortify .conquest-label {
+  color: var(--my-color, var(--accent));
+}
 .conquest-steal-header {
   display: flex;
   align-items: center;

@@ -208,3 +208,103 @@ DO $$ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  anon cannot write ratings';
 END $$;
 RESET ROLE;
+
+-- ========================================== rejouer + protection (CoC) ====
+\set R1 'bbbbbbbb-0000-0000-0000-000000000001'
+\set R2 'bbbbbbbb-0000-0000-0000-000000000002'
+\set R3 'bbbbbbbb-0000-0000-0000-000000000003'
+INSERT INTO auth.users (id) VALUES (:'R1'), (:'R2'), (:'R3');
+SET ROLE authenticated;
+SET test.uid = :'R1';
+SELECT code AS rcode, id AS rmid FROM conquest_create_match('Antoine', 'teal', 'solid', 600) \gset
+SELECT set_config('test.rmid', :'rmid', false);
+SELECT pg_temp.eq('creator is ready by default', (SELECT ready FROM match_players WHERE match_id = :'rmid' AND user_id = :'R1'), true);
+SET test.uid = :'R2';
+SELECT 1 FROM conquest_join_match(:'rcode', 'Léa', 'amber', 'dots', 'red');
+SELECT pg_temp.eq('joiner is not ready', (SELECT ready FROM match_players WHERE match_id = :'rmid' AND user_id = :'R2'), false);
+SELECT conquest_set_ready(:'rmid', true);
+SET test.uid = :'R1';
+SELECT 1 FROM conquest_start_match(:'rmid');
+DO $$ BEGIN
+  PERFORM conquest_rematch(current_setting('test.rmid')::uuid);
+  RAISE EXCEPTION 'FAIL rematch of a live match accepted';
+EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'match_not_finished' THEN RAISE; END IF;
+  RAISE NOTICE 'ok  rematch refused while live';
+END $$;
+RESET ROLE;
+UPDATE matches SET started_at = now() - interval '1 second' WHERE id = :'rmid';
+SET ROLE authenticated;
+
+-- Capture = 20 s de protection.
+SELECT pg_temp.eq('capture ok', claim_country(:'rmid', 'France')->>'ok', 'true');
+SELECT pg_temp.eq('capture shield is 20 s',
+  (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 20);
+SET test.uid = :'R2';
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT pg_temp.eq('opponent cannot fortify my country', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'not_yours');
+SELECT pg_temp.eq('opponent cannot steal while shielded', conquest_steal_challenge(:'rmid', 'France')->>'reason', 'shielded');
+
+-- Étape 1 : défi drapeau ou capitale, mauvaise réponse → cooldown.
+SET test.uid = :'R1';
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT challenge AS f1 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
+SELECT pg_temp.eq('fortify step 1 opened', (:'f1'::jsonb)->>'step', '1');
+SELECT pg_temp.eq('step 1 bonus is 30 s', (:'f1'::jsonb)->>'bonus_seconds', '30');
+SELECT pg_temp.eq('re-request returns the same challenge',
+  (conquest_fortify_challenge(:'rmid', 'France')->>'kind'), (:'f1'::jsonb)->>'kind');
+SELECT pg_temp.eq('wrong fortify answer', conquest_fortify(:'rmid', 'Lyon')->>'reason', 'wrong');
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT pg_temp.eq('10 s cooldown after a wrong fortify', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'cooldown');
+SELECT pg_temp.eq('fortify table hidden from clients', (SELECT count(*) FROM match_fortify_challenges)::int, 0);
+
+-- Bonne réponse (capitale) → +30 s, puis l'autre type (drapeau) → +1 min.
+RESET ROLE;
+DELETE FROM match_events WHERE kind = 'fortify_fail';
+UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
+INSERT INTO match_fortify_challenges VALUES (:'rmid', :'R1', 'France', 1, 'capital', '{}', now() + interval '20 seconds');
+SET ROLE authenticated;
+SELECT pg_temp.eq('right capital fortifies', conquest_fortify(:'rmid', 'paris')->>'ok', 'true');
+SELECT pg_temp.eq('shield +30 s (≈50 s)',
+  (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 50);
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT challenge AS f2 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
+SELECT pg_temp.eq('step 2 asks the other kind (flag)', (:'f2'::jsonb)->>'kind', 'flag');
+SELECT pg_temp.eq('step 2 has 6 flags', jsonb_array_length((:'f2'::jsonb)->'options'), 6);
+SELECT pg_temp.eq('step 2 bonus is 60 s', (:'f2'::jsonb)->>'bonus_seconds', '60');
+SELECT pg_temp.eq('right flag fortifies', conquest_fortify(:'rmid', (SELECT iso2 FROM conquest_countries WHERE country_id = 'France'))->>'fortify_level', '2');
+SELECT pg_temp.eq('shield +1 min (≈110 s)',
+  (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 110);
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT pg_temp.eq('no third step', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'max_fortified');
+
+-- Expired shield: steal resets the fortify level.
+RESET ROLE;
+UPDATE match_claims SET shield_until = now() - interval '1 second' WHERE match_id = :'rmid';
+UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
+INSERT INTO match_steal_challenges VALUES (:'rmid', :'R2', 'France', 'capital', '{}', now() + interval '20 seconds');
+SET ROLE authenticated;
+SET test.uid = :'R2';
+SELECT pg_temp.eq('steal after shield expiry', steal_country(:'rmid', 'Paris')->>'ok', 'true');
+SELECT pg_temp.eq('steal resets fortify level', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 0);
+
+-- Revanche : R2 la crée, R1 la rejoint, tous deux prêts, couleurs gardées.
+RESET ROLE; UPDATE matches SET ends_at = now() - interval '1 second' WHERE id = :'rmid'; SET ROLE authenticated;
+SELECT id AS remid FROM conquest_rematch(:'rmid') \gset
+SELECT pg_temp.eq('rematch linked on the old match', (SELECT rematch_id FROM matches WHERE id = :'rmid')::text, :'remid');
+SELECT pg_temp.eq('rematch creator hosts', (SELECT host_id FROM matches WHERE id = :'remid')::text, :'R2');
+SELECT pg_temp.eq('rematch creator ready + same colour',
+  (SELECT ready::text || color FROM match_players WHERE match_id = :'remid' AND user_id = :'R2'), 'trueamber');
+SELECT pg_temp.eq('second click is idempotent', (SELECT id FROM conquest_rematch(:'rmid'))::text, :'remid');
+SET test.uid = :'R1';
+SELECT pg_temp.eq('opponent joins the same rematch', (SELECT id FROM conquest_rematch(:'rmid'))::text, :'remid');
+SELECT pg_temp.eq('both ready', (SELECT count(*) FILTER (WHERE ready) FROM match_players WHERE match_id = :'remid')::int, 2);
+SET test.uid = :'R2';
+SELECT pg_temp.eq('host starts the rematch', (SELECT status FROM conquest_start_match(:'remid')), 'live');
+SET test.uid = :'R3';
+DO $$ BEGIN
+  PERFORM conquest_rematch(current_setting('test.rmid')::uuid);
+  RAISE EXCEPTION 'FAIL outsider rematch accepted';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  outsider cannot rematch';
+END $$;
+RESET ROLE;

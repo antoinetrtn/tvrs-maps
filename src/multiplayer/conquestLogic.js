@@ -276,6 +276,10 @@ export function describeClaimRefusal(
 ) {
   const fr = lang === "fr";
   const name = result?.country_id ? countryName(result.country_id) : "";
+  if (result?.mode === "fortify") {
+    const fortify = describeFortifyRefusal(result.reason, name, fr);
+    if (fortify) return fortify;
+  }
   switch (result?.reason) {
     case "already_yours":
       return fr ? `${name} est déjà à toi` : `${name} is already yours`;
@@ -315,6 +319,58 @@ export function describeClaimRefusal(
   }
 }
 
+function describeFortifyRefusal(reason, name, fr) {
+  switch (reason) {
+    case "wrong":
+      return fr ? `Renfort raté sur ${name}` : `Reinforcement failed on ${name}`;
+    case "cooldown":
+      return fr ? `Attends avant de renforcer ${name}` : `Wait before reinforcing ${name}`;
+    case "max_fortified":
+      return fr ? `${name} est déjà au maximum` : `${name} is already fully reinforced`;
+    case "not_yours":
+    case "changed":
+      return fr
+        ? `${name || "Ce pays"} n'est plus à toi`
+        : `${name || "This country"} is no longer yours`;
+    default:
+      return null;
+  }
+}
+
+/** Fortify steps (server rules mirror): step 1 → +30 s, step 2 → +60 s. */
+/**
+ * Running shields for the globe countdown: [{ id, ms, level, mine, ownerId }],
+ * soonest first. `level` = fortify steps done (0 after a capture).
+ */
+export function shieldCountdowns(claims = [], userId, clientNowMs = Date.now(), offsetMs = 0) {
+  return claims
+    .map((claim) => ({
+      id: claim.country_id,
+      ownerId: claim.owner_id,
+      mine: claim.owner_id === userId,
+      level: Number(claim.fortify_level) || 0,
+      ms: claim.shield_until ? remainingMs(claim.shield_until, clientNowMs, offsetMs) : 0,
+    }))
+    .filter((shield) => shield.ms > 0)
+    .sort((a, b) => a.ms - b.ms || a.id.localeCompare(b.id));
+}
+
+/** Seconds label for a shield countdown: "1:05" above a minute, "42" below. */
+export function formatShieldSeconds(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  if (total < 60) return String(total);
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/**
+ * End-screen rematch state: "offer" (no rematch yet), "join" (an opponent
+ * already opened one — joining makes me ready), or null when not finished.
+ */
+export function rematchState(match) {
+  if (!match || match.status !== "finished") return null;
+  return match.rematch_id ? "join" : "offer";
+}
+
 /** Maps RPC error messages to user-facing text. */
 export function describeRpcError(error, lang = "fr") {
   const fr = lang === "fr";
@@ -327,6 +383,11 @@ export function describeRpcError(error, lang = "fr") {
     return fr ? "La partie a déjà commencé" : "The match already started";
   if (message.includes("players_not_ready"))
     return fr ? "Tous les joueurs doivent être prêts" : "Every player must be ready";
+  if (message.includes("match_not_finished"))
+    return fr ? "La partie n'est pas terminée" : "The match is not over yet";
+  // RPC missing on the server: the migration is not applied yet.
+  if (message.includes("Could not find the function") || message.includes("PGRST202"))
+    return fr ? "Fonction pas encore disponible sur le serveur" : "Not available on the server yet";
   if (message.includes("not_host"))
     return fr ? "Seul l'hôte peut lancer" : "Only the host can start";
   return fr ? "Connexion au serveur impossible" : "Could not reach the server";
