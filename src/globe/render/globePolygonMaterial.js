@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
 import { getGlobePrefs } from "../globePrefs";
+import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
 import { GLSL_BAYER_4X4_FN } from "./globeShaders";
@@ -34,6 +35,8 @@ function applyFoundMeshStyle(material, isMeshFound) {
 
 export function applyCountrySurfaceGrainShader(shader) {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+  shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+  shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.vertexShader = `
     varying vec3 vDitherWorldNormal;
     varying vec3 vDitherWorldPos;
@@ -56,7 +59,12 @@ export function applyCountrySurfaceGrainShader(shader) {
     varying vec3 vWorldPos;
     varying vec3 vViewDir;
     uniform float uPixelScale;
+    uniform float uTime;
+    uniform sampler2D uCapitalLightsMap;
     ${GLSL_BAYER_4X4_FN}
+    float cityCellHash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       `#include <dithering_fragment>
@@ -78,7 +86,28 @@ export function applyCountrySurfaceGrainShader(shader) {
       float crossTick = clamp(1.0 - max(topoDist.x, topoDist.y) * 0.6, 0.0, 1.0);
       vec3 engrave = gl_FragColor.rgb * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
 
-      vec3 capRgb = gl_FragColor.rgb * limbFactor + engrave;
+      // Discreet pixel-art capital & urban agglomeration night lights seen from space
+      float cityDensity = texture2D(uCapitalLightsMap, cartUv).r;
+      float camAlt = max(length(cameraPosition) - 100.0, 15.0);
+      float zoomOctave = exp2(floor(log2(clamp(230.0 / camAlt, 1.0, 8.0)) + 0.5));
+      float cityRes = 180.0 * zoomOctave;
+      float cityRow = floor(cLat * cityRes);
+      float cityRowLat = (cityRow + 0.5) / cityRes;
+      float cityCols = max(floor(cityRes * cos(cityRowLat) + 0.5), 16.0);
+      float cityCol = floor(cLng * cityCols);
+      vec2 cityCellId = vec2(cityCol, cityRow);
+      float cityBayer = bayer4x4(cityCellId);
+      float cityHash = cityCellHash(cityCellId);
+      float cityTwinkle = 0.86 + 0.14 * sin(uTime * 1.8 + cityHash * 6.2831853);
+      float urbanCluster = smoothstep(0.04, 0.88, cityDensity) * (0.52 + 0.48 * step(0.14, cityHash));
+      float cityPixelOn = step(cityBayer + 0.04, urbanCluster * 0.86);
+      float coreBoost = smoothstep(0.45, 0.94, cityDensity) * 0.24;
+      float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+      float darkRestMask = 1.0 - smoothstep(0.26, 0.48, surfaceLuma);
+      float cityIntensity = cityPixelOn * (0.15 + coreBoost) * cityTwinkle * darkRestMask;
+      vec3 cityGlow = vec3(0.92, 0.89, 0.82) * cityIntensity;
+
+      vec3 capRgb = gl_FragColor.rgb * limbFactor + engrave + cityGlow;
       vec3 sideRgb = gl_FragColor.rgb * 0.58;
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
       `
