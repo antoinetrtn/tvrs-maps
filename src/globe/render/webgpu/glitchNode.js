@@ -212,7 +212,7 @@ function glitchBase(u, lit) {
     .mul(transitionActive);
   const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline).add(bayerStipple)).toVar();
   const isMonoAwakening = on(u.uTheme).and(on(u.uIsSatellite).not());
-  const foundRestingColor = select(isMonoAwakening, vec3(0.28, 0.25, 0.2), u.uFoundGreen);
+  const foundRestingColor = select(isMonoAwakening, vec3(0.48, 0.34, 0.15), u.uFoundGreen);
 
   const finalColor = vec3(staticVec).toVar();
   If(on(u.uIsError), () => {
