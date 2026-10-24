@@ -8,8 +8,8 @@ export const ZOOM_HAPTIC_DETENTS = 64;
 // and lets Blink VibrationController finish timer_do_vibrate_ in 4ms so closely-spaced
 // detents (26ms cooldown, 6px pinch step, 64 log detents) never self-cancel.
 const ZOOM_HAPTIC_COOLDOWN_MS = 26;
-export const ZOOM_HAPTIC_TICK_MS = 4;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 9;
+export const ZOOM_HAPTIC_TICK_MS = 1;
+export const ZOOM_HAPTIC_BOUNDARY_MS = 3;
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 280;
 const ZOOM_PINCH_STEP_PX = 6;
 const ZOOM_WHEEL_STEP_DELTA = 16;
@@ -82,14 +82,14 @@ function playTactileAudioTick(isBoundary = false) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(isBoundary ? 150 : 125, now);
-    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 55 : 44, now + 0.0035);
-    gain.gain.setValueAtTime(isBoundary ? 0.014 : 0.008, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.0038);
+    osc.frequency.setValueAtTime(isBoundary ? 140 : 115, now);
+    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 52 : 42, now + 0.0022);
+    gain.gain.setValueAtTime(isBoundary ? 0.006 : 0.003, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.0024);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.004);
+    osc.stop(now + 0.0026);
     return true;
   } catch {
     return false;
