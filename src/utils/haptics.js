@@ -1,18 +1,19 @@
 import { GLOBE_MAX_ALTITUDE, GLOBE_MIN_ALTITUDE } from "../globe/render/globeAltitude";
 import { prefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 
-export const ZOOM_HAPTIC_DETENTS = 28;
-// In Chromium Blink (vibration_controller.cc), calling Vibrate() while is_running_ is true
-// sends a Mojo Cancel() IPC to Android VibratorManagerService before scheduling the next
-// pulse after a main-thread timer. A 35ms pulse + 135ms cooldown guarantees is_running_
-// returns to false well before the next tick while giving ERM/LRA motors time to spin up.
-const ZOOM_HAPTIC_COOLDOWN_MS = 135;
-export const ZOOM_HAPTIC_TICK_MS = 35;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 60;
+export const ZOOM_HAPTIC_DETENTS = 64;
+// Sub-resonance micro-impulse calibration for Android LRA/ERM motors:
+// Driving the actuator for 4ms (< 1 half-cycle at ~170Hz resonance) imparts a crisp,
+// feather-light mechanical detent ("watch crown" feel) instead of a full-scale buzz,
+// and lets Blink VibrationController finish timer_do_vibrate_ in 4ms so closely-spaced
+// detents (26ms cooldown, 6px pinch step, 64 log detents) never self-cancel.
+const ZOOM_HAPTIC_COOLDOWN_MS = 26;
+export const ZOOM_HAPTIC_TICK_MS = 4;
+export const ZOOM_HAPTIC_BOUNDARY_MS = 9;
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 280;
-const ZOOM_PINCH_STEP_PX = 18;
-const ZOOM_WHEEL_STEP_DELTA = 36;
-const MIN_NATIVE_VIBRATE_INTERVAL_MS = 130;
+const ZOOM_PINCH_STEP_PX = 6;
+const ZOOM_WHEEL_STEP_DELTA = 16;
+const MIN_NATIVE_VIBRATE_INTERVAL_MS = 22;
 
 const BOUNDARY_EPS = 0.004;
 
@@ -81,14 +82,14 @@ function playTactileAudioTick(isBoundary = false) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(isBoundary ? 135 : 108, now);
-    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 48 : 38, now + 0.008);
-    gain.gain.setValueAtTime(isBoundary ? 0.036 : 0.024, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.0085);
+    osc.frequency.setValueAtTime(isBoundary ? 150 : 125, now);
+    osc.frequency.exponentialRampToValueAtTime(isBoundary ? 55 : 44, now + 0.0035);
+    gain.gain.setValueAtTime(isBoundary ? 0.014 : 0.008, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.0038);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.009);
+    osc.stop(now + 0.004);
     return true;
   } catch {
     return false;

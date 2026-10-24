@@ -368,8 +368,8 @@ describe("globeAltitude", () => {
       expect(tracker.onAltitudeChange(1.8, { now: 800 }).pulsed).toBe(false);
       // Passing isZoomGesture: true directly activates the gesture window (double-tap-drag zoom)
       expect(tracker.onAltitudeChange(1.2, { now: 900, isZoomGesture: true }).pulsed).toBe(true);
-      expect(ZOOM_HAPTIC_TICK_MS).toBe(35);
-      expect(ZOOM_HAPTIC_BOUNDARY_MS).toBe(60);
+      expect(ZOOM_HAPTIC_TICK_MS).toBe(4);
+      expect(ZOOM_HAPTIC_BOUNDARY_MS).toBe(9);
       expect(typeof primeHapticsOnUserGesture).toBe("function");
       primeHapticsOnUserGesture();
       // When navigator.vibrate is absent (iOS Safari), falls back to the hidden switch toggle
