@@ -2,16 +2,7 @@ import "./HomeScreenCategoryCarousel.css";
 import "./HomeScreenCarouselMotion.css";
 import "./HomeScreenDesktop.css";
 
-import {
-  Chess,
-  ChevronLeft,
-  ChevronRight,
-  Earth,
-  Globe,
-  Hash,
-  MapPin,
-  Waves,
-} from "pixelarticons/react";
+import { ChevronLeft, ChevronRight } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
@@ -22,17 +13,18 @@ import { usStatesDataMap } from "../data/usStatesData";
 import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
 import { getGameModesMetadata } from "./homeHeroText";
 import ModeCard from "./HomeModeCard";
+import { HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 import IconButton from "./ui/IconButton";
 import useCarouselDrag from "./useCarouselDrag";
 
 const MODE_ICONS = {
-  [HOME_CONQUEST_KEY]: <Chess width={48} height={48} />,
-  countries: <Globe width={48} height={48} />,
-  capitals: <MapPin width={48} height={48} />,
-  departments: <Hash width={48} height={48} />,
-  us_states: <Earth width={48} height={48} />,
-  rivers_mountains: <Waves width={48} height={48} />,
+  [HOME_CONQUEST_KEY]: <HomeModePixelArt modeKey={HOME_CONQUEST_KEY} />,
+  countries: <HomeModePixelArt modeKey="countries" />,
+  capitals: <HomeModePixelArt modeKey="capitals" />,
+  departments: <HomeModePixelArt modeKey="departments" />,
+  us_states: <HomeModePixelArt modeKey="us_states" />,
+  rivers_mountains: <HomeModePixelArt modeKey="rivers_mountains" />,
 };
 
 const buildCarouselItems = (metadata) =>

@@ -9,6 +9,7 @@ import {
   abs,
   asin,
   atan,
+  cameraPosition,
   clamp,
   cos,
   float,
@@ -23,6 +24,7 @@ import {
   normalize,
   positionLocal,
   positionWorld,
+  pow,
   select,
   sin,
   smoothstep,
@@ -161,23 +163,27 @@ function successEffect(u, time, blockUv, worldPos) {
   return baseTone;
 }
 
-function selectionEffect(finalColor, green, time, theme, worldPos) {
-  const pulse = sin(time.mul(5.5)).mul(0.18).add(0.82);
-  const sweep = step(fract(worldPos.y.mul(0.05).sub(time.mul(0.9))), 0.1).mul(0.18);
+function selectionEffect(finalColor, green, time, theme, isSatellite) {
+  const pulse = sin(time.mul(3.2)).mul(0.08).add(0.92);
+  const isMonoAwakening = theme.greaterThan(0.5).and(isSatellite.lessThan(0.5));
+  const targetTone = select(isMonoAwakening, vec3(0.92, 0.68, 0.24), green);
   const isBlackout = theme.greaterThan(0.9).and(theme.lessThan(1.1));
   return select(
-    isBlackout,
-    green.mul(pulse.mul(0.32).add(sweep.mul(0.15)).add(0.22)),
-    mix(finalColor, green.mul(pulse.mul(0.42).add(sweep).add(0.3)), 0.52)
+    isMonoAwakening,
+    targetTone.mul(pulse.mul(0.72).add(0.16)),
+    select(
+      isBlackout,
+      targetTone.mul(pulse.mul(0.36).add(0.26)),
+      mix(finalColor, targetTone.mul(pulse.mul(0.48).add(0.36)), 0.56)
+    )
   );
 }
 
-const edgeGlowAt = (blockUv, time) =>
-  mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv.add(floor(time.mul(15)))));
+const edgeGlowAt = (bayer) => mix(vec3(0.96, 0.68, 0.22), vec3(1.0, 0.88, 0.48), step(0.5, bayer));
 
 const on = (x) => x.greaterThan(0.5);
 
-/** Screen-space static, the transition amplitude and the effect base colour. */
+/** Warm pixel-dithered Atlas Lantern selection base colour. */
 function glitchBase(u, lit) {
   const time = u.uTime;
   const transitionActive = step(0.006, u.uFadeProgress).mul(
@@ -187,30 +193,29 @@ function glitchBase(u, lit) {
   const glitchAmp = transitionActive
     .mul(sin(u.uFadeProgress.mul(PI)).mul(0.6).add(0.4))
     .mul(selectInScale);
-  const t = time.mul(glitchAmp.mul(62).add(28));
 
   const sphereDir = normalize(positionWorld);
   const sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
   const sphereLng = atan(sphereDir.z, sphereDir.x);
   const fragPx = vec2(sphereLng.mul(cos(sphereLat.mul(0.65))), sphereLat).mul(520.0);
   const bayer = bayer4x4(floor(fragPx));
+  const coarseBayer = bayer4x4(floor(fragPx.mul(0.5)));
   const blockUv = floor(fragPx.mul(0.85));
-  const noiseUv = fragPx.mul(2.4);
-  const noiseCoarse = hash(blockUv.add(sin(t)));
-  const noiseFine = hash(floor(noiseUv).add(vec2(cos(t.mul(1.6)), sin(t.mul(0.95)))));
-  const noise = mix(noiseFine, noiseCoarse, transitionActive.mul(0.35));
+
+  const viewDir = normalize(cameraPosition.sub(positionWorld));
+  const ndv = clamp(importDot(sphereDir, viewDir), 0.0, 1.0);
+  const sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
 
   const light = on(u.uIsLight);
-  const baseMin = select(light, float(0.76), float(0.36));
-  const baseMax = select(light, float(0.94), float(0.54));
-  const scanline = sin(fragPx.y.mul(2.2).add(time.mul(glitchAmp.mul(14).add(5)))).mul(
-    select(light, float(0.018), float(0.026))
+  const lanternPulse = sin(time.mul(3.2)).mul(0.07).add(0.93);
+  const stippleStep = step(0.5, coarseBayer);
+  const lanternDark = mix(vec3(0.3, 0.22, 0.12), vec3(0.39, 0.28, 0.15), stippleStep);
+  const lanternLight = mix(vec3(0.82, 0.72, 0.52), vec3(0.9, 0.8, 0.6), stippleStep);
+  const lanternBase = select(light, lanternLight, lanternDark);
+  const rimWarmth = pow(float(1.0).sub(ndv), 2.0).mul(
+    select(light, vec3(0.16, 0.11, 0.04), vec3(0.34, 0.22, 0.07))
   );
-  const bayerStipple = bayer
-    .sub(0.46875)
-    .mul(select(light, float(0.025), float(0.035)))
-    .mul(transitionActive);
-  const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline).add(bayerStipple)).toVar();
+  const staticVec = lanternBase.mul(sphereShade).mul(lanternPulse).add(rimWarmth).toVar();
   const isMonoAwakening = on(u.uTheme).and(on(u.uIsSatellite).not());
   const foundRestingColor = select(isMonoAwakening, vec3(0.48, 0.34, 0.15), u.uFoundGreen);
 
@@ -222,7 +227,7 @@ function glitchBase(u, lit) {
       finalColor.assign(successEffect(u, time, blockUv, positionWorld));
     })
     .ElseIf(on(u.uIsSelection), () => {
-      finalColor.assign(selectionEffect(lit, u.uFoundGreen, time, u.uTheme, positionWorld));
+      finalColor.assign(selectionEffect(lit, u.uFoundGreen, time, u.uTheme, u.uIsSatellite));
     })
     .ElseIf(on(u.uIsFound), () => {
       finalColor.assign(foundRestingColor);
@@ -242,70 +247,36 @@ function glitchBase(u, lit) {
   };
 }
 
-/** Deselection dissolve: threshold noise, tears and the chroma-split colour. */
-function glitchDissolve(u, base) {
-  const time = u.uTime;
-  const { transitionActive, glitchAmp, fragPx, blockUv, finalColor, bayer } = base;
-  const dissolveBlock = floor(fragPx.mul(0.21)).add(
-    vec2(sin(time.mul(58)), cos(time.mul(41)))
-      .mul(glitchAmp)
-      .mul(3.5)
-  );
-  const tn1 = hash(dissolveBlock);
-  const tn2 = hash(dissolveBlock.mul(1.9).add(time.mul(3.7)));
-  const transitionNoise = mix(tn1, tn2, glitchAmp.max(0.35).mul(0.55));
-  const ditherDissolve = mix(transitionNoise, bayer, 0.28);
-  const horizontalTear = step(
-    0.78,
-    sin(fragPx.y.mul(0.038).add(time.mul(glitchAmp.mul(95).add(48))))
-  );
-  const verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x.mul(0.07)), floor(time.mul(24)))));
+function importDot(a, b) {
+  return a.x.mul(b.x).add(a.y.mul(b.y)).add(a.z.mul(b.z));
+}
 
-  const glitchThreshold = u.uFadeProgress.toVar();
+/** Ordered pixel-art Bayer dither dissolve with warm amber frontier embers. */
+function glitchDissolve(u, base) {
+  const { finalColor } = base;
+  const glitchThreshold = clamp(u.uFadeProgress, 0, 1).toVar();
   const glitchColor = vec3(finalColor).toVar();
-  If(on(transitionActive), () => {
-    glitchThreshold.addAssign(ditherDissolve.sub(0.5).mul(glitchAmp.mul(0.3).add(0.46)));
-    glitchThreshold.assign(
-      clamp(glitchThreshold.sub(horizontalTear.mul(0.16)).add(verticalGlitch.mul(0.12)), 0, 1)
-    );
-  });
-  If(on(transitionActive).and(on(u.uIsFound).not()), () => {
-    const chroma = ditherDissolve.sub(0.5).mul(0.28).mul(glitchAmp);
-    glitchColor.assign(
-      vec3(
-        clamp(finalColor.x.add(chroma), 0, 1),
-        clamp(finalColor.y.mul(float(1).sub(glitchAmp.mul(0.15))), 0, 1),
-        clamp(finalColor.z.sub(chroma), 0, 1)
-      )
-    );
-    const tear = mix(u.uGlitchTintA, u.uGlitchTintB, hash(blockUv.add(floor(time.mul(30)))));
-    glitchColor.assign(mix(glitchColor, tear, glitchAmp.mul(0.42).mul(horizontalTear)));
-    glitchColor.assign(mix(glitchColor, vec3(0), glitchAmp.mul(0.25).mul(verticalGlitch)));
-  });
   return { glitchThreshold, glitchColor };
 }
 
 /** Fragment output node equivalent to GLITCH_FRAGMENT_BODY. */
 function createGlitchOutputNode(u) {
   return Fn(() => {
-    const time = u.uTime;
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, blockUv, staticVec, sideShade, bayer, foundRestingColor } = base;
+    const { transitionActive, fragPx, staticVec, sideShade, bayer, foundRestingColor } = base;
     const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
 
     const settleColor = mix(lit, foundRestingColor.mul(sideShade), step(0.5, u.uIsFound)).toVar();
-    // Clean uniform surface without noisy surface blotches
-    const blockValRaw = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
-    const blockVal = mix(blockValRaw, bayer, 0.22);
-    const edgeGlow = edgeGlowAt(blockUv, time).mul(1.6);
+    const cellNoise = hash(floor(fragPx.mul(0.25)));
+    const blockVal = mix(bayer, cellNoise, 0.32);
+    const edgeGlow = edgeGlowAt(bayer);
 
     const feedback = on(u.uIsError).or(on(u.uIsSuccess));
     const isFoundSurface = on(u.uIsFound);
     const transiting = on(transitionActive);
     const satellite = on(u.uIsSatellite);
 
-    // Colour branch (GLSL: error/success → found → transition → resting static).
     const rgb = vec3(staticVec.mul(sideShade)).toVar();
     If(feedback, () => {
       rgb.assign(glitchColor);
@@ -319,24 +290,20 @@ function createGlitchOutputNode(u) {
       .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold)), () => {
         rgb.assign(settleColor);
       })
-      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold.add(0.12))), () => {
-        rgb.assign(mix(glitchColor, edgeGlow, 0.65));
+      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold.add(0.11))), () => {
+        rgb.assign(mix(glitchColor, edgeGlow, 0.72));
       })
       .ElseIf(transiting, () => {
         rgb.assign(glitchColor);
       });
-    // (The GLSL soft select-in branch is unreachable: it needs transitionActive,
-    // already handled above.)
-    // Clean cartographic finish
 
-    // Alpha branch (satellite dissolve fades the cap out, block by block).
     const alpha = float(1).toVar();
     const fade = u.uFadeProgress;
     const satDissolve = feedback.or(isFoundSurface).not().and(transiting).and(satellite);
     If(satDissolve.and(blockVal.lessThan(fade)), () => {
       alpha.assign(0);
     }).ElseIf(satDissolve, () => {
-      rgb.assign(select(blockVal.lessThan(fade.add(0.12)), mix(rgb, edgeGlow, 0.65), rgb));
+      rgb.assign(select(blockVal.lessThan(fade.add(0.11)), mix(rgb, edgeGlow, 0.72), rgb));
       alpha.assign(float(1).sub(fade.mul(fade)));
     });
     If(feedback.or(isFoundSurface).or(transiting).not().and(satellite), () => {

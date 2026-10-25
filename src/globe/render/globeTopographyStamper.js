@@ -1,4 +1,6 @@
+import { departmentsDataMap } from "../../data/departmentsData";
 import { riversMountainsDataMap } from "../../data/riversMountainsData";
+import { usStatesDataMap } from "../../data/usStatesData";
 
 // Flat [lat1, lng1, lat2, lng2, ...] polylines for extra rivers & major tributaries
 const EXTRA_RIVERS_FLAT = [
@@ -29,6 +31,25 @@ const EXTRA_RIVERS_FLAT = [
   [-19.0, -57.6, -25.3, -57.6, -27.3, -58.6], // Paraguay
   [40.44, -80.0, 38.25, -85.76, 37.0, -89.13], // Ohio
   [50.0, -116.0, 47.6, -117.4, 45.6, -121.2, 46.2, -124.0], // Columbia
+  [49.9, 3.3, 49.89, 2.3, 50.18, 1.65], // Somme
+  [48.1, -0.8, 48.11, -1.68, 47.5, -2.4], // Vilaine
+  [45.8, 0.6, 45.65, 0.16, 45.95, -1.05], // Charente
+  [45.55, 2.8, 45.18, 1.5, 44.85, 0.48, 45.04, -0.6], // Dordogne
+  [44.5, 3.5, 44.45, 1.44, 44.3, 0.33], // Lot
+  [44.3, 3.6, 43.93, 2.15, 44.08, 1.1], // Tarn
+  [43.0, 0.15, 43.7, -1.05, 43.52, -1.52], // Adour
+  [44.6, 3.88, 45.78, 3.18, 46.56, 3.33, 46.95, 3.1], // Allier
+  [45.9, 2.45, 46.8, 2.4, 47.39, 0.68], // Cher
+  [47.8, 4.5, 48.3, 4.08, 48.95, 2.38], // Yonne / Marne
+  [46.7, 6.15, 47.24, 6.02, 47.1, 5.1], // Doubs
+  [45.45, 6.95, 45.56, 5.92, 45.19, 5.72, 45.0, 4.88], // Isere
+  [44.9, 6.65, 44.4, 6.0, 43.7, 5.5, 43.92, 4.75], // Durance
+  [39.25, -106.3, 38.25, -104.6, 37.68, -97.33, 35.38, -94.4, 34.74, -92.28, 33.8, -91.1], // Arkansas
+  [43.8, -110.6, 42.8, -112.8, 43.6, -116.5, 46.2, -119.0], // Snake
+  [36.0, -83.9, 34.7, -87.7, 37.0, -88.6], // Tennessee
+  [44.1, -73.9, 42.65, -73.75, 40.7, -74.0], // Hudson
+  [41.3, -122.3, 38.58, -121.5, 38.05, -121.9], // Sacramento
+  [34.8, -102.5, 33.9, -98.5, 31.3, -92.4, 31.0, -91.8], // Red River
 ];
 
 // Flat [spread, height, lat1, lng1, lat2, lng2, ...] for extra mountain chains
@@ -293,6 +314,16 @@ function stampRiverPolyline(data, texWidth, texHeight, path, seed = 1.0) {
   }
 }
 
+function stampRegionalPinpoint(data, texWidth, texHeight, lat, lng) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  const y = Math.floor(((lat + 90) / 180) * texHeight);
+  const x = Math.floor(((lng + 180) / 360) * texWidth);
+  if (y < 0 || y >= texHeight) return;
+  const wx = ((x % texWidth) + texWidth) % texWidth;
+  const idx = (y * texWidth + wx) * 4;
+  data[idx + 1] = 255;
+}
+
 export function stampTopographyChannels(data, texWidth, texHeight) {
   Object.values(riversMountainsDataMap).forEach((item, idx) => {
     if (!item?.path) return;
@@ -318,5 +349,12 @@ export function stampTopographyChannels(data, texWidth, texHeight) {
 
   EXTRA_RIVERS_FLAT.forEach((flat, idx) => {
     stampRiverPolyline(data, texWidth, texHeight, flatPairsToPath(flat, 0), 811.3 + idx * 37.9);
+  });
+
+  Object.values(departmentsDataMap).forEach((dept) => {
+    stampRegionalPinpoint(data, texWidth, texHeight, dept?.lat, dept?.lng);
+  });
+  Object.values(usStatesDataMap).forEach((state) => {
+    stampRegionalPinpoint(data, texWidth, texHeight, state?.lat, state?.lng);
   });
 }

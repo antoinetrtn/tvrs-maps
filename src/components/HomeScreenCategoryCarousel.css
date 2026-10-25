@@ -121,13 +121,17 @@
   top: 18px;
   width: 320px;
   height: 216px;
-  padding: 1.25rem;
-  border-radius: var(--radius-md);
+  padding: 1.15rem 1.35rem;
+  border-radius: 0;
   background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
   background-color: var(--bg-color) !important;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
+  --card-mode-accent: var(--accent);
+  --card-mode-secondary: var(--text-main);
+  --card-mode-spark: var(--accent);
+  border: none;
+  clip-path: var(--card-clip-path);
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
@@ -139,7 +143,7 @@
 
 .deck-mode-card.is-top-card {
   height: 216px;
-  border-color: color-mix(in srgb, var(--text-main) 22%, transparent);
+  border-color: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 52%, transparent);
   box-shadow: var(--shadow-card);
 }
 
@@ -171,24 +175,25 @@
   border-radius: inherit;
   z-index: 1;
   background:
+    radial-gradient(
+      circle at 86% 24%,
+      color-mix(in srgb, var(--card-mode-accent, var(--accent)) 16%, transparent) 0%,
+      transparent 58%
+    ),
     repeating-linear-gradient(
       90deg,
-      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
       transparent 1px 32px
     ),
     repeating-linear-gradient(
       0deg,
-      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
       transparent 1px 32px
     );
 }
 
 .card-plate-pattern::after {
-  content: "";
-  position: absolute;
-  inset: var(--spacing-xs);
-  border: 1px solid color-mix(in srgb, var(--text-main) 10%, transparent);
-  border-radius: var(--radius-sm);
+  content: none;
 }
 
 .card-plate-meta {
@@ -205,7 +210,14 @@
 .card-plate-number {
   font-family: var(--font-display);
   letter-spacing: 0.08em;
-  color: var(--accent);
+  color: var(--card-mode-accent, var(--accent));
+}
+
+.card-plate-count {
+  padding: 1px var(--spacing-xs);
+  border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--accent)) 38%, transparent);
+  background: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 12%, var(--bg-color));
+  color: var(--card-mode-spark, var(--text-main));
 }
 
 .card-content {
@@ -232,8 +244,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
-  opacity: 0.9;
+  color: var(--card-mode-accent, var(--accent));
+  opacity: 1;
   flex-shrink: 0;
 }
 

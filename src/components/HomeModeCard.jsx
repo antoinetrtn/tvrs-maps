@@ -1,7 +1,10 @@
 import { BookOpen, Play, ScrollVertical, Target } from "pixelarticons/react";
 import React from "react";
 
+import { MODE_PIXEL_PALETTES } from "../config/accentPresets";
 import { getCardPose } from "./homeCardPose";
+import { getModeClipPath } from "./homeModeFrameData";
+import { CardPixelOrnaments, HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 import Button from "./ui/Button";
 
@@ -109,7 +112,7 @@ const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badge
     <div className="card-header-row">
       <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
       <span className="card-mode-icon" aria-hidden="true">
-        {modeItem.icon}
+        {modeItem.icon || <HomeModePixelArt modeKey={modeItem.key} />}
       </span>
     </div>
     <p id={`card-desc-${modeItem.key}`} className="card-desc desktop-reveal">
@@ -118,9 +121,19 @@ const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badge
   </div>
 );
 
-const getCardStyle = (pose, isTopCard, reducedMotion) => {
+const getCardStyle = (pose, isTopCard, reducedMotion, modeKey) => {
+  const palette = MODE_PIXEL_PALETTES[modeKey] || MODE_PIXEL_PALETTES.countries;
+  const clipPath = getModeClipPath(modeKey);
+  const modeVars = {
+    "--card-mode-accent": palette.primary,
+    "--card-mode-secondary": palette.secondary,
+    "--card-mode-spark": palette.spark,
+    "--card-clip-path": clipPath,
+    clipPath,
+  };
   if (reducedMotion) {
     return {
+      ...modeVars,
       "--card-x": "0px",
       "--card-y": "0px",
       "--card-rot": "0deg",
@@ -131,6 +144,7 @@ const getCardStyle = (pose, isTopCard, reducedMotion) => {
     };
   }
   return {
+    ...modeVars,
     "--card-x": `${pose.translateX}px`,
     "--card-y": `${pose.translateY}px`,
     "--card-rot": `${pose.rotateZ}deg`,
@@ -196,7 +210,7 @@ const ModeCard = ({
     animatingDirection: reducedMotion ? null : animatingDirection,
   });
 
-  const cardStyle = getCardStyle(pose, isTopCard, reducedMotion);
+  const cardStyle = getCardStyle(pose, isTopCard, reducedMotion, modeItem.key);
   const selectSideCard = () => onSelectSideCard(stackPos);
 
   const plateNumber = String(idx + 1).padStart(2, "0");
@@ -225,6 +239,7 @@ const ModeCard = ({
       {...interactiveProps}
     >
       <div className="card-plate-pattern" aria-hidden="true" />
+      <CardPixelOrnaments modeKey={modeItem.key} />
       <CardContent
         modeItem={modeItem}
         lang={lang}

@@ -27,6 +27,7 @@ import {
   mix,
   normalize,
   normalWorld,
+  output,
   positionLocal,
   positionWorld,
   pow,
@@ -66,35 +67,41 @@ export function createStandardMaterial(params) {
     : new THREE.MeshStandardMaterial(params);
 }
 
-function buildTerrainReliefAndRivers(
-  cartUv,
-  baseLit,
-  capitalSample,
-  cityHash,
-  cityPower,
-  isSoloFound,
-  isConquestOwned,
-  uTimeNode
-) {
-  const mountainRelief = capitalSample.b;
-  const riverVal = capitalSample.a;
-  const ridgeCrest = step(0.76, mountainRelief);
-  const ridgeSpur = float(1.0).sub(ridgeCrest).mul(step(0.38, mountainRelief));
-  const valleyGap = float(1.0).sub(max(ridgeCrest, ridgeSpur)).mul(step(0.12, mountainRelief));
+function buildTerrainReliefAndRivers(p) {
+  const {
+    cartUv,
+    baseLit,
+    capitalSample,
+    cityHash,
+    cityPower,
+    isSoloFound,
+    isConquestOwned,
+    uTimeNode,
+    uRegionalNode,
+    ghostMask,
+  } = p;
+  const reliefMask = ghostMask.mul(mix(float(1.0), cityPower.mul(0.36), uRegionalNode));
+  const spurMask = reliefMask.mul(float(1.0).sub(uRegionalNode));
+  const rawCrest = step(0.76, capitalSample.b);
+  const rawSpur = float(1.0).sub(rawCrest).mul(step(0.38, capitalSample.b));
+  const rawValley = float(1.0).sub(max(rawCrest, rawSpur)).mul(step(0.12, capitalSample.b));
+  const ridgeCrest = rawCrest.mul(reliefMask);
+  const ridgeSpur = rawSpur.mul(spurMask);
+  const valleyGap = rawValley.mul(spurMask);
   const darkReliefLit = baseLit
     .mul(float(1.0).sub(valleyGap.mul(0.16)))
-    .add(vec3(0.055, 0.058, 0.062).mul(ridgeCrest))
-    .add(vec3(0.028, 0.03, 0.032).mul(ridgeSpur));
+    .add(vec3(0.058).mul(ridgeCrest))
+    .add(vec3(0.03).mul(ridgeSpur));
   const soloCrestTone = mix(vec3(0.62, 0.48, 0.28), vec3(0.92, 0.78, 0.48), isSoloFound);
   const soloSpurTone = mix(vec3(0.36, 0.29, 0.19), vec3(0.68, 0.5, 0.24), isSoloFound);
   const awakenedCrestTone = mix(
     soloCrestTone,
-    min(vec3(1.0), baseLit.mul(1.65).add(vec3(0.24, 0.22, 0.16))),
+    min(vec3(1.0), baseLit.mul(1.65).add(vec3(0.22))),
     isConquestOwned
   );
   const awakenedSpurTone = mix(
     soloSpurTone,
-    min(vec3(1.0), baseLit.mul(1.28).add(vec3(0.1, 0.09, 0.06))),
+    min(vec3(1.0), baseLit.mul(1.28).add(vec3(0.09))),
     isConquestOwned
   );
   const awakeSlope = mix(
@@ -105,9 +112,14 @@ function buildTerrainReliefAndRivers(
   const awakeReliefLit = mix(awakeSlope, awakenedCrestTone, ridgeCrest.mul(0.86));
   const reliefLit = mix(darkReliefLit, awakeReliefLit, cityPower);
 
-  const riverCore = step(0.65, riverVal);
-  const riverBank = float(1.0).sub(riverCore).mul(step(0.25, riverVal));
-  const riverShimmer = sin(uTimeNode.mul(2.2).add(cartUv.x.mul(140.0).add(cartUv.y.mul(90.0))))
+  const riverMask = ghostMask.mul(mix(float(1.0), cityPower.mul(0.52), uRegionalNode));
+  const riverCore = step(0.65, capitalSample.a).mul(riverMask);
+  const riverBank = float(1.0)
+    .sub(step(0.65, capitalSample.a))
+    .mul(step(0.25, capitalSample.a))
+    .mul(riverMask)
+    .mul(float(1.0).sub(uRegionalNode));
+  const riverShimmer = sin(uTimeNode.mul(2.2).add(cartUv.x.mul(140.0)).add(cartUv.y.mul(90.0)))
     .mul(0.22)
     .add(0.78);
   const darkRiverLit = mix(
@@ -123,27 +135,31 @@ function buildTerrainReliefAndRivers(
     awakeRiverTone,
     riverCore.mul(0.88)
   );
-  return mix(darkRiverLit, awakeRiverLit, cityPower);
+  return {
+    terrainLit: mix(darkRiverLit, awakeRiverLit, cityPower),
+    riverCore,
+    ridgeCrest,
+    ridgeSpur,
+  };
 }
 
-function buildCityLightsLayer(cartUv, baseLit, cityPower, isSoloFound, isConquestOwned, uTimeNode) {
+function buildCityLightsLayer(p) {
+  const { cartUv, cityPower, isConquestOwned, uTimeNode, uRegionalNode } = p;
   const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
   const capitalSample = texture(getCapitalLightsTexture(), cartUv);
   const cityDensity = capitalSample.r;
   const cityAura = capitalSample.g;
   const cityHash = hash(cityCellId);
   const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
-  const terrainLit = buildTerrainReliefAndRivers(
-    cartUv,
-    baseLit,
+  const { terrainLit, riverCore, ridgeCrest, ridgeSpur } = buildTerrainReliefAndRivers({
+    ...p,
     capitalSample,
     cityHash,
-    cityPower,
-    isSoloFound,
-    isConquestOwned,
-    uTimeNode
-  );
-  const trafficWave = sin(uTimeNode.mul(2.8).sub(cityAura.mul(8.5)).add(cityHash.mul(6.2831853)))
+  });
+  const isRegionalPin = step(0.975, cityAura);
+  const worldAura = cityAura.mul(float(1.0).sub(isRegionalPin.mul(step(cityDensity, 0.25))));
+  const effectiveAura = mix(worldAura, isRegionalPin.mul(0.42), uRegionalNode);
+  const trafficWave = sin(uTimeNode.mul(2.8).sub(worldAura.mul(8.5)).add(cityHash.mul(6.2831853)))
     .mul(0.2)
     .add(0.8);
   const satTwinkle = sin(uTimeNode.mul(4.2).add(cityHash2.mul(6.2831853)))
@@ -158,7 +174,11 @@ function buildCityLightsLayer(cartUv, baseLit, cityPower, isSoloFound, isConques
     max(terrainLit.mul(1.35), vec3(0.75, 0.55, 0.22)),
     isConquestOwned.mul(0.5)
   );
-  const withAura = mix(terrainLit, max(terrainLit, auraColor), cityAura.mul(0.32).mul(cityPower));
+  const withAura = mix(
+    terrainLit,
+    max(terrainLit, auraColor),
+    effectiveAura.mul(0.32).mul(cityPower)
+  );
   const colorOuterTentacle = mix(
     vec3(0.94, 0.54, 0.16),
     vec3(1.0, 0.84, 0.48),
@@ -172,26 +192,40 @@ function buildCityLightsLayer(cartUv, baseLit, cityPower, isSoloFound, isConques
   const colorMetroHeart = mix(
     vec3(1.0, 0.94, 0.7),
     vec3(1.0, 0.99, 0.92),
-    smoothstep(0.82, 1.0, cityDensity)
+    smoothstep(0.82, 1.0, max(cityDensity, isRegionalPin))
   );
-  const sparkColor = tierPinpoint
+  const worldSparkColor = tierPinpoint
     .mul(colorMetroHeart)
     .add(tierArterial.mul(colorMainArterial))
     .add(tierTentacle.mul(colorOuterTentacle));
-  const sparkAlpha = tierPinpoint
+  const sparkColor = mix(worldSparkColor, colorMetroHeart, uRegionalNode);
+  const worldSparkAlpha = tierPinpoint
     .mul(0.98)
     .add(tierArterial.mul(cityHash2.mul(0.16).add(0.78)).mul(trafficWave))
-    .add(tierTentacle.mul(cityHash2.mul(0.24).add(0.5)).mul(satTwinkle))
-    .mul(cityPower);
-  return mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
+    .add(tierTentacle.mul(cityHash2.mul(0.24).add(0.5)).mul(satTwinkle));
+  const regionalSparkAlpha = isRegionalPin.mul(satTwinkle.mul(0.12).add(0.88));
+  const sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uRegionalNode).mul(cityPower);
+  const satTopo = max(riverCore.mul(0.92), ridgeCrest.mul(0.76).add(ridgeSpur.mul(0.42)));
+  const satFeat = clamp(
+    max(sparkAlpha.mul(1.15).add(effectiveAura.mul(0.38).mul(cityPower)), satTopo),
+    0.0,
+    1.0
+  );
+  return { capRgb: mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0)), satFeat };
 }
 
 let grainNode = null;
+let ghostGrainNode = null;
 let showcaseLightsNode = null;
+let regionalModeNode = null;
+let satelliteThemeNode = null;
 /** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
-export function countryGrainOutputNode() {
-  if (grainNode) return grainNode;
-  grainNode = Fn(() => {
+export function countryGrainOutputNode(isGhostCountry = false) {
+  if (isGhostCountry && ghostGrainNode) return ghostGrainNode;
+  if (!isGhostCountry && grainNode) return grainNode;
+  const node = Fn(() => {
+    const uGhost = float(isGhostCountry ? 1.0 : 0.0);
+    const ghostMask = float(1.0).sub(uGhost);
     const sphereNormal = normalize(positionWorld);
     const geomNormal = normalize(normalWorld);
     const isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
@@ -213,28 +247,39 @@ export function countryGrainOutputNode() {
     const uShowcaseNode = (showcaseLightsNode ||= mirrorUniform(
       polygonGlitchUniforms.uShowcaseLights
     ));
+    const uRegionalNode = (regionalModeNode ||= mirrorUniform(
+      polygonGlitchUniforms.uIsRegionalMode
+    ));
+    const uSatThemeNode = (satelliteThemeNode ||= mirrorUniform(
+      polygonGlitchUniforms.uIsSatelliteTheme
+    ));
     const lit = litDisplayColor();
     const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
     const maxC = max(lit.x, max(lit.y, lit.z));
     const minC = min(lit.x, min(lit.y, lit.z));
     const chroma = maxC.sub(minC);
-    const isSoloFound = step(float(0.45), lit.y)
+    const isSoloFound = step(0.45, lit.y)
       .mul(step(lit.z.mul(1.32), lit.y))
       .mul(step(lit.x.mul(2.2), lit.z));
     const isConquestOwned = float(1.0)
       .sub(isSoloFound)
-      .mul(step(float(0.15), chroma))
-      .mul(step(float(0.36), maxC));
-    const isAwakenedCap = max(isSoloFound, isConquestOwned);
+      .mul(step(0.15, chroma))
+      .mul(step(0.36, maxC));
+    const isAwakenedCap = max(isSoloFound, isConquestOwned).mul(ghostMask);
+    const lumaThresh = mix(float(0.44), float(0.64), uRegionalNode);
     const isUnfoundDarkCap = float(1.0)
       .sub(isAwakenedCap)
-      .mul(float(1.0).sub(smoothstep(0.44, 0.58, surfaceLuma)));
-    const cityPower = clamp(max(isAwakenedCap, uShowcaseNode.mul(isUnfoundDarkCap)), 0.0, 1.0);
+      .mul(ghostMask)
+      .mul(float(1.0).sub(smoothstep(lumaThresh, lumaThresh.add(0.14), surfaceLuma)));
+    const cityPower = clamp(max(isAwakenedCap, uShowcaseNode.mul(isUnfoundDarkCap)), 0.0, 1.0).mul(
+      ghostMask
+    );
 
+    const dimTarget = mix(float(0.38), float(0.74), uRegionalNode);
     const blackoutDim = mix(
-      float(1.0),
-      float(0.38),
-      float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap)
+      mix(float(1.0), dimTarget, float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap)),
+      float(0.42),
+      uGhost
     );
     const unfoundLand = lit.mul(blackoutDim);
     const soloAwakenedLand = vec3(0.48, 0.34, 0.15).add(
@@ -251,19 +296,33 @@ export function countryGrainOutputNode() {
       .add(vec3(rimSheen));
     const baseLit = landSurface.mul(limbFactor).add(engrave);
 
-    const capRgb = buildCityLightsLayer(
+    const { capRgb, satFeat } = buildCityLightsLayer({
       cartUv,
       baseLit,
       cityPower,
       isSoloFound,
       isConquestOwned,
-      uTimeNode
-    );
+      uTimeNode,
+      uRegionalNode,
+      ghostMask,
+    });
     const sideRgb = landSurface.mul(0.58);
     const rgb = mix(capRgb, sideRgb, isSideWall);
-    return displayOutput(rgb);
+    const satTargetAlpha = mix(
+      mix(float(0.24), float(0.48), isConquestOwned),
+      float(0.96),
+      satFeat
+    );
+    const outAlpha = mix(
+      output.a,
+      satTargetAlpha,
+      uSatThemeNode.mul(isAwakenedCap).mul(float(1.0).sub(isSideWall))
+    );
+    return displayOutput(rgb, outAlpha);
   })();
-  return grainNode;
+  if (isGhostCountry) ghostGrainNode = node;
+  else grainNode = node;
+  return node;
 }
 
 let oceanTimeNode = null;

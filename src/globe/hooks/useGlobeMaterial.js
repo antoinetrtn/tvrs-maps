@@ -4,6 +4,7 @@ import { attribute } from "three/tsl";
 
 import { getThemeColors, GLOBE_FX_DEFAULTS } from "../../config/designSystem";
 import { useAppTheme } from "../../hooks/useAppTheme";
+import { getCapitalLightsTexture } from "../render/capitalLightsTexture";
 import { GLSL_BAYER_4X4_FN } from "../render/globeShaders";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 import {
@@ -133,36 +134,122 @@ const applyBlackoutOceanShader = (shader) => {
 };
 
 const applySatelliteSensorShader = (shader, gridUvExpr = "vMapUv") => {
-  shader.fragmentShader = shader.fragmentShader.replace(
-    "#include <map_fragment>",
-    `
-    #ifdef USE_MAP
-      vec4 sampledDiffuseColor = texture2D( map, vMapUv );
-      
-      // Sensor grid, anti-aliased in screen space. At world zoom a cell is far
-      // smaller than a pixel: the raw grid aliased into moiré stripes. The
-      // grid (and its per-cell noise) now fades in only once cells span a
-      // few pixels, with 1px-wide lines whatever the zoom.
-      vec2 gridUv = ${gridUvExpr} * vec2(16384.0, 8192.0);
-      vec2 cellPx = max(fwidth(gridUv), vec2(1e-4));
-      float gridVis = 1.0 - smoothstep(0.18, 0.4, max(cellPx.x, cellPx.y));
-      vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5) / cellPx;
-      float gridLine = clamp(min(gridFract.x, gridFract.y), 0.0, 1.0);
+  shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+  shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
+  shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
+  shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
+  shader.vertexShader = shader.vertexShader
+    .replace("#include <common>", "#include <common>\nvarying vec3 vSatWorldPos;")
+    .replace(
+      "#include <begin_vertex>",
+      "#include <begin_vertex>\nvSatWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;"
+    );
+  shader.fragmentShader = shader.fragmentShader
+    .replace(
+      "#include <common>",
+      `#include <common>
+      varying vec3 vSatWorldPos;
+      uniform float uTime;
+      uniform float uShowcaseLights;
+      uniform float uIsRegionalMode;
+      uniform sampler2D uCapitalLightsMap;`
+    )
+    .replace(
+      "#include <map_fragment>",
+      `
+      #ifdef USE_MAP
+        vec4 sampledDiffuseColor = texture2D( map, vMapUv );
+        vec2 gridUv = ${gridUvExpr} * vec2(16384.0, 8192.0);
+        vec2 cellPx = max(fwidth(gridUv), vec2(1e-4));
+        float gridVis = 1.0 - smoothstep(0.18, 0.4, max(cellPx.x, cellPx.y));
+        vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5) / cellPx;
+        float gridLine = clamp(min(gridFract.x, gridFract.y), 0.0, 1.0);
 
-      vec3 gridColor = vec3(0.0, 0.5, 0.95);
-      float gridMix = (1.0 - gridLine) * 0.1 * gridVis;
-      sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, gridColor, gridMix);
+        vec3 gridColor = vec3(0.0, 0.5, 0.95);
+        float gridMix = (1.0 - gridLine) * 0.1 * gridVis;
+        sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, gridColor, gridMix);
 
-      vec2 blockId = floor(gridUv);
-      float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
+        vec2 blockId = floor(gridUv);
+        float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
 
-      float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
-      sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand * gridVis;
+        float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
+        sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand * gridVis;
 
-      diffuseColor *= sampledDiffuseColor;
-    #endif
-    `
-  );
+        vec3 satSphereDir = normalize(vSatWorldPos);
+        vec2 satCartUv = vec2(
+          atan(satSphereDir.x, satSphereDir.z) / 6.2831853 + 0.5,
+          asin(clamp(satSphereDir.y, -1.0, 1.0)) / 3.14159265 + 0.5
+        );
+        vec4 satTopo = texture2D(uCapitalLightsMap, satCartUv);
+        float satCity = satTopo.r * isLand;
+        float satRawAura = satTopo.g * isLand;
+        float satRelief = satTopo.b * isLand;
+        float satRiver = satTopo.a * isLand;
+        float satRegPin = step(0.975, satRawAura);
+        float satAura = (satRegPin > 0.5 && satCity < 0.25) ? 0.0 : satRawAura;
+        float satPower = clamp(uShowcaseLights * (1.0 - uIsRegionalMode), 0.0, 1.0) * isLand;
+        float satSleep = clamp((1.0 - uShowcaseLights) * (1.0 - uIsRegionalMode), 0.0, 1.0) * isLand;
+        sampledDiffuseColor.rgb *= mix(1.0, 0.76, satSleep);
+
+        float satCrest = step(0.76, satRelief);
+        float satSpur = (1.0 - satCrest) * step(0.38, satRelief);
+        sampledDiffuseColor.rgb = mix(
+          sampledDiffuseColor.rgb,
+          vec3(0.92, 0.78, 0.48),
+          satCrest * mix(0.18 * isLand, 0.52, satPower) + satSpur * mix(0.08 * isLand, 0.28, satPower)
+        );
+
+        float satRiverCore = step(0.65, satRiver);
+        float satRiverShim = 0.78 + 0.22 * sin(uTime * 2.2 + satCartUv.x * 140.0 + satCartUv.y * 90.0);
+        vec3 satRiverCol = mix(
+          vec3(0.07, 0.20, 0.30),
+          mix(vec3(0.14, 0.48, 0.62), vec3(0.42, 0.86, 0.94), satRiverShim),
+          satPower
+        );
+        sampledDiffuseColor.rgb = mix(
+          sampledDiffuseColor.rgb,
+          satRiverCol,
+          satRiverCore * mix(0.46 * isLand, 0.86, satPower)
+        );
+
+        diffuseColor *= sampledDiffuseColor;
+      #endif
+      `
+    )
+    .replace(
+      "#include <dithering_fragment>",
+      `#include <dithering_fragment>
+      #ifdef USE_MAP
+        vec2 satCellId = floor(satCartUv * vec2(3600.0, 1800.0));
+        float satHash = fract(sin(dot(satCellId, vec2(127.1, 311.7))) * 43758.5453);
+        float satHash2 = fract(sin(dot(satCellId + vec2(37.2, 91.7), vec2(127.1, 311.7))) * 43758.5453);
+        float satWave = 0.80 + 0.20 * sin(uTime * 2.8 - satAura * 8.5 + satHash * 6.2831853);
+        float satTwink = 0.78 + 0.22 * sin(uTime * 4.2 + satHash2 * 6.2831853);
+        float sPin = step(0.82, satCity);
+        float sArt = (1.0 - sPin) * step(0.55, satCity);
+        float sTent = (1.0 - max(sPin, sArt)) * step(0.25, satCity);
+        vec3 sSparkCol = sPin * vec3(1.0, 0.97, 0.84)
+          + sArt * mix(vec3(0.98, 0.72, 0.18), vec3(1.0, 0.84, 0.34), satHash2)
+          + sTent * vec3(0.94, 0.54, 0.16);
+        float sSparkAlpha = (
+          sPin * 0.98 +
+          sArt * (0.78 + 0.16 * satHash2) * satWave +
+          sTent * (0.50 + 0.24 * satHash2) * satTwink
+        ) * satPower;
+        gl_FragColor.rgb = mix(
+          gl_FragColor.rgb,
+          max(gl_FragColor.rgb, vec3(0.68, 0.40, 0.12)),
+          satAura * 0.30 * satPower
+        );
+        gl_FragColor.rgb = mix(
+          gl_FragColor.rgb,
+          max(gl_FragColor.rgb, satRiverCol),
+          satRiverCore * 0.55 * satPower
+        );
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, sSparkCol, clamp(sSparkAlpha, 0.0, 1.0));
+      #endif
+      `
+    );
 };
 
 /**
