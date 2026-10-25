@@ -207,17 +207,22 @@
     padding: 1.5rem 2.1rem 1.4rem;
   }
 
-  /* Atlas plate pattern consistent at bigger size (orthogonal graticule 40px) */
+  /* Atlas plate pattern consistent at bigger size + subtle mode-tinted radial stage */
   .deck-mode-card .card-plate-pattern {
     background:
+      radial-gradient(
+        circle at 86% 26%,
+        color-mix(in srgb, var(--card-mode-accent, var(--accent)) 18%, transparent) 0%,
+        transparent 56%
+      ),
       repeating-linear-gradient(
         90deg,
-        color-mix(in srgb, var(--text-main) 3%, transparent) 0 1px,
+        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
         transparent 1px 40px
       ),
       repeating-linear-gradient(
         0deg,
-        color-mix(in srgb, var(--text-main) 3%, transparent) 0 1px,
+        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
         transparent 1px 40px
       );
   }
@@ -253,9 +258,9 @@
 
   /* Mode pixel-art vignette inside stepped frame */
   .card-mode-icon {
-    width: 72px;
-    height: 56px;
-    min-width: 72px;
+    width: 76px;
+    height: 60px;
+    min-width: 76px;
     border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--accent)) 55%, transparent);
     border-radius: 0;
     background: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 10%, var(--bg-color));
@@ -267,8 +272,8 @@
   }
 
   .card-mode-icon svg {
-    width: 66px;
-    height: 50px;
+    width: 72px;
+    height: 56px;
   }
 
   /* Description paragraph revealed on desktop */
@@ -399,28 +404,4 @@
   .deck-dot {
     transition: none;
   }
-}
-
-.deck-mode-card {
-  clip-path: var(--card-clip-path);
-}
-
-.card-pixel-ornaments {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: var(--z-base);
-}
-
-.card-perimeter-svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.card-pixel-art-svg {
-  display: block;
-  width: 56px;
-  height: 44px;
-  image-rendering: pixelated;
 }

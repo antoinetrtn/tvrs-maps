@@ -1,7 +1,13 @@
+import "./HomeModePixelArt.css";
+
 import React from "react";
 
 import { MODE_PIXEL_PALETTES, PIXEL_SCENE_SWATCHES as S } from "../config/accentPresets";
-import { MODE_SILHOUETTE_POLYGONS, toSvgPoints } from "./homeModeSilhouettes";
+import {
+  MODE_BEZEL_CRESTS,
+  MODE_CORNER_MOTIFS,
+  OUTER_CORNER_STEP_RECTS,
+} from "./homeModeFrameData";
 
 const ConquestPixelScene = () => (
   <>
@@ -182,16 +188,16 @@ export const HomeModePixelArt = ({ modeKey }) => {
     <svg
       className="card-pixel-art-svg"
       viewBox="0 0 36 28"
-      width="56"
-      height="44"
+      width="72"
+      height="56"
       shapeRendering="crispEdges"
       aria-hidden="true"
     >
       <Scene />
-      <rect x="0" y="0" width="36" height="1" fill={palette.primary} fillOpacity="0.65" />
-      <rect x="0" y="27" width="36" height="1" fill={palette.primary} fillOpacity="0.65" />
-      <rect x="0" y="0" width="1" height="28" fill={palette.primary} fillOpacity="0.65" />
-      <rect x="35" y="0" width="1" height="28" fill={palette.primary} fillOpacity="0.65" />
+      <rect x="0" y="0" width="36" height="1" fill={palette.primary} fillOpacity="0.7" />
+      <rect x="0" y="27" width="36" height="1" fill={palette.primary} fillOpacity="0.7" />
+      <rect x="0" y="0" width="1" height="28" fill={palette.primary} fillOpacity="0.7" />
+      <rect x="35" y="0" width="1" height="28" fill={palette.primary} fillOpacity="0.7" />
       <rect x="0" y="0" width="2" height="2" fill={palette.spark} />
       <rect x="34" y="0" width="2" height="2" fill={palette.spark} />
       <rect x="0" y="26" width="2" height="2" fill={palette.secondary} />
@@ -200,56 +206,81 @@ export const HomeModePixelArt = ({ modeKey }) => {
   );
 };
 
+const CornerOrnamentSvg = ({ pos, motif, palette }) => (
+  <svg
+    className={`card-corner-svg card-corner-${pos}`}
+    viewBox="0 0 12 12"
+    width="24"
+    height="24"
+    shapeRendering="crispEdges"
+    aria-hidden="true"
+  >
+    {OUTER_CORNER_STEP_RECTS.map(([x, y, w, h], idx) => (
+      <rect
+        key={`b-${idx}`}
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        fill={palette.primary}
+        fillOpacity="0.9"
+      />
+    ))}
+    {motif.map(([x, y, w, h, tone], idx) => (
+      <rect
+        key={`m-${idx}`}
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        fill={palette[tone] || palette.primary}
+        fillOpacity={tone === "spark" ? "0.95" : "0.8"}
+      />
+    ))}
+  </svg>
+);
+
+const BezelCrestSvg = ({ edge, crest, palette }) => (
+  <svg
+    className={`card-crest-svg card-crest-${edge}`}
+    viewBox="0 0 24 4"
+    width="48"
+    height="8"
+    shapeRendering="crispEdges"
+    aria-hidden="true"
+  >
+    {crest.map(([x, y, w, h, tone], idx) => (
+      <rect
+        key={idx}
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        fill={palette[tone] || palette.primary}
+        fillOpacity={tone === "spark" ? "0.95" : "0.8"}
+      />
+    ))}
+  </svg>
+);
+
 export const CardPixelOrnaments = ({ modeKey }) => {
   const palette = MODE_PIXEL_PALETTES[modeKey] || MODE_PIXEL_PALETTES.countries;
-  const shape = MODE_SILHOUETTE_POLYGONS[modeKey] || MODE_SILHOUETTE_POLYGONS.countries;
-  const outerSvgPts = toSvgPoints(shape.outer, 0, 0);
-  const innerSvgPts = toSvgPoints(shape.outer, 1.8, 2.8);
+  const motif = MODE_CORNER_MOTIFS[modeKey] || MODE_CORNER_MOTIFS.countries;
+  const crest = MODE_BEZEL_CRESTS[modeKey] || MODE_BEZEL_CRESTS.countries;
 
   return (
     <div className="card-pixel-ornaments" aria-hidden="true">
-      <svg
-        className="card-perimeter-svg"
-        viewBox="0 0 1000 600"
-        preserveAspectRatio="none"
-        shapeRendering="crispEdges"
-      >
-        <polygon
-          points={outerSvgPts}
-          fill="none"
-          stroke={palette.primary}
-          strokeWidth="3.5"
-          vectorEffect="non-scaling-stroke"
-        />
-        <polygon
-          points={innerSvgPts}
-          fill="none"
-          stroke={palette.secondary}
-          strokeOpacity="0.48"
-          strokeWidth="1"
-          strokeDasharray="6 4"
-          vectorEffect="non-scaling-stroke"
-        />
-        {shape.gems.map(([gx, gy], idx) => (
-          <g key={idx}>
-            <rect
-              x={Math.round(gx * 10 - 9)}
-              y={Math.round(gy * 6 - 9)}
-              width="18"
-              height="18"
-              fill={idx % 2 === 0 ? palette.primary : palette.secondary}
-              fillOpacity="0.35"
-            />
-            <rect
-              x={Math.round(gx * 10 - 5)}
-              y={Math.round(gy * 6 - 5)}
-              width="10"
-              height="10"
-              fill={idx === 0 ? palette.spark : palette.primary}
-            />
-          </g>
-        ))}
-      </svg>
+      <span className="card-rail card-rail-top" />
+      <span className="card-rail card-rail-bottom" />
+      <span className="card-rail card-rail-left" />
+      <span className="card-rail card-rail-right" />
+      <span className="card-inner-frame" />
+      <CornerOrnamentSvg pos="tl" motif={motif} palette={palette} />
+      <CornerOrnamentSvg pos="tr" motif={motif} palette={palette} />
+      <CornerOrnamentSvg pos="bl" motif={motif} palette={palette} />
+      <CornerOrnamentSvg pos="br" motif={motif} palette={palette} />
+      <BezelCrestSvg edge="top" crest={crest} palette={palette} />
+      <BezelCrestSvg edge="bottom" crest={crest} palette={palette} />
     </div>
   );
 };

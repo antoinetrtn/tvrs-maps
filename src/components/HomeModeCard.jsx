@@ -3,9 +3,9 @@ import React from "react";
 
 import { MODE_PIXEL_PALETTES } from "../config/accentPresets";
 import { getCardPose } from "./homeCardPose";
+import { getModeClipPath } from "./homeModeFrameData";
 import { CardPixelOrnaments, HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
-import { getModeClipPath } from "./homeModeSilhouettes";
 import Button from "./ui/Button";
 
 const guardDrag = (wasDraggingRef, fn) => (e) => {

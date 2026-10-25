@@ -121,7 +121,7 @@
   top: 18px;
   width: 320px;
   height: 216px;
-  padding: 1.15rem 1.4rem;
+  padding: 1.15rem 1.35rem;
   border-radius: 0;
   background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
   background-color: var(--bg-color) !important;
@@ -175,14 +175,19 @@
   border-radius: inherit;
   z-index: 1;
   background:
+    radial-gradient(
+      circle at 86% 24%,
+      color-mix(in srgb, var(--card-mode-accent, var(--accent)) 16%, transparent) 0%,
+      transparent 58%
+    ),
     repeating-linear-gradient(
       90deg,
-      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
       transparent 1px 32px
     ),
     repeating-linear-gradient(
       0deg,
-      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
       transparent 1px 32px
     );
 }
