@@ -7,6 +7,7 @@ import {
   MICRO_TERRITORIES,
   SECONDARY_CITIES_BY_COUNTRY,
 } from "./capitalLightsData";
+import { stampTopographyChannels } from "./globeTopographyStamper";
 // 10 texels per degree (0.10° per texel) -> 1 texel ≈ 1px–1.5px on screen at continent zoom
 const TEX_WIDTH = 3600;
 const TEX_HEIGHT = 1800;
@@ -26,7 +27,6 @@ function setTexelRG(data, x, y, rVal, gVal) {
   const idx = (y * TEX_WIDTH + wx) * 4;
   if (rVal > data[idx]) data[idx] = rVal;
   if (gVal > data[idx + 1]) data[idx + 1] = gVal;
-  data[idx + 3] = 255;
 }
 
 function stampIsoPoint(data, lat, lng, cosLat, rVal, gVal) {
@@ -254,14 +254,18 @@ function stampInterCityCorridor(data, lat1, lng1, lat2, lng2, seed) {
 
 /**
  * Lazily builds a 3600x1800 NearestFilter DataTexture (0.10 deg/texel) of crisp,
- * tentacular pixel-art capital & secondary city night lights:
- * - R channel: crisp 1px dendritic highway tentacles, inter-city corridors, & bright metropolitan core
+ * pixel-art cartographic night lights, topographic mountain relief, and hydrographic rivers:
+ * - R channel: crisp 1px dendritic highway tentacles, inter-city corridors, & metropolitan core
  * - G channel: warm nocturnal sodium-amber urban ground aura
+ * - B channel: pixel-art mountain ridges, lateral spurs, and stepped contour hachures
+ * - A channel: crisp 1px meandering world rivers & hydrographic network
  */
 export function getCapitalLightsTexture() {
   if (sharedCapitalLightsTexture) return sharedCapitalLightsTexture;
 
   const data = new Uint8Array(TEX_WIDTH * TEX_HEIGHT * 4);
+
+  stampTopographyChannels(data, TEX_WIDTH, TEX_HEIGHT);
 
   Object.entries(countryDataMap).forEach(([admin, info]) => {
     if (MICRO_TERRITORIES.has(admin)) return;

@@ -3,14 +3,24 @@ import { countryDataMap } from "../../data/gameData";
 import { riversMountainsDataMap } from "../../data/riversMountainsData";
 import { scrambleText } from "../../utils/utils";
 
-function buildGlobeLabelFlagHtml(iso2, { compact = false, prominent = false } = {}) {
+function buildGlobeLabelFlagHtml(
+  iso2,
+  { compact = false, minimized = false, prominent = false } = {}
+) {
   if (!iso2 || iso2.length < 2) return "";
-  const w = compact ? 16 : prominent ? 56 : 44;
-  const h = compact ? 12 : prominent ? 42 : 33;
+  const w = minimized ? 14 : compact ? 16 : prominent ? 56 : 44;
+  const h = minimized ? 10 : compact ? 12 : prominent ? 42 : 33;
   const scaleVar = prominent
     ? "var(--globe-flag-scale, 1.15)"
     : "var(--globe-flag-scale, var(--ui-scale, 1))";
-  return `<img src="/flags/${iso2.toLowerCase()}.svg" alt="" class="globe-label-flag${compact ? " compact" : prominent ? " prominent" : ""}" width="${w}" height="${h}" style="width:calc(${w}px * ${scaleVar});height:calc(${h}px * ${scaleVar});object-fit:cover;border-radius:var(--radius-sm);border:1px solid color-mix(in srgb, var(--text-main) 22%, transparent);flex-shrink:0;display:block;" />`;
+  const flagClass = minimized
+    ? " compact minimized-found"
+    : compact
+      ? " compact"
+      : prominent
+        ? " prominent"
+        : "";
+  return `<img src="/flags/${iso2.toLowerCase()}.svg" alt="" class="globe-label-flag${flagClass}" width="${w}" height="${h}" style="width:calc(${w}px * ${scaleVar});height:calc(${h}px * ${scaleVar});object-fit:cover;border-radius:var(--radius-sm);border:1px solid color-mix(in srgb, var(--text-main) 22%, transparent);flex-shrink:0;display:block;" />`;
 }
 
 /**
@@ -91,17 +101,20 @@ export function createGlobeLabelElement(
   const revealAll = mode === "learn" || !isPlayMode || d.isFound;
   const isDeptMode = d.mode === "departments";
   const isUsStatesMode = d.mode === "us_states";
+  const isFoundMinimized = isPlayMode && Boolean(d.isFound);
   const showLabelFlag = d.iso2 && d.mode !== "rivers_mountains";
-  const flagProminent = showLabelFlag && isPlayMode && d.isSelected && !isPanelOpen;
+  const flagProminent = showLabelFlag && isPlayMode && d.isSelected && !d.isFound && !isPanelOpen;
   const flagHtml = showLabelFlag
     ? buildGlobeLabelFlagHtml(d.iso2, {
-        compact: isPanelOpen,
+        compact: isPanelOpen || isFoundMinimized,
+        minimized: isFoundMinimized,
         prominent: flagProminent,
       })
     : "";
-  const labelRowLayout = isPanelOpen
-    ? "flex-direction: row; align-items: center; gap: 4px;"
-    : "flex-direction: column; align-items: center; gap: 3px;";
+  const labelRowLayout =
+    isPanelOpen || isFoundMinimized
+      ? "flex-direction: row; align-items: center; gap: 4px;"
+      : "flex-direction: column; align-items: center; gap: 3px;";
 
   // Uniform scramble across every guessable mode (countries, capitals, departments, us_states,
   // rivers/mountains) so no mode leaks its answer as readable text.
@@ -219,13 +232,15 @@ export function createGlobeLabelElement(
     const displayCapital = revealAll ? d.capital : "???";
 
     const isRegionalTag = isDeptMode || isUsStatesMode;
-    const deptMainSize = isRegionalTag ? "14px" : "13px";
-    const deptSubSize = isRegionalTag ? "12px" : "11px";
-    const deptMainHeight = isRegionalTag ? "17px" : "15px";
-    const deptSubHeight = isRegionalTag ? "15px" : "13px";
-    const labelBg = isRegionalTag
-      ? `background: color-mix(in srgb, ${labelShadow} 68%, transparent); padding: 3px 7px; border-radius: var(--radius-sm);`
-      : "";
+    const deptMainSize = isFoundMinimized ? "10.5px" : isRegionalTag ? "14px" : "13px";
+    const deptSubSize = isFoundMinimized ? "9.5px" : isRegionalTag ? "12px" : "11px";
+    const deptMainHeight = isFoundMinimized ? "13px" : isRegionalTag ? "17px" : "15px";
+    const deptSubHeight = isFoundMinimized ? "11px" : isRegionalTag ? "15px" : "13px";
+    const labelBg = isFoundMinimized
+      ? `background: color-mix(in srgb, ${labelShadow} 72%, transparent); padding: 2px 5px; border-radius: var(--radius-sm); border: 1px solid color-mix(in srgb, ${labelStalk} 38%, transparent);`
+      : isRegionalTag
+        ? `background: color-mix(in srgb, ${labelShadow} 68%, transparent); padding: 3px 7px; border-radius: var(--radius-sm);`
+        : "";
 
     const getScrambledHtml = (ratio) => {
       let scrambledLine1;
@@ -250,7 +265,7 @@ export function createGlobeLabelElement(
       } else {
         const isCapitalsMode = d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals);
         let baseLine1Text = isCapitalsMode ? `${d.capital}` : `${d.country}`;
-        if (revealAll && d.capital && !isCapitalsMode) {
+        if (revealAll && d.capital && !isCapitalsMode && !isFoundMinimized) {
           baseLine1Text = `${d.country} (${d.capital})`;
         }
         const emojiPrefix = d.iso2 ? "" : `${iconSymbol || d.flag || ""}`;
@@ -258,7 +273,9 @@ export function createGlobeLabelElement(
         scrambledLine1 = flagHtml
           ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
           : textSpan;
-        if (isCapitalsMode && !d.hideCountryLine) scrambledLine2 = scramble(d.country);
+        if (isCapitalsMode && !d.hideCountryLine && !isFoundMinimized) {
+          scrambledLine2 = scramble(d.country);
+        }
       }
 
       return `
@@ -272,30 +289,30 @@ export function createGlobeLabelElement(
         <!-- Dot -->
         <div style="
           position: absolute;
-          width: 6px;
-          height: 6px;
+          width: ${isFoundMinimized ? "4px" : "6px"};
+          height: ${isFoundMinimized ? "4px" : "6px"};
           background: ${labelDot};
           border-radius: 0;
-          left: -3px;
-          top: -3px;
+          left: ${isFoundMinimized ? "-2px" : "-3px"};
+          top: ${isFoundMinimized ? "-2px" : "-3px"};
           box-shadow: 0 0 0 1px color-mix(in srgb, ${labelShadow} 75%, transparent);
-          opacity: 1;
+          opacity: ${isFoundMinimized ? "0.85" : "1"};
         "></div>
-        <!-- Stalk Line (Shortened to 15px) -->
+        <!-- Stalk Line -->
         <div style="
           position: absolute;
           width: 1.2px;
-          height: 15px;
+          height: ${isFoundMinimized ? "7px" : "15px"};
           background: ${labelStalk};
           left: -0.6px;
-          bottom: 3px;
-          opacity: 0.85;
+          bottom: ${isFoundMinimized ? "2px" : "3px"};
+          opacity: ${isFoundMinimized ? "0.7" : "0.85"};
         "></div>
-        <!-- Centered Minimalist Label directly above the stalk (placed at bottom: 21px) -->
-        <div class="normal-text-container" style="
+        <!-- Centered Minimalist Label directly above the stalk -->
+        <div class="normal-text-container${isFoundMinimized ? " minimized-found-pill" : ""}" style="
           position: absolute;
           left: 50%;
-          bottom: 21px;
+          bottom: ${isFoundMinimized ? "10px" : "21px"};
           transform: translateX(-50%);
           display: flex;
           flex-direction: column;
@@ -303,7 +320,7 @@ export function createGlobeLabelElement(
           font-family: var(--font-main);
           white-space: nowrap;
           color: ${labelText};
-          opacity: 1;
+          opacity: ${isFoundMinimized ? "0.88" : "1"};
         ">
           ${getScrambledHtml(1.0)}
         </div>
