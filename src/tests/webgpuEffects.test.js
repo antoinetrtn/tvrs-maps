@@ -3,6 +3,8 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { vec2 } from "three/tsl";
 import { describe, expect, it } from "vitest";
 
+import { getCapitalLightsTexture } from "../globe/render/capitalLightsTexture";
+import { createGlobeLabelElement } from "../globe/render/globeLabelBuilder";
 import { createFresnelGlowNodeMaterial } from "../globe/render/globeNodeMaterials";
 import {
   applyCountryBorderDitherShader,
@@ -218,5 +220,54 @@ describe("WebGPU effect ports", () => {
     expect(mat.uniforms.glowColor.value.getHex()).toBe(0x4fc3f7);
     expect(mat.uniforms.coef.value).toBe(0.9);
     expect(mat.uniforms.power.value).toBe(1.4);
+  });
+
+  it("packs city lights (R/G), mountain relief (B), and rivers (A) into capitalLightsTexture", () => {
+    const tex = getCapitalLightsTexture();
+    expect(tex.image.width).toBe(3600);
+    expect(tex.image.height).toBe(1800);
+    const data = tex.image.data;
+    let nonZeroB = 0;
+    let nonZeroA = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 2] > 0) nonZeroB++;
+      if (data[i + 3] > 0) nonZeroA++;
+    }
+    expect(nonZeroB).toBeGreaterThan(500);
+    expect(nonZeroA).toBeGreaterThan(500);
+  });
+
+  it("renders a minimized inline flag pill when a country is found in play mode", () => {
+    const baseCtx = {
+      UI_COLORS: {},
+      REGION_COLORS_LABELS: {},
+      isLightTheme: false,
+      labelColors: {
+        foundText: "var(--text-primary)",
+        selectedText: "var(--text-primary)",
+        stalkFound: "var(--accent)",
+        stalkSelected: "var(--accent)",
+      },
+      mode: "countries",
+      isLearnMode: false,
+      isRiversMountainsMode: false,
+      isPanelOpen: false,
+      showFlag: true,
+    };
+
+    const selectedUnfoundEl = createGlobeLabelElement(
+      { country: "France", capital: "Paris", iso2: "fr", isSelected: true, isFound: false },
+      baseCtx
+    );
+    expect(selectedUnfoundEl.innerHTML).not.toContain("minimized-found-pill");
+    expect(selectedUnfoundEl.innerHTML).toContain("globe-label-flag prominent");
+
+    const foundEl = createGlobeLabelElement(
+      { country: "France", capital: "Paris", iso2: "fr", isSelected: true, isFound: true },
+      baseCtx
+    );
+    expect(foundEl.innerHTML).toContain("minimized-found-pill");
+    expect(foundEl.innerHTML).toContain("globe-label-flag compact minimized-found");
+    expect(foundEl.textContent.trim().length).toBe("France".length);
   });
 });

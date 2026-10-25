@@ -6,7 +6,7 @@ import { getGlobePrefs } from "../globePrefs";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
-import { GLSL_BAYER_4X4_FN } from "./globeShaders";
+import { COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY, GLSL_BAYER_4X4_FN } from "./globeShaders";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { applySatelliteVisibility, resolvePolygonEmissiveProps } from "./polygonEmissiveProps";
 import {
@@ -69,94 +69,7 @@ export function applyCountrySurfaceGrainShader(shader) {
     }
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
-      `#include <dithering_fragment>
-      vec3 sphereNormal = normalize(vDitherWorldPos);
-      vec3 geomNormal = normalize(vDitherWorldNormal);
-      float isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
-
-      vec3 viewDir = normalize(cameraPosition - vDitherWorldPos);
-      float ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
-      float limbFactor = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
-      float rimSheen = pow(1.0 - ndv, 3.2) * 0.045;
-
-      float cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-      float cLng = atan(sphereNormal.x, sphereNormal.z);
-      vec2 cartUv = vec2(cLng / 6.2831853 + 0.5, cLat / 3.14159265 + 0.5);
-      vec2 topoGrid = cartUv * vec2(72.0, 36.0);
-      vec2 topoDist = abs(fract(topoGrid + 0.5) - 0.5) / max(fwidth(topoGrid), vec2(0.001));
-      float parallelLine = clamp(1.0 - topoDist.y, 0.0, 1.0);
-      float crossTick = clamp(1.0 - max(topoDist.x, topoDist.y) * 0.6, 0.0, 1.0);
-
-      // Blackout -> Awakened country surface & living city-lights network (Solo & Conquête 1v1)
-      float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-      float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
-      float minC = min(gl_FragColor.r, min(gl_FragColor.g, gl_FragColor.b));
-      float chroma = maxC - minC;
-      float isSoloFound = step(0.45, gl_FragColor.g)
-        * step(gl_FragColor.b * 1.32, gl_FragColor.g)
-        * step(gl_FragColor.r * 2.2, gl_FragColor.b);
-      float isConquestOwned = (1.0 - isSoloFound) * step(0.15, chroma) * step(0.36, maxC);
-      float isAwakenedCap = max(isSoloFound, isConquestOwned);
-      float isUnfoundDarkCap = (1.0 - isAwakenedCap) * (1.0 - smoothstep(0.44, 0.58, surfaceLuma));
-      float cityPower = clamp(max(isAwakenedCap, uShowcaseLights * isUnfoundDarkCap), 0.0, 1.0);
-
-      float blackoutDim = mix(1.0, 0.38, (1.0 - uShowcaseLights) * isUnfoundDarkCap);
-      vec3 unfoundLand = gl_FragColor.rgb * blackoutDim;
-      vec3 soloAwakenedLand = vec3(0.48, 0.34, 0.15) + vec3(0.15, 0.10, 0.04) * (1.0 - ndv);
-      vec3 conquestAwakenedLand = gl_FragColor.rgb * 0.84 + gl_FragColor.rgb * 0.22 * (1.0 - ndv);
-      vec3 landSurface = mix(
-        mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
-        soloAwakenedLand,
-        isSoloFound
-      );
-      vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
-      vec3 baseLit = landSurface * limbFactor + engrave;
-
-      vec2 cityCellId = floor(cartUv * vec2(3600.0, 1800.0));
-      vec2 capitalSample = texture2D(uCapitalLightsMap, cartUv).rg;
-      float cityDensity = capitalSample.r;
-      float cityAura = capitalSample.g;
-      float cityHash = cityCellHash(cityCellId);
-      float cityHash2 = cityCellHash(cityCellId + vec2(37.2, 91.7));
-      float trafficWave = 0.80 + 0.20 * sin(uTime * 2.8 - cityAura * 8.5 + cityHash * 6.2831853);
-      float satTwinkle = 0.78 + 0.22 * sin(uTime * 4.2 + cityHash2 * 6.2831853);
-      float tierPinpoint = step(0.82, cityDensity);
-      float tierArterial = (1.0 - tierPinpoint) * step(0.55, cityDensity);
-      float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.25, cityDensity);
-
-      vec3 auraColor = mix(
-        vec3(0.68, 0.40, 0.12),
-        max(baseLit * 1.35, vec3(0.75, 0.55, 0.22)),
-        isConquestOwned * 0.5
-      );
-      vec3 withAura = mix(baseLit, max(baseLit, auraColor), cityAura * 0.32 * cityPower);
-      vec3 colorOuterTentacle = mix(
-        vec3(0.94, 0.54, 0.16),
-        vec3(1.0, 0.84, 0.48),
-        isConquestOwned * 0.45
-      );
-      vec3 colorMainArterial = mix(
-        mix(vec3(0.98, 0.72, 0.18), vec3(1.0, 0.84, 0.34), cityHash2),
-        vec3(1.0, 0.94, 0.72),
-        isConquestOwned * 0.55
-      );
-      vec3 colorMetroHeart = mix(
-        vec3(1.0, 0.94, 0.70),
-        vec3(1.0, 0.99, 0.92),
-        smoothstep(0.82, 1.0, cityDensity)
-      );
-      vec3 sparkColor = tierPinpoint * colorMetroHeart
-        + tierArterial * colorMainArterial
-        + tierTentacle * colorOuterTentacle;
-      float sparkAlpha = (
-        tierPinpoint * 0.98 +
-        tierArterial * (0.78 + 0.16 * cityHash2) * trafficWave +
-        tierTentacle * (0.50 + 0.24 * cityHash2) * satTwinkle
-      ) * cityPower;
-      vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
-      vec3 sideRgb = landSurface * 0.58;
-      gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
-      `
+      COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY
     )}
   `;
 }

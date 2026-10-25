@@ -66,13 +66,83 @@ export function createStandardMaterial(params) {
     : new THREE.MeshStandardMaterial(params);
 }
 
-function buildCityLightsLayer(cartUv, baseLit, cityPower, isConquestOwned, uTimeNode) {
+function buildTerrainReliefAndRivers(
+  cartUv,
+  baseLit,
+  capitalSample,
+  cityHash,
+  cityPower,
+  isSoloFound,
+  isConquestOwned,
+  uTimeNode
+) {
+  const mountainRelief = capitalSample.b;
+  const riverVal = capitalSample.a;
+  const ridgeCrest = step(0.76, mountainRelief);
+  const ridgeSpur = float(1.0).sub(ridgeCrest).mul(step(0.38, mountainRelief));
+  const valleyGap = float(1.0).sub(max(ridgeCrest, ridgeSpur)).mul(step(0.12, mountainRelief));
+  const darkReliefLit = baseLit
+    .mul(float(1.0).sub(valleyGap.mul(0.16)))
+    .add(vec3(0.055, 0.058, 0.062).mul(ridgeCrest))
+    .add(vec3(0.028, 0.03, 0.032).mul(ridgeSpur));
+  const soloCrestTone = mix(vec3(0.62, 0.48, 0.28), vec3(0.92, 0.78, 0.48), isSoloFound);
+  const soloSpurTone = mix(vec3(0.36, 0.29, 0.19), vec3(0.68, 0.5, 0.24), isSoloFound);
+  const awakenedCrestTone = mix(
+    soloCrestTone,
+    min(vec3(1.0), baseLit.mul(1.65).add(vec3(0.24, 0.22, 0.16))),
+    isConquestOwned
+  );
+  const awakenedSpurTone = mix(
+    soloSpurTone,
+    min(vec3(1.0), baseLit.mul(1.28).add(vec3(0.1, 0.09, 0.06))),
+    isConquestOwned
+  );
+  const awakeSlope = mix(
+    baseLit.mul(float(1.0).sub(valleyGap.mul(0.28))),
+    awakenedSpurTone,
+    ridgeSpur.mul(cityHash.mul(0.18).add(0.68))
+  );
+  const awakeReliefLit = mix(awakeSlope, awakenedCrestTone, ridgeCrest.mul(0.86));
+  const reliefLit = mix(darkReliefLit, awakeReliefLit, cityPower);
+
+  const riverCore = step(0.65, riverVal);
+  const riverBank = float(1.0).sub(riverCore).mul(step(0.25, riverVal));
+  const riverShimmer = sin(uTimeNode.mul(2.2).add(cartUv.x.mul(140.0).add(cartUv.y.mul(90.0))))
+    .mul(0.22)
+    .add(0.78);
+  const darkRiverLit = mix(
+    reliefLit.mul(float(1.0).sub(riverBank.mul(0.1))),
+    vec3(0.08, 0.14, 0.19),
+    riverCore.mul(0.58)
+  );
+  const soloRiverColor = mix(vec3(0.14, 0.46, 0.58), vec3(0.38, 0.8, 0.88), riverShimmer);
+  const conquestRiverColor = mix(vec3(0.1, 0.2, 0.32), vec3(0.76, 0.94, 1.0), riverShimmer);
+  const awakeRiverTone = mix(soloRiverColor, conquestRiverColor, isConquestOwned);
+  const awakeRiverLit = mix(
+    reliefLit.mul(float(1.0).sub(riverBank.mul(0.22))),
+    awakeRiverTone,
+    riverCore.mul(0.88)
+  );
+  return mix(darkRiverLit, awakeRiverLit, cityPower);
+}
+
+function buildCityLightsLayer(cartUv, baseLit, cityPower, isSoloFound, isConquestOwned, uTimeNode) {
   const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
   const capitalSample = texture(getCapitalLightsTexture(), cartUv);
   const cityDensity = capitalSample.r;
   const cityAura = capitalSample.g;
   const cityHash = hash(cityCellId);
   const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
+  const terrainLit = buildTerrainReliefAndRivers(
+    cartUv,
+    baseLit,
+    capitalSample,
+    cityHash,
+    cityPower,
+    isSoloFound,
+    isConquestOwned,
+    uTimeNode
+  );
   const trafficWave = sin(uTimeNode.mul(2.8).sub(cityAura.mul(8.5)).add(cityHash.mul(6.2831853)))
     .mul(0.2)
     .add(0.8);
@@ -85,10 +155,10 @@ function buildCityLightsLayer(cartUv, baseLit, cityPower, isConquestOwned, uTime
 
   const auraColor = mix(
     vec3(0.68, 0.4, 0.12),
-    max(baseLit.mul(1.35), vec3(0.75, 0.55, 0.22)),
+    max(terrainLit.mul(1.35), vec3(0.75, 0.55, 0.22)),
     isConquestOwned.mul(0.5)
   );
-  const withAura = mix(baseLit, max(baseLit, auraColor), cityAura.mul(0.32).mul(cityPower));
+  const withAura = mix(terrainLit, max(terrainLit, auraColor), cityAura.mul(0.32).mul(cityPower));
   const colorOuterTentacle = mix(
     vec3(0.94, 0.54, 0.16),
     vec3(1.0, 0.84, 0.48),
@@ -120,75 +190,79 @@ let grainNode = null;
 let showcaseLightsNode = null;
 /** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
 export function countryGrainOutputNode() {
-  if (!grainNode) {
-    grainNode = Fn(() => {
-      const sphereNormal = normalize(positionWorld);
-      const geomNormal = normalize(normalWorld);
-      const isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
+  if (grainNode) return grainNode;
+  grainNode = Fn(() => {
+    const sphereNormal = normalize(positionWorld);
+    const geomNormal = normalize(normalWorld);
+    const isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
 
-      const viewDir = normalize(cameraPosition.sub(positionWorld));
-      const ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
-      const limbFactor = mix(float(0.95), float(1.02), smoothstep(0.0, 0.65, ndv));
-      const rimSheen = pow(float(1.0).sub(ndv), 3.2).mul(0.045);
+    const viewDir = normalize(cameraPosition.sub(positionWorld));
+    const ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
+    const limbFactor = mix(float(0.95), float(1.02), smoothstep(0.0, 0.65, ndv));
+    const rimSheen = pow(float(1.0).sub(ndv), 3.2).mul(0.045);
 
-      const cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-      const cLng = atan(sphereNormal.x, sphereNormal.z);
-      const cartUv = vec2(cLng.div(6.2831853).add(0.5), cLat.div(3.14159265).add(0.5));
-      const topoGrid = cartUv.mul(vec2(72.0, 36.0));
-      const topoDist = abs(fract(topoGrid.add(0.5)).sub(0.5)).div(
-        max(fwidth(topoGrid), vec2(0.001))
-      );
-      const parallelLine = clamp(float(1.0).sub(topoDist.y), 0.0, 1.0);
-      const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
+    const cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
+    const cLng = atan(sphereNormal.x, sphereNormal.z);
+    const cartUv = vec2(cLng.div(6.2831853).add(0.5), cLat.div(3.14159265).add(0.5));
+    const topoGrid = cartUv.mul(vec2(72.0, 36.0));
+    const topoDist = abs(fract(topoGrid.add(0.5)).sub(0.5)).div(max(fwidth(topoGrid), vec2(0.001)));
+    const parallelLine = clamp(float(1.0).sub(topoDist.y), 0.0, 1.0);
+    const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
 
-      const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
-      const uShowcaseNode = (showcaseLightsNode ||= mirrorUniform(
-        polygonGlitchUniforms.uShowcaseLights
-      ));
-      const lit = litDisplayColor();
-      const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
-      const maxC = max(lit.x, max(lit.y, lit.z));
-      const minC = min(lit.x, min(lit.y, lit.z));
-      const chroma = maxC.sub(minC);
-      const isSoloFound = step(float(0.45), lit.y)
-        .mul(step(lit.z.mul(1.32), lit.y))
-        .mul(step(lit.x.mul(2.2), lit.z));
-      const isConquestOwned = float(1.0)
-        .sub(isSoloFound)
-        .mul(step(float(0.15), chroma))
-        .mul(step(float(0.36), maxC));
-      const isAwakenedCap = max(isSoloFound, isConquestOwned);
-      const isUnfoundDarkCap = float(1.0)
-        .sub(isAwakenedCap)
-        .mul(float(1.0).sub(smoothstep(0.44, 0.58, surfaceLuma)));
-      const cityPower = clamp(max(isAwakenedCap, uShowcaseNode.mul(isUnfoundDarkCap)), 0.0, 1.0);
+    const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
+    const uShowcaseNode = (showcaseLightsNode ||= mirrorUniform(
+      polygonGlitchUniforms.uShowcaseLights
+    ));
+    const lit = litDisplayColor();
+    const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
+    const maxC = max(lit.x, max(lit.y, lit.z));
+    const minC = min(lit.x, min(lit.y, lit.z));
+    const chroma = maxC.sub(minC);
+    const isSoloFound = step(float(0.45), lit.y)
+      .mul(step(lit.z.mul(1.32), lit.y))
+      .mul(step(lit.x.mul(2.2), lit.z));
+    const isConquestOwned = float(1.0)
+      .sub(isSoloFound)
+      .mul(step(float(0.15), chroma))
+      .mul(step(float(0.36), maxC));
+    const isAwakenedCap = max(isSoloFound, isConquestOwned);
+    const isUnfoundDarkCap = float(1.0)
+      .sub(isAwakenedCap)
+      .mul(float(1.0).sub(smoothstep(0.44, 0.58, surfaceLuma)));
+    const cityPower = clamp(max(isAwakenedCap, uShowcaseNode.mul(isUnfoundDarkCap)), 0.0, 1.0);
 
-      const blackoutDim = mix(
-        float(1.0),
-        float(0.38),
-        float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap)
-      );
-      const unfoundLand = lit.mul(blackoutDim);
-      const soloAwakenedLand = vec3(0.48, 0.34, 0.15).add(
-        vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
-      );
-      const conquestAwakenedLand = lit.mul(0.84).add(lit.mul(0.22).mul(float(1.0).sub(ndv)));
-      const landSurface = mix(
-        mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
-        soloAwakenedLand,
-        isSoloFound
-      );
-      const engrave = landSurface
-        .mul(parallelLine.mul(0.04).add(crossTick.mul(0.09)))
-        .add(vec3(rimSheen));
-      const baseLit = landSurface.mul(limbFactor).add(engrave);
+    const blackoutDim = mix(
+      float(1.0),
+      float(0.38),
+      float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap)
+    );
+    const unfoundLand = lit.mul(blackoutDim);
+    const soloAwakenedLand = vec3(0.48, 0.34, 0.15).add(
+      vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
+    );
+    const conquestAwakenedLand = lit.mul(0.84).add(lit.mul(0.22).mul(float(1.0).sub(ndv)));
+    const landSurface = mix(
+      mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
+      soloAwakenedLand,
+      isSoloFound
+    );
+    const engrave = landSurface
+      .mul(parallelLine.mul(0.04).add(crossTick.mul(0.09)))
+      .add(vec3(rimSheen));
+    const baseLit = landSurface.mul(limbFactor).add(engrave);
 
-      const capRgb = buildCityLightsLayer(cartUv, baseLit, cityPower, isConquestOwned, uTimeNode);
-      const sideRgb = landSurface.mul(0.58);
-      const rgb = mix(capRgb, sideRgb, isSideWall);
-      return displayOutput(rgb);
-    })();
-  }
+    const capRgb = buildCityLightsLayer(
+      cartUv,
+      baseLit,
+      cityPower,
+      isSoloFound,
+      isConquestOwned,
+      uTimeNode
+    );
+    const sideRgb = landSurface.mul(0.58);
+    const rgb = mix(capRgb, sideRgb, isSideWall);
+    return displayOutput(rgb);
+  })();
   return grainNode;
 }
 
