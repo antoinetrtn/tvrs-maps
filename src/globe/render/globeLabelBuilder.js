@@ -331,6 +331,10 @@ export function createGlobeLabelElement(
     let hasBeenAttached = false;
 
     const mountInterval = setInterval(() => {
+      if (typeof document === "undefined" || !document.body) {
+        clearInterval(mountInterval);
+        return;
+      }
       const isAttached = document.body.contains(el);
       if (isAttached) {
         hasBeenAttached = true;

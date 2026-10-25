@@ -17,6 +17,10 @@ export const polygonGlitchUniforms = {
   uFoundGreen: { value: getFoundGreenThreeColor().clone() },
   // 1 when on Home/End screen (planet-wide city-lights showcase), 0 during active gameplay (blackout -> awaken).
   uShowcaseLights: { value: 1 },
+  // 1 when in French Departments or US States regional mode (clean micro-scale hydrography + 1px capital pinpoints).
+  uIsRegionalMode: { value: 0 },
+  // 1 when globeTheme === "satellite" (translucent emissive overlay over real satellite terrain).
+  uIsSatelliteTheme: { value: 0 },
   // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
   uPixelScale: { value: 1 },
   // Deselection tear colours: cyan/magenta, accent-derived on the Monochrome globe.

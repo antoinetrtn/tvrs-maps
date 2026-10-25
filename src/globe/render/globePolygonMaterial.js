@@ -33,10 +33,13 @@ function applyFoundMeshStyle(material, isMeshFound) {
   material.opacity = 1;
 }
 
-export function applyCountrySurfaceGrainShader(shader) {
+export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false } = {}) {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
   shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
+  shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
+  shader.uniforms.uIsSatelliteTheme = polygonGlitchUniforms.uIsSatelliteTheme;
+  shader.uniforms.uIsGhost = { value: isGhostCountry ? 1.0 : 0.0 };
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.vertexShader = `
     varying vec3 vDitherWorldNormal;
@@ -62,6 +65,9 @@ export function applyCountrySurfaceGrainShader(shader) {
     uniform float uPixelScale;
     uniform float uTime;
     uniform float uShowcaseLights;
+    uniform float uIsRegionalMode;
+    uniform float uIsSatelliteTheme;
+    uniform float uIsGhost;
     uniform sampler2D uCapitalLightsMap;
     ${GLSL_BAYER_4X4_FN}
     float cityCellHash(vec2 p) {
@@ -247,12 +253,19 @@ export function getPolygonMaterialForFeature({
   const isMeshFound =
     foundStyle === "mesh" && kind === "cap" && (isFound || showFoundOnGlobe) && !isIsolated;
   const meshSuffix = isMeshFound ? "-mesh" : "";
-  let cacheKey = `${kind}-${look}${ownerTint ? "-owner" : ""}${meshSuffix}`;
-  if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}${meshSuffix}`;
-  else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}-${globeTheme}${meshSuffix}`;
-  else if (ghostVeil > 0) cacheKey = `ghost-veil-${kind}-${look}-${ghostVeil}`;
-  else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}`;
-  else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}`;
+  const isGhostCountry = Boolean(d?.isGhostCountry);
+  const ghostSuffix = isGhostCountry ? "-ghost" : "";
+  polygonGlitchUniforms.uIsRegionalMode.value = isDepartmentMode ? 1.0 : 0.0;
+  polygonGlitchUniforms.uIsSatelliteTheme.value = globeTheme === "satellite" ? 1.0 : 0.0;
+
+  let cacheKey = `${kind}-${look}${ownerTint ? "-owner" : ""}${meshSuffix}${ghostSuffix}`;
+  if (isShaderCap)
+    cacheKey = `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}${meshSuffix}${ghostSuffix}`;
+  else if (isFoundCapMaterial)
+    cacheKey = `found-cap-${isMobileStr}-${globeTheme}${meshSuffix}${ghostSuffix}`;
+  else if (ghostVeil > 0) cacheKey = `ghost-veil-${kind}-${look}-${ghostVeil}${ghostSuffix}`;
+  else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}${ghostSuffix}`;
+  else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}${ghostSuffix}`;
 
   let material = sharedMaterialsRef.current.get(cacheKey);
 
@@ -330,8 +343,14 @@ export function getPolygonMaterialForFeature({
         isSatellite,
       });
     } else {
-      if (material.isNodeMaterial) material.outputNode = countryGrainOutputNode();
-      else material.onBeforeCompile = applyCountrySurfaceGrainShader;
+      if (material.isNodeMaterial) material.outputNode = countryGrainOutputNode(isGhostCountry);
+      else {
+        material.customProgramCacheKey = () =>
+          isGhostCountry ? "country-grain-ghost" : "country-grain-land";
+        material.onBeforeCompile = isGhostCountry
+          ? (shader) => applyCountrySurfaceGrainShader(shader, { isGhostCountry: true })
+          : applyCountrySurfaceGrainShader;
+      }
     }
 
     material.userData.isIsolated = isIsolated;
