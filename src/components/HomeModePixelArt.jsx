@@ -1,6 +1,7 @@
 import React from "react";
 
 import { MODE_PIXEL_PALETTES, PIXEL_SCENE_SWATCHES as S } from "../config/accentPresets";
+import { MODE_SILHOUETTE_POLYGONS, toSvgPoints } from "./homeModeSilhouettes";
 
 const ConquestPixelScene = () => (
   <>
@@ -201,68 +202,53 @@ export const HomeModePixelArt = ({ modeKey }) => {
 
 export const CardPixelOrnaments = ({ modeKey }) => {
   const palette = MODE_PIXEL_PALETTES[modeKey] || MODE_PIXEL_PALETTES.countries;
+  const shape = MODE_SILHOUETTE_POLYGONS[modeKey] || MODE_SILHOUETTE_POLYGONS.countries;
+  const outerSvgPts = toSvgPoints(shape.outer, 0, 0);
+  const innerSvgPts = toSvgPoints(shape.outer, 1.8, 2.8);
 
   return (
     <div className="card-pixel-ornaments" aria-hidden="true">
       <svg
-        className="card-corner-ornament corner-tl"
-        viewBox="0 0 18 18"
+        className="card-perimeter-svg"
+        viewBox="0 0 1000 600"
+        preserveAspectRatio="none"
         shapeRendering="crispEdges"
       >
-        <rect x="8" y="0" width="10" height="2" fill={palette.primary} />
-        <rect x="4" y="2" width="4" height="2" fill={palette.primary} />
-        <rect x="2" y="4" width="2" height="4" fill={palette.primary} />
-        <rect x="0" y="8" width="2" height="10" fill={palette.primary} />
-        <rect x="6" y="6" width="3" height="3" fill={palette.spark} />
-        <rect x="11" y="4" width="2" height="2" fill={palette.secondary} />
-        <rect x="4" y="11" width="2" height="2" fill={palette.secondary} />
-      </svg>
-
-      <svg
-        className="card-corner-ornament corner-tr"
-        viewBox="0 0 18 18"
-        shapeRendering="crispEdges"
-      >
-        <rect x="0" y="0" width="10" height="2" fill={palette.primary} />
-        <rect x="10" y="2" width="4" height="2" fill={palette.primary} />
-        <rect x="14" y="4" width="2" height="4" fill={palette.primary} />
-        <rect x="16" y="8" width="2" height="10" fill={palette.primary} />
-        <rect x="9" y="6" width="3" height="3" fill={palette.spark} />
-        <rect x="5" y="4" width="2" height="2" fill={palette.secondary} />
-        <rect x="12" y="11" width="2" height="2" fill={palette.secondary} />
-      </svg>
-
-      <svg
-        className="card-corner-ornament corner-bl"
-        viewBox="0 0 18 18"
-        shapeRendering="crispEdges"
-      >
-        <rect x="0" y="0" width="2" height="10" fill={palette.primary} />
-        <rect x="2" y="10" width="2" height="4" fill={palette.primary} />
-        <rect x="4" y="14" width="4" height="2" fill={palette.primary} />
-        <rect x="8" y="16" width="10" height="2" fill={palette.primary} />
-        <rect x="6" y="9" width="3" height="3" fill={palette.secondary} />
-      </svg>
-
-      <svg
-        className="card-corner-ornament corner-br"
-        viewBox="0 0 18 18"
-        shapeRendering="crispEdges"
-      >
-        <rect x="16" y="0" width="2" height="10" fill={palette.primary} />
-        <rect x="14" y="10" width="2" height="4" fill={palette.primary} />
-        <rect x="10" y="14" width="4" height="2" fill={palette.primary} />
-        <rect x="0" y="16" width="10" height="2" fill={palette.primary} />
-        <rect x="9" y="9" width="3" height="3" fill={palette.secondary} />
-      </svg>
-
-      <svg className="card-edge-crest crest-top" viewBox="0 0 64 8" shapeRendering="crispEdges">
-        <rect x="0" y="0" width="18" height="2" fill={palette.primary} fillOpacity="0.55" />
-        <rect x="20" y="2" width="6" height="2" fill={palette.secondary} />
-        <rect x="28" y="0" width="8" height="3" fill={palette.spark} />
-        <rect x="31" y="3" width="2" height="3" fill={palette.spark} />
-        <rect x="38" y="2" width="6" height="2" fill={palette.secondary} />
-        <rect x="46" y="0" width="18" height="2" fill={palette.primary} fillOpacity="0.55" />
+        <polygon
+          points={outerSvgPts}
+          fill="none"
+          stroke={palette.primary}
+          strokeWidth="3.5"
+          vectorEffect="non-scaling-stroke"
+        />
+        <polygon
+          points={innerSvgPts}
+          fill="none"
+          stroke={palette.secondary}
+          strokeOpacity="0.48"
+          strokeWidth="1"
+          strokeDasharray="6 4"
+          vectorEffect="non-scaling-stroke"
+        />
+        {shape.gems.map(([gx, gy], idx) => (
+          <g key={idx}>
+            <rect
+              x={Math.round(gx * 10 - 9)}
+              y={Math.round(gy * 6 - 9)}
+              width="18"
+              height="18"
+              fill={idx % 2 === 0 ? palette.primary : palette.secondary}
+              fillOpacity="0.35"
+            />
+            <rect
+              x={Math.round(gx * 10 - 5)}
+              y={Math.round(gy * 6 - 5)}
+              width="10"
+              height="10"
+              fill={idx === 0 ? palette.spark : palette.primary}
+            />
+          </g>
+        ))}
       </svg>
     </div>
   );

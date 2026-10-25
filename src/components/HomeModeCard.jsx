@@ -5,6 +5,7 @@ import { MODE_PIXEL_PALETTES } from "../config/accentPresets";
 import { getCardPose } from "./homeCardPose";
 import { CardPixelOrnaments, HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
+import { getModeClipPath } from "./homeModeSilhouettes";
 import Button from "./ui/Button";
 
 const guardDrag = (wasDraggingRef, fn) => (e) => {
@@ -122,10 +123,13 @@ const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badge
 
 const getCardStyle = (pose, isTopCard, reducedMotion, modeKey) => {
   const palette = MODE_PIXEL_PALETTES[modeKey] || MODE_PIXEL_PALETTES.countries;
+  const clipPath = getModeClipPath(modeKey);
   const modeVars = {
     "--card-mode-accent": palette.primary,
     "--card-mode-secondary": palette.secondary,
     "--card-mode-spark": palette.spark,
+    "--card-clip-path": clipPath,
+    clipPath,
   };
   if (reducedMotion) {
     return {

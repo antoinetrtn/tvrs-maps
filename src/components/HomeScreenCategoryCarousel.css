@@ -121,8 +121,8 @@
   top: 18px;
   width: 320px;
   height: 216px;
-  padding: 1.25rem;
-  border-radius: var(--radius-md);
+  padding: 1.15rem 1.4rem;
+  border-radius: 0;
   background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
   background-color: var(--bg-color) !important;
   backdrop-filter: none;
@@ -130,7 +130,8 @@
   --card-mode-accent: var(--accent);
   --card-mode-secondary: var(--text-main);
   --card-mode-spark: var(--accent);
-  border: 1.5px solid color-mix(in srgb, var(--card-mode-accent, var(--accent)) 36%, transparent);
+  border: none;
+  clip-path: var(--card-clip-path);
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
@@ -187,11 +188,7 @@
 }
 
 .card-plate-pattern::after {
-  content: "";
-  position: absolute;
-  inset: var(--spacing-xs);
-  border: 1px dashed color-mix(in srgb, var(--card-mode-accent, var(--accent)) 22%, transparent);
-  border-radius: 0;
+  content: none;
 }
 
 .card-plate-meta {
