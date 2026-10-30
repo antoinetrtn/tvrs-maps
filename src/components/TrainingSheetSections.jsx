@@ -102,7 +102,8 @@ export const TrainingReset = ({
           <Button
             type="button"
             variant="secondary"
-            className="training-btn training-action-btn training-cancel-btn"
+            look="training-cancel"
+            className="training-btn training-action-btn"
             onClick={onCancelReset}
           >
             {t("cancel")}
@@ -110,7 +111,8 @@ export const TrainingReset = ({
           <Button
             type="button"
             variant="primary"
-            className="training-btn training-action-btn training-confirm-btn"
+            look="training-confirm"
+            className="training-btn training-action-btn"
             onClick={onConfirmReset}
           >
             {t("training_reset_yes")}
@@ -122,13 +124,7 @@ export const TrainingReset = ({
 
   return (
     <div className="training-reset-row">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="training-reset-btn"
-        onClick={onPromptReset}
-      >
+      <Button type="button" variant="ghost" size="sm" look="training-reset" onClick={onPromptReset}>
         {t("training_reset")}
       </Button>
     </div>

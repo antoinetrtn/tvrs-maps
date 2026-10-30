@@ -11,7 +11,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(topCard).toHaveAttribute("data-mode", "countries");
 
     // Launch Game
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
 
@@ -30,7 +30,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputIsland).toHaveClass(/error/);
 
     // Stop round via HUD Stop button
-    const stopBtn = page.locator(".hud-top-right .hud-btn, .hud-top-right button").first();
+    const stopBtn = page.locator(".hud-top-right .ui-icon-btn--hud, .hud-top-right button").first();
     await stopBtn.click();
 
     // Verify EndScreen modal
@@ -63,7 +63,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
 
     // Launch Learn mode from top card
     const topCard = page.locator(".deck-mode-card.is-top-card");
-    await topCard.locator(".card-learn-btn").click();
+    await topCard.locator(".ui-btn--tile").click();
 
     // Verify Learn Mode data panel & carousel
     const dataPanel = page.locator(".game-data-panel");
@@ -85,7 +85,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputField).toHaveValue("France");
 
     // Return Home via logo
-    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .hud-btn").first();
+    const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .ui-icon-btn--hud").first();
     await homeLogo.click();
 
     await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
@@ -102,7 +102,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "departments");
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
 
     // Mobile input field check
     const inputField = page.locator("#q-resp-field");
@@ -119,7 +119,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputField).toHaveValue("");
 
     // Return Home via mobile Home button
-    const homeBtn = page.locator(".hud-top-left .hud-btn").first();
+    const homeBtn = page.locator(".hud-top-left .ui-icon-btn--hud").first();
     await homeBtn.click();
 
     await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
@@ -138,7 +138,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "us_states");
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
 
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
@@ -149,7 +149,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await expect(inputField).toHaveValue("");
 
     // Stop round via HUD stop button
-    const stopBtn = page.locator(".hud-top-right .hud-btn, .hud-top-right button").first();
+    const stopBtn = page.locator(".hud-top-right .ui-icon-btn--hud, .hud-top-right button").first();
     await stopBtn.click();
 
     const endScreen = page.locator(".end-screen-overlay");

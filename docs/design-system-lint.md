@@ -6,13 +6,17 @@ Règle : chaque type d'élément (bouton, modal avec bouton valider + croix, sli
 
 | Élément | Défini dans |
 | --- | --- |
-| Boutons | `src/components/ui/Button.jsx`, `IconButton.jsx`, `PanelCloseButton.jsx` ; surface cliquable nue (pastille, tuile avatar/badge, ligne de tableau) : `ui/Pressable.jsx` |
+| Boutons | `src/components/ui/Button.jsx`, `IconButton.jsx`, `PanelCloseButton.jsx` ; surface cliquable nue (pastille, tuile avatar/badge, ligne de tableau) : `ui/Pressable.jsx`. Habillages nommés (« looks ») : `ui/ButtonLooks.css` et `ui/IconButtonLooks.css`, choisis par `<Button look="…">` / `<IconButton look="…">` (listes `LOOKS` / `ICON_LOOKS`) |
 | Modal / sheet (titre, valider, croix) | `src/components/ui/Dialog.jsx` |
 | Slider / Toggle / Choix | `ui/Slider.jsx`, `ui/Switch.jsx`, `ui/OptionGroup.jsx` |
 | Champs | `ui/TextField.jsx` (`variant="bare"` : input nu stylé par son conteneur, ex. îlot de réponse) |
 | Onglets, états, toasts, réglages | `ui/TabBar.jsx`, `ui/StateBlock.jsx` (+ Empty/Error/Loading), `ui/Toast.jsx`, `ui/Settings.jsx` |
 | Animations (`@keyframes`) | `src/styles/motion.css` / `src/styles/keyframes.css` (ou interne à un primitive `ui/`) |
 | Couleurs / tokens | `src/config/designSystem.js` + `:root` de `src/index.css` (`check:tokens`, `check:css-rules`) |
+
+## Looks de bouton
+
+Un écran ne restyle jamais `.ui-btn` / `.ui-icon-btn` lui-même. S'il faut un habillage particulier (CTA de carte, tuile, bouton HUD, ligne d'auth…), il est ajouté **une fois** dans `src/components/ui/ButtonLooks.css` (ou `IconButtonLooks.css`) sous `.ui-btn--<look>` / `.ui-icon-btn--<look>`, déclaré dans `LOOKS` (`Button.jsx`) ou `ICON_LOOKS` (`IconButton.jsx`), puis choisi avec la prop `look` (une valeur ou un tableau). Un look inconnu est ignoré et signalé en dev ; un test vérifie que chaque look a sa règle CSS. Les écrans gardent seulement les deltas de placement via `className` (ex. `flex: 1` dans une rangée d'actions).
 
 ## Règles lint (`npm run check:ds`, `scripts/check-ds-atoms.mjs`)
 

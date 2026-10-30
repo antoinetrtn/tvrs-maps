@@ -140,13 +140,6 @@
     display: none;
   }
 
-  .home-bottom-right .profile-trigger-btn,
-  .home-bottom-right .settings-trigger-btn {
-    width: 48px;
-    min-width: 48px;
-    padding: 0;
-  }
-
   .home-bottom-right .profile-icon {
     transform: translateY(-2px);
   }

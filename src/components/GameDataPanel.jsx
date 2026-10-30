@@ -195,7 +195,7 @@ const GameDataPanel = ({
 
       {isGameOver && onGoHome && (
         <div className="panel-footer data-panel-footer">
-          <Button variant="primary" onClick={onGoHome}>
+          <Button variant="primary" className="data-panel-footer-action" onClick={onGoHome}>
             <Home width={16} height={16} />
             {t("home")}
           </Button>

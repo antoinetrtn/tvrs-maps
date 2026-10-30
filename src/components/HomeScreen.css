@@ -201,26 +201,6 @@
 /* Level badge inside profile glass button */
 
 /* Profile trigger: icon centered, mini XP bar along bottom edge + level badge */
-.profile-trigger-btn {
-  position: relative;
-  display: grid;
-  place-items: center;
-  overflow: visible;
-}
-
-.profile-trigger-btn > .profile-btn-level-tag {
-  position: absolute;
-}
-
-.profile-trigger-btn .profile-btn-xp-bar {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
-  width: auto;
-  pointer-events: none;
-  z-index: 1;
-}
 
 .profile-icon {
   display: flex;

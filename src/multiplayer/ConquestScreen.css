@@ -151,20 +151,6 @@
   min-width: 0;
 }
 
-.conquest-icon-btn {
-  border-color: var(--glass-border-strong);
-  color: var(--accent);
-  box-shadow: none;
-}
-
-.conquest-share-btn {
-  gap: var(--spacing-xs);
-  min-height: var(--control-lg);
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 .conquest-code {
   font-size: var(--font-size-xl);
   letter-spacing: 0.12em;

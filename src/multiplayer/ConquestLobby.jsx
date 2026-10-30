@@ -112,7 +112,7 @@ const RoomShare = ({ t, code }) => {
           variant="outline"
           size="md"
           label={t.copyCode}
-          className="conquest-icon-btn"
+          look="conquest-copy"
           onClick={onCopy}
         >
           <Copy width={18} height={18} aria-hidden="true" />
@@ -120,7 +120,7 @@ const RoomShare = ({ t, code }) => {
         <Button
           variant="secondary"
           size="md"
-          className="conquest-share-btn"
+          look="conquest-share"
           icon={<ExternalLink width={16} height={16} aria-hidden="true" />}
           onClick={onShare}
           aria-label={t.share}
@@ -226,7 +226,8 @@ export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => 
     variant="primary"
     size="lg"
     block
-    className={`conquest-ready-cta ${ready ? "is-ready" : ""} ${emphasized ? "" : "is-quiet"}`}
+    look="ready-cta"
+    className={`${ready ? "is-ready" : ""} ${emphasized ? "" : "is-quiet"}`}
     aria-pressed={ready}
     disabled={busy}
     onClick={onToggle}

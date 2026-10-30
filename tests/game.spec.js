@@ -19,7 +19,7 @@ test.describe("TVRS Maps E2E Game Flow Baseline", () => {
     await expect(topCard).toBeVisible();
 
     // Check Play button on top card
-    const playBtn = topCard.locator(".card-play-btn");
+    const playBtn = topCard.locator(".ui-btn--cta");
     await expect(playBtn).toBeVisible();
   });
 
@@ -30,7 +30,7 @@ test.describe("TVRS Maps E2E Game Flow Baseline", () => {
     await expect(topCard).toHaveAttribute("data-mode", "countries");
 
     // Click Play button
-    const playBtn = topCard.locator(".card-play-btn");
+    const playBtn = topCard.locator(".ui-btn--cta");
     await playBtn.click();
 
     // Verify that the answer input field is now visible

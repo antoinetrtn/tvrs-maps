@@ -1,8 +1,10 @@
 import "./Button.css";
+import "./ButtonLooks.css";
 
 import React from "react";
 
 import { primeHapticsOnUserGesture, triggerSubtleHapticTick } from "../../utils/haptics";
+import { LOOKS } from "./buttonLooks";
 
 const VARIANTS = ["primary", "secondary", "ghost", "danger"];
 const SIZES = ["sm", "md", "lg"];
@@ -20,12 +22,14 @@ const SIZES = ["sm", "md", "lg"];
  *
  * All states (hover, pressed, focus-visible, disabled, loading) live in Button.css and are
  * shared by every variant; screens only add layout deltas through `className`.
+ * - `look`: one or several named skins from LOOKS (ButtonLooks.css), e.g. look={["tile", "tile-train"]}.
  */
 const Button = React.forwardRef(function Button(
   {
     variant = "secondary",
     size = "md",
     block = false,
+    look,
     loading = false,
     disabled = false,
     icon = null,
@@ -44,6 +48,10 @@ const Button = React.forwardRef(function Button(
     `ui-btn--${safeVariant}`,
     `ui-btn--${safeSize}`,
     block && "ui-btn--block",
+    ...[].concat(look || []).map((l) => {
+      if (!LOOKS.includes(l) && import.meta.env?.DEV) console.error(`Button: unknown look "${l}"`);
+      return LOOKS.includes(l) && `ui-btn--${l}`;
+    }),
     loading && "is-loading",
     className,
   ]

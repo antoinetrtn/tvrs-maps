@@ -14,9 +14,3 @@
   display: flex;
   gap: var(--spacing-md);
 }
-
-.modal-btn {
-  flex: 1;
-  padding: var(--spacing-ms) var(--spacing-lg);
-  font-weight: 600;
-}

@@ -250,11 +250,15 @@ const EndScreen = ({
         )}
 
         <div className="end-screen-actions">
-          <Button variant="secondary" onClick={() => setMinimized(true)}>
+          <Button
+            variant="secondary"
+            className="end-screen-action"
+            onClick={() => setMinimized(true)}
+          >
             <ChevronDown width={16} height={16} />
             {t("explore_globe")}
           </Button>
-          <Button variant="primary" onClick={onRestart}>
+          <Button variant="primary" className="end-screen-action" onClick={onRestart}>
             {t("home")}
           </Button>
         </div>
