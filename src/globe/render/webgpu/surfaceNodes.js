@@ -42,7 +42,7 @@ import { isGlobeWebGPU } from "../globeRendererFlag";
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { applyBiomePalette } from "./biomeNodes";
 import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
-import { buildIgnition, igniteSpark } from "./igniteNodes";
+import { buildIgnition, homeShowcase, igniteSpark } from "./igniteNodes";
 import {
   bayer4x4,
   displayOutput,
@@ -273,8 +273,14 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       .mul(ghostMask)
       .mul(float(1.0).sub(smoothstep(lumaThresh, lumaThresh.add(0.14), surfaceLuma)));
     const ign = buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode });
+    const { showcaseNow, showcaseLand } = homeShowcase({
+      cartUv,
+      uTimeNode,
+      uShowcaseNode,
+      uRegionalNode,
+    });
     const cityPower = clamp(
-      max(isAwakenedCap.mul(ign.igniteMask), uShowcaseNode.mul(isUnfoundDarkCap)),
+      max(isAwakenedCap.mul(ign.igniteMask), showcaseNow.mul(isUnfoundDarkCap)),
       0.0,
       1.0
     ).mul(ghostMask);
@@ -282,7 +288,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     const { blackoutAmt, unfoundLand } = buildBlackoutLand({
       lit,
       surfaceLuma,
-      uShowcaseNode,
+      uShowcaseNode: showcaseLand,
       isUnfoundDarkCap,
       uRegionalNode,
       uGhost,
@@ -302,7 +308,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       ghostMask,
       isSoloFound,
       isUnfoundDarkCap,
-      uShowcaseNode,
+      uShowcaseNode: showcaseLand,
       uRegionalNode,
       uSatThemeNode,
     });

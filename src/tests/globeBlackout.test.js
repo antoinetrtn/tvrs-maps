@@ -8,7 +8,7 @@ describe("globe blackout (Terre sans électricité)", () => {
     expect(COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY).toContain("float blackoutAmt");
     expect(COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY).toContain("vec3 blackoutGrey = vec3(surfaceLuma)");
     expect(COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY).toMatch(
-      /blackoutAmt = \(1\.0 - uShowcaseLights\)[^;]*\(1\.0 - uIsRegionalMode\)/
+      /blackoutAmt = \(1\.0 - showcaseLand\)[^;]*\(1\.0 - uIsRegionalMode\)/
     );
   });
 
