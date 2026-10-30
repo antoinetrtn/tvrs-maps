@@ -182,12 +182,13 @@ describe("WebGPU effect ports", () => {
     stylePolygonBorderLine(line);
     expect(line.material.onBeforeCompile).toBe(prevFn);
 
-    // Re-applying enforces transparent even if reset by three-globe
+    // three-globe's reset (transparent = false) is ignored: no program switch,
+    // so borders don't flicker on selection changes.
     line.material.transparent = false;
     const prevVersion = line.material.version;
     stylePolygonBorderLine(line);
     expect(line.material.transparent).toBe(true);
-    expect(line.material.version).toBeGreaterThan(prevVersion);
+    expect(line.material.version).toBe(prevVersion);
   });
 
   it("converts polygon stroke LineBasicMaterial to LineBasicNodeMaterial with dither", () => {

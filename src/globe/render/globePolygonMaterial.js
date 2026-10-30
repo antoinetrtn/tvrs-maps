@@ -128,42 +128,56 @@ export function applyCountryBorderDitherShader(shader) {
   `;
 }
 
+/**
+ * three-globe resets `material.transparent = opacity < 1` on every polygon
+ * digest (each selection change). Border colours are opaque, so the strokes
+ * flipped to the opaque pass for a few frames until the next culling pass set
+ * them back to transparent (+ needsUpdate → program switch): the borders
+ * blinked on every click. Locking the flag keeps the stroke material stable;
+ * only its colour changes on selection.
+ */
+function lockBorderTransparency(mat) {
+  if (!mat || mat.userData?.borderTransparencyLocked) return;
+  Object.defineProperty(mat, "transparent", {
+    configurable: true,
+    enumerable: true,
+    get: () => true,
+    set: () => {},
+  });
+  mat.userData.borderTransparencyLocked = true;
+  mat.needsUpdate = true;
+}
+
+function styleBorderMaterial(lineObj, m, allowSwap) {
+  if (!m) return m;
+  if (m.userData?.hasBorderDither) {
+    lockBorderTransparency(m);
+    return m;
+  }
+  m.userData.hasBorderDither = true;
+  if (m.isNodeMaterial) {
+    m.outputNode = countryBorderOutputNode();
+  } else if (allowSwap && isGlobeWebGPU()) {
+    const swapped = toDitheredLineBasicNodeMaterial(m);
+    swapped.userData.hasBorderDither = true;
+    lockBorderTransparency(swapped);
+    return swapped;
+  } else {
+    m.onBeforeCompile = applyCountryBorderDitherShader;
+  }
+  lockBorderTransparency(m);
+  return m;
+}
+
 export function stylePolygonBorderLine(lineObj) {
   if (!lineObj?.material) return;
   const mat = lineObj.material;
   if (Array.isArray(mat)) {
-    mat.forEach((m) => {
-      if (!m) return;
-      if (!m.transparent) {
-        m.transparent = true;
-        m.needsUpdate = true;
-      }
-      if (m.userData?.hasBorderDither) return;
-      m.userData.hasBorderDither = true;
-      if (m.isNodeMaterial) {
-        m.outputNode = countryBorderOutputNode();
-      } else if (isGlobeWebGPU()) {
-        // Handled per array element if ever encountered
-        m.onBeforeCompile = applyCountryBorderDitherShader;
-      } else {
-        m.onBeforeCompile = applyCountryBorderDitherShader;
-      }
-    });
+    mat.forEach((m) => styleBorderMaterial(lineObj, m, false));
     return;
   }
-  if (!mat.transparent) {
-    mat.transparent = true;
-    mat.needsUpdate = true;
-  }
-  if (mat.userData?.hasBorderDither) return;
-  mat.userData.hasBorderDither = true;
-  if (mat.isNodeMaterial) {
-    mat.outputNode = countryBorderOutputNode();
-  } else if (isGlobeWebGPU()) {
-    lineObj.material = toDitheredLineBasicNodeMaterial(mat);
-  } else {
-    mat.onBeforeCompile = applyCountryBorderDitherShader;
-  }
+  const styled = styleBorderMaterial(lineObj, mat, true);
+  if (styled !== mat) lineObj.material = styled;
 }
 
 /**
