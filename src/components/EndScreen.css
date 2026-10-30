@@ -321,7 +321,6 @@
     grid-template-columns: 1fr;
     gap: var(--spacing-ms);
   }
-  .end-screen-xp-card,
   .end-screen-history {
     margin-bottom: var(--spacing-md);
   }
@@ -399,24 +398,6 @@
 }
 
 /* Gamification End Screen XP Card */
-.end-screen-xp-card {
-  max-width: 600px;
-  width: 90%;
-  margin: 0 auto var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  --i: 2;
-  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
-  pointer-events: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  box-shadow: var(--glass-shadow);
-}
 
 .xp-card-header {
   display: flex;
@@ -458,7 +439,6 @@
 }
 
 @media (max-width: 640px) {
-  .end-screen-xp-card,
   .end-screen-history {
     width: calc(100% - 40px);
     padding: var(--spacing-sm);

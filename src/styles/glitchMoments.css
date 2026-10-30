@@ -11,10 +11,6 @@
   animation: glitch-burst 0.42s steps(3) 0.15s 1 both;
 }
 
-.deck-mode-card.is-top-card .card-title {
-  animation: glitch-burst 0.36s steps(3) 0.1s 1;
-}
-
 /* Right answer: the score ticks, then a short chromatic snap */
 .score-increased-flash.score-increased-flash {
   animation:
@@ -43,7 +39,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .end-screen-header.end-screen-header h1,
-  .deck-mode-card.is-top-card .card-title,
   .score-increased-flash.score-increased-flash,
   .passport-stamp.passport-stamp,
   .passport-stamp.new-pb-badge,

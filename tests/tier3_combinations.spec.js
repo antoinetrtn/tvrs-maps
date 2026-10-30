@@ -5,7 +5,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
   test("T3-COMB-01: Mid-Selection Interface Theme Switch during active game session", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
 
@@ -30,7 +30,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
   test("T3-COMB-02: Mid-Selection Globe Theme Switch during active game session", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
 
     await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
@@ -52,7 +52,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await settingsPanel.locator('.segmented-opt:has-text("Satellite")').first().click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("France");
@@ -70,7 +70,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await settingsPanel.locator('.segmented-opt:has-text("Satellite")').first().click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
     await inputField.fill("Japon");
     await inputField.press("Enter");
@@ -82,7 +82,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
   test("T3-COMB-05: Unfound Country Opacity Fade Out on Deselection (AGENTS.md Rule 3)", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const canvas = page.locator("canvas").first();
 
     // Click canvas ocean space
@@ -99,7 +99,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await dots.nth(5).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "rivers_mountains");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -114,7 +114,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
   test("T3-COMB-07: Game Mode Switch Mid-Session via Return Home Logo Button", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
 
@@ -122,7 +122,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .ui-icon-btn--hud").first();
     await homeLogo.click();
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toBeVisible();
   });
 
@@ -140,7 +140,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await hardcoreOpt.click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const hearts = page.locator(".hud-hearts");
     await expect(hearts).toBeVisible();
   });
@@ -158,7 +158,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await hardcoreOpt.click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
 
     const inputField = page.locator("#q-resp-field");
     await inputField.fill("InvalidCountryX123");
@@ -181,7 +181,7 @@ test.describe("Tier 3: Cross-Feature Combinations (10 Tests)", () => {
     await hardcoreOpt.click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     for (let i = 0; i < 5; i++) {

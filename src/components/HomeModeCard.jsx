@@ -7,6 +7,7 @@ import { getModeClipPath } from "./homeModeFrameData";
 import { CardPixelOrnaments, HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 import Button from "./ui/Button";
+import Card from "./ui/Card";
 
 const guardDrag = (wasDraggingRef, fn) => (e) => {
   if (wasDraggingRef.current) {
@@ -231,11 +232,12 @@ const ModeCard = ({
   );
 
   return (
-    <div
+    <Card
       data-mode={modeItem.key}
       data-stack-pos={stackPos}
       data-is-prev={stackPos === totalModes - 1 ? "true" : undefined}
-      className={`deck-mode-card ${isTopCard ? "is-top-card" : "is-stacked-card"}`}
+      look="mode-deck"
+      className={`${isTopCard ? "is-top-card" : "is-stacked-card"}`}
       style={cardStyle}
       {...interactiveProps}
     >
@@ -260,7 +262,7 @@ const ModeCard = ({
         onStartGame={onStartGame}
         t={t}
       />
-    </div>
+    </Card>
   );
 };
 

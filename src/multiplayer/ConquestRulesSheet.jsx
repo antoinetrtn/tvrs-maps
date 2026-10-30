@@ -3,6 +3,7 @@ import "./ConquestRules.css";
 import { useCallback } from "react";
 
 import Button from "../components/ui/Button.jsx";
+import Card from "../components/ui/Card";
 import Dialog, { DialogTitle } from "../components/ui/Dialog";
 import IconButton from "../components/ui/IconButton";
 import { getConquestRulesText } from "./conquestRulesText";
@@ -108,13 +109,13 @@ export default function ConquestRulesSheet({ open, onClose, lang }) {
         <RulesIllustration labels={t.illustration} />
         <div className="conquest-rules-grid">
           {t.sections.map((section) => (
-            <article key={section.id} className="conquest-rules-card">
+            <Card key={section.id} as="article" look="rules">
               <div className="conquest-rules-card-head">
                 <span className="conquest-rules-icon">{makeIcon(ICON_PATHS[section.id])}</span>
                 <h3 className="conquest-rules-card-title">{section.title}</h3>
               </div>
               <p className="conquest-rules-card-text">{renderHighlightedText(section.text)}</p>
-            </article>
+            </Card>
           ))}
         </div>
       </div>

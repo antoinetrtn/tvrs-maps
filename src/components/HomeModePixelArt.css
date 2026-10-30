@@ -1,7 +1,3 @@
-.deck-mode-card {
-  clip-path: var(--card-clip-path);
-}
-
 .card-pixel-ornaments {
   position: absolute;
   inset: 0;

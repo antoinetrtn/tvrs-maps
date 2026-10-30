@@ -13,6 +13,7 @@ import EndScreenContinents from "./EndScreenContinents";
 import EndScreenTraining from "./EndScreenTraining";
 import PixelFireworks from "./PixelFireworks";
 import Button from "./ui/Button";
+import Card from "./ui/Card";
 import XpBar from "./XpBar";
 import XpOrbsAnimation from "./XpOrbsAnimation";
 
@@ -195,8 +196,10 @@ const EndScreen = ({
 
         {/* Gamification Progress Display */}
         {!isTraining && xpResult && (
-          <div
-            className={`end-screen-xp-card glass-panel ${showLevelUp ? "level-up-shake" : ""}`}
+          <Card
+            look="xp-end"
+            glass
+            className={`${showLevelUp ? "level-up-shake" : ""}`}
             ref={orbsTargetRef}
           >
             <div className="xp-card-header">
@@ -207,7 +210,7 @@ const EndScreen = ({
             {showLevelUp && (
               <div className="end-screen-level-up-banner text-natural-case">{t("level_up")}</div>
             )}
-          </div>
+          </Card>
         )}
 
         {!isTraining && lastScores && lastScores.length > 0 && (

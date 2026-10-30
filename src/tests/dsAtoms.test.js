@@ -17,6 +17,8 @@ describe("check-ds-atoms", () => {
     const css = "@keyframes pop {}\n.hud-btn:hover {\n}";
     expect(rules("src/components/Foo.css", css)).toEqual(["local-keyframes", "adhoc-atom-class"]);
     expect(rules("src/styles/motion.css", "@keyframes pop {}")).toEqual([]);
+    expect(rules("src/components/Foo.css", ".stat-card {\n}")).toEqual(["adhoc-atom-class"]);
+    expect(rules("src/components/Foo.css", ".card-title {\n}")).toEqual([]);
   });
   it("honours the reviewed escape hatch", () => {
     expect(

@@ -16,6 +16,7 @@ import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
 import ProfileFooter from "./ProfileFooter";
 import Button from "./ui/Button";
+import Card from "./ui/Card";
 import Dialog from "./ui/Dialog";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import Pressable from "./ui/Pressable";
@@ -244,7 +245,7 @@ const ProfilePanel = ({
             {/* Blurring Overlay for guest mode */}
             {isSupabaseConfigured && !session && (
               <div className="profile-blur-overlay">
-                <div className="profile-blur-card glass-panel">
+                <Card look="locked" glass>
                   <p className="profile-blur-text text-natural-case">{t("auth_required")}</p>
                   <Button
                     variant="primary"
@@ -256,7 +257,7 @@ const ProfilePanel = ({
                   >
                     {t("auth_sign_in")}
                   </Button>
-                </div>
+                </Card>
               </div>
             )}
 
@@ -282,10 +283,7 @@ const ProfilePanel = ({
                   </div>
 
                   {/* XP progression card */}
-                  <div
-                    className="xp-progression-card glass-panel"
-                    style={{ marginBottom: "var(--spacing-md)" }}
-                  >
+                  <Card look="xp" glass style={{ marginBottom: "var(--spacing-md)" }}>
                     <div className="xp-card-header">
                       <div className="xp-avatar-wrap">
                         <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={36} />
@@ -301,25 +299,25 @@ const ProfilePanel = ({
                       percent={percent}
                       label={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
                     />
-                  </div>
+                  </Card>
 
                   {/* Quick Stats Grid */}
                   <div className="quick-stats-grid" style={{ marginBottom: "var(--spacing-lg)" }}>
-                    <div className="quick-stat-card glass-panel">
+                    <Card look="stat" glass>
                       <span className="stat-label">{t("stats_total_xp")}</span>
                       <span className="stat-value">{userProfile.xp || 0}</span>
-                    </div>
-                    <div className="quick-stat-card glass-panel">
+                    </Card>
+                    <Card look="stat" glass>
                       <span className="stat-label">{t("stats_games_played")}</span>
                       <span className="stat-value">{totalGamesPlayed}</span>
-                    </div>
-                    <div className="quick-stat-card glass-panel">
+                    </Card>
+                    <Card look="stat" glass>
                       <span className="stat-label">{t("stats_badges_unlocked")}</span>
                       <span className="stat-value">
                         {unlockedBadges.filter((b) => b.startsWith("ch_")).length} /{" "}
                         {CHALLENGES.length}
                       </span>
-                    </div>
+                    </Card>
                   </div>
 
                   {/* Avatar Selector */}
@@ -428,7 +426,7 @@ const ProfilePanel = ({
             </div>
 
             {/* Sticky Bottom Area */}
-            <div className="badge-detail-card glass-panel">
+            <Card look="badge-detail" glass>
               <div className="badge-detail-header">
                 <div
                   className="badge-detail-icon-glow"
@@ -456,7 +454,7 @@ const ProfilePanel = ({
                 </div>
               </div>
               <p className="badge-detail-description">{getChallengeDesc(selectedChallengeObj)}</p>
-            </div>
+            </Card>
           </div>
         )}
       </div>

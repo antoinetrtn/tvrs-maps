@@ -49,7 +49,7 @@ export const RULES = {
   },
   "adhoc-atom-class": {
     applies: (f) => isCss(f) && outsideUi(f),
-    re: /^[^{}@/\n;]*\.[\w-]*-(btn|button|modal|slider|toggle|switch)(?![\w-])[^;{}\n]*[{,][ \t]*$/gm,
+    re: /^[^{}@/\n;]*\.[\w-]*-(btn|button|modal|slider|toggle|switch|card)(?![\w-])[^;{}\n]*[{,][ \t]*$/gm,
     hint: "Do not restyle a button/modal/slider/toggle locally: add a variant/size to the ui/ primitive.",
   },
 };
