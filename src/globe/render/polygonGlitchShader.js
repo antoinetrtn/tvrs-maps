@@ -37,10 +37,15 @@ export const polygonGlitchUniforms = {
   uIgniteDuration: { value: 1.6 },
   // 1 when the user prefers reduced motion: ignition and showcase loops resolve instantly.
   uReducedMotion: { value: 0 },
+  // Homepage wake-up progress 0 (blackout) -> 1 (world awake), one-shot per arrival.
+  uHomeWake: { value: 1 },
   // Globe camera motion reactivity for magnetic ocean currents.
   uGlobeMotion: { value: 0 },
   uGlobeVelocity: { value: new THREE.Vector2(0, 0) },
 };
+
+/** Set once country materials are built (homepage wake-up starts then, not on an empty globe). */
+export const homeWakeState = { polygonsReady: false };
 
 const animatedPolygonMaterials = new Set();
 

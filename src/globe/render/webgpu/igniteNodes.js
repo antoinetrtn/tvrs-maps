@@ -2,7 +2,7 @@
  * TSL twin of the GLSL discovery-ignition block (globeShaders.js): city pixels of the
  * freshly found country switch on one by one as a front expands from its capital.
  */
-import { acos, clamp, dot, float, floor, fract, max, mix, step, vec2, vec3 } from "three/tsl";
+import { acos, clamp, dot, float, floor, max, mix, step, vec2, vec3 } from "three/tsl";
 
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { hash, mirrorUniform } from "./tslCommon";
@@ -44,18 +44,22 @@ export function igniteSpark(baseColor, igniteFlash) {
   return mix(baseColor, vec3(0.96, 0.68, 0.22).mul(1.25), igniteFlash || float(0.0));
 }
 
-let homeReducedNode = null;
+let homeNodes = null;
 
-/** Homepage ignition (GLSL twin): showcase lights gated by a slow west->east block sweep. */
-export function homeShowcase({ cartUv, uTimeNode, uShowcaseNode, uRegionalNode }) {
-  const reduced = (homeReducedNode ||= mirrorUniform(polygonGlitchUniforms.uReducedMotion));
+/** Homepage wake-up (GLSL twin): one-shot west->east power-up from blackout, then awake. */
+export function homeShowcase({ cartUv, uShowcaseNode, uRegionalNode }) {
+  const n = (homeNodes ||= {
+    reduced: mirrorUniform(polygonGlitchUniforms.uReducedMotion),
+    wake: mirrorUniform(polygonGlitchUniforms.uHomeWake),
+  });
   const blockHash = hash(floor(cartUv.mul(vec2(96.0, 48.0))));
-  const cycle = fract(uTimeNode.div(18.0).add(cartUv.x.mul(0.9)).add(blockHash.mul(0.22)));
   const jitter = hash(floor(cartUv.mul(vec2(3600.0, 1800.0)))).mul(0.12);
-  const homeIgnite = max(step(float(0.08).add(jitter), cycle), max(reduced, uRegionalNode));
-  // City lights switch fully off; land only browns out (GLSL showcaseNow / showcaseLand).
+  const wakeAt = float(0.04).add(blockHash.mul(0.6)).add(cartUv.x.mul(0.2)).add(jitter);
+  const on = max(n.reduced, uRegionalNode);
+  const homeIgnite = max(step(wakeAt, n.wake), on);
+  const homeLandOn = max(step(wakeAt.sub(0.05), n.wake), on);
   return {
     showcaseNow: uShowcaseNode.mul(homeIgnite),
-    showcaseLand: uShowcaseNode.mul(mix(float(0.6), float(1.0), homeIgnite)),
+    showcaseLand: uShowcaseNode.mul(homeLandOn),
   };
 }

@@ -275,7 +275,6 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     const ign = buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode });
     const { showcaseNow, showcaseLand } = homeShowcase({
       cartUv,
-      uTimeNode,
       uShowcaseNode,
       uRegionalNode,
     });

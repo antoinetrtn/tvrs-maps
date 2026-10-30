@@ -12,6 +12,7 @@ import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { applySatelliteVisibility, resolvePolygonEmissiveProps } from "./polygonEmissiveProps";
 import {
   attachPolygonGlitchShader,
+  homeWakeState,
   polygonGlitchUniforms,
   syncPolygonShaderUniforms,
 } from "./polygonGlitchShader";
@@ -45,6 +46,7 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
   shader.uniforms.uIgniteRadius = polygonGlitchUniforms.uIgniteRadius;
   shader.uniforms.uIgniteDuration = polygonGlitchUniforms.uIgniteDuration;
   shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
+  shader.uniforms.uHomeWake = polygonGlitchUniforms.uHomeWake;
   shader.uniforms.uIsGhost = { value: isGhostCountry ? 1.0 : 0.0 };
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
@@ -80,6 +82,7 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
     uniform float uIgniteRadius;
     uniform float uIgniteDuration;
     uniform float uReducedMotion;
+    uniform float uHomeWake;
     uniform sampler2D uCapitalLightsMap;
     uniform sampler2D uBiomeMap;
     ${GLSL_BAYER_4X4_FN}
@@ -225,6 +228,7 @@ export function getPolygonMaterialForFeature({
   ghostVeil = 0, // Satellite regional modes: opacity of the dark veil over the rest of the world
 }) {
   polygonGlitchUniforms.uShowcaseLights.value = isHomeScreen || isEndScreen ? 1.0 : 0.0;
+  homeWakeState.polygonsReady = true;
   polygonGlitchUniforms.uReducedMotion.value =
     typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
       ? 1
