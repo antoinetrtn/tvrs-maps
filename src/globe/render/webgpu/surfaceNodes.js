@@ -64,6 +64,10 @@ export function createStandardMaterial(params) {
     : new THREE.MeshStandardMaterial(params);
 }
 
+// Saturated blue rivers stay legible over both player tints (GLSL twin in globeShaders.js).
+const CONQUEST_RIVER_DEEP = vec3(0.05, 0.12, 0.34);
+const CONQUEST_RIVER_SHINE = vec3(0.36, 0.66, 0.98);
+
 function buildTerrainReliefAndRivers(p) {
   const {
     cartUv,
@@ -126,7 +130,7 @@ function buildTerrainReliefAndRivers(p) {
     riverCore.mul(darkRiver.strength)
   );
   const soloRiverColor = mix(vec3(0.14, 0.46, 0.58), vec3(0.38, 0.8, 0.88), riverShimmer);
-  const conquestRiverColor = mix(vec3(0.1, 0.2, 0.32), vec3(0.76, 0.94, 1.0), riverShimmer);
+  const conquestRiverColor = mix(CONQUEST_RIVER_DEEP, CONQUEST_RIVER_SHINE, riverShimmer.mul(0.6));
   const awakeRiverTone = mix(soloRiverColor, conquestRiverColor, isConquestOwned);
   const awakeRiverLit = mix(
     reliefLit.mul(float(1.0).sub(riverBank.mul(0.22))),
@@ -296,17 +300,10 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
     );
     const conquestAwakenedLand = lit.mul(0.84).add(lit.mul(0.22).mul(float(1.0).sub(ndv)));
+    const baseLand = mix(unfoundLand, conquestAwakenedLand, isConquestOwned);
     const landSurface = applyBiomePalette({
-      landSurface: mix(
-        mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
-        soloAwakenedLand,
-        isSoloFound
-      ),
-      cartUv,
-      ndv,
-      ghostMask,
-      isSoloFound,
-      isUnfoundDarkCap,
+      landSurface: mix(baseLand, soloAwakenedLand, isSoloFound),
+      ...{ cartUv, ndv, ghostMask, isSoloFound, isConquestOwned, lit, maxC, isUnfoundDarkCap },
       uShowcaseNode: showcaseLand,
       uRegionalNode,
       uSatThemeNode,

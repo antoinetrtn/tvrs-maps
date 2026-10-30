@@ -13,9 +13,9 @@ exports[`useGlobePolygons characterization — Full Matrix Snapshots > freezes r
     },
     {
       "admin": "Spain",
-      "capMat": "MeshPhongMaterial vis:true tr:true op:0.62 wf:false col:#e08a3c em:#e08a3c@0.42 sh:false fc:false",
+      "capMat": "MeshPhongMaterial vis:true tr:true op:0.62 wf:false col:#e0664a em:#e0664a@0.42 sh:false fc:false",
       "capUniforms": null,
-      "colors": "#e08a3c | side:#da863a | stroke:#ede6d6 | base:#cf8038/#c87b36",
+      "colors": "#e0664a | side:#da6348 | stroke:#ede6d6 | base:#cf5e45/#c85b43",
       "metrics": "alt:0.001 | w:0.95 | res:1.5",
       "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
     },

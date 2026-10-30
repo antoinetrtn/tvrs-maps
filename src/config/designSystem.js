@@ -717,7 +717,8 @@ export const getXpOrbColors = () => ({
 /** « Conquête » player colours (atlas tones), paired with patterns in conquestLogic. */
 export const CONQUEST_PLAYER_COLORS = {
   teal: THEME.dark.accent,
-  amber: THEME.dark.warning,
+  /** Cooler coral-orange so the golden city lights stand out on player 2. */
+  amber: "#e0664a",
   red: THEME.dark.error,
   green: THEME.dark.success,
   /** Globe outline marking patterned (non-solid) players for colour-blind play. */

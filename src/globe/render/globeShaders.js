@@ -375,10 +375,15 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       vec3 biomeTone = biomeSample.rgb;
       vec3 biomeLand = biomeTone * (0.88 + 0.18 * (1.0 - ndv));
       float biomeAllowed = biomeSample.a * (1.0 - uIsGhost) * (1.0 - uIsSatelliteTheme);
-      float biomeReveal = max(isSoloFound, showcaseLand * isUnfoundDarkCap) * biomeAllowed;
+      float biomeReveal = max(max(isSoloFound, isConquestOwned), showcaseLand * isUnfoundDarkCap) * biomeAllowed;
       float biomeHint = (1.0 - showcaseLand) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
       landSurface = mix(landSurface, biomeTone * 0.3, biomeHint * 0.34);
       landSurface = mix(landSurface, biomeLand, biomeReveal * 0.92);
+      // Conquête: translucent owner tint over the realistic palette (relief/forests stay visible).
+      vec3 ownerHue = gl_FragColor.rgb / max(maxC, 0.001);
+      float ownerLuma = dot(landSurface, vec3(0.299, 0.587, 0.114));
+      vec3 ownerTint = ownerHue * (0.30 + ownerLuma * 1.1);
+      landSurface = mix(landSurface, ownerTint, isConquestOwned * biomeAllowed * 0.5);
       vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
       vec3 baseLit = landSurface * limbFactor + engrave;
 
@@ -424,7 +429,7 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       vec3 darkRiverTone = mix(vec3(0.08, 0.14, 0.19), vec3(0.10, 0.105, 0.11), blackoutAmt);
       vec3 darkRiverLit = mix(reliefLit * (1.0 - riverBank * 0.10), darkRiverTone, riverCore * mix(0.58, 0.34, blackoutAmt));
       vec3 soloRiverColor = mix(vec3(0.14, 0.46, 0.58), vec3(0.38, 0.80, 0.88), riverShimmer);
-      vec3 conquestRiverColor = mix(vec3(0.10, 0.20, 0.32), vec3(0.76, 0.94, 1.0), riverShimmer);
+      vec3 conquestRiverColor = mix(vec3(0.05, 0.12, 0.34), vec3(0.36, 0.66, 0.98), riverShimmer * 0.6);
       vec3 awakeRiverTone = mix(soloRiverColor, conquestRiverColor, isConquestOwned);
       vec3 awakeRiverLit = mix(reliefLit * (1.0 - riverBank * 0.22), awakeRiverTone, riverCore * 0.88);
       vec3 terrainLit = mix(darkRiverLit, awakeRiverLit, cityPower);
