@@ -40,6 +40,11 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
   shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
   shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
   shader.uniforms.uIsSatelliteTheme = polygonGlitchUniforms.uIsSatelliteTheme;
+  shader.uniforms.uIgniteOrigin = polygonGlitchUniforms.uIgniteOrigin;
+  shader.uniforms.uIgniteStart = polygonGlitchUniforms.uIgniteStart;
+  shader.uniforms.uIgniteRadius = polygonGlitchUniforms.uIgniteRadius;
+  shader.uniforms.uIgniteDuration = polygonGlitchUniforms.uIgniteDuration;
+  shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
   shader.uniforms.uIsGhost = { value: isGhostCountry ? 1.0 : 0.0 };
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
@@ -70,6 +75,11 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
     uniform float uIsRegionalMode;
     uniform float uIsSatelliteTheme;
     uniform float uIsGhost;
+    uniform vec3 uIgniteOrigin;
+    uniform float uIgniteStart;
+    uniform float uIgniteRadius;
+    uniform float uIgniteDuration;
+    uniform float uReducedMotion;
     uniform sampler2D uCapitalLightsMap;
     uniform sampler2D uBiomeMap;
     ${GLSL_BAYER_4X4_FN}

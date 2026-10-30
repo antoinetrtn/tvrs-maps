@@ -42,6 +42,7 @@ import { isGlobeWebGPU } from "../globeRendererFlag";
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { applyBiomePalette } from "./biomeNodes";
 import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
+import { buildIgnition, igniteSpark } from "./igniteNodes";
 import {
   bayer4x4,
   displayOutput,
@@ -195,7 +196,10 @@ function buildCityLightsLayer(p) {
     .mul(colorMetroHeart)
     .add(tierArterial.mul(colorMainArterial))
     .add(tierTentacle.mul(colorOuterTentacle));
-  const sparkColor = mix(worldSparkColor, colorMetroHeart, uRegionalNode);
+  const sparkColor = igniteSpark(
+    mix(worldSparkColor, colorMetroHeart, uRegionalNode),
+    p.igniteFlash
+  );
   const worldSparkAlpha = tierPinpoint
     .mul(0.98)
     .add(tierArterial.mul(cityHash2.mul(0.16).add(0.78)).mul(trafficWave))
@@ -268,9 +272,12 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       .sub(isAwakenedCap)
       .mul(ghostMask)
       .mul(float(1.0).sub(smoothstep(lumaThresh, lumaThresh.add(0.14), surfaceLuma)));
-    const cityPower = clamp(max(isAwakenedCap, uShowcaseNode.mul(isUnfoundDarkCap)), 0.0, 1.0).mul(
-      ghostMask
-    );
+    const ign = buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode });
+    const cityPower = clamp(
+      max(isAwakenedCap.mul(ign.igniteMask), uShowcaseNode.mul(isUnfoundDarkCap)),
+      0.0,
+      1.0
+    ).mul(ghostMask);
 
     const { blackoutAmt, unfoundLand } = buildBlackoutLand({
       lit,
@@ -314,6 +321,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       uRegionalNode,
       ghostMask,
       blackoutAmt,
+      igniteFlash: ign.igniteFlash,
     });
     const sideRgb = landSurface.mul(0.58);
     const rgb = mix(capRgb, sideRgb, isSideWall);

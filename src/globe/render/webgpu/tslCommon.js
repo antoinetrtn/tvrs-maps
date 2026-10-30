@@ -59,10 +59,12 @@ export function mirrorUniform(holder) {
     ? new THREE.Color().copy(holder.value)
     : holder.value?.isVector2
       ? new THREE.Vector2().copy(holder.value)
-      : holder.value;
+      : holder.value?.isVector3
+        ? new THREE.Vector3().copy(holder.value)
+        : holder.value;
   const node = uniform(initial);
   node.onRenderUpdate(() => {
-    if (holder.value?.isColor || holder.value?.isVector2) {
+    if (holder.value?.isColor || holder.value?.isVector2 || holder.value?.isVector3) {
       node.value.copy(holder.value);
       return node.value;
     }

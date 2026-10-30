@@ -334,7 +334,21 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       float lumaThreshold = mix(0.44, 0.64, uIsRegionalMode);
       float lumaMask = 1.0 - smoothstep(lumaThreshold, lumaThreshold + 0.14, surfaceLuma);
       float isUnfoundDarkCap = (1.0 - isAwakenedCap) * (1.0 - uIsGhost) * lumaMask;
-      float cityPower = clamp(max(isAwakenedCap, uShowcaseLights * isUnfoundDarkCap), 0.0, 1.0) * (1.0 - uIsGhost);
+      // Discovery ignition: inside the freshly found country's radius, city pixels switch
+      // on one by one as a front expands from the capital (per-pixel jitter, no blur).
+      vec2 igniteCell = floor(cartUv * vec2(3600.0, 1800.0));
+      float igniteDist = acos(clamp(dot(sphereNormal, uIgniteOrigin), -1.0, 1.0));
+      float igniteT = (uTime - uIgniteStart) / max(uIgniteDuration, 0.001);
+      float igniteActive = step(igniteDist, uIgniteRadius) * step(0.0, igniteT) * step(igniteT, 1.0)
+        * (1.0 - uReducedMotion) * (1.0 - uIsRegionalMode);
+      float igniteFront = igniteT * uIgniteRadius * 1.2;
+      float igniteJitter = cityCellHash(igniteCell + vec2(5.3, 11.9)) * uIgniteRadius * 0.2;
+      float igniteD = igniteDist + igniteJitter;
+      float ignitePixelOn = step(igniteD, igniteFront);
+      float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14));
+      float igniteMask = mix(1.0, ignitePixelOn, igniteActive);
+      float cityPower = clamp(max(isAwakenedCap * igniteMask, uShowcaseLights * isUnfoundDarkCap), 0.0, 1.0)
+        * (1.0 - uIsGhost);
 
       // Blackout: unfound land in world modes is a desaturated, power-less grey derived
       // from the base terrain colour (no hard-coded terrain hue), cities/rivers switched off.
@@ -448,6 +462,8 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       );
       float regionalSparkAlpha = isRegionalPin * regMicroSpark * (0.88 + 0.12 * satTwinkle);
       float sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uIsRegionalMode) * cityPower;
+      // Leading edge of the ignition wave burns in the existing win gold.
+      sparkColor = mix(sparkColor, vec3(0.96, 0.68, 0.22) * 1.25, igniteFlash);
       vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
 
       vec3 sideRgb = landSurface * 0.58;
