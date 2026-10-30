@@ -143,36 +143,8 @@
   }
 
   /* Mode card sizing and styling */
-  .deck-mode-card,
-  .deck-mode-card.is-top-card,
-  .deck-mode-card.is-stacked-card {
-    /* The JS pose scales cards by 1000/920 (perspective mimic): compensate so the
-       visible top card is exactly --deck-w x --deck-h. */
-    width: calc(var(--deck-w) * 0.92);
-    height: calc(var(--deck-h) * 0.92);
-    top: calc(var(--deck-h) * 0.04);
-    padding: 1.5rem 2.1rem 1.4rem;
-  }
 
   /* Atlas plate pattern consistent at bigger size + subtle mode-tinted radial stage */
-  .deck-mode-card .card-plate-pattern {
-    background:
-      radial-gradient(
-        circle at 86% 26%,
-        color-mix(in srgb, var(--card-mode-accent, var(--accent)) 18%, transparent) 0%,
-        transparent 56%
-      ),
-      repeating-linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
-        transparent 1px 40px
-      ),
-      repeating-linear-gradient(
-        0deg,
-        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
-        transparent 1px 40px
-      );
-  }
 
   /* Top row metadata */
   .card-plate-meta {
@@ -245,9 +217,6 @@
   }
 
   /* Stacked (non-top) cards hide description so not read twice */
-  .deck-mode-card.is-stacked-card .card-desc {
-    visibility: hidden;
-  }
 
   /* Actions row */
   .card-actions {

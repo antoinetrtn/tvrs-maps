@@ -17,7 +17,7 @@ export const test = base.extend({
   guestPage: async ({ page }, use) => {
     await openGuestHome(page);
     await page.locator(".deck-dots-row .deck-dot").nth(1).click();
-    await page.locator('.deck-mode-card.is-top-card[data-mode="countries"]').waitFor();
+    await page.locator('.ui-card--mode-deck.is-top-card[data-mode="countries"]').waitFor();
     await use(page);
   },
 });

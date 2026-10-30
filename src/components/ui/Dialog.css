@@ -102,3 +102,9 @@
     animation: none;
   }
 }
+
+/* Dialog header spacing (moved from panelSystem.css, shared with .sheet-panel there). */
+.dialog-card .panel-header {
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+}

@@ -7,7 +7,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
 
     // Verify Homepage title & top card
     await expect(page).toHaveTitle(/tvrs maps/i);
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "countries");
 
     // Launch Game
@@ -52,7 +52,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     const homeBtn = page.locator(".end-screen-actions .ui-btn--primary");
     await homeBtn.click();
 
-    await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
+    await expect(page.locator(".ui-card--mode-deck.is-top-card")).toBeVisible();
   });
 
   // 2. Complete Desktop Learn Mode Exploration (1280x800)
@@ -62,7 +62,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await page.setViewportSize({ width: 1280, height: 800 });
 
     // Launch Learn mode from top card
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await topCard.locator(".ui-btn--tile").click();
 
     // Verify Learn Mode data panel & carousel
@@ -88,7 +88,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     const homeLogo = page.locator(".hud-logo-clickable, .hud-top-left .ui-icon-btn--hud").first();
     await homeLogo.click();
 
-    await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
+    await expect(page.locator(".ui-card--mode-deck.is-top-card")).toBeVisible();
   });
 
   // 3. Complete Mobile Round Simulation (375x812 iPhone 13)
@@ -100,7 +100,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await dots.nth(3).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "departments");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -122,7 +122,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     const homeBtn = page.locator(".hud-top-left .ui-icon-btn--hud").first();
     await homeBtn.click();
 
-    await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
+    await expect(page.locator(".ui-card--mode-deck.is-top-card")).toBeVisible();
   });
 
   // 4. Complete Mobile Landscape Simulation (667x375)
@@ -136,7 +136,7 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     await dots.nth(4).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "us_states");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -159,6 +159,6 @@ test.describe("Tier 4: Real-World Scenarios (4 Tests)", () => {
     const homeBtn = page.locator(".end-screen-actions .ui-btn--primary");
     await homeBtn.click();
 
-    await expect(page.locator(".deck-mode-card.is-top-card")).toBeVisible();
+    await expect(page.locator(".ui-card--mode-deck.is-top-card")).toBeVisible();
   });
 });

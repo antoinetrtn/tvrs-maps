@@ -4,7 +4,7 @@ test.describe("Carte Conquête de l'accueil", () => {
   test("T1-CQ-01: Conquête est la première carte et celle affichée par défaut", async ({
     freshGuestPage: page,
   }) => {
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "conquest");
     await expect(page.locator(".deck-dots-row .deck-dot").first()).toHaveClass(/active/);
     // Le bandeau « Conquête 1v1 — Nouveau » n'existe plus
@@ -14,7 +14,7 @@ test.describe("Carte Conquête de l'accueil", () => {
   test("T1-CQ-02: « Règles » remplace Apprendre et ouvre la notice de Conquête", async ({
     freshGuestPage: page,
   }) => {
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard.locator(".ui-btn--tile")).toHaveCount(1);
     await expect(topCard.locator(".ui-btn--tile-rules")).toContainText(/règles/i);
     await topCard.locator(".ui-btn--tile-rules").click();
@@ -27,7 +27,7 @@ test.describe("Carte Conquête de l'accueil", () => {
 test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 1. Countries Mode Launch
   test("T1-MODE-01: Launch Countries Game Mode", async ({ guestPage: page }) => {
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "countries");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -41,7 +41,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await dots.nth(2).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "capitals");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -57,7 +57,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await dots.nth(3).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "departments");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -77,7 +77,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await dots.nth(4).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "us_states");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -97,7 +97,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await dots.nth(5).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "rivers_mountains");
     await topCard.locator(".ui-btn--cta").click();
 
@@ -115,7 +115,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await dots.nth(2).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "capitals");
   });
 
@@ -125,7 +125,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await dots.nth(5).click();
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "rivers_mountains");
   });
 
@@ -135,13 +135,15 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     await dots.nth(4).click();
     await page.waitForTimeout(200);
 
-    const topCardMode = await page.locator(".deck-mode-card.is-top-card").getAttribute("data-mode");
+    const topCardMode = await page
+      .locator(".ui-card--mode-deck.is-top-card")
+      .getAttribute("data-mode");
     expect(topCardMode).toBe("us_states");
   });
 
   // 9. Learn Mode Launch
   test("T1-MODE-09: Launch Learn Mode from Home Card", async ({ guestPage: page }) => {
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await topCard.locator(".ui-btn--tile").click();
 
     const dataPanel = page.locator(".game-data-panel");
@@ -150,7 +152,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
   // 10. Learn Sub-Mode TabBar Navigation
   test("T1-MODE-10: Learn Mode Sub-Mode Carousel Navigation", async ({ guestPage: page }) => {
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await topCard.locator(".ui-btn--tile").click();
 
     const learnControl = page.locator(".learn-carousel-control");
@@ -227,7 +229,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-HUD-01: Answer Input Field Auto-Clears on Correct Answer", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("France");
@@ -240,7 +242,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-HUD-02: Auto-Suggestions Popup Appears at 4+ Characters", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("Fran");
@@ -255,7 +257,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-HUD-03: Clicking Suggestion Item Submits Answer and Clears Input", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("Fran");

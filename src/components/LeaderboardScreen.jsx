@@ -24,6 +24,7 @@ import { getLeaderboard, getUserHistory, isSupabaseConfigured } from "../service
 import { formatTime } from "../utils/utils";
 import InvaderAvatar from "./InvaderAvatar";
 import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "./LeaderboardRow";
+import Card from "./ui/Card";
 import Dialog, { DialogTitle } from "./ui/Dialog";
 import EmptyState from "./ui/EmptyState";
 import ErrorState from "./ui/ErrorState";
@@ -429,8 +430,9 @@ const LeaderboardScreen = ({
 
             {/* Stats Summary cards always displayed at the top of active mode */}
             <div className="personal-stats-grid px-cascade">
-              <div
-                className="personal-stat-card glass-panel"
+              <Card
+                look="stat-chip"
+                glass
                 role="group"
                 aria-label={`${t("games_played")} : ${currentRecord.gamesPlayed}`}
                 title={t("games_played")}
@@ -438,9 +440,10 @@ const LeaderboardScreen = ({
                 <span className="sr-only">{t("games_played")}</span>
                 <Gamepad width={14} height={14} className="stat-icon" aria-hidden="true" />
                 <span className="stat-value highlight-cyan">{currentRecord.gamesPlayed}</span>
-              </div>
-              <div
-                className="personal-stat-card glass-panel"
+              </Card>
+              <Card
+                look="stat-chip"
+                glass
                 role="group"
                 aria-label={`${t("best_score")} : ${currentRecord.maxScore}`}
                 title={t("best_score")}
@@ -448,9 +451,10 @@ const LeaderboardScreen = ({
                 <span className="sr-only">{t("best_score")}</span>
                 <Trophy width={14} height={14} className="stat-icon" aria-hidden="true" />
                 <span className="stat-value highlight-green">{currentRecord.maxScore}</span>
-              </div>
-              <div
-                className="personal-stat-card glass-panel"
+              </Card>
+              <Card
+                look="stat-chip"
+                glass
                 role="group"
                 aria-label={`${t("best_time")} : ${currentRecord.bestTime ? formatTime(currentRecord.bestTime) : "--"}`}
                 title={t("best_time")}
@@ -460,7 +464,7 @@ const LeaderboardScreen = ({
                 <span className="stat-value highlight-magenta">
                   {currentRecord.bestTime ? formatTime(currentRecord.bestTime) : "--"}
                 </span>
-              </div>
+              </Card>
             </div>
 
             {/* Conditional Rendering of Tab Content */}

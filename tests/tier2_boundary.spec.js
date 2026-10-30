@@ -9,7 +9,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     }
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toBeVisible();
   });
 
@@ -21,7 +21,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     }
     await page.waitForTimeout(200);
 
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toBeVisible();
   });
 
@@ -29,7 +29,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-CLICK-03: Rapid Double-Click Play Button initializes single session", async ({
     guestPage: page,
   }) => {
-    const playBtn = page.locator(".deck-mode-card.is-top-card .ui-btn--cta");
+    const playBtn = page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta");
     await playBtn.dblclick();
 
     const inputField = page.locator("#q-resp-field");
@@ -75,7 +75,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-CLICK-06: Rapid suggestion taps handled safely after input clear", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("Fran");
@@ -177,7 +177,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
 
   // 15. Clear search query input in Learn mode data panel
   test("T2-DESEL-04: Clear Search Input in Learn Data Panel", async ({ guestPage: page }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--tile").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--tile").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("France");
@@ -189,7 +189,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-DESEL-05: Input Field Focus Retention on Canvas Interaction", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
     await inputField.focus();
 
@@ -201,14 +201,14 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   // 17. Desktop Viewport (1280x800) Layout Verification
   test("T2-RESIZE-01: Desktop Viewport Layout Verification", async ({ guestPage: page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    const card = page.locator(".deck-mode-card.is-top-card");
+    const card = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(card).toBeVisible();
   });
 
   // 18. Mobile Viewport (375x667) Layout Verification
   test("T2-RESIZE-02: Mobile Viewport Layout Verification", async ({ guestPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    const card = page.locator(".deck-mode-card.is-top-card");
+    const card = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(card).toBeVisible();
   });
 
@@ -216,7 +216,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-RESIZE-03: Dynamic Resize Desktop to Mobile", async ({ guestPage: page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.setViewportSize({ width: 375, height: 667 });
-    const card = page.locator(".deck-mode-card.is-top-card");
+    const card = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(card).toBeVisible();
   });
 
@@ -224,14 +224,14 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-RESIZE-04: Dynamic Resize Mobile to Desktop", async ({ guestPage: page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.setViewportSize({ width: 1280, height: 800 });
-    const card = page.locator(".deck-mode-card.is-top-card");
+    const card = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(card).toBeVisible();
   });
 
   // 21. Mobile Landscape Viewport (667x375) Adaptation
   test("T2-RESIZE-05: Mobile Landscape Viewport Adaptation", async ({ guestPage: page }) => {
     await page.setViewportSize({ width: 667, height: 375 });
-    const card = page.locator(".deck-mode-card.is-top-card");
+    const card = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(card).toBeVisible();
   });
 
@@ -239,7 +239,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-DATA-01: Accented Character Answer Matching (Egypte / Égypte)", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("Egypte");
@@ -252,7 +252,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-DATA-02: Hyphenated Name Handling (saint marin / Saint-Marin)", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("saint marin");
@@ -263,7 +263,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
 
   // 24. Case insensitive answer matching
   test("T2-DATA-03: Case Insensitive Answer Submission (fRAncE)", async ({ guestPage: page }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("fRAncE");
@@ -276,7 +276,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-DATA-04: Non-Existent Answer Submission Triggers Error Feedback Class", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("Atlantis123XYZ");
@@ -290,7 +290,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   test("T2-DATA-05: Duplicate Correct Answer Submission Triggers Feedback Class", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
+    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("France");
@@ -340,7 +340,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await enOpt.click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
-    const topCardTitle = page.locator(".deck-mode-card.is-top-card .card-title");
+    const topCardTitle = page.locator(".ui-card--mode-deck.is-top-card .card-title");
     await expect(topCardTitle).toHaveText("World Countries");
   });
 
@@ -358,7 +358,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await frOpt.click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
-    const topCardTitle = page.locator(".deck-mode-card.is-top-card .card-title");
+    const topCardTitle = page.locator(".ui-card--mode-deck.is-top-card .card-title");
     await expect(topCardTitle).toHaveText("Pays du Monde");
   });
 });

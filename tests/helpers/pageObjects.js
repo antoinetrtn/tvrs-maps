@@ -5,7 +5,7 @@ export class HomeScreen {
     this.page = page;
     this.logo = page.locator(".home-logo");
     this.deckWrapper = page.locator(".cards-deck-wrapper");
-    this.topCard = page.locator(".deck-mode-card.is-top-card");
+    this.topCard = page.locator(".ui-card--mode-deck.is-top-card");
     this.leftArrow = page.locator(".deck-click-zone.left");
     this.rightArrow = page.locator(".deck-click-zone.right");
     this.dots = page.locator(".deck-dots-row .deck-dot");
@@ -19,7 +19,7 @@ export class HomeScreen {
   }
 
   async selectMode(modeKey) {
-    const card = this.page.locator(`.deck-mode-card[data-mode="${modeKey}"]`);
+    const card = this.page.locator(`.ui-card--mode-deck[data-mode="${modeKey}"]`);
     if (await card.evaluate((el) => el.classList.contains("is-top-card"))) {
       return;
     }

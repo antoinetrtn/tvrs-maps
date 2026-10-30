@@ -190,7 +190,7 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
 
     // ArrowRight advances to next mode (capitals)
     fireEvent.keyDown(window, { key: "ArrowRight" });
-    const topCardNext = document.querySelector(".deck-mode-card.is-top-card");
+    const topCardNext = document.querySelector(".ui-card--mode-deck.is-top-card");
     expect(topCardNext.getAttribute("data-mode")).toBe("capitals");
 
     // The carousel ignores input while its 200 ms change animation runs
@@ -200,7 +200,7 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
 
     // ArrowLeft goes back to previous mode (countries)
     fireEvent.keyDown(window, { key: "ArrowLeft" });
-    const topCardPrev = document.querySelector(".deck-mode-card.is-top-card");
+    const topCardPrev = document.querySelector(".ui-card--mode-deck.is-top-card");
     expect(topCardPrev.getAttribute("data-mode")).toBe("countries");
     vi.useRealTimers();
   });

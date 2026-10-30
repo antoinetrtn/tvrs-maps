@@ -72,8 +72,7 @@
   /* tabs grow via TabBar rule; close button is pushed right */
 }
 
-.sheet-panel .panel-header,
-.dialog-card .panel-header {
+.sheet-panel .panel-header {
   margin-bottom: var(--spacing-sm);
   padding-bottom: var(--spacing-xs);
 }

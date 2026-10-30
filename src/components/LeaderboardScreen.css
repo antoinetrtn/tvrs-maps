@@ -91,47 +91,6 @@
   flex-shrink: 0;
 }
 
-.personal-stat-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  min-height: 40px;
-  min-width: 0;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  text-align: center;
-  /* TODO(design): pointed at --glass-bg-subtle, a token that never existed — the
-     invalid var() suppressed .glass-panel's background, so these cards have always
-     rendered transparent. Kept explicit pending a decision on the intended tint. */
-  background: transparent;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-}
-
-.personal-stat-card .stat-icon {
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.personal-stat-card .stat-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-  text-transform: none; /* natural casing */
-}
-
-.personal-stat-card .stat-value {
-  font-family: var(--font-display);
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
 .highlight-green {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
@@ -304,14 +263,6 @@
     margin-bottom: var(--spacing-sm);
   }
 
-  .personal-stat-card {
-    padding: var(--spacing-xs) var(--spacing-xxs);
-  }
-
-  .personal-stat-card .stat-value {
-    font-size: var(--font-size-base);
-  }
-
   .evolution-chart {
     height: 60px;
   }
@@ -320,14 +271,5 @@
 @media (max-width: 360px) {
   .personal-stats-grid {
     gap: var(--spacing-xxs);
-  }
-
-  .personal-stat-card {
-    padding: var(--spacing-xs) 2px;
-    gap: var(--spacing-xxs);
-  }
-
-  .personal-stat-card .stat-value {
-    font-size: var(--font-size-xs);
   }
 }
