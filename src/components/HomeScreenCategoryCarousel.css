@@ -1,14 +1,3 @@
-@keyframes atlasDeckIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 .cards-deck-wrapper {
   position: relative;
   display: flex;

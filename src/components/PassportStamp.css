@@ -46,21 +46,6 @@
   line-height: 1;
 }
 
-@keyframes stamp-in {
-  0% {
-    opacity: 0;
-    transform: rotate(-3deg) scale(1.4);
-  }
-  60% {
-    opacity: 1;
-    transform: rotate(-3deg) scale(0.96);
-  }
-  100% {
-    opacity: 0.92;
-    transform: rotate(-3deg) scale(1);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .passport-stamp {
     animation: none;
@@ -78,19 +63,4 @@
   transform: rotate(3deg);
   animation-name: stamp-in-pb;
   animation-delay: var(--dur-fill);
-}
-
-@keyframes stamp-in-pb {
-  0% {
-    opacity: 0;
-    transform: rotate(3deg) scale(1.4);
-  }
-  60% {
-    opacity: 1;
-    transform: rotate(3deg) scale(0.96);
-  }
-  100% {
-    opacity: 0.92;
-    transform: rotate(3deg) scale(1);
-  }
 }

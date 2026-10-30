@@ -48,17 +48,6 @@
   gap: var(--spacing-xs);
 }
 
-@keyframes data-panel-slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 .data-panel-header {
   display: flex;
   align-items: center;
