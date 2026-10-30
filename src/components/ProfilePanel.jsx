@@ -252,7 +252,7 @@ const ProfilePanel = ({
                       e.preventDefault();
                       if (onOpenAuth) onOpenAuth();
                     }}
-                    className="profile-blur-btn"
+                    look="profile-unlock"
                   >
                     {t("auth_sign_in")}
                   </Button>

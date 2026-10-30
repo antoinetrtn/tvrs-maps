@@ -100,12 +100,6 @@
     backwards;
 }
 
-.training-start-btn {
-  width: 100%;
-  min-height: var(--control-lg);
-  margin-top: var(--spacing-xs);
-}
-
 .training-reset-row {
   display: flex;
   align-items: center;
@@ -117,16 +111,6 @@
 .training-reset-row.confirm {
   justify-content: space-between;
   flex-wrap: wrap;
-}
-
-.training-reset-btn {
-  text-decoration: underline;
-}
-
-.training-cancel-btn,
-.training-confirm-btn {
-  min-height: var(--control-lg);
-  font-size: var(--font-size-xs);
 }
 
 .training-reset-status {

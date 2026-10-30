@@ -18,12 +18,12 @@ const guardDrag = (wasDraggingRef, fn) => (e) => {
   fn?.();
 };
 
-const SecondaryButton = ({ isTopCard, className, onClick, title, label, icon }) => (
+const SecondaryButton = ({ isTopCard, look, onClick, title, label, icon }) => (
   <Button
     variant="secondary"
     size="lg"
     tabIndex={isTopCard ? 0 : -1}
-    className={className}
+    look={look}
     onClick={onClick}
     title={title}
     aria-label={title}
@@ -58,7 +58,8 @@ const CardActions = ({
         variant="primary"
         size="lg"
         tabIndex={isTopCard ? 0 : -1}
-        className={`card-play-btn mode-${modeKey}`}
+        look="cta"
+        className={`mode-${modeKey}`}
         onClick={onPlay}
       >
         <Play width={20} height={20} aria-hidden="true" />
@@ -68,7 +69,7 @@ const CardActions = ({
       {!isConquest && (
         <SecondaryButton
           isTopCard={isTopCard}
-          className="card-learn-btn card-train-btn"
+          look={["tile", "tile-train"]}
           onClick={onTrain}
           title={t("training_card_label")}
           label={t("card_train_short") || t("training_card_label")}
@@ -79,7 +80,7 @@ const CardActions = ({
       {isConquest ? (
         <SecondaryButton
           isTopCard={isTopCard}
-          className="card-learn-btn card-rules-btn"
+          look={["tile", "tile-rules"]}
           onClick={onSecondary}
           title={t("mode_rules")}
           label={t("card_rules_short") || t("mode_rules")}
@@ -88,7 +89,7 @@ const CardActions = ({
       ) : (
         <SecondaryButton
           isTopCard={isTopCard}
-          className="card-learn-btn"
+          look="tile"
           onClick={onSecondary}
           title={t("mode_learn")}
           label={t("card_learn_short") || t("mode_learn")}

@@ -151,7 +151,8 @@ export default function TrainingSheet({ open, mode, lang, profileId, onClose, on
         <Button
           type="button"
           variant="primary"
-          className="training-btn training-start-btn"
+          look="training-start"
+          className="training-btn"
           onClick={data.handleStart}
         >
           {t("training_start")}

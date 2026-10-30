@@ -21,7 +21,8 @@ export default function ProfileFooter({
         type="submit"
         variant="primary"
         disabled={disabled}
-        className={`form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
+        look="form-submit"
+        className={`${saveSuccess ? "save-success-glow" : ""}`}
       >
         {saveLabel}
       </Button>

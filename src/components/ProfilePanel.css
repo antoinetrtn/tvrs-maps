@@ -351,24 +351,6 @@
 }
 
 /* Form Actions */
-.form-submit-btn {
-  width: 100%;
-  font-weight: 600;
-  padding: var(--spacing-ms) var(--spacing-lg);
-  border: none;
-  background: var(--text-main);
-  color: var(--bg-color);
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.form-submit-btn:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
 
 .form-feedback {
   padding: var(--spacing-xs);
@@ -440,12 +422,6 @@
   color: var(--text-main);
   margin: 0;
   line-height: 1.4;
-}
-
-.profile-blur-btn {
-  font-weight: 600;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-sm);
 }
 
 .profile-customization-container.blurred {
@@ -602,8 +578,3 @@ form.profile-form {
 }
 
 /* Success state on Save (crisp fill, no glow) */
-.form-submit-btn.save-success-glow {
-  background: var(--success) !important;
-  color: var(--bg-color) !important;
-  border-color: var(--success) !important;
-}

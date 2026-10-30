@@ -1,4 +1,5 @@
 import "./Button.css";
+import "./ButtonLooks.css";
 
 import React from "react";
 
@@ -6,6 +7,25 @@ import { primeHapticsOnUserGesture, triggerSubtleHapticTick } from "../../utils/
 
 const VARIANTS = ["primary", "secondary", "ghost", "danger"];
 const SIZES = ["sm", "md", "lg"];
+/** Named looks defined once in ButtonLooks.css (screen-specific skins of the kit button). */
+export const LOOKS = [
+  "cta",
+  "dialog-action",
+  "form-submit",
+  "profile-unlock",
+  "row",
+  "row-google",
+  "row-guest",
+  "row-tvrs",
+  "submit",
+  "tile",
+  "tile-rules",
+  "tile-train",
+  "training-cancel",
+  "training-confirm",
+  "training-reset",
+  "training-start",
+];
 
 /**
  * Button — the single text-button primitive of the kit.
@@ -20,12 +40,14 @@ const SIZES = ["sm", "md", "lg"];
  *
  * All states (hover, pressed, focus-visible, disabled, loading) live in Button.css and are
  * shared by every variant; screens only add layout deltas through `className`.
+ * - `look`: one or several named skins from LOOKS (ButtonLooks.css), e.g. look={["tile", "tile-train"]}.
  */
 const Button = React.forwardRef(function Button(
   {
     variant = "secondary",
     size = "md",
     block = false,
+    look,
     loading = false,
     disabled = false,
     icon = null,
@@ -44,6 +66,10 @@ const Button = React.forwardRef(function Button(
     `ui-btn--${safeVariant}`,
     `ui-btn--${safeSize}`,
     block && "ui-btn--block",
+    ...[].concat(look || []).map((l) => {
+      if (!LOOKS.includes(l) && import.meta.env?.DEV) console.error(`Button: unknown look "${l}"`);
+      return LOOKS.includes(l) && `ui-btn--${l}`;
+    }),
     loading && "is-loading",
     className,
   ]

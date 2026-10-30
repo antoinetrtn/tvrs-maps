@@ -5,11 +5,6 @@
   width: 100%;
 }
 
-.auth-row-btn {
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-}
-
 .auth-btn-icon {
   display: flex;
   align-items: center;
@@ -19,57 +14,18 @@
 }
 
 /* TVRS Cyan Button -> changed to glass style */
-.auth-row-btn.tvrs-btn {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-}
-
-.auth-row-btn.tvrs-btn:hover {
-  background: var(--glass-hover);
-  border-color: var(--text-main);
-  transform: translateY(-1px);
-}
 
 /* (former [data-theme="light"] overrides removed: they duplicated the base
    declarations verbatim — theming now flows from the tokens on <html>) */
 
 /* Google Light/Gray Button */
-.auth-row-btn.google-btn {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-}
-
-.auth-row-btn.google-btn:hover {
-  background: var(--glass-hover);
-  border-color: var(--text-main);
-  transform: translateY(-1px);
-}
 
 /* Guest Pink Button -> changed to glass style */
-.auth-row-btn.guest-btn {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-}
-
-.auth-row-btn.guest-btn:hover {
-  background: var(--glass-hover);
-  border-color: var(--text-main);
-  transform: translateY(-1px);
-}
 
 .auth-modal-form {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-}
-
-.auth-modal-submit-btn {
-  font-weight: 600;
-  padding: var(--spacing-ms) var(--spacing-sm);
-  font-size: var(--font-size-sm);
 }
 
 .disabled-input {

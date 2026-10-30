@@ -209,7 +209,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         size="lg"
         block
         onClick={() => setStep("email")}
-        className="auth-row-btn tvrs-btn"
+        look={["row", "row-tvrs"]}
       >
         <User width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
         <span>{t("auth_tvrs_account")}</span>
@@ -220,7 +220,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         size="lg"
         block
         onClick={handleGoogleSignIn}
-        className="auth-row-btn google-btn"
+        look={["row", "row-google"]}
       >
         <Earth width={16} height={16} className="auth-btn-icon" aria-hidden="true" />
         <span>{t("auth_google")}</span>
@@ -231,7 +231,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         size="lg"
         block
         onClick={onGuest}
-        className="auth-row-btn guest-btn"
+        look={["row", "row-guest"]}
         aria-label={t("auth_guest")}
         title={t("auth_guest")}
       >
@@ -254,7 +254,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         required
         autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
       />
-      <Button type="submit" variant="primary" loading={loading} className="auth-modal-submit-btn">
+      <Button type="submit" variant="primary" loading={loading} look="submit">
         {loading ? "Vérification..." : "Continuer"}
       </Button>
     </form>
@@ -282,13 +282,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
         autoFocus /* eslint-disable-line jsx-a11y/no-autofocus */
       />
 
-      <Button
-        type="submit"
-        variant="primary"
-        loading={loading}
-        disabled={isCooldown}
-        className="auth-modal-submit-btn"
-      >
+      <Button type="submit" variant="primary" loading={loading} disabled={isCooldown} look="submit">
         {loading ? t("saving") : isCooldown ? "Attendez..." : passwordButtonLabel}
       </Button>
     </form>
