@@ -1,4 +1,5 @@
-import { conquestCursorStore } from "./conquestCursors";
+import { countryDataMap } from "../data/gameData";
+import { buildCursorPayload, conquestCursorStore } from "./conquestCursors";
 import { normalizeRoomCode } from "./conquestLogic";
 import { markRulesSeen } from "./useConquestRulesAutoOpen";
 
@@ -101,6 +102,26 @@ function buildPreviewPlayers(phase, displayName, opts) {
   return list;
 }
 
+const foldName = (value) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+/** Preview answer → canonical country id (accepts French or English names, accents optional). */
+export function resolvePreviewCountry(answer) {
+  const key = foldName(answer);
+  if (!key) return null;
+  for (const [id, data] of Object.entries(countryDataMap)) {
+    if (key === foldName(id) || key === foldName(data.name_en) || key === foldName(data.name_fr)) {
+      return id;
+    }
+  }
+  return null;
+}
+
 function buildPreviewClaims(phase, baseMs, empty) {
   if (empty || phase === "idle" || phase === "home" || phase === "lobby") return [];
   return [
@@ -124,6 +145,9 @@ function buildPreviewClaims(phase, baseMs, empty) {
     },
     { country_id: "Spain", owner_id: "me", fortify_level: 0, shield_until: null },
     { country_id: "Portugal", owner_id: "me", fortify_level: 0, shield_until: null },
+    { country_id: "Poland", owner_id: "opp", fortify_level: 0, shield_until: null },
+    { country_id: "Egypt", owner_id: "opp", fortify_level: 0, shield_until: null },
+    { country_id: "India", owner_id: "opp", fortify_level: 0, shield_until: null },
   ];
 }
 
@@ -227,17 +251,22 @@ export function createConquestPreview({
     busy: false,
   };
 
+  // Opponent cursor wanders between its countries (wire format via buildCursorPayload,
+  // so it goes through the same sanitizer as real realtime messages).
+  const cursorStops = [
+    { lat: 51.1657, lng: 10.4515, country: "Germany" },
+    { lat: 52.07, lng: 19.48, country: "Poland" },
+    { lat: 42.8, lng: 12.6, country: "Italy" },
+  ];
+  let cursorStep = 0;
   const updateOpponentCursor = () => {
     if (currentPhase === "live") {
-      conquestCursorStore.receive(
-        {
-          userId: "opp",
-          lat: 51.1657,
-          lng: 10.4515,
-          country: "Germany",
-        },
-        { selfId: "me", playerIds: new Set(["me", "opp"]), now: Date.now() }
-      );
+      const stop = cursorStops[cursorStep++ % cursorStops.length];
+      conquestCursorStore.receive(buildCursorPayload("opp", stop), {
+        selfId: "me",
+        playerIds: new Set(["me", "opp"]),
+        now: Date.now(),
+      });
     }
   };
   updateOpponentCursor();
@@ -285,9 +314,9 @@ export function createConquestPreview({
     claim: async (answer) => {
       const val = String(answer || "").trim();
       if (!val) return null;
-      const owned = state.claims.find(
-        (c) => c.owner_id !== "me" && c.country_id.toLowerCase() === val.toLowerCase()
-      );
+      const countryId = resolvePreviewCountry(val);
+      if (!countryId) return { ok: false, reason: "wrong" };
+      const owned = state.claims.find((c) => c.owner_id !== "me" && c.country_id === countryId);
       if (owned) {
         return {
           ok: false,
@@ -296,7 +325,6 @@ export function createConquestPreview({
           owner_id: owned.owner_id,
         };
       }
-      const countryId = val.charAt(0).toUpperCase() + val.slice(1);
       const nextClaims = [...state.claims, { country_id: countryId, owner_id: "me" }];
       const nextEvents = [
         ...state.events,
