@@ -30,6 +30,18 @@ Exception revue en PR : commentaire `ds-atoms-allow: <règle> — raison` sur la
 
 Complète les garde-fous existants : `check:tokens` (tokens fantômes, sync dark), `check:css-rules` (hex, durées, z-index, radius, ombres… en ratchet), `check:a11y`, ESLint + jsx-a11y.
 
-## Agent de vérification Gemini (prévu, pas encore actif)
+## Blocage du merge (GitHub)
 
-Job GitHub Action `ds-review` sur `pull_request` → `dev` : récupère le diff, lance `npm run check:ds` (bloquant), puis Gemini 3.8 (clé en secret de repo) relit le diff avec ce document en contexte pour repérer ce que les regex ratent (carte ou layout recomposé, variante dupliquée). Il commente la PR et met un statut `ds-review` en échec si un atome est recomposé. Pour bloquer le merge : ajouter `Lint, Test, and Build` puis `ds-review` aux checks requis de la protection de branche `dev`.
+Protection de la branche `dev` : PR obligatoire (0 review requise), check requis **`Lint, Test, and Build`** (workflow `Quality Check`, qui lance `check:ds`), branche à jour avec `dev` exigée (strict). `main` n'est pas modifiée.
+
+## Revue design system avant chaque merge dans dev
+
+Pas de clé API, pas d'Action Gemini : la revue tourne sur la box avec l'abonnement existant via Antigravity CLI.
+
+1. `scripts/ds-review.sh` (ou `scripts/ds-review.sh origin/dev gemini-3.8-flash-medium`) :
+   - lance `npm run check:ds` (bloquant) ;
+   - envoie le diff `src/` + ce document à Gemini (`agy --model gemini-3.8-flash-high -p …`) qui liste les atomes recomposés et rend `VERDICT: OK` / `VERDICT: A CORRIGER`.
+2. Corriger les duplications signalées, relancer jusqu'à `VERDICT: OK`.
+3. Si Gemini n'a plus de crédits (code de sortie 3), le script affiche la checklist et le diff : la revue est faite à la main avant le merge.
+
+Codes de sortie : 0 OK · 1 check:ds en échec · 2 Gemini demande des corrections · 3 revue manuelle requise.
