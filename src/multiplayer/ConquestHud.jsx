@@ -4,6 +4,7 @@ import "./ConquestLockouts.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
+import TextField from "../components/ui/TextField";
 import { showToast } from "../components/ui/Toast.jsx";
 import {
   ANSWER_INPUT_PROPS,
@@ -237,7 +238,8 @@ const HudAnswer = ({
       />
     ) : (
       <form onSubmit={submit} autoComplete="off">
-        <input
+        <TextField
+          variant="bare"
           ref={inputRef}
           {...ANSWER_INPUT_PROPS}
           className="conquest-input"

@@ -3,6 +3,7 @@ import "./AccentPicker.css";
 import React from "react";
 
 import { ACCENT_PRESETS } from "../config/accentPresets";
+import Pressable from "./ui/Pressable";
 
 /** Accent swatches: pick one of the curated presets (persisted by useAppTheme). */
 const AccentPicker = ({ lang = "fr", accent, setAccent, label }) => (
@@ -11,7 +12,7 @@ const AccentPicker = ({ lang = "fr", accent, setAccent, label }) => (
       const name = preset.label[lang] || preset.label.en;
       const isActive = id === accent;
       return (
-        <button
+        <Pressable
           key={id}
           type="button"
           role="radio"
@@ -24,7 +25,7 @@ const AccentPicker = ({ lang = "fr", accent, setAccent, label }) => (
         >
           <span className="accent-swatch-chip" aria-hidden="true" />
           <span className="accent-swatch-label">{name}</span>
-        </button>
+        </Pressable>
       );
     })}
   </div>

@@ -16,6 +16,7 @@ import ModeCard from "./HomeModeCard";
 import { HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 import IconButton from "./ui/IconButton";
+import Pressable from "./ui/Pressable";
 import useCarouselDrag from "./useCarouselDrag";
 
 const MODE_ICONS = {
@@ -61,8 +62,8 @@ const DeckDots = ({ items, activeIndex, lang, onDotClick }) => {
       {items.map((item, idx) => {
         const itemTitle = lang === "fr" ? item.titleFr : item.titleEn;
         return (
-          // pagination dot: intentionally not a kit Button (6px visual, 24px hit area via ::after)
-          <button
+          // pagination dot: kit Pressable, not Button (6px visual, 24px hit area via ::after)
+          <Pressable
             type="button"
             key={item.key}
             className={`deck-dot ${idx === activeIndex ? "active" : ""}`}
