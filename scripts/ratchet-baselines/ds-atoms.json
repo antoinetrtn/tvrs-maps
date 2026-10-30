@@ -1,0 +1,49 @@
+{
+  "adhoc-atom-class": {
+    "src/components/AuthModal.css": 11,
+    "src/components/ConfirmationModal.css": 1,
+    "src/components/EndScreen.css": 2,
+    "src/components/GameDataPanel.css": 1,
+    "src/components/GameHUD.css": 4,
+    "src/components/HomeDock.css": 3,
+    "src/components/HomeScreen.css": 4,
+    "src/components/HomeScreenCategoryCarousel.css": 12,
+    "src/components/HomeScreenDesktop.css": 11,
+    "src/components/ProfilePanel.css": 9,
+    "src/components/TrainingSheet.css": 3,
+    "src/index.css": 2,
+    "src/multiplayer/ConquestHud.css": 2,
+    "src/multiplayer/ConquestReady.css": 4,
+    "src/multiplayer/ConquestScreen.css": 2,
+    "src/styles/panelSystem.css": 2
+  },
+  "local-keyframes": {
+    "src/App.css": 6,
+    "src/components/GameDataPanel.css": 2,
+    "src/components/GameHUD.css": 3,
+    "src/components/GameHUDLives.css": 1,
+    "src/components/HomeScreen.css": 3,
+    "src/components/HomeScreenCategoryCarousel.css": 1,
+    "src/components/Logo.css": 1,
+    "src/components/PassportStamp.css": 2,
+    "src/components/TrainingSheet.css": 1,
+    "src/globe/GlobeMap.css": 1,
+    "src/multiplayer/ConquestCursors.css": 1,
+    "src/multiplayer/ConquestHud.css": 1,
+    "src/multiplayer/ConquestReady.css": 2,
+    "src/multiplayer/ConquestShieldLayer.css": 1,
+    "src/styles/glitchMoments.css": 2,
+    "src/styles/panelSystem.css": 3
+  },
+  "raw-button": {
+    "src/components/AccentPicker.jsx": 1,
+    "src/components/GameDataPanelRow.jsx": 1,
+    "src/components/HomeScreenCategoryCarousel.jsx": 1,
+    "src/components/ProfilePanel.jsx": 2
+  },
+  "raw-input": {
+    "src/components/GameHUD.jsx": 1,
+    "src/multiplayer/ConquestHud.jsx": 1,
+    "src/utils/answerField.js": 1
+  }
+}

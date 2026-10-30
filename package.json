@@ -24,7 +24,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,css,json}\"",
     "quality": "node scripts/quality-check.js",
-    "check": "npm run format:check && npm run lint && npm run check:tokens && npm run check:css-rules && npm run check:a11y && npm run test:run && npm run build",
+    "check": "npm run format:check && npm run lint && npm run check:tokens && npm run check:css-rules && npm run check:a11y && npm run check:ds && npm run test:run && npm run build",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "husky",
@@ -32,7 +32,8 @@
     "supabase:pull": "npx supabase db pull",
     "supabase:push": "npx supabase db push",
     "supabase:migration": "npx supabase migration new",
-    "check:bundle": "node scripts/check-bundle-budget.mjs"
+    "check:bundle": "node scripts/check-bundle-budget.mjs",
+    "check:ds": "node scripts/check-ds-atoms.mjs"
   },
   "keywords": [],
   "author": "",

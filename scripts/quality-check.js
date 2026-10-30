@@ -28,7 +28,7 @@ const requiredScripts = {
   lint: "node scripts/quality-check.js",
   quality: "node scripts/quality-check.js",
   check:
-    "npm run format:check && npm run lint && npm run check:tokens && npm run check:css-rules && npm run check:a11y && npm run test:run && npm run build",
+    "npm run format:check && npm run lint && npm run check:tokens && npm run check:css-rules && npm run check:a11y && npm run check:ds && npm run test:run && npm run build",
   "check:tokens": "node scripts/check-tokens.mjs",
   "check:css-rules": "node scripts/check-css-rules.mjs",
   "check:a11y": "node scripts/check-a11y-ratchet.mjs",
