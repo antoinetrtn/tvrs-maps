@@ -23,13 +23,6 @@
   animation: px-ready-pip var(--dur-fast) var(--steps-snap);
 }
 
-@keyframes px-ready-pip {
-  from {
-    transform: scale(1.5);
-    opacity: 0.4;
-  }
-}
-
 .conquest-ready-label.is-ready {
   color: var(--success);
 }
@@ -103,12 +96,6 @@
 .conquest-ready-cta.is-ready::before {
   transform: scaleX(1);
   animation: px-ready-fill var(--dur-base) var(--steps-snap);
-}
-
-@keyframes px-ready-fill {
-  from {
-    transform: scaleX(0);
-  }
 }
 
 /* Once ready and the host can start, the start button takes the lead. */

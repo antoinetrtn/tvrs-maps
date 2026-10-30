@@ -4,6 +4,7 @@ import "./components/ui/TextField.css";
 import "./styles/panelSystem.css";
 import "./styles/glitchMoments.css";
 import "./styles/motion.css";
+import "./styles/keyframes.css";
 
 import React from "react";
 import ReactDOM from "react-dom/client";

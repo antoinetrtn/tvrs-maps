@@ -3,52 +3,8 @@
    a level-up and a passport stamp landing. Never on hover, never looping.
    Loaded from main.jsx; doubled selectors win over component sheets. */
 
-@keyframes glitch-burst {
-  0% {
-    text-shadow:
-      -2px 0 var(--glitch-magenta),
-      2px 0 var(--glitch-cyan);
-    transform: translateX(-1px) skewX(-3deg);
-  }
-  33% {
-    text-shadow:
-      2px 0 var(--glitch-magenta),
-      -2px 0 var(--glitch-cyan);
-    transform: translateX(1px) skewX(2deg);
-  }
-  66% {
-    text-shadow:
-      -1px 0 var(--glitch-magenta-soft),
-      1px 0 var(--glitch-cyan-soft);
-    transform: translateX(0) skewX(-1deg);
-  }
-  100% {
-    text-shadow: none;
-    transform: none;
-  }
-}
-
 /* Same burst without transform, for elements whose transform is owned elsewhere
    (rotated stamps, scaled score pill). */
-@keyframes glitch-burst-ink {
-  0%,
-  66% {
-    text-shadow:
-      -2px 0 var(--glitch-magenta),
-      2px 0 var(--glitch-cyan);
-    filter: drop-shadow(-1px 0 var(--glitch-magenta-soft))
-      drop-shadow(1px 0 var(--glitch-cyan-soft));
-  }
-  33% {
-    text-shadow:
-      2px 0 var(--glitch-magenta),
-      -2px 0 var(--glitch-cyan);
-  }
-  100% {
-    text-shadow: none;
-    filter: none;
-  }
-}
 
 /* Title moments */
 .end-screen-header.end-screen-header h1 {

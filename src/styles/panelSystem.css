@@ -157,24 +157,6 @@
   animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
 }
 
-@keyframes sheet-in {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(var(--sheet-clip-bleed));
-  }
-}
-
-@keyframes sheet-out {
-  from {
-    clip-path: inset(var(--sheet-clip-bleed));
-  }
-  to {
-    clip-path: inset(0 0 100% 0);
-  }
-}
-
 /* Below the desktop breakpoint (aligned with the HUD's mobile layout switch),
    every sheet panel becomes a fullscreen slide-up sheet. Single source of
    truth — components must NOT duplicate this block. */
@@ -251,12 +233,3 @@
 }
 
 /* Shared plain fade-in (was duplicated as ui-fade-in / ui-fade-in). */
-@keyframes ui-fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}

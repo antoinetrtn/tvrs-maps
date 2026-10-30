@@ -161,11 +161,6 @@
   color: var(--warning);
   animation: conquest-timer-blink var(--dur-count) steps(1, end) infinite;
 }
-@keyframes conquest-timer-blink {
-  50% {
-    color: var(--text-main);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .conquest-timer.is-urgent {
     animation: none;

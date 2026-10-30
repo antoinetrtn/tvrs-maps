@@ -15,17 +15,6 @@
   pointer-events: auto;
 }
 
-@keyframes label-appear {
-  from {
-    opacity: 0;
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-  }
-}
-
 .globe-label-element {
   animation: label-appear 0.3s var(--ease-out) forwards;
 }

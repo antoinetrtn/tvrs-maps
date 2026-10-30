@@ -11,7 +11,7 @@ Règle : chaque type d'élément (bouton, modal avec bouton valider + croix, sli
 | Slider / Toggle / Choix | `ui/Slider.jsx`, `ui/Switch.jsx`, `ui/OptionGroup.jsx` |
 | Champs | `ui/TextField.jsx` |
 | Onglets, états, toasts, réglages | `ui/TabBar.jsx`, `ui/StateBlock.jsx` (+ Empty/Error/Loading), `ui/Toast.jsx`, `ui/Settings.jsx` |
-| Animations (`@keyframes`) | `src/styles/motion.css` (ou interne à un primitive `ui/`) |
+| Animations (`@keyframes`) | `src/styles/motion.css` / `src/styles/keyframes.css` (ou interne à un primitive `ui/`) |
 | Couleurs / tokens | `src/config/designSystem.js` + `:root` de `src/index.css` (`check:tokens`, `check:css-rules`) |
 
 ## Règles lint (`npm run check:ds`, `scripts/check-ds-atoms.mjs`)
@@ -21,7 +21,7 @@ Règle : chaque type d'élément (bouton, modal avec bouton valider + croix, sli
 | `raw-button` | `<button>` natif |
 | `raw-input` | `<input>`, `<select>`, `<textarea>` natifs |
 | `raw-dialog` | `<dialog>`, `role="dialog"`, `aria-modal` (modal recomposée) |
-| `local-keyframes` | `@keyframes` hors `src/styles/motion.css` |
+| `local-keyframes` | `@keyframes` hors `src/styles/motion.css` / `keyframes.css` |
 | `adhoc-atom-class` | sélecteur CSS `.xxx-btn / -button / -modal / -slider / -toggle / -switch` (restyle local d'un atome) |
 
 Fonctionnement en ratchet : les violations existantes sont figées dans `scripts/ratchet-baselines/ds-atoms.json`. Toute nouvelle violation fait échouer `npm run check` et la CI (`Quality Check`, PR vers `dev`/`main`). Une règle à 0 devient donc bloquante à 100 %. Après une correction : `npm run check:ds -- --update`. Ne jamais remonter la baseline.
