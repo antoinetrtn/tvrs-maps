@@ -237,7 +237,10 @@ export function useGlobeLighting({
         if (
           obj.type === "LineSegments" &&
           material?.type === "LineBasicMaterial" &&
-          material.transparent === true
+          material.transparent === true &&
+          // Country borders are styled by stylePolygonBorderLine, not as graticules.
+          !material.userData?.hasBorderDither &&
+          obj.parent?.__globeObjType !== "polygon"
         ) {
           graticuleMaterialsRef.current.push(material);
         }
