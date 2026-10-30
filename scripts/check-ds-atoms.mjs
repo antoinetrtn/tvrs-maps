@@ -20,7 +20,7 @@ import { runRatchetCli } from "./lib/ratchetCli.mjs";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SKIPPED_DIRS = new Set(["src/tests", "src/data", "src/dev"]);
 const UI_DIR = "src/components/ui/";
-const MOTION_FILES = new Set(["src/styles/motion.css"]);
+const MOTION_FILES = new Set(["src/styles/motion.css", "src/styles/keyframes.css"]);
 
 const outsideUi = (f) => !f.startsWith(UI_DIR);
 const isJsx = (f) => /\.jsx?$/.test(f);
