@@ -336,9 +336,13 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       float isUnfoundDarkCap = (1.0 - isAwakenedCap) * (1.0 - uIsGhost) * lumaMask;
       float cityPower = clamp(max(isAwakenedCap, uShowcaseLights * isUnfoundDarkCap), 0.0, 1.0) * (1.0 - uIsGhost);
 
-      float unfoundDimTarget = mix(0.38, 0.74, uIsRegionalMode);
+      // Blackout: unfound land in world modes is a desaturated, power-less grey derived
+      // from the base terrain colour (no hard-coded terrain hue), cities/rivers switched off.
+      float blackoutAmt = (1.0 - uShowcaseLights) * isUnfoundDarkCap * (1.0 - uIsRegionalMode);
+      float unfoundDimTarget = mix(0.36, 0.74, uIsRegionalMode);
       float blackoutDim = mix(mix(1.0, unfoundDimTarget, (1.0 - uShowcaseLights) * isUnfoundDarkCap), 0.42, uIsGhost);
-      vec3 unfoundLand = gl_FragColor.rgb * blackoutDim;
+      vec3 blackoutGrey = vec3(surfaceLuma) * vec3(0.97, 0.99, 1.03);
+      vec3 unfoundLand = mix(gl_FragColor.rgb, blackoutGrey, blackoutAmt * 0.88) * blackoutDim;
       vec3 soloAwakenedLand = vec3(0.48, 0.34, 0.15) + vec3(0.15, 0.10, 0.04) * (1.0 - ndv);
       vec3 conquestAwakenedLand = gl_FragColor.rgb * 0.84 + gl_FragColor.rgb * 0.22 * (1.0 - ndv);
       vec3 landSurface = mix(mix(unfoundLand, conquestAwakenedLand, isConquestOwned), soloAwakenedLand, isSoloFound);
@@ -394,7 +398,8 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       float riverCore = step(0.65, riverVal) * riverMask;
       float riverBank = (1.0 - step(0.65, riverVal)) * step(0.25, riverVal) * riverMask * (1.0 - uIsRegionalMode);
       float riverShimmer = 0.78 + 0.22 * sin(uTime * 2.2 + (cartUv.x * 140.0 + cartUv.y * 90.0));
-      vec3 darkRiverLit = mix(reliefLit * (1.0 - riverBank * 0.10), vec3(0.08, 0.14, 0.19), riverCore * 0.58);
+      vec3 darkRiverTone = mix(vec3(0.08, 0.14, 0.19), vec3(0.10, 0.105, 0.11), blackoutAmt);
+      vec3 darkRiverLit = mix(reliefLit * (1.0 - riverBank * 0.10), darkRiverTone, riverCore * mix(0.58, 0.34, blackoutAmt));
       vec3 soloRiverColor = mix(vec3(0.14, 0.46, 0.58), vec3(0.38, 0.80, 0.88), riverShimmer);
       vec3 conquestRiverColor = mix(vec3(0.10, 0.20, 0.32), vec3(0.76, 0.94, 1.0), riverShimmer);
       vec3 awakeRiverTone = mix(soloRiverColor, conquestRiverColor, isConquestOwned);
