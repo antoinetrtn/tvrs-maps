@@ -347,15 +347,15 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       float ignitePixelOn = step(igniteD, igniteFront);
       float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14));
       float igniteMask = mix(1.0, ignitePixelOn, igniteActive);
-      // Homepage ignition: blocks of the dark world power up in a slow west->east sweep,
-      // pixel by pixel (18 s cycle, ~14 % of each block dark). Static with reduced motion.
+      // Homepage wake-up: the world starts in blackout and powers up once, block by block
+      // and pixel by pixel west->east (land first, then golden city lights), then stays awake.
       float homeBlockHash = cityCellHash(floor(cartUv * vec2(96.0, 48.0)));
-      float homeCycle = fract(uTime / 18.0 + cartUv.x * 0.9 + homeBlockHash * 0.22);
-      float homeIgnite = step(0.08 + cityCellHash(igniteCell) * 0.12, homeCycle);
-      homeIgnite = max(homeIgnite, max(uReducedMotion, uIsRegionalMode));
+      float homeWakeAt = 0.04 + homeBlockHash * 0.6 + cartUv.x * 0.2 + cityCellHash(igniteCell) * 0.12;
+      float homeOn = max(uReducedMotion, uIsRegionalMode);
+      float homeIgnite = max(step(homeWakeAt, uHomeWake), homeOn);
+      float homeLandOn = max(step(homeWakeAt - 0.05, uHomeWake), homeOn);
       float showcaseNow = uShowcaseLights * homeIgnite;
-      // Land only browns out (cities switch fully off) so the sweep reads as power, not holes.
-      float showcaseLand = uShowcaseLights * mix(0.6, 1.0, homeIgnite);
+      float showcaseLand = uShowcaseLights * homeLandOn;
       float cityPower = clamp(max(isAwakenedCap * igniteMask, showcaseNow * isUnfoundDarkCap), 0.0, 1.0)
         * (1.0 - uIsGhost);
 
