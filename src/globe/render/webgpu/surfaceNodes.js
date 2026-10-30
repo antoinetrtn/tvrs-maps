@@ -1,9 +1,5 @@
-/**
- * TSL ports of the remaining onBeforeCompile effects (WebGPU renderer only):
- * country surface relief, blackout ocean magnetic currents, satellite sensor grid,
- * mountain glitch. Each mirrors its GLSL source line by line (see the GLSL next to
- * the call sites) and runs in display space like the original (tslCommon.js).
- */
+// TSL ports of the onBeforeCompile effects (WebGPU only): country relief, blackout ocean
+// currents, satellite grid, mountain glitch — each mirrors its GLSL twin (tslCommon.js).
 import * as THREE from "three";
 import {
   abs,
@@ -46,6 +42,7 @@ import { MeshPhongNodeMaterial, MeshStandardNodeMaterial } from "three/webgpu";
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { isGlobeWebGPU } from "../globeRendererFlag";
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
+import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
 import {
   bayer4x4,
   displayOutput,
@@ -122,10 +119,11 @@ function buildTerrainReliefAndRivers(p) {
   const riverShimmer = sin(uTimeNode.mul(2.2).add(cartUv.x.mul(140.0)).add(cartUv.y.mul(90.0)))
     .mul(0.22)
     .add(0.78);
+  const darkRiver = blackoutRiverTone(p.blackoutAmt);
   const darkRiverLit = mix(
     reliefLit.mul(float(1.0).sub(riverBank.mul(0.1))),
-    vec3(0.08, 0.14, 0.19),
-    riverCore.mul(0.58)
+    darkRiver.tone,
+    riverCore.mul(darkRiver.strength)
   );
   const soloRiverColor = mix(vec3(0.14, 0.46, 0.58), vec3(0.38, 0.8, 0.88), riverShimmer);
   const conquestRiverColor = mix(vec3(0.1, 0.2, 0.32), vec3(0.76, 0.94, 1.0), riverShimmer);
@@ -275,13 +273,14 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       ghostMask
     );
 
-    const dimTarget = mix(float(0.38), float(0.74), uRegionalNode);
-    const blackoutDim = mix(
-      mix(float(1.0), dimTarget, float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap)),
-      float(0.42),
-      uGhost
-    );
-    const unfoundLand = lit.mul(blackoutDim);
+    const { blackoutAmt, unfoundLand } = buildBlackoutLand({
+      lit,
+      surfaceLuma,
+      uShowcaseNode,
+      isUnfoundDarkCap,
+      uRegionalNode,
+      uGhost,
+    });
     const soloAwakenedLand = vec3(0.48, 0.34, 0.15).add(
       vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
     );
@@ -305,6 +304,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       uTimeNode,
       uRegionalNode,
       ghostMask,
+      blackoutAmt,
     });
     const sideRgb = landSurface.mul(0.58);
     const rgb = mix(capRgb, sideRgb, isSideWall);
