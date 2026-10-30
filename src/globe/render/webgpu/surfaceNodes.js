@@ -17,6 +17,7 @@ import {
   fwidth,
   length,
   log2,
+  materialReference,
   max,
   min,
   mix,
@@ -224,6 +225,7 @@ let ghostGrainNode = null;
 let showcaseLightsNode = null;
 let regionalModeNode = null;
 let satelliteThemeNode = null;
+let igniteSelfNode = null;
 /** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
 export function countryGrainOutputNode(isGhostCountry = false) {
   if (isGhostCountry && ghostGrainNode) return ghostGrainNode;
@@ -276,8 +278,9 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       .sub(isAwakenedCap)
       .mul(ghostMask)
       .mul(float(1.0).sub(smoothstep(lumaThresh, lumaThresh.add(0.14), surfaceLuma)));
-    const ign = buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode });
-    const { showcaseNow, showcaseLand } = homeShowcase({
+    const uSelfNode = (igniteSelfNode ||= materialReference("userData.igniteSelf", "float"));
+    const ign = buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode, uSelfNode });
+    const { showcaseNow, showcaseLand, homeFlash } = homeShowcase({
       cartUv,
       uShowcaseNode,
       uRegionalNode,
@@ -323,7 +326,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       uRegionalNode,
       ghostMask,
       blackoutAmt,
-      igniteFlash: ign.igniteFlash,
+      igniteFlash: max(ign.igniteFlash, homeFlash),
     });
     const sideRgb = landSurface.mul(0.58);
     const rgb = mix(capRgb, sideRgb, isSideWall);

@@ -12,7 +12,9 @@ import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { applySatelliteVisibility, resolvePolygonEmissiveProps } from "./polygonEmissiveProps";
 import {
   attachPolygonGlitchShader,
+  getIgniteSelfHolder,
   homeWakeState,
+  igniteState,
   polygonGlitchUniforms,
   syncPolygonShaderUniforms,
 } from "./polygonGlitchShader";
@@ -35,7 +37,10 @@ function applyFoundMeshStyle(material, isMeshFound) {
   material.opacity = 1;
 }
 
-export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false } = {}) {
+export function applyCountrySurfaceGrainShader(
+  shader,
+  { isGhostCountry = false, igniteSelf = null } = {}
+) {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
   shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
@@ -48,6 +53,7 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
   shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
   shader.uniforms.uHomeWake = polygonGlitchUniforms.uHomeWake;
   shader.uniforms.uIsGhost = { value: isGhostCountry ? 1.0 : 0.0 };
+  shader.uniforms.uIgniteSelf = igniteSelf || { value: 0.0 };
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
   shader.vertexShader = `
@@ -77,6 +83,7 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
     uniform float uIsRegionalMode;
     uniform float uIsSatelliteTheme;
     uniform float uIsGhost;
+    uniform float uIgniteSelf;
     uniform vec3 uIgniteOrigin;
     uniform float uIgniteStart;
     uniform float uIgniteRadius;
@@ -301,6 +308,12 @@ export function getPolygonMaterialForFeature({
   else if (ghostVeil > 0) cacheKey = `ghost-veil-${kind}-${look}-${ghostVeil}${ghostSuffix}`;
   else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}${ghostSuffix}`;
   else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}${ghostSuffix}`;
+  // The country being ignited gets a private material so only it restarts from dark.
+  const igniteSelf =
+    !isShaderCap && kind === "cap" && !isGhostCountry && admin && admin === igniteState.admin
+      ? getIgniteSelfHolder(admin)
+      : null;
+  if (igniteSelf) cacheKey = `ignite-${admin}-${cacheKey}`;
 
   let material = sharedMaterialsRef.current.get(cacheKey);
 
@@ -378,13 +391,18 @@ export function getPolygonMaterialForFeature({
         isSatellite,
       });
     } else {
-      if (material.isNodeMaterial) material.outputNode = countryGrainOutputNode(isGhostCountry);
-      else {
+      if (material.isNodeMaterial) {
+        // Read through materialReference: one pipeline, per-material ignition flag.
+        Object.defineProperty(material.userData, "igniteSelf", {
+          get: () => (igniteSelf ? igniteSelf.value : 0),
+          enumerable: true,
+        });
+        material.outputNode = countryGrainOutputNode(isGhostCountry);
+      } else {
         material.customProgramCacheKey = () =>
           isGhostCountry ? "country-grain-ghost" : "country-grain-land";
-        material.onBeforeCompile = isGhostCountry
-          ? (shader) => applyCountrySurfaceGrainShader(shader, { isGhostCountry: true })
-          : applyCountrySurfaceGrainShader;
+        material.onBeforeCompile = (shader) =>
+          applyCountrySurfaceGrainShader(shader, { isGhostCountry, igniteSelf });
       }
     }
 
