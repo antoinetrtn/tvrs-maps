@@ -29,6 +29,14 @@ export const polygonGlitchUniforms = {
   // Success flash timeline — stamped (in uTime seconds) when a guess lands.
   uSuccessStart: { value: -10 },
   uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
+  // Discovery ignition: a gold wave lights the found country's city pixels outward
+  // from its capital (unit direction in world space), over uIgniteDuration seconds.
+  uIgniteOrigin: { value: new THREE.Vector3(0, 1, 0) },
+  uIgniteStart: { value: -100 },
+  uIgniteRadius: { value: 0.1 },
+  uIgniteDuration: { value: 1.6 },
+  // 1 when the user prefers reduced motion: ignition and showcase loops resolve instantly.
+  uReducedMotion: { value: 0 },
   // Globe camera motion reactivity for magnetic ocean currents.
   uGlobeMotion: { value: 0 },
   uGlobeVelocity: { value: new THREE.Vector2(0, 0) },
