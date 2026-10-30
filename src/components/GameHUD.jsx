@@ -19,6 +19,7 @@ import Logo from "./Logo";
 import { PixelHeart } from "./PixelHeart";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
+import TextField from "./ui/TextField";
 
 const GameHUD = ({
   mode,
@@ -449,7 +450,8 @@ const GameHUD = ({
               onSubmit={(e) => e.preventDefault()}
               className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""} ${isRejected ? "is-rejected" : ""}`}
             >
-              <input
+              <TextField
+                variant="bare"
                 ref={extInputRef}
                 {...ANSWER_INPUT_PROPS}
                 {...inputProps}

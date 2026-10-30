@@ -6,10 +6,10 @@ Règle : chaque type d'élément (bouton, modal avec bouton valider + croix, sli
 
 | Élément | Défini dans |
 | --- | --- |
-| Boutons | `src/components/ui/Button.jsx`, `IconButton.jsx`, `PanelCloseButton.jsx` |
+| Boutons | `src/components/ui/Button.jsx`, `IconButton.jsx`, `PanelCloseButton.jsx` ; surface cliquable nue (pastille, tuile avatar/badge, ligne de tableau) : `ui/Pressable.jsx` |
 | Modal / sheet (titre, valider, croix) | `src/components/ui/Dialog.jsx` |
 | Slider / Toggle / Choix | `ui/Slider.jsx`, `ui/Switch.jsx`, `ui/OptionGroup.jsx` |
-| Champs | `ui/TextField.jsx` |
+| Champs | `ui/TextField.jsx` (`variant="bare"` : input nu stylé par son conteneur, ex. îlot de réponse) |
 | Onglets, états, toasts, réglages | `ui/TabBar.jsx`, `ui/StateBlock.jsx` (+ Empty/Error/Loading), `ui/Toast.jsx`, `ui/Settings.jsx` |
 | Animations (`@keyframes`) | `src/styles/motion.css` / `src/styles/keyframes.css` (ou interne à un primitive `ui/`) |
 | Couleurs / tokens | `src/config/designSystem.js` + `:root` de `src/index.css` (`check:tokens`, `check:css-rules`) |

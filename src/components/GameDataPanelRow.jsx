@@ -2,6 +2,7 @@ import { Check, Minus } from "pixelarticons/react";
 import React from "react";
 
 import { scrambleText } from "../utils/utils";
+import Pressable from "./ui/Pressable";
 
 const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) => {
   const isRevealed = mode === "learn" || row.revealed;
@@ -13,7 +14,7 @@ const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) 
   const isLearnSelected = mode === "learn" && isSelected;
 
   return (
-    <button
+    <Pressable
       type="button"
       role="row"
       data-country-key={row.key}
@@ -41,7 +42,7 @@ const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) 
       )}
       <span className="data-panel-row-name">{displayName}</span>
       {displaySub && <span className="data-panel-row-sub">{displaySub}</span>}
-    </button>
+    </Pressable>
   );
 };
 

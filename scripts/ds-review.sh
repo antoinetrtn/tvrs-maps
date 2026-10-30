@@ -16,7 +16,7 @@ npm run -s check:ds || { echo "check:ds en échec : corriger avant toute revue."
 DIFF="$(git diff "$BASE"...HEAD -- src ':!src/tests')"
 [ -z "$DIFF" ] && { echo "Aucun diff src/ : rien à revoir."; exit 0; }
 
-PROMPT="Tu es le relecteur design system de TVRS Maps. Règle : chaque élément (bouton, modal valider+croix, slider, toggle, input, carte, layout, animation, couleur/token) est défini UNE fois dans src/components/ui, src/styles/keyframes.css/motion.css et src/config/designSystem.js. Voici les règles du repo :
+PROMPT="N'utilise aucun outil. Tu es le relecteur design system de TVRS Maps. Règle : chaque élément (bouton, modal valider+croix, slider, toggle, input, carte, layout, animation, couleur/token) est défini UNE fois dans src/components/ui, src/styles/keyframes.css/motion.css et src/config/designSystem.js. Voici les règles du repo :
 $(cat docs/design-system-lint.md)
 
 Relis ce diff. Liste UNIQUEMENT les recompositions/duplications d'atomes (fichier:ligne, atome du DS à utiliser à la place). Termine par une ligne 'VERDICT: OK' ou 'VERDICT: A CORRIGER'. N'édite aucun fichier.
@@ -26,7 +26,7 @@ $DIFF"
 
 echo "== 2. revue Gemini ($MODEL)"
 if [ -x "$AGY" ] && OUT="$(timeout 600 "$AGY" --model "$MODEL" -p "$PROMPT" 2>&1)" \
-   && ! grep -qiE 'quota|exhausted|rate limit|RESOURCE_EXHAUSTED|permission' <<<"$OUT"; then
+   && grep -q 'VERDICT:' <<<"$OUT"; then
   echo "$OUT"
   grep -q 'VERDICT: A CORRIGER' <<<"$OUT" && exit 2
   exit 0

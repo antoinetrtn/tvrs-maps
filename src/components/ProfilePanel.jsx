@@ -18,6 +18,7 @@ import ProfileFooter from "./ProfileFooter";
 import Button from "./ui/Button";
 import Dialog from "./ui/Dialog";
 import PanelCloseButton from "./ui/PanelCloseButton";
+import Pressable from "./ui/Pressable";
 import TabBar from "./ui/TabBar";
 import TextField from "./ui/TextField";
 import XpBar from "./XpBar";
@@ -327,7 +328,7 @@ const ProfilePanel = ({
                     <div className="avatar-grid scrollbar-styled">
                       {allAvatars.map((item) => {
                         return (
-                          <button
+                          <Pressable
                             key={item.id}
                             type="button"
                             className={`avatar-option glass-panel ${selectedAvatar === item.id ? "active" : ""} ${item.isLocked ? "locked" : ""}`}
@@ -353,7 +354,7 @@ const ProfilePanel = ({
                                 </div>
                               )}
                             </div>
-                          </button>
+                          </Pressable>
                         );
                       })}
                     </div>
@@ -397,7 +398,7 @@ const ProfilePanel = ({
                   const isUnlocked = unlockedBadges.includes(ch.id);
                   const isSelected = selectedChallengeId === ch.id;
                   return (
-                    <button
+                    <Pressable
                       key={ch.id}
                       type="button"
                       className={`badge-item-btn glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
@@ -420,7 +421,7 @@ const ProfilePanel = ({
                           </div>
                         )}
                       </div>
-                    </button>
+                    </Pressable>
                   );
                 })}
               </div>

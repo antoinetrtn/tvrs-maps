@@ -49,7 +49,7 @@ export const RULES = {
   },
   "adhoc-atom-class": {
     applies: (f) => isCss(f) && outsideUi(f),
-    re: /^[^{}@/]*\.[\w-]*-(btn|button|modal|slider|toggle|switch)\b[^{]*\{/gm,
+    re: /^[^{}@/\n;]*\.[\w-]*-(btn|button|modal|slider|toggle|switch)(?![\w-])[^;{}\n]*[{,][ \t]*$/gm,
     hint: "Do not restyle a button/modal/slider/toggle locally: add a variant/size to the ui/ primitive.",
   },
 };
@@ -74,6 +74,7 @@ export function scanSource(file, text) {
     if (!def.applies(file)) continue;
     for (const m of text.matchAll(def.re)) {
       const line = lineAt(m.index);
+      if (isJsx(file) && /^\s*(\/\/|\*|\/\*)/.test(lines[line - 1])) continue;
       const ctx = `${lines[line - 2] || ""}\n${lines[line - 1] || ""}`;
       if (ctx.includes(`ds-atoms-allow: ${rule}`)) continue;
       found.push({ rule, file, line, excerpt: lines[line - 1].trim().slice(0, 120) });
