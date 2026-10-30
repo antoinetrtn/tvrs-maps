@@ -53,6 +53,7 @@ const colorAllowListFiles = new Set([
   "src/config/designSystem.js",
   "src/config/accentPresets.js", // curated accent palette = design tokens
   "src/config/monochromeGlobe.js", // accent-derived globe palette (ink base)
+  "src/config/worldPaletteTokens.js", // real-Earth land-cover palette (Blue Marble sampled)
   "src/index.css",
   "src/components/Logo.jsx",
 ]);

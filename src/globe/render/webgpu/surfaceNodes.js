@@ -15,7 +15,6 @@ import {
   Fn,
   fract,
   fwidth,
-  If,
   length,
   log2,
   max,
@@ -24,7 +23,6 @@ import {
   normalize,
   normalWorld,
   output,
-  positionLocal,
   positionWorld,
   pow,
   select,
@@ -42,6 +40,7 @@ import { MeshPhongNodeMaterial, MeshStandardNodeMaterial } from "three/webgpu";
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { isGlobeWebGPU } from "../globeRendererFlag";
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
+import { applyBiomePalette } from "./biomeNodes";
 import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
 import {
   bayer4x4,
@@ -285,11 +284,21 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
     );
     const conquestAwakenedLand = lit.mul(0.84).add(lit.mul(0.22).mul(float(1.0).sub(ndv)));
-    const landSurface = mix(
-      mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
-      soloAwakenedLand,
-      isSoloFound
-    );
+    const landSurface = applyBiomePalette({
+      landSurface: mix(
+        mix(unfoundLand, conquestAwakenedLand, isConquestOwned),
+        soloAwakenedLand,
+        isSoloFound
+      ),
+      cartUv,
+      ndv,
+      ghostMask,
+      isSoloFound,
+      isUnfoundDarkCap,
+      uShowcaseNode,
+      uRegionalNode,
+      uSatThemeNode,
+    });
     const engrave = landSurface
       .mul(parallelLine.mul(0.04).add(crossTick.mul(0.09)))
       .add(vec3(rimSheen));
@@ -447,53 +456,5 @@ export function satelliteSensorColorNode(map, gridSourceUv = null) {
     const isLand = step(0.18, length(sampled.rg.sub(sampled.b)));
     rgb.addAssign(noise.sub(0.5).mul(0.03).mul(isLand).mul(gridVis));
     return vec4(rgb, sampled.a);
-  })();
-}
-
-let mountainShared = null;
-/** Node twin of LowPolyBiomes' mountain glitch material. */
-export function createMountainGlitchNodeMaterial(mountainGlitchUniforms, isLight) {
-  const mat = new MeshPhongNodeMaterial({ flatShading: true, shininess: 0, specular: 0x000000 });
-  mat.outputNode = mountainGlitchOutputNode(mountainGlitchUniforms, isLight);
-  mat.customProgramCacheKey = () => `mountain-glitch-gpu-${isLight ? "light" : "dark"}`;
-  return mat;
-}
-
-/** Mountain glitch (LowPolyBiomes glitchMat onBeforeCompile). */
-function mountainGlitchOutputNode(mountainGlitchUniforms, isLight) {
-  if (!mountainShared) {
-    mountainShared = {
-      uTime: mirrorUniform(mountainGlitchUniforms.uTime),
-      uIsError: mirrorUniform(mountainGlitchUniforms.uIsError),
-      uIsSuccess: mirrorUniform(mountainGlitchUniforms.uIsSuccess),
-      uFoundGreen: mirrorUniform(mountainGlitchUniforms.uFoundGreen),
-    };
-  }
-  const u = mountainShared;
-  // A constant, not a uniform: light/dark materials get distinct pipelines
-  // through customProgramCacheKey (see LowPolyBiomes).
-  const uIsLight = float(isLight ? 1 : 0);
-  return Fn(() => {
-    const p = positionLocal;
-    const light = uIsLight.greaterThan(0.5);
-    const noiseUv = p.xy.mul(8.0).add(vec2(p.z.mul(4.0)));
-    const noise = hash(noiseUv.add(sin(u.uTime.mul(28.0))));
-    const baseMin = select(light, float(0.65), float(0.12));
-    const baseMax = select(light, float(0.98), float(0.68));
-    const scanline = sin(p.y.mul(15.0).add(u.uTime.mul(5.0))).mul(
-      select(light, float(0.03), float(0.07))
-    );
-    const finalColor = vec3(mix(baseMin, baseMax, noise).add(scanline)).toVar();
-    const pulse = sin(u.uTime.mul(18.0)).mul(0.35).add(0.65);
-    const sweep = step(fract(p.y.mul(1.5).sub(u.uTime.mul(4.0))), 0.35).mul(0.4);
-    const fxNoise = hash(noiseUv.add(sin(u.uTime.mul(45.0))));
-    const intensity = pulse.add(sweep).mul(mix(0.7, 1.3, fxNoise));
-    If(u.uIsError.greaterThan(0.5), () => {
-      finalColor.assign(vec3(1.0, 0.27, 0.0).mul(intensity.add(0.4)));
-    });
-    If(u.uIsSuccess.greaterThan(0.5), () => {
-      finalColor.assign(u.uFoundGreen.mul(intensity));
-    });
-    return displayOutput(clamp(finalColor, 0, 1));
   })();
 }
