@@ -2,7 +2,7 @@
  * TSL twin of the GLSL discovery-ignition block (globeShaders.js): city pixels of the
  * freshly found country switch on one by one as a front expands from its capital.
  */
-import { acos, clamp, dot, float, floor, max, mix, step, vec2, vec3 } from "three/tsl";
+import { acos, clamp, dot, float, floor, fract, max, mix, step, vec2, vec3 } from "three/tsl";
 
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { hash, mirrorUniform } from "./tslCommon";
@@ -42,4 +42,20 @@ export function buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode }
 /** Leading edge of the ignition wave burns in the existing win gold. */
 export function igniteSpark(baseColor, igniteFlash) {
   return mix(baseColor, vec3(0.96, 0.68, 0.22).mul(1.25), igniteFlash || float(0.0));
+}
+
+let homeReducedNode = null;
+
+/** Homepage ignition (GLSL twin): showcase lights gated by a slow west->east block sweep. */
+export function homeShowcase({ cartUv, uTimeNode, uShowcaseNode, uRegionalNode }) {
+  const reduced = (homeReducedNode ||= mirrorUniform(polygonGlitchUniforms.uReducedMotion));
+  const blockHash = hash(floor(cartUv.mul(vec2(96.0, 48.0))));
+  const cycle = fract(uTimeNode.div(18.0).add(cartUv.x.mul(0.9)).add(blockHash.mul(0.22)));
+  const jitter = hash(floor(cartUv.mul(vec2(3600.0, 1800.0)))).mul(0.12);
+  const homeIgnite = max(step(float(0.08).add(jitter), cycle), max(reduced, uRegionalNode));
+  // City lights switch fully off; land only browns out (GLSL showcaseNow / showcaseLand).
+  return {
+    showcaseNow: uShowcaseNode.mul(homeIgnite),
+    showcaseLand: uShowcaseNode.mul(mix(float(0.6), float(1.0), homeIgnite)),
+  };
 }

@@ -211,6 +211,10 @@ export function getPolygonMaterialForFeature({
   ghostVeil = 0, // Satellite regional modes: opacity of the dark veil over the rest of the world
 }) {
   polygonGlitchUniforms.uShowcaseLights.value = isHomeScreen || isEndScreen ? 1.0 : 0.0;
+  polygonGlitchUniforms.uReducedMotion.value =
+    typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      ? 1
+      : 0;
   const isSameAdmin = (a, b) => {
     if (!a || !b) return false;
     if (a === b) return true;

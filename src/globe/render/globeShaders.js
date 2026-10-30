@@ -347,14 +347,23 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       float ignitePixelOn = step(igniteD, igniteFront);
       float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14));
       float igniteMask = mix(1.0, ignitePixelOn, igniteActive);
-      float cityPower = clamp(max(isAwakenedCap * igniteMask, uShowcaseLights * isUnfoundDarkCap), 0.0, 1.0)
+      // Homepage ignition: blocks of the dark world power up in a slow west->east sweep,
+      // pixel by pixel (18 s cycle, ~14 % of each block dark). Static with reduced motion.
+      float homeBlockHash = cityCellHash(floor(cartUv * vec2(96.0, 48.0)));
+      float homeCycle = fract(uTime / 18.0 + cartUv.x * 0.9 + homeBlockHash * 0.22);
+      float homeIgnite = step(0.08 + cityCellHash(igniteCell) * 0.12, homeCycle);
+      homeIgnite = max(homeIgnite, max(uReducedMotion, uIsRegionalMode));
+      float showcaseNow = uShowcaseLights * homeIgnite;
+      // Land only browns out (cities switch fully off) so the sweep reads as power, not holes.
+      float showcaseLand = uShowcaseLights * mix(0.6, 1.0, homeIgnite);
+      float cityPower = clamp(max(isAwakenedCap * igniteMask, showcaseNow * isUnfoundDarkCap), 0.0, 1.0)
         * (1.0 - uIsGhost);
 
       // Blackout: unfound land in world modes is a desaturated, power-less grey derived
       // from the base terrain colour (no hard-coded terrain hue), cities/rivers switched off.
-      float blackoutAmt = (1.0 - uShowcaseLights) * isUnfoundDarkCap * (1.0 - uIsRegionalMode);
+      float blackoutAmt = (1.0 - showcaseLand) * isUnfoundDarkCap * (1.0 - uIsRegionalMode);
       float unfoundDimTarget = mix(0.36, 0.74, uIsRegionalMode);
-      float blackoutDim = mix(mix(1.0, unfoundDimTarget, (1.0 - uShowcaseLights) * isUnfoundDarkCap), 0.42, uIsGhost);
+      float blackoutDim = mix(mix(1.0, unfoundDimTarget, (1.0 - showcaseLand) * isUnfoundDarkCap), 0.42, uIsGhost);
       vec3 blackoutGrey = vec3(surfaceLuma) * vec3(0.97, 0.99, 1.03);
       vec3 unfoundLand = mix(gl_FragColor.rgb, blackoutGrey, blackoutAmt * 0.88) * blackoutDim;
       vec3 soloAwakenedLand = vec3(0.48, 0.34, 0.15) + vec3(0.15, 0.10, 0.04) * (1.0 - ndv);
@@ -366,8 +375,8 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       vec3 biomeTone = biomeSample.rgb;
       vec3 biomeLand = biomeTone * (0.88 + 0.18 * (1.0 - ndv));
       float biomeAllowed = biomeSample.a * (1.0 - uIsGhost) * (1.0 - uIsSatelliteTheme);
-      float biomeReveal = max(isSoloFound, uShowcaseLights * isUnfoundDarkCap) * biomeAllowed;
-      float biomeHint = (1.0 - uShowcaseLights) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
+      float biomeReveal = max(isSoloFound, showcaseLand * isUnfoundDarkCap) * biomeAllowed;
+      float biomeHint = (1.0 - showcaseLand) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
       landSurface = mix(landSurface, biomeTone * 0.3, biomeHint * 0.34);
       landSurface = mix(landSurface, biomeLand, biomeReveal * 0.92);
       vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
