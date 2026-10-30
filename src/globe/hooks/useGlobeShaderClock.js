@@ -51,7 +51,7 @@ const stepGlobeMotionState = (state, cam, dt, reduced) => {
  * so shader animation (including the magnetic-field dithered ocean currents and
  * country selection effects) runs at the real render rate and reacts to globe motion.
  */
-export const HOME_WAKE_SECONDS = 9;
+export const HOME_WAKE_SECONDS = 6;
 
 /**
  * Advance the homepage wake-up (0 = blackout, 1 = awake) by one frame. Driven by the

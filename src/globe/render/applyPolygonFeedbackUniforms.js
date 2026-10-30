@@ -1,7 +1,7 @@
 import { countryDataMap } from "../../data/gameData";
 import { SECONDARY_CITIES_BY_COUNTRY } from "./capitalLightsData";
 import { getFoundGreenThreeColor } from "./foundGreenPalette";
-import { polygonGlitchUniforms } from "./polygonGlitchShader";
+import { markIgnitingCountry, polygonGlitchUniforms } from "./polygonGlitchShader";
 
 /** Push success/error flags to cached polygon shaders without waiting for React. */
 export function applyPolygonFeedbackUniforms({
@@ -72,6 +72,7 @@ export function stampCityIgnition(admin, time = performance.now() / 1000) {
     radius = Math.max(radius, angularDistance(lat, lng, sLat, sLng) + 0.04);
   });
   radius = Math.min(radius, 0.6);
+  markIgnitingCountry(admin);
   const cosLat = Math.cos(lat * DEG);
   polygonGlitchUniforms.uIgniteOrigin.value.set(
     cosLat * Math.sin(lng * DEG),

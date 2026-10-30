@@ -11,6 +11,9 @@ describe("Homepage wake-up", () => {
   it("gates showcase lights and blackout by the sweep in GLSL", () => {
     const body = COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY;
     expect(body).not.toContain("homeCycle");
+    // Whole-world pixel ignition, no coarse tiles.
+    expect(body).not.toContain("homeBlockHash");
+    expect(body).toContain("igniteFlash = max(igniteFlash, homeFlash);");
     expect(body).toContain("float homeIgnite = max(step(homeWakeAt, uHomeWake), homeOn);");
     expect(body).toContain("float homeOn = max(uReducedMotion, uIsRegionalMode);");
     expect(body).toContain("showcaseNow * isUnfoundDarkCap");

@@ -345,15 +345,22 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       float igniteJitter = cityCellHash(igniteCell + vec2(5.3, 11.9)) * uIgniteRadius * 0.2;
       float igniteD = igniteDist + igniteJitter;
       float ignitePixelOn = step(igniteD, igniteFront);
-      float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14));
-      float igniteMask = mix(1.0, ignitePixelOn, igniteActive);
-      // Homepage wake-up: the world starts in blackout and powers up once, block by block
-      // and pixel by pixel west->east (land first, then golden city lights), then stays awake.
-      float homeBlockHash = cityCellHash(floor(cartUv * vec2(96.0, 48.0)));
-      float homeWakeAt = 0.04 + homeBlockHash * 0.6 + cartUv.x * 0.2 + cityCellHash(igniteCell) * 0.12;
+      // Only the freshly found country (uIgniteSelf) restarts from dark; already-lit
+      // neighbours inside the radius keep their lights and only catch a faint spark.
+      float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14))
+        * mix(0.35, 1.0, uIgniteSelf);
+      float igniteMask = mix(1.0, ignitePixelOn, igniteActive * uIgniteSelf);
+      // Homepage wake-up: the discovery ignition applied to the whole world at once.
+      // Land powers up pixel by pixel, then every city pixel switches on with a gold
+      // spark (per-pixel jitter on the 3600x1800 grid, no tiles), then stays awake.
+      float homeWakeAt = 0.12 + cityCellHash(igniteCell) * 0.78;
+      float homeLandAt = 0.02 + cityCellHash(igniteCell + vec2(17.1, 3.7)) * 0.5;
       float homeOn = max(uReducedMotion, uIsRegionalMode);
       float homeIgnite = max(step(homeWakeAt, uHomeWake), homeOn);
-      float homeLandOn = max(step(homeWakeAt - 0.05, uHomeWake), homeOn);
+      float homeLandOn = max(step(homeLandAt, uHomeWake), homeOn);
+      float homeFlash = uShowcaseLights * (1.0 - homeOn) * homeIgnite
+        * (1.0 - step(homeWakeAt + 0.06, uHomeWake));
+      igniteFlash = max(igniteFlash, homeFlash);
       float showcaseNow = uShowcaseLights * homeIgnite;
       float showcaseLand = uShowcaseLights * homeLandOn;
       float cityPower = clamp(max(isAwakenedCap * igniteMask, showcaseNow * isUnfoundDarkCap), 0.0, 1.0)

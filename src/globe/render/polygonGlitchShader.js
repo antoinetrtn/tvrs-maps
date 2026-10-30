@@ -44,6 +44,31 @@ export const polygonGlitchUniforms = {
   uGlobeVelocity: { value: new THREE.Vector2(0, 0) },
 };
 
+/**
+ * Discovery ignition is per country: the found caps share one material, so the country
+ * being ignited gets its own material bound to a per-country `{ value }` holder (1 while it
+ * is the latest discovery). Previously lit countries keep 0 and never restart from dark.
+ */
+export const igniteState = { admin: null };
+const igniteSelfHolders = new Map();
+
+export function getIgniteSelfHolder(admin) {
+  let holder = igniteSelfHolders.get(admin);
+  if (!holder) {
+    holder = { value: igniteState.admin === admin ? 1 : 0 };
+    igniteSelfHolders.set(admin, holder);
+  }
+  return holder;
+}
+
+export function markIgnitingCountry(admin) {
+  igniteSelfHolders.forEach((holder) => {
+    holder.value = 0;
+  });
+  igniteState.admin = admin;
+  getIgniteSelfHolder(admin).value = 1;
+}
+
 /** Set once country materials are built (homepage wake-up starts then, not on an empty globe). */
 export const homeWakeState = { polygonsReady: false };
 
