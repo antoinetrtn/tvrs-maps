@@ -342,6 +342,16 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       vec3 soloAwakenedLand = vec3(0.48, 0.34, 0.15) + vec3(0.15, 0.10, 0.04) * (1.0 - ndv);
       vec3 conquestAwakenedLand = gl_FragColor.rgb * 0.84 + gl_FragColor.rgb * 0.22 * (1.0 - ndv);
       vec3 landSurface = mix(mix(unfoundLand, conquestAwakenedLand, isConquestOwned), soloAwakenedLand, isSoloFound);
+      // Pixel-art biome palette (baked, NearestFilter): revealed on found caps and
+      // the illuminated home, only hinted on blacked-out caps, off on ghosts/satellite.
+      vec4 biomeSample = texture2D(uBiomeMap, cartUv);
+      vec3 biomeTone = biomeSample.rgb;
+      vec3 biomeLand = biomeTone * (0.88 + 0.18 * (1.0 - ndv));
+      float biomeAllowed = biomeSample.a * (1.0 - uIsGhost) * (1.0 - uIsSatelliteTheme);
+      float biomeReveal = max(isSoloFound, uShowcaseLights * isUnfoundDarkCap) * biomeAllowed;
+      float biomeHint = (1.0 - uShowcaseLights) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
+      landSurface = mix(landSurface, biomeTone * 0.3, biomeHint * 0.34);
+      landSurface = mix(landSurface, biomeLand, biomeReveal * 0.92);
       vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
       vec3 baseLit = landSurface * limbFactor + engrave;
 

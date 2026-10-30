@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
 import { getGlobePrefs } from "../globePrefs";
+import { getBiomeTexture } from "./biomeTexture";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
@@ -41,6 +42,7 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
   shader.uniforms.uIsSatelliteTheme = polygonGlitchUniforms.uIsSatelliteTheme;
   shader.uniforms.uIsGhost = { value: isGhostCountry ? 1.0 : 0.0 };
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
+  shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
   shader.vertexShader = `
     varying vec3 vDitherWorldNormal;
     varying vec3 vDitherWorldPos;
@@ -69,6 +71,7 @@ export function applyCountrySurfaceGrainShader(shader, { isGhostCountry = false 
     uniform float uIsSatelliteTheme;
     uniform float uIsGhost;
     uniform sampler2D uCapitalLightsMap;
+    uniform sampler2D uBiomeMap;
     ${GLSL_BAYER_4X4_FN}
     float cityCellHash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);

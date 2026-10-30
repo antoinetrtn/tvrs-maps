@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { FOUND_SURFACE_GREEN, getFoundGreenThreeColor } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
 import { buildMergedPeaksGeometry } from "./mergedPeaks";
-import { createMountainGlitchNodeMaterial } from "./webgpu/surfaceNodes";
+import { createMountainGlitchNodeMaterial } from "./webgpu/mountainGlitchNodes";
 
 export const mountainGlitchUniforms = {
   uTime: { value: 0 },
