@@ -5,7 +5,7 @@ import "../components/PassportStamp.css";
 import "../multiplayer/ConquestScreen.css";
 import "./DevGallery.css";
 
-import { Close, Settings2, User } from "pixelarticons/react";
+import { Settings2, User } from "pixelarticons/react";
 import React, { useState } from "react";
 
 import GlassIconButton from "../components/GlassIconButton";
@@ -14,9 +14,9 @@ import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "../component
 import Button from "../components/ui/Button";
 import EmptyState from "../components/ui/EmptyState";
 import ErrorState from "../components/ui/ErrorState";
-import IconButton from "../components/ui/IconButton";
 import LoadingState from "../components/ui/LoadingState";
 import OptionGroup from "../components/ui/OptionGroup";
+import PanelCloseButton from "../components/ui/PanelCloseButton";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings";
 import Slider from "../components/ui/Slider";
 import Switch from "../components/ui/Switch";
@@ -86,9 +86,7 @@ const AccentColumn = ({ id }) => {
         <GlassIconButton title="Profil">
           <User width={20} height={20} />
         </GlassIconButton>
-        <IconButton variant="ghost" size="sm" label="Fermer" look="panel-close">
-          <Close width={20} height={20} />
-        </IconButton>
+        <PanelCloseButton label="Fermer" />
       </Block>
       <Block title="Switch">
         <Switch checked={on} onChange={setOn} label="Démo" />
