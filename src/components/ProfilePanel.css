@@ -235,7 +235,7 @@
   box-sizing: border-box;
 }
 
-.badge-item-btn {
+.badge-tile {
   aspect-ratio: 1;
   padding: 0;
   background: var(--glass-bg);
@@ -252,17 +252,17 @@
     color var(--transition-fast);
 }
 
-.badge-item-btn:hover {
+.badge-tile:hover {
   background: var(--glass-hover);
   border-color: var(--text-main);
 }
 
-.badge-item-btn.unlocked {
+.badge-tile.unlocked {
   background: color-mix(in srgb, var(--badge-color-border) 14%, var(--glass-bg));
   box-shadow: none;
 }
 
-.badge-item-btn.selected {
+.badge-tile.selected {
   border-color: var(--text-main);
   box-shadow: inset 0 0 0 2px var(--text-main);
 }
@@ -518,10 +518,6 @@
 .profile-panel .panel-header {
   position: relative;
   z-index: 300;
-}
-.profile-panel .panel-close-btn {
-  position: relative;
-  z-index: 301;
 }
 
 form.profile-form {

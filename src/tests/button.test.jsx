@@ -160,7 +160,7 @@ describe("PanelCloseButton / IconButton title", () => {
     render(<PanelCloseButton label="Fermer" onClick={onClick} />);
     const el = screen.getByRole("button", { name: "Fermer" });
     expect(el.getAttribute("type")).toBe("button");
-    expect(el.className).toContain("panel-close-btn");
+    expect(el.className).toContain("ui-icon-btn--panel-close");
     fireEvent.click(el);
     expect(onClick).toHaveBeenCalledTimes(1);
   });

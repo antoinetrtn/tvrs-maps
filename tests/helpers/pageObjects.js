@@ -9,13 +9,13 @@ export class HomeScreen {
     this.leftArrow = page.locator(".deck-click-zone.left");
     this.rightArrow = page.locator(".deck-click-zone.right");
     this.dots = page.locator(".deck-dots-row .deck-dot");
-    this.settingsBtn = page.locator(".settings-trigger-btn");
-    this.profileBtn = page.locator(".profile-trigger-btn");
+    this.settingsBtn = page.locator(".ui-icon-btn--dock-settings");
+    this.profileBtn = page.locator(".ui-icon-btn--dock-profile");
     this.podiumWidget = page.locator(".home-podium-widget");
     this.settingsPanel = page.locator(".sheet-panel.settings-panel");
     this.profilePanel = page.locator(".sheet-panel.profile-panel");
     this.leaderboardPanel = page.locator(".sheet-panel.leaderboard-panel");
-    this.panelCloseBtn = page.locator(".panel-close-btn");
+    this.panelCloseBtn = page.locator(".ui-icon-btn--panel-close");
   }
 
   async selectMode(modeKey) {
@@ -32,12 +32,12 @@ export class HomeScreen {
   }
 
   async startTopModePlay() {
-    const playBtn = this.topCard.locator(".card-play-btn");
+    const playBtn = this.topCard.locator(".ui-btn--cta");
     await playBtn.click();
   }
 
   async startTopModeLearn() {
-    const learnBtn = this.topCard.locator(".card-learn-btn");
+    const learnBtn = this.topCard.locator(".ui-btn--tile");
     await learnBtn.click();
   }
 
@@ -47,7 +47,7 @@ export class HomeScreen {
   }
 
   async closeSettings() {
-    await this.settingsPanel.locator(".panel-close-btn").click();
+    await this.settingsPanel.locator(".ui-icon-btn--panel-close").click();
     await expect(this.settingsPanel).not.toHaveClass(/open/);
   }
 
@@ -75,10 +75,10 @@ export class GameHUD {
     this.lostHearts = page.locator(".PixelHeart.heart-lost");
     this.suggestionsList = page.locator(".suggestions-list");
     this.suggestionItems = page.locator("[role=option]");
-    this.prevBtn = page.locator(".hud-btn.prev-btn");
-    this.nextBtn = page.locator(".hud-btn.next-btn");
+    this.prevBtn = page.locator(".ui-icon-btn--hud.prev-btn");
+    this.nextBtn = page.locator(".ui-icon-btn--hud.next-btn");
     this.homeLogo = page.locator(".hud-logo-clickable");
-    this.stopBtn = page.locator(".hud-top-right .hud-btn");
+    this.stopBtn = page.locator(".hud-top-right .ui-icon-btn--hud");
   }
 
   async enterAnswer(answerText) {

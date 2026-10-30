@@ -280,7 +280,7 @@
   gap: var(--spacing-sm);
 }
 
-.end-screen-actions .ui-btn {
+.end-screen-actions .end-screen-action {
   flex: 1;
   gap: var(--spacing-xs);
 }

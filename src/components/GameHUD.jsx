@@ -220,7 +220,7 @@ const GameHUD = ({
             <div className="hud-top-left">
               <IconButton
                 label={t("home")}
-                className="hud-btn"
+                look="hud"
                 onClick={onGoHome}
                 onMouseDown={(e) => e.preventDefault()}
               >
@@ -247,7 +247,8 @@ const GameHUD = ({
               {mode === "learn" ? (
                 <IconButton
                   label={t("data_table")}
-                  className={`hud-btn ${showLearnPanel ? "active" : ""}`}
+                  look="hud"
+                  className={`${showLearnPanel ? "active" : ""}`}
                   onClick={onToggleLearnPanel}
                   onMouseDown={(e) => e.preventDefault()}
                 >
@@ -265,7 +266,7 @@ const GameHUD = ({
                   {isPlaying && !isGameOver ? (
                     <IconButton
                       label={t("stop")}
-                      className="hud-btn"
+                      look="hud"
                       style={{ color: "var(--error)", width: "40px", height: "40px" }}
                       onClick={onStop}
                       onMouseDown={(e) => e.preventDefault()}
@@ -275,7 +276,7 @@ const GameHUD = ({
                   ) : (
                     <IconButton
                       label={t("play")}
-                      className="hud-btn"
+                      look="hud"
                       style={{ color: "var(--success)", width: "40px", height: "40px" }}
                       onClick={() => onNavigateFocus("next")}
                       onMouseDown={(e) => e.preventDefault()}
@@ -317,7 +318,7 @@ const GameHUD = ({
               {mode !== "learn" && (
                 <Button
                   variant="ghost"
-                  className="central-island-panel"
+                  look="hud-island"
                   onClick={onInfo}
                   onMouseDown={(e) => e.preventDefault()}
                   title={t("progress_title")}
@@ -351,7 +352,7 @@ const GameHUD = ({
               {mode === "learn" ? null : hideHudPlayStop ? null : isPlaying && !isGameOver ? (
                 <IconButton
                   label={t("stop")}
-                  className="hud-btn"
+                  look="hud"
                   style={{ color: "var(--error)" }}
                   onClick={onStop}
                   onMouseDown={(e) => e.preventDefault()}
@@ -361,7 +362,7 @@ const GameHUD = ({
               ) : (
                 <IconButton
                   label={t("play")}
-                  className="hud-btn"
+                  look="hud"
                   style={{ color: "var(--success)" }}
                   onClick={() => onNavigateFocus("next")}
                   onMouseDown={(e) => e.preventDefault()}
@@ -401,7 +402,7 @@ const GameHUD = ({
               );
             })}
           </div>
-          <IconButton label={t("information")} className="hud-btn" onClick={onInfo}>
+          <IconButton label={t("information")} look="hud" onClick={onInfo}>
             <InfoBox width={18} height={18} />
           </IconButton>
         </div>
@@ -436,7 +437,8 @@ const GameHUD = ({
             {isFocusedCountry && mode !== "learn" && (
               <IconButton
                 label={t("previous")}
-                className="hud-btn prev-btn"
+                look="hud"
+                className="prev-btn"
                 onClick={() => onNavigateFocus("prev")}
                 onMouseDown={(e) => e.preventDefault()}
               >
@@ -465,7 +467,8 @@ const GameHUD = ({
             {isFocusedCountry && mode !== "learn" && (
               <IconButton
                 label={t("next")}
-                className="hud-btn next-btn"
+                look="hud"
+                className="next-btn"
                 onClick={() => onNavigateFocus("next")}
                 onMouseDown={(e) => e.preventDefault()}
               >

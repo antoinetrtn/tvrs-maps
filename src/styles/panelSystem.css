@@ -88,10 +88,6 @@
 }
 
 /* ──── UNIFIED CLOSE & BACK BUTTONS ──── */
-.panel-close-btn {
-  flex-shrink: 0;
-  margin-left: auto;
-}
 
 /* ──── UNIFIED BODY ──── */
 .panel-body {
@@ -186,11 +182,6 @@
   }
 
   /* Expand close and back touch targets to 44px HIG minimum on mobile */
-  .panel-close-btn,
-  .panel-back-btn {
-    width: 44px;
-    height: 44px;
-  }
 }
 
 /* ──── FULLPAGE PANEL (always fullscreen) ──── */

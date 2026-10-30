@@ -161,7 +161,8 @@ const HomeScreen = ({
           </GlassIconButton>
 
           <GlassIconButton
-            className="profile-trigger-btn home-dock-segment"
+            look="dock-profile"
+            className="home-dock-segment"
             onClick={(e) => {
               e.stopPropagation();
               setProfileOpen((prev) => !prev);
@@ -186,7 +187,8 @@ const HomeScreen = ({
           </GlassIconButton>
 
           <GlassIconButton
-            className="settings-trigger-btn home-dock-segment"
+            look="dock-settings"
+            className="home-dock-segment"
             onClick={(e) => {
               e.stopPropagation();
               setSettingsOpen((prev) => !prev);

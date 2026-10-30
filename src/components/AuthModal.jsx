@@ -304,7 +304,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           variant="ghost"
           size="sm"
           label={t("back")}
-          className="panel-back-btn"
+          look="panel-back"
           onClick={step === "email" ? resetFlow : goBackToEmail}
         >
           <ArrowLeft width={18} height={18} />

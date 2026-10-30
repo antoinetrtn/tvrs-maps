@@ -401,7 +401,7 @@ const ProfilePanel = ({
                     <Pressable
                       key={ch.id}
                       type="button"
-                      className={`badge-item-btn glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
+                      className={`badge-tile glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
                       onClick={() => setSelectedChallengeId(ch.id)}
                       style={{
                         "--badge-color-border": isUnlocked

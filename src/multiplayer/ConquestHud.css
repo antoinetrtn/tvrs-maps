@@ -214,7 +214,6 @@
   border: 1px solid var(--black);
   background-color: var(--actor-color);
 }
-.conquest-feed-line,
 .conquest-feed-line-text {
   display: inline-flex;
   align-items: center;
@@ -229,19 +228,6 @@
   font-weight: inherit;
   text-align: left;
   min-width: 0;
-}
-.conquest-feed-line:focus-visible {
-  background: none;
-  color: var(--accent);
-  text-decoration: underline;
-}
-@media (hover: hover) {
-  .conquest-feed-line:hover,
-  .ui-btn.conquest-feed-line:hover:not(:disabled) {
-    background: none;
-    color: var(--accent);
-    text-decoration: underline;
-  }
 }
 .conquest-feed-text {
   overflow: hidden;
@@ -378,14 +364,12 @@
   .conquest-feed li:not(:first-child) {
     display: none;
   }
-  .conquest-feed-line,
   .conquest-feed-line-text {
     width: 100%;
     min-height: 36px;
   }
   .conquest-hud .conquest-steal .conquest-input,
   .conquest-hud .conquest-steal button,
-  .conquest-hud .conquest-steal .ui-btn,
   .conquest-hud .conquest-steal .ui-option {
     min-height: 44px;
   }

@@ -15,9 +15,9 @@ test.describe("Carte Conquête de l'accueil", () => {
     freshGuestPage: page,
   }) => {
     const topCard = page.locator(".deck-mode-card.is-top-card");
-    await expect(topCard.locator(".card-learn-btn")).toHaveCount(1);
-    await expect(topCard.locator(".card-rules-btn")).toContainText(/règles/i);
-    await topCard.locator(".card-rules-btn").click();
+    await expect(topCard.locator(".ui-btn--tile")).toHaveCount(1);
+    await expect(topCard.locator(".ui-btn--tile-rules")).toContainText(/règles/i);
+    await topCard.locator(".ui-btn--tile-rules").click();
     await expect(page.locator(".conquest-rules-dialog")).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.locator(".conquest-rules-dialog")).toHaveCount(0);
@@ -29,7 +29,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-MODE-01: Launch Countries Game Mode", async ({ guestPage: page }) => {
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "countries");
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
 
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
@@ -43,7 +43,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "capitals");
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
 
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
@@ -59,7 +59,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "departments");
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
 
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
@@ -79,7 +79,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "us_states");
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
 
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
@@ -99,7 +99,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
     const topCard = page.locator(".deck-mode-card.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "rivers_mountains");
-    await topCard.locator(".card-play-btn").click();
+    await topCard.locator(".ui-btn--cta").click();
 
     const inputField = page.locator("#q-resp-field");
     await expect(inputField).toBeVisible();
@@ -142,7 +142,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 9. Learn Mode Launch
   test("T1-MODE-09: Launch Learn Mode from Home Card", async ({ guestPage: page }) => {
     const topCard = page.locator(".deck-mode-card.is-top-card");
-    await topCard.locator(".card-learn-btn").click();
+    await topCard.locator(".ui-btn--tile").click();
 
     const dataPanel = page.locator(".game-data-panel");
     await expect(dataPanel).toBeVisible();
@@ -151,7 +151,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 10. Learn Sub-Mode TabBar Navigation
   test("T1-MODE-10: Learn Mode Sub-Mode Carousel Navigation", async ({ guestPage: page }) => {
     const topCard = page.locator(".deck-mode-card.is-top-card");
-    await topCard.locator(".card-learn-btn").click();
+    await topCard.locator(".ui-btn--tile").click();
 
     const learnControl = page.locator(".learn-carousel-control");
     await expect(learnControl).toBeVisible();
@@ -167,7 +167,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
   // 11. Interface Theme Switch (Dark -> Light)
   test("T1-THEME-01: Toggle Interface Theme in Settings", async ({ guestPage: page }) => {
-    await page.locator(".settings-trigger-btn").click();
+    await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
     await expect(settingsPanel).toHaveClass(/open/);
 
@@ -179,30 +179,30 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     const appContainer = page.locator(".app-container");
     await expect(appContainer).toHaveAttribute("data-theme", "light");
 
-    await settingsPanel.locator(".panel-close-btn").click();
+    await settingsPanel.locator(".ui-icon-btn--panel-close").click();
   });
 
   // 12. Globe Theme Switch (Satellite)
   test("T1-THEME-02: Select Globe Theme Satellite in Settings", async ({ guestPage: page }) => {
-    await page.locator(".settings-trigger-btn").click();
+    await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
 
     const satelliteOpt = settingsPanel.locator('.segmented-opt:has-text("Satellite")').first();
     await satelliteOpt.click();
 
-    await settingsPanel.locator(".panel-close-btn").click();
+    await settingsPanel.locator(".ui-icon-btn--panel-close").click();
     await expect(settingsPanel).not.toHaveClass(/open/);
   });
 
   // 13. Globe Theme Switch (Blackout)
   test("T1-THEME-03: Select Globe Theme Blackout in Settings", async ({ guestPage: page }) => {
-    await page.locator(".settings-trigger-btn").click();
+    await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
 
     const blackoutOpt = settingsPanel.locator('.segmented-opt:has-text("Blackout")').first();
     await blackoutOpt.click();
 
-    await settingsPanel.locator(".panel-close-btn").click();
+    await settingsPanel.locator(".ui-icon-btn--panel-close").click();
     await expect(settingsPanel).not.toHaveClass(/open/);
   });
 
@@ -210,7 +210,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-THEME-04: Theme Persistence in LocalStorage across Page Reload", async ({
     guestPage: page,
   }) => {
-    await page.locator(".settings-trigger-btn").click();
+    await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
 
     const lightOpt = settingsPanel
@@ -227,7 +227,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-HUD-01: Answer Input Field Auto-Clears on Correct Answer", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .card-play-btn").click();
+    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("France");
@@ -240,7 +240,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-HUD-02: Auto-Suggestions Popup Appears at 4+ Characters", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .card-play-btn").click();
+    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("Fran");
@@ -255,7 +255,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-HUD-03: Clicking Suggestion Item Submits Answer and Clears Input", async ({
     guestPage: page,
   }) => {
-    await page.locator(".deck-mode-card.is-top-card .card-play-btn").click();
+    await page.locator(".deck-mode-card.is-top-card .ui-btn--cta").click();
     const inputField = page.locator("#q-resp-field");
 
     await inputField.fill("Fran");
@@ -267,25 +267,25 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
   // 18. Settings Panel Open & Close
   test("T1-HUD-05: Settings Panel Trigger Open and Close", async ({ guestPage: page }) => {
-    const settingsBtn = page.locator(".settings-trigger-btn");
+    const settingsBtn = page.locator(".ui-icon-btn--dock-settings");
     await settingsBtn.click();
 
     const panel = page.locator(".sheet-panel.settings-panel");
     await expect(panel).toHaveClass(/open/);
 
-    await panel.locator(".panel-close-btn").click();
+    await panel.locator(".ui-icon-btn--panel-close").click();
     await expect(panel).not.toHaveClass(/open/);
   });
 
   // 19. Profile Panel Open & Close
   test("T1-HUD-06: Profile Panel Trigger Open and Close", async ({ guestPage: page }) => {
-    const profileBtn = page.locator(".profile-trigger-btn");
+    const profileBtn = page.locator(".ui-icon-btn--dock-profile");
     await profileBtn.click();
 
     const panel = page.locator(".sheet-panel.profile-panel");
     await expect(panel).toHaveClass(/open/);
 
-    await panel.locator(".panel-close-btn").click();
+    await panel.locator(".ui-icon-btn--panel-close").click();
     await expect(panel).not.toHaveClass(/open/);
   });
 
@@ -297,7 +297,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
     const panel = page.locator(".sheet-panel.leaderboard-panel");
     await expect(panel).toHaveClass(/open/);
 
-    await panel.locator(".panel-close-btn").click();
+    await panel.locator(".ui-icon-btn--panel-close").click();
     await expect(panel).not.toHaveClass(/open/);
   });
 });

@@ -188,16 +188,14 @@ body {
  * Blur lives on ::before for Android Chrome / iOS Safari compatibility.
  */
 :is(
-  .glass-icon-btn,
-  .settings-trigger-btn,
-  .profile-trigger-btn,
-  .leaderboard-trigger-btn,
-  .hud-btn,
+  .ui-icon-btn--glass-chrome,
+  .ui-icon-btn--dock-settings,
+  .ui-icon-btn--dock-profile,
+  .ui-icon-btn--hud,
   .hud-mini-pill,
-  .central-island-panel,
+  .ui-btn--hud-island,
   .focus-mini-pill,
   .home-podium-widget,
-  .learn-toggle-btn,
   .sheet-panel,
   .input-island,
   .suggestions-list,
@@ -224,13 +222,11 @@ body {
 }
 
 :is(
-    .glass-icon-btn:not(.profile-trigger-btn),
-    .settings-trigger-btn,
-    .leaderboard-trigger-btn,
-    .hud-btn,
+    .ui-icon-btn--glass-chrome:not(.ui-icon-btn--dock-profile),
+    .ui-icon-btn--dock-settings,
+    .ui-icon-btn--hud,
     .hud-mini-pill,
-    .learn-toggle-btn,
-    .central-island-panel,
+    .ui-btn--hud-island,
     .sheet-panel,
     .input-island,
     .suggestions-list,

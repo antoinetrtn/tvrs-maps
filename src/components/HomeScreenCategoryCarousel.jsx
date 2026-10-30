@@ -40,7 +40,7 @@ const DeckArrow = ({ side, onClick, label, icon }) => (
       size="sm"
       variant="outline"
       label={label}
-      className="deck-arrow"
+      look="deck-arrow"
       onClick={(e) => {
         if (e.detail > 0) {
           e.currentTarget.blur();

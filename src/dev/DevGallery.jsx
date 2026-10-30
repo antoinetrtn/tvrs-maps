@@ -86,7 +86,7 @@ const AccentColumn = ({ id }) => {
         <GlassIconButton title="Profil">
           <User width={20} height={20} />
         </GlassIconButton>
-        <IconButton variant="ghost" size="sm" label="Fermer" className="panel-close-btn">
+        <IconButton variant="ghost" size="sm" label="Fermer" look="panel-close">
           <Close width={20} height={20} />
         </IconButton>
       </Block>
