@@ -196,7 +196,10 @@ export function resolvePolygonShaderMode({
   const playSelectedShader =
     isPlay && isIsolated && (isError || (isSuccess && isRegionalMode) || !isFound);
   const homeSelectedShader = isHomeScreen && isIsolated;
-  const isPrevShader = !isEndScreen && isPrevTransitioning && !isFound;
+  // In play, a deselected unfound country goes straight back to its grain material: the
+  // selection shader cannot reproduce the surface night look (biome hint, relief, limb), so
+  // its fade dipped grey, then black once tinted (PR 265) before the swap.
+  const isPrevShader = !isEndScreen && !isPlay && isPrevTransitioning && !isFound;
 
   const useShader =
     (kind === "cap" || kind === "side") &&

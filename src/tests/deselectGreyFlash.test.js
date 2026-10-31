@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DESELECT_FADE_START } from "../config/gameConfig";
 import { GLITCH_FRAGMENT_BODY, GLITCH_FRAGMENT_DECLARATIONS } from "../globe/render/globeShaders";
+import { resolvePolygonShaderMode } from "../globe/render/polygonColorResolver";
 import glitchNodeSrc from "../globe/render/webgpu/glitchNode.js?raw";
 
 // Regression: deselecting an unfound country (France → Belgium) flashed the raw lit grey
@@ -28,5 +29,27 @@ describe("deselect fade settles to the unfound blackout look", () => {
     expect(glitchNodeSrc).toMatch(/const settleColor = mix\(\s*restColor/);
     expect(glitchNodeSrc).toMatch(/mix\(staticVec, restColor, deselectDone\)/);
     expect(glitchNodeSrc).toMatch(/mix\(float\(0\.36\), float\(0\.74\), regional\)/);
+  });
+});
+
+describe("deselect in play: straight back to the grain night look", () => {
+  const base = {
+    admin: "France",
+    kind: "cap",
+    foundSet: new Set(),
+    isIsolated: false,
+    isPrevTransitioning: true,
+    isEndScreen: false,
+    isHomeScreen: false,
+  };
+
+  it("a deselected unfound country leaves the selection shader at once (no black dip)", () => {
+    expect(resolvePolygonShaderMode({ ...base, mode: "countries" }).useShader).toBe(false);
+    expect(resolvePolygonShaderMode({ ...base, mode: "capitals" }).useShader).toBe(false);
+  });
+
+  it("the newly selected country still uses the selection shader", () => {
+    const sel = { ...base, isIsolated: true, isPrevTransitioning: false, mode: "countries" };
+    expect(resolvePolygonShaderMode(sel).useShader).toBe(true);
   });
 });
