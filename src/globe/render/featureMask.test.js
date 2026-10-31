@@ -5,10 +5,13 @@ import {
   clearFeatureMask,
   FEATURE_FOUND_VALUE,
   FEATURE_HALO_VALUES,
+  FEATURE_HOVER_VALUE,
+  FEATURE_MEMBER_VALUE,
   FEATURE_SELECTED_VALUE,
   getFeatureCells,
   getFeatureMaskData,
   getFeatureMaskTexture,
+  setFeatureHover,
   setFeatureMask,
 } from "./featureMask";
 
@@ -144,5 +147,38 @@ describe("featureMask", () => {
       if (bufferAfter[i] !== 0) nonZero++;
     }
     expect(nonZero).toBe(0);
+  });
+
+  it("marks only game-dataset features as members (simplified view)", () => {
+    const onlyAmazon = { amazon: riversMountainsDataMap.amazon };
+    setFeatureMask({ selectedKey: null, foundKeys: [], dataMap: onlyAmazon });
+    const data = getFeatureMaskData();
+    const amazonCell = getFeatureCells("amazon", onlyAmazon.amazon)[0];
+    expect(data[amazonCell]).toBe(FEATURE_MEMBER_VALUE);
+    const otherKey = Object.keys(riversMountainsDataMap).find(
+      (k) => k !== "amazon" && riversMountainsDataMap[k].type === "river"
+    );
+    const otherCells = getFeatureCells(otherKey, riversMountainsDataMap[otherKey]);
+    const hidden = otherCells.filter((c) => data[c] === 0).length;
+    expect(hidden / otherCells.length).toBeGreaterThan(0.9);
+  });
+
+  it("hover draws a thin line without halo and restores on leave", () => {
+    setFeatureMask({ selectedKey: null, foundKeys: [], dataMap: riversMountainsDataMap });
+    const data = getFeatureMaskData();
+    const before = data.slice();
+    setFeatureHover("amazon", riversMountainsDataMap);
+    const cells = getFeatureCells("amazon", riversMountainsDataMap.amazon);
+    expect(data[cells[0]]).toBe(FEATURE_HOVER_VALUE);
+    expect(data.some((v) => FEATURE_HALO_VALUES.includes(v))).toBe(false);
+    setFeatureHover(null);
+    expect(data.every((v, i) => v === before[i])).toBe(true);
+  });
+
+  it("hover never overrides the selected feature", () => {
+    setFeatureMask({ selectedKey: "amazon", foundKeys: [], dataMap: riversMountainsDataMap });
+    const cells = getFeatureCells("amazon", riversMountainsDataMap.amazon);
+    setFeatureHover("amazon", riversMountainsDataMap);
+    expect(getFeatureMaskData()[cells[0]]).toBe(FEATURE_SELECTED_VALUE);
   });
 });

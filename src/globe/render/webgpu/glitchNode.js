@@ -363,7 +363,8 @@ function createGlitchOutputNode(u) {
     If(on(u.uFeatureMode), () => {
       const featSample = texture(getFeatureMaskTexture(), selUv).r;
       const isFeatCore = step(0.9, featSample);
-      const isFeatHalo = step(0.2, featSample).mul(float(1.0).sub(isFeatCore));
+      const isFeatHover = step(0.84, featSample).mul(float(1.0).sub(isFeatCore));
+      const isFeatHalo = step(0.2, featSample).mul(float(1.0).sub(step(0.84, featSample)));
       const isFeatFound = step(0.1, featSample).mul(float(1.0).sub(step(0.2, featSample)));
       const featPulseWave = sin(u.uTime.mul(6.2831853 / SELECT_PULSE_S_VALUE))
         .mul(0.5)
@@ -395,6 +396,7 @@ function createGlitchOutputNode(u) {
       rgb.assign(mix(rgb, fCrest, isFeatFound.mul(rCrest)));
       rgb.assign(mix(rgb, fRiver, isFeatFound.mul(rCore)));
       rgb.assign(mix(rgb, EDGE_RGB, featHaloAmt));
+      rgb.assign(mix(rgb, EDGE_RGB, isFeatHover.mul(0.6)));
       rgb.assign(mix(rgb, EDGE_RGB, isFeatCore));
     });
 

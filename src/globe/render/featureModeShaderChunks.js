@@ -12,7 +12,8 @@ export const FEATURE_GLITCH_CHUNK = `
   if (uFeatureMode > 0.5) {
     float featSample = texture2D(uFeatureMap, selUv).r;
     float isFeatCore = step(0.90, featSample);
-    float isFeatHalo = step(0.20, featSample) * (1.0 - isFeatCore);
+    float isFeatHover = step(0.84, featSample) * (1.0 - isFeatCore);
+    float isFeatHalo = step(0.20, featSample) * (1.0 - step(0.84, featSample));
     float isFeatFound = step(0.10, featSample) * (1.0 - step(0.20, featSample));
     float featPulseWave = 0.5 + 0.5 * sin(uTime * 6.2831853 / SELECT_PULSE_S);
     float featPulse = mix(floor(featPulseWave * SELECT_PULSE_STEPS + 0.5) / SELECT_PULSE_STEPS, 0.6, uReducedMotion);
@@ -33,6 +34,7 @@ export const FEATURE_GLITCH_CHUNK = `
     gl_FragColor.rgb = mix(gl_FragColor.rgb, fCrest, isFeatFound * rCrest);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, fRiver, isFeatFound * rCore);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_EDGE_RGB, featHaloAmt);
+    gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_EDGE_RGB, isFeatHover * 0.6);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_EDGE_RGB, isFeatCore);
   }
 `;
@@ -41,20 +43,27 @@ export const FEATURE_GLITCH_CHUNK = `
 export const FEATURE_SURFACE_CHUNK = `
       // Feature mode (rivers & mountains): land darker so features pop, readable cool blue
       // river core and warm light crest/spur relief across ALL land caps.
+      // Only features of the game dataset are drawn (mask >= 20/255); the decorative
+      // extra rivers / ranges stay hidden in this simplified view.
+      float featMember = step(0.05, texture2D(uFeatureMap, cartUv).r);
+      float featSpur = ridgeSpur * featMember;
+      float featCrest = ridgeCrest * featMember;
+      float featRiverCore = riverCore * featMember;
       vec3 featBaseLit = baseLit * 0.60 * (1.0 - valleyGap * 0.20);
       vec3 featSpurTone = vec3(0.62, 0.50, 0.35);
       vec3 featCrestTone = vec3(0.88, 0.76, 0.56);
-      vec3 featReliefLit = mix(featBaseLit, featSpurTone, ridgeSpur * (0.75 + 0.15 * cityHash));
-      featReliefLit = mix(featReliefLit, featCrestTone, ridgeCrest * 0.92);
+      vec3 featReliefLit = mix(featBaseLit, featSpurTone, featSpur * (0.75 + 0.15 * cityHash));
+      featReliefLit = mix(featReliefLit, featCrestTone, featCrest * 0.92);
 
       vec3 featRiverColor = mix(vec3(0.24, 0.58, 0.84), vec3(0.40, 0.78, 0.96), riverShimmer);
-      vec3 featRiverLit = mix(featReliefLit * (1.0 - riverBank * 0.15), featRiverColor, riverCore * 0.92);
+      vec3 featRiverLit = mix(featReliefLit * (1.0 - riverBank * featMember * 0.15), featRiverColor, featRiverCore * 0.92);
 
       vec3 activeTerrainLit = mix(terrainLit, featRiverLit, uFeatureMode);
 
       float featSample = texture2D(uFeatureMap, cartUv).r * uFeatureMode;
       float isFeatCore = step(0.90, featSample);
-      float isFeatHalo = step(0.20, featSample) * (1.0 - isFeatCore);
+      float isFeatHover = step(0.84, featSample) * (1.0 - isFeatCore);
+      float isFeatHalo = step(0.20, featSample) * (1.0 - step(0.84, featSample));
       float isFeatFound = step(0.10, featSample) * (1.0 - step(0.20, featSample));
 
       float featPulseWave = 0.5 + 0.5 * sin(uTime * 6.2831853 / SELECT_PULSE_S);
@@ -71,5 +80,6 @@ export const FEATURE_SURFACE_CHUNK = `
       activeTerrainLit = mix(activeTerrainLit, featFoundLit, isFeatFound);
 
       activeTerrainLit = mix(activeTerrainLit, SELECT_EDGE_RGB, featHaloAmt);
+      activeTerrainLit = mix(activeTerrainLit, SELECT_EDGE_RGB, isFeatHover * 0.6);
       activeTerrainLit = mix(activeTerrainLit, SELECT_EDGE_RGB, isFeatCore);
 `;

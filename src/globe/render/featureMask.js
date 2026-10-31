@@ -8,6 +8,12 @@ const FEATURE_MASK_HEIGHT = 1800;
 export const FEATURE_FOUND_VALUE = 40;
 export const FEATURE_SELECTED_VALUE = 255;
 export const FEATURE_HALO_VALUES = [170, 115, 60];
+/** Cells of a feature that exists in the game dataset (others are hidden in this mode). */
+export const FEATURE_MEMBER_VALUE = 20;
+/** Hover: thin, lighter amber line/outline, no halo (desktop pointer only). */
+export const FEATURE_HOVER_VALUE = 220;
+
+const isFeatureArea = (item) => item?.type === "mountain_range" || item?.type === "mountain";
 
 let maskData = null;
 let maskTexture = null;
@@ -15,6 +21,10 @@ let maskTexture = null;
 let lastSelectedKey = undefined;
 let lastFoundKeysHash = undefined;
 let lastDataMap = undefined;
+let memberMap = undefined;
+let memberBase = null;
+let hoverKey = null;
+let hoverSaved = null; // [idx, previousValue] pairs restored when the hover moves
 
 /**
  * Lazily creates and returns the 3600x1800 R8 DataTexture for feature highlight mask.
@@ -127,9 +137,9 @@ export function setFeatureMask({
   lastDataMap = dataMap;
 
   getFeatureMaskTexture();
-  maskData.fill(0);
-
   const activeDataMap = dataMap || riversMountainsDataMap;
+  hoverSaved = null;
+  maskData.set(getMemberBase(activeDataMap));
 
   // 1. Write FOUND features (value 40)
   for (let f = 0; f < foundArray.length; f++) {
@@ -147,10 +157,62 @@ export function setFeatureMask({
   const item = selectedKey && (activeDataMap[selectedKey] || riversMountainsDataMap[selectedKey]);
   if (item) {
     const cells = getFeatureCells(selectedKey, item);
-    if (item.type === "mountain_range" || item.type === "mountain") writeAreaOutline(cells);
+    if (isFeatureArea(item)) writeAreaOutline(cells);
     else writeLineHalo(cells);
   }
 
+  const pendingHover = hoverKey;
+  hoverKey = null;
+  if (pendingHover) setFeatureHover(pendingHover, activeDataMap);
+  maskTexture.needsUpdate = true;
+}
+
+/** Game features of the dataset (falls back to the full rivers & mountains set). */
+function gameFeatureEntries(dataMap) {
+  const own = Object.entries(dataMap || {}).filter(([, it]) => it?.path && it.type);
+  return own.length ? own : Object.entries(riversMountainsDataMap);
+}
+
+/** Membership layer (value 20), dilated by one cell to cover the stamped river banks. */
+function getMemberBase(dataMap) {
+  if (memberBase && memberMap === dataMap) return memberBase;
+  const W = FEATURE_MASK_WIDTH;
+  const H = FEATURE_MASK_HEIGHT;
+  const base = new Uint8Array(W * H);
+  for (const [key, item] of gameFeatureEntries(dataMap)) {
+    for (const idx of getFeatureCells(key, item)) {
+      const y = Math.floor(idx / W);
+      const x = idx % W;
+      for (let dy = -1; dy <= 1; dy++) {
+        const ny = y + dy;
+        if (ny < 0 || ny >= H) continue;
+        for (let dx = -1; dx <= 1; dx++) base[ny * W + ((x + dx + W) % W)] = FEATURE_MEMBER_VALUE;
+      }
+    }
+  }
+  memberBase = base;
+  memberMap = dataMap;
+  return base;
+}
+
+/** Hover highlight: only touches the hovered cells, restores them on change. */
+export function setFeatureHover(key, dataMap = lastDataMap) {
+  const next = key || null;
+  if (next === hoverKey || !maskData) return;
+  if (hoverSaved) for (const [idx, v] of hoverSaved) maskData[idx] = v;
+  hoverSaved = null;
+  hoverKey = next;
+  const item = next && ((dataMap || {})[next] || riversMountainsDataMap[next]);
+  if (item && next !== lastSelectedKey) {
+    const cells = getFeatureCells(next, item);
+    const line = isFeatureArea(item) ? areaShape(cells).edge : cells;
+    hoverSaved = [];
+    for (const idx of line) {
+      if (maskData[idx] >= FEATURE_HOVER_VALUE) continue;
+      hoverSaved.push([idx, maskData[idx]]);
+      maskData[idx] = FEATURE_HOVER_VALUE;
+    }
+  }
   maskTexture.needsUpdate = true;
 }
 
@@ -192,7 +254,7 @@ function writeLineHalo(cells) {
  * Mountain band: like the country selection, a thin 1-cell amber border (255) on
  * the band's edge and the halo rings walked INWARD, so the relief stays readable.
  */
-function writeAreaOutline(cells) {
+function areaShape(cells) {
   const W = FEATURE_MASK_WIDTH;
   // Morphological closing (8-neighbour dilate x2, erode x2): the stamped spurs are
   // ragged, the outline follows the massif's silhouette instead of every speckle.
@@ -228,14 +290,18 @@ function writeAreaOutline(cells) {
     out.push(y * W + ((x + W - 1) % W), y * W + ((x + 1) % W));
     return out;
   };
+  const edge = [];
+  for (const idx of inside) if (nb(idx).some((n) => !inside.has(n))) edge.push(idx);
+  return { inside, edge, nb };
+}
+
+function writeAreaOutline(cells) {
+  const { inside, edge, nb } = areaShape(cells);
   const dist = new Map();
-  let front = [];
-  for (const idx of inside) {
-    if (nb(idx).some((n) => !inside.has(n))) {
-      dist.set(idx, 0);
-      front.push(idx);
-      maskData[idx] = FEATURE_SELECTED_VALUE;
-    }
+  let front = edge;
+  for (const idx of edge) {
+    dist.set(idx, 0);
+    maskData[idx] = FEATURE_SELECTED_VALUE;
   }
   for (let r = 0; r < FEATURE_HALO_VALUES.length; r++) {
     const next = [];
@@ -254,6 +320,8 @@ function writeAreaOutline(cells) {
  * Clears the mask buffer without any new allocations.
  */
 export function clearFeatureMask() {
+  hoverKey = null;
+  hoverSaved = null;
   if (maskData) {
     maskData.fill(0);
     if (maskTexture) maskTexture.needsUpdate = true;

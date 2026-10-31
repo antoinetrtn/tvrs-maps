@@ -13,27 +13,32 @@ import {
 export function applyFeatureMode(p) {
   const { baseLit, valleyGap, ridgeSpur, ridgeCrest, cityHash, riverShimmer, riverBank } = p;
   const { riverCore, cartUv, uTimeNode, uFeatureNode, uReducedMotionNode, terrainLit } = p;
+  const featSample = texture(getFeatureMaskTexture(), cartUv).r.mul(uFeatureNode);
+  const featMember = step(0.05, texture(getFeatureMaskTexture(), cartUv).r);
+  const featSpur = ridgeSpur.mul(featMember);
+  const featCrest = ridgeCrest.mul(featMember);
+  const featRiverCore = riverCore.mul(featMember);
   const featBaseLit = baseLit.mul(0.6).mul(float(1.0).sub(valleyGap.mul(0.2)));
   const featSpurTone = vec3(0.62, 0.5, 0.35);
   const featCrestTone = vec3(0.88, 0.76, 0.56);
   const featReliefLit = mix(
-    mix(featBaseLit, featSpurTone, ridgeSpur.mul(cityHash.mul(0.15).add(0.75))),
+    mix(featBaseLit, featSpurTone, featSpur.mul(cityHash.mul(0.15).add(0.75))),
     featCrestTone,
-    ridgeCrest.mul(0.92)
+    featCrest.mul(0.92)
   );
 
   const featRiverColor = mix(vec3(0.24, 0.58, 0.84), vec3(0.4, 0.78, 0.96), riverShimmer);
   const featRiverLit = mix(
-    featReliefLit.mul(float(1.0).sub(riverBank.mul(0.15))),
+    featReliefLit.mul(float(1.0).sub(riverBank.mul(featMember).mul(0.15))),
     featRiverColor,
-    riverCore.mul(0.92)
+    featRiverCore.mul(0.92)
   );
 
   const activeTerrainLit = mix(terrainLit, featRiverLit, uFeatureNode);
 
-  const featSample = texture(getFeatureMaskTexture(), cartUv).r.mul(uFeatureNode);
   const isFeatCore = step(0.9, featSample);
-  const isFeatHalo = step(0.2, featSample).mul(float(1.0).sub(isFeatCore));
+  const isFeatHover = step(0.84, featSample).mul(float(1.0).sub(isFeatCore));
+  const isFeatHalo = step(0.2, featSample).mul(float(1.0).sub(step(0.84, featSample)));
   const isFeatFound = step(0.1, featSample).mul(float(1.0).sub(step(0.2, featSample)));
 
   const featPulseWave = sin(uTimeNode.mul(6.2831853 / SELECT_PULSE_S_VALUE))
@@ -59,6 +64,7 @@ export function applyFeatureMode(p) {
   litTerrain = mix(litTerrain, foundReliefCrest, ridgeCrest.mul(isFeatFound));
   litTerrain = mix(litTerrain, foundRiverColor, riverCore.mul(isFeatFound));
   litTerrain = mix(litTerrain, selectEdgeRgb, featHaloAmt);
+  litTerrain = mix(litTerrain, selectEdgeRgb, isFeatHover.mul(0.6));
   litTerrain = mix(litTerrain, selectEdgeRgb, isFeatCore);
 
   return litTerrain;

@@ -204,6 +204,7 @@ const GlobeMap = (props) => {
     handleTouchEnd,
     handlePointerDown,
     handlePointerMove,
+    handlePointerLeave,
     handlePointerUp,
     handleBackgroundClick,
   } = useGlobeInteractions({
@@ -449,6 +450,7 @@ const GlobeMap = (props) => {
         ref={globeContainerRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
         onPointerUp={handlePointerUp}
       >
         <div className="globe-backdrop">
