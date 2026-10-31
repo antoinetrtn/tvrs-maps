@@ -11,6 +11,8 @@
 
 // --- Modes -------------------------------------------------------------------
 // 'learn' is intentionally NOT in gameConfig.PLAY_MODES (it never scores/scrambles).
+import { BREAKPOINTS } from "./breakpoints.js";
+
 export const DEFAULT_MODE = "countries";
 
 // --- Timing ------------------------------------------------------------------
@@ -18,12 +20,17 @@ export const DEFAULT_GAME_DURATION_SEC = 15 * 60; // 15 minutes
 
 // Home-screen showcase: how often the auto-targeted demo country rotates.
 export const HOME_AUTOROTATE_INTERVAL_MS = 5500;
+/** Home globe swaps its layer only once the card carousel has been still this long (ms). */
+export const HOME_GLOBE_SETTLE_MS = 320;
 
 // Mobile soft-keyboard open/close debounce.
 export const KEYBOARD_CLOSE_DELAY_MS = 180;
 
-// Screen transition: UI soft fade duration (matches screen-soft-in in App.css)
-export const SCREEN_TRANSITION_MS = 280;
+// Home screen exit transition duration (mirrored by --dur-screen-exit in motion.css)
+export const EXIT_MS = 180;
+
+// Screen transition total duration (exit step + game UI entrance)
+export const SCREEN_TRANSITION_MS = 420;
 
 /**
  * Transient input-feedback durations (popup success/error/warning flashes and
@@ -62,10 +69,7 @@ export const GAME_START_VIEWPOINTS = [
 ];
 export const GAME_START_VIEW_JITTER_DEG = 8;
 
-export const BREAKPOINTS = {
-  mobile: 768,
-  desktop: 1024,
-};
+export { BREAKPOINTS };
 
 /** Width reserved on the right for the data panel (panel + gutters). */
 export function getDataPanelLayoutWidth(viewportWidth) {
@@ -80,6 +84,7 @@ export const STORAGE_KEYS = {
   uiTheme: "tvrs-ui-theme",
   hardcoreMode: "tvrs-hardcore-mode",
   peacefulMode: "tvrs-peaceful-mode",
+  accent: "tvrs-accent",
 };
 
 // --- Hardcore mode -----------------------------------------------------------

@@ -1,0 +1,111 @@
+/* ==========================================================================
+   AUTOCOMPLETE SUGGESTIONS LIST (Combobox Listbox)
+   ========================================================================== */
+
+.suggestions-list {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 100%;
+  pointer-events: auto;
+  box-shadow: var(--glass-shadow);
+  margin-bottom: var(--spacing-sm);
+}
+
+.suggestion-item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  /* Comfortable touch target — a missed tap closes the mobile keyboard. */
+  min-height: var(--control-lg);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background var(--dur-micro) var(--steps-press),
+    color var(--dur-micro) var(--steps-press),
+    box-shadow var(--dur-micro) var(--steps-press),
+    transform var(--dur-micro) var(--steps-press);
+}
+
+@media (max-width: 1024px) {
+  .suggestion-item {
+    font-size: var(--font-size-base);
+  }
+}
+
+.suggestion-item[aria-selected="true"],
+.suggestion-item.is-selected {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.suggestion-item:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+  transform: translate(1px, 0);
+}
+
+.suggestion-item:active {
+  transform: var(--press-offset);
+  transition: transform var(--dur-micro) var(--steps-press);
+}
+
+/* Already found entry in list: dimmed with checkmark */
+.suggestion-item[data-found="true"] {
+  opacity: 0.5;
+}
+
+.suggestion-item[data-found="true"]:hover,
+.suggestion-item[data-found="true"][aria-selected="true"] {
+  opacity: 0.8;
+}
+
+.suggestion-item .sug-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.suggestion-item .sug-text {
+  font-family: var(--font-main);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion-item .sug-sub {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  margin-left: var(--spacing-sm);
+  white-space: nowrap;
+}
+
+.sug-found-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-left: var(--spacing-sm);
+}
+
+.sug-check {
+  font-weight: 600;
+}

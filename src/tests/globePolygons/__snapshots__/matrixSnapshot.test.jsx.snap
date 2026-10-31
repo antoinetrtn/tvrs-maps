@@ -1,0 +1,248 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`useGlobePolygons characterization — Full Matrix Snapshots > freezes regional, conquest, and transitionStep (0, mid, end) matrix via snapshot 1`] = `
+{
+  "conquestRows": [
+    {
+      "admin": "France",
+      "capMat": "MeshPhongMaterial vis:true tr:true op:0.62 wf:false col:#52b5aa em:#52b5aa@0.42 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#52b5aa | side:#50b0a5 | stroke:#777777 | base:#4ca89d/#49a297",
+      "metrics": "alt:0.008 | w:7.5 | res:1.5",
+      "sideMat": "MeshPhongMaterial vis:false tr:true op:1 sh:false",
+    },
+    {
+      "admin": "Spain",
+      "capMat": "MeshPhongMaterial vis:true tr:true op:0.62 wf:false col:#e0664a em:#e0664a@0.42 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#e0664a | side:#da6348 | stroke:#ede6d6 | base:#cf5e45/#c85b43",
+      "metrics": "alt:0.001 | w:0.95 | res:1.5",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+    {
+      "admin": "Japan",
+      "capMat": "MeshPhongMaterial vis:false tr:true op:1 wf:false col:#363b44 em:#363b44@0.42 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#363b44 | side:#343942 | stroke:#777777 | base:#857045/#2e3b37",
+      "metrics": "alt:0.001 | w:0.95 | res:1.5",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+  ],
+  "step0": [
+    {
+      "admin": "01",
+      "capMat": "MeshPhongMaterial vis:false tr:true op:1 wf:false col:#38526c em:#38526c@0.12 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#38526c | side:#37516b | stroke:#0f2a33 | base:#64748b/#2e3b37",
+      "metrics": "alt:0.001 | w:0 | res:1.5",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+    {
+      "admin": "Spain",
+      "capMat": "MeshPhongMaterial vis:false tr:true op:1 wf:false col:#38526c em:#38526c@0.42 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#38526c | side:#0f2a33 | stroke:#777777 | base:#38526c/#2e3b37",
+      "metrics": "alt:0.0005 | w:0.15 | res:1",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+  ],
+  "stepEnd": [
+    {
+      "admin": "01",
+      "capMat": "MeshPhongMaterial vis:false tr:true op:1 wf:false col:#141414 em:#141414@0.12 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#141414 | side:#141414 | stroke:#777777 | base:#64748b/#2e3b37",
+      "metrics": "alt:0.001 | w:1.1 | res:1.5",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+    {
+      "admin": "Spain",
+      "capMat": "MeshPhongMaterial vis:true tr:true op:0.58 wf:false col:#0e1116 em:#0e1116@0 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#0e1116 | side:#0f2a33 | stroke:#777777 | base:#38526c/#2e3b37",
+      "metrics": "alt:0.0005 | w:0.15 | res:1",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+  ],
+  "stepMid": [
+    {
+      "admin": "01",
+      "capMat": "MeshPhongMaterial vis:false tr:true op:1 wf:false col:#2d4156 em:#2d4156@0.12 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#2d4156 | side:#2d4055 | stroke:#4e5456 | base:#64748b/#2e3b37",
+      "metrics": "alt:0.001 | w:0.44 | res:1.5",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+    {
+      "admin": "Spain",
+      "capMat": "MeshPhongMaterial vis:true tr:true op:0.23 wf:false col:#2c4156 em:#2c4156@0 sh:false fc:false",
+      "capUniforms": null,
+      "colors": "#2c4156 | side:#0f2a33 | stroke:#777777 | base:#38526c/#2e3b37",
+      "metrics": "alt:0.0005 | w:0.15 | res:1",
+      "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+    },
+  ],
+  "usStatesRows": [
+    {
+      "admin": "California",
+      "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#32403b em:#32403b@0.12 sh:true fc:false",
+      "capUniforms": "target:#303d39 err:0 ok:0 fnd:0 sat:0 th:1 selIn:0",
+      "colors": "#e6dccb | side:#e4dac9 | stroke:#e6dccb | base:#303d39/#2e3b37",
+      "metrics": "alt:0.0016 | w:7.5 | res:1.5",
+      "sideMat": "MeshPhongMaterial vis:true tr:true op:1 sh:true",
+    },
+  ],
+}
+`;
+
+exports[`useGlobePolygons characterization — Full Matrix Snapshots > freezes the world modes × themes × states matrix via snapshot 1`] = `
+[
+  {
+    "id": "countries | monochrome | neutral+selected+found",
+    "rows": [
+      {
+        "admin": "France",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:true fc:false",
+        "capUniforms": "target:#303d39 err:0 ok:0 fnd:0 sat:0 th:1 selIn:0",
+        "colors": "#34423d | side:#313e3a | stroke:#e6dccb | base:#303d39/#2e3b37",
+        "metrics": "alt:0.008 | w:7.5 | res:1.5",
+        "sideMat": "MeshPhongMaterial vis:true tr:true op:1 sh:true",
+      },
+      {
+        "admin": "Spain",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#000000 em:#2dffa8@1 sh:false fc:true",
+        "capUniforms": null,
+        "colors": "#2dffa8 | side:#2bf6a2 | stroke:#21bc7b | base:#2dffa8/#2dffa8",
+        "metrics": "alt:0.0012 | w:1.2 | res:1.5",
+        "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+      },
+      {
+        "admin": "Brazil",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:false fc:false",
+        "capUniforms": null,
+        "colors": "#34423d | side:#33403b | stroke:#4a5550 | base:#34423d/#2e3b37",
+        "metrics": "alt:0.0012 | w:1.6 | res:1.5",
+        "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+      },
+    ],
+  },
+  {
+    "id": "countries | satellite | neutral+selected+found",
+    "rows": [
+      {
+        "admin": "France",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.52 sh:true fc:false",
+        "capUniforms": "target:#303d39 err:0 ok:0 fnd:0 sat:1 th:0 selIn:0",
+        "colors": "#34423d | side:#313e3a | stroke:#e6dccb | base:#303d39/#2e3b37",
+        "metrics": "alt:0.008 | w:7.5 | res:1.5",
+        "sideMat": "MeshPhongMaterial vis:true tr:true op:1 sh:true",
+      },
+      {
+        "admin": "Spain",
+        "capMat": "MeshPhongMaterial vis:true tr:true op:0.5 wf:false col:#000000 em:#2dffa8@1 sh:false fc:true",
+        "capUniforms": null,
+        "colors": "#2dffa8 | side:#2bf6a2 | stroke:#21bc7b | base:#2dffa8/#2dffa8",
+        "metrics": "alt:0.001 | w:1.2 | res:1.5",
+        "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+      },
+      {
+        "admin": "Brazil",
+        "capMat": "MeshPhongMaterial vis:false tr:true op:1 wf:false col:#854d45 em:#854d45@0.42 sh:false fc:false",
+        "capUniforms": null,
+        "colors": "#854d45 | side:#814b43 | stroke:#777777 | base:#854d45/#2e3b37",
+        "metrics": "alt:0.001 | w:0.95 | res:1.5",
+        "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+      },
+    ],
+  },
+  {
+    "id": "countries | default | neutral+selected",
+    "rows": [
+      {
+        "admin": "France",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.52 sh:true fc:false",
+        "capUniforms": "target:#303d39 err:0 ok:0 fnd:0 sat:0 th:0 selIn:0",
+        "colors": "#34423d | side:#313e3a | stroke:#e6dccb | base:#303d39/#2e3b37",
+        "metrics": "alt:0.008 | w:7.5 | res:1.5",
+        "sideMat": "MeshPhongMaterial vis:true tr:true op:1 sh:true",
+      },
+      {
+        "admin": "Spain",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#38526c em:#38526c@0.42 sh:false fc:false",
+        "capUniforms": null,
+        "colors": "#38526c | side:#365069 | stroke:#49494a | base:#38526c/#2e3b37",
+        "metrics": "alt:0.0012 | w:0.95 | res:1.5",
+        "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+      },
+    ],
+  },
+  {
+    "id": "countries | blackout | error-flash",
+    "rows": [
+      {
+        "admin": "France",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:true fc:false",
+        "capUniforms": "target:#c94e37 err:1 ok:0 fnd:0 sat:0 th:1 selIn:0",
+        "colors": "#d9543b | side:#cd4f38 | stroke:#d9543b | base:#c94e37/#c24b35",
+        "metrics": "alt:0.008 | w:7.5 | res:1.5",
+        "sideMat": "MeshPhongMaterial vis:true tr:true op:1 sh:true",
+      },
+    ],
+  },
+  {
+    "id": "countries | satellite | success-flash",
+    "rows": [
+      {
+        "admin": "France",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#2dffa8 em:#2dffa8@1 sh:true fc:false",
+        "capUniforms": "target:#2dffa8 err:0 ok:1 fnd:1 sat:1 th:0 selIn:0",
+        "colors": "#2dffa8 | side:#2af19f | stroke:#e6dccb | base:#2dffa8/#2dffa8",
+        "metrics": "alt:0.008 | w:14 | res:1.5",
+        "sideMat": "MeshPhongMaterial vis:true tr:false op:1 sh:true",
+      },
+    ],
+  },
+  {
+    "id": "rivers_mountains | monochrome | selected-river",
+    "rows": [
+      {
+        "admin": "Amazon",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:true fc:false",
+        "capUniforms": "target:#303d39 err:0 ok:0 fnd:0 sat:0 th:1 selIn:0",
+        "colors": "#34423d | side:#313e3a | stroke:#e6dccb | base:#303d39/#2e3b37",
+        "metrics": "alt:0.008 | w:7.5 | res:1.5",
+        "sideMat": "MeshPhongMaterial vis:true tr:true op:1 sh:true",
+      },
+      {
+        "admin": "France",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:false fc:false",
+        "capUniforms": null,
+        "colors": "#34423d | side:#33403b | stroke:#4a5550 | base:#34423d/#2e3b37",
+        "metrics": "alt:0.0012 | w:1.6 | res:1.5",
+        "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+      },
+    ],
+  },
+  {
+    "id": "learn | monochrome | selected+neutral",
+    "rows": [
+      {
+        "admin": "France",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#e6dccb em:#e6dccb@1 sh:false fc:false",
+        "capUniforms": null,
+        "colors": "#e6dccb | side:#d9d0c0 | stroke:#1a915f | base:#d5ccbc/#cdc5b5",
+        "metrics": "alt:0.008 | w:14 | res:1.5",
+        "sideMat": "MeshPhongMaterial vis:true tr:false op:1 sh:false",
+      },
+      {
+        "admin": "Spain",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#34423d em:#34423d@0.05 sh:false fc:false",
+        "capUniforms": null,
+        "colors": "#34423d | side:#33403b | stroke:#4a5550 | base:#34423d/#2e3b37",
+        "metrics": "alt:0.0012 | w:1.6 | res:1.5",
+        "sideMat": "MeshBasicMaterial vis:false tr:false op:1 sh:false",
+      },
+    ],
+  },
+]
+`;

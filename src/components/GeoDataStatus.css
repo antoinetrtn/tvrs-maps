@@ -1,0 +1,25 @@
+/* GeoDataStatus.css — Retro-technical geo status overlay */
+
+.geo-status-wrapper {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: var(--z-overlay);
+}
+
+/* Error blocks the app underneath: a scrim catches taps so "Play" can't start on a dead map. */
+.geo-status-wrapper.is-blocking {
+  pointer-events: auto;
+  background: var(--overlay-bg);
+}
+
+.geo-status-wrapper > .ui-state {
+  max-width: min(320px, calc(100vw - 32px));
+  padding: var(--spacing-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  backdrop-filter: var(--blur-scrim);
+}

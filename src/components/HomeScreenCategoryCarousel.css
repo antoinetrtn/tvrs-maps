@@ -1,34 +1,3 @@
-@keyframes retroDeckGlitchIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translate3d(0, 10px, 0);
-    filter: contrast(1.3) brightness(1.2) hue-rotate(90deg);
-    clip-path: inset(5% 0 15% 0);
-  }
-  25% {
-    opacity: 0.8;
-    transform: scale(1.02) translate3d(-3px, -2px, 0);
-    filter: contrast(1.15) brightness(1.1) hue-rotate(0deg);
-    clip-path: inset(0 3% 0 0);
-  }
-  55% {
-    opacity: 1;
-    transform: scale(0.99) translate3d(2px, 1px, 0);
-    filter: contrast(1.05) brightness(1.05);
-    clip-path: inset(0 0 0 0);
-  }
-  80% {
-    transform: scale(1.005) translate3d(-1px, 0, 0);
-    filter: contrast(1) brightness(1);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translate3d(0, 0, 0);
-    filter: none;
-    clip-path: none;
-  }
-}
-
 .cards-deck-wrapper {
   position: relative;
   display: flex;
@@ -40,11 +9,7 @@
   margin: 0 auto;
   padding: 0;
   user-select: none;
-  animation: retroDeckGlitchIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.cards-deck-wrapper.is-user-dragging .deck-arrow {
-  pointer-events: none !important;
+  animation: atlasDeckIn var(--dur-slow) var(--ease-out) both;
 }
 
 .deck-click-zone {
@@ -54,11 +19,10 @@
   width: 75px;
   height: 250px;
   z-index: 180;
-  cursor: pointer;
   display: flex;
   align-items: center;
   pointer-events: none;
-  background: transparent !important;
+  background: transparent;
 }
 
 .deck-click-zone.left {
@@ -73,59 +37,20 @@
   padding-right: 6px;
 }
 
-.deck-click-zone:hover {
-  background: transparent !important;
-}
-
-.deck-click-zone:hover .deck-arrow {
-  opacity: 1;
-  color: var(--accent);
-  border-color: var(--accent);
-  transform: scale(1.15);
-  box-shadow: 0 0 12px var(--accent-soft);
-}
-
-.deck-click-zone:active .deck-arrow {
-  transform: scale(0.92);
-}
-
-.deck-arrow {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--glass-border-strong);
-  background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
-  color: var(--text-main);
-  opacity: 0.55;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--bg-color) 60%, transparent);
-  pointer-events: auto;
-  cursor: pointer;
-  transition:
-    color var(--transition-spring),
-    border-color var(--transition-spring),
-    opacity var(--transition-spring),
-    transform var(--transition-spring),
-    box-shadow var(--transition-spring);
-}
-
-.deck-arrow::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
+@media (hover: none) and (pointer: coarse) {
+  .deck-click-zone {
+    display: none;
+  }
 }
 
 .deck-stage {
   position: relative;
   width: 320px;
-  height: 270px;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-  touch-action: none !important;
+  touch-action: none;
   cursor: grab;
 }
 
@@ -135,95 +60,58 @@
 
 /* Individual Stacked Card Base - 100% SOLID PURE OPAQUE BACKGROUND (ALPHA = 1.0) */
 /* Individual Stacked Card Base - Mysterious Dark Technical Card */
-.deck-mode-card {
-  position: absolute;
-  top: 20px;
-  width: 320px;
-  height: 250px;
-  padding: 1.25rem;
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
-  background-color: var(--bg-color) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--bg-color) 70%, transparent);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
 
-.deck-mode-card.is-top-card {
-  height: 250px;
-  border-color: color-mix(in srgb, var(--text-main) 22%, transparent);
-  box-shadow:
-    0 14px 40px color-mix(in srgb, var(--bg-color) 85%, transparent),
-    0 0 1px color-mix(in srgb, var(--text-main) 30%, transparent);
-}
-
-.deck-mode-card.is-stacked-card {
-  cursor: pointer;
-  height: 250px;
-  border-color: color-mix(in srgb, var(--text-main) 14%, transparent);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--bg-color) 50%, transparent);
-  transition:
-    transform 160ms cubic-bezier(0.1, 0.9, 0.2, 1),
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease-out;
-}
-
-.deck-mode-card.is-stacked-card:hover {
-  filter: brightness(1.2);
-  border-color: color-mix(in srgb, var(--text-main) 25%, transparent);
-}
-
-.deck-mode-card.is-stacked-card .card-actions {
-  pointer-events: none;
-}
-
-/* Scanline Overlay */
-.card-scanline-layer {
+/* Atlas plate: faint orthogonal graticule, framed by a double rule */
+.card-plate-pattern {
   position: absolute;
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: repeating-linear-gradient(
-    0deg,
-    color-mix(in srgb, var(--text-main) 3%, transparent) 0px,
-    color-mix(in srgb, var(--text-main) 3%, transparent) 1px,
-    transparent 1px,
-    transparent 4px
-  );
   z-index: 1;
+  background:
+    radial-gradient(
+      circle at 86% 24%,
+      color-mix(in srgb, var(--card-mode-accent, var(--accent)) 16%, transparent) 0%,
+      transparent 58%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
+      transparent 1px 32px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
+      transparent 1px 32px
+    );
 }
 
-.card-parallax-bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: inherit;
-  transition: transform 400ms cubic-bezier(0.18, 0.9, 0.26, 1.15);
-  z-index: 0;
+.card-plate-pattern::after {
+  content: none;
 }
 
-.card-ambient-glow {
-  position: absolute;
-  top: -30%;
-  left: -20%;
-  width: 140%;
-  height: 140%;
-  background: radial-gradient(
-    circle at 50% 30%,
-    color-mix(in srgb, var(--text-main) 6%, transparent) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
+.card-plate-meta {
+  font-family: var(--font-display);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.card-plate-number {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  color: var(--card-mode-accent, var(--accent));
+}
+
+.card-plate-count {
+  padding: 1px var(--spacing-xs);
+  border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--accent)) 38%, transparent);
+  background: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 12%, var(--bg-color));
+  color: var(--card-mode-spark, var(--text-main));
 }
 
 .card-content {
@@ -231,8 +119,9 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  transition: transform 400ms cubic-bezier(0.18, 0.9, 0.26, 1.15);
+  gap: var(--spacing-xs);
+  min-height: 64px;
+  transition: transform var(--dur-slow) var(--ease-out);
   text-align: left;
 }
 
@@ -240,16 +129,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--spacing-ms);
   width: 100%;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--spacing-xs);
 }
 
 .card-mode-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
+  color: var(--card-mode-accent, var(--accent));
   opacity: 1;
   flex-shrink: 0;
 }
@@ -258,30 +147,21 @@
   flex: 1;
   font-family: var(--font-display);
   font-size: var(--font-size-2xl);
-  font-weight: 700;
+  font-weight: 600;
   color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
   margin: 0;
   line-height: 1.3;
   white-space: pre-line;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-transform: none;
-  text-shadow: 0 2px 6px color-mix(in srgb, var(--bg-color) 70%, transparent);
 }
 
 .card-desc {
-  font-family: var(--font-main);
-  font-size: var(--font-size-base);
-  color: color-mix(in srgb, var(--text-muted) 92%, var(--text-main));
-  margin: 0.25rem 0 0 0;
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin: 0;
 }
 
 .card-actions {
@@ -289,94 +169,47 @@
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--spacing-sm);
   margin-top: auto;
 }
 
-.card-play-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  height: 48px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--text-main) 14%, var(--bg-color));
-  color: var(--text-main);
-  font-family: var(--font-display) !important;
-  font-size: var(--font-size-base);
-  font-weight: 800;
-  border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
-  cursor: pointer;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--bg-color) 60%, transparent);
-  transition: all var(--transition-spring);
-}
-
-.card-play-btn span {
-  font-family: var(--font-display) !important;
-}
-
-.card-play-btn:hover {
-  background: color-mix(in srgb, var(--text-main) 22%, var(--bg-color));
-  border-color: color-mix(in srgb, var(--text-main) 50%, transparent);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px color-mix(in srgb, var(--bg-color) 80%, transparent);
-}
-
-.card-play-btn:active {
-  transform: translateY(0) scale(0.97);
-}
-
-.card-learn-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
-  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition-spring);
-}
-
-.card-learn-btn:hover {
-  border-color: color-mix(in srgb, var(--text-main) 38%, transparent);
-  color: var(--text-main);
-  background: color-mix(in srgb, var(--text-main) 12%, var(--bg-color));
-  transform: translateY(-2px);
-}
-
-.card-learn-btn:active {
-  transform: translateY(0) scale(0.95);
-}
+/* Carte Conquête : « Règles » remplace le bouton Apprendre (bouton icône carré 44px) */
 
 /* Dots Row - Pixel Squares */
 .deck-dots-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--spacing-md);
   margin-top: 1.25rem;
   width: 100%;
 }
 
 .deck-dot {
-  width: 5px;
-  height: 5px;
+  position: relative;
+  width: 6px;
+  height: 6px;
   border-radius: 0;
   background: color-mix(in srgb, var(--text-muted) 45%, transparent);
   opacity: 0.5;
   border: none;
   cursor: pointer;
   padding: 0;
+  box-shadow: none;
   transition:
-    background var(--transition-normal),
-    opacity var(--transition-normal),
-    transform var(--transition-normal);
+    width var(--dur-fast) var(--steps-snap),
+    background var(--dur-fast) linear,
+    opacity var(--dur-fast) linear;
+}
+
+.deck-dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: var(--control-md);
+  min-height: var(--control-md);
 }
 
 .deck-dot:hover {
@@ -385,12 +218,12 @@
 }
 
 .deck-dot.active {
-  width: 7px;
-  height: 7px;
+  width: 16px;
+  height: 6px;
   border-radius: 0;
   background: var(--accent);
   opacity: 1;
-  box-shadow: 0 0 6px var(--accent-soft);
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
@@ -401,19 +234,15 @@
 
   .deck-stage {
     width: 100%;
-    height: 259px;
+    height: 200px;
   }
 
-  .deck-mode-card,
-  .deck-mode-card.is-top-card,
-  .deck-mode-card.is-stacked-card {
-    height: 235px;
-    top: 12px;
-  }
+  /* Compact mobile card: no dead band between the title and the actions. */
 
-  .deck-mode-card {
-    width: min(100% - 28px, 320px);
-    padding: 1rem;
+  .card-mode-icon {
+    padding: var(--spacing-xs);
+    border: 1px solid var(--glass-border);
+    border-radius: 0;
   }
 
   .deck-click-zone.left {
@@ -424,14 +253,6 @@
   .deck-click-zone.right {
     right: -15px;
     width: 60px;
-  }
-
-  .deck-click-zone.left .deck-arrow::after {
-    right: 0;
-  }
-
-  .deck-click-zone.right .deck-arrow::after {
-    left: 0;
   }
 
   .deck-dots-row {

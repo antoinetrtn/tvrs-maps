@@ -2,6 +2,7 @@ import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
+import { stepProgress } from "./modeTransition";
 
 export { FOUND_SURFACE_GREEN };
 export const FOUND_HIGHLIGHT = GLITCH_EFFECT_SETTINGS.selectionHighlight;
@@ -71,8 +72,43 @@ export function resolveRegionalLandColor(
   return fallbackRegionColor || GLOBE_STYLE.base.mapBase;
 }
 
+/** Share of the sea tone mixed into the rest of the world while a regional layer is played. */
+export const GHOST_DIM_AMOUNT = 0.62;
+/** Satellite: the dark veil laid over the imagery outside the played region. */
+export const GHOST_VEIL_OPACITY = 0.58;
+
+/**
+ * Rest-of-the-world tone in regional modes (US states, departments): the
+ * attenuated region colour pulled toward the sea so the played region is the
+ * only land that reads. Satellite shows imagery, so the ghosts become a dark
+ * veil instead (see GHOST_VEIL_OPACITY).
+ */
 export function resolveGhostCountryColor(d, countryDataMapOpts, opts) {
-  return opts?.fallbackRegionColor || GLOBE_STYLE.base.mapBase;
+  const base = opts?.fallbackRegionColor || GLOBE_STYLE.base.mapBase;
+  if (opts?.isSatellite && opts?.veilColor) return opts.veilColor;
+  if (opts?.lerpColor && opts?.mapSea) return opts.lerpColor(base, opts.mapSea, GHOST_DIM_AMOUNT);
+  return base;
+}
+
+/**
+ * Satellite shows imagery instead of coloured land, so the rest of the world is
+ * dimmed by a dark veil: full while a regional layer is played, stepped in or out
+ * during the layer transition. 0 = no veil.
+ */
+export function resolveGhostVeil({ d, isRegionalMode, globeTheme, transState = null }) {
+  if (globeTheme !== "satellite") return 0;
+  if (isRegionalMode) {
+    if (!d.isGhostCountry) return 0;
+    const fadingIn = transState && transState.isEnteringRegional;
+    return fadingIn
+      ? Math.round(GHOST_VEIL_OPACITY * transState.progress * 100) / 100
+      : GHOST_VEIL_OPACITY;
+  }
+  // Back to the world layer: the veil of the former ghost countries steps out.
+  if (transState?.isExitingRegional && !d.isParentCountryFeature && !d.isExitingDepartmentFeature) {
+    return Math.round(GHOST_VEIL_OPACITY * (1 - transState.progress) * 100) / 100;
+  }
+  return 0;
 }
 
 export function resolvePolygonStrokeWidth({
@@ -110,6 +146,24 @@ export function shouldUseRegionalUnfoundLand({ isEndScreen, isFound, isSelected 
   return !isEndScreen && !isFound && !isSelected;
 }
 
+const END_MISSED_ERROR_TINT = {
+  light: 0.16,
+  dark: 0.2,
+};
+
+/**
+ * End screen: missed countries stay on a quiet, flat land surface with a
+ * subtle warm tint instead of running the TV static shader across the globe.
+ */
+export function resolveEndMissedColor({ mapBase, UI_COLORS, lerpColor, isLight = false }) {
+  const base = mapBase || UI_COLORS?.mapBase;
+  if (!UI_COLORS?.error || typeof lerpColor !== "function") {
+    return base;
+  }
+  const amount = isLight ? END_MISSED_ERROR_TINT.light : END_MISSED_ERROR_TINT.dark;
+  return lerpColor(base, UI_COLORS.error, amount);
+}
+
 export function resolveCountryCapColor({
   admin,
   region: _region,
@@ -131,13 +185,18 @@ export function resolveCountryCapColor({
 
   if (isEndScreen) {
     if (isFound) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-    return UI_COLORS.error;
+    return resolveEndMissedColor({
+      mapBase,
+      UI_COLORS,
+      lerpColor: _lerpColor,
+      isLight: _isLight,
+    });
   }
 
   if (isLearn) {
     if (isSelected) {
       if (isError) return UI_COLORS.error;
-      return FOUND_HIGHLIGHT;
+      return GLITCH_EFFECT_SETTINGS.selectionHighlight;
     }
     return mapBase;
   }
@@ -173,14 +232,13 @@ export function resolvePolygonShaderMode({
   const isFound = foundSet.has(admin);
   const isLearn = mode === "learn";
   const isPlay = !isLearn && !isHomeScreen && !isEndScreen;
-  const isEndMissed = isEndScreen && !isFound;
   const playSelectedShader = isPlay && isIsolated && (isError || isSuccess || !isFound);
   const homeSelectedShader = isHomeScreen && isIsolated;
-  const isPrevShader = isPrevTransitioning && !isFound;
+  const isPrevShader = !isEndScreen && isPrevTransitioning && !isFound;
 
   const useShader =
     (kind === "cap" || kind === "side") &&
-    (playSelectedShader || homeSelectedShader || isPrevShader || isEndMissed);
+    (playSelectedShader || homeSelectedShader || isPrevShader);
 
   return {
     useShader,
@@ -188,7 +246,8 @@ export function resolvePolygonShaderMode({
   };
 }
 
-export function getTransitionState(modeTransitionRef) {
+// `_step` is the render-step counter: passing it makes accessor memoization explicit.
+export function getTransitionState(modeTransitionRef, _step = 0) {
   if (!modeTransitionRef?.current?.active) return null;
   const trans = modeTransitionRef.current;
   const now = typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -197,8 +256,7 @@ export function getTransitionState(modeTransitionRef) {
     trans.active = false;
     return null;
   }
-  const tRaw = Math.min(1, Math.max(0, elapsed / trans.duration));
-  const progress = tRaw * tRaw * (3 - 2 * tRaw);
+  const progress = stepProgress(elapsed / trans.duration);
   const isEnteringRegional = (trans.toDept || trans.toUs) && !(trans.fromDept || trans.fromUs);
   const isExitingRegional = (trans.fromDept || trans.fromUs) && !(trans.toDept || trans.toUs);
   return {
@@ -224,6 +282,7 @@ export function resolveModeTransitionColor({
   UI_COLORS,
   getRegionSurfaceColor,
   getRegionSurfaceColorDimmed,
+  getGhostColor,
   getFeatureMonochromeShade,
   lerpColor,
 }) {
@@ -233,9 +292,11 @@ export function resolveModeTransitionColor({
   if (d.isGhostCountry) {
     const region = cdm?.[admin]?.region || d.properties?.region || "Americas";
     const worldColor = getRegionSurfaceColor ? getRegionSurfaceColor(region) : UI_COLORS.mapBase;
-    const ghostColor = getRegionSurfaceColorDimmed
-      ? getRegionSurfaceColorDimmed(region)
-      : worldColor;
+    const ghostColor = getGhostColor
+      ? getGhostColor(region)
+      : getRegionSurfaceColorDimmed
+        ? getRegionSurfaceColorDimmed(region)
+        : worldColor;
 
     const isRegionalToRegional = (fromDept || fromUs) && (toDept || toUs);
     if (isRegionalToRegional) return ghostColor;
@@ -244,27 +305,39 @@ export function resolveModeTransitionColor({
     return lerpColor(worldColor, ghostColor, lerpFactor);
   }
 
+  const regionOf = (fallback) =>
+    gameDataMap?.[admin]?.region || cdm?.[admin]?.region || d.properties?.region || fallback;
+  const worldColorOf = (region) =>
+    getRegionSurfaceColor ? getRegionSurfaceColor(region) : UI_COLORS.mapBase;
+  const ghostColorOf = (region) =>
+    getGhostColor
+      ? getGhostColor(region)
+      : getRegionSurfaceColorDimmed
+        ? getRegionSurfaceColorDimmed(region)
+        : worldColorOf(region);
+
+  // World France / USA while a regional layer takes over: they stay as the backdrop
+  // of the incoming departments / states (which start from this very colour).
   if (d.isParentCountryFeature) {
-    const region = cdm?.[admin]?.region || d.properties?.region || "Europe";
-    const parentColor = getRegionSurfaceColor ? getRegionSurfaceColor(region) : UI_COLORS.mapBase;
-    const lerpFactor = isExitingRegional ? progress : 1 - progress;
-    return lerpColor(UI_COLORS.mapSea, parentColor, lerpFactor);
+    return isExitingRegional ? null : worldColorOf(regionOf("Europe"));
   }
 
-  if (d.isEnteringDepartmentFeature) {
-    const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
+  if (d.isEnteringDepartmentFeature || d.isDepartmentFeature) {
+    const regionCode = regionOf("Americas");
     const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
-    const baseColor = getDimmed(regionCode);
-    const deptColor = getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
-    return lerpColor(UI_COLORS.mapSea, deptColor, progress);
+    const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
+    // Regional → regional: the area was dimmed ghost land; from the world it was the world colour.
+    const from = fromDept || fromUs ? ghostColorOf(regionCode) : worldColorOf(regionCode);
+    return lerpColor(from, deptColor, progress);
   }
 
   if (d.isExitingDepartmentFeature) {
-    const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
+    const regionCode = regionOf("Americas");
     const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
-    const baseColor = getDimmed(regionCode);
-    const deptColor = getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
-    return lerpColor(UI_COLORS.mapSea, deptColor, 1 - progress);
+    const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
+    // Dissolves into what takes its place: the world colour, or the dimmed ghost land.
+    const to = toDept || toUs ? ghostColorOf(regionCode) : worldColorOf(regionCode);
+    return lerpColor(deptColor, to, progress);
   }
 
   return null;
@@ -283,7 +356,7 @@ export function resolveModeTransitionStroke({
   const { progress, isExitingRegional } = transState;
   const _admin = getFeatureAdmin(d);
 
-  if (d.isEnteringDepartmentFeature) {
+  if (d.isEnteringDepartmentFeature || d.isDepartmentFeature) {
     const baseStroke =
       globeTheme === "satellite" ? UI_COLORS.mapBorder : UI_COLORS.accent || UI_COLORS.paper;
     return lerpColor(UI_COLORS.mapSea, baseStroke, progress);
@@ -307,7 +380,7 @@ export function resolveModeTransitionStroke({
 export function resolveModeTransitionStrokeWidth({ d, transState, perfProfile, UI_COLORS }) {
   const { progress, isExitingRegional } = transState;
 
-  if (d.isEnteringDepartmentFeature) {
+  if (d.isEnteringDepartmentFeature || d.isDepartmentFeature) {
     const strokeScale = perfProfile?.isMobile ? 0.94 : 1;
     const baseWidth = 1.1 * strokeScale;
     return baseWidth * progress;
@@ -349,7 +422,16 @@ export function resolveRestingColorForFeature({
   lerpColor,
 }) {
   if (isEndScreen) {
-    const base = isFound ? (isPerfectScore ? UI_COLORS.gold : UI_COLORS.success) : UI_COLORS.error;
+    const base = isFound
+      ? isPerfectScore
+        ? UI_COLORS.gold
+        : UI_COLORS.success
+      : resolveEndMissedColor({
+          mapBase: UI_COLORS.mapBase,
+          UI_COLORS,
+          lerpColor,
+          isLight,
+        });
     if (kind === "cap") {
       return base;
     }
@@ -370,4 +452,17 @@ export function resolveRestingColorForFeature({
     return base;
   }
   return lerpColor(base, UI_COLORS.black, isLight ? 0.04 : 0.08);
+}
+
+/** Conquête: le focus transitoire d'un pays possédé ne masque pas la couleur du propriétaire. */
+export function isQuietOwnedFocusFor(overlay, admin, gameDataMap) {
+  const id = overlay?.quietFocusId;
+  if (!id || !overlay.colors?.[admin]) return false;
+  return id === admin || isSameAdmin(admin, id, gameDataMap);
+}
+
+/** Conquête: couleur de base (cap / side) d'un pays possédé, cible de la dissolution. */
+export function resolveOwnerBaseColor(owner, kind, { lerpColor, UI_COLORS, isLight }) {
+  const capColor = lerpColor(owner, UI_COLORS.black, isLight ? 0.32 : 0.16);
+  return kind === "side" ? lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08) : capColor;
 }

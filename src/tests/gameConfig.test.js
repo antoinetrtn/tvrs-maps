@@ -93,7 +93,10 @@ describe("Game Configuration Utilities", () => {
       );
       expect(
         getPolygonAltitudeFor({ isDepartmentMode: true, isSelected: false, isGhostCountry: false })
-      ).toBe(POLYGON_ALTITUDE.base);
+      ).toBe(POLYGON_ALTITUDE.departmentBase);
+      // Regional relief stays flatter than the world-scale lift.
+      expect(POLYGON_ALTITUDE.departmentBase).toBeLessThan(POLYGON_ALTITUDE.base);
+      expect(POLYGON_ALTITUDE.departmentSelected).toBeLessThan(POLYGON_ALTITUDE.selected / 3);
     });
   });
 

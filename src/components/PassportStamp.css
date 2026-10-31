@@ -1,0 +1,66 @@
+/* Passport stamps — travel-journal rewards on the end screen. */
+
+/* Passport stamp — inked double frame, slightly rotated, lands with a thump */
+.passport-stamp {
+  --stamp-ink: var(--accent);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--stamp-ink);
+  border: 2px solid var(--stamp-ink);
+  outline: 1px solid color-mix(in srgb, var(--stamp-ink) 60%, transparent);
+  outline-offset: 3px;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  transform: rotate(-3deg);
+  opacity: 0.92;
+  animation: stamp-in var(--dur-stamp) var(--steps-snap) var(--dur-pop) both;
+  pointer-events: auto;
+}
+
+.score-stamp {
+  /* Opaque ink pad so the pixel numerals stay legible over the globe */
+  background: color-mix(in srgb, var(--bg-color) 86%, transparent);
+  min-width: 96px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  outline-offset: 3px;
+  gap: var(--spacing-xxs);
+}
+
+.perfect-game .score-stamp {
+  --stamp-ink: var(--success);
+}
+
+.stamp-caption {
+  font-size: var(--font-size-2xs);
+}
+
+.stamp-value {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .passport-stamp {
+    animation: none;
+  }
+}
+
+/* Personal Best — rectangular passport stamp */
+.new-pb-badge {
+  flex-direction: row;
+  gap: var(--spacing-xs);
+  white-space: nowrap;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  transform: rotate(3deg);
+  animation-name: stamp-in-pb;
+  animation-delay: var(--dur-fill);
+}

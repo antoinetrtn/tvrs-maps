@@ -1,37 +1,48 @@
 import "./App.css";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import AchievementToast from "./components/AchievementToast.jsx";
+import AchievementStack from "./components/AchievementStack.jsx";
 import AuthModal from "./components/AuthModal.jsx";
 import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
+import GeoDataStatus from "./components/GeoDataStatus.jsx";
+import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
 import HomeScreen from "./components/HomeScreen.jsx";
+import { ToastViewport } from "./components/ui/Toast.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
 import {
-  BREAKPOINTS,
   DEFAULT_GAME_DURATION_SEC,
   DEFAULT_MODE,
   HOME_AUTOROTATE_INTERVAL_MS,
-  PERFORMANCE,
-  SCREEN_TRANSITION_MS,
+  HOME_GLOBE_SETTLE_MS,
   STORAGE_KEYS,
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
+import useAchievementToasts from "./hooks/useAchievementToasts.jsx";
 import { useAppTheme } from "./hooks/useAppTheme";
 import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
+import { useCountryStatsRecorder } from "./hooks/useCountryStatsRecorder";
 import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
 import { useGameSession } from "./hooks/useGameSession";
 import { useGameSessionProps } from "./hooks/useGameSessionProps";
 import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
+import { usePerfProfile } from "./hooks/usePerfProfile";
+import useScreenExit, { EXIT_MS } from "./hooks/useScreenExit";
+import useScreenGlitch from "./hooks/useScreenGlitch";
+import useSettledValue from "./hooks/useSettledValue";
+import { useTrainingRun } from "./hooks/useTrainingRun";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
+import { isGuestLaunch } from "./multiplayer/conquestLink";
+import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import { isSupabaseConfigured } from "./services/supabaseClient";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home");
+  const { showHome, homeExiting } = useScreenExit(currentScreen, EXIT_MS);
 
   const {
     session,
@@ -48,9 +59,12 @@ function App() {
   const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [homeMode, setHomeMode] = useState("countries");
+  const [homeMode, setHomeMode] = useState(HOME_CONQUEST_KEY);
   const prevActiveDataMapRef = useRef(null);
-  const prevHomeModeRef = useRef(homeMode);
+  // Globe layer for the home screen: follows the carousel only once it settles.
+  const isHomeScreenActive = currentScreen === "home";
+  const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
+  const prevHomeModeRef = useRef(globeHomeMode);
 
   const [peacefulMode, setPeacefulModeRaw] = useState(() => {
     try {
@@ -76,16 +90,11 @@ function App() {
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
-  const [isScreenGlitching, setIsScreenGlitching] = useState(false);
+  const isScreenGlitching = useScreenGlitch(currentScreen);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const [achievementQueue, setAchievementQueue] = useState([]);
-  const activeAchievement = achievementQueue[0] || null;
-  const addAchievementToQueue = useCallback((a) => setAchievementQueue((prev) => [...prev, a]), []);
-  const handleCloseAchievement = useCallback(
-    () => setAchievementQueue((prev) => prev.slice(1)),
-    []
-  );
+  const { addAchievementToQueue, achievements, dismissAchievement } = useAchievementToasts();
+  if (import.meta.env.DEV) globalThis.__TVRS_PUSH_ACHIEVEMENT__ = addAchievementToQueue;
 
   const [learnSubMode, setLearnSubMode] = useState("countries");
   const [showLearnPanel, setShowLearnPanel] = useState(false);
@@ -104,23 +113,10 @@ function App() {
   const t = useTranslation(lang);
   const extInputRef = useRef(null);
   const globeFeedbackApplierRef = useRef(null);
-  const prevScreenRef = useRef(currentScreen);
-
-  useEffect(() => {
-    if (prevScreenRef.current !== currentScreen) {
-      const isEnteringGame = currentScreen === "game" && prevScreenRef.current === "home";
-      prevScreenRef.current = currentScreen;
-      if (isEnteringGame) {
-        setIsScreenGlitching(true);
-        const timer = setTimeout(() => setIsScreenGlitching(false), SCREEN_TRANSITION_MS);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [currentScreen, showResultsTable]);
 
   useEffect(() => {
     if (isSupabaseConfigured && session === null) {
-      if (localStorage.getItem("tvrs-guest-mode") !== "true") setShowAuthModal(true);
+      if (!isGuestLaunch()) setShowAuthModal(true); // guest mode or Conquête invite link
     } else if (session) {
       setShowAuthModal(false);
     }
@@ -130,10 +126,9 @@ function App() {
     localStorage.setItem("tvrs-guest-mode", "true");
     setShowAuthModal(false);
   }, []);
-
   const { viewport, isKeyboardMode } = useViewport();
-  // Theme state + document-level CSS variables (extracted, see useAppTheme).
-  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = useAppTheme(viewport?.width);
+  const appTheme = useAppTheme(viewport?.width); // theme + accent + document CSS vars
+  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = appTheme;
   const {
     countriesData,
     departmentsData,
@@ -141,18 +136,18 @@ function App() {
     activeDataMap,
     allCountryKeys,
     totalPossible,
+    geoStatus,
   } = useGeoData({
-    mode: currentScreen === "home" ? homeMode : mode,
-    learnSubMode:
-      currentScreen === "home" ? (homeMode === "capitals" ? "countries" : homeMode) : learnSubMode,
+    mode: currentScreen === "home" ? getHomeGeoMode(globeHomeMode) : mode,
+    learnSubMode: currentScreen === "home" ? getHomeLearnSubMode(globeHomeMode) : learnSubMode,
   });
 
   if (
     currentScreen === "home" &&
-    (activeDataMap !== prevActiveDataMapRef.current || homeMode !== prevHomeModeRef.current)
+    (activeDataMap !== prevActiveDataMapRef.current || globeHomeMode !== prevHomeModeRef.current)
   ) {
     prevActiveDataMapRef.current = activeDataMap;
-    prevHomeModeRef.current = homeMode;
+    prevHomeModeRef.current = globeHomeMode;
     if (activeDataMap) {
       const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
       if (keys.length > 0) {
@@ -161,6 +156,9 @@ function App() {
       }
     }
   }
+
+  const { trainingPool, setTrainingPool, clearTraining, sessionKeys, sessionTotal } =
+    useTrainingRun({ allCountryKeys, totalPossible });
 
   const {
     foundList,
@@ -174,7 +172,6 @@ function App() {
     popupError,
     popupWarning,
     setPopupError,
-    setPopupWarning,
     isNewPB,
     xpResult,
     handleInput,
@@ -190,8 +187,9 @@ function App() {
     mistakes,
   } = useGameSession({
     mode,
-    allCountryKeys,
-    totalPossible,
+    allCountryKeys: sessionKeys,
+    totalPossible: sessionTotal,
+    trainingPool,
     gameDuration,
     lang,
     userProfile,
@@ -210,6 +208,17 @@ function App() {
     effectiveKeyboardMode: isKeyboardMode,
     globeFeedbackApplierRef,
     hardcoreMode,
+  });
+
+  useCountryStatsRecorder({
+    mode,
+    profileId: userProfile?.id,
+    currentScreen,
+    selectedCountry,
+    foundList,
+    isPlaying,
+    isGameOver,
+    popupError,
   });
 
   // Transient red flash when a life is lost (wrong answer in game modes)
@@ -235,9 +244,11 @@ function App() {
   }, [mode]);
 
   const startGame = useCallback(
-    (selectedMode, subMode) => {
+    (selectedMode, subMode, pool = null) => {
       resetGame(selectedMode);
       setMode(selectedMode);
+      setTrainingPool(pool?.length ? pool : null); // entraînement ciblé : 1re cible = la moins maîtrisée
+      if (pool?.length) setSelectedCountry(pool[0]);
       if (selectedMode === "learn" && subMode) {
         setLearnSubMode(subMode);
       }
@@ -260,7 +271,7 @@ function App() {
       refocus();
       [50, 150, 300].forEach((ms) => setTimeout(refocus, ms));
     },
-    [resetGame, extInputRef]
+    [resetGame, extInputRef, setTrainingPool]
   );
 
   useEffect(() => {
@@ -271,15 +282,16 @@ function App() {
 
   const goHome = useCallback(() => {
     resetGame(DEFAULT_MODE);
+    clearTraining();
     setSelectedCountry(null);
     setMode(DEFAULT_MODE);
-    setHomeMode("countries");
+    setHomeMode(HOME_CONQUEST_KEY);
     setShowLearnPanel(false);
     setLearnSearchQuery("");
     setShowInfoModal(false);
     setShowResultsTable(false);
     setCurrentScreen("home");
-  }, [resetGame, setSelectedCountry]);
+  }, [resetGame, setSelectedCountry, clearTraining]);
 
   useEffect(() => {
     if (currentScreen === "home") {
@@ -304,7 +316,7 @@ function App() {
     return () => {
       clearInterval(interval);
     };
-  }, [currentScreen, activeDataMap, homeMode]);
+  }, [currentScreen, activeDataMap, globeHomeMode]);
 
   const handleCustomConfirm = (message, action) =>
     setConfirmState({
@@ -315,26 +327,7 @@ function App() {
       },
     });
 
-  const perfProfile = useMemo(() => {
-    const isMobile = viewport.width < BREAKPOINTS.mobile;
-    const isTablet = viewport.width >= BREAKPOINTS.mobile && viewport.width < BREAKPOINTS.desktop;
-    const tier = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
-    const devicePixelRatio = window.devicePixelRatio || 1;
-    const pixelRatio = Math.min(devicePixelRatio, PERFORMANCE.maxPixelRatio[tier]);
-    return {
-      isMobile,
-      isTablet,
-      pixelRatio,
-      antialias: !isMobile,
-      enableAutoRotate: true,
-      enablePointerInteraction: true,
-      maxLabels: PERFORMANCE.maxLabels[tier],
-      showAtmosphere: true,
-      useImageTextures: false,
-      cullOffscreenCountries: isMobile,
-      polygonCapCurvatureResolution: PERFORMANCE.polygonCapCurvatureResolution[tier],
-    };
-  }, [viewport.width]);
+  const perfProfile = usePerfProfile(viewport.width);
 
   const { isMobileViewport, isPanelOpen, panelDataMap, panelMode, closePanel, handlePanelSelect } =
     useGameDataPanelState({
@@ -369,7 +362,6 @@ function App() {
     specificCountryGuess,
     handleInput,
     setPopupError,
-    setPopupWarning,
   });
 
   const handleCountrySelect = useCountrySelectHandler({
@@ -391,7 +383,8 @@ function App() {
     goHome,
     lang,
     score,
-    totalPossible,
+    totalPossible: sessionTotal,
+    trainingPool,
     timeLeft,
     handleHudEnter,
     isPlaying,
@@ -413,7 +406,7 @@ function App() {
     theme,
     viewport,
     isKeyboardMode,
-    globeTheme,
+    globeTheme: appTheme.globeRenderTheme,
     learnSubMode,
     onLearnSubModeChange,
     learnSearchQuery,
@@ -446,9 +439,10 @@ function App() {
     globeFeedbackApplierRef,
     livesLeft,
     isHardcoreRun,
-    homeMode,
+    homeMode: getHomeGeoMode(globeHomeMode),
   });
 
+  const cq = useConquestLayer({ currentScreen, setCurrentScreen, lang, userProfile, sessionView });
   const panicActive = isPlaying && !isGameOver && timeLeft > 0 && timeLeft <= 30;
 
   return (
@@ -460,7 +454,7 @@ function App() {
       {(panicActive || lifeLostFlash) && (
         <div className={`panic-vignette-overlay${panicActive ? "" : " life-lost"}`} />
       )}
-      {currentScreen === "home" ? (
+      {showHome ? (
         <HomeScreen
           onStartGame={startGame}
           theme={theme}
@@ -475,6 +469,7 @@ function App() {
           setPeacefulMode={setPeacefulMode}
           globeTheme={globeTheme}
           setGlobeTheme={setGlobeTheme}
+          {...appTheme.accentProps}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}
@@ -484,13 +479,16 @@ function App() {
           onOpenAuth={() => setShowAuthModal(true)}
           homeMode={homeMode}
           setHomeMode={setHomeMode}
+          onOpenConquest={cq.open}
+          exiting={homeExiting}
         />
       ) : null}
       <GameSessionView
-        {...sessionView}
+        {...cq.sessionView}
         isMobileViewport={isMobileViewport}
         closePanel={closePanel}
       />
+      {cq.screen}
       {confirmState && (
         <ConfirmationModal
           message={confirmState.message}
@@ -501,15 +499,9 @@ function App() {
         />
       )}
 
-      {activeAchievement && (
-        <AchievementToast
-          title={activeAchievement.title}
-          message={activeAchievement.message}
-          invaderId={activeAchievement.invaderId}
-          color={activeAchievement.color}
-          onClose={handleCloseAchievement}
-        />
-      )}
+      <ToastViewport />
+      <AchievementStack achievements={achievements} onDismiss={dismissAchievement} />
+      <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}

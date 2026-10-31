@@ -1,0 +1,186 @@
+/* Motion layer — tokens + shared micro-interaction primitives.
+   Identity: square cells, motion in steps (no springs, no glow). Blur is light
+   (2-4px) and never animated continuously. Only transform / opacity / clip-path
+   animate. Loaded from main.jsx right after panelSystem.css. */
+
+:root {
+  /* Durations */
+  --dur-micro: 80ms;
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 360ms;
+  --dur-sheet-in: 180ms;
+  --dur-sheet-out: 110ms;
+  --dur-screen-exit: 180ms; /* Mirrored by EXIT_MS in src/config/gameConstants.js */
+  --dur-fling: 190ms;
+  --dur-settle: 260ms;
+  --dur-loop: 900ms; /* Looping stepped indicators (e.g. map-data loading cells) */
+  --dur-pop: 350ms; /* Score tick, label appear */
+  --dur-stamp: 450ms; /* Stamp / trophy entrance */
+  --dur-fill: 600ms; /* Progress bar fills */
+  --dur-reveal: 800ms; /* Fade-in reveals, pulses */
+  --dur-count: 1000ms; /* Counters, flashes, blinks */
+  --dur-ambient: 2000ms; /* Slow ambient loops */
+  --dur-ambient-slow: 3000ms; /* Slowest ambient loops (twinkle) */
+  --dur-toast: 4000ms; /* Auto-dismissing toast lifetime */
+  --dur-step: 100ms; /* Unit for staggered delays: calc(var(--dur-step) * n) */
+  --dur-reduced: 0.01ms; /* Reduced-motion collapse */
+
+  /* Easings (smooth, for non-pixel matter) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-fling: cubic-bezier(0.12, 0.98, 0.24, 1);
+
+  /* Stepped easings (pixel matter: press, indicator, bands, rows, shutter) */
+  --steps-press: steps(2, end);
+  --steps-snap: steps(4, end);
+  --steps-sheet-in: steps(5, end);
+  --steps-sheet-out: steps(3, end);
+  --steps-band: steps(6, end);
+  --steps-row: steps(1, end);
+  --steps-shutter: steps(3, end);
+
+  /* Shared values */
+  --cell: 4px;
+  --stagger: 40ms;
+  --press-offset: translate(1px, 1px);
+  --blur-scrim: blur(3px);
+  --blur-soft: 2px;
+  --sheet-clip-bleed: -48px; /* keeps the hard shadow visible while a sheet is revealed */
+}
+
+/* ──── 1. PRESS "BLOC" ────
+   Pointer-down: the control drops 1px, and its surface fills with the ink
+   colour for one step (inset box-shadow, so it also works when a rule already
+   forces the background with !important; the text flips to the page colour
+   unless the rule forces its own). No scale, no glow. */
+@keyframes px-press-flash {
+  from {
+    box-shadow: inset 0 0 0 999px var(--text-main);
+    color: var(--bg-color);
+  }
+}
+
+:is(.tab-bar-tab, .ui-option):active:not(:disabled) {
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
+}
+
+:is(.tab-bar-tab, .ui-option) {
+  touch-action: manipulation;
+}
+
+/* Tab content changes by horizontal bands, top to bottom (no cross-fade). */
+@keyframes px-band-in {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+.px-band-in {
+  animation: px-band-in var(--dur-fast) var(--steps-band);
+}
+
+/* ──── 4. CASCADE ────
+   Direct children enter one after the other (40ms apart, 2 steps, 2px blur → 0).
+   Delay is capped after the 6th child so long lists never wait. */
+@keyframes px-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+    filter: blur(var(--blur-soft));
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(2px);
+    filter: blur(1px);
+  }
+}
+
+/* Same two steps without filter, for children past the 6th. */
+@keyframes px-row-in-lite {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(2px);
+  }
+}
+
+.px-cascade > * {
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 5) * var(--stagger)) backwards;
+}
+
+.px-cascade > :nth-child(1) {
+  --i: 0;
+}
+.px-cascade > :nth-child(2) {
+  --i: 1;
+}
+.px-cascade > :nth-child(3) {
+  --i: 2;
+}
+.px-cascade > :nth-child(4) {
+  --i: 3;
+}
+.px-cascade > :nth-child(5) {
+  --i: 4;
+}
+
+.px-cascade > :nth-child(n + 7) {
+  animation-name: px-row-in-lite;
+}
+
+/* ──── 5. SHUTTER (Solo ↔ Conquête) ────
+   Six blinds start closed over the new screen and open top to bottom in steps.
+   pointer-events: none, so the new screen is usable from the first frame. */
+@keyframes px-shutter-open {
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+.mode-shutter {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-fx);
+  pointer-events: none;
+}
+
+.mode-shutter-blind {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--i) * (100% / 6));
+  height: calc(100% / 6 + 1px);
+  background: var(--bg-color);
+  animation: px-shutter-open var(--dur-fast) var(--steps-shutter) calc(var(--i) * var(--stagger))
+    forwards;
+}
+
+/* ──── GLOBAL REDUCED MOTION ────
+   Every animation and transition resolves instantly to its end state. Colour
+   and shape changes (active tab, filled button, open sheet) still carry the
+   meaning. Shutter blinds are not rendered at all. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: var(--dur-reduced) !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--dur-reduced) !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .mode-shutter {
+    display: none;
+  }
+}

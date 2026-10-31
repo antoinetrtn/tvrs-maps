@@ -9,6 +9,33 @@
  * driven from GlobeMap's lighting + animation code.
  */
 
+/**
+ * Exact 4x4 Bayer matrix lookup in [0, 15/16].
+ * Periodic mod 4 in x and y, matching SpaceBackground.jsx's BAYER_4X4 matrix.
+ */
+export function evaluateBayer4x4(x, y) {
+  const xi = ((Math.floor(x) % 4) + 4) % 4;
+  const yi = ((Math.floor(y) % 4) + 4) % 4;
+  const p0x = xi % 2;
+  const p0y = yi % 2;
+  const p1x = Math.floor(xi / 2) % 2;
+  const p1y = Math.floor(yi / 2) % 2;
+  const b0 = p0x * 2 + p0y * (3 - 4 * p0x);
+  const b1 = p1x * 2 + p1y * (3 - 4 * p1x);
+  return (4 * b0 + b1) / 16;
+}
+
+export const GLSL_BAYER_4X4_FN = `
+  float bayer2x2(vec2 v) {
+    return v.x * 2.0 + v.y * (3.0 - 4.0 * v.x);
+  }
+  float bayer4x4(vec2 px) {
+    vec2 p0 = floor(mod(px, 2.0));
+    vec2 p1 = floor(mod(floor(px * 0.5), 2.0));
+    return (4.0 * bayer2x2(p0) + bayer2x2(p1)) / 16.0;
+  }
+`;
+
 // Pass the view-space normal and position through to the fragment stage so the
 // fragment shader can compute a true perspective Fresnel term per pixel.
 export const FRESNEL_VERTEX_SHADER = `
@@ -30,6 +57,7 @@ export const FRESNEL_FRAGMENT_SHADER = `
   uniform vec3 glowColor;
   uniform float coef;
   uniform float power;
+  ${GLSL_BAYER_4X4_FN}
   void main() {
     vec3 normal = normalize(vAtmosphereNormal);
     vec3 viewDir = normalize(vAtmosphereViewPos);
@@ -46,7 +74,12 @@ export const FRESNEL_FRAGMENT_SHADER = `
 
     // Higher exponent creates a more gentle, soft, and diffuse gradient transition
     float exponent = max(1.8, power * 2.0);
-    float intensity = pow(edgeFade, exponent) * coef;
+    float rawIntensity = pow(edgeFade, exponent) * coef;
+
+    vec2 rimCell = floor((normal.xy * 0.5 + 0.5) * 960.0);
+    float bayer = bayer4x4(rimCell);
+    float dithered = floor(rawIntensity * 5.0 + bayer) / 5.0;
+    float intensity = mix(rawIntensity, dithered, 0.82);
 
     gl_FragColor = vec4(glowColor, intensity);
   }
@@ -83,6 +116,9 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSuccessStart;
   uniform float uSuccessDuration;
   uniform float uIsSatellite;
+  uniform vec3 uGlitchTintA;
+  uniform vec3 uGlitchTintB;
+  ${GLSL_BAYER_4X4_FN}
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
@@ -121,12 +157,14 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
     // White-hot flicker on the blocks still resolving.
     float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
-    vec3 hot = mix(vec3(1.0), uFoundGreen, 0.2) * flick;
+    bool isMonoAwakening = (theme > 0.5) && (uIsSatellite < 0.5);
+    vec3 targetTone = isMonoAwakening ? vec3(0.96, 0.68, 0.22) : uFoundGreen;
+    vec3 hot = mix(vec3(1.0, 0.97, 0.86), targetTone, 0.25) * flick;
     // Single fast scanline sweep down the country during the burst.
     float sweep = step(fract(worldPos.y * 0.18 - p * 2.8), 0.22)
       * (1.0 - smoothstep(0.3, 0.8, p)) * 0.7;
-    // Ends exactly on uFoundGreen so the handoff to the found state is seamless.
-    vec3 baseGreen = mix(hot, uFoundGreen, resolved) + uFoundGreen * sweep;
+    // Ends on targetTone so the handoff to the found state is seamless.
+    vec3 baseGreen = mix(hot, targetTone, resolved) + targetTone * sweep;
 
     // Extremely strong lime-cyan-magenta chromatic split during the resolve phase
     if (p < 0.85) {
@@ -139,12 +177,15 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     return baseGreen;
   }
   vec3 computeSelectionEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 worldPos) {
-    float pulse = sin(time * 5.5) * 0.18 + 0.82;
-    float sweep = step(fract(worldPos.y * 0.05 - time * 0.9), 0.1) * 0.18;
-    if (theme > 0.9 && theme < 1.1) {
-      return greenColor * (pulse * 0.32 + sweep * 0.15 + 0.22);
+    float pulse = sin(time * 3.2) * 0.08 + 0.92;
+    bool isMonoAwakening = (theme > 0.5) && (uIsSatellite < 0.5);
+    vec3 targetTone = isMonoAwakening ? vec3(0.92, 0.68, 0.24) : greenColor;
+    if (isMonoAwakening) {
+      return targetTone * (pulse * 0.72 + 0.16);
+    } else if (theme > 0.9 && theme < 1.1) {
+      return targetTone * (pulse * 0.36 + 0.26);
     } else {
-      return mix(finalColor, greenColor * (pulse * 0.42 + sweep + 0.3), 0.52);
+      return mix(finalColor, targetTone * (pulse * 0.48 + 0.36), 0.56);
     }
   }
 `;
@@ -153,28 +194,34 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 export const GLITCH_FRAGMENT_BODY = `
   vec3 litRestingColor = gl_FragColor.rgb;
 
-  // Screen-space static — medium grain (~4–5px), uniform per country.
+  // Warm pixel-dithered Atlas Lantern selection & Bayer checkerboard dissolve
   float transitionActive = step(0.006, uFadeProgress) * (1.0 - step(0.994, uFadeProgress));
   float selectInScale = mix(1.0, 0.52, step(0.5, uSelectInTransition));
   float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159)) * selectInScale;
-  float t = uTime * (28.0 + glitchAmp * 62.0);
 
-  // DPR-normalized screen coords: same visual grain size on mobile and desktop.
-  vec2 fragPx = gl_FragCoord.xy * uPixelScale;
+  // 3D sphere-anchored surface coordinates so pixel dither and lantern blocks
+  // live on the globe surface and rotate/zoom naturally with the Earth.
+  vec3 sphereDir = normalize(vWorldPosition);
+  float sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
+  float sphereLng = atan(sphereDir.z, sphereDir.x);
+  vec2 fragPx = vec2(sphereLng * cos(sphereLat * 0.65), sphereLat) * 520.0;
+  float bayer = bayer4x4(floor(fragPx));
+  float coarseBayer = bayer4x4(floor(fragPx * 0.5));
+  vec2 blockUv = floor(fragPx * 0.85);
 
-  vec2 blockUv = floor(fragPx * 0.24);
-  vec2 noiseUv = fragPx * 0.28;
-  float noiseCoarse = hash(blockUv + sin(t));
-  float noiseFine = hash(noiseUv + vec2(cos(t * 1.6), sin(t * 0.95)));
-  float noise = mix(noiseCoarse, noiseFine, 0.4);
+  vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+  float ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
+  float sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
 
-  float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
-  float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
-  float scanline = sin(fragPx.y * 1.05 + uTime * (6.0 + glitchAmp * 14.0))
-    * ((uIsLight > 0.5) ? 0.03 : 0.048);
-
-  float staticColor = mix(baseMin, baseMax, noise) + scanline;
-  vec3 staticVec = vec3(staticColor);
+  float lanternPulse = 0.93 + 0.07 * sin(uTime * 3.2);
+  float stippleStep = step(0.5, coarseBayer);
+  vec3 lanternDark = mix(vec3(0.30, 0.22, 0.12), vec3(0.39, 0.28, 0.15), stippleStep);
+  vec3 lanternLight = mix(vec3(0.82, 0.72, 0.52), vec3(0.90, 0.80, 0.60), stippleStep);
+  vec3 lanternBase = (uIsLight > 0.5) ? lanternLight : lanternDark;
+  vec3 rimWarmth = pow(1.0 - ndv, 2.0)
+    * ((uIsLight > 0.5) ? vec3(0.16, 0.11, 0.04) : vec3(0.34, 0.22, 0.07));
+  vec3 staticVec = lanternBase * sphereShade * lanternPulse + rimWarmth;
+  vec3 foundRestingColor = ((uTheme > 0.5) && (uIsSatellite < 0.5)) ? vec3(0.48, 0.34, 0.15) : uFoundGreen;
 
   // Caps and extruded side walls share one effect pipeline; sides are shaded
   // slightly darker below so the extrusion keeps its depth cue.
@@ -186,36 +233,17 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (uIsSelection > 0.5) {
     finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
   } else if (uIsFound > 0.5) {
-    finalColor = uFoundGreen;
+    finalColor = foundRestingColor;
   } else {
     finalColor = staticVec;
   }
   finalColor *= mix(1.0, uSideShade, step(0.5, uIsSide));
 
-  // Deselection dissolve: noisy digital dither + tears + chroma split
-  vec2 dissolveBlock = floor(fragPx * 0.21)
-    + vec2(sin(uTime * 58.0), cos(uTime * 41.0)) * glitchAmp * 3.5;
-  float transitionNoise = hash(dissolveBlock);
-  float transitionNoise2 = hash(dissolveBlock * 1.9 + uTime * 3.7);
-  transitionNoise = mix(transitionNoise, transitionNoise2, 0.55 * max(glitchAmp, 0.35));
-
-  float horizontalTear = step(0.78, sin(fragPx.y * 0.038 + uTime * (48.0 + glitchAmp * 95.0)));
-  float verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x * 0.07), floor(uTime * 24.0))));
-
-  float glitchThreshold = uFadeProgress;
-  if (transitionActive > 0.5) {
-    // Softer threshold noise + gentler tears → the dissolve edge breaks up
-    // evenly instead of ripping the country apart in big chunks.
-    glitchThreshold += (transitionNoise - 0.5) * (0.46 + glitchAmp * 0.30);
-    if (horizontalTear > 0.5) {
-      glitchThreshold = clamp(glitchThreshold - 0.16, 0.0, 1.0);
-    }
-    if (verticalGlitch > 0.5) {
-      glitchThreshold = clamp(glitchThreshold + 0.12, 0.0, 1.0);
-    }
-  }
-
+  // Ordered pixel-art Bayer dither dissolve with warm amber frontier embers
+  float cellNoise = hash(floor(fragPx * 0.25));
+  float blockVal = mix(bayer, cellNoise, 0.32);
   float finalProgress = clamp(uFadeProgress, 0.0, 1.0);
+  float glitchThreshold = finalProgress;
 
   vec3 glitchColor = finalColor;
   bool isFoundSurface = (uIsFound > 0.5);
@@ -225,50 +253,24 @@ export const GLITCH_FRAGMENT_BODY = `
     (uIsError < 0.5) &&
     (uIsSuccess < 0.5);
 
-  if (transitionActive > 0.5 && !isFoundSurface) {
-    // Retro TV chroma aberration & vertical dropouts
-    float chroma = (transitionNoise - 0.5) * 0.28 * glitchAmp;
-    glitchColor.r = clamp(finalColor.r + chroma, 0.0, 1.0);
-    glitchColor.g = clamp(finalColor.g * (1.0 - glitchAmp * 0.15), 0.0, 1.0);
-    glitchColor.b = clamp(finalColor.b - chroma, 0.0, 1.0);
-    
-    // Horizontal scanline/tear overlay with neon color aberrations
-    if (horizontalTear > 0.5) {
-      vec3 tearColor = mix(vec3(0.0, 0.8, 1.0), vec3(1.0, 0.0, 0.8), hash(blockUv + floor(uTime * 30.0)));
-      glitchColor = mix(glitchColor, tearColor, 0.42 * glitchAmp);
-    }
-    if (verticalGlitch > 0.5) {
-      glitchColor = mix(glitchColor, vec3(0.0), 0.25 * glitchAmp);
-    }
-  }
-
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
-  vec3 settleColor = mix(litRestingColor, uFoundGreen * sideShade, step(0.5, uIsFound));
-
-  // Micro-grain noise sur la surface de tous les pays
-  float countrySurfaceNoise = (hash(fragPx * 0.42 + vec2(0.12, 0.45)) - 0.5) * 0.06;
-  staticVec += vec3(countrySurfaceNoise);
-  settleColor += vec3(countrySurfaceNoise * 0.7);
-
-  float blockVal = hash(blockUv * 0.38 + sin(uTime * 8.0) * 0.05);
+  vec3 settleColor = mix(litRestingColor, foundRestingColor * sideShade, step(0.5, uIsFound));
+  vec3 edgeGlow = mix(vec3(0.96, 0.68, 0.22), vec3(1.0, 0.88, 0.48), step(0.5, bayer));
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
   } else if (isFoundSurface) {
-    gl_FragColor.rgb = uFoundGreen * sideShade;
+    gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
     if (uIsSatellite > 0.5) {
       gl_FragColor.rgb = glitchColor;
     } else {
       if (blockVal < glitchThreshold) {
         gl_FragColor.rgb = settleColor;
+      } else if (blockVal < glitchThreshold + 0.11) {
+        gl_FragColor.rgb = mix(glitchColor, edgeGlow, 0.72);
       } else {
-        if (blockVal < glitchThreshold + 0.12) {
-          vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
-          gl_FragColor.rgb = mix(glitchColor, edgeGlow * 1.6, 0.65);
-        } else {
-          gl_FragColor.rgb = glitchColor;
-        }
+        gl_FragColor.rgb = glitchColor;
       }
     }
   } else if (isSoftSelectIn && transitionActive > 0.5) {
@@ -279,10 +281,7 @@ export const GLITCH_FRAGMENT_BODY = `
     gl_FragColor.rgb = staticVec * sideShade;
   }
 
-  // Grain TV tactile micro-subtil sur l'intégralité des faces des pays
-  float surfaceGrain = (hash(fragPx * 0.38 + vec2(0.4, 0.7)) - 0.5) * 0.055;
-  gl_FragColor.rgb += vec3(surfaceGrain);
-
+  // Clean cartographic finish
   if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {
     gl_FragColor.a = 1.0;
   } else {
@@ -291,9 +290,8 @@ export const GLITCH_FRAGMENT_BODY = `
         if (blockVal < uFadeProgress) {
           gl_FragColor.a = 0.0;
         } else {
-          if (blockVal < uFadeProgress + 0.12) {
-            vec3 edgeGlow = mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv + floor(uTime * 15.0)));
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow * 1.6, 0.65);
+          if (blockVal < uFadeProgress + 0.11) {
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow, 0.72);
           }
           gl_FragColor.a = 1.0 - uFadeProgress * uFadeProgress;
         }
@@ -305,3 +303,193 @@ export const GLITCH_FRAGMENT_BODY = `
     }
   }
 `;
+
+export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment>
+      vec3 sphereNormal = normalize(vDitherWorldPos);
+      vec3 geomNormal = normalize(vDitherWorldNormal);
+      float isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
+
+      vec3 viewDir = normalize(cameraPosition - vDitherWorldPos);
+      float ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
+      float limbFactor = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
+      float rimSheen = pow(1.0 - ndv, 3.2) * 0.045;
+
+      float cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
+      float cLng = atan(sphereNormal.x, sphereNormal.z);
+      vec2 cartUv = vec2(cLng / 6.2831853 + 0.5, cLat / 3.14159265 + 0.5);
+      vec2 topoGrid = cartUv * vec2(72.0, 36.0);
+      vec2 topoDist = abs(fract(topoGrid + 0.5) - 0.5) / max(fwidth(topoGrid), vec2(0.001));
+      float parallelLine = clamp(1.0 - topoDist.y, 0.0, 1.0);
+      float crossTick = clamp(1.0 - max(topoDist.x, topoDist.y) * 0.6, 0.0, 1.0);
+
+      float surfaceLuma = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+      float maxC = max(gl_FragColor.r, max(gl_FragColor.g, gl_FragColor.b));
+      float minC = min(gl_FragColor.r, min(gl_FragColor.g, gl_FragColor.b));
+      float chroma = maxC - minC;
+      float isSoloFound = step(0.45, gl_FragColor.g)
+        * step(gl_FragColor.b * 1.32, gl_FragColor.g)
+        * step(gl_FragColor.r * 2.2, gl_FragColor.b);
+      float isConquestOwned = (1.0 - isSoloFound) * step(0.15, chroma) * step(0.36, maxC);
+      float isAwakenedCap = max(isSoloFound, isConquestOwned) * (1.0 - uIsGhost);
+      float lumaThreshold = mix(0.44, 0.64, uIsRegionalMode);
+      float lumaMask = 1.0 - smoothstep(lumaThreshold, lumaThreshold + 0.14, surfaceLuma);
+      float isUnfoundDarkCap = (1.0 - isAwakenedCap) * (1.0 - uIsGhost) * lumaMask;
+      // Discovery ignition: inside the freshly found country's radius, city pixels switch
+      // on one by one as a front expands from the capital (per-pixel jitter, no blur).
+      vec2 igniteCell = floor(cartUv * vec2(3600.0, 1800.0));
+      float igniteDist = acos(clamp(dot(sphereNormal, uIgniteOrigin), -1.0, 1.0));
+      float igniteT = (uTime - uIgniteStart) / max(uIgniteDuration, 0.001);
+      float igniteActive = step(igniteDist, uIgniteRadius) * step(0.0, igniteT) * step(igniteT, 1.0)
+        * (1.0 - uReducedMotion) * (1.0 - uIsRegionalMode);
+      float igniteFront = igniteT * uIgniteRadius * 1.2;
+      float igniteJitter = cityCellHash(igniteCell + vec2(5.3, 11.9)) * uIgniteRadius * 0.2;
+      float igniteD = igniteDist + igniteJitter;
+      float ignitePixelOn = step(igniteD, igniteFront);
+      // Only the freshly found country (uIgniteSelf) restarts from dark; already-lit
+      // neighbours inside the radius keep their lights and only catch a faint spark.
+      float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14))
+        * mix(0.35, 1.0, uIgniteSelf);
+      float igniteMask = mix(1.0, ignitePixelOn, igniteActive * uIgniteSelf);
+      // Homepage wake-up: the discovery ignition applied to the whole world at once.
+      // Land powers up pixel by pixel, then every city pixel switches on with a gold
+      // spark (per-pixel jitter on the 3600x1800 grid, no tiles), then stays awake.
+      float homeWakeAt = 0.12 + cityCellHash(igniteCell) * 0.78;
+      float homeLandAt = 0.02 + cityCellHash(igniteCell + vec2(17.1, 3.7)) * 0.5;
+      float homeOn = max(uReducedMotion, uIsRegionalMode);
+      float homeIgnite = max(step(homeWakeAt, uHomeWake), homeOn);
+      float homeLandOn = max(step(homeLandAt, uHomeWake), homeOn);
+      float homeFlash = uShowcaseLights * (1.0 - homeOn) * homeIgnite
+        * (1.0 - step(homeWakeAt + 0.06, uHomeWake));
+      igniteFlash = max(igniteFlash, homeFlash);
+      float showcaseNow = uShowcaseLights * homeIgnite;
+      float showcaseLand = uShowcaseLights * homeLandOn;
+      float cityPower = clamp(max(isAwakenedCap * igniteMask, showcaseNow * isUnfoundDarkCap), 0.0, 1.0)
+        * (1.0 - uIsGhost);
+
+      // Blackout: unfound land in world modes is a desaturated, power-less grey derived
+      // from the base terrain colour (no hard-coded terrain hue), cities/rivers switched off.
+      float blackoutAmt = (1.0 - showcaseLand) * isUnfoundDarkCap * (1.0 - uIsRegionalMode);
+      float unfoundDimTarget = mix(0.36, 0.74, uIsRegionalMode);
+      float blackoutDim = mix(mix(1.0, unfoundDimTarget, (1.0 - showcaseLand) * isUnfoundDarkCap), 0.42, uIsGhost);
+      vec3 blackoutGrey = vec3(surfaceLuma) * vec3(0.97, 0.99, 1.03);
+      vec3 unfoundLand = mix(gl_FragColor.rgb, blackoutGrey, blackoutAmt * 0.88) * blackoutDim;
+      vec3 soloAwakenedLand = vec3(0.48, 0.34, 0.15) + vec3(0.15, 0.10, 0.04) * (1.0 - ndv);
+      vec3 conquestAwakenedLand = gl_FragColor.rgb * 0.84 + gl_FragColor.rgb * 0.22 * (1.0 - ndv);
+      vec3 landSurface = mix(mix(unfoundLand, conquestAwakenedLand, isConquestOwned), soloAwakenedLand, isSoloFound);
+      // Pixel-art biome palette (baked, NearestFilter): revealed on found caps and
+      // the illuminated home, only hinted on blacked-out caps, off on ghosts/satellite.
+      vec4 biomeSample = texture2D(uBiomeMap, cartUv);
+      vec3 biomeTone = biomeSample.rgb;
+      vec3 biomeLand = biomeTone * (0.88 + 0.18 * (1.0 - ndv));
+      float biomeAllowed = biomeSample.a * (1.0 - uIsGhost) * (1.0 - uIsSatelliteTheme);
+      float biomeReveal = max(max(isSoloFound, isConquestOwned), showcaseLand * isUnfoundDarkCap) * biomeAllowed;
+      float biomeHint = (1.0 - showcaseLand) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
+      landSurface = mix(landSurface, biomeTone * 0.3, biomeHint * 0.34);
+      landSurface = mix(landSurface, biomeLand, biomeReveal * 0.92);
+      // Conquête: translucent owner tint over the realistic palette (relief/forests stay visible).
+      vec3 ownerHue = gl_FragColor.rgb / max(maxC, 0.001);
+      float ownerLuma = dot(landSurface, vec3(0.299, 0.587, 0.114));
+      vec3 ownerTint = ownerHue * (0.30 + ownerLuma * 1.1);
+      landSurface = mix(landSurface, ownerTint, isConquestOwned * biomeAllowed * 0.5);
+      vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
+      vec3 baseLit = landSurface * limbFactor + engrave;
+
+      vec2 cityCellId = floor(cartUv * vec2(3600.0, 1800.0));
+      vec4 capitalSample = texture2D(uCapitalLightsMap, cartUv);
+      float cityDensity = capitalSample.r;
+      float cityAura = capitalSample.g;
+      float mountainRelief = capitalSample.b;
+      float riverVal = capitalSample.a;
+      float cityHash = cityCellHash(cityCellId);
+      float cityHash2 = cityCellHash(cityCellId + vec2(37.2, 91.7));
+
+      vec2 regSub = fract(cartUv * vec2(3600.0, 1800.0));
+      vec2 regCellId = floor(cartUv * vec2(14400.0, 7200.0));
+      float regSubHash = cityCellHash(regCellId);
+      float regCenterDot = step(0.28, regSub.x) * step(regSub.x, 0.72) * step(0.28, regSub.y) * step(regSub.y, 0.72);
+      float regMicroSpark = regCenterDot + (1.0 - regCenterDot) * step(0.84, regSubHash) * 0.65;
+
+      float reliefMask = (1.0 - uIsGhost) * mix(1.0, 0.36 * cityPower, uIsRegionalMode);
+      float spurMask = reliefMask * (1.0 - uIsRegionalMode);
+      float rawCrest = step(0.76, mountainRelief);
+      float rawSpur = (1.0 - rawCrest) * step(0.38, mountainRelief);
+      float rawValley = (1.0 - max(rawCrest, rawSpur)) * step(0.12, mountainRelief);
+      float ridgeCrest = rawCrest * reliefMask;
+      float ridgeSpur = rawSpur * spurMask;
+      float valleyGap = rawValley * spurMask;
+      vec3 darkReliefLit = baseLit * (1.0 - valleyGap * 0.16)
+        + vec3(0.055, 0.058, 0.062) * ridgeCrest
+        + vec3(0.028, 0.030, 0.032) * ridgeSpur;
+      vec3 soloCrestTone = mix(vec3(0.62, 0.48, 0.28), vec3(0.92, 0.78, 0.48), isSoloFound);
+      vec3 soloSpurTone = mix(vec3(0.36, 0.29, 0.19), vec3(0.68, 0.50, 0.24), isSoloFound);
+      vec3 awakenedCrestTone = mix(soloCrestTone, min(vec3(1.0), baseLit * 1.65 + vec3(0.24, 0.22, 0.16)), isConquestOwned);
+      vec3 awakenedSpurTone = mix(soloSpurTone, min(vec3(1.0), baseLit * 1.28 + vec3(0.10, 0.09, 0.06)), isConquestOwned);
+      vec3 awakeReliefLit = baseLit * (1.0 - valleyGap * 0.28);
+      awakeReliefLit = mix(awakeReliefLit, awakenedSpurTone, ridgeSpur * (0.68 + 0.18 * cityHash));
+      awakeReliefLit = mix(awakeReliefLit, awakenedCrestTone, ridgeCrest * 0.86);
+      vec3 reliefLit = mix(darkReliefLit, awakeReliefLit, cityPower);
+
+      float riverMask = (1.0 - uIsGhost) * mix(1.0, 0.52 * cityPower, uIsRegionalMode);
+      float riverCore = step(0.65, riverVal) * riverMask;
+      float riverBank = (1.0 - step(0.65, riverVal)) * step(0.25, riverVal) * riverMask * (1.0 - uIsRegionalMode);
+      float riverShimmer = 0.78 + 0.22 * sin(uTime * 2.2 + (cartUv.x * 140.0 + cartUv.y * 90.0));
+      vec3 darkRiverTone = mix(vec3(0.08, 0.14, 0.19), vec3(0.10, 0.105, 0.11), blackoutAmt);
+      vec3 darkRiverLit = mix(reliefLit * (1.0 - riverBank * 0.10), darkRiverTone, riverCore * mix(0.58, 0.34, blackoutAmt));
+      vec3 soloRiverColor = mix(vec3(0.14, 0.46, 0.58), vec3(0.38, 0.80, 0.88), riverShimmer);
+      vec3 conquestRiverColor = mix(vec3(0.05, 0.12, 0.34), vec3(0.36, 0.66, 0.98), riverShimmer * 0.6);
+      vec3 awakeRiverTone = mix(soloRiverColor, conquestRiverColor, isConquestOwned);
+      vec3 awakeRiverLit = mix(reliefLit * (1.0 - riverBank * 0.22), awakeRiverTone, riverCore * 0.88);
+      vec3 terrainLit = mix(darkRiverLit, awakeRiverLit, cityPower);
+
+      float isRegionalPin = step(0.975, cityAura);
+      float worldAura = (isRegionalPin > 0.5 && cityDensity < 0.25) ? 0.0 : cityAura;
+      float effectiveAura = mix(worldAura, isRegionalPin * 0.28, uIsRegionalMode);
+
+      float trafficWave = 0.80 + 0.20 * sin(uTime * 2.8 - worldAura * 8.5 + cityHash * 6.2831853);
+      float satTwinkle = 0.78 + 0.22 * sin(uTime * 4.2 + cityHash2 * 6.2831853);
+      float tierPinpoint = step(0.82, cityDensity);
+      float tierArterial = (1.0 - tierPinpoint) * step(0.55, cityDensity);
+      float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.25, cityDensity);
+
+      vec3 auraColor = mix(
+        vec3(0.68, 0.40, 0.12),
+        max(terrainLit * 1.35, vec3(0.75, 0.55, 0.22)),
+        isConquestOwned * 0.5
+      );
+      vec3 withAura = mix(terrainLit, max(terrainLit, auraColor), effectiveAura * 0.32 * cityPower);
+      vec3 colorOuterTentacle = mix(
+        vec3(0.94, 0.54, 0.16),
+        vec3(1.0, 0.84, 0.48),
+        isConquestOwned * 0.45
+      );
+      vec3 colorMainArterial = mix(
+        mix(vec3(0.98, 0.72, 0.18), vec3(1.0, 0.84, 0.34), cityHash2),
+        vec3(1.0, 0.94, 0.72),
+        isConquestOwned * 0.55
+      );
+      vec3 colorMetroHeart = mix(
+        vec3(1.0, 0.94, 0.70),
+        vec3(1.0, 0.99, 0.92),
+        smoothstep(0.82, 1.0, max(cityDensity, isRegionalPin))
+      );
+      vec3 worldSparkColor = tierPinpoint * colorMetroHeart
+        + tierArterial * colorMainArterial
+        + tierTentacle * colorOuterTentacle;
+      vec3 sparkColor = mix(worldSparkColor, colorMetroHeart, uIsRegionalMode);
+      float worldSparkAlpha = (
+        tierPinpoint * 0.98 +
+        tierArterial * (0.78 + 0.16 * cityHash2) * trafficWave +
+        tierTentacle * (0.50 + 0.24 * cityHash2) * satTwinkle
+      );
+      float regionalSparkAlpha = isRegionalPin * regMicroSpark * (0.88 + 0.12 * satTwinkle);
+      float sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uIsRegionalMode) * cityPower;
+      // Leading edge of the ignition wave burns in the existing win gold.
+      sparkColor = mix(sparkColor, vec3(0.96, 0.68, 0.22) * 1.25, igniteFlash);
+      vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
+
+      vec3 sideRgb = landSurface * 0.58;
+      gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
+      float satTopoFeat = max(riverCore * 0.92, ridgeCrest * 0.76 + ridgeSpur * 0.42);
+      float satFeat = clamp(max(sparkAlpha * 1.15 + effectiveAura * 0.38 * cityPower, satTopoFeat), 0.0, 1.0);
+      float satTargetAlpha = mix(mix(0.24, 0.48, isConquestOwned), 0.96, satFeat);
+      gl_FragColor.a = mix(gl_FragColor.a, satTargetAlpha, uIsSatelliteTheme * isAwakenedCap * (1.0 - isSideWall));`;

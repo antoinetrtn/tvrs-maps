@@ -1,27 +1,27 @@
 import "./ConfirmationModal.css";
 
 import React from "react";
-import { createPortal } from "react-dom";
 
 import { useTranslation } from "../config/i18n";
+import Button from "./ui/Button";
+import Dialog, { DialogTitle } from "./ui/Dialog";
 
 const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
   const t = useTranslation(lang);
-  return createPortal(
-    <div className={`dialog-panel ${theme}`}>
-      <div className="dialog-card">
-        <p>{message}</p>
-        <div className="modal-actions">
-          <button className="modal-btn cancel" onClick={onCancel}>
-            {t("cancel")}
-          </button>
-          <button className="modal-btn confirm" onClick={onConfirm}>
-            {t("confirm")}
-          </button>
-        </div>
+  return (
+    <Dialog onClose={onCancel} theme={theme} closeOnBackdrop={false}>
+      <DialogTitle as="p" className="panel-title confirmation-message">
+        {message}
+      </DialogTitle>
+      <div className="modal-actions">
+        <Button variant="secondary" look="dialog-action" className="cancel" onClick={onCancel}>
+          {t("cancel")}
+        </Button>
+        <Button variant="primary" look="dialog-action" className="confirm" onClick={onConfirm}>
+          {t("confirm")}
+        </Button>
       </div>
-    </div>,
-    document.body
+    </Dialog>
   );
 };
 

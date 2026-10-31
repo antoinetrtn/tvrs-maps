@@ -9,12 +9,15 @@ import { PERFORMANCE } from "../../config/gameConstants";
 import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
 import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
+import { loopHasWork } from "../render/globeLoopWork";
+import { isDeselectResettableMaterial } from "../render/globePolygonMaterial";
 import { getCachedMaterial } from "../render/polygonColorResolver";
 import {
   getAnimatedPolygonMaterialCount,
   polygonGlitchUniforms,
 } from "../render/polygonGlitchShader";
 import { syncSelectedCountryShaderUniforms } from "../render/selectionTransitionShader";
+import { useGlobeShaderClock } from "./useGlobeShaderClock";
 
 const _transitionTargetColor = new THREE.Color();
 
@@ -68,16 +71,26 @@ export function useGlobeAnimationLoop({
   const graticuleStyleUntilRef = useRef(0);
   const lastGraticuleStyleTimeRef = useRef(0);
   const prevSelectedCountryRef = useRef(null);
+  // Read by useGlobeShaderClock (time uniforms advance per rendered frame).
+  const needsSharedTimeRef = useRef(false);
+  const mountainGlitchActiveRef = useRef(mountainGlitchActive);
+  mountainGlitchActiveRef.current = mountainGlitchActive;
+  const globeMaterialRef = useRef(globeMaterial);
+  globeMaterialRef.current = globeMaterial;
 
   const selectedCountryRef = useRef(null);
   const isErrorRef = useRef(false);
   const isSuccessRef = useRef(false);
-  const isEndScreenRef = useRef(false);
+
+  const kickLoop = () => {
+    if (animFrameIdRef.current == null && sceneWaitTimeoutRef.current == null) {
+      animateSceneRef.current?.();
+    }
+  };
 
   selectedCountryRef.current = selectedCountry;
   isErrorRef.current = isError;
   isSuccessRef.current = isSuccess;
-  isEndScreenRef.current = isEndScreen;
 
   useEffect(() => {
     needsGraticuleStyleRef.current = true;
@@ -117,7 +130,6 @@ export function useGlobeAnimationLoop({
       const imperativeFeedback = globeFeedbackRef?.current;
       const currentIsError = isErrorRef.current || Boolean(imperativeFeedback?.isError);
       const currentIsSuccess = isSuccessRef.current || Boolean(imperativeFeedback?.isSuccess);
-      const currentIsEndScreen = isEndScreenRef.current;
 
       const isUrgentAnim =
         currentIsError ||
@@ -147,12 +159,6 @@ export function useGlobeAnimationLoop({
       const timeSec = time / 1000;
       const needsMountainFeedback = mountainGlitchActive && (currentIsError || currentIsSuccess);
 
-      if (globeMaterial && globeMaterial.userData.shader) {
-        if (globeMaterial.userData.shader.uniforms.uTime) {
-          globeMaterial.userData.shader.uniforms.uTime.value = timeSec;
-        }
-      }
-
       const capMat = currentSelectedCountry
         ? getCachedMaterial(
             polygonMaterialCacheRef.current.cap,
@@ -173,12 +179,12 @@ export function useGlobeAnimationLoop({
       const hasAnimatedShaders = getAnimatedPolygonMaterialCount() > 0;
       const needsSharedTime =
         hasAnimatedShaders &&
-        (currentIsEndScreen ||
-          currentIsError ||
+        (currentIsError ||
           currentIsSuccess ||
           Boolean(transitioningPreviousCountryRef?.current) ||
           selectedHasShader);
 
+      needsSharedTimeRef.current = needsSharedTime;
       if (needsSharedTime) {
         polygonGlitchUniforms.uTime.value = timeSec;
       }
@@ -191,7 +197,6 @@ export function useGlobeAnimationLoop({
       }
 
       if (mountainGlitchActive) {
-        mountainGlitchUniforms.uTime.value = timeSec;
         if (needsMountainFeedback) {
           mountainGlitchUniforms.uIsError.value =
             currentSelectedCountry && currentIsError ? 1.0 : 0.0;
@@ -255,7 +260,7 @@ export function useGlobeAnimationLoop({
             }
           });
           [oldCapMat, oldSideMat].forEach((mat, index) => {
-            if (!mat || mat.userData.isFoundCap) return;
+            if (!isDeselectResettableMaterial(mat)) return;
             if (!mat.userData.shader && mat.userData.admin !== oldAdmin) return;
             const isCap = index === 0;
 
@@ -320,8 +325,7 @@ export function useGlobeAnimationLoop({
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;
               if (shader.uniforms.uFadeProgress) {
-                const isMissedOnEnd = currentIsEndScreen && !foundSet.has(prevCountry);
-                shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : 1.0;
+                shader.uniforms.uFadeProgress.value = 1.0;
               }
             }
           });
@@ -347,8 +351,7 @@ export function useGlobeAnimationLoop({
             if (mat && mat.userData.shader) {
               const shader = mat.userData.shader;
               if (shader.uniforms.uFadeProgress) {
-                const isMissedOnEnd = currentIsEndScreen && !foundSet.has(prevCountry);
-                shader.uniforms.uFadeProgress.value = isMissedOnEnd ? 0.0 : fadeProgress;
+                shader.uniforms.uFadeProgress.value = fadeProgress;
               }
               if (shader.uniforms.uSelectInTransition) {
                 shader.uniforms.uSelectInTransition.value = 0.0;
@@ -363,23 +366,41 @@ export function useGlobeAnimationLoop({
         transitionColorsPrimedRef.current = null;
       }
 
-      const _hasWork =
-        needsSharedTime ||
-        hasSelectedCountry ||
-        transitioningPreviousCountryRef?.current ||
-        !glowSettled ||
-        needsGraticuleStyleRef.current;
+      const hasWork = loopHasWork({
+        needsSharedTime,
+        hasSelectedCountry,
+        currentIsError,
+        currentIsSuccess,
+        mountainGlitchActive,
+        modeTransitionRef,
+        transitioningPreviousCountryRef,
+        glowSettled,
+        needsGraticuleStyleRef,
+      });
 
-      scheduleFrame();
+      // Idle: stop polling; state changes (selection/feedback/data/theme) re-kick.
+      if (hasWork && !document.hidden) {
+        scheduleFrame();
+      }
     };
 
     animateSceneRef.current = animateScene;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearScheduledFrame();
+      } else if (animFrameIdRef.current == null && sceneWaitTimeoutRef.current == null) {
+        scheduleFrame();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     if (animFrameIdRef.current == null && sceneWaitTimeoutRef.current == null) {
       scheduleFrame();
     }
 
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearScheduledFrame();
     };
   }, [
@@ -412,6 +433,14 @@ export function useGlobeAnimationLoop({
     mode,
   ]);
 
+  useGlobeShaderClock({
+    globeEl,
+    globeMaterialRef,
+    needsSharedTimeRef,
+    mountainGlitchActiveRef,
+    mountainGlitchUniforms,
+  });
+
   useEffect(() => {
     if (!globeFeedbackApplierRef) return undefined;
     globeFeedbackApplierRef.current = (admin, { isError = false, isSuccess = false }) => {
@@ -422,13 +451,7 @@ export function useGlobeAnimationLoop({
         isSuccess,
         mountainGlitchUniforms,
       });
-      if (
-        animFrameIdRef.current == null &&
-        sceneWaitTimeoutRef.current == null &&
-        animateSceneRef.current
-      ) {
-        animateSceneRef.current();
-      }
+      kickLoop();
     };
     return () => {
       globeFeedbackApplierRef.current = null;
@@ -436,13 +459,7 @@ export function useGlobeAnimationLoop({
   }, [globeFeedbackApplierRef, polygonMaterialCacheRef, mountainGlitchUniforms]);
 
   useEffect(() => {
-    if (
-      animFrameIdRef.current == null &&
-      sceneWaitTimeoutRef.current == null &&
-      animateSceneRef.current
-    ) {
-      animateSceneRef.current();
-    }
+    kickLoop();
   }, [selectedCountry, isError, isSuccess, isEndScreen, transitioningPreviousCountryState]);
 
   useEffect(() => {
@@ -454,26 +471,14 @@ export function useGlobeAnimationLoop({
       graticuleStyleUntilRef.current = performance.now() + 500;
       updateGlobeLighting();
       styleGlobeGraticules();
-      if (
-        animFrameIdRef.current == null &&
-        sceneWaitTimeoutRef.current == null &&
-        animateSceneRef.current
-      ) {
-        animateSceneRef.current();
-      }
+      kickLoop();
     }
   }, [countriesData, departmentsData, updateGlobeLighting, styleGlobeGraticules]);
 
   const handleGlobeReady = () => {
     needsGraticuleStyleRef.current = true;
     graticuleStyleUntilRef.current = performance.now() + 400;
-    if (
-      animFrameIdRef.current == null &&
-      sceneWaitTimeoutRef.current == null &&
-      animateSceneRef.current
-    ) {
-      animateSceneRef.current();
-    }
+    kickLoop();
     styleGlobeGraticules();
     updateGlobeLighting();
   };

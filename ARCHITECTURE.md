@@ -27,10 +27,15 @@ src/
   App.css                     Coquille app : .app-container, transition d'écran
                               (screen-soft-in/scanline), vignette panique.
   index.css                   Tokens CSS bootstrap (:root + [data-theme="light"]) et
-                              composants globaux réutilisables (.btn-primary, glitch…).
+                              composants globaux réutilisables (ui/Button, ui/IconButton, glitch…).
   styles/
     panelSystem.css           Système unifié panneaux/overlays : sheet-panel,
-                              panel-header, segmented-control, nav-chips, dialogs.
+                              panel-header, TabBar (ui/TabBar), dialogs.
+    motion.css                Tokens de motion (--dur-*, --steps-*, --blur-scrim, --stagger),
+                              appui « bloc » (px-press-flash), indicateur d'onglet,
+                              bandes (px-band-in), cascade (.px-cascade), volets
+                              Solo ↔ Conquête (.mode-shutter) et repli global
+                              prefers-reduced-motion. Carré, par pas, jamais de glow.
 
   globe/                      TOUT le rendu 3D vit ici.
     GlobeMap.jsx              ~590 l. Compose <Globe> (react-globe.gl) et branche
@@ -49,7 +54,11 @@ src/
                               (montagnes 3D low-poly).
 
   components/                 Écrans & UI (CSS co-localisé par composant) :
-                              HomeScreen (+ HomeScreenCategoryCarousel), GameSessionView
+                              HomeScreen (+ HomeScreenCategoryCarousel/HomeModeCard ; la
+                              carte « conquest » est la 1re du carrousel quand le mode est
+                              activé — Jouer ouvre le salon, « Règles » la feuille
+                              ConquestRulesSheet ; homeModes.js mappe cette carte vers le
+                              globe monde), GameSessionView
                               (monte GlobeMap + GameHUD + GameDataPanel + EndScreen),
                               GameHUD, GameDataPanel (tableau de résultats — remplace
                               l'ancien ResultsModal), EndScreen, LeaderboardScreen,
@@ -85,14 +94,20 @@ src/
                               (checkChallengesRealTime), recordSuccessfulGuessSideEffects.js.
 
   services/                   supabaseClient.js (auth, profils, records, leaderboard),
-                              TaskService.js.
+                              TaskService.js, countryStats/ (stats trouvé/raté par pays,
+                              score de maîtrise pur `mastery.js`, stockage localStorage
+                              versionné `storage.js`, service à backend interchangeable).
   tests/                      Tests Vitest (purs : shaders, gamification, i18n, config…).
   types/                      supabase.ts (types générés).
 
-public/data/
-  countries-50m-low.json      GeoJSON polygones pays (basse résolution = runtime).
-  departements-1000m.geojson  GeoJSON départements FR.
-  us-states.json              GeoJSON états US.
+public/data/                  GeoJSON servis (GÉNÉRÉS : ne pas éditer à la main).
+  countries-50m-low.json      polygones pays (basse résolution = runtime).
+  departements-1000m.geojson  départements FR.
+  us-states.json              états US.
+data-src/geodata/             Sources d'origine conservées (non servies) + README.
+scripts/build-geodata.mjs     `npm run build:geodata` régénère public/data depuis data-src
+                              (coordonnées à 3 décimales, propriétés utiles seulement, JSON
+                              compact) ; `npm run check:geodata` vérifie qu'ils sont à jour.
 ```
 
 **Invariants** (détaillés dans `QUALITY.md`) : pas de chaîne UI en dur (→ `config/i18n.js`),
@@ -122,6 +137,17 @@ centralisées dans `config/gameConfig.js` pour que les modes ne divergent pas
 visuellement. S'ajoute un axe **hardcore/peaceful** (toggle persisté,
 `hardcoreMode` dans `App`) : le hardcore ajoute des vies (`livesLeft`) et marque
 les records/scores leaderboard correspondants.
+
+### Entraînement ciblé
+
+Option « cible » (icône Target) sur chaque carte de l'accueil → `TrainingSheet`. À la fin d'une
+partie solo (hors Apprendre), `useCountryStatsRecorder` enregistre par pays trouvé / raté (cibles
+vues non trouvées + mauvaises réponses ; un pays jamais ciblé n'est pas compté) via
+`services/countryStats` (localStorage `tvrs-country-stats:v1:<profil>`, plafonné en taille ; AUCUN
+accès Supabase). `mastery.js` calcule un score de faiblesse ∈ [0,1] (historique récent pondéré par
+décroissance, a priori neutre 0,5 → un pays jamais vu passe après les ratés fréquents et avant les
+pays maîtrisés, petit bonus d'oubli). Une partie ciblée (`useTrainingRun`) remplace la liste du mode
+par un pool de 10/20/30 éléments, plus faibles d'abord ; ni record, ni XP, ni classement.
 
 ## 4. Flux de données et état
 
@@ -210,6 +236,13 @@ overrider QUE des concerns "scène globe" (matériau, glow, graticules, largeur 
 trait, mode de couleur des labels, palettes continents/départements). **Conséquence
 voulue : changer le thème du globe change le globe, pas l'interface.** Tout ce qui
 n'est pas listé dans `globeSettings` reste identique entre satellite et blackout.
+
+**Accent par défaut** : `DEFAULT_ACCENT` (`src/config/accentPresets.js`) vaut `bone`
+(« Os (sobre) »), lié au globe Monochrome via `monochrome@<accent>`. Il ne s'applique
+qu'aux utilisateurs sans accent enregistré : `readStoredAccent` renvoie toujours
+l'accent déjà sauvegardé (`STORAGE_KEYS.accent`) s'il est valide, sans jamais
+l'écraser. Les valeurs de repli du `:root` de `src/index.css` (premier paint) doivent
+rester alignées sur ce preset (garde `npm run check:tokens`).
 
 Helpers de couleur région : `getThemeRegionColor` (surface), `…Attenuated`
 (non-trouvé), `…Label`. Blackout n'a pas de palette `attenuated`/`label` → fallback

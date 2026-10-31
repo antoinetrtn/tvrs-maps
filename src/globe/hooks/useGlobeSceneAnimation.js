@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { disposeBiomeCache } from "../render/LowPolyBiomes";
 import { useGlobeAnimationLoop } from "./useGlobeAnimationLoop";
@@ -92,8 +92,16 @@ export function useGlobeSceneAnimation({
     gameDataMap,
   });
 
+  // The biome geometries/materials are shared and keyed by theme/colour, so they stay
+  // valid while the player finds countries. Disposing them on every `foundList`
+  // change forced a GPU re-upload (and shader re-link) after each answer in
+  // Mountains & Rivers. Release them only when a game is reset (list emptied) or
+  // when the globe unmounts.
+  const foundCount = foundList.length;
+  const previousFoundCountRef = useRef(foundCount);
   useEffect(() => {
-    if (foundList.length === 0) disposeBiomeCache();
-    return () => disposeBiomeCache();
-  }, [foundList]);
+    if (previousFoundCountRef.current > 0 && foundCount === 0) disposeBiomeCache();
+    previousFoundCountRef.current = foundCount;
+  }, [foundCount]);
+  useEffect(() => disposeBiomeCache, []);
 }

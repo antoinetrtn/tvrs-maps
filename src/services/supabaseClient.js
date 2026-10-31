@@ -1,5 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
-
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
@@ -10,7 +8,27 @@ export const isSupabaseConfigured = Boolean(
   supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY"
 );
 
-export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey) : null;
+let supabasePromise = null;
+
+/**
+ * Lazily loads `@supabase/supabase-js` and returns the singleton client (or null
+ * when Supabase env vars are not configured). Memoized so the SDK chunk is
+ * fetched and instantiated at most once, off the initial-load critical path.
+ */
+export function getSupabase() {
+  if (!isSupabaseConfigured) {
+    return Promise.resolve(null);
+  }
+  if (!supabasePromise) {
+    supabasePromise = import("@supabase/supabase-js")
+      .then(({ createClient }) => createClient(supabaseUrl, supabaseAnonKey))
+      .catch((err) => {
+        supabasePromise = null;
+        throw err;
+      });
+  }
+  return supabasePromise;
+}
 
 /**
  * Fetches user profile by ID.
@@ -18,6 +36,7 @@ export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabas
 export async function getProfile(profileId) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -35,6 +54,7 @@ export async function getProfile(profileId) {
 export async function isUsernameTaken(username, excludeProfileId = null) {
   if (!isSupabaseConfigured) return false;
   try {
+    const supabase = await getSupabase();
     let query = supabase.from("profiles").select("id").eq("username", username);
 
     if (excludeProfileId) {
@@ -64,6 +84,7 @@ export async function upsertProfile(
 ) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
+    const supabase = await getSupabase();
     let activeUsername = username;
     const payload = {
       id: profileId,
@@ -110,6 +131,7 @@ export async function submitLeaderboardScore(
 ) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
+    const supabase = await getSupabase();
     const insertRow = (row) => supabase.from("leaderboards").insert(row).select();
     const row = {
       profile_id: profileId,
@@ -143,6 +165,7 @@ function isMissingHardcoreColumn(error) {
 export async function getLeaderboard(gameMode, limit = 50) {
   if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
+    const supabase = await getSupabase();
     const fetchWith = (columns) =>
       supabase
         .from("user_records")
@@ -199,6 +222,7 @@ export async function getLeaderboard(gameMode, limit = 50) {
 export async function getUserHistory(profileId, gameMode = null, limit = 50) {
   if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
+    const supabase = await getSupabase();
     const fetchWith = (columns) => {
       let query = supabase.from("leaderboards").select(columns).eq("profile_id", profileId);
       if (gameMode) {
@@ -233,6 +257,7 @@ export async function getUserHistory(profileId, gameMode = null, limit = 50) {
 export async function getUserRecords(profileId) {
   if (!isSupabaseConfigured) return { data: [], error: new Error("Service non configuré") };
   try {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from("user_records")
       .select("*")
@@ -256,6 +281,7 @@ export async function upsertUserRecord(
 ) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Service non configuré") };
   try {
+    const supabase = await getSupabase();
     const payload = {
       profile_id: profileId,
       game_mode: gameMode,
@@ -295,6 +321,7 @@ export async function upsertUserRecord(
 export async function signUpWithEmail(email, password) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Supabase non configuré") };
   try {
+    const supabase = await getSupabase();
     const { data, error } = await supabase.auth.signUp({ email, password });
     return { data, error };
   } catch (err) {
@@ -305,6 +332,7 @@ export async function signUpWithEmail(email, password) {
 export async function signInWithEmail(email, password) {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Supabase non configuré") };
   try {
+    const supabase = await getSupabase();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { data, error };
   } catch (err) {
@@ -312,13 +340,24 @@ export async function signInWithEmail(email, password) {
   }
 }
 
+/**
+ * OAuth return URL: the current deployment (origin + path, no query/hash), so
+ * dev, previews and localhost come back to themselves. Supabase only honours
+ * it if it matches the Auth "Redirect URLs" allowlist; otherwise it falls back
+ * to the Site URL (production).
+ */
+export function getAuthRedirectUrl(location = window.location) {
+  return `${location.origin}${location.pathname || "/"}`;
+}
+
 export async function signInWithGoogle() {
   if (!isSupabaseConfigured) return { data: null, error: new Error("Supabase non configuré") };
   try {
+    const supabase = await getSupabase();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: getAuthRedirectUrl(),
       },
     });
     return { data, error };
@@ -330,6 +369,7 @@ export async function signInWithGoogle() {
 export async function signOut() {
   if (!isSupabaseConfigured) return { error: new Error("Supabase non configuré") };
   try {
+    const supabase = await getSupabase();
     const { error } = await supabase.auth.signOut();
     return { error };
   } catch (err) {
