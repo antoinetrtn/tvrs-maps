@@ -38,13 +38,15 @@ import {
 
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { DISCOVERY } from "../discoveryTimeline";
-import {
-  SELECT_CITY_ALPHA_VALUE,
-  SELECT_CITY_AMBER_RGB,
-  SELECT_EDGE_RGB_VALUE,
-  SELECT_LAND_TINT_RGB,
-} from "../globeShaders";
+import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
 import { getSelectionOutlineTexture, selectionOutlineBox } from "../selectionOutline";
+import {
+  SELECT_EDGE_RGB_VALUE,
+  SELECT_HALO_ALPHA_VALUE,
+  SELECT_LAND_TINT_RGB,
+  SELECT_PULSE_S_VALUE,
+  SELECT_PULSE_STEPS_VALUE,
+} from "../selectionStyle";
 import { discoveryLandStep } from "./igniteNodes";
 import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
@@ -231,10 +233,20 @@ function glitchBase(u, lit) {
   const edgeOn = step(hash(ocCell.add(7.0)), lightProg.mul(2.0)).mul(
     float(1).sub(transitionActive)
   );
-  const edgeOuter = step(0.75, edgeV).mul(edgeOn);
-  const edgeInner = step(0.25, edgeV)
-    .mul(float(1).sub(step(0.75, edgeV)))
+  const edgeOuter = step(0.9, edgeV).mul(edgeOn);
+  const edgeHalo = step(0.15, edgeV)
+    .mul(float(1).sub(step(0.9, edgeV)))
     .mul(edgeOn);
+  // Halo breathes in a few flat steps (pixel-art, no strobe); still under reduced motion.
+  const pulseWave = sin(time.mul(6.2831853 / SELECT_PULSE_S_VALUE))
+    .mul(0.5)
+    .add(0.5);
+  const pulse = mix(
+    floor(pulseWave.mul(SELECT_PULSE_STEPS_VALUE).add(0.5)).div(SELECT_PULSE_STEPS_VALUE),
+    float(0.6),
+    u.uReducedMotion
+  );
+  const haloAmt = edgeHalo.mul(edgeV).mul(SELECT_HALO_ALPHA_VALUE).mul(pulse.mul(0.65).add(0.35));
   const selLand = vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(LAND_TINT);
   const staticVec = mix(
     mix(
@@ -243,11 +255,11 @@ function glitchBase(u, lit) {
       cityOn.mul(SELECT_CITY_ALPHA_VALUE)
     ),
     EDGE_RGB,
-    edgeOuter
+    haloAmt
   );
   const foundRestingColor = vec3(0.48, 0.34, 0.15);
 
-  const finalStatic = mix(staticVec, CITY_AMBER, edgeInner.mul(0.3));
+  const finalStatic = mix(staticVec, EDGE_RGB, edgeOuter);
   const finalColor = vec3(finalStatic).toVar();
   If(on(u.uIsError), () => {
     finalColor.assign(errorEffect(time, blockUv, positionWorld));
@@ -260,7 +272,7 @@ function glitchBase(u, lit) {
           foundRestingColor,
           sphereDir,
           selCell,
-          max(side, step(0.75, edgeV))
+          max(side, step(0.9, edgeV))
         )
       );
     })

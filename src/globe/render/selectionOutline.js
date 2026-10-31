@@ -2,14 +2,18 @@
  * Pixel-art outline of the selected country, drawn ON its surface (no extrusion).
  * The country is rasterised once per selection on a lat/lng grid aligned on global
  * multiples of the cell size (square pixels, like the city-light texture): inside
- * cells touching the outside form the bright ring (255), the next ring in is dim
- * (128). Read by the GLSL glitch shader and its TSL twin through the same
+ * cells touching the outside form the thin bright border (255); the next HALO_RINGS
+ * rings in carry a fading soft halo (HALO_VALUES), pulsed by the shader. Read by the GLSL glitch shader and its TSL twin through the same
  * texture + `uSelOutlineBox` (lng0°, lat0°, cell°, size).
  */
 import * as THREE from "three";
 
 const N = 128;
-const CELLS = [0.1, 0.2, 0.25, 0.4, 0.5, 1, 2, 4];
+const CELLS = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1, 1.5, 2, 3, 4];
+// Longest side in cells: finer grid = thinner one-pixel border.
+const MAX_CELLS = 110;
+export const EDGE_VALUE = 255;
+export const HALO_VALUES = [170, 115, 60];
 const data = new Uint8Array(N * N * 4);
 let tex = null;
 let current = null;
@@ -51,7 +55,8 @@ export function rasterizeOutline(geometry, out = data) {
       return [x, lat];
     })
   );
-  const cell = CELLS.find((c) => Math.max(x1 - x0, y1 - y0) / c <= 60) || CELLS[CELLS.length - 1];
+  const cell =
+    CELLS.find((c) => Math.max(x1 - x0, y1 - y0) / c <= MAX_CELLS) || CELLS[CELLS.length - 1];
   const ox = Math.floor(x0 / cell) - 2,
     oy = Math.floor(y0 / cell) - 2;
   const w = Math.min(N, Math.ceil(x1 / cell) - ox + 3),
@@ -76,22 +81,37 @@ export function rasterizeOutline(geometry, out = data) {
         inside[j * N + i] = 1;
   }
   const at = (i, j) => (i < 0 || j < 0 || i >= N || j >= N ? 0 : inside[j * N + i]);
-  const ring = (i, j, v) =>
-    !at(i - 1, j) === v || !at(i + 1, j) === v || !at(i, j - 1) === v || !at(i, j + 1) === v;
+  const nb = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ];
+  // Ring distance from the border, walked inwards (0 = border cell).
+  const dist = new Uint8Array(N * N).fill(255);
+  let front = [];
   for (let j = 0; j < h; j++)
-    for (let i = 0; i < w; i++) {
-      if (!at(i, j)) continue;
-      const outer = ring(i, j, true);
-      const inner =
-        !outer &&
-        [
-          [-1, 0],
-          [1, 0],
-          [0, -1],
-          [0, 1],
-        ].some(([a, b]) => at(i + a, j + b) && ring(i + a, j + b, true));
-      out[(j * N + i) * 4] = outer ? 255 : inner ? 128 : 0;
-    }
+    for (let i = 0; i < w; i++)
+      if (at(i, j) && nb.some(([a, b]) => !at(i + a, j + b))) {
+        dist[j * N + i] = 0;
+        front.push([i, j]);
+      }
+  for (let d = 1; d <= HALO_VALUES.length; d++) {
+    const next = [];
+    for (const [i, j] of front)
+      for (const [a, b] of nb) {
+        const x = i + a,
+          y = j + b;
+        if (at(x, y) && dist[y * N + x] === 255) {
+          dist[y * N + x] = d;
+          next.push([x, y]);
+        }
+      }
+    front = next;
+  }
+  for (let k = 0; k < N * N; k++)
+    out[k * 4] =
+      dist[k] === 0 ? EDGE_VALUE : dist[k] <= HALO_VALUES.length ? HALO_VALUES[dist[k] - 1] : 0;
   return { ox: ox * cell, oy: oy * cell, cell };
 }
 

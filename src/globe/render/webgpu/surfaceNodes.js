@@ -296,6 +296,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       isUnfoundDarkCap,
       uRegionalNode,
       uGhost,
+      uHomeNode: uShowcaseNode,
     });
     const soloAwakenedLand = vec3(0.48, 0.34, 0.15).add(
       vec3(0.15, 0.1, 0.04).mul(float(1.0).sub(ndv))
