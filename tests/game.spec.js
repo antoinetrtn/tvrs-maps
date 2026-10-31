@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { EndScreen, GameDataPanel, GameHUD, HomeScreen } from "./helpers/pageObjects";
 import { showMode } from "./helpers/fixtures";
 
 test.describe("TVRS Maps E2E Game Flow Baseline", () => {

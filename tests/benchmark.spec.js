@@ -129,7 +129,7 @@ function generateBaselineArtifacts(results) {
     rivers_mountains: {},
   };
 
-  if (fs.existsSync(jsonPath)) {
+  {
     try {
       const content = fs.readFileSync(jsonPath, "utf8");
       if (content.trim()) {
@@ -149,7 +149,7 @@ function generateBaselineArtifacts(results) {
         }
       }
     } catch (err) {
-      console.error("[BENCHMARK] Error reading existing JSON:", err);
+      if (err?.code !== "ENOENT") console.error("[BENCHMARK] Error reading existing JSON:", err);
     }
   }
 

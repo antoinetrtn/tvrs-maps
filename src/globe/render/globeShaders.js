@@ -1,5 +1,6 @@
 import { DISCOVERY_DEFS, discoveryLandFn, GLSL_DISCOVERY_LAND_FN } from "./discoveryShaderChunks";
 export { DISCOVERY_DEFS, GLSL_DISCOVERY_LAND_FN };
+import * as FEAT from "./featureModeShaderChunks";
 import { SELECTION_STYLE_DEFS } from "./selectionStyle";
 /**
  * ==========================================
@@ -8,8 +9,7 @@ import { SELECTION_STYLE_DEFS } from "./selectionStyle";
  *
  * Raw GLSL for the custom "inner glow" atmosphere halo rendered behind the globe.
  * Extracted from GlobeMap.jsx so the (verbose, rarely-touched) shader source does
- * not clutter the component. The matching uniforms (glowColor / coef / power) are
- * driven from GlobeMap's lighting + animation code.
+ * not clutter the component. Uniforms are driven from GlobeMap.
  */
 
 /**
@@ -125,6 +125,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSelectStart;
   uniform float uShowcaseLights;
   uniform float uIsRegionalMode;
+${FEAT.FEATURE_DECLARATIONS}
   uniform sampler2D uCapitalLightsMap;
   uniform sampler2D uBiomeMap;
   uniform sampler2D uSelOutlineMap;
@@ -279,6 +280,7 @@ export const GLITCH_FRAGMENT_BODY = `
     gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_CITY_AMBER, isCityPx * SELECT_CITY_ALPHA);
   }
 
+${FEAT.FEATURE_GLITCH_CHUNK}
   gl_FragColor.a = 1.0;
 `;
 
@@ -443,9 +445,10 @@ ${SELECT_CITY_DEFS}
       vec3 awakeRiverLit = mix(reliefLit * (1.0 - riverBank * 0.22), awakeRiverTone, riverCore * 0.88);
       vec3 terrainLit = mix(darkRiverLit, awakeRiverLit, terrainPower);
 
+${FEAT.FEATURE_SURFACE_CHUNK}
       float isRegionalPin = step(0.975, cityAura);
       float worldAura = (isRegionalPin > 0.5 && cityDensity < 0.25) ? 0.0 : cityAura;
-      float effectiveAura = mix(worldAura, isRegionalPin * 0.28, uIsRegionalMode);
+      float effectiveAura = mix(worldAura, isRegionalPin * 0.28, uIsRegionalMode) * (1.0 - uFeatureMode);
 
       float trafficWave = 0.80 + 0.20 * sin(uTime * 2.8 - worldAura * 8.5 + cityHash * 6.2831853);
       float satTwinkle = 0.78 + 0.22 * sin(uTime * 4.2 + cityHash2 * 6.2831853);
@@ -455,10 +458,10 @@ ${SELECT_CITY_DEFS}
 
       vec3 auraColor = mix(
         vec3(0.68, 0.40, 0.12),
-        max(terrainLit * 1.35, vec3(0.75, 0.55, 0.22)),
+        max(activeTerrainLit * 1.35, vec3(0.75, 0.55, 0.22)),
         isConquestOwned * 0.5
       );
-      vec3 withAura = mix(terrainLit, max(terrainLit, auraColor), effectiveAura * 0.32 * cityPower);
+      vec3 withAura = mix(activeTerrainLit, max(activeTerrainLit, auraColor), effectiveAura * 0.32 * cityPower);
       vec3 colorOuterTentacle = mix(
         vec3(0.94, 0.54, 0.16),
         vec3(1.0, 0.84, 0.48),
@@ -484,7 +487,7 @@ ${SELECT_CITY_DEFS}
         tierTentacle * (0.50 + 0.24 * cityHash2) * satTwinkle
       );
       float regionalSparkAlpha = isRegionalPin * regMicroSpark * (0.88 + 0.12 * satTwinkle);
-      float sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uIsRegionalMode) * cityPower;
+      float sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uIsRegionalMode) * cityPower * (1.0 - uFeatureMode);
       // Leading edge of the ignition wave burns in the existing win gold.
       sparkColor = mix(sparkColor, vec3(0.96, 0.68, 0.22) * 1.25, igniteFlash);
       vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));

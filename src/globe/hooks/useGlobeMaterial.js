@@ -136,12 +136,7 @@ export function useGlobeMaterial({ UI_COLORS = getThemeColors() } = {}) {
     });
     const rimColor = new THREE.Color(UI_COLORS.oceanRimColor);
     const rimStrength = Number(UI_COLORS.oceanRimStrength) || 0.07;
-    if (mat.isNodeMaterial)
-      mat.outputNode = blackoutOceanOutputNode(
-        rimColor,
-        rimStrength,
-        polygonGlitchUniforms.uPixelScale
-      );
+    if (mat.isNodeMaterial) mat.outputNode = blackoutOceanOutputNode(rimColor, rimStrength);
     else
       mat.onBeforeCompile = (shader) => {
         shader.uniforms.uRimColor = { value: rimColor };

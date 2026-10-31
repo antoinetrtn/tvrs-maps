@@ -63,13 +63,7 @@ export function stepHomeWake(progress, dt, reduced) {
   return Math.min(1, Math.max(0, progress + dt / HOME_WAKE_SECONDS));
 }
 
-export function useGlobeShaderClock({
-  globeEl,
-  globeMaterialRef,
-  needsSharedTimeRef,
-  mountainGlitchActiveRef,
-  mountainGlitchUniforms,
-}) {
+export function useGlobeShaderClock({ globeEl, globeMaterialRef, needsSharedTimeRef }) {
   useEffect(() => {
     let restore = null;
     let waitId = null;
@@ -132,9 +126,6 @@ export function useGlobeShaderClock({
         if (needsSharedTimeRef.current || !reduced) {
           polygonGlitchUniforms.uTime.value = timeSec;
         }
-        if (mountainGlitchActiveRef.current && mountainGlitchUniforms?.uTime) {
-          mountainGlitchUniforms.uTime.value = timeSec;
-        }
       };
       restore = () => {
         scene.onBeforeRender = prev;
@@ -145,11 +136,5 @@ export function useGlobeShaderClock({
       if (waitId != null) clearTimeout(waitId);
       restore?.();
     };
-  }, [
-    globeEl,
-    globeMaterialRef,
-    needsSharedTimeRef,
-    mountainGlitchActiveRef,
-    mountainGlitchUniforms,
-  ]);
+  }, [globeEl, globeMaterialRef, needsSharedTimeRef]);
 }

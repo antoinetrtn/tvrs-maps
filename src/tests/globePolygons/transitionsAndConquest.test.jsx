@@ -308,7 +308,8 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
 
   describe("Selection transitions (transitioningPreviousCountryState and transitioningIncomingCountryState)", () => {
     it("characterizes deselection glitch transition and incoming transition", () => {
-      // 1. Deselection of unfound country: opaque glitch shader cap + visible side + selected altitude
+      // 1. Deselection of unfound country in play: straight back to the grain material (the
+      //    glitch fade could not match the night surface: grey then black dip), flat altitude
       const { result: monoDeselect } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
@@ -324,9 +325,7 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       );
       const franceMonoDeselect = summarizeFeatureOutput(monoDeselect.current, FEATURE_FRANCE);
       expect(franceMonoDeselect.altitude).toBe(POLYGON_ALTITUDE.selected);
-      expect(franceMonoDeselect.capMaterial.userData.isGlitchShaderCap).toBe(true);
-      expect(franceMonoDeselect.capMaterial.transparent).toBe(false);
-      expect(franceMonoDeselect.capMaterial.opacity).toBe(1);
+      expect(franceMonoDeselect.capMaterial.userData.isGlitchShaderCap).toBe(false);
       expect(franceMonoDeselect.sideMaterial.visible).toBe(false);
 
       // 3. Deselecting an already-found country: no glitch shader on cap, but altitude & side stay elevated

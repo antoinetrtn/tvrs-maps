@@ -5,6 +5,7 @@ import { FEEDBACK_TIMING } from "../../config/gameConstants";
 import { getBiomeTexture } from "./biomeTexture";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { DISCOVERY } from "./discoveryTimeline";
+import { getFeatureMaskTexture } from "./featureMask";
 import {
   GLITCH_FRAGMENT_BODY,
   GLITCH_FRAGMENT_DECLARATIONS,
@@ -21,6 +22,8 @@ export const polygonGlitchUniforms = {
   uShowcaseLights: { value: 1 },
   // 1 when in French Departments or US States regional mode (clean micro-scale hydrography + 1px capital pinpoints).
   uIsRegionalMode: { value: 0 },
+  // 1 when in rivers & mountains mode (pixel rivers and relief on all land caps + feature mask).
+  uFeatureMode: { value: 0 },
   // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
   uPixelScale: { value: 1 },
   // Deselection tear colours, derived from the globe palette.
@@ -211,6 +214,8 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uSelectStart = polygonGlitchUniforms.uSelectStart;
     shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
     shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
+    shader.uniforms.uFeatureMode = polygonGlitchUniforms.uFeatureMode;
+    shader.uniforms.uFeatureMap = { value: getFeatureMaskTexture() };
     shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
     shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
     shader.uniforms.uSelOutlineMap = { value: getSelectionOutlineTexture() };

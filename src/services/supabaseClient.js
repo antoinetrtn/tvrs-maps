@@ -105,7 +105,7 @@ export async function upsertProfile(
       (error.code === "23505" ||
         /unique constraint|profiles_username_key/i.test(error.message || ""))
     ) {
-      const suffix = Math.random().toString(36).substring(2, 6);
+      const suffix = globalThis.crypto.randomUUID().replace(/-/g, "").slice(0, 4);
       activeUsername = `${username}_${suffix}`;
       payload.username = activeUsername;
       const retryResult = await supabase.from("profiles").upsert(payload).select().single();

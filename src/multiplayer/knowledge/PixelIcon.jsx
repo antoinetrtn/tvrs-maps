@@ -359,7 +359,7 @@ function buildRuns(rows) {
     const line = rows[r];
     let start = -1;
     for (let c = 0; c <= line.length; c += 1) {
-      if (line[c] === "#") {
+      if (c < line.length && line[c] === "#") {
         if (start === -1) start = c;
       } else if (start !== -1) {
         runs.push({ key: `${r}-${start}`, row: r + 1, colStart: start + 1, colEnd: c + 1 });

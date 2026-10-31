@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { vec2 } from "three/tsl";
 import { describe, expect, it } from "vitest";
 
@@ -21,7 +20,6 @@ import { attachGlitchNodes } from "../globe/render/webgpu/glitchNode";
 import {
   swapLineMaterialsForWebGPU,
   toDitheredLineBasicNodeMaterial,
-  toLine2NodeMaterial,
 } from "../globe/render/webgpu/lineMaterialSwap";
 import {
   blackoutOceanOutputNode,
@@ -79,23 +77,13 @@ describe("WebGPU effect ports", () => {
     expect(blackoutOceanOutputNode().isNode).toBe(true);
   });
 
-  it("swaps LineMaterial for an equivalent Line2NodeMaterial", () => {
-    const lineMat = new LineMaterial({ color: 0x3399ff, linewidth: 3.8 });
-    lineMat.transparent = true;
-    lineMat.opacity = 0.5;
-    const swapped = toLine2NodeMaterial(lineMat);
-    expect(swapped.isLine2NodeMaterial).toBe(true);
+  it("converts LineBasicMaterial to a dithered LineBasicNodeMaterial", () => {
+    const basicMat = new THREE.LineBasicMaterial({ color: 0x3399ff, opacity: 0.5 });
+    const swapped = toDitheredLineBasicNodeMaterial(basicMat);
+    expect(swapped.isLineBasicNodeMaterial).toBe(true);
     expect(swapped.color.getHex()).toBe(0x3399ff);
-    expect(swapped.linewidth).toBe(3.8);
     expect(swapped.opacity).toBe(0.5);
-    expect(swapped.defines).toEqual({});
-
-    const scene = new THREE.Scene();
-    const mesh = new THREE.Mesh(new THREE.BufferGeometry(), new LineMaterial());
-    scene.add(mesh);
-    expect(swapLineMaterialsForWebGPU(scene)).toBe(1);
-    expect(mesh.material.isLine2NodeMaterial).toBe(true);
-    expect(swapLineMaterialsForWebGPU(scene)).toBe(0);
+    expect(swapped.userData.hasBorderDither).toBe(true);
   });
 
   it("evaluates exact 4x4 Bayer matrix values periodic mod 4", () => {

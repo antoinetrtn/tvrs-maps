@@ -216,6 +216,7 @@ const HomeScreen = ({
           setLeaderboardOpen(false);
         }}
         onPointerDown={(e) => e.stopPropagation()}
+        aria-hidden="true"
       />
 
       {settingsMounted && (

@@ -40,6 +40,7 @@ import {
 import { getBiomeTexture } from "../biomeTexture";
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { DISCOVERY } from "../discoveryTimeline";
+import { getFeatureMaskTexture } from "../featureMask";
 import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
 import { getSelectionOutlineTexture, selectionOutlineBox } from "../selectionOutline";
 import {
@@ -71,6 +72,7 @@ function getSharedNodes(polygonGlitchUniforms) {
       uSelectStart: mirrorUniform(polygonGlitchUniforms.uSelectStart),
       uShowcaseLights: mirrorUniform(polygonGlitchUniforms.uShowcaseLights),
       uIsRegionalMode: mirrorUniform(polygonGlitchUniforms.uIsRegionalMode),
+      uFeatureMode: mirrorUniform(polygonGlitchUniforms.uFeatureMode),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
       uRevealStart: mirrorUniform(polygonGlitchUniforms.uRevealStart),
       uLandRadius: mirrorUniform(polygonGlitchUniforms.uLandRadius),
@@ -292,6 +294,7 @@ function glitchBase(u, lit) {
   const sideShade = mix(1.0, u.uSideShade, step(0.5, u.uIsSide));
   finalColor.mulAssign(sideShade);
   return {
+    selUv,
     transitionActive,
     glitchAmp,
     fragPx,
@@ -338,7 +341,8 @@ function createGlitchOutputNode(u) {
   return Fn(() => {
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, staticVec, sideShade, foundRestingColor, isCityPx, pixelOn } = base;
+    const { transitionActive, staticVec, sideShade, foundRestingColor, isCityPx, pixelOn, selUv } =
+      base;
     const { unfoundRestColor: restColor } = base;
     const deselectDone = step(0.994, u.uFadeProgress);
     const { glitchColor } = glitchDissolve(u, base);
@@ -364,6 +368,46 @@ function createGlitchOutputNode(u) {
       });
     If(on(u.uIsSuccess), () => {
       rgb.assign(mix(rgb, CITY_AMBER, isCityPx.mul(SELECT_CITY_ALPHA_VALUE)));
+    });
+
+    If(on(u.uFeatureMode), () => {
+      const featSample = texture(getFeatureMaskTexture(), selUv).r;
+      const isFeatCore = step(0.9, featSample);
+      const isFeatHover = step(0.84, featSample).mul(float(1.0).sub(isFeatCore));
+      const isFeatHalo = step(0.2, featSample).mul(float(1.0).sub(step(0.84, featSample)));
+      const isFeatFound = step(0.1, featSample).mul(float(1.0).sub(step(0.2, featSample)));
+      const featPulseWave = sin(u.uTime.mul(6.2831853 / SELECT_PULSE_S_VALUE))
+        .mul(0.5)
+        .add(0.5);
+      const featPulse = mix(
+        floor(featPulseWave.mul(SELECT_PULSE_STEPS_VALUE).add(0.5)).div(SELECT_PULSE_STEPS_VALUE),
+        float(0.6),
+        u.uReducedMotion
+      );
+      const featHaloAmt = isFeatHalo
+        .mul(featSample)
+        .mul(SELECT_HALO_ALPHA_VALUE)
+        .mul(featPulse.mul(0.65).add(0.35));
+
+      const capSample = texture(getCapitalLightsTexture(), selUv);
+      const mRelief = capSample.b;
+      const rVal = capSample.a;
+      const rCore = step(0.65, rVal);
+      const rCrest = step(0.76, mRelief);
+      const rSpur = float(1.0).sub(rCrest).mul(step(0.38, mRelief));
+      const rShimmer = sin(u.uTime.mul(2.2).add(selUv.x.mul(140.0).add(selUv.y.mul(90.0))))
+        .mul(0.22)
+        .add(0.78);
+      const fCrest = vec3(0.92, 0.78, 0.48);
+      const fSpur = vec3(0.68, 0.5, 0.24);
+      const fRiver = mix(vec3(0.22, 0.68, 0.92), vec3(0.45, 0.88, 1.0), rShimmer);
+
+      rgb.assign(mix(rgb, fSpur, isFeatFound.mul(rSpur)));
+      rgb.assign(mix(rgb, fCrest, isFeatFound.mul(rCrest)));
+      rgb.assign(mix(rgb, fRiver, isFeatFound.mul(rCore)));
+      rgb.assign(mix(rgb, EDGE_RGB, featHaloAmt));
+      rgb.assign(mix(rgb, EDGE_RGB, isFeatHover.mul(0.6)));
+      rgb.assign(mix(rgb, EDGE_RGB, isFeatCore));
     });
 
     return vec4(fromDisplay(clamp(rgb, 0, 1)), 1.0);

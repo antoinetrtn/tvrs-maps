@@ -64,6 +64,7 @@ export function useGlobePolygons({
   gameDataMap = countryDataMap,
   isDepartmentMode,
   isUsStatesMode,
+  isRiversMountainsMode = false,
   isPerfectScore,
   isError,
   isSuccess,
@@ -368,7 +369,7 @@ export function useGlobePolygons({
         !isQuietOwnedFocus(admin) && isSameAdmin(admin, selectedCountry, gameDataMap);
       const darken = isSelected
         ? GLOBE_STYLE.lighting.sideDarken.selected
-        : foundSet.has(admin) || (mode === "learn" && isSelected)
+        : foundSet.has(admin)
           ? GLOBE_STYLE.lighting.sideDarken.found
           : GLOBE_STYLE.lighting.sideDarken.base;
 
@@ -512,6 +513,7 @@ export function useGlobePolygons({
         transitioningPreviousCountryState: prevTransition,
         transitioningIncomingCountryState: incomingTransition,
         isDepartmentMode: isRegionalMode,
+        isRiversMountainsMode,
         globeLightingEnabled,
         perfProfile,
         UI_COLORS,
@@ -534,6 +536,7 @@ export function useGlobePolygons({
       UI_COLORS,
       selectedCountry,
       isRegionalMode,
+      isRiversMountainsMode,
       foundSet,
       mode,
       perfProfile,

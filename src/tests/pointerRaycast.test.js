@@ -3,15 +3,15 @@ import { describe, expect, it } from "vitest";
 import { isGlobeHoverRaycastNeeded } from "../globe/render/pointerRaycast";
 
 describe("isGlobeHoverRaycastNeeded", () => {
-  it("returns false for home screen even in rivers and mountains mode", () => {
+  it("returns false for home screen in rivers and mountains mode", () => {
     expect(isGlobeHoverRaycastNeeded({ isHomeScreen: true, isRiversMountainsMode: true })).toBe(
       false
     );
   });
 
-  it("returns true during gameplay in rivers and mountains mode", () => {
+  it("returns false during gameplay in rivers and mountains mode (3D meshes removed)", () => {
     expect(isGlobeHoverRaycastNeeded({ isHomeScreen: false, isRiversMountainsMode: true })).toBe(
-      true
+      false
     );
   });
 
@@ -21,7 +21,7 @@ describe("isGlobeHoverRaycastNeeded", () => {
     );
   });
 
-  it("forces false when profileEnabled is false even in rivers and mountains gameplay", () => {
+  it("forces false when profileEnabled is false", () => {
     expect(
       isGlobeHoverRaycastNeeded({
         isHomeScreen: false,
@@ -35,13 +35,13 @@ describe("isGlobeHoverRaycastNeeded", () => {
     expect(isGlobeHoverRaycastNeeded()).toBe(false);
   });
 
-  it("treats undefined profileEnabled as true", () => {
+  it("treats undefined profileEnabled as returning false", () => {
     expect(
       isGlobeHoverRaycastNeeded({
         isHomeScreen: false,
         isRiversMountainsMode: true,
         profileEnabled: undefined,
       })
-    ).toBe(true);
+    ).toBe(false);
   });
 });
