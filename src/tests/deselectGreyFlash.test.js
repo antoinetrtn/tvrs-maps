@@ -42,8 +42,8 @@ describe("deselect fade settles to the unfound blackout look", () => {
   });
 
   it("resolveRestingColorForFeature targets the regional resting land color on home, not grey", () => {
-    const UI_COLORS = { mapBase: "#30343c", black: "#000000" };
-    const getRegionalLandColor = (region) => (region === "Europe" ? "#2b6cb0" : "#d97706");
+    const UI_COLORS = { mapBase: "map-base", black: "black" };
+    const getRegionalLandColor = (region) => (region === "Europe" ? "europe-land" : "other-land");
     const countryDataMap = { France: { region: "Europe" } };
 
     // In-game: unfound country resting color resolves to mapBase (blackout look)
@@ -68,6 +68,6 @@ describe("deselect fade settles to the unfound blackout look", () => {
       countryDataMap,
       getRegionalLandColor,
     });
-    expect(homeResting).toBe("#2b6cb0");
+    expect(homeResting).toBe("europe-land");
   });
 });
