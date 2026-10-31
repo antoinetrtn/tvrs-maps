@@ -106,23 +106,20 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsSuccess;
   uniform float uIsSelection;
   uniform float uIsLight;
-  uniform float uTheme;
   uniform float uIsSide;
   uniform float uIsFound;
   uniform float uSelectInTransition;
-  uniform vec3 uFoundGreen;
   uniform float uPixelScale;
   uniform float uSideShade;
   uniform float uSuccessStart;
   uniform float uSuccessDuration;
-  uniform float uIsSatellite;
   uniform vec3 uGlitchTintA;
   uniform vec3 uGlitchTintB;
   ${GLSL_BAYER_4X4_FN}
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
-  vec3 computeErrorEffect(vec3 finalColor, float time, float theme, vec2 noiseUv, vec3 worldPos) {
+  vec3 computeErrorEffect(vec3 finalColor, float time, vec2 noiseUv, vec3 worldPos) {
     float pulse = sin(time * 24.0) * 0.4 + 0.6;
     float sweep = step(fract(worldPos.y * 0.24 - time * 6.0), 0.2) * 0.5;
     float errorNoise = hash(noiseUv + sin(time * 60.0));
@@ -143,13 +140,9 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
       splitColor = mix(splitColor, vec3(1.0, 0.0, 1.0), 0.75); // Magenta flash
     }
 
-    if (theme > 0.9 && theme < 1.1) {
-      return splitColor;
-    } else {
-      return mix(finalColor, splitColor, 0.95);
-    }
+    return splitColor;
   }
-  vec3 computeSuccessEffect(vec3 finalColor, float time, float theme, vec2 blockUv, vec3 worldPos) {
+  vec3 computeSuccessEffect(vec3 finalColor, float time, vec2 blockUv, vec3 worldPos) {
     // Progress 0 -> 1 over the success flash (uSuccessStart is stamped on the guess).
     float p = clamp((time - uSuccessStart) / uSuccessDuration, 0.0, 1.0);
     // Chunky pixel blocks lock onto the found green, noisiest blocks resolving last.
@@ -157,8 +150,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
     float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
     // White-hot flicker on the blocks still resolving.
     float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
-    bool isMonoAwakening = (theme > 0.5) && (uIsSatellite < 0.5);
-    vec3 targetTone = isMonoAwakening ? vec3(0.96, 0.68, 0.22) : uFoundGreen;
+    vec3 targetTone = vec3(0.96, 0.68, 0.22);
     vec3 hot = mix(vec3(1.0, 0.97, 0.86), targetTone, 0.25) * flick;
     // Single fast scanline sweep down the country during the burst.
     float sweep = step(fract(worldPos.y * 0.18 - p * 2.8), 0.22)
@@ -176,17 +168,9 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 
     return baseGreen;
   }
-  vec3 computeSelectionEffect(vec3 finalColor, vec3 greenColor, float time, float theme, vec3 worldPos) {
+  vec3 computeSelectionEffect(float time) {
     float pulse = sin(time * 3.2) * 0.08 + 0.92;
-    bool isMonoAwakening = (theme > 0.5) && (uIsSatellite < 0.5);
-    vec3 targetTone = isMonoAwakening ? vec3(0.92, 0.68, 0.24) : greenColor;
-    if (isMonoAwakening) {
-      return targetTone * (pulse * 0.72 + 0.16);
-    } else if (theme > 0.9 && theme < 1.1) {
-      return targetTone * (pulse * 0.36 + 0.26);
-    } else {
-      return mix(finalColor, targetTone * (pulse * 0.48 + 0.36), 0.56);
-    }
+    return vec3(0.92, 0.68, 0.24) * (pulse * 0.72 + 0.16);
   }
 `;
 
@@ -221,17 +205,17 @@ export const GLITCH_FRAGMENT_BODY = `
   vec3 rimWarmth = pow(1.0 - ndv, 2.0)
     * ((uIsLight > 0.5) ? vec3(0.16, 0.11, 0.04) : vec3(0.34, 0.22, 0.07));
   vec3 staticVec = lanternBase * sphereShade * lanternPulse + rimWarmth;
-  vec3 foundRestingColor = ((uTheme > 0.5) && (uIsSatellite < 0.5)) ? vec3(0.48, 0.34, 0.15) : uFoundGreen;
+  vec3 foundRestingColor = vec3(0.48, 0.34, 0.15);
 
   // Caps and extruded side walls share one effect pipeline; sides are shaded
   // slightly darker below so the extrusion keeps its depth cue.
   vec3 finalColor = gl_FragColor.rgb;
   if (uIsError > 0.5) {
-    finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
+    finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, blockUv, vWorldPosition);
   } else if (uIsSuccess > 0.5) {
-    finalColor = computeSuccessEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
+    finalColor = computeSuccessEffect(gl_FragColor.rgb, uTime, blockUv, vWorldPosition);
   } else if (uIsSelection > 0.5) {
-    finalColor = computeSelectionEffect(gl_FragColor.rgb, uFoundGreen, uTime, uTheme, vWorldPosition);
+    finalColor = computeSelectionEffect(uTime);
   } else if (uIsFound > 0.5) {
     finalColor = foundRestingColor;
   } else {
@@ -262,16 +246,12 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (isFoundSurface) {
     gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
-    if (uIsSatellite > 0.5) {
-      gl_FragColor.rgb = glitchColor;
+    if (blockVal < glitchThreshold) {
+      gl_FragColor.rgb = settleColor;
+    } else if (blockVal < glitchThreshold + 0.11) {
+      gl_FragColor.rgb = mix(glitchColor, edgeGlow, 0.72);
     } else {
-      if (blockVal < glitchThreshold) {
-        gl_FragColor.rgb = settleColor;
-      } else if (blockVal < glitchThreshold + 0.11) {
-        gl_FragColor.rgb = mix(glitchColor, edgeGlow, 0.72);
-      } else {
-        gl_FragColor.rgb = glitchColor;
-      }
+      gl_FragColor.rgb = glitchColor;
     }
   } else if (isSoftSelectIn && transitionActive > 0.5) {
     float reveal = 1.0 - uFadeProgress;
@@ -282,26 +262,7 @@ export const GLITCH_FRAGMENT_BODY = `
   }
 
   // Clean cartographic finish
-  if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {
-    gl_FragColor.a = 1.0;
-  } else {
-    if (transitionActive > 0.5) {
-      if (uIsSatellite > 0.5) {
-        if (blockVal < uFadeProgress) {
-          gl_FragColor.a = 0.0;
-        } else {
-          if (blockVal < uFadeProgress + 0.11) {
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow, 0.72);
-          }
-          gl_FragColor.a = 1.0 - uFadeProgress * uFadeProgress;
-        }
-      } else {
-        gl_FragColor.a = 1.0;
-      }
-    } else {
-      gl_FragColor.a = (uIsSatellite > 0.5) ? (1.0 - finalProgress) : 1.0;
-    }
-  }
+  gl_FragColor.a = 1.0;
 `;
 
 export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment>
@@ -379,11 +340,11 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       vec3 conquestAwakenedLand = gl_FragColor.rgb * 0.84 + gl_FragColor.rgb * 0.22 * (1.0 - ndv);
       vec3 landSurface = mix(mix(unfoundLand, conquestAwakenedLand, isConquestOwned), soloAwakenedLand, isSoloFound);
       // Pixel-art biome palette (baked, NearestFilter): revealed on found caps and
-      // the illuminated home, only hinted on blacked-out caps, off on ghosts/satellite.
+      // the illuminated home, only hinted on blacked-out caps, off on ghosts.
       vec4 biomeSample = texture2D(uBiomeMap, cartUv);
       vec3 biomeTone = biomeSample.rgb;
       vec3 biomeLand = biomeTone * (0.88 + 0.18 * (1.0 - ndv));
-      float biomeAllowed = biomeSample.a * (1.0 - uIsGhost) * (1.0 - uIsSatelliteTheme);
+      float biomeAllowed = biomeSample.a * (1.0 - uIsGhost);
       float biomeReveal = max(max(isSoloFound, isConquestOwned), showcaseLand * isUnfoundDarkCap) * biomeAllowed;
       float biomeHint = (1.0 - showcaseLand) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
       landSurface = mix(landSurface, biomeTone * 0.3, biomeHint * 0.34);
@@ -490,8 +451,4 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
 
       vec3 sideRgb = landSurface * 0.58;
-      gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);
-      float satTopoFeat = max(riverCore * 0.92, ridgeCrest * 0.76 + ridgeSpur * 0.42);
-      float satFeat = clamp(max(sparkAlpha * 1.15 + effectiveAura * 0.38 * cityPower, satTopoFeat), 0.0, 1.0);
-      float satTargetAlpha = mix(mix(0.24, 0.48, isConquestOwned), 0.96, satFeat);
-      gl_FragColor.a = mix(gl_FragColor.a, satTargetAlpha, uIsSatelliteTheme * isAwakenedCap * (1.0 - isSideWall));`;
+      gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);`;

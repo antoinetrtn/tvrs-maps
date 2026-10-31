@@ -4,14 +4,13 @@ import { getGlobePrefs, GLOBE_PREF_KEYS, setGlobePref } from "../globe/globePref
 
 describe("globe prefs store", () => {
   it("persists valid values and ignores invalid ones", () => {
-    setGlobePref("foundStyle", "mesh");
-    expect(getGlobePrefs().foundStyle).toBe("mesh");
-    expect(localStorage.getItem(GLOBE_PREF_KEYS.foundStyle)).toBe("mesh");
-    setGlobePref("foundStyle", "bogus");
-    expect(getGlobePrefs().foundStyle).toBe("mesh");
     setGlobePref("renderer", "webgpu");
     expect(getGlobePrefs().renderer).toBe("webgpu");
+    expect(localStorage.getItem(GLOBE_PREF_KEYS.renderer)).toBe("webgpu");
+    setGlobePref("renderer", "bogus");
+    expect(getGlobePrefs().renderer).toBe("webgpu");
+    setGlobePref("foundStyle", "mesh");
+    expect(getGlobePrefs().foundStyle).toBeUndefined();
     setGlobePref("renderer", "webgl");
-    setGlobePref("foundStyle", "surface");
   });
 });

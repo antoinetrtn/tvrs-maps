@@ -25,7 +25,6 @@ export function useGlobeAnimationLoop({
   globeEl,
   isLight,
   UI_COLORS,
-  globeTheme,
   globeLightingEnabled,
   perfProfile,
   globeLightingRef,
@@ -189,10 +188,8 @@ export function useGlobeAnimationLoop({
         polygonGlitchUniforms.uTime.value = timeSec;
       }
       if (currentIsError || currentIsSuccess) {
-        const foundGreen = getFoundGreenThreeColor();
-        polygonGlitchUniforms.uFoundGreen.value.copy(foundGreen);
         if (needsMountainFeedback) {
-          mountainGlitchUniforms.uFoundGreen.value.copy(foundGreen);
+          mountainGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
         }
       }
 
@@ -291,7 +288,6 @@ export function useGlobeAnimationLoop({
           syncSelectedCountryShaderUniforms({
             shader: mat.userData.shader,
             isLight,
-            isBlackoutTheme: UI_COLORS.isBlackoutTheme,
             isError: currentIsError,
             isSuccess: currentIsSuccess,
             isFound: foundSet.has(currentSelectedCountry),
@@ -404,7 +400,6 @@ export function useGlobeAnimationLoop({
       clearScheduledFrame();
     };
   }, [
-    globeTheme,
     isLight,
     UI_COLORS,
     styleGlobeGraticules,

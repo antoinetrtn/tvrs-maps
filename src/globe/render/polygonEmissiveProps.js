@@ -3,30 +3,6 @@ import * as THREE from "three";
 import { GLOBE_STYLE } from "../../config/designSystem";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 
-// Opacity of found-country caps over the satellite texture.
-const SATELLITE_FOUND_OPACITY = 0.5;
-// Conquête owner tint over the satellite texture (caps are hidden otherwise).
-const SATELLITE_OWNER_OPACITY = 0.62;
-
-/**
- * Satellite theme: caps are hidden over the imagery unless they carry
- * meaning. Found countries get a soft glitch tint instead of the raw
- * triangulation wireframe (which read as a noisy mesh).
- */
-export function applySatelliteVisibility(
-  material,
-  { opaque, found, transitioning, ownerTint, veil = 0 }
-) {
-  material.visible = true;
-  material.transparent = !opaque;
-  if (opaque) material.opacity = 1.0;
-  else if (found) material.opacity = SATELLITE_FOUND_OPACITY;
-  else if (transitioning) material.opacity = 1.0;
-  else if (ownerTint) material.opacity = SATELLITE_OWNER_OPACITY;
-  else if (veil > 0) material.opacity = veil;
-  else material.visible = false;
-}
-
 export function resolvePolygonEmissiveProps({
   color,
   kind,
@@ -35,7 +11,6 @@ export function resolvePolygonEmissiveProps({
   isHighlightedOnGlobe,
   isDepartmentMode,
   isGhostCountry,
-  isGhostVeil = false,
   globeLightingEnabled,
   isLight,
   UI_COLORS,
@@ -44,16 +19,6 @@ export function resolvePolygonEmissiveProps({
   const emissiveIntensity = 0;
   const specularHex = new THREE.Color(UI_COLORS.black);
   const shininess = 0.7;
-
-  // Satellite: the ghost world is a flat dark veil, no lighting or highlights.
-  if (isGhostVeil) {
-    return {
-      emissiveHex: color,
-      emissiveIntensity: 0,
-      specularHex: new THREE.Color(0, 0, 0),
-      shininess: 0,
-    };
-  }
 
   if (showFoundOnGlobe && kind === "cap") {
     return {

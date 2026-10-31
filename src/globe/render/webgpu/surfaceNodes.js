@@ -1,5 +1,5 @@
 // TSL ports of the onBeforeCompile effects (WebGPU only): country relief, blackout ocean
-// currents, satellite grid, mountain glitch — each mirrors its GLSL twin (tslCommon.js).
+// currents, mountain glitch — each mirrors its GLSL twin (tslCommon.js).
 import * as THREE from "three";
 import {
   abs,
@@ -31,10 +31,8 @@ import {
   smoothstep,
   step,
   texture,
-  uv,
   vec2,
   vec3,
-  vec4,
 } from "three/tsl";
 import { MeshPhongNodeMaterial, MeshStandardNodeMaterial } from "three/webgpu";
 
@@ -44,14 +42,7 @@ import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { applyBiomePalette } from "./biomeNodes";
 import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
 import { buildIgnition, homeShowcase, igniteSpark } from "./igniteNodes";
-import {
-  bayer4x4,
-  displayOutput,
-  hash,
-  hashGrain,
-  litDisplayColor,
-  mirrorUniform,
-} from "./tslCommon";
+import { bayer4x4, displayOutput, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 /** MeshPhongMaterial, or its node twin when the globe renders with WebGPU. */
 export function createPhongMaterial(params) {
@@ -140,9 +131,6 @@ function buildTerrainReliefAndRivers(p) {
   );
   return {
     terrainLit: mix(darkRiverLit, awakeRiverLit, cityPower),
-    riverCore,
-    ridgeCrest,
-    ridgeSpur,
   };
 }
 
@@ -154,7 +142,7 @@ function buildCityLightsLayer(p) {
   const cityAura = capitalSample.g;
   const cityHash = hash(cityCellId);
   const cityHash2 = hash(cityCellId.add(vec2(37.2, 91.7)));
-  const { terrainLit, riverCore, ridgeCrest, ridgeSpur } = buildTerrainReliefAndRivers({
+  const { terrainLit } = buildTerrainReliefAndRivers({
     ...p,
     capitalSample,
     cityHash,
@@ -211,20 +199,13 @@ function buildCityLightsLayer(p) {
     .add(tierTentacle.mul(cityHash2.mul(0.24).add(0.5)).mul(satTwinkle));
   const regionalSparkAlpha = isRegionalPin.mul(satTwinkle.mul(0.12).add(0.88));
   const sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uRegionalNode).mul(cityPower);
-  const satTopo = max(riverCore.mul(0.92), ridgeCrest.mul(0.76).add(ridgeSpur.mul(0.42)));
-  const satFeat = clamp(
-    max(sparkAlpha.mul(1.15).add(effectiveAura.mul(0.38).mul(cityPower)), satTopo),
-    0.0,
-    1.0
-  );
-  return { capRgb: mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0)), satFeat };
+  return { capRgb: mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0)) };
 }
 
 let grainNode = null;
 let ghostGrainNode = null;
 let showcaseLightsNode = null;
 let regionalModeNode = null;
-let satelliteThemeNode = null;
 let igniteSelfNode = null;
 /** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
 export function countryGrainOutputNode(isGhostCountry = false) {
@@ -256,9 +237,6 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     ));
     const uRegionalNode = (regionalModeNode ||= mirrorUniform(
       polygonGlitchUniforms.uIsRegionalMode
-    ));
-    const uSatThemeNode = (satelliteThemeNode ||= mirrorUniform(
-      polygonGlitchUniforms.uIsSatelliteTheme
     ));
     const lit = litDisplayColor();
     const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
@@ -310,14 +288,13 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       ...{ cartUv, ndv, ghostMask, isSoloFound, isConquestOwned, lit, maxC, isUnfoundDarkCap },
       uShowcaseNode: showcaseLand,
       uRegionalNode,
-      uSatThemeNode,
     });
     const engrave = landSurface
       .mul(parallelLine.mul(0.04).add(crossTick.mul(0.09)))
       .add(vec3(rimSheen));
     const baseLit = landSurface.mul(limbFactor).add(engrave);
 
-    const { capRgb, satFeat } = buildCityLightsLayer({
+    const { capRgb } = buildCityLightsLayer({
       cartUv,
       baseLit,
       cityPower,
@@ -331,17 +308,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     });
     const sideRgb = landSurface.mul(0.58);
     const rgb = mix(capRgb, sideRgb, isSideWall);
-    const satTargetAlpha = mix(
-      mix(float(0.24), float(0.48), isConquestOwned),
-      float(0.96),
-      satFeat
-    );
-    const outAlpha = mix(
-      output.a,
-      satTargetAlpha,
-      uSatThemeNode.mul(isAwakenedCap).mul(float(1.0).sub(isSideWall))
-    );
-    return displayOutput(rgb, outAlpha);
+    return displayOutput(rgb, output.a);
   })();
   if (isGhostCountry) ghostGrainNode = node;
   else grainNode = node;
@@ -451,24 +418,5 @@ export function blackoutOceanOutputNode(
     );
 
     return displayOutput(litDisplayColor().add(waveRgb).add(graticuleRgb));
-  })();
-}
-
-/** applySatelliteSensorShader: screen-space anti-aliased sensor grid on the map. */
-export function satelliteSensorColorNode(map, gridSourceUv = null) {
-  return Fn(() => {
-    const mapUv = uv();
-    const sampled = texture(map, mapUv);
-    const gridUv = (gridSourceUv || mapUv).mul(vec2(16384.0, 8192.0));
-    const cellPx = max(fwidth(gridUv), vec2(1e-4));
-    const gridVis = float(1).sub(smoothstep(0.18, 0.4, max(cellPx.x, cellPx.y)));
-    const gridFract = abs(fract(gridUv.sub(0.5)).sub(0.5)).div(cellPx);
-    const gridLine = clamp(min(gridFract.x, gridFract.y), 0, 1);
-    const gridMix = float(1).sub(gridLine).mul(0.1).mul(gridVis);
-    const rgb = mix(sampled.rgb, vec3(0.0, 0.5, 0.95), gridMix).toVar();
-    const noise = hashGrain(floor(gridUv));
-    const isLand = step(0.18, length(sampled.rg.sub(sampled.b)));
-    rgb.addAssign(noise.sub(0.5).mul(0.03).mul(isLand).mul(gridVis));
-    return vec4(rgb, sampled.a);
   })();
 }

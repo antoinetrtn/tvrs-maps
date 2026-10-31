@@ -57,7 +57,6 @@ export function createGlobeLabelElement(
     isEndScreen,
     _isLight,
     gameDataMap,
-    _globeTheme,
     mode,
     t,
     isPanelOpen = false,

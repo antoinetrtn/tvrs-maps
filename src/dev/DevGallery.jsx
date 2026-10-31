@@ -22,16 +22,7 @@ import Slider from "../components/ui/Slider";
 import Switch from "../components/ui/Switch";
 import TabBar from "../components/ui/TabBar";
 import TextField from "../components/ui/TextField";
-import { ACCENT_PRESETS, getAccentOverrides } from "../config/accentPresets";
 import { getThemeCssVariables } from "../config/designSystem";
-
-const kebab = (key) => key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
-
-/** Accent tokens as scoped CSS variables, so 6 accents render side by side. */
-const accentVars = (id) =>
-  Object.fromEntries(
-    Object.entries(getAccentOverrides(id)).map(([key, value]) => [`--${kebab(key)}`, value])
-  );
 
 const Block = ({ title, children }) => (
   <div className="dg-block">
@@ -40,7 +31,7 @@ const Block = ({ title, children }) => (
   </div>
 );
 
-const AccentColumn = ({ id }) => {
+const GalleryColumn = () => {
   const [on, setOn] = useState(true);
   const [minutes, setMinutes] = useState(10);
   const [lang, setLang] = useState("fr");
@@ -48,8 +39,8 @@ const AccentColumn = ({ id }) => {
   const [tab2, setTab2] = useState("opt1");
   const [text, setText] = useState("");
   return (
-    <section className="dg-column" style={accentVars(id)} aria-label={id}>
-      <h2 className="dg-column-title">{ACCENT_PRESETS[id].label.fr}</h2>
+    <section className="dg-column" aria-label="Thème nocturne">
+      <h2 className="dg-column-title">Thème nocturne</h2>
       <Block title="Button">
         <Button variant="primary">Jouer</Button>
         <Button variant="secondary">Secondaire</Button>
@@ -187,17 +178,15 @@ const AccentColumn = ({ id }) => {
   );
 };
 
-/** Every UI primitive under the 6 accents, in the real dark theme tokens. */
+/** Every UI primitive in the unified nocturnal theme tokens. */
 const DevGallery = () => (
-  <main className="dg-root" style={getThemeCssVariables("dark", "monochrome")}>
+  <main className="dg-root" style={getThemeCssVariables("dark")}>
     <header className="dg-header">
       <h1>Galerie de composants</h1>
       <p>Page de développement uniquement — absente des builds de production.</p>
     </header>
     <div className="dg-grid">
-      {Object.keys(ACCENT_PRESETS).map((id) => (
-        <AccentColumn key={id} id={id} />
-      ))}
+      <GalleryColumn />
     </div>
   </main>
 );

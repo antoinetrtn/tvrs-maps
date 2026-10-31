@@ -80,12 +80,17 @@ export function getDataPanelLayoutWidth(viewportWidth) {
 
 // --- Persistence -------------------------------------------------------------
 export const STORAGE_KEYS = {
-  globeTheme: "tvrs-globe-theme",
-  uiTheme: "tvrs-ui-theme",
   hardcoreMode: "tvrs-hardcore-mode",
   peacefulMode: "tvrs-peaceful-mode",
-  accent: "tvrs-accent",
 };
+// Settings removed with the unified theme (globe theme, UI theme, accent,
+// found-country style): dropped from localStorage once on startup.
+export const RETIRED_STORAGE_KEYS = [
+  "tvrs-globe-theme",
+  "tvrs-ui-theme",
+  "tvrs-accent",
+  "tvrs-found-style",
+];
 
 // --- Hardcore mode -----------------------------------------------------------
 // Optional difficulty: the run ends after this many wrong answers.

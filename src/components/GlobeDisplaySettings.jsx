@@ -6,11 +6,10 @@ import {
   isRendererForcedByUrl,
   resolveGlobeRenderer,
 } from "../globe/render/globeRendererFlag";
-import OptionGroup from "./ui/OptionGroup";
 import { SettingsRow } from "./ui/Settings";
 import Switch from "./ui/Switch";
 
-/** Globe-only display rows of the settings sheet (found style, renderer). */
+/** Globe-only display rows of the settings sheet (renderer). */
 const GlobeDisplaySettings = ({ t }) => {
   const prefs = useGlobePrefs();
   const supported = hasWebGPUSupport();
@@ -28,17 +27,6 @@ const GlobeDisplaySettings = ({ t }) => {
 
   return (
     <>
-      <SettingsRow label={t("found_style_short")} layout="stacked">
-        <OptionGroup
-          label={t("found_style")}
-          options={[
-            { value: "surface", label: t("found_style_surface") },
-            { value: "mesh", label: t("found_style_mesh") },
-          ]}
-          value={prefs.foundStyle}
-          onChange={(v) => setGlobePref("foundStyle", v)}
-        />
-      </SettingsRow>
       <SettingsRow label={t("renderer_webgpu")} description={visibleDesc} srDescription={srDesc}>
         <Switch
           checked={isWebGPU}

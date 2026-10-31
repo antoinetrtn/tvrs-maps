@@ -42,11 +42,9 @@ const GameHUD = ({
   extInputRef,
   foundList,
   countryDataMap,
-  theme,
   viewport,
   isKeyboardMode,
   selectedCountry,
-  globeTheme,
   learnSubMode,
   learnSearchQuery = "",
   onLearnSearchChange,
@@ -126,11 +124,8 @@ const GameHUD = ({
 
   const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
   const REGION_COLORS = useMemo(() => {
-    return GAME_REGIONS.reduce(
-      (acc, r) => ({ ...acc, [r]: getThemeRegionColorLabel(globeTheme, theme, r) }),
-      {}
-    );
-  }, [globeTheme, theme]);
+    return GAME_REGIONS.reduce((acc, r) => ({ ...acc, [r]: getThemeRegionColorLabel(r) }), {});
+  }, []);
   const regionStats = useMemo(() => {
     if (!countryDataMap) return {};
     const stats = {};

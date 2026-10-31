@@ -119,7 +119,6 @@ export const shouldScrambleLabel = (
  */
 export const POLYGON_ALTITUDE = {
   base: 0.0012,
-  satelliteBase: 0.001,
   selected: 0.008,
   // Regional maps are seen from very close: a department is only ~1° wide, so
   // the world-scale lift turned small areas into pillars and made the whole
@@ -164,16 +163,10 @@ export const getFeatureCapResolution = (d, baseResolution) =>
     ),
   });
 
-export const getPolygonAltitudeFor = ({
-  isDepartmentMode,
-  isGhostCountry,
-  isSelected,
-  globeTheme,
-}) => {
+export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSelected }) => {
   if (isDepartmentMode && isGhostCountry) return POLYGON_ALTITUDE.ghostCountry;
   if (isSelected)
     return isDepartmentMode ? POLYGON_ALTITUDE.departmentSelected : POLYGON_ALTITUDE.selected;
-  if (globeTheme === "satellite") return POLYGON_ALTITUDE.satelliteBase;
   return isDepartmentMode ? POLYGON_ALTITUDE.departmentBase : POLYGON_ALTITUDE.base;
 };
 

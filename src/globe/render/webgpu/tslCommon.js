@@ -27,9 +27,6 @@ import {
 /** GLSL `fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123)`. */
 export const hash = (p) => fract(sin(dot(p, vec2(127.1, 311.7))).mul(43758.5453123));
 
-/** GLSL `fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)`. */
-export const hashGrain = (p) => fract(sin(dot(p, vec2(12.9898, 78.233))).mul(43758.5453));
-
 /**
  * 4x4 Bayer ordered-dither threshold in [0.0, 0.9375] (exact [0..15]/16 values).
  * Uses pure float/mod/floor math (no integer bitops) for universal WebGPU TSL compilation.

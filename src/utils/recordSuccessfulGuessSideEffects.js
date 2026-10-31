@@ -39,8 +39,6 @@ function checkContinentConquest({
   newFound,
   activeDataMap,
   conqueredRegionsThisGameRef,
-  globeTheme,
-  theme,
   t,
   addAchievementToQueue,
 }) {
@@ -58,7 +56,7 @@ function checkContinentConquest({
   if (wasCompletedBefore || !isCompletedNow) return [];
 
   conqueredRegionsThisGameRef.current.push(region);
-  const labelColor = getThemeRegionColorLabel(globeTheme, theme, region);
+  const labelColor = getThemeRegionColorLabel(region);
   const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
   addAchievementToQueue({
@@ -143,7 +141,6 @@ export function recordSuccessfulGuessSideEffects({
   mode,
   gameDuration,
   timeLeft,
-  globeTheme,
   theme,
   t,
   lang,
@@ -160,7 +157,6 @@ export function recordSuccessfulGuessSideEffects({
     newFound,
     activeDataMap,
     conqueredRegionsThisGameRef: refs.conqueredRegionsThisGameRef,
-    globeTheme,
     theme,
     t,
     addAchievementToQueue,

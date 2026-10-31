@@ -94,7 +94,7 @@
    composited layer above the canvas (no canvas filter, no animation, so it
    is cheap and already reduced-motion safe). The accent halo itself lives in
    the renderer (atmosphere glow + ocean rim). */
-.globe-map-shell.crt::after {
+.globe-map-shell::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -112,7 +112,7 @@
 }
 
 /* Soft curved-glass vignette, kept separate from the masked scanlines. */
-.globe-map-shell.crt::before {
+.globe-map-shell::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -123,20 +123,6 @@
     transparent 64%,
     color-mix(in srgb, var(--bg-color) 32%, transparent) 100%
   );
-}
-
-/* NASA GIBS acknowledgement for the progressive satellite tiles. */
-.globe-imagery-credit {
-  position: absolute;
-  left: 8px;
-  bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-  z-index: 2;
-  font-size: 9px;
-  line-height: 1.2;
-  color: var(--text-muted);
-  opacity: 0.55;
-  text-decoration: none;
-  pointer-events: auto;
 }
 
 /* Home on mobile: the action bar owns the bottom edge, so the credit sits

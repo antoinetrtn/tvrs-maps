@@ -23,7 +23,6 @@ const HomeScreen = ({
   onStartGame,
   onOpenConquest = null,
   theme,
-  _setTheme,
   lang,
   setLang,
   gameDuration,
@@ -32,10 +31,6 @@ const HomeScreen = ({
   setHardcoreMode,
   peacefulMode = false,
   setPeacefulMode,
-  globeTheme,
-  setGlobeTheme,
-  accent,
-  setAccent,
   topExplorers = [],
   userProfile,
   setUserProfile,
@@ -232,10 +227,6 @@ const HomeScreen = ({
         peacefulMode={peacefulMode}
         setPeacefulMode={setPeacefulMode}
         setHardcoreMode={setHardcoreMode}
-        globeTheme={globeTheme}
-        setGlobeTheme={setGlobeTheme}
-        accent={accent}
-        setAccent={setAccent}
       />
 
       <ProfilePanel

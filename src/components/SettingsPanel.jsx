@@ -1,10 +1,8 @@
 import "./ui/ui.css";
 
-import { Earth, Globe } from "pixelarticons/react";
 import React from "react";
 
 import { useTranslation } from "../config/i18n";
-import AccentPicker from "./AccentPicker";
 import GlobeDisplaySettings from "./GlobeDisplaySettings";
 import Dialog, { DialogTitle } from "./ui/Dialog";
 import OptionGroup from "./ui/OptionGroup";
@@ -28,10 +26,6 @@ const SettingsPanel = ({
   peacefulMode,
   setPeacefulMode,
   setHardcoreMode,
-  globeTheme,
-  setGlobeTheme,
-  accent,
-  setAccent,
 }) => {
   const t = useTranslation(lang);
   const minutes = Math.round(gameDuration / 60);
@@ -94,34 +88,7 @@ const SettingsPanel = ({
               onChange={setLang}
             />
           </SettingsRow>
-          <SettingsRow layout="stacked">
-            <OptionGroup
-              label={t("globe_theme")}
-              options={[
-                {
-                  value: "monochrome",
-                  label: t("theme_blackout"),
-                  icon: <Globe width={14} height={14} />,
-                },
-                {
-                  value: "satellite",
-                  label: t("theme_satellite"),
-                  icon: <Earth width={14} height={14} />,
-                },
-              ]}
-              value={globeTheme}
-              onChange={setGlobeTheme}
-            />
-          </SettingsRow>
           <GlobeDisplaySettings t={t} />
-          <SettingsRow layout="stacked">
-            <AccentPicker
-              lang={lang}
-              accent={accent}
-              setAccent={setAccent}
-              label={t("accent_color")}
-            />
-          </SettingsRow>
         </SettingsSection>
       </div>
     </Dialog>
