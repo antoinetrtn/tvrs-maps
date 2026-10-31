@@ -220,7 +220,9 @@ export const GLITCH_FRAGMENT_BODY = `
   float lightProg = (transitionActive > 0.5) ? 1.0 - floor(uFadeProgress * 5.0) / 5.0 : floor(selectIn * 6.0) / 6.0;
   vec2 selUv = vec2(atan(sphereDir.x, sphereDir.z) / 6.2831853 + 0.5, sphereLat / 3.14159265 + 0.5);
   vec2 selCell = floor(selUv * vec2(3600.0, 1800.0));
-  float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall);
+  // Regional scale: the 0.1° city cells would be big blocks inside a département/state.
+  float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall)
+    * (1.0 - uIsRegionalMode);
   float cityOn = isCityPx * step(hash(selCell + 3.7), lightProg * 1.15 - 0.15);
   float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
   float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0) * (1.0 - transitionActive);
