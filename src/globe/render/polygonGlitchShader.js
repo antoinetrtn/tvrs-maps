@@ -11,7 +11,11 @@ import {
   GLITCH_VERTEX_BODY,
   GLITCH_VERTEX_DECLARATIONS,
 } from "./globeShaders";
-import { getSelectionOutlineTexture, selectionOutlineBox } from "./selectionOutline";
+import {
+  getSelectionOutlineTexture,
+  selectionOutlineBox,
+  selectionOutlinePx,
+} from "./selectionOutline";
 import { attachGlitchNodes } from "./webgpu/glitchNode";
 
 /** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
@@ -218,6 +222,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
     shader.uniforms.uSelOutlineMap = { value: getSelectionOutlineTexture() };
     shader.uniforms.uSelOutlineBox = selectionOutlineBox;
+    shader.uniforms.uSelOutlinePx = selectionOutlinePx;
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
     shader.uniforms.uFadeProgress = { value: 0.0 };
     shader.uniforms.uTargetColor = {

@@ -30,6 +30,7 @@ import {
   syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
+import { setSelectionOutlineDpr } from "../render/selectionOutline";
 import { CAMERA_MS, cameraDuration, selectCameraDuration } from "./cameraTiming";
 import { getHomeDesktopPov } from "./homePov";
 
@@ -273,6 +274,7 @@ export function useGlobeCamera(props) {
           if (import.meta.env.PROD) renderer.debug.checkShaderErrors = false;
           polygonGlitchUniforms.uPixelScale.value =
             GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
+          setSelectionOutlineDpr(pixelRatio);
         }
         const controls = globeEl.current.controls?.();
         if (controls) {

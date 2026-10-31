@@ -268,10 +268,10 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
         selectedCountry: "France",
       });
       const franceLearn = summarizeFeatureOutput(learnRes.current, FEATURE_FRANCE);
-      expect(franceLearn.color).toBe(FOUND_HIGHLIGHT);
-      expect(franceLearn.strokeWidth).toBe(14);
-      expect(franceLearn.capMaterial.userData.isGlitchShaderCap).toBe(false);
-      expect(franceLearn.capMaterial.emissiveIntensity).toBe(1);
+      // Learn reuses the home bricks: no white fill, the shared selection shader draws it.
+      expect(franceLearn.color).not.toBe(FOUND_HIGHLIGHT);
+      expect(franceLearn.color).toBe(learnRes.current.UI_COLORS.mapBase);
+      expect(franceLearn.capMaterial.userData.isGlitchShaderCap).toBe(true);
 
       const { result: homeRes } = renderPolygons({
         isHomeScreen: true,

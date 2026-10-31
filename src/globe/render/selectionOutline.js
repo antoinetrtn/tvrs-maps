@@ -1,34 +1,46 @@
 /**
- * Pixel-art outline of the selected country, drawn ON its surface (no extrusion).
- * The country is rasterised once per selection on a lat/lng grid aligned on global
- * multiples of the cell size (square pixels, like the city-light texture): inside
- * cells touching the outside form the thin bright border (255); the next HALO_RINGS
- * rings in carry a fading soft halo (HALO_VALUES), pulsed by the shader. Read by the GLSL glitch shader and its TSL twin through the same
- * texture + `uSelOutlineBox` (lng0°, lat0°, cell°, size).
+ * Selection outline brick (one for every country, department and state): a coverage
+ * mask of the selected feature on a lat/lng grid (1 = inside), sampled bilinearly by the
+ * GLSL glitch shader and its TSL twin. The shader turns the mask's 0.5 contour into a
+ * line of constant SCREEN width (fwidth), hard-stepped for a crisp pixel look, so the
+ * border is equally thin on Monaco, Russia, a département or Antarctica at any zoom/DPR.
+ * Polar rows are padded (no ring at the pole) and 360°-wide features wrap seamlessly
+ * (no seam line on the antimeridian). Shader inputs: texture + `uSelOutlineBox`
+ * (lng0°, lat0°, cell°, 360/cell or 0 when empty) + `uSelOutlinePx` (line width, device px).
  */
 import * as THREE from "three";
 
 // One byte per cell; large enough that a country with far-flung parts (France with
 // Guyane/Réunion, USA with Alaska/Hawaii) keeps a fine grid over its whole extent.
 const N = 1024;
-const CELLS = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1, 1.5, 2, 3, 4];
+const CELLS = [
+  0.02, 0.035, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1, 1.5, 2, 3, 4,
+];
 // Longest side of the MAIN landmass, in cells (only bites on very large countries):
 // finer grid = thinner one-pixel border, never coarser than needed for Russia/Canada.
 // Sized on the largest polygon, not the whole bbox, so overseas parts never coarsen it.
-const MAX_CELLS = 400;
+const MAX_CELLS = 1000;
 export const OUTLINE_TEX_SIZE = N;
-export const EDGE_VALUE = 255;
-export const HALO_VALUES = [170, 115, 60];
+export const INSIDE_VALUE = 255;
+/** Outline width in CSS px (× renderer pixel ratio → device px, see setSelectionOutlineDpr). */
+export const OUTLINE_CSS_PX = 1.5;
 const data = new Uint8Array(N * N);
 let tex = null;
 let current = null;
 
 export const selectionOutlineBox = { value: new THREE.Vector4(0, 0, 1, 0) };
+export const selectionOutlinePx = { value: OUTLINE_CSS_PX };
+
+/** Keeps the line at OUTLINE_CSS_PX CSS pixels whatever the renderer pixel ratio. */
+export function setSelectionOutlineDpr(pixelRatio = 1) {
+  selectionOutlinePx.value = OUTLINE_CSS_PX * Math.max(1, pixelRatio || 1);
+}
 
 export function getSelectionOutlineTexture() {
   if (!tex) {
     tex = new THREE.DataTexture(data, N, N, THREE.RedFormat, THREE.UnsignedByteType);
-    tex.magFilter = tex.minFilter = THREE.NearestFilter;
+    // Bilinear: the shader reads the mask's 0.5 contour as a smooth field.
+    tex.magFilter = tex.minFilter = THREE.LinearFilter;
     tex.generateMipmaps = false;
     tex.unpackAlignment = 1;
     tex.needsUpdate = true;
@@ -72,17 +84,26 @@ export function rasterizeOutline(geometry, out = data) {
     .map((p) => extentOf(p[0]))
     .reduce((best, e) => (e.w * e.h > best.w * best.h ? e : best));
   const ref = (main.x0 + main.x1) / 2;
-  const wrap = (lng) => lng + Math.round((ref - lng) / 360) * 360;
+  // Circumpolar feature (Antarctica): already spans -180..180; the grid covers exactly
+  // 360° and wraps (no unwrapping, which would fold its ±180° seam onto itself).
+  const wraps = main.w >= 359;
+  const wrap = wraps ? (lng) => lng : (lng) => lng + Math.round((ref - lng) / 360) * 360;
   const pts = polys.flat().map((r) => r.map(([lng, lat]) => [wrap(lng), lat]));
-  const { x0, x1, y0, y1 } = extentOf(pts.flat());
-  const cell = pickOutlineCell(Math.max(main.w, main.h), Math.max(x1 - x0, y1 - y0));
+  const full = extentOf(pts.flat());
+  const cell = wraps
+    ? CELLS.find((c) => 360 / c <= N - 8)
+    : pickOutlineCell(Math.max(main.w, main.h), Math.max(full.w, full.h));
+  const x0 = wraps ? -180 : full.x0;
+  const x1 = wraps ? 180 : full.x1;
   const ox = Math.floor(x0 / cell) - 2,
-    oy = Math.floor(y0 / cell) - 2;
+    oy = Math.floor(full.y0 / cell) - 2;
   const w = Math.min(N, Math.ceil(x1 / cell) - ox + 3),
-    h = Math.min(N, Math.ceil(y1 / cell) - oy + 3);
-  const inside = new Uint8Array(N * N);
+    h = Math.min(N, Math.ceil(full.y1 / cell) - oy + 3);
+  const inside = out;
+  const shift = wraps ? (lng) => lng - Math.floor((lng + 180) / 360) * 360 : (lng) => lng;
   for (let j = 0; j < h; j++) {
-    const lat = (oy + j + 0.5) * cell;
+    // Rows past a pole read the last row on the globe (no fake edge ring at the pole).
+    const lat = Math.max(-90 + cell / 2, Math.min(90 - cell / 2, (oy + j + 0.5) * cell));
     const xs = [];
     for (const r of pts)
       for (let i = 0, k = r.length - 1; i < r.length; k = i++) {
@@ -90,57 +111,27 @@ export function rasterizeOutline(geometry, out = data) {
           [bx, by] = r[k];
         if (ay > lat !== by > lat) xs.push(ax + ((lat - ay) / (by - ay)) * (bx - ax));
       }
-    xs.sort((a, b) => a - b);
-    for (let p = 0; p + 1 < xs.length; p += 2)
-      for (
-        let i = Math.max(0, Math.ceil(xs[p] / cell - ox - 0.5));
-        i < w && (ox + i + 0.5) * cell < xs[p + 1];
-        i++
-      )
-        inside[j * N + i] = 1;
+    xs.sort((p, q) => p - q);
+    let n = 0,
+      prev = -Infinity;
+    for (let i = 0; i < w; i++) {
+      const lng = shift((ox + i + 0.5) * cell);
+      if (lng < prev) n = 0;
+      prev = lng;
+      while (n < xs.length && xs[n] < lng) n++;
+      if (n % 2) inside[j * N + i] = INSIDE_VALUE;
+    }
   }
   // Islets/microstates thinner than a cell: light the cell under their centre, so
-  // Monaco or an atoll still shows one amber pixel instead of nothing.
+  // Monaco or an atoll still shows an amber pixel instead of nothing.
   for (const r of pts) {
     const e = extentOf(r);
     const i = Math.floor((e.x0 + e.x1) / 2 / cell) - ox,
       j = Math.floor((e.y0 + e.y1) / 2 / cell) - oy;
     if (e.w < cell * 2 && e.h < cell * 2 && i >= 0 && j >= 0 && i < w && j < h)
-      inside[j * N + i] = 1;
+      inside[j * N + i] = INSIDE_VALUE;
   }
-  const at = (i, j) => (i < 0 || j < 0 || i >= N || j >= N ? 0 : inside[j * N + i]);
-  const nb = [
-    [-1, 0],
-    [1, 0],
-    [0, -1],
-    [0, 1],
-  ];
-  // Ring distance from the border, walked inwards (0 = border cell).
-  const dist = new Uint8Array(N * N).fill(255);
-  let front = [];
-  for (let j = 0; j < h; j++)
-    for (let i = 0; i < w; i++)
-      if (at(i, j) && nb.some(([a, b]) => !at(i + a, j + b))) {
-        dist[j * N + i] = 0;
-        front.push([i, j]);
-      }
-  for (let d = 1; d <= HALO_VALUES.length; d++) {
-    const next = [];
-    for (const [i, j] of front)
-      for (const [a, b] of nb) {
-        const x = i + a,
-          y = j + b;
-        if (at(x, y) && dist[y * N + x] === 255) {
-          dist[y * N + x] = d;
-          next.push([x, y]);
-        }
-      }
-    front = next;
-  }
-  for (let k = 0; k < N * N; k++)
-    out[k] =
-      dist[k] === 0 ? EDGE_VALUE : dist[k] <= HALO_VALUES.length ? HALO_VALUES[dist[k] - 1] : 0;
-  return { ox: ox * cell, oy: oy * cell, cell };
+  return { ox: ox * cell, oy: oy * cell, cell, period: wraps ? Math.round(360 / cell) : 0 };
 }
 
 /** Called when a country gets the selection shader; rebuilds only when it changes. */
@@ -148,6 +139,12 @@ export function setSelectionOutline(admin, geometry) {
   if (!admin || admin === current) return;
   current = admin;
   const box = rasterizeOutline(geometry);
-  selectionOutlineBox.value.set(box?.ox ?? 0, box?.oy ?? 0, box?.cell ?? 1, box ? N : 0);
+  // w: wrap period in cells for circumpolar features, else a large value (no wrap); 0 = empty.
+  selectionOutlineBox.value.set(
+    box?.ox ?? 0,
+    box?.oy ?? 0,
+    box?.cell ?? 1,
+    box ? box.period || 1e6 : 0
+  );
   getSelectionOutlineTexture().needsUpdate = true;
 }
