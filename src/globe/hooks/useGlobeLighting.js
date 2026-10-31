@@ -31,7 +31,6 @@ export function useGlobeLighting({
   globeLightingEnabled,
   UI_COLORS,
   perfProfile,
-  globeTheme,
   safeColor,
 }) {
   const globeLightingRef = useRef(null);
@@ -131,53 +130,29 @@ export function useGlobeLighting({
     const isMobile = perfProfile?.isMobile;
     const lightScale = isMobile ? PERFORMANCE.mobileLightScale : 1;
 
-    rimLight.visible = !UI_COLORS.isBlackoutTheme;
+    // Flat nocturnal globe: only key, fill, studio and inner glow light the polygons.
+    rimLight.visible = false;
     studioLight.visible = true;
-    studioLeft.visible = !UI_COLORS.isBlackoutTheme;
-    studioRight.visible = !UI_COLORS.isBlackoutTheme;
+    studioLeft.visible = false;
+    studioRight.visible = false;
     innerGlow.visible = true;
 
     // globe.gl's own ambient + directional lights stay as they are. They used
     // to be zeroed here, but only when the rig was rebuilt *after* globe.gl had
-    // added them, i.e. on a live theme switch and never on a fresh load: the
-    // globe then looked darker than after a refresh (Antoine's theme bug).
+    // added them, i.e. on a live rebuild and never on a fresh load: the
+    // globe then looked darker than after a refresh.
 
-    if (UI_COLORS.isBlackoutTheme) {
-      // Blackout theme: brighter uniform ambient to make country polygons visible on flat dark globe
-      keyLight.intensity = (isLight ? 0.2 : 0.28) * lightScale;
-      keyLight.position.set(-3.5, 2.4, 4.2);
-      rimLight.intensity = (isLight ? 0.18 : 0.28) * lightScale;
-      rimLight.position.set(3.8, 1.3, -3.6);
-      fillLight.intensity = (isLight ? 1.0 : 0.92) * lightScale;
-      studioLight.intensity = (isLight ? 0.72 : 0.62) * lightScale;
-      studioLeft.intensity = (isLight ? 0.12 : 0.15) * lightScale;
-      studioLeft.position.set(-4.5, 2.5, 3.5);
-      studioRight.intensity = (isLight ? 0.12 : 0.15) * lightScale;
-      studioRight.position.set(4.5, -1.2, 2.8);
-    } else {
-      const isSatellite = globeTheme === "satellite";
-      // Satellite theme: strong sun headlight placed front-right-top relative to the camera
-      keyLight.intensity = (isSatellite ? 1.8 : isLight ? 0.12 : 0.16) * lightScale;
-      keyLight.position.set(
-        isSatellite ? 3.5 : -3.5,
-        isSatellite ? 2.0 : 2.4,
-        isSatellite ? 5.5 : 4.2
-      );
-
-      // Outline halo for atmospheric glow
-      rimLight.intensity = (isSatellite ? 0.35 : isLight ? 0.14 : 0.24) * lightScale;
-      rimLight.position.set(3.8, 1.3, -3.6);
-
-      // Low ambient/fill light to keep the dark side realistic (not completely black, but dark)
-      fillLight.intensity = (isSatellite ? 0.18 : isLight ? 0.72 : 0.68) * lightScale;
-      studioLight.intensity = (isSatellite ? 0.08 : isLight ? 0.54 : 0.48) * lightScale;
-
-      // Disable side lights in satellite mode to avoid washing out shadows
-      studioLeft.intensity = (isSatellite ? 0.0 : isLight ? 0.08 : 0.1) * lightScale;
-      studioLeft.position.set(-4.5, 2.5, 3.5);
-      studioRight.intensity = (isSatellite ? 0.0 : isLight ? 0.08 : 0.1) * lightScale;
-      studioRight.position.set(4.5, -1.2, 2.8);
-    }
+    // Brighter uniform ambient so country polygons read on the flat dark globe.
+    keyLight.intensity = (isLight ? 0.2 : 0.28) * lightScale;
+    keyLight.position.set(-3.5, 2.4, 4.2);
+    rimLight.intensity = (isLight ? 0.18 : 0.28) * lightScale;
+    rimLight.position.set(3.8, 1.3, -3.6);
+    fillLight.intensity = (isLight ? 1.0 : 0.92) * lightScale;
+    studioLight.intensity = (isLight ? 0.72 : 0.62) * lightScale;
+    studioLeft.intensity = (isLight ? 0.12 : 0.15) * lightScale;
+    studioLeft.position.set(-4.5, 2.5, 3.5);
+    studioRight.intensity = (isLight ? 0.12 : 0.15) * lightScale;
+    studioRight.position.set(4.5, -1.2, 2.8);
 
     rimLight.color.set(safeColor(UI_COLORS.lightingRim));
     fillLight.color.set(safeColor(UI_COLORS.lightingFill));
@@ -204,15 +179,7 @@ export function useGlobeLighting({
     }
 
     return true;
-  }, [
-    isLight,
-    globeLightingEnabled,
-    UI_COLORS,
-    perfProfile?.isMobile,
-    globeTheme,
-    safeColor,
-    globeEl,
-  ]);
+  }, [isLight, globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, safeColor, globeEl]);
 
   const styleGlobeGraticules = useCallback(() => {
     const scene = globeEl.current?.scene?.();
@@ -225,7 +192,7 @@ export function useGlobeLighting({
         ? GLOBE_STYLE.lighting.graticuleOpacity.light
         : GLOBE_STYLE.lighting.graticuleOpacity.dark);
 
-    const cacheKey = `${globeTheme}-${UI_COLORS.graticule}-${isLight}`;
+    const cacheKey = `${UI_COLORS.graticule}-${isLight}`;
     if (graticuleCacheKeyRef.current !== cacheKey) {
       graticuleCacheKeyRef.current = cacheKey;
       graticuleMaterialsRef.current = [];
@@ -253,7 +220,7 @@ export function useGlobeLighting({
       material.depthWrite = false;
       material.needsUpdate = true;
     });
-  }, [isLight, UI_COLORS, globeTheme, globeEl]);
+  }, [isLight, UI_COLORS, globeEl]);
 
   useEffect(() => {
     updateGlobeLighting();

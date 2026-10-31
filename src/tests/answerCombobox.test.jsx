@@ -64,7 +64,6 @@ describe("answerCombobox (<GameHUD> integration)", () => {
       foundList: [],
       countryDataMap: mockCountryDataMap,
       theme: "dark",
-      globeTheme: "blackout",
       selectedCountry: null,
       ...customProps,
     };
@@ -363,7 +362,6 @@ describe("answerCombobox (<GameHUD> integration)", () => {
         foundList={[]}
         countryDataMap={mockCountryDataMap}
         theme="dark"
-        globeTheme="blackout"
         selectedCountry={null}
         learnSearchQuery={learnVal}
         onLearnSearchChange={onLearnSearchChangeMock}

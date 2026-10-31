@@ -15,7 +15,7 @@ import {
 } from "../globe/render/polygonColorResolver";
 
 const lerpColor = (a, _b, _amount) => a;
-const UI_COLORS = getThemeColors("satellite", "dark");
+const UI_COLORS = getThemeColors("dark");
 
 describe("polygonColorResolver", () => {
   const baseCtx = {
@@ -54,7 +54,6 @@ describe("polygonColorResolver", () => {
     ).toBe(true);
     expect(
       resolveRegionalLandColor("Europe", {
-        globeTheme: "satellite",
         regionColorsLabels: { Europe: UI_COLORS.accent },
         regionColorsAttenuated: { Europe: UI_COLORS.mapBorder },
         fallbackAccent: UI_COLORS.accent,
@@ -242,7 +241,6 @@ describe("polygonColorResolver", () => {
       transState,
       countryDataMap: { Spain: { region: "Europe" } },
       gameDataMap: {},
-      globeTheme: "satellite",
       UI_COLORS,
       getRegionSurfaceColor,
       getRegionSurfaceColorDimmed,

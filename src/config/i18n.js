@@ -34,11 +34,6 @@ export const translations = {
     minus_one_minute: "-1 minute",
     plus_one_minute: "+1 minute",
     dark_light_mode: "Mode sombre/clair",
-    globe_theme: "Thème du globe",
-    found_style: "Style des pays trouvés",
-    found_style_short: "Trouvés",
-    found_style_surface: "Surface",
-    found_style_mesh: "Maillage",
     renderer_webgpu: "WebGPU",
     renderer_webgpu_desc:
       "Moteur de rendu par défaut du globe. Désactive pour revenir à WebGL en cas de souci.",
@@ -119,7 +114,6 @@ export const translations = {
     // End Screen
     incredible: "Incroyable !",
     well_done: "Bravo !",
-    accent_color: "Couleur d'accent",
     settings_section_game: "Partie",
     settings_section_display: "Affichage",
     travel_journal: "Carnet de voyage",
@@ -148,8 +142,6 @@ export const translations = {
     region_Reliefs: "Reliefs & Fleuves",
     region_Unknown: "Inconnu",
     // Globe Themes
-    theme_satellite: "Satellite",
-    theme_blackout: "Monochrome",
     // Profil & Leaderboard
     profile: "Profil",
     profile_screen_title: "Mon Profil & Classements",
@@ -267,11 +259,6 @@ export const translations = {
     minus_one_minute: "-1 minute",
     plus_one_minute: "+1 minute",
     dark_light_mode: "Dark/light mode",
-    globe_theme: "Globe theme",
-    found_style: "Found countries style",
-    found_style_short: "Found",
-    found_style_surface: "Surface",
-    found_style_mesh: "Mesh",
     renderer_webgpu: "WebGPU",
     renderer_webgpu_desc: "Default globe renderer. Turn off to go back to WebGL if needed.",
     renderer_webgpu_unsupported: "Unavailable: this browser does not support WebGPU.",
@@ -355,7 +342,6 @@ export const translations = {
     // End Screen
     incredible: "Incredible !",
     well_done: "Well done!",
-    accent_color: "Accent color",
     settings_section_game: "Game",
     settings_section_display: "Display",
     travel_journal: "Travel journal",
@@ -386,8 +372,6 @@ export const translations = {
     region_Unknown: "Unknown",
 
     // Globe Themes
-    theme_satellite: "Satellite",
-    theme_blackout: "Monochrome",
 
     // Profile & Leaderboard
     profile: "Profile",

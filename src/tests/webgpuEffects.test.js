@@ -28,7 +28,6 @@ import {
   countryGrainOutputNode,
   createPhongMaterial,
   createStandardMaterial,
-  satelliteSensorColorNode,
 } from "../globe/render/webgpu/surfaceNodes";
 import { bayer4x4, mirrorUniform } from "../globe/render/webgpu/tslCommon";
 
@@ -78,7 +77,6 @@ describe("WebGPU effect ports", () => {
   it("builds the surface nodes", () => {
     expect(countryGrainOutputNode()).toBe(countryGrainOutputNode());
     expect(blackoutOceanOutputNode().isNode).toBe(true);
-    expect(satelliteSensorColorNode(new THREE.Texture()).isNode).toBe(true);
   });
 
   it("swaps LineMaterial for an equivalent Line2NodeMaterial", () => {

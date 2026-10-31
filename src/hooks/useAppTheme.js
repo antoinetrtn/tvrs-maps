@@ -1,91 +1,42 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
-import {
-  ACCENT_PRESETS,
-  persistAccent,
-  readStoredAccent,
-  setActiveAccent,
-} from "../config/accentPresets";
-import {
-  DEFAULT_GLOBE_THEME,
-  getThemeCssVariables,
-  isValidGlobeTheme,
-  migrateGlobeTheme,
-} from "../config/designSystem";
-import { BREAKPOINTS, STORAGE_KEYS } from "../config/gameConstants";
+import { getThemeCssVariables } from "../config/designSystem";
+import { BREAKPOINTS, RETIRED_STORAGE_KEYS } from "../config/gameConstants";
 
 const uiScale = (w = BREAKPOINTS.desktop) =>
   w >= 1800 ? 0.78 : w >= 1400 ? 0.84 : w >= 1100 ? 0.9 : w >= 900 ? 0.95 : w < 520 ? 0.88 : 1;
 
+// The game has one unified nocturnal theme: the UI chrome is always dark.
+const THEME = "dark";
+
 /**
- * UI theme (dark/light chrome) + globe theme state, and the CSS-variable
- * style object applied to both .app-container and document.documentElement.
+ * CSS-variable style object of the unified theme, applied to both
+ * .app-container and document.documentElement.
  */
 export function useAppTheme(viewportWidth) {
-  const [globeTheme, setGlobeThemeRaw] = useState(() => {
-    try {
-      const cached = migrateGlobeTheme(localStorage.getItem(STORAGE_KEYS.globeTheme));
-      if (cached && isValidGlobeTheme(cached)) {
-        localStorage.setItem(STORAGE_KEYS.globeTheme, cached);
-        return cached;
-      }
-    } catch {}
-    return DEFAULT_GLOBE_THEME;
-  });
-
-  // Accent preset: read once, pushed into designSystem before the first paint.
-  const [accent, setAccentRaw] = useState(() =>
-    setActiveAccent(readStoredAccent(globalThis.localStorage, STORAGE_KEYS.accent))
-  );
-
-  const setAccent = useCallback((id) => {
-    if (!ACCENT_PRESETS[id]) return;
-    setAccentRaw(setActiveAccent(persistAccent(globalThis.localStorage, STORAGE_KEYS.accent, id)));
-  }, []);
-
-  const [theme, setThemeRaw] = useState(() => {
-    return "dark";
-  });
-
-  const setTheme = useCallback((t) => {
-    setThemeRaw(t);
-    try {
-      localStorage.setItem(STORAGE_KEYS.uiTheme, t);
-    } catch {}
-  }, []);
-
-  const setGlobeTheme = useCallback((t) => {
-    const validTheme = t === "satellite" ? "satellite" : "monochrome";
-    setGlobeThemeRaw(validTheme);
-    const targetUiTheme = "dark";
-    setThemeRaw(targetUiTheme);
-    try {
-      localStorage.setItem(STORAGE_KEYS.globeTheme, validTheme);
-      localStorage.setItem(STORAGE_KEYS.uiTheme, targetUiTheme);
-    } catch {}
-  }, []);
-
   const appStyle = useMemo(
-    // accent is a dependency: getThemeColors reads the active accent preset.
-
-    () => getThemeCssVariables(theme, globeTheme, { uiScale: uiScale(viewportWidth) }),
-    [theme, globeTheme, viewportWidth, accent]
+    () => getThemeCssVariables(THEME, { uiScale: uiScale(viewportWidth) }),
+    [viewportWidth]
   );
 
   // Theme the whole document, not just .app-container: portals mounted on
   // document.body (AuthModal, ConfirmationModal…) and the body background
-  // otherwise fall back to the dark :root tokens when the UI theme is light.
+  // otherwise fall back to the :root first-paint tokens.
   useEffect(() => {
     const rootEl = document.documentElement;
-    rootEl.dataset.theme = theme;
+    rootEl.dataset.theme = THEME;
     Object.entries(appStyle).forEach(([key, value]) => {
       rootEl.style.setProperty(key, String(value));
     });
-  }, [theme, appStyle]);
+  }, [appStyle]);
 
-  const accentProps = useMemo(() => ({ accent, setAccent }), [accent, setAccent]);
+  useEffect(() => {
+    try {
+      RETIRED_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+    } catch {
+      // Storage unavailable (private mode): nothing to clean.
+    }
+  }, []);
 
-  // Globe render key: Monochrome carries the accent so the globe palette re-derives live.
-  const globeRenderTheme = globeTheme === "monochrome" ? `monochrome@${accent}` : globeTheme;
-  return { theme, setTheme, globeTheme, globeRenderTheme, setGlobeTheme, accentProps, appStyle };
+  return { theme: THEME, appStyle };
 }

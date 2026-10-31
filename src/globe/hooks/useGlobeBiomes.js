@@ -80,7 +80,6 @@ export function useGlobeBiomes({
   selectedCountry,
   foundSet,
   isHomeScreen,
-  globeTheme,
 }) {
   const biomeObjectsCacheRef = useRef(new Map());
 
@@ -131,42 +130,39 @@ export function useGlobeBiomes({
     [selectedCountry, isRiversMountainsMode, gameDataMap]
   );
 
-  const getOrBuildBiome = useCallback(
-    (d, isSelected) => {
-      const key = `${d.admin || "unknown"}_${d.isFound ? "found" : "unfound"}_selected_${isSelected}_${d.scale}_${d.lat}_${d.lng}_${globeTheme}`;
-      const cached = biomeObjectsCacheRef.current.get(key);
-      if (cached) return cached;
+  const getOrBuildBiome = useCallback((d, isSelected) => {
+    const key = `${d.admin || "unknown"}_${d.isFound ? "found" : "unfound"}_selected_${isSelected}_${d.scale}_${d.lat}_${d.lng}`;
+    const cached = biomeObjectsCacheRef.current.get(key);
+    if (cached) return cached;
 
-      let asset;
-      const baseScale = d.scale * BIOME_SCENE_SCALE;
-      if (d.type === "mountain" || d.type === "mountain_range") {
-        asset = createMountainFeature(
-          globeTheme,
-          isSelected,
-          d.isFound,
-          d.bearing,
-          d.spread,
-          d.height,
-          d.path,
-          d.lat,
-          d.lng,
-          baseScale * RELIEF.mountainScale,
-          GLITCH_EFFECT_SETTINGS.foundMountainColor
-        );
-      } else {
-        asset = new THREE.Group();
-      }
+    let asset;
+    const baseScale = d.scale * BIOME_SCENE_SCALE;
+    if (d.type === "mountain" || d.type === "mountain_range") {
+      asset = createMountainFeature(
+        "dark",
+        isSelected,
+        d.isFound,
+        d.bearing,
+        d.spread,
+        d.height,
+        d.path,
+        d.lat,
+        d.lng,
+        baseScale * RELIEF.mountainScale,
+        GLITCH_EFFECT_SETTINGS.foundMountainColor
+      );
+    } else {
+      asset = new THREE.Group();
+    }
 
-      const alignedAsset = new THREE.Group();
-      asset.rotation.x = BIOME_SURFACE_ALIGNMENT_RADIANS;
-      alignedAsset.add(asset);
-      alignedAsset.scale.setScalar(baseScale * RELIEF.mountainScale);
+    const alignedAsset = new THREE.Group();
+    asset.rotation.x = BIOME_SURFACE_ALIGNMENT_RADIANS;
+    alignedAsset.add(asset);
+    alignedAsset.scale.setScalar(baseScale * RELIEF.mountainScale);
 
-      biomeObjectsCacheRef.current.set(key, alignedAsset);
-      return alignedAsset;
-    },
-    [globeTheme]
-  );
+    biomeObjectsCacheRef.current.set(key, alignedAsset);
+    return alignedAsset;
+  }, []);
 
   const createBiomeThreeObject = useCallback(
     (d) => getOrBuildBiome(d, isSameAdmin(d.admin, selectedCountry, gameDataMap)),
@@ -239,7 +235,7 @@ export function useGlobeBiomes({
       );
       cache.clear();
     };
-  }, [globeTheme]);
+  }, []);
 
   return {
     getBiomeAssetsData,

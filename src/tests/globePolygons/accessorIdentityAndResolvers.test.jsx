@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CONQUEST_PLAYER_COLORS, getThemeColors } from "../../config/designSystem";
@@ -11,7 +11,6 @@ import {
   POLYGON_CAP_RESOLUTION,
 } from "../../config/gameConfig";
 import { countryDataMap } from "../../data/gameData";
-import { setGlobePref } from "../../globe/globePrefs";
 import { useGlobePolygons } from "../../globe/hooks/useGlobePolygons";
 import {
   FOUND_SURFACE_GREEN,
@@ -137,7 +136,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         isSuccess: runDiff((p) => ({ ...p, isSuccess: true })),
         conquestOverlay: runDiff((p) => ({ ...p, conquestOverlay: CONQUEST_OVERLAY_FIXTURE })),
         mode: runDiff((p) => ({ ...p, mode: "learn" })),
-        globeTheme: runDiff((p) => ({ ...p, globeTheme: "satellite" })),
         theme: runDiff((p) => ({ ...p, theme: "light" })),
         isLight: runDiff((p) => ({ ...p, isLight: true })),
         globeLightingEnabled: runDiff((p) => ({ ...p, globeLightingEnabled: false })),
@@ -170,9 +168,8 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         noChange: [],
         unusedFoundList: [],
         selectionTransitionWrapperOnly: [],
-        // G-2: changing selectedCountry or globeTheme rebuilds 11 of 14 accessors
+        // G-2: changing selectedCountry rebuilds 11 of 14 accessors
         selectedCountry: REBUILT_ON_SELECTION_OR_GLOBE_THEME,
-        globeTheme: REBUILT_ON_SELECTION_OR_GLOBE_THEME,
         // Changing foundSet, mode, theme, or isLight rebuilds 10 of 14 accessors (all except altitude, curvature, lerpColor, isQuietOwnedFocus)
         foundSet: REBUILT_ON_FOUND_MODE_THEME,
         mode: REBUILT_ON_FOUND_MODE_THEME,
@@ -264,30 +261,12 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         ],
       });
     });
-
-    it("rebuilds only getPolygonCapMaterial and getPolygonSideMaterial when foundStyle external store changes", () => {
-      const stableProps = createHookProps();
-      const { result, unmount } = renderHook(() => useGlobePolygons(stableProps));
-      const before = { ...result.current };
-
-      act(() => {
-        setGlobePref("foundStyle", "mesh");
-      });
-
-      expect(diffAccessors(before, result.current)).toEqual([
-        "getPolygonCapMaterial",
-        "getPolygonSideMaterial",
-      ]);
-      expect(result.current.lerpColor).toBe(before.lerpColor);
-      unmount();
-    });
   });
 
   describe("Material cache and shared pool lifecycle", () => {
-    it("clears polygonMaterialCacheRef on mode switch while keeping sharedMaterialsRef until theme/lighting changes", () => {
+    it("clears polygonMaterialCacheRef on mode switch while keeping sharedMaterialsRef until lighting changes", () => {
       const { result, rerender, unmount } = renderHook((p) => useGlobePolygons(p), {
         initialProps: createHookProps({
-          globeTheme: "monochrome",
           selectedCountry: "France",
           foundSet: new Set(["Spain"]),
         }),
@@ -305,7 +284,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
       rerender(
         createHookProps({
           mode: "capitals",
-          globeTheme: "monochrome",
           selectedCountry: "France",
           foundSet: new Set(["Spain"]),
         })
@@ -318,12 +296,11 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
       expect(result.current.getPolygonCapMaterial(FEATURE_SPAIN)).toBe(spainCapMat1);
 
       // CHARACTERIZATION: current behavior — transitioning to isEndScreen=true does NOT clear
-      // sharedMaterialsRef, and found-cap cacheKey (`found-cap-desktop-monochrome`) does not
+      // sharedMaterialsRef, and found-cap cacheKey (`found-cap-desktop`) does not
       // include isEndScreen or color, so Spain reuses its play-mode FOUND_SURFACE_GREEN material!
       rerender(
         createHookProps({
           mode: "capitals",
-          globeTheme: "monochrome",
           isEndScreen: true,
           isPerfectScore: true,
           foundSet: new Set(["Spain"]),
@@ -334,12 +311,12 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
       expect(spainEndMat).toBe(spainCapMat1);
       expect(`#${spainEndMat.emissive.getHexString()}`).toBe(FOUND_SURFACE_GREEN);
 
-      // Switching globeTheme disposes sharedMaterialsRef and clears animated materials
+      // Switching lighting disposes sharedMaterialsRef and clears animated materials
       const disposeSpy = vi.spyOn(franceCapMat1, "dispose");
       rerender(
         createHookProps({
           mode: "capitals",
-          globeTheme: "satellite",
+          globeLightingEnabled: false,
           isEndScreen: true,
           foundSet: new Set(["Spain"]),
         })
@@ -383,23 +360,13 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
           isDepartmentMode: false,
           isGhostCountry: false,
           isSelected: false,
-          globeTheme: "monochrome",
         })
       ).toBe(POLYGON_ALTITUDE.base);
-      expect(
-        getPolygonAltitudeFor({
-          isDepartmentMode: false,
-          isGhostCountry: false,
-          isSelected: false,
-          globeTheme: "satellite",
-        })
-      ).toBe(POLYGON_ALTITUDE.satelliteBase);
       expect(
         getPolygonAltitudeFor({
           isDepartmentMode: true,
           isGhostCountry: true,
           isSelected: true,
-          globeTheme: "monochrome",
         })
       ).toBe(POLYGON_ALTITUDE.ghostCountry); // ghost check precedes isSelected!
 
@@ -435,7 +402,7 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
       expect(getCachedMaterial(map, "France")).toBeNull();
       expect(getCachedMaterial(map, null)).toBeNull();
 
-      const uiColors = getThemeColors("monochrome", "dark");
+      const uiColors = getThemeColors("dark");
       expect(mutedFoundGreen(uiColors.mapBase, () => uiColors.black)).toBe(FOUND_SURFACE_GREEN);
       expect(getFeatureMonochromeShade(null, uiColors.mapBase, (a) => a, uiColors)).toBe(
         uiColors.mapBase
@@ -452,11 +419,10 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         foundSet: new Set(),
         mode: "countries",
         isLight: false,
-        globeLightingEnabled: true,
         perfProfile: { isMobile: true },
-        UI_COLORS: { isBlackoutTheme: false, strokeWidthDesktop: 0.75 },
+        UI_COLORS: { strokeWidthDesktop: 0.75 },
       });
-      expect(baseStroke).toBeCloseTo((0.75 + 0.2) * 0.94, 5);
+      expect(baseStroke).toBeCloseTo(0.75 * 0.94, 5);
 
       expect(
         isQuietOwnedFocusFor(

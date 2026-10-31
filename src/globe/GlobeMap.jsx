@@ -47,7 +47,6 @@ import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { usePolygonMaterialEviction } from "./hooks/usePolygonMaterialEviction";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 import { isGlobeHoverRaycastNeeded } from "./render/pointerRaycast";
-import SatelliteImageryLayer from "./SatelliteImageryLayer.jsx";
 
 // Module-level for a stable identity (an inline arrow rebuilt the lighting rig each render).
 const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
@@ -76,7 +75,6 @@ const GlobeMap = (props) => {
     onPreserveInputFocus,
     globeLightingEnabled = true,
     activeDataMap,
-    globeTheme = "satellite",
     learnSubMode = DEFAULT_LEARN_SUB_MODE,
     isPanelOpen = false,
   } = props;
@@ -152,7 +150,6 @@ const GlobeMap = (props) => {
   } = useGlobePolygons({
     mode,
     theme,
-    globeTheme,
     isLight,
     globeLightingEnabled,
     perfProfile,
@@ -186,7 +183,6 @@ const GlobeMap = (props) => {
     globeLightingEnabled,
     UI_COLORS,
     perfProfile,
-    globeTheme,
     safeColor: safeOpaqueColor,
   });
 
@@ -245,7 +241,7 @@ const GlobeMap = (props) => {
   useGlobeVisibilityPause(globeEl);
   useGlobeShaderWarmup(
     globeEl,
-    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}|${globeTheme}|${theme}`
+    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}|${theme}`
   );
 
   // First correct answer: link the opaque "success" programs ahead of time.
@@ -294,7 +290,6 @@ const GlobeMap = (props) => {
     isPerfectScore,
     isError,
     isLight,
-    globeTheme,
     theme,
     canonicalPositions,
     gameDataMap,
@@ -319,7 +314,6 @@ const GlobeMap = (props) => {
     isError,
     REGION_COLORS_LABELS,
     UI_COLORS,
-    globeTheme,
     t,
     globeEl,
     isLight,
@@ -357,15 +351,10 @@ const GlobeMap = (props) => {
     selectedCountry,
     foundSet,
     isHomeScreen,
-    globeTheme,
     isRiversMountainsMode,
   });
 
-  const globeMaterial = useGlobeMaterial({
-    UI_COLORS,
-    globeLightingEnabled,
-    isLight,
-  });
+  const globeMaterial = useGlobeMaterial({ UI_COLORS });
 
   const lightingGlowConfig = {
     globeLightingRef,
@@ -441,7 +430,7 @@ const GlobeMap = (props) => {
 
   return (
     <div
-      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""} ${String(globeTheme).startsWith("monochrome") ? "crt" : ""}`}
+      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
     >
       <div
         className={`globe-container ${theme}`}
@@ -578,7 +567,6 @@ const GlobeMap = (props) => {
             onBackgroundClick={handleBackgroundClick}
           />
         </div>
-        <SatelliteImageryLayer globeEl={globeEl} globeTheme={globeTheme} />
       </div>
     </div>
   );

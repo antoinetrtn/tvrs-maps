@@ -28,7 +28,7 @@ function compactRow(hookCurrent, feature) {
     metrics: `alt:${s.altitude} | w:${s.strokeWidth} | res:${s.curvatureResolution}`,
     capMat: `${cap.type} vis:${cap.visible} tr:${cap.transparent} op:${cap.opacity} wf:${cap.wireframe} col:${cap.color} em:${cap.emissive}@${cap.emissiveIntensity} sh:${cap.userData.isGlitchShaderCap} fc:${cap.userData.isFoundCap}`,
     capUniforms: u
-      ? `target:${u.uTargetColor} err:${u.uIsError} ok:${u.uIsSuccess} fnd:${u.uIsFound} sat:${u.uIsSatellite} th:${u.uTheme} selIn:${u.uSelectInTransition}`
+      ? `target:${u.uTargetColor} err:${u.uIsError} ok:${u.uIsSuccess} fnd:${u.uIsFound} selIn:${u.uSelectInTransition}`
       : null,
     sideMat: `${side.type} vis:${side.visible} tr:${side.transparent} op:${side.opacity} sh:${side.userData.isGlitchShaderCap}`,
   };
@@ -44,53 +44,30 @@ describe("useGlobePolygons characterization — Full Matrix Snapshots", () => {
     resetGlobePolygonTestGlobals();
   });
 
-  it("freezes the world modes × themes × states matrix via snapshot", () => {
+  it("freezes the world modes × states matrix via snapshot", () => {
     const cases = [
       {
-        id: "countries | monochrome | neutral+selected+found",
+        id: "countries | neutral+selected+found",
         props: {
           mode: "countries",
-          globeTheme: "monochrome",
           selectedCountry: "France",
           foundSet: new Set(["Spain"]),
         },
         features: [FEATURE_FRANCE, FEATURE_SPAIN, FEATURE_BRAZIL],
       },
       {
-        id: "countries | satellite | neutral+selected+found",
+        id: "countries | error-flash",
         props: {
           mode: "countries",
-          globeTheme: "satellite",
-          selectedCountry: "France",
-          foundSet: new Set(["Spain"]),
-        },
-        features: [FEATURE_FRANCE, FEATURE_SPAIN, FEATURE_BRAZIL],
-      },
-      {
-        id: "countries | default | neutral+selected",
-        props: {
-          mode: "countries",
-          globeTheme: "default",
-          selectedCountry: "France",
-          foundSet: new Set(),
-        },
-        features: [FEATURE_FRANCE, FEATURE_SPAIN],
-      },
-      {
-        id: "countries | blackout | error-flash",
-        props: {
-          mode: "countries",
-          globeTheme: "blackout",
           selectedCountry: "France",
           isError: true,
         },
         features: [FEATURE_FRANCE],
       },
       {
-        id: "countries | satellite | success-flash",
+        id: "countries | success-flash",
         props: {
           mode: "countries",
-          globeTheme: "satellite",
           selectedCountry: "France",
           isSuccess: true,
           foundSet: new Set(["France"]),
@@ -98,19 +75,17 @@ describe("useGlobePolygons characterization — Full Matrix Snapshots", () => {
         features: [FEATURE_FRANCE],
       },
       {
-        id: "rivers_mountains | monochrome | selected-river",
+        id: "rivers_mountains | selected-river",
         props: {
           mode: "rivers_mountains",
-          globeTheme: "monochrome",
           selectedCountry: "Amazon",
         },
         features: [FEATURE_RIVER_AMAZON, FEATURE_FRANCE],
       },
       {
-        id: "learn | monochrome | selected+neutral",
+        id: "learn | selected+neutral",
         props: {
           mode: "learn",
-          globeTheme: "monochrome",
           selectedCountry: "France",
         },
         features: [FEATURE_FRANCE, FEATURE_SPAIN],
@@ -152,7 +127,6 @@ describe("useGlobePolygons characterization — Full Matrix Snapshots", () => {
       {
         mode: "departments",
         isDepartmentMode: true,
-        globeTheme: "satellite",
         modeTransitionRef: transRef,
         transitionStep: 0,
       },
@@ -164,7 +138,6 @@ describe("useGlobePolygons characterization — Full Matrix Snapshots", () => {
       {
         mode: "departments",
         isDepartmentMode: true,
-        globeTheme: "satellite",
         modeTransitionRef: transRef,
         transitionStep: 2,
       },
@@ -176,7 +149,6 @@ describe("useGlobePolygons characterization — Full Matrix Snapshots", () => {
       {
         mode: "departments",
         isDepartmentMode: true,
-        globeTheme: "satellite",
         modeTransitionRef: transRef,
         transitionStep: 5,
       },
@@ -187,7 +159,6 @@ describe("useGlobePolygons characterization — Full Matrix Snapshots", () => {
       {
         mode: "us_states",
         isUsStatesMode: true,
-        globeTheme: "monochrome",
         selectedCountry: "California",
       },
       [FEATURE_US_CALIFORNIA]
@@ -196,7 +167,6 @@ describe("useGlobePolygons characterization — Full Matrix Snapshots", () => {
     const conquestRows = runCase(
       {
         mode: "countries",
-        globeTheme: "satellite",
         selectedCountry: "France",
         conquestOverlay: { ...CONQUEST_OVERLAY_FIXTURE, quietFocusId: "France" },
       },

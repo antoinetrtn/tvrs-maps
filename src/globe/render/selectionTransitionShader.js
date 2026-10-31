@@ -1,7 +1,6 @@
 export function syncSelectedCountryShaderUniforms({
   shader,
   isLight,
-  isBlackoutTheme,
   isError,
   isSuccess,
   isFound,
@@ -24,9 +23,6 @@ export function syncSelectedCountryShaderUniforms({
   }
   if (shader.uniforms.uIsLight) {
     shader.uniforms.uIsLight.value = isLight ? 1.0 : 0.0;
-  }
-  if (shader.uniforms.uTheme) {
-    shader.uniforms.uTheme.value = isBlackoutTheme ? 1.0 : 0.0;
   }
   if (shader.uniforms.uIsFound) {
     shader.uniforms.uIsFound.value = isFound ? 1.0 : 0.0;
