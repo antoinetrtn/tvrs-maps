@@ -146,19 +146,6 @@ const PAIRS = {
   resuming: ["Reprise de ta partie…", "Resuming your match…"],
   close: ["Fermer", "Close"],
   feedEmpty: ["Aucune capture pour l'instant", "No captures yet"],
-  knowledgeTitle: ["Escalade de connaissances", "Knowledge escalation"],
-  knowledgeStep: ["Escalade", "Escalation"],
-  knowledgeTimer: ["Temps restant", "Time remaining"],
-  knowledgeHint: [
-    "Choisis la bonne réponse (touches 1 à 4)",
-    "Pick the right answer (keys 1 to 4)",
-  ],
-  knowledgeSuccess: ["escaladé !", "escalated!"],
-  knowledgeFailed: ["Escalade ratée", "Escalation failed"],
-  categoryTech: ["Tech", "Tech"],
-  categoryNature: ["Faune & flore", "Wildlife & flora"],
-  categoryMusique: ["Musique", "Music"],
-  categoryCulture: ["Culture générale", "General knowledge"],
 };
 
 const withPairs = (base, index) =>

@@ -436,19 +436,3 @@
 .ui-btn--ready-cta.is-quiet .conquest-ready-cta-sub {
   display: none;
 }
-
-/* — moved from src/multiplayer/knowledge/ConquestKnowledge.css — */
-
-.ui-btn--knowledge-choice {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  min-height: calc(var(--control-lg) + var(--spacing-xl));
-  padding: var(--spacing-sm) var(--spacing-xs);
-  border-radius: 0;
-  box-shadow: 2px 2px 0 var(--black);
-  text-align: center;
-}

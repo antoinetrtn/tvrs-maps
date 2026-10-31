@@ -7,6 +7,5 @@ export const CARD_LOOKS = [
   "locked",
   "badge-detail",
   "rules",
-  "knowledge",
   "mode-deck",
 ];

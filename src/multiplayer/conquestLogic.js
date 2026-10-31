@@ -254,15 +254,6 @@ export function formatFeedEvent(event, { players = [], countryName = (id) => id,
       return fr
         ? `${who} a raté le vol de ${countryName(event.country_id)}`
         : `${who} failed to steal ${countryName(event.country_id)}`;
-    case "knowledge":
-      if (event.payload?.ok) {
-        return fr
-          ? `${who} a réussi l'escalade sur ${countryName(event.country_id)}`
-          : `${who} passed the knowledge step on ${countryName(event.country_id)}`;
-      }
-      return fr
-        ? `${who} a raté l'escalade sur ${countryName(event.country_id)}`
-        : `${who} failed the knowledge step on ${countryName(event.country_id)}`;
     case "join":
       return fr ? `${who} a rejoint le salon` : `${who} joined the room`;
     case "start":

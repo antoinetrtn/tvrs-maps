@@ -4,7 +4,6 @@ export const LOOKS = [
   "feed-line",
   "ready-cta",
   "conquest-share",
-  "knowledge-choice",
   "cta",
   "dialog-action",
   "form-submit",

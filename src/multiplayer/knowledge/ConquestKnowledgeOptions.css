@@ -1,0 +1,44 @@
+.conquest-knowledge-options.ui-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+.conquest-knowledge-options .ui-option {
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  text-align: left;
+}
+.conquest-knowledge-options .ui-option-mark {
+  display: none;
+}
+.cq-pixel-icon {
+  display: inline-grid;
+  grid-template-columns: repeat(12, 3px);
+  grid-template-rows: repeat(12, 3px);
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.cq-pixel-icon--plant,
+.cq-pixel-icon--animal,
+.cq-pixel-icon--bird,
+.cq-pixel-icon--sea,
+.cq-pixel-icon--fruit {
+  color: var(--success);
+}
+
+.cq-pixel-icon--instrument,
+.cq-pixel-icon--music,
+.cq-pixel-icon--dish,
+.cq-pixel-icon--drink,
+.cq-pixel-icon--sport {
+  color: var(--warning);
+}
+
+.cq-pixel-px {
+  background-color: currentColor;
+  box-shadow: 1px 1px 0 var(--black);
+}

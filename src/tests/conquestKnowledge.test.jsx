@@ -1,41 +1,25 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const rpcMock = vi.hoisted(() => vi.fn());
-vi.mock("../services/supabaseClient", () => ({
-  getSupabase: () =>
-    Promise.resolve({
-      rpc: (...args) => rpcMock(...args),
-    }),
-}));
+import { describe, expect, it, vi } from "vitest";
 
 import {
   ALLOWED_CATEGORIES,
   ALLOWED_ICON_PREFIXES,
-  buildRegionalClientPacks,
   findBannedTemporalTerm,
   findRecentYear,
   findSharedCorrectAnswers,
   hasRecentOrTemporalReference,
   isValidIconId,
-  stripQuestionForClient,
   validateCountryCategories,
   validateKnowledgeDataset,
   validateQuestion,
 } from "../../scripts/lib/knowledgeRules.mjs";
-import { answerKnowledge, requestKnowledgeChallenge } from "../multiplayer/conquestApi";
 import ConquestStealPanel from "../multiplayer/ConquestStealPanel.jsx";
 import { conquestText } from "../multiplayer/conquestText";
-import ConquestKnowledgeCard from "../multiplayer/knowledge/ConquestKnowledgeCard.jsx";
-import {
-  getCategoryLabel,
-  KNOWLEDGE_CATEGORIES,
-} from "../multiplayer/knowledge/knowledgeCategories";
-import { clearKnowledgePackCache, loadKnowledgePack } from "../multiplayer/knowledge/knowledgePack";
+import { getCategoryLabel } from "../multiplayer/knowledge/knowledgeCategories";
 import PixelIcon, { resolveIconFamily } from "../multiplayer/knowledge/PixelIcon.jsx";
 
 const makeValidQuestion = (overrides = {}) => ({
@@ -172,179 +156,80 @@ describe("knowledgeRules validator logic", () => {
   });
 });
 
-describe("knowledge pack builder & public/quiz/*.json", () => {
-  it("strips answerIndex, stableReason, and reviewNote from client packs", () => {
-    const q = makeValidQuestion({ reviewNote: "verified" });
-    const stripped = stripQuestionForClient(q, "FR");
-    expect(stripped).toEqual({
-      id: "fr-1",
-      iso: "FR",
-      category: "tech",
-      prompt: q.prompt,
-      choices: q.choices,
-    });
-    expect("answerIndex" in stripped).toBe(false);
-    expect("stableReason" in stripped).toBe(false);
-    expect("reviewNote" in stripped).toBe(false);
-
-    const packs = buildRegionalClientPacks(
-      [
-        {
-          iso: "FR",
-          questions: [q, makeValidQuestion({ id: "fr-draft", needsReview: true })],
-        },
-      ],
-      { France: { iso2: "FR", region: "Europe" } }
-    );
-    const europePack = packs.get("europe");
-    expect(europePack).toHaveLength(1);
-    expect(europePack[0].id).toBe("fr-1");
-    expect("answerIndex" in europePack[0]).toBe(false);
+describe("knowledge ladder data stays server-side", () => {
+  it("ships no public question pack with answers", () => {
+    expect(fs.existsSync(path.resolve(process.cwd(), "public/quiz"))).toBe(false);
   });
 
-  it("asserts generated public/quiz/*.json files contain no answerIndex or server metadata", () => {
-    const quizDir = path.resolve(process.cwd(), "public/quiz");
-    const files = fs.readdirSync(quizDir).filter((f) => f.endsWith(".json"));
-    expect(files.length).toBeGreaterThanOrEqual(6);
-
-    for (const file of files) {
-      const content = JSON.parse(fs.readFileSync(path.join(quizDir, file), "utf8"));
-      expect(Array.isArray(content)).toBe(true);
-      for (const item of content) {
-        expect(item).not.toHaveProperty("answerIndex");
-        expect(item).not.toHaveProperty("stableReason");
-        expect(item).not.toHaveProperty("reviewNote");
-        expect(item).not.toHaveProperty("needsReview");
-        expect(typeof item.id).toBe("string");
-        expect(typeof item.iso).toBe("string");
-        expect(typeof item.category).toBe("string");
-        expect(typeof item.prompt).toBe("string");
-        expect(item.choices).toHaveLength(4);
-      }
-    }
+  it("rejects labels padded with spaces (the server compares the label as-is)", () => {
+    const q = makeValidQuestion();
+    q.choices[0] = { ...q.choices[0], label: " TGV" };
+    expect(validateQuestion(q).join(" ")).toMatch(/espaces/);
   });
 });
 
-describe("ConquestKnowledgeCard, PixelIcon, and knowledgePack", () => {
-  const sampleChallenge = {
-    country_id: "France",
+describe("knowledge categories + PixelIcon", () => {
+  it("labels the ladder categories, culture as fallback", () => {
+    expect(getCategoryLabel("tech")).toBe("Tech");
+    expect(getCategoryLabel("nature", "en")).toBe("Wildlife & flora");
+    expect(getCategoryLabel("musique")).toBe("Musique");
+    expect(getCategoryLabel("inconnu")).toBe("Culture générale");
+  });
+
+  it("renders a family glyph", () => {
+    expect(resolveIconFamily("animal-goat")).toBe("animal");
+    expect(resolveIconFamily("nope")).toBe("symbol");
+    const { container } = render(<PixelIcon iconId="music-note" />);
+    expect(container.querySelector(".cq-pixel-icon--music")).not.toBeNull();
+  });
+});
+
+describe("ConquestStealPanel knowledge step (ladder levels 3-5)", () => {
+  const t = conquestText("fr");
+  const challenge = {
+    ok: true,
     mode: "steal",
     kind: "knowledge",
-    question_id: "fr-1",
+    step: 4,
     category: "nature",
-    prompt: "Quel oiseau emblématique niche sur les falaises bretonnes ?",
-    choices: [
-      { label: "Macareux moine", iconId: "bird-puffin" },
-      { label: "Autruche", iconId: "bird-ostrich" },
-      { label: "Manchot empereur", iconId: "bird-penguin" },
-      { label: "Condor des Andes", iconId: "bird-condor" },
-    ],
-    expires_at: new Date(Date.now() + 12000).toISOString(),
+    country_id: "Mexico",
+    prompt: "Quel amphibien vit dans les canaux de Xochimilco ?",
+    options: ["Le triton", "L'axolotl", "La salamandre", "Le protée"],
+    icons: ["animal-frog", "animal-axolotl", "animal-lizard", "animal-eel"],
+    expires_at: new Date(Date.now() + 20000).toISOString(),
   };
 
-  beforeEach(() => {
-    clearKnowledgePackCache();
-  });
-
-  it("maps the 4 canonical categories in French and English with category-agnostic fallback", () => {
-    expect(KNOWLEDGE_CATEGORIES.tech.fr).toBe("Tech");
-    expect(getCategoryLabel("tech", "fr")).toBe("Tech");
-    expect(getCategoryLabel("nature", "fr")).toBe("Faune & flore");
-    expect(getCategoryLabel("musique", "fr")).toBe("Musique");
-    expect(getCategoryLabel("culture", "fr")).toBe("Culture générale");
-    expect(getCategoryLabel("nature", "en")).toBe("Wildlife & flora");
-    expect(getCategoryLabel("astronomie", "fr")).toBe("Astronomie");
-  });
-
-  it("renders 2x2 grid with PixelIcon, category chip, timer bar, click & keyboard 1-4", () => {
-    const onAnswer = vi.fn();
-    const onCancel = vi.fn();
-    const { container } = render(
-      <ConquestKnowledgeCard
-        challenge={sampleChallenge}
-        countryName={() => "France"}
-        lang="fr"
-        onAnswer={onAnswer}
-        onCancel={onCancel}
-      />
-    );
-
-    expect(screen.getByText("Faune & flore")).toBeTruthy();
-    expect(screen.getByText("France")).toBeTruthy();
-    expect(screen.getByText(sampleChallenge.prompt)).toBeTruthy();
-    expect(screen.getByRole("progressbar")).toBeTruthy();
-
-    const pixelIcons = container.querySelectorAll(".cq-pixel-icon");
-    expect(pixelIcons).toHaveLength(4);
-    expect(pixelIcons[0].getAttribute("data-family")).toBe("bird");
-    expect(resolveIconFamily("tech-cpu")).toBe("tech");
-    expect(resolveIconFamily("unknown-xyz")).toBe("symbol");
-
-    // Click choice 3 (index 2)
-    fireEvent.click(screen.getByText("Manchot empereur"));
-    expect(onAnswer).toHaveBeenCalledWith(2);
-
-    // Keyboard shortcuts 1-4
-    fireEvent.keyDown(window, { key: "1" });
-    expect(onAnswer).toHaveBeenCalledWith(0);
-
-    fireEvent.keyDown(window, { key: "4" });
-    expect(onAnswer).toHaveBeenCalledWith(3);
-  });
-
-  it("renders PixelIcon directly and memoizes regional knowledge pack fetches", async () => {
-    const { container } = render(<PixelIcon iconId="music-harp" />);
-    expect(container.querySelector(".cq-pixel-icon")?.getAttribute("data-family")).toBe("music");
-
-    const fakeFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve([{ id: "fr-1" }]),
-    });
-    const res = await loadKnowledgePack("Europe", fakeFetch);
-    expect(res).toEqual([{ id: "fr-1" }]);
-    expect(fakeFetch).toHaveBeenCalledWith("/quiz/europe.json");
-  });
-
-  it("renders lazily inside ConquestStealPanel when challenge.kind === 'knowledge'", async () => {
+  it("uses the same panel: pick an option, send its label", async () => {
     const onAnswer = vi.fn();
     render(
       <ConquestStealPanel
-        t={conquestText("fr")}
-        challenge={sampleChallenge}
-        countryName={() => "France"}
-        onAnswer={onAnswer}
-        onCancel={vi.fn()}
+        t={t}
         lang="fr"
+        challenge={challenge}
+        countryName={(id) => (id === "Mexico" ? "Mexique" : id)}
+        onAnswer={onAnswer}
+        onCancel={() => {}}
       />
     );
-
-    await waitFor(() => {
-      expect(screen.getByText(sampleChallenge.prompt)).toBeTruthy();
-    });
-    fireEvent.keyDown(window, { key: "2" });
-    expect(onAnswer).toHaveBeenCalledWith(1);
-  });
-});
-
-describe("conquestApi knowledge RPC parameters", () => {
-  beforeEach(() => {
-    rpcMock.mockReset();
-    rpcMock.mockResolvedValue({ data: { ok: true }, error: null });
+    expect(screen.getByText(/Faune & flore · Mexique — Quel amphibien/)).toBeTruthy();
+    const option = await screen.findByRole("radio", { name: "L'axolotl" });
+    fireEvent.click(option);
+    fireEvent.click(screen.getByRole("button", { name: t.stealOffer }));
+    expect(onAnswer).toHaveBeenCalledWith("L'axolotl");
   });
 
-  it("passes p_match_id and p_country_id to conquest_knowledge_challenge", async () => {
-    await requestKnowledgeChallenge("match-uuid-1", "France");
-    expect(rpcMock).toHaveBeenCalledWith("conquest_knowledge_challenge", {
-      p_match_id: "match-uuid-1",
-      p_country_id: "France",
-    });
-  });
-
-  it("passes p_match_id and p_choice to conquest_answer_knowledge", async () => {
-    await answerKnowledge("match-uuid-1", 2);
-    expect(rpcMock).toHaveBeenCalledWith("conquest_answer_knowledge", {
-      p_match_id: "match-uuid-1",
-      p_choice: 2,
-    });
+  it("keeps the capital step as a typed answer", () => {
+    render(
+      <ConquestStealPanel
+        t={t}
+        lang="fr"
+        challenge={{ ...challenge, kind: "capital", step: 1, options: [] }}
+        countryName={(id) => id}
+        onAnswer={() => {}}
+        onCancel={() => {}}
+      />
+    );
+    expect(screen.getByRole("textbox")).toBeTruthy();
+    expect(screen.queryByRole("radio")).toBeNull();
   });
 });

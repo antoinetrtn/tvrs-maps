@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  answerKnowledge as answerKnowledgeRpc,
   cancelFortifyChallenge,
   cancelStealChallenge,
   claimConquestCountry,
@@ -16,7 +15,6 @@ import {
   openConquestChannel,
   rematchConquestMatch,
   requestFortifyChallenge,
-  requestKnowledgeChallenge,
   requestStealChallenge,
   setConquestReady,
   startConquestMatch,
@@ -71,18 +69,6 @@ const storage = {
 /** True when a match was in progress before the last reload. */
 export const hasStoredConquestMatch = () => Boolean(storage.read()?.id);
 
-async function resolveKnowledgeEscalation(matchId, res) {
-  if (!res?.ok || !(res.kind === "knowledge" || res.needs_knowledge)) return null;
-  if (Array.isArray(res.choices)) return res;
-  try {
-    const kRes = await requestKnowledgeChallenge(matchId, res.country_id);
-    if (kRes?.ok) return { ...res, ...kRes, kind: "knowledge", needs_knowledge: true };
-  } catch {
-    /* Graceful degradation when knowledge RPC is not deployed */
-  }
-  return null;
-}
-
 /** Lobby + live match state for the « Conquête » mode (server authoritative). */
 export function useConquestMatch({ lang, displayName }) {
   const [userId, setUserId] = useState(null);
@@ -92,7 +78,6 @@ export function useConquestMatch({ lang, displayName }) {
   const [realtimeUp, setRealtimeUp] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [knowledgeChallenge, setKnowledgeChallenge] = useState(null);
   const channelRef = useRef(null);
   const matchIdRef = useRef(null);
   const stateRef = useRef(EMPTY_STATE);
@@ -281,24 +266,11 @@ export function useConquestMatch({ lang, displayName }) {
     [callGame]
   );
   const steal = useCallback(
-    (answer) =>
-      callGame(async (id) => {
-        const res = await stealConquestCountry(id, answer);
-        const kChallenge = await resolveKnowledgeEscalation(id, res);
-        if (kChallenge) {
-          setKnowledgeChallenge(kChallenge);
-          return kChallenge;
-        }
-        return res;
-      }, "steal"),
+    (answer) => callGame((id) => stealConquestCountry(id, answer), "steal"),
     [callGame]
   );
   const cancelSteal = useCallback(
-    () =>
-      callGame((id) => {
-        setKnowledgeChallenge(null);
-        return cancelStealChallenge(id);
-      }, null),
+    () => callGame((id) => cancelStealChallenge(id), null),
     [callGame]
   );
 
@@ -307,42 +279,11 @@ export function useConquestMatch({ lang, displayName }) {
     [callGame]
   );
   const fortify = useCallback(
-    (answer) =>
-      callGame(async (id) => {
-        const res = await fortifyConquestCountry(id, answer);
-        if (res?.ok && (res.kind === "knowledge" || res.needs_knowledge)) {
-          setKnowledgeChallenge(res);
-        }
-        return res;
-      }, "fortify"),
+    (answer) => callGame((id) => fortifyConquestCountry(id, answer), "fortify"),
     [callGame]
   );
   const cancelFortify = useCallback(
-    () =>
-      callGame((id) => {
-        setKnowledgeChallenge(null);
-        return cancelFortifyChallenge(id);
-      }, null),
-    [callGame]
-  );
-
-  const requestKnowledge = useCallback(async (countryId) => {
-    if (!matchIdRef.current || !requestKnowledgeChallenge) return null;
-    try {
-      const res = await requestKnowledgeChallenge(matchIdRef.current, countryId);
-      if (res?.ok) setKnowledgeChallenge(res);
-      return res;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const answerKnowledge = useCallback(
-    (choiceIndex) =>
-      callGame(async (id) => {
-        setKnowledgeChallenge(null);
-        return answerKnowledgeRpc(id, choiceIndex);
-      }, "knowledge"),
+    () => callGame((id) => cancelFortifyChallenge(id), null),
     [callGame]
   );
 
@@ -374,7 +315,6 @@ export function useConquestMatch({ lang, displayName }) {
     stateRef.current = EMPTY_STATE;
     storage.clear();
     setState(EMPTY_STATE);
-    setKnowledgeChallenge(null);
     setOnline([]);
     setError("");
   }, []);
@@ -441,7 +381,6 @@ export function useConquestMatch({ lang, displayName }) {
   return {
     userId,
     ...state,
-    knowledgeChallenge,
     clockOffset,
     online,
     realtimeUp,
@@ -459,8 +398,6 @@ export function useConquestMatch({ lang, displayName }) {
     requestFortify,
     fortify,
     cancelFortify,
-    requestKnowledge,
-    answerKnowledge,
     rematch,
     leave,
     refresh,

@@ -136,6 +136,9 @@ export function validateQuestion(q, seenIds = new Set(), checkCategory = true) {
       const label = typeof choice?.label === "string" ? choice.label.trim() : "";
       if (!label) {
         errors.push(`${id}: label de choix manquant`);
+      } else if (label !== choice.label) {
+        // Le serveur compare l'étiquette choisie telle quelle (niveaux d'escalade 3 à 5).
+        errors.push(`${id}: label avec espaces en bord "${choice.label}"`);
       } else {
         normalizedLabels.add(label.toLowerCase());
       }
@@ -271,49 +274,4 @@ export function validateKnowledgeDataset(entries = [], expectedIsos = []) {
     erreurs,
     warnings,
   };
-}
-
-/** Strips server-only fields (`answerIndex`, `stableReason`, `reviewNote`, `needsReview`, `difficulty`). */
-export function stripQuestionForClient(question, iso) {
-  return {
-    id: question.id,
-    iso,
-    category: question.category,
-    prompt: question.prompt,
-    choices: (question.choices || []).map((choice) => ({
-      label: choice.label,
-      iconId: choice.iconId,
-    })),
-  };
-}
-
-/** Builds per-region client question packs (only `needsReview === false`, answers stripped). */
-export function buildRegionalClientPacks(entries = [], countryDataMap = {}) {
-  const isoInfo = new Map();
-  for (const [countryId, data] of Object.entries(countryDataMap)) {
-    if (data?.iso2) {
-      isoInfo.set(data.iso2, {
-        countryId,
-        region: String(data.region || "world").toLowerCase(),
-      });
-    }
-  }
-
-  const packs = new Map();
-  for (const { region } of isoInfo.values()) {
-    if (!packs.has(region)) packs.set(region, []);
-  }
-
-  for (const entry of entries) {
-    const info = isoInfo.get(entry?.iso);
-    if (!info) continue;
-    const list = packs.get(info.region) || [];
-    for (const q of entry?.questions || []) {
-      if (q?.needsReview !== false) continue;
-      list.push(stripQuestionForClient(q, entry.iso));
-    }
-    packs.set(info.region, list);
-  }
-
-  return packs;
 }

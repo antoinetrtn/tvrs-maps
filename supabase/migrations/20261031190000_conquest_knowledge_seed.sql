@@ -1,4 +1,4 @@
--- Généré par scripts/build-knowledge-packs.mjs — ne pas éditer à la main.
+-- Généré par scripts/build-knowledge-seed.mjs — ne pas éditer à la main.
 -- Seed de l'escalade de connaissances Conquête : 703 questions (needsReview = false).
 
 INSERT INTO public.conquest_knowledge_questions

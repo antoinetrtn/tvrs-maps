@@ -254,13 +254,18 @@ SET test.uid = :'R1';
 RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT challenge AS f1 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
 SELECT pg_temp.eq('fortify step 1 opened', (:'f1'::jsonb)->>'step', '1');
+SELECT pg_temp.eq('ladder step 1 is the capital', (:'f1'::jsonb)->>'kind', 'capital');
 SELECT pg_temp.eq('step 1 bonus is 30 s', (:'f1'::jsonb)->>'bonus_seconds', '30');
 SELECT pg_temp.eq('re-request returns the same challenge',
   (conquest_fortify_challenge(:'rmid', 'France')->>'kind'), (:'f1'::jsonb)->>'kind');
 SELECT pg_temp.eq('wrong fortify answer', conquest_fortify(:'rmid', 'Lyon')->>'reason', 'wrong');
 RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT pg_temp.eq('10 s cooldown after a wrong fortify', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'cooldown');
-SELECT pg_temp.eq('fortify table hidden from clients', (SELECT count(*) FROM match_fortify_challenges)::int, 0);
+DO $$ BEGIN
+  PERFORM count(*) FROM match_fortify_challenges;
+  RAISE EXCEPTION 'FAIL fortify table readable by clients';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  fortify table hidden from clients';
+END $$;
 
 -- Bonne réponse (capitale) → +30 s, puis l'autre type (drapeau) → +1 min.
 RESET ROLE;
@@ -279,52 +284,62 @@ SELECT pg_temp.eq('step 2 bonus is 60 s', (:'f2'::jsonb)->>'bonus_seconds', '60'
 SELECT pg_temp.eq('right flag fortifies', conquest_fortify(:'rmid', (SELECT iso2 FROM conquest_countries WHERE country_id = 'France'))->>'fortify_level', '2');
 SELECT pg_temp.eq('shield +1 min (≈110 s)',
   (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 110);
+-- Niveaux 3 à 5 : questions de connaissances (tech, faune & flore, musique), même défi.
 RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
-SELECT pg_temp.eq('no third step', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'max_fortified');
-
--- Expired shield: steal resets the fortify level.
-RESET ROLE;
-UPDATE match_claims SET shield_until = now() - interval '1 second' WHERE match_id = :'rmid';
-UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
-INSERT INTO match_steal_challenges VALUES (:'rmid', :'R2', 'France', 'capital', '{}', now() + interval '20 seconds');
-SET ROLE authenticated;
-SET test.uid = :'R2';
--- Pays renforcé : la bonne capitale ouvre le QCM de connaissances (sans réponse).
-SELECT r AS k1 FROM (SELECT steal_country(:'rmid', 'Paris') AS r) x \gset
-SELECT pg_temp.eq('fortified steal needs knowledge', (:'k1'::jsonb)->>'needs_knowledge', 'true');
-SELECT pg_temp.eq('knowledge challenge has 4 choices', jsonb_array_length((:'k1'::jsonb)->'choices'), 4);
-SELECT pg_temp.eq('knowledge challenge leaks no answer',
-  (:'k1'::jsonb) ? 'answer_index' OR (:'k1'::jsonb) ? 'answer_perm', false);
-SELECT pg_temp.eq('country not transferred yet', (SELECT owner_id FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::text, :'R1');
+SELECT challenge AS f3 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
+SELECT pg_temp.eq('step 3 is a knowledge question', (:'f3'::jsonb)->>'kind', 'knowledge');
+SELECT pg_temp.eq('step 3 category is tech', (:'f3'::jsonb)->>'category', 'tech');
+SELECT pg_temp.eq('step 3 has 4 options + 4 icons',
+  jsonb_array_length((:'f3'::jsonb)->'options') + jsonb_array_length((:'f3'::jsonb)->'icons'), 8);
+SELECT pg_temp.eq('knowledge challenge leaks no answer', (:'f3'::jsonb) ? 'answer_index', false);
 DO $$ BEGIN
   PERFORM count(*) FROM conquest_knowledge_questions;
   RAISE EXCEPTION 'FAIL knowledge questions readable by clients';
 EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  knowledge questions hidden from clients';
 END $$;
--- Mauvaise réponse au QCM → échec + pénalité, le renfort reste.
 RESET ROLE;
-SELECT (SELECT array_position(c.answer_perm, q.answer_index) - 1) AS good,
-       ((SELECT array_position(c.answer_perm, q.answer_index) - 1) + 1) % 4 AS bad
-  FROM match_steal_challenges c JOIN conquest_knowledge_questions q ON q.id = c.question_id
- WHERE c.match_id = :'rmid' AND c.user_id = :'R2' \gset
+SELECT (q.choices -> q.answer_index::int) ->> 'label' AS good,
+       (SELECT c ->> 'label' FROM jsonb_array_elements(q.choices) WITH ORDINALITY c(c, i)
+         WHERE i - 1 <> q.answer_index LIMIT 1) AS bad
+  FROM match_fortify_challenges f JOIN conquest_knowledge_questions q ON q.id = f.question_id
+ WHERE f.match_id = :'rmid' AND f.user_id = :'R1' \gset
 SET ROLE authenticated;
-SELECT pg_temp.eq('wrong knowledge answer fails', conquest_answer_knowledge(:'rmid', :bad)->>'reason', 'wrong');
-SELECT pg_temp.eq('double submit refused', conquest_answer_knowledge(:'rmid', :good)->>'reason', 'no_challenge');
-SELECT pg_temp.eq('fortify kept after failed quiz', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 2);
--- Bonne réponse → transfert + renfort remis à 0.
+SELECT pg_temp.eq('wrong knowledge option fails', conquest_fortify(:'rmid', :'bad')->>'reason', 'wrong');
+SELECT pg_temp.eq('double submit refused', conquest_fortify(:'rmid', :'good')->>'reason', 'no_challenge');
+RESET ROLE; DELETE FROM match_events WHERE kind = 'fortify_fail';
+UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT challenge AS f3 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
 RESET ROLE;
-DELETE FROM match_events WHERE kind IN ('steal_fail', 'knowledge');
+SELECT (q.choices -> q.answer_index::int) ->> 'label' AS good
+  FROM match_fortify_challenges f JOIN conquest_knowledge_questions q ON q.id = f.question_id
+ WHERE f.match_id = :'rmid' AND f.user_id = :'R1' \gset
+SET ROLE authenticated;
+SELECT pg_temp.eq('right knowledge option fortifies', conquest_fortify(:'rmid', :'good')->>'fortify_level', '3');
+
+-- Expired shield: le voleur affronte le niveau 4 (faune & flore) ; succès = transfert + renforts à 0.
+RESET ROLE;
+UPDATE match_claims SET shield_until = now() - interval '1 second' WHERE match_id = :'rmid';
+UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
+SET ROLE authenticated;
+SET test.uid = :'R2';
+SELECT challenge AS s4 FROM (SELECT conquest_steal_challenge(:'rmid', 'France') AS challenge) x \gset
+SELECT pg_temp.eq('steal of a level-3 country asks step 4', (:'s4'::jsonb)->>'step', '4');
+SELECT pg_temp.eq('step 4 category is nature', (:'s4'::jsonb)->>'category', 'nature');
+SELECT pg_temp.eq('re-request keeps the same question',
+  conquest_steal_challenge(:'rmid', 'France')->>'question_id', (:'s4'::jsonb)->>'question_id');
+SELECT pg_temp.eq('capital does not answer a knowledge step', steal_country(:'rmid', 'Paris')->>'reason', 'wrong');
+SELECT pg_temp.eq('fortify kept after a failed steal', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 3);
+RESET ROLE;
+DELETE FROM match_events WHERE kind = 'steal_fail';
 UPDATE match_players SET penalty_until = NULL, last_action_at = NULL, steal_fails = 0 WHERE match_id IS NOT NULL;
 SET ROLE authenticated;
-SELECT r AS k2 FROM (SELECT conquest_knowledge_challenge(:'rmid', 'France') AS r) x \gset
-SELECT pg_temp.eq('attacker gets a knowledge challenge', (:'k2'::jsonb)->>'kind', 'knowledge');
+SELECT challenge AS s4 FROM (SELECT conquest_steal_challenge(:'rmid', 'France') AS challenge) x \gset
 RESET ROLE;
-SELECT array_position(c.answer_perm, q.answer_index) - 1 AS good
+SELECT (q.choices -> q.answer_index::int) ->> 'label' AS good
   FROM match_steal_challenges c JOIN conquest_knowledge_questions q ON q.id = c.question_id
  WHERE c.match_id = :'rmid' AND c.user_id = :'R2' \gset
 SET ROLE authenticated;
-SELECT pg_temp.eq('right knowledge answer steals', conquest_answer_knowledge(:'rmid', :good)->>'ok', 'true');
-SELECT pg_temp.eq('steal after shield expiry', (SELECT owner_id FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::text, :'R2');
+SELECT pg_temp.eq('steal after shield expiry', steal_country(:'rmid', :'good')->>'ok', 'true');
 SELECT pg_temp.eq('steal resets fortify level', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 0);
 
 -- Revanche : R2 la crée, R1 la rejoint, tous deux prêts, couleurs gardées.

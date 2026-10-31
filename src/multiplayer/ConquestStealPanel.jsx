@@ -3,37 +3,30 @@ import React, { useState } from "react";
 import Button from "../components/ui/Button.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
 import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
-import StateBlock from "../components/ui/StateBlock.jsx";
 import TextField from "../components/ui/TextField.jsx";
 import { ANSWER_INPUT_PROPS, shieldAutofillText } from "../utils/answerField";
+import { getCategoryLabel } from "./knowledge/knowledgeCategories";
 
-const LazyKnowledgeCard = React.lazy(() => import("./knowledge/ConquestKnowledgeCard.jsx"));
+// Knowledge steps (ladder levels 3 to 5) only: pixel icons load on demand.
+const LazyKnowledgeOptions = React.lazy(() => import("./knowledge/ConquestKnowledgeOptions.jsx"));
 
-/** Harder steal challenge: type the capital, pick the right flag, or answer the knowledge QCM. */
-const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel, myColor }) => {
+/**
+ * Escalation challenge (steal or reinforce): ladder level 1 = type the capital,
+ * 2 = pick the flag, 3-5 = pick the answer to a knowledge question (tech, nature, music).
+ */
+const ConquestStealPanel = ({ t, lang, challenge, countryName, onAnswer, onCancel, myColor }) => {
   const [value, setValue] = useState("");
-  if (challenge?.kind === "knowledge" || challenge?.needs_knowledge) {
-    return (
-      <React.Suspense fallback={<StateBlock variant="loading" title={t.loading} />}>
-        <LazyKnowledgeCard
-          challenge={challenge}
-          countryName={countryName}
-          t={t}
-          myColor={myColor}
-          onAnswer={onAnswer}
-          onCancel={onCancel}
-        />
-      </React.Suspense>
-    );
-  }
   const name = countryName(challenge.country_id);
   const isFlag = challenge.kind === "flag";
+  const isKnowledge = challenge.kind === "knowledge";
   // Same panel for a steal and for reinforcing my own country (+30 s / +1 min).
   const isFortify = challenge.mode === "fortify";
   const submitLabel = isFortify
     ? `${t.fortifyOffer} +${challenge.bonus_seconds || 0} s`
     : t.stealOffer;
-  const question = `${isFlag ? t.stealFlag : t.stealCapital} ${name} ?`;
+  const question = isKnowledge
+    ? `${getCategoryLabel(challenge.category, lang)} · ${name} — ${challenge.prompt}`
+    : `${isFlag ? t.stealFlag : t.stealCapital} ${name} ?`;
   const headerText = isFortify
     ? `${t.fortifyTitle} +${challenge.bonus_seconds || 0} s · ${question}`
     : question;
@@ -64,7 +57,17 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel, myC
         <span className="conquest-label">{headerText}</span>
         <PanelCloseButton label={t.stealCancel} onClick={onCancel} />
       </div>
-      {isFlag ? (
+      {isKnowledge ? (
+        <React.Suspense fallback={null}>
+          <LazyKnowledgeOptions
+            options={challenge.options || []}
+            icons={challenge.icons || []}
+            value={value}
+            onChange={setValue}
+            label={question}
+          />
+        </React.Suspense>
+      ) : isFlag ? (
         <OptionGroup
           className="conquest-flag-options"
           options={flagOptions}
