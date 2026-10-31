@@ -134,18 +134,21 @@ function renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, co
   }
 }
 
-function renderStaticOffscreen(offscreenCanvas, width, height, colors) {
-  offscreenCanvas.width = width;
-  offscreenCanvas.height = height;
+// Static layer (limb dither, vignette, reticle) is centred on the globe's real
+// on-screen disc when `frame` is known, so it follows the home offset and zoom
+// instead of staying pinned to the viewport centre.
+function renderStaticOffscreen(offscreenCanvas, width, height, colors, frame) {
+  if (offscreenCanvas.width !== width) offscreenCanvas.width = width;
+  if (offscreenCanvas.height !== height) offscreenCanvas.height = height;
   const ctx = offscreenCanvas.getContext("2d");
   if (!ctx) return;
 
   ctx.clearRect(0, 0, width, height);
 
-  const cx = Math.round(width / 2);
-  const cy = Math.round(height / 2);
   const minDim = Math.min(width, height);
-  const limbRadius = Math.round(minDim * 0.36);
+  const cx = frame ? frame.cx : Math.round(width / 2);
+  const cy = frame ? frame.cy : Math.round(height / 2);
+  const limbRadius = frame ? frame.r : Math.round(minDim * 0.36);
   const rOuter = Math.round(limbRadius * 1.32);
 
   renderLimbDither(ctx, cx, cy, limbRadius, colors);
@@ -299,9 +302,32 @@ function stepShootingStars(ctx, shootingStars, width, height, frameScale, colors
   return remaining;
 }
 
-const SpaceBackground = React.memo(() => {
+// Quantise to whole 4 px steps: keeps dither cells on true square pixels and
+// avoids rebuilding the static layer for sub-pixel camera jitter.
+const quantizeFrame = (f) =>
+  f && Number.isFinite(f.cx) && Number.isFinite(f.cy) && Number.isFinite(f.r) && f.r > 4
+    ? { cx: Math.round(f.cx / 4) * 4, cy: Math.round(f.cy / 4) * 4, r: Math.round(f.r / 4) * 4 }
+    : null;
+const sameFrame = (a, b) =>
+  a === b || (Boolean(a) && Boolean(b) && a.cx === b.cx && a.cy === b.cy && a.r === b.r);
+
+// Expose the globe centre to sibling CSS layers (backdrop vignette).
+const publishFrameVars = (el, frame) => {
+  if (!el) return;
+  if (frame) {
+    el.style.setProperty("--globe-cx", `${frame.cx}px`);
+    el.style.setProperty("--globe-cy", `${frame.cy}px`);
+  } else {
+    el.style.removeProperty("--globe-cx");
+    el.style.removeProperty("--globe-cy");
+  }
+};
+
+const SpaceBackground = React.memo(({ getGlobeFrame }) => {
   const canvasRef = useRef(null);
   const offscreenRef = useRef(null);
+  const frameGetterRef = useRef(getGlobeFrame);
+  frameGetterRef.current = getGlobeFrame;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -320,8 +346,18 @@ const SpaceBackground = React.memo(() => {
     let height = (canvas.height = window.innerHeight);
 
     const colors = SPACE_RGB_COMPONENTS;
+    let globeFrame = null;
+    const readFrame = () => quantizeFrame(frameGetterRef.current?.());
+    const syncGlobeFrame = () => {
+      const next = readFrame();
+      if (sameFrame(next, globeFrame)) return false;
+      globeFrame = next;
+      publishFrameVars(canvas.parentElement, globeFrame);
+      renderStaticOffscreen(offscreenCanvas, width, height, colors, globeFrame);
+      return true;
+    };
 
-    renderStaticOffscreen(offscreenCanvas, width, height, colors);
+    renderStaticOffscreen(offscreenCanvas, width, height, colors, globeFrame);
 
     const stars = [];
     spawnStarfield(stars, width, height);
@@ -334,6 +370,7 @@ const SpaceBackground = React.memo(() => {
     let lastFrameTime = 0;
 
     const renderFrame = (now = performance.now()) => {
+      syncGlobeFrame();
       const reduced = prefersReducedMotion();
       ctx.clearRect(0, 0, width, height);
       ctx.drawImage(offscreenCanvas, 0, 0);
@@ -357,7 +394,9 @@ const SpaceBackground = React.memo(() => {
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      renderStaticOffscreen(offscreenCanvas, width, height, colors);
+      globeFrame = readFrame();
+      publishFrameVars(canvas.parentElement, globeFrame);
+      renderStaticOffscreen(offscreenCanvas, width, height, colors, globeFrame);
       spawnStarfield(stars, width, height);
       if (prefersReducedMotion()) {
         renderFrame(performance.now());
@@ -406,7 +445,15 @@ const SpaceBackground = React.memo(() => {
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
+    // Reduced motion has no RAF loop: poll the globe frame cheaply instead.
+    const reducedPoll = window.setInterval(() => {
+      if (prefersReducedMotion() && !document.hidden && syncGlobeFrame()) {
+        renderFrame(performance.now());
+      }
+    }, 250);
+
     return () => {
+      window.clearInterval(reducedPoll);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);

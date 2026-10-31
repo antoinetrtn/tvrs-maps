@@ -36,7 +36,12 @@
 }
 
 .globe-backdrop-vignette {
-  background: radial-gradient(circle at center, transparent 0%, var(--bg-color) 100%);
+  /* Centred on the globe (vars set by SpaceBackground), not on the viewport. */
+  background: radial-gradient(
+    circle farthest-corner at var(--globe-cx, 50%) var(--globe-cy, 50%),
+    transparent 0%,
+    var(--bg-color) 100%
+  );
   opacity: 0.6;
 }
 
