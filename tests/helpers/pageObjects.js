@@ -11,7 +11,7 @@ export class HomeScreen {
     this.dots = page.locator(".deck-dots-row .deck-dot");
     this.settingsBtn = page.locator(".ui-icon-btn--dock-settings");
     this.profileBtn = page.locator(".ui-icon-btn--dock-profile");
-    this.podiumWidget = page.locator(".home-podium-widget");
+    this.podiumWidget = page.locator(".ui-icon-btn--dock-podium");
     this.settingsPanel = page.locator(".sheet-panel.settings-panel");
     this.profilePanel = page.locator(".sheet-panel.profile-panel");
     this.leaderboardPanel = page.locator(".sheet-panel.leaderboard-panel");

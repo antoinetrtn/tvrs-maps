@@ -44,8 +44,10 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
 
     expect(prevButton.tagName).toBe("BUTTON");
     expect(prevButton.getAttribute("type")).toBe("button");
+    expect(prevButton.className).toContain("ui-icon-btn--ghost");
     expect(nextButton.tagName).toBe("BUTTON");
     expect(nextButton.getAttribute("type")).toBe("button");
+    expect(nextButton.className).toContain("ui-icon-btn--ghost");
 
     fireEvent.click(nextButton);
     expect(setHomeMode).toHaveBeenCalled();
@@ -137,6 +139,9 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
     const learnLabel = screen.getByText("Apprendre");
     expect(learnLabel.className).toContain("card-btn-label");
     expect(learnLabel.className).toContain("desktop-reveal");
+
+    expect(document.querySelector(".card-pixel-ornaments")).toBeNull();
+    expect(document.querySelector(".card-plate-pattern")).not.toBeNull();
   });
 
   it("ModeCard in conquest mode renders rules button with desktop-reveal label", () => {

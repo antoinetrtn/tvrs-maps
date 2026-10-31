@@ -14,13 +14,14 @@
   justify-content: center;
   gap: var(--spacing-sm);
   height: var(--control-lg);
+  min-height: var(--control-lg);
   border-radius: var(--radius-sm);
   background: var(--accent);
   color: var(--accent-contrast);
   font-family: var(--font-display);
   font-size: var(--font-size-base);
   font-weight: 600;
-  border: 1.5px solid var(--accent);
+  border: 1px solid var(--accent);
   box-shadow: none;
 }
 
@@ -48,20 +49,21 @@
   width: var(--control-lg);
   height: var(--control-lg);
   min-width: var(--control-lg);
+  min-height: var(--control-lg);
   padding: 0;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
-  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+  border: 1px solid color-mix(in srgb, var(--text-main) 14%, transparent);
+  background: color-mix(in srgb, var(--text-main) 4%, transparent);
   color: var(--text-muted);
 }
 
 .ui-btn--tile:hover,
 .ui-btn.ui-btn--tile:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--text-main) 38%, transparent);
+  border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
   color: var(--text-main);
-  background: color-mix(in srgb, var(--text-main) 12%, var(--bg-color));
-  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--text-main) 10%, transparent);
+  transform: none;
 }
 
 .ui-btn--tile:active {
@@ -73,6 +75,7 @@
   width: var(--control-lg);
   height: var(--control-lg);
   min-width: var(--control-lg);
+  min-height: var(--control-lg);
   padding: 0;
 }
 
@@ -94,8 +97,10 @@
 
 @media (min-width: 769px) {
   .ui-btn--cta {
-    height: 48px;
+    height: var(--control-lg);
+    min-height: var(--control-lg);
     flex: 1;
+    padding: 0 var(--spacing-md);
     font-size: var(--font-size-md);
     font-weight: 500;
   }
@@ -105,9 +110,16 @@
   .ui-btn--tile,
   .ui-btn--tile-train,
   .ui-btn--tile-rules {
-    height: 48px;
+    width: auto;
+    min-width: var(--control-lg);
+    height: var(--control-lg);
+    min-height: var(--control-lg);
+    padding: 0 var(--spacing-ms);
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
     border-radius: var(--radius-sm);
-    border: 1px solid color-mix(in srgb, var(--text-main) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--text-main) 14%, transparent);
+    background: color-mix(in srgb, var(--text-main) 4%, transparent);
     color: var(--text-muted);
   }
   .ui-btn--tile:hover,
@@ -116,35 +128,9 @@
   .ui-btn.ui-btn--tile:hover:not(:disabled),
   .ui-btn.ui-btn--tile-train:hover:not(:disabled),
   .ui-btn.ui-btn--tile-rules:hover:not(:disabled) {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-}
-/* css-rules-allow: breakpoint-offscale — same desktop breakpoint as HomeScreenDesktop.css, kept identical to avoid a visual change */
-@media (min-width: 1100px) {
-  .ui-btn--cta {
-    min-width: 0;
-    padding: 0 var(--spacing-md);
-  }
-  .ui-btn--tile,
-  .ui-btn--tile-train,
-  .ui-btn--tile-rules {
-    width: auto;
-    min-width: 40px;
-    padding: 0 var(--spacing-sm);
-    gap: var(--spacing-xs);
-    flex-shrink: 0;
-  }
-}
-
-/* css-rules-allow: breakpoint-offscale — same desktop breakpoint as HomeScreenDesktop.css, kept identical to avoid a visual change */
-@media (min-width: 769px) and (max-width: 1099px) {
-  .ui-btn--tile,
-  .ui-btn--tile-train,
-  .ui-btn--tile-rules {
-    width: 48px;
-    min-width: 48px;
-    padding: 0;
+    border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
+    background: color-mix(in srgb, var(--text-main) 10%, transparent);
+    color: var(--text-main);
   }
 }
 

@@ -122,7 +122,7 @@ const HomeScreen = ({
 
         <div className="home-bottom-right" role="toolbar" aria-label={t("settings")}>
           <GlassIconButton
-            className="home-podium-widget home-dock-segment"
+            look={["dock-segment", "dock-podium"]}
             onClick={(e) => {
               e.stopPropagation();
               setLeaderboardOpen((prev) => !prev);
@@ -163,8 +163,7 @@ const HomeScreen = ({
           </GlassIconButton>
 
           <GlassIconButton
-            look="dock-profile"
-            className="home-dock-segment"
+            look={["dock-segment", "dock-profile"]}
             onClick={(e) => {
               e.stopPropagation();
               setProfileOpen((prev) => !prev);
@@ -189,8 +188,7 @@ const HomeScreen = ({
           </GlassIconButton>
 
           <GlassIconButton
-            look="dock-settings"
-            className="home-dock-segment"
+            look={["dock-segment", "dock-settings"]}
             onClick={(e) => {
               e.stopPropagation();
               setSettingsOpen((prev) => !prev);

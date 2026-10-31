@@ -209,7 +209,7 @@
 }
 
 @media (hover: hover) {
-  .ui-icon-btn--glass:hover:not(:disabled):not(.home-dock-segment) {
+  .ui-icon-btn--glass:hover:not(:disabled):not(.ui-icon-btn--dock-segment) {
     transform: translateY(-1px);
     color: var(--accent);
     background: var(--glass-hover);
