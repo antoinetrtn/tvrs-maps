@@ -1,9 +1,26 @@
-/* Desktop action dock — three separate square buttons at bottom-right
-   Identity: pixel/square, 1px borders, light blur, stepped transitions.
-   Mobile (<= 768px): labels hidden, dock elements styled individually. */
+/* Action dock — three calm, equal-height items (Classement, Profil, Réglages)
+   Identity: pixel/square, 1px neutral grey borders, light blur, stepped transitions.
+   Mobile (<= 768px): compact equal-height segments; Desktop (>= 769px): visible labels. */
 
 .home-dock-label {
   display: none;
+}
+
+.home-bottom-right .home-dock-segment {
+  position: relative;
+  height: var(--control-lg);
+  min-height: var(--control-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+  border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  color: var(--text-muted);
+  touch-action: manipulation;
+  font: inherit;
+  overflow: visible;
 }
 
 @media (min-width: 769px) {
@@ -17,7 +34,7 @@
     align-items: center;
     padding: 0;
     margin: 0;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-ms);
     background: transparent;
     border: none;
     border-radius: 0;
@@ -28,15 +45,29 @@
     pointer-events: auto;
   }
 
+  .home-dock-label {
+    display: inline-block;
+    font-family: var(--font-main);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transition: color var(--dur-fast) linear;
+  }
+
   .home-bottom-right .home-dock-segment {
     position: relative;
-    height: 48px;
-    min-height: 48px;
-    display: flex;
+    height: var(--control-lg);
+    min-height: var(--control-lg);
+    width: auto;
+    padding: 0 var(--spacing-ms);
+    gap: var(--spacing-sm);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+    border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
     border-radius: var(--radius-sm);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
@@ -51,41 +82,56 @@
       color var(--dur-fast) linear;
   }
 
-  /* Level badge on profile button */
+  .home-bottom-right .home-podium-widget {
+    padding: 0 var(--spacing-ms) 0 0;
+    gap: var(--spacing-sm);
+  }
+
+  .home-bottom-right .home-podium-spots {
+    border-right: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
+  }
+
+  /* Inline level badge on profile button (never overlapping borders or text) */
   .home-bottom-right .profile-btn-level-tag {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: var(--accent);
-    color: var(--accent-contrast);
+    position: static;
+    order: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    background: color-mix(in srgb, var(--text-main) 10%, transparent);
+    color: var(--text-main);
     font-family: var(--font-display);
     font-size: var(--font-size-2xs);
     font-weight: 600;
     line-height: 1;
-    padding: 2px 4px;
-    border: 1px solid var(--bg-color);
-    border-radius: 0;
+    padding: 0 var(--spacing-xs);
+    border: 1px solid color-mix(in srgb, var(--text-main) 18%, transparent);
+    border-radius: var(--radius-sm);
     box-shadow: none;
     z-index: var(--z-hud-top);
   }
 
-  /* Mini XP bar in profile button */
+  /* Mini XP bar along bottom inner edge of profile button */
   .home-bottom-right .profile-btn-xp-bar {
     position: absolute;
-    left: var(--spacing-sm);
-    right: var(--spacing-sm);
-    bottom: 5px;
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
+    bottom: 2px;
     width: auto;
+    height: 2px;
+    opacity: 0.65;
     z-index: var(--z-home-content);
   }
 
   .home-bottom-right .profile-icon,
   .home-bottom-right .settings-icon {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     color: inherit;
   }
 
@@ -96,9 +142,9 @@
   /* Micro-interactions: hover, focus-visible, active */
   .home-bottom-right .home-dock-segment:hover {
     transform: none;
-    background: color-mix(in srgb, var(--accent) 10%, var(--glass-bg));
-    border-color: var(--accent);
-    color: var(--accent);
+    background: color-mix(in srgb, var(--text-main) 10%, var(--bg-color));
+    border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
+    color: var(--text-main);
     box-shadow: none;
   }
 
@@ -107,7 +153,7 @@
   }
 
   .home-bottom-right .home-dock-segment:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--text-main);
     outline-offset: 2px;
     z-index: var(--z-hud-top);
   }
@@ -134,100 +180,17 @@
   }
 }
 
-/* 769px to 1279px: icons only + custom stepped tooltip */
-@media (min-width: 769px) and (max-width: 1279px) {
-  .home-dock-label {
-    display: none;
-  }
-
-  .home-bottom-right .profile-icon {
-    transform: translateY(-2px);
-  }
-
-  .home-bottom-right .home-podium-widget {
-    width: auto;
-    padding: 0;
-  }
-
-  .home-bottom-right .home-dock-segment::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: calc(100% + var(--spacing-xs));
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-color);
-    color: var(--text-main);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-sm);
-    font-family: var(--font-main);
-    font-size: var(--font-size-2xs);
-    font-weight: 500;
-    line-height: 1.2;
-    padding: 2px var(--spacing-xs);
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    z-index: var(--z-hud-top);
-    box-shadow: none;
-    transition:
-      opacity var(--dur-fast) steps(2, end),
-      visibility var(--dur-fast) steps(2, end);
-  }
-
-  .home-bottom-right .home-dock-segment:hover::after,
-  .home-bottom-right .home-dock-segment:focus-visible::after {
-    opacity: 1;
-    visibility: visible;
-    border-color: var(--accent);
-  }
-}
-
-/* >= 1280px: visible labels */
-@media (min-width: 1280px) {
-  .home-bottom-right {
-    gap: calc(var(--spacing-sm) + var(--spacing-xs));
-  }
-
-  .home-dock-label {
-    display: inline-block;
-    font-family: var(--font-main);
-    font-size: var(--font-size-xs);
-    font-weight: 500;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    transition: color var(--dur-fast) linear;
-  }
-
-  .home-bottom-right .home-dock-segment {
-    padding: 0 var(--spacing-md);
-    gap: var(--spacing-sm);
-    width: auto;
-  }
-
-  .home-bottom-right .home-podium-widget {
-    padding: 0 var(--spacing-md) 0 0;
-    gap: var(--spacing-sm);
-  }
-
-  .home-bottom-right .home-dock-segment::after {
-    display: none;
-  }
-}
-
 /* >= 1440px: clamp margin up to 32px */
 @media (min-width: 1440px) {
   .home-bottom-right {
-    bottom: clamp(var(--spacing-lg), 2vw, 32px);
-    right: clamp(var(--spacing-lg), 2vw, 32px);
+    bottom: clamp(var(--spacing-lg), 2vw, var(--spacing-xl));
+    right: clamp(var(--spacing-lg), 2vw, var(--spacing-xl));
   }
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .home-bottom-right .home-dock-segment,
-  .home-bottom-right .home-dock-segment::after,
   .home-dock-label {
     transition: none;
   }

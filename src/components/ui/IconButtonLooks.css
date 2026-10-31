@@ -21,36 +21,35 @@
 
 .ui-icon-btn--dock-profile {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  width: auto;
+  min-width: var(--control-lg);
+  padding: 0 var(--spacing-sm);
   overflow: visible;
 }
 
 /* — moved from src/components/HomeScreen.css — */
 
 .ui-icon-btn--dock-profile > .profile-btn-level-tag {
-  position: absolute;
+  position: static;
+  order: 3;
 }
 
 /* — moved from src/components/HomeScreen.css — */
 
 .ui-icon-btn--dock-profile .profile-btn-xp-bar {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
+  left: var(--spacing-xs);
+  right: var(--spacing-xs);
+  bottom: 2px;
   width: auto;
+  height: 2px;
+  opacity: 0.65;
   pointer-events: none;
   z-index: var(--z-raised);
-}
-/* css-rules-allow: breakpoint-offscale — same breakpoint as HomeDock.css, kept identical to avoid a visual change */
-@media (min-width: 769px) and (max-width: 1279px) {
-  .home-bottom-right .ui-icon-btn--dock-profile,
-  .home-bottom-right .ui-icon-btn--dock-settings {
-    width: 48px;
-    min-width: 48px;
-    padding: 0;
-  }
 }
 
 /* — moved from src/components/HomeScreenCategoryCarousel.css — */
@@ -65,9 +64,9 @@
 .deck-click-zone:focus-visible .ui-icon-btn--deck-arrow,
 .ui-icon-btn.ui-icon-btn--deck-arrow:focus-visible {
   opacity: 1;
-  color: var(--accent);
-  border-color: var(--accent);
-  outline: 2px solid var(--accent);
+  color: var(--text-main);
+  border-color: transparent;
+  outline: 2px solid var(--text-main);
   outline-offset: 2px;
 }
 
@@ -86,15 +85,16 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: 0;
-  border: 1px solid var(--glass-border-strong);
-  background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
-  color: var(--text-main);
-  opacity: 0.55;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 0.75;
   box-shadow: none;
   pointer-events: auto;
   transition:
     color var(--dur-fast) linear,
+    background var(--dur-fast) linear,
     border-color var(--dur-fast) linear,
     opacity var(--dur-fast) linear,
     transform var(--dur-micro) var(--steps-press);
@@ -120,34 +120,36 @@
 
 @media (min-width: 769px) {
   .ui-icon-btn--deck-arrow {
-    width: var(--control-md);
-    height: var(--control-md);
-    min-width: var(--control-md);
+    width: var(--control-sm);
+    height: var(--control-sm);
+    min-width: var(--control-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid color-mix(in srgb, var(--text-main) 20%, transparent);
-    background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
+    border: 1px solid transparent;
+    background: transparent;
     color: var(--text-muted);
     opacity: 1;
     border-radius: var(--radius-sm);
     box-shadow: none;
     transition:
       color var(--dur-fast) linear,
+      background var(--dur-fast) linear,
       border-color var(--dur-fast) linear,
       transform var(--dur-micro) var(--steps-press);
   }
 
   .ui-icon-btn--deck-arrow svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
   .ui-icon-btn--deck-arrow:hover,
   .deck-click-zone:hover .ui-icon-btn--deck-arrow,
   .ui-icon-btn.ui-icon-btn--deck-arrow:hover:not(:disabled) {
     color: var(--text-main);
-    border-color: var(--accent);
+    background: color-mix(in srgb, var(--text-main) 8%, transparent);
+    border-color: transparent;
   }
 
   .deck-click-zone.left:hover .ui-icon-btn--deck-arrow,
@@ -164,8 +166,8 @@
   .deck-click-zone:focus-visible .ui-icon-btn--deck-arrow,
   .ui-icon-btn.ui-icon-btn--deck-arrow:focus-visible {
     color: var(--text-main);
-    border-color: var(--accent);
-    outline: 2px solid var(--accent);
+    border-color: transparent;
+    outline: 2px solid var(--text-main);
     outline-offset: 2px;
   }
 

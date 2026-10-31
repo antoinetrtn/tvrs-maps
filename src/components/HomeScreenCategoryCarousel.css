@@ -58,42 +58,10 @@
   cursor: grabbing;
 }
 
-/* Individual Stacked Card Base - 100% SOLID PURE OPAQUE BACKGROUND (ALPHA = 1.0) */
-/* Individual Stacked Card Base - Mysterious Dark Technical Card */
-
-/* Atlas plate: faint orthogonal graticule, framed by a double rule */
-.card-plate-pattern {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  z-index: var(--z-raised);
-  background:
-    radial-gradient(
-      circle at 86% 24%,
-      color-mix(in srgb, var(--card-mode-accent, var(--accent)) 16%, transparent) 0%,
-      transparent 58%
-    ),
-    repeating-linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
-      transparent 1px 32px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
-      transparent 1px 32px
-    );
-}
-
-.card-plate-pattern::after {
-  content: none;
-}
-
 .card-plate-meta {
   font-family: var(--font-display);
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--spacing-sm);
   font-size: var(--font-size-2xs);
@@ -104,14 +72,17 @@
 .card-plate-number {
   font-family: var(--font-display);
   letter-spacing: 0.08em;
-  color: var(--card-mode-accent, var(--accent));
+  color: color-mix(in srgb, var(--card-mode-accent, var(--text-muted)) 45%, var(--text-muted));
 }
 
 .card-plate-count {
   padding: 1px var(--spacing-xs);
-  border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--accent)) 38%, transparent);
-  background: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 12%, var(--bg-color));
-  color: var(--card-mode-spark, var(--text-main));
+  border: none;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text-main) 6%, transparent);
+  color: var(--text-muted);
+  font-size: var(--font-size-2xs);
+  line-height: 1.3;
 }
 
 .card-content {
@@ -131,14 +102,17 @@
   justify-content: space-between;
   gap: var(--spacing-ms);
   width: 100%;
-  margin-bottom: var(--spacing-xs);
 }
 
 .card-mode-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--card-mode-accent, var(--accent));
+  padding: 2px;
+  border: 1px solid color-mix(in srgb, var(--text-main) 14%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text-main) 4%, var(--bg-color));
+  color: var(--text-muted);
   opacity: 1;
   flex-shrink: 0;
 }
@@ -150,7 +124,7 @@
   font-weight: 600;
   color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.25;
   white-space: pre-line;
   letter-spacing: 0.02em;
   display: -webkit-box;
@@ -173,15 +147,13 @@
   margin-top: auto;
 }
 
-/* Carte Conquête : « Règles » remplace le bouton Apprendre (bouton icône carré 44px) */
-
 /* Dots Row - Pixel Squares */
 .deck-dots-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
-  margin-top: 1.25rem;
+  margin-top: var(--spacing-md);
   width: 100%;
 }
 
@@ -191,7 +163,7 @@
   height: 6px;
   border-radius: 0;
   background: color-mix(in srgb, var(--text-muted) 45%, transparent);
-  opacity: 0.5;
+  opacity: 0.7;
   border: none;
   cursor: pointer;
   padding: 0;
@@ -221,7 +193,7 @@
   width: 16px;
   height: 6px;
   border-radius: 0;
-  background: var(--accent);
+  background: var(--text-main);
   opacity: 1;
   box-shadow: none;
 }
@@ -234,15 +206,12 @@
 
   .deck-stage {
     width: 100%;
-    height: 200px;
+    height: 196px;
   }
 
-  /* Compact mobile card: no dead band between the title and the actions. */
-
-  .card-mode-icon {
-    padding: var(--spacing-xs);
-    border: 1px solid var(--glass-border);
-    border-radius: 0;
+  .card-title {
+    font-size: var(--font-size-xl);
+    line-height: 1.2;
   }
 
   .deck-click-zone.left {
@@ -256,6 +225,6 @@
   }
 
   .deck-dots-row {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-md);
   }
 }

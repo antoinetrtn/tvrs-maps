@@ -19,20 +19,16 @@
 
 .ui-card--mode-deck {
   position: absolute;
-  top: 18px;
+  top: 14px;
   width: 320px;
   height: 216px;
-  padding: 1.15rem 1.35rem;
-  border-radius: 0;
-  background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
-  background-color: var(--bg-color) !important;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  --card-mode-accent: var(--accent);
-  --card-mode-secondary: var(--text-main);
-  --card-mode-spark: var(--accent);
-  border: none;
-  clip-path: var(--card-clip-path);
+  --card-mode-accent: var(--text-muted);
+  border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
@@ -44,15 +40,16 @@
 
 .ui-card--mode-deck.is-top-card {
   height: 216px;
-  border-color: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 52%, transparent);
+  border-color: color-mix(in srgb, var(--text-main) 18%, transparent);
   box-shadow: var(--shadow-card);
 }
 
 .ui-card--mode-deck.is-stacked-card {
   cursor: pointer;
   height: 216px;
-  border-color: color-mix(in srgb, var(--text-main) 14%, transparent);
-  box-shadow: var(--glass-shadow);
+  background: color-mix(in srgb, var(--text-main) 3%, var(--bg-color));
+  border-color: color-mix(in srgb, var(--text-main) 12%, transparent);
+  box-shadow: none;
   transition:
     transform var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) ease,
@@ -61,10 +58,27 @@
 }
 
 .ui-card--mode-deck.is-stacked-card:hover {
-  border-color: color-mix(in srgb, var(--text-main) 25%, transparent);
+  border-color: color-mix(in srgb, var(--text-main) 22%, transparent);
 }
 
+.ui-card--mode-deck.is-stacked-card .card-content,
 .ui-card--mode-deck.is-stacked-card .card-actions {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui-card--mode-deck.is-stacked-card:not([data-stack-pos="1"]):not([data-stack-pos="2"]):not(
+    [data-is-prev="true"]
+  ) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cards-deck-wrapper:not(.is-user-dragging)
+  .ui-card--mode-deck.is-stacked-card[data-is-prev="true"]:not([data-stack-pos="1"]):not(
+    [data-stack-pos="2"]
+  ) {
+  opacity: 0;
   pointer-events: none;
 }
 
@@ -72,12 +86,12 @@
   .ui-card--mode-deck,
   .ui-card--mode-deck.is-top-card,
   .ui-card--mode-deck.is-stacked-card {
-    height: 180px;
-    top: 12px;
+    height: 172px;
+    top: 14px;
   }
 
   .ui-card--mode-deck {
-    width: min(100% - 28px, 320px);
+    width: min(100% - 24px, 328px);
     padding: var(--spacing-md);
   }
 }
@@ -179,35 +193,12 @@
        visible top card is exactly --deck-w x --deck-h. */
     width: calc(var(--deck-w) * 0.92);
     height: calc(var(--deck-h) * 0.92);
-    top: calc(var(--deck-h) * 0.04);
-    padding: 1.5rem 2.1rem 1.4rem;
-  }
-  .ui-card--mode-deck .card-plate-pattern {
-    background:
-      radial-gradient(
-        circle at 86% 26%,
-        color-mix(in srgb, var(--card-mode-accent, var(--accent)) 18%, transparent) 0%,
-        transparent 56%
-      ),
-      repeating-linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
-        transparent 1px 40px
-      ),
-      repeating-linear-gradient(
-        0deg,
-        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
-        transparent 1px 40px
-      );
+    top: calc(var(--deck-h) * 0.06);
+    padding: var(--spacing-lg);
   }
   .ui-card--mode-deck.is-stacked-card .card-desc {
     visibility: hidden;
   }
-}
-
-/* — moved from src/components/HomeModePixelArt.css — */
-.ui-card--mode-deck {
-  clip-path: var(--card-clip-path);
 }
 
 /* — moved from src/components/LeaderboardScreen.css — */

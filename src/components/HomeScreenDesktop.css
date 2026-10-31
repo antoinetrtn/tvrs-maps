@@ -22,8 +22,8 @@
 @media (min-width: 769px) {
   /* Mode card sizing variables */
   .home-screen-overlay {
-    --deck-w: clamp(420px, 33vw, 560px);
-    --deck-h: clamp(264px, 20vw, 320px);
+    --deck-w: clamp(440px, 34vw, 540px);
+    --deck-h: clamp(268px, 21vw, 312px);
   }
 
   .home-stage-container {
@@ -32,17 +32,19 @@
     margin: 0;
   }
 
-  /* Carousel grid layout: deck stage on top, navigation controls below */
+  /* Carousel grid layout: deck stage on top, calm navigation row below */
   .cards-deck-wrapper {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto auto auto;
     grid-template-rows: auto auto;
     grid-template-areas:
       "stage stage stage"
       "prev dots next";
+    justify-content: start;
     width: var(--deck-w);
     max-width: var(--deck-w);
-    row-gap: var(--spacing-md);
+    row-gap: var(--spacing-lg);
+    column-gap: var(--spacing-md);
     align-items: center;
   }
 
@@ -67,7 +69,7 @@
     justify-content: center;
     gap: var(--spacing-sm);
     margin: 0;
-    width: 100%;
+    width: auto;
   }
 
   /* Reset absolute side placement of click zones on desktop */
@@ -86,16 +88,14 @@
     background: transparent;
   }
 
-  /* Desktop arrows: 40x40px squares, 1px border */
-
-  /* Dots on desktop: 8px square mark, active: 24px wide bar with accent */
+  /* Dots on desktop: 8px square mark, active: 24px wide bar in --text-main */
   .deck-dot {
     position: relative;
     width: 8px;
     height: 8px;
     border-radius: 0;
     background: color-mix(in srgb, var(--text-muted) 45%, transparent);
-    opacity: 0.5;
+    opacity: 0.7;
     border: none;
     cursor: pointer;
     padding: 0;
@@ -112,8 +112,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    min-width: 40px;
-    min-height: 40px;
+    min-width: var(--control-sm);
+    min-height: var(--control-sm);
   }
 
   .deck-dot:hover {
@@ -122,14 +122,14 @@
   }
 
   .deck-dot:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--text-main);
     outline-offset: 2px;
   }
 
   .deck-dot.active {
     width: 24px;
     height: 8px;
-    background: var(--accent);
+    background: var(--text-main);
     opacity: 1;
   }
 
@@ -139,12 +139,8 @@
     font-size: var(--font-size-xs);
     color: var(--text-muted);
     letter-spacing: 0.08em;
-    margin-left: var(--spacing-xs);
+    margin-left: var(--spacing-sm);
   }
-
-  /* Mode card sizing and styling */
-
-  /* Atlas plate pattern consistent at bigger size + subtle mode-tinted radial stage */
 
   /* Top row metadata */
   .card-plate-meta {
@@ -153,11 +149,12 @@
   }
 
   .card-plate-number {
-    color: var(--card-mode-accent, var(--accent));
+    color: color-mix(in srgb, var(--card-mode-accent, var(--text-muted)) 45%, var(--text-muted));
   }
 
   .card-plate-count {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-2xs);
+    color: var(--text-muted);
   }
 
   .card-header-row {
@@ -169,21 +166,21 @@
   .card-title {
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(1.6rem, 2.1vw, 2.2rem);
+    font-size: clamp(1.5rem, 2vw, 2.05rem);
     line-height: 1.15;
     letter-spacing: 0;
     text-shadow: none;
   }
 
-  /* Mode pixel-art vignette inside stepped frame */
+  /* Mode pixel-art vignette inside neutral grey frame */
   .card-mode-icon {
     width: 76px;
     height: 60px;
     min-width: 76px;
-    border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--accent)) 55%, transparent);
-    border-radius: 0;
-    background: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 10%, var(--bg-color));
-    color: var(--card-mode-accent, var(--accent));
+    border: 1px solid color-mix(in srgb, var(--text-main) 14%, transparent);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--text-main) 4%, var(--bg-color));
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -207,7 +204,7 @@
     white-space: normal;
     font-family: var(--font-main);
     font-weight: 400;
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     line-height: 1.45;
     color: var(--text-muted);
     display: -webkit-box;
@@ -216,43 +213,31 @@
     line-clamp: 2;
   }
 
-  /* Stacked (non-top) cards hide description so not read twice */
-
   /* Actions row */
   .card-actions {
-    gap: var(--spacing-sm);
+    gap: var(--spacing-ms);
     margin-top: auto;
   }
-}
 
-/* Secondary button labels on desktop (at 1100px+ visible with text, 769-1099px square icon buttons) */
-@media (min-width: 1100px) {
-  .home-screen-overlay {
-    --deck-w: clamp(468px, 35vw, 560px);
-  }
-
+  /* Secondary button labels revealed on desktop */
   .card-btn-label.desktop-reveal {
     position: static;
     width: auto;
     height: auto;
+    margin: 0;
+    padding: 0;
     overflow: visible;
     clip-path: none;
     white-space: nowrap;
     font-family: var(--font-main);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     font-weight: 500;
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1099px) {
-  .card-btn-label.desktop-reveal {
-    display: none;
   }
 }
 
 @media (min-width: 769px) and (max-height: 760px) {
   .home-screen-overlay {
-    --deck-h: 268px;
+    --deck-h: 264px;
   }
 }
 
