@@ -153,7 +153,9 @@ function App() {
     if (activeDataMap) {
       const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
       if (keys.length > 0) {
-        const index = Math.floor(Math.random() * keys.length);
+        const index = Math.floor(
+          (globalThis.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000) * keys.length
+        );
         setSelectedCountry(keys[index]);
       }
     }

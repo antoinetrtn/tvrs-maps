@@ -192,7 +192,7 @@ const LeaderboardScreen = ({
     };
 
     if (isOpen && activeTab === "global") {
-      fetchScores();
+      void fetchScores();
     }
 
     return () => {
@@ -243,7 +243,7 @@ const LeaderboardScreen = ({
     };
 
     if (isOpen && activeTab === "personal") {
-      fetchHistory();
+      void fetchHistory();
     }
 
     return () => {

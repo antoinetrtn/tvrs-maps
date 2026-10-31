@@ -62,7 +62,9 @@ export function useUserProfile() {
           return min + (x % range);
         }
       }
-      return Math.floor(min + Math.random() * range);
+      return Math.floor(
+        min + (globalThis.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000) * range
+      );
     };
 
     const randomNum = getSecureRandomIntInRange(100, 1000);
@@ -310,7 +312,7 @@ export function useUserProfile() {
       }
     };
 
-    syncProfileAndRecords();
+    void syncProfileAndRecords();
 
     return () => {
       isMounted = false;
