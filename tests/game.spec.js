@@ -15,21 +15,22 @@ test.describe("TVRS Maps E2E Game Flow Baseline", () => {
     await expect(page).toHaveTitle(/tvrs maps/i);
 
     // Check that top mode card is visible
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toBeVisible();
 
     // Check Play button on top card
-    const playBtn = topCard.locator(".card-play-btn");
+    const playBtn = topCard.locator(".ui-btn--cta");
     await expect(playBtn).toBeVisible();
   });
 
   test("should start game in countries mode", async ({ page }) => {
-    // Verify top card is countries mode or select it
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    // La carte Conquête est la première : on choisit « Pays du Monde » via les points du carrousel
+    await page.locator(".deck-dots-row .deck-dot").nth(1).click();
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "countries");
 
     // Click Play button
-    const playBtn = topCard.locator(".card-play-btn");
+    const playBtn = topCard.locator(".ui-btn--cta");
     await playBtn.click();
 
     // Verify that the answer input field is now visible

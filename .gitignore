@@ -33,3 +33,4 @@ public/data/*-raw.json
 playwright-report/
 test-results/
 .antigravitycli/
+.env*

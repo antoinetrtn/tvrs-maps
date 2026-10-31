@@ -1,0 +1,21 @@
+/* Carousel motion layer — ref-driven dragging, release transitions & reduced motion.
+   Preserves square-corner identity, stepped snap, and no blur/glow. */
+
+.deck-stage {
+  --drag-x: 0px;
+  --drag-abs-x: 0px;
+  --drag-rot: 0deg;
+  --drag-progress: 0;
+}
+
+/* will-change only while dragging or animating release, never permanently */
+
+/* Top card follows the user's finger during drag */
+
+/* Drag left (data-drag-dir="next") reveals next card (stackPos 1) */
+
+/* Drag right (data-drag-dir="prev") reveals previous card (data-is-prev) */
+
+/* Release easing dependent on velocity */
+
+/* Reduced motion: no rotation / translateZ / fly-away, 120ms opacity fade */

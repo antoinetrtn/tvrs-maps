@@ -6,8 +6,8 @@
  * lives here so a single mode can't drift visually from the others.
  */
 
-const PLAY_MODES = ["countries", "capitals", "departments", "rivers_mountains", "us_states"];
-const LEARN_SUB_MODES = ["countries", "capitals", "rivers_mountains", "departments", "us_states"];
+export const PLAY_MODES = ["countries", "capitals", "departments", "us_states", "rivers_mountains"];
+const LEARN_SUB_MODES = PLAY_MODES;
 export const DEFAULT_LEARN_SUB_MODE = "countries";
 
 const GAME_MODES_CONFIG = {
@@ -31,6 +31,8 @@ const GAME_MODES_CONFIG = {
     geometryKey: "departmentsData",
     ghostExclusions: ["France"],
     viewPoint: { lat: 46.5, lng: 2.6, altitude: { mobile: 0.48, desktop: 0.3 } },
+    // Metropolitan France incl. Corsica; used to auto-frame any viewport.
+    bounds: { latMin: 41.3, latMax: 51.1, lngMin: -5.2, lngMax: 9.6 },
     targetCheck: "name",
   },
   us_states: {
@@ -39,6 +41,8 @@ const GAME_MODES_CONFIG = {
     geometryKey: "usStatesData",
     ghostExclusions: ["United States of America"],
     viewPoint: { lat: 38.0, lng: -97.0, altitude: { mobile: 0.85, desktop: 0.6 } },
+    // Contiguous United States (Alaska/Hawaii are reached by panning).
+    bounds: { latMin: 24.5, latMax: 49.4, lngMin: -124.8, lngMax: -66.9 },
     targetCheck: "name",
   },
   rivers_mountains: {
@@ -117,10 +121,48 @@ export const POLYGON_ALTITUDE = {
   base: 0.0012,
   satelliteBase: 0.001,
   selected: 0.008,
-  departmentBase: 0.0012,
-  departmentSelected: 0.006,
-  ghostCountry: 0.0006,
+  // Regional maps are seen from very close: a department is only ~1° wide, so
+  // the world-scale lift turned small areas into pillars and made the whole
+  // map look embossed. Keep the regional relief flat and subtle.
+  departmentBase: 0.0003,
+  departmentSelected: 0.0016,
+  // Ghost countries (dimmed world around a regional map) are tessellated by the
+  // original Delaunay: worst cap dip at 1° is 0.044 (Greenland) < 0.0005 × 100.
+  ghostCountry: 0.0005,
+  // Layer cross-fade: the outgoing regional features stay above the new layer while they
+  // dissolve; the world France / USA stay under the incoming departments / states.
+  exitingRegional: 0.0016,
+  parentBackdrop: 0.0001,
 };
+
+/**
+ * Max cap triangulation step (degrees) per polygon layer. A cap is made of flat
+ * triangles, so it dips below its vertices by ≈ 0.0125 × step² globe units (the
+ * regional layers, built by RefinedConicPolygonGeometry, have a hard bound of
+ * 100 × (1 − cos(step/√3)): 0.012 at 1.5°, 0.046 at 3°). The sea sphere pokes
+ * through any cap that dips deeper than its altitude × 100: 0.03 for regional
+ * maps, 0.05 for ghost countries, 0.12 for the world. Each layer therefore gets
+ * a step that keeps it under its own margin, instead of the 3° mobile profile.
+ * Verified on the real GeoJSON by src/tests/polygonCapSag.test.js.
+ */
+export const POLYGON_CAP_RESOLUTION = { world: 2, regional: 1.5, ghost: 1 };
+
+/** Cap triangulation step for a polygon: the perf profile's, capped per layer. */
+export const getPolygonCapResolution = ({ baseResolution = 1.5, isGhost, isRegional }) => {
+  if (isGhost) return Math.min(baseResolution, POLYGON_CAP_RESOLUTION.ghost);
+  if (isRegional) return Math.min(baseResolution, POLYGON_CAP_RESOLUTION.regional);
+  return Math.min(baseResolution, POLYGON_CAP_RESOLUTION.world);
+};
+
+/** Same, decided from the feature's own flags (stable through mode switches). */
+export const getFeatureCapResolution = (d, baseResolution) =>
+  getPolygonCapResolution({
+    baseResolution,
+    isGhost: Boolean(d.isGhostCountry),
+    isRegional: Boolean(
+      d.isDepartmentFeature || d.isEnteringDepartmentFeature || d.isExitingDepartmentFeature
+    ),
+  });
 
 export const getPolygonAltitudeFor = ({
   isDepartmentMode,

@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+  ACCENT_PRESETS,
+  persistAccent,
+  readStoredAccent,
+  setActiveAccent,
+} from "../config/accentPresets";
+import {
   DEFAULT_GLOBE_THEME,
   getThemeCssVariables,
   isValidGlobeTheme,
+  migrateGlobeTheme,
 } from "../config/designSystem";
 import { BREAKPOINTS, STORAGE_KEYS } from "../config/gameConstants";
 
@@ -17,11 +24,24 @@ const uiScale = (w = BREAKPOINTS.desktop) =>
 export function useAppTheme(viewportWidth) {
   const [globeTheme, setGlobeThemeRaw] = useState(() => {
     try {
-      const cached = localStorage.getItem(STORAGE_KEYS.globeTheme);
-      if (cached && isValidGlobeTheme(cached)) return cached;
+      const cached = migrateGlobeTheme(localStorage.getItem(STORAGE_KEYS.globeTheme));
+      if (cached && isValidGlobeTheme(cached)) {
+        localStorage.setItem(STORAGE_KEYS.globeTheme, cached);
+        return cached;
+      }
     } catch {}
     return DEFAULT_GLOBE_THEME;
   });
+
+  // Accent preset: read once, pushed into designSystem before the first paint.
+  const [accent, setAccentRaw] = useState(() =>
+    setActiveAccent(readStoredAccent(globalThis.localStorage, STORAGE_KEYS.accent))
+  );
+
+  const setAccent = useCallback((id) => {
+    if (!ACCENT_PRESETS[id]) return;
+    setAccentRaw(setActiveAccent(persistAccent(globalThis.localStorage, STORAGE_KEYS.accent, id)));
+  }, []);
 
   const [theme, setThemeRaw] = useState(() => {
     return "dark";
@@ -35,7 +55,7 @@ export function useAppTheme(viewportWidth) {
   }, []);
 
   const setGlobeTheme = useCallback((t) => {
-    const validTheme = t === "satellite" ? "satellite" : "blackout";
+    const validTheme = t === "satellite" ? "satellite" : "monochrome";
     setGlobeThemeRaw(validTheme);
     const targetUiTheme = "dark";
     setThemeRaw(targetUiTheme);
@@ -46,8 +66,10 @@ export function useAppTheme(viewportWidth) {
   }, []);
 
   const appStyle = useMemo(
+    // accent is a dependency: getThemeColors reads the active accent preset.
+
     () => getThemeCssVariables(theme, globeTheme, { uiScale: uiScale(viewportWidth) }),
-    [theme, globeTheme, viewportWidth]
+    [theme, globeTheme, viewportWidth, accent]
   );
 
   // Theme the whole document, not just .app-container: portals mounted on
@@ -61,5 +83,9 @@ export function useAppTheme(viewportWidth) {
     });
   }, [theme, appStyle]);
 
-  return { theme, setTheme, globeTheme, setGlobeTheme, appStyle };
+  const accentProps = useMemo(() => ({ accent, setAccent }), [accent, setAccent]);
+
+  // Globe render key: Monochrome carries the accent so the globe palette re-derives live.
+  const globeRenderTheme = globeTheme === "monochrome" ? `monochrome@${accent}` : globeTheme;
+  return { theme, setTheme, globeTheme, globeRenderTheme, setGlobeTheme, accentProps, appStyle };
 }

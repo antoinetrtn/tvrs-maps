@@ -4,6 +4,7 @@ import { AVATAR_COLORS } from "../config/designSystem";
 import { getActiveModeConfig } from "../config/gameConfig";
 import { AUTO_NAVIGATION, FEEDBACK_TIMING, HARDCORE_LIVES } from "../config/gameConstants";
 import { CHALLENGES } from "../data/challenges";
+import { nextTrainingTarget } from "../services/countryStats";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 import { normalizeString } from "../utils/utils";
 
@@ -29,6 +30,7 @@ export function useGameSession({
   effectiveKeyboardMode,
   globeFeedbackApplierRef,
   hardcoreMode = false,
+  trainingPool = null,
 }) {
   const [foundList, setFoundList] = useState([]);
   const score = foundList.length;
@@ -92,6 +94,8 @@ export function useGameSession({
 
   const getClosestUnfound = useCallback(
     (fromAdmin, currentFound) => {
+      // Entraînement ciblé : on suit l'ordre du pool (moins maîtrisés d'abord), pas la proximité.
+      if (trainingPool) return nextTrainingTarget(trainingPool, currentFound);
       const c1 = activeDataMap[fromAdmin];
       if (!c1 || c1.lat === undefined) return null;
 
@@ -133,7 +137,7 @@ export function useGameSession({
       }
       return null;
     },
-    [activeDataMap]
+    [activeDataMap, trainingPool]
   );
 
   const navigateFocus = useCallback(
@@ -214,7 +218,8 @@ export function useGameSession({
 
   const handleGameFinished = useCallback(
     async (finalScore) => {
-      if (mode === "learn") return;
+      // Pas de record, d'XP ni de classement pour « Apprendre » et l'entraînement ciblé (pool réduit).
+      if (mode === "learn" || trainingPool) return;
       const timeSpent = gameDuration - timeLeft;
 
       const prevRecord = localRecords[mode] || { maxScore: 0, bestTime: null, gamesPlayed: 0 };
@@ -260,6 +265,7 @@ export function useGameSession({
       lang,
       addAchievementToQueue,
       isHardcoreRun,
+      trainingPool,
     ]
   );
 
@@ -430,7 +436,7 @@ export function useGameSession({
       if (!normalizedInput) return false;
       let matchFound = null;
 
-      for (const adminKey of Object.keys(activeDataMap)) {
+      for (const adminKey of trainingPool ?? Object.keys(activeDataMap)) {
         const mapped = activeDataMap[adminKey];
         let matchName = null;
         let matchCapital = null;
@@ -487,6 +493,7 @@ export function useGameSession({
       selectedCountry,
       handleSuccessfulGuess,
       registerMistake,
+      trainingPool,
     ]
   );
 

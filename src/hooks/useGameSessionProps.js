@@ -6,6 +6,7 @@ export function useGameSessionProps({
   lang,
   score,
   totalPossible,
+  trainingPool = null,
   timeLeft,
   handleHudEnter,
   isPlaying,
@@ -220,8 +221,14 @@ export function useGameSessionProps({
       xpResult,
       livesLeft,
       isHardcoreRun,
+      isTraining: Boolean(trainingPool),
+      trainingMode: mode,
+      trainingReviewKeys: trainingPool
+        ? trainingPool.filter((key) => !foundList.includes(key))
+        : [],
     }),
     [
+      trainingPool,
       foundList,
       totalPossible,
       countryDataMap,

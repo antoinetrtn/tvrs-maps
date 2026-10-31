@@ -9,17 +9,68 @@ import {
   GLITCH_VERTEX_BODY,
   GLITCH_VERTEX_DECLARATIONS,
 } from "./globeShaders";
+import { attachGlitchNodes } from "./webgpu/glitchNode";
 
 /** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
 export const polygonGlitchUniforms = {
   uTime: { value: 0 },
   uFoundGreen: { value: getFoundGreenThreeColor().clone() },
+  // 1 when on Home/End screen (planet-wide city-lights showcase), 0 during active gameplay (blackout -> awaken).
+  uShowcaseLights: { value: 1 },
+  // 1 when in French Departments or US States regional mode (clean micro-scale hydrography + 1px capital pinpoints).
+  uIsRegionalMode: { value: 0 },
+  // 1 when globeTheme === "satellite" (translucent emissive overlay over real satellite terrain).
+  uIsSatelliteTheme: { value: 0 },
   // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
   uPixelScale: { value: 1 },
+  // Deselection tear colours: cyan/magenta, accent-derived on the Monochrome globe.
+  uGlitchTintA: { value: new THREE.Color(0x00ccff) },
+  uGlitchTintB: { value: new THREE.Color(0xff00cc) },
   // Success flash timeline — stamped (in uTime seconds) when a guess lands.
   uSuccessStart: { value: -10 },
   uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
+  // Discovery ignition: a gold wave lights the found country's city pixels outward
+  // from its capital (unit direction in world space), over uIgniteDuration seconds.
+  uIgniteOrigin: { value: new THREE.Vector3(0, 1, 0) },
+  uIgniteStart: { value: -100 },
+  uIgniteRadius: { value: 0.1 },
+  uIgniteDuration: { value: 1.6 },
+  // 1 when the user prefers reduced motion: ignition and showcase loops resolve instantly.
+  uReducedMotion: { value: 0 },
+  // Homepage wake-up progress 0 (blackout) -> 1 (world awake), one-shot per arrival.
+  uHomeWake: { value: 1 },
+  // Globe camera motion reactivity for magnetic ocean currents.
+  uGlobeMotion: { value: 0 },
+  uGlobeVelocity: { value: new THREE.Vector2(0, 0) },
 };
+
+/**
+ * Discovery ignition is per country: the found caps share one material, so the country
+ * being ignited gets its own material bound to a per-country `{ value }` holder (1 while it
+ * is the latest discovery). Previously lit countries keep 0 and never restart from dark.
+ */
+export const igniteState = { admin: null };
+const igniteSelfHolders = new Map();
+
+export function getIgniteSelfHolder(admin) {
+  let holder = igniteSelfHolders.get(admin);
+  if (!holder) {
+    holder = { value: igniteState.admin === admin ? 1 : 0 };
+    igniteSelfHolders.set(admin, holder);
+  }
+  return holder;
+}
+
+export function markIgnitingCountry(admin) {
+  igniteSelfHolders.forEach((holder) => {
+    holder.value = 0;
+  });
+  igniteState.admin = admin;
+  getIgniteSelfHolder(admin).value = 1;
+}
+
+/** Set once country materials are built (homepage wake-up starts then, not on an empty globe). */
+export const homeWakeState = { polygonsReady: false };
 
 const animatedPolygonMaterials = new Set();
 
@@ -99,10 +150,32 @@ export function attachPolygonGlitchShader(
   }
 ) {
   const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
+  if (material.isNodeMaterial) {
+    // WebGPU renderer (experimental flag): TSL port with the same uniforms.
+    const shader = attachGlitchNodes(material, polygonGlitchUniforms, {
+      uSideShade: GLITCH_EFFECT_SETTINGS.sideShadeFactor,
+      uFadeProgress: 0,
+      uTargetColor: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
+      uIsError: isSelected && isError ? 1 : 0,
+      uIsSuccess: isSelected && isSuccess ? 1 : 0,
+      uIsSelection: isSelected && isSelectionHighlight ? 1 : 0,
+      uIsLight: isLight ? 1 : 0,
+      uTheme: isBlackoutTheme ? 1 : 0,
+      uIsSide: kind === "side" ? 1 : 0,
+      uIsFound: isFound ? 1 : 0,
+      uIsSatellite: isSatellite ? 1 : 0,
+      uSelectInTransition: isIncomingTransitioning ? 1 : 0,
+    });
+    material.userData.shader = shader;
+    registerAnimatedPolygonMaterial(material);
+    return;
+  }
   material.customProgramCacheKey = () => `shader-cap-glitch-v9-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+    shader.uniforms.uGlitchTintA = polygonGlitchUniforms.uGlitchTintA;
+    shader.uniforms.uGlitchTintB = polygonGlitchUniforms.uGlitchTintB;
     shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
     shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };

@@ -1,0 +1,250 @@
+/* Button + IconButton — the kit's button primitives (src/components/ui/Button.jsx, IconButton.jsx).
+   Replaces the former .btn-primary / .btn-secondary / .glass-icon-btn / .panel-close-btn / ...
+   rules scattered across the stylesheets. Loaded from main.jsx right after index.css so the
+   cascade order is unchanged: screen sheets only add layout deltas (width, margin, position).
+   Identity: square corners, stepped press ("bloc" flash), hard 1-2px shadows, no glow, no
+   scale. Hover is limited to real hover devices (no sticky hover on touch). */
+
+/* ──── Shared base ──── */
+.ui-btn,
+.ui-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform var(--dur-micro) var(--steps-press),
+    box-shadow var(--dur-micro) var(--steps-press),
+    opacity var(--dur-fast) linear,
+    background var(--dur-fast) linear,
+    color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear;
+}
+
+.ui-btn:focus-visible,
+.ui-icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ui-btn:active:not(:disabled):not(.is-loading),
+.ui-icon-btn:active:not(:disabled) {
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
+}
+
+.ui-btn:disabled,
+.ui-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  animation: none;
+}
+
+/* ──── Button ──── */
+.ui-btn {
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  text-align: center;
+}
+
+.ui-btn--sm {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.ui-btn--lg {
+  min-height: var(--control-lg);
+  padding: var(--spacing-ms) var(--spacing-lg);
+}
+
+.ui-btn--block {
+  display: flex;
+  width: 100%;
+}
+
+.ui-btn__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* primary — accent fill */
+.ui-btn--primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.ui-btn--primary:active:not(:disabled):not(.is-loading) {
+  box-shadow: 1px 1px 0 var(--text-main);
+  text-shadow: none;
+}
+
+/* secondary — solid glass surface, readable over the satellite globe */
+.ui-btn--secondary {
+  background: var(--glass-bg);
+  color: var(--text-main);
+  border-color: var(--glass-border-strong);
+}
+
+/* ghost — no chrome until hovered */
+.ui-btn--ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+/* danger — outlined error colour, fills on hover */
+.ui-btn--danger {
+  background: var(--glass-bg);
+  color: var(--error);
+  border-color: var(--error);
+}
+
+@media (hover: hover) {
+  .ui-btn--primary:hover:not(:disabled):not(.is-loading) {
+    transform: translateY(-1px);
+    box-shadow: 2px 2px 0 var(--text-main);
+    border-color: var(--accent-hover);
+    background: var(--accent-hover);
+  }
+
+  .ui-btn--secondary:hover:not(:disabled):not(.is-loading) {
+    transform: translateY(-1px);
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--glass-hover);
+  }
+
+  .ui-btn--ghost:hover:not(:disabled):not(.is-loading) {
+    color: var(--text-main);
+    background: var(--glass-hover);
+  }
+
+  .ui-btn--danger:hover:not(:disabled):not(.is-loading) {
+    transform: translateY(-1px);
+    background: var(--error);
+    color: var(--bg-color);
+  }
+}
+
+/* loading — label stays, three square cells fill in steps; clicks are ignored in JS */
+.ui-btn.is-loading {
+  cursor: progress;
+}
+
+.ui-btn.is-loading::after {
+  content: "";
+  flex-shrink: 0;
+  width: calc(var(--cell) * 3);
+  height: var(--cell);
+  background: currentColor;
+  animation: ui-btn-cells var(--dur-loop) steps(3, end) infinite;
+}
+
+@keyframes ui-btn-cells {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+/* ──── IconButton ──── */
+.ui-icon-btn {
+  flex-shrink: 0;
+  padding: 0;
+  width: var(--control-lg);
+  height: var(--control-lg);
+}
+
+.ui-icon-btn--sm {
+  width: var(--control-sm);
+  height: var(--control-sm);
+}
+
+.ui-icon-btn--md {
+  width: var(--control-md);
+  height: var(--control-md);
+}
+
+/* glass — solid glass square with the hard soft shadow (home triggers, HUD buttons) */
+.ui-icon-btn--glass {
+  color: var(--text-main);
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* outline — bordered, transparent (sheet close, steppers, carousel arrows) */
+.ui-icon-btn--outline {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: var(--glass-border);
+}
+
+/* ghost — no chrome (panel close / back) */
+.ui-icon-btn--ghost {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.ui-icon-btn--danger {
+  color: var(--error);
+  background: var(--glass-bg);
+  border-color: var(--error);
+}
+
+.ui-icon-btn--glass:active:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .ui-icon-btn--glass:hover:not(:disabled):not(.home-dock-segment) {
+    transform: translateY(-1px);
+    color: var(--accent);
+    background: var(--glass-hover);
+    border-color: var(--accent);
+  }
+
+  .ui-icon-btn--outline:hover:not(:disabled) {
+    color: var(--accent);
+    background: var(--glass-hover);
+    border-color: var(--accent);
+  }
+
+  .ui-icon-btn--ghost:hover:not(:disabled) {
+    color: var(--text-main);
+    background: var(--glass-hover);
+  }
+
+  .ui-icon-btn--danger:hover:not(:disabled) {
+    background: var(--error);
+    color: var(--bg-color);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn,
+  .ui-icon-btn {
+    transition: none;
+  }
+
+  .ui-btn:active:not(:disabled):not(.is-loading),
+  .ui-icon-btn:active:not(:disabled) {
+    animation: none;
+  }
+
+  .ui-btn.is-loading::after {
+    animation: none;
+  }
+}

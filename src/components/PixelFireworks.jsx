@@ -2,22 +2,25 @@ import "./PixelFireworks.css";
 
 import React, { useEffect, useRef } from "react";
 
-import { AVATAR_COLORS } from "../config/designSystem";
-
-const RETRO_COLORS = Object.values(AVATAR_COLORS);
+import { getFireworkColors } from "../config/designSystem";
+import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
 
 const PixelFireworks = ({ duration = 6000 }) => {
   const canvasRef = useRef(null);
+  const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (reducedMotion) return undefined;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!ctx) return undefined;
+
+    const RETRO_COLORS = getFireworkColors();
 
     let animationFrameId;
     let isActive = true;
+    const spawnTimers = [];
 
     // Resize canvas
     const resizeCanvas = () => {
@@ -99,12 +102,12 @@ const PixelFireworks = ({ duration = 6000 }) => {
       if (!isActive) return;
       rockets.push(new Rocket());
       // schedule next spawn
-      setTimeout(spawnRocket, Math.random() * 600 + 400);
+      spawnTimers.push(setTimeout(spawnRocket, Math.random() * 600 + 400));
     };
 
     // Initial rockets
     spawnRocket();
-    setTimeout(spawnRocket, 300);
+    spawnTimers.push(setTimeout(spawnRocket, 300));
 
     // Animation Loop
     const tick = () => {
@@ -153,8 +156,11 @@ const PixelFireworks = ({ duration = 6000 }) => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", resizeCanvas);
       clearTimeout(stopTimer);
+      spawnTimers.forEach((id) => clearTimeout(id));
     };
-  }, [duration]);
+  }, [duration, reducedMotion]);
+
+  if (reducedMotion) return null;
 
   return <canvas ref={canvasRef} className="pixel-fireworks-canvas" />;
 };
