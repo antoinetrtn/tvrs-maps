@@ -1,4 +1,11 @@
-import { expect, expectPanelClosed, showMode, test } from "./helpers/fixtures.js";
+import {
+  expect,
+  deckStep,
+  expectPanelClosed,
+  openLearnPanel,
+  showMode,
+  test,
+} from "./helpers/fixtures.js";
 
 const LEARN_BTN = ".ui-btn--tile:not(.ui-btn--tile-train)";
 
@@ -104,7 +111,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
   // 6. Carousel Navigation Next
   test("T1-MODE-06: Carousel Right Arrow Navigation", async ({ guestPage: page }) => {
-    await page.locator(".deck-click-zone.right button").click();
+    await deckStep(page, "right");
     const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "capitals");
   });
@@ -112,7 +119,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   // 7. Carousel Navigation Prev
   test("T1-MODE-07: Carousel Left Arrow Navigation", async ({ guestPage: page }) => {
     await showMode(page, "capitals");
-    await page.locator(".deck-click-zone.left button").click();
+    await deckStep(page, "left");
     const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toHaveAttribute("data-mode", "countries");
   });
@@ -133,6 +140,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-MODE-09: Launch Learn Mode from Home Card", async ({ guestPage: page }) => {
     const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await topCard.locator(LEARN_BTN).click();
+    await openLearnPanel(page);
 
     const dataPanel = page.locator(".game-data-panel");
     await expect(dataPanel).toBeVisible();
@@ -142,6 +150,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
   test("T1-MODE-10: Learn Mode Sub-Mode Carousel Navigation", async ({ guestPage: page }) => {
     const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await topCard.locator(LEARN_BTN).click();
+    await openLearnPanel(page);
 
     const learnControl = page.locator(".learn-carousel-control");
     await expect(learnControl).toBeVisible();
