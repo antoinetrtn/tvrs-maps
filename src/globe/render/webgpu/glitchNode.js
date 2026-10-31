@@ -46,6 +46,7 @@ function getSharedNodes(polygonGlitchUniforms) {
       uTime: mirrorUniform(polygonGlitchUniforms.uTime),
       uPixelScale: mirrorUniform(polygonGlitchUniforms.uPixelScale),
       uSuccessStart: mirrorUniform(polygonGlitchUniforms.uSuccessStart),
+      uSelectStart: mirrorUniform(polygonGlitchUniforms.uSelectStart),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
       uFoundGreen: mirrorUniform(polygonGlitchUniforms.uFoundGreen),
       uGlitchTintA: mirrorUniform(polygonGlitchUniforms.uGlitchTintA),
@@ -179,8 +180,6 @@ function selectionEffect(finalColor, green, time, theme, isSatellite) {
   );
 }
 
-const EDGE_GLOW = vec3(1.0, 0.8, 0.4);
-
 const on = (x) => x.greaterThan(0.5);
 
 /** Warm pixel-dithered Atlas Lantern selection base colour. */
@@ -280,8 +279,10 @@ function createGlitchOutputNode(u) {
     const { transitionActive, staticVec, sideShade, foundRestingColor } = base;
     const { glitchColor } = glitchDissolve(u, base);
     const fade = clamp(u.uFadeProgress, 0, 1);
-    const settleMix = smoothstep(0.0, 1.0, fade);
-    const afterglow = EDGE_GLOW.mul(sin(fade.mul(PI)).mul(0.22)).mul(float(1).sub(settleMix));
+    const isWall = step(0.5, u.uIsSide);
+    const settleMix = mix(smoothstep(0.0, 0.7, fade), smoothstep(0.3, 1.0, fade), isWall);
+    const selectIn = clamp(u.uTime.sub(u.uSelectStart).div(0.6), 0, 1);
+    const inMix = mix(smoothstep(0.35, 1.0, selectIn), smoothstep(0.0, 0.5, selectIn), isWall);
 
     const settleColor = mix(lit, foundRestingColor.mul(sideShade), step(0.5, u.uIsFound)).toVar();
 
@@ -290,7 +291,7 @@ function createGlitchOutputNode(u) {
     const transiting = on(transitionActive);
     const satellite = on(u.uIsSatellite);
 
-    const rgb = vec3(staticVec.mul(sideShade)).toVar();
+    const rgb = vec3(mix(lit, staticVec.mul(sideShade), inMix)).toVar();
     If(feedback, () => {
       rgb.assign(glitchColor);
     })
@@ -301,13 +302,12 @@ function createGlitchOutputNode(u) {
         rgb.assign(glitchColor);
       })
       .ElseIf(transiting, () => {
-        rgb.assign(mix(glitchColor, settleColor, settleMix).add(afterglow));
+        rgb.assign(mix(glitchColor, settleColor, settleMix));
       });
 
     const alpha = float(1).toVar();
     const satDissolve = feedback.or(isFoundSurface).not().and(transiting).and(satellite);
     If(satDissolve, () => {
-      rgb.addAssign(afterglow);
       alpha.assign(float(1).sub(settleMix));
     });
     If(feedback.or(isFoundSurface).or(transiting).not().and(satellite), () => {

@@ -114,6 +114,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uPixelScale;
   uniform float uSideShade;
   uniform float uSuccessStart;
+  uniform float uSelectStart;
   uniform float uSuccessDuration;
   uniform float uIsSatellite;
   uniform vec3 uGlitchTintA;
@@ -193,13 +194,10 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 export const GLITCH_FRAGMENT_BODY = `
   vec3 litRestingColor = gl_FragColor.rgb;
 
-  // Warm ember selection & smooth glowing crossfade on deselection
   float transitionActive = step(0.006, uFadeProgress) * (1.0 - step(0.994, uFadeProgress));
   float selectInScale = mix(1.0, 0.52, step(0.5, uSelectInTransition));
   float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159)) * selectInScale;
 
-  // 3D sphere-anchored surface coordinates so pixel dither and lantern blocks
-  // live on the globe surface and rotate/zoom naturally with the Earth.
   vec3 sphereDir = normalize(vWorldPosition);
   float sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
   float sphereLng = atan(sphereDir.z, sphereDir.x);
@@ -210,9 +208,6 @@ export const GLITCH_FRAGMENT_BODY = `
   float ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
   float sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
 
-  // Warm ember selection: clean amber fill (no stipple), slow breathing, a soft
-  // light gleam drifting across the country and glowing side walls that trace
-  // the border like a lit outline. Matches the nocturnal ignition art direction.
   float emberPulse = 0.9 + 0.1 * sin(uTime * 2.4);
   vec3 emberCap = mix(litRestingColor, vec3(1.0, 0.72, 0.32), 0.38) * 1.18;
   vec3 emberWall = (uIsLight > 0.5) ? vec3(0.98, 0.78, 0.40) : vec3(1.0, 0.74, 0.30);
@@ -225,8 +220,6 @@ export const GLITCH_FRAGMENT_BODY = `
     + vec3(1.0, 0.82, 0.46) * gleam * 0.16 * (1.0 - step(0.5, uIsSide));
   vec3 foundRestingColor = ((uTheme > 0.5) && (uIsSatellite < 0.5)) ? vec3(0.48, 0.34, 0.15) : uFoundGreen;
 
-  // Caps and extruded side walls share one effect pipeline; sides are shaded
-  // slightly darker below so the extrusion keeps its depth cue.
   vec3 finalColor = gl_FragColor.rgb;
   if (uIsError > 0.5) {
     finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, uTheme, blockUv, vWorldPosition);
@@ -241,23 +234,17 @@ export const GLITCH_FRAGMENT_BODY = `
   }
   finalColor *= mix(1.0, uSideShade, step(0.5, uIsSide));
 
-  // Smooth crossfade (no checkerboard): the ember cools down to the resting colour
-  // with a brief warm afterglow at mid-transition.
   float finalProgress = clamp(uFadeProgress, 0.0, 1.0);
-  float settleMix = smoothstep(0.0, 1.0, finalProgress);
-  float afterglow = sin(finalProgress * 3.14159) * 0.22;
+  float isWall = step(0.5, uIsSide);
+  float settleMix = mix(smoothstep(0.0, 0.7, finalProgress), smoothstep(0.3, 1.0, finalProgress), isWall);
+  float selectIn = clamp((uTime - uSelectStart) / 0.6, 0.0, 1.0);
+  float inMix = mix(smoothstep(0.35, 1.0, selectIn), smoothstep(0.0, 0.5, selectIn), isWall);
 
   vec3 glitchColor = finalColor;
   bool isFoundSurface = (uIsFound > 0.5);
-  bool isSoftSelectIn =
-    (uSelectInTransition > 0.5) &&
-    (uIsFound < 0.5) &&
-    (uIsError < 0.5) &&
-    (uIsSuccess < 0.5);
 
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
   vec3 settleColor = mix(litRestingColor, foundRestingColor * sideShade, step(0.5, uIsFound));
-  vec3 edgeGlow = vec3(1.0, 0.80, 0.40);
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
@@ -267,23 +254,17 @@ export const GLITCH_FRAGMENT_BODY = `
     if (uIsSatellite > 0.5) {
       gl_FragColor.rgb = glitchColor;
     } else {
-      gl_FragColor.rgb = mix(glitchColor, settleColor, settleMix) + edgeGlow * afterglow * (1.0 - settleMix);
+      gl_FragColor.rgb = mix(glitchColor, settleColor, settleMix);
     }
-  } else if (isSoftSelectIn && transitionActive > 0.5) {
-    float reveal = 1.0 - uFadeProgress;
-    float grain = smoothstep(0.1, 0.6, reveal);
-    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, grain * 0.5);
   } else {
-    gl_FragColor.rgb = staticVec * sideShade;
+    gl_FragColor.rgb = mix(litRestingColor, staticVec * sideShade, inMix);
   }
 
-  // Clean cartographic finish
   if (uIsError > 0.5 || uIsSuccess > 0.5 || isFoundSurface) {
     gl_FragColor.a = 1.0;
   } else {
     if (transitionActive > 0.5) {
       if (uIsSatellite > 0.5) {
-        gl_FragColor.rgb += edgeGlow * afterglow * (1.0 - settleMix);
         gl_FragColor.a = 1.0 - settleMix;
       } else {
         gl_FragColor.a = 1.0;

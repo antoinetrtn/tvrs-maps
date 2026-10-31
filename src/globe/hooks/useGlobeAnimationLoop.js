@@ -188,6 +188,7 @@ export function useGlobeAnimationLoop({
       if (needsSharedTime) {
         polygonGlitchUniforms.uTime.value = timeSec;
       }
+      polygonGlitchUniforms.uSelectStart.value = (selectionTransitionStartRef?.current ?? 0) / 1000;
       if (currentIsError || currentIsSuccess) {
         const foundGreen = getFoundGreenThreeColor();
         polygonGlitchUniforms.uFoundGreen.value.copy(foundGreen);
