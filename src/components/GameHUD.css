@@ -59,8 +59,6 @@
   min-width: 0;
 }
 
-/* New row for gauges that spans the whole width */
-
 /* ==========================================================================
    CENTRAL ISLAND PANEL (The Pill)
    ========================================================================== */
@@ -127,7 +125,7 @@
 }
 
 /* ==========================================================================
-   GAUGES & BUTTONS
+   BOTTOM-RIGHT BUTTONS
    ========================================================================= */
 .hud-bottom-right {
   position: fixed;
@@ -149,66 +147,6 @@
   opacity: 0;
   transform: translateY(12px) scale(0.96);
   pointer-events: none;
-}
-
-.island-sub-gauges {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  pointer-events: auto;
-}
-
-.circular-gauge {
-  width: var(--control-sm);
-  height: var(--control-sm);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: conic-gradient(
-    var(--color) var(--pct),
-    color-mix(in srgb, var(--color) 28%, var(--glass-border)) 0
-  );
-  position: relative;
-}
-
-.circular-gauge::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  background: var(--glass-bg);
-  border-radius: calc(var(--radius-sm) - 2px);
-}
-
-.gauge-val {
-  font-family: var(--font-display);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  z-index: 1;
-  color: var(--color);
-  letter-spacing: 0;
-}
-
-.gauge-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  transition:
-    opacity var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.gauge-item.faded {
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.gauge-item.highlight .circular-gauge {
-  box-shadow:
-    0 0 0 2px var(--bg-color),
-    0 0 0 3px var(--color);
-  transform: translateX(-2px);
 }
 
 /* ==========================================================================
@@ -346,13 +284,6 @@
   .island-progress-wrap {
     flex: 1;
     min-width: 30px;
-  }
-
-  .gauge-item.highlight .circular-gauge {
-    animation: none;
-    box-shadow:
-      0 0 0 1px var(--bg-color),
-      0 0 0 2px var(--color);
   }
 
   .hud-bottom-right {
