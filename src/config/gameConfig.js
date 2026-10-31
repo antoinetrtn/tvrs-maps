@@ -119,12 +119,14 @@ export const shouldScrambleLabel = (
  */
 export const POLYGON_ALTITUDE = {
   base: 0.0012,
-  selected: 0.008,
+  // Selection stays flat: the raised walls glitched and hid the outline face-on; the
+  // outline is now drawn in pixels on the surface (selectionOutline.js).
+  selected: 0.0012,
   // Regional maps are seen from very close: a department is only ~1° wide, so
   // the world-scale lift turned small areas into pillars and made the whole
   // map look embossed. Keep the regional relief flat and subtle.
   departmentBase: 0.0003,
-  departmentSelected: 0.0016,
+  departmentSelected: 0.0003,
   // Ghost countries (dimmed world around a regional map) are tessellated by the
   // original Delaunay: worst cap dip at 1° is 0.044 (Greenland) < 0.0005 × 100.
   ghostCountry: 0.0005,

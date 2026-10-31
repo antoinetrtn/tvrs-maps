@@ -543,22 +543,8 @@ export function useGlobePolygons({
     [getPolygonMaterial]
   );
 
-  const getPolygonSideMaterial = useCallback(
-    (d) => {
-      const admin = getFeatureAdmin(d);
-      const isSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
-      const isPrev = isSameAdmin(admin, transitioningPreviousCountryState, gameDataMap);
-      const isIncoming = isSameAdmin(admin, transitioningIncomingCountryState, gameDataMap);
-      return isSelected || isPrev || isIncoming ? getPolygonMaterial(d, "side") : invisibleMaterial;
-    },
-    [
-      selectedCountry,
-      transitioningPreviousCountryState,
-      transitioningIncomingCountryState,
-      getPolygonMaterial,
-      gameDataMap,
-    ]
-  );
+  // Flat selection: no visible side walls (the outline lives on the cap surface).
+  const getPolygonSideMaterial = useCallback(() => invisibleMaterial, []);
 
   // Per-country lookup is cheap to rebuild: reset it on every mode switch.
   useEffect(() => {

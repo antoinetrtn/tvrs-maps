@@ -10,6 +10,7 @@ import {
   GLITCH_VERTEX_BODY,
   GLITCH_VERTEX_DECLARATIONS,
 } from "./globeShaders";
+import { getSelectionOutlineTexture, selectionOutlineBox } from "./selectionOutline";
 import { attachGlitchNodes } from "./webgpu/glitchNode";
 
 /** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
@@ -194,7 +195,7 @@ export function attachPolygonGlitchShader(
     registerAnimatedPolygonMaterial(material);
     return;
   }
-  material.customProgramCacheKey = () => `shader-cap-glitch-v12-${kind}`;
+  material.customProgramCacheKey = () => `shader-cap-glitch-v13-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
@@ -208,6 +209,8 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
     shader.uniforms.uSelectStart = polygonGlitchUniforms.uSelectStart;
     shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
+    shader.uniforms.uSelOutlineMap = { value: getSelectionOutlineTexture() };
+    shader.uniforms.uSelOutlineBox = selectionOutlineBox;
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
     shader.uniforms.uFadeProgress = { value: 0.0 };
     shader.uniforms.uTargetColor = {

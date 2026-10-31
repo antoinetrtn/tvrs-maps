@@ -1,5 +1,6 @@
 import { DISCOVERY_DEFS, discoveryLandFn, GLSL_DISCOVERY_LAND_FN } from "./discoveryShaderChunks";
 export { DISCOVERY_DEFS, GLSL_DISCOVERY_LAND_FN };
+import { SELECTION_STYLE_DEFS } from "./selectionStyle";
 /**
  * ==========================================
  * GLOBE GLSL SHADERS
@@ -96,6 +97,7 @@ export const FRESNEL_FRAGMENT_SHADER = `
 export const SELECT_CITY_AMBER_RGB = [0.78, 0.52, 0.18];
 export const SELECT_CITY_ALPHA_VALUE = 0.6;
 const SELECT_CITY_DEFS = `
+  ${SELECTION_STYLE_DEFS}
   #define SELECT_CITY_AMBER vec3(${SELECT_CITY_AMBER_RGB.join(", ")})
   #define SELECT_CITY_ALPHA ${SELECT_CITY_ALPHA_VALUE.toFixed(2)}
 `;
@@ -125,6 +127,8 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSuccessStart;
   uniform float uSelectStart;
   uniform sampler2D uCapitalLightsMap;
+  uniform sampler2D uSelOutlineMap;
+  uniform vec4 uSelOutlineBox;
   ${SELECT_CITY_DEFS}
   uniform float uSuccessDuration;
   uniform float uRevealStart;
@@ -163,7 +167,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   ${discoveryLandFn("hash")}
   // Discovery reveal, success window (selection shader still active until auto-advance):
   // the land front leaves the capital in square-pixel steps towards the found tone, the
-  // outline (side walls) turns amber ahead of it. No full-country flash.
+  // surface pixel outline turns amber ahead of it. No full-country flash.
   vec3 computeDiscoveryEffect(vec3 staticColor, vec3 foundColor, vec3 dir, vec2 cell, float isWall) {
     float revealT = uTime - uRevealStart;
     float dist = acos(clamp(dot(dir, uIgniteOrigin), -1.0, 1.0));
@@ -196,6 +200,15 @@ export const GLITCH_FRAGMENT_BODY = `
   // Selection: the country's real city-light pixels (same texture cells as the found
   // ignition) glow dim amber in stepped order, border traced in square pixels.
   float isWall = step(0.5, uIsSide);
+  // Flat selection (no extrusion): pixel outline read from the per-selection mask, on
+  // a lat/lng grid of uSelOutlineBox.z degrees (square cells, see selectionOutline.js).
+  vec2 selDeg = vec2(degrees(atan(sphereDir.x, sphereDir.z)), degrees(sphereLat));
+  vec2 selOc = (selDeg - uSelOutlineBox.xy) / uSelOutlineBox.z;
+  selOc.x = mod(selOc.x, 360.0 / uSelOutlineBox.z);
+  vec2 selOcCell = floor(selOc);
+  float selInBox = step(selOc.x, uSelOutlineBox.w) * step(0.0, selOc.y) * step(selOc.y, uSelOutlineBox.w);
+  vec2 selOcUv = (selOcCell + 0.5) / max(uSelOutlineBox.w, 1.0);
+  float selEdgeV = texture2D(uSelOutlineMap, selOcUv).r * selInBox * (1.0 - isWall);
   float selectIn = clamp((uTime - uSelectStart) / 0.5, 0.0, 1.0);
   float lightProg = (transitionActive > 0.5) ? 1.0 - floor(uFadeProgress * 5.0) / 5.0 : floor(selectIn * 6.0) / 6.0;
   vec2 selUv = vec2(atan(sphereDir.x, sphereDir.z) / 6.2831853 + 0.5, sphereLat / 3.14159265 + 0.5);
@@ -203,15 +216,28 @@ export const GLITCH_FRAGMENT_BODY = `
   float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall);
   float cityOn = isCityPx * step(hash(selCell + 3.7), lightProg * 1.15 - 0.15);
   float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
-  vec3 staticVec = mix(litRestingColor, vec3(1.0, 0.74, 0.3) / max(uSideShade, 0.001), wallOn);
+  float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0) * (1.0 - transitionActive);
+  float edgeOuter = step(0.9, selEdgeV) * edgeOn;
+  float edgeHalo = step(0.15, selEdgeV) * (1.0 - step(0.9, selEdgeV)) * edgeOn;
+  // Halo breathes in a few flat steps (pixel-art, no strobe); still under reduced motion.
+  float pulseWave = 0.5 + 0.5 * sin(uTime * 6.2831853 / SELECT_PULSE_S);
+  float pulse = mix(floor(pulseWave * SELECT_PULSE_STEPS + 0.5) / SELECT_PULSE_STEPS, 0.6, uReducedMotion);
+  float haloAmt = edgeHalo * selEdgeV * SELECT_HALO_ALPHA * (0.35 + 0.65 * pulse);
+  // Warm night umber under the selection instead of the cold map grey.
+  vec3 selLand = vec3(dot(litRestingColor, vec3(0.299, 0.587, 0.114))) * SELECT_LAND_TINT;
+  vec3 wallTone = vec3(1.0, 0.74, 0.3) / max(uSideShade, 0.001);
+  vec3 staticVec = mix(mix(litRestingColor, selLand, 1.0 - isWall), wallTone, wallOn);
   staticVec = mix(staticVec, SELECT_CITY_AMBER, cityOn * SELECT_CITY_ALPHA);
+  staticVec = mix(staticVec, SELECT_EDGE_RGB, haloAmt);
+  staticVec = mix(staticVec, SELECT_EDGE_RGB, edgeOuter);
   vec3 foundRestingColor = vec3(0.48, 0.34, 0.15);
 
   vec3 finalColor = gl_FragColor.rgb;
   if (uIsError > 0.5) {
     finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, blockUv, vWorldPosition);
   } else if (uIsSuccess > 0.5) {
-    finalColor = computeDiscoveryEffect(staticVec, foundRestingColor, sphereDir, selCell, isWall);
+    float discEdge = max(isWall, step(0.9, selEdgeV));
+    finalColor = computeDiscoveryEffect(staticVec, foundRestingColor, sphereDir, selCell, discEdge);
   } else if (uIsSelection > 0.5) {
     finalColor = computeSelectionEffect(uTime);
   } else if (uIsFound > 0.5) {
@@ -232,7 +258,7 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (isFoundSurface) {
     gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
-    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn));
+    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter));
   } else {
     gl_FragColor.rgb = staticVec * sideShade;
   }
@@ -331,7 +357,8 @@ ${SELECT_CITY_DEFS}
       float blackoutAmt = (1.0 - showcaseLand) * isUnfoundDarkCap * (1.0 - uIsRegionalMode);
       float unfoundDimTarget = mix(0.36, 0.74, uIsRegionalMode);
       float blackoutDim = mix(mix(1.0, unfoundDimTarget, (1.0 - showcaseLand) * isUnfoundDarkCap), 0.42, uIsGhost);
-      vec3 blackoutGrey = vec3(surfaceLuma) * vec3(0.97, 0.99, 1.03);
+      // Warm umber in game only: Home/End keep the original cool grey (wake-up untouched).
+      vec3 blackoutGrey = vec3(surfaceLuma) * mix(BLACKOUT_TINT, BLACKOUT_TINT_HOME, uShowcaseLights);
       vec3 unfoundLand = mix(gl_FragColor.rgb, blackoutGrey, blackoutAmt * 0.88) * blackoutDim;
       vec3 soloAwakenedLand = vec3(0.48, 0.34, 0.15) + vec3(0.15, 0.10, 0.04) * (1.0 - ndv);
       vec3 conquestAwakenedLand = gl_FragColor.rgb * 0.84 + gl_FragColor.rgb * 0.22 * (1.0 - ndv);

@@ -5,6 +5,8 @@
  */
 import { float, mix, vec3 } from "three/tsl";
 
+import { BLACKOUT_TINT_HOME_RGB, BLACKOUT_TINT_RGB } from "../selectionStyle";
+
 export function buildBlackoutLand({
   lit,
   surfaceLuma,
@@ -12,12 +14,19 @@ export function buildBlackoutLand({
   isUnfoundDarkCap,
   uRegionalNode,
   uGhost,
+  uHomeNode,
 }) {
   const unlit = float(1.0).sub(uShowcaseNode).mul(isUnfoundDarkCap);
   const blackoutAmt = unlit.mul(float(1.0).sub(uRegionalNode));
   const dimTarget = mix(float(0.36), float(0.74), uRegionalNode);
   const blackoutDim = mix(mix(float(1.0), dimTarget, unlit), float(0.42), uGhost);
-  const blackoutGrey = vec3(surfaceLuma).mul(vec3(0.97, 0.99, 1.03));
+  // Warm umber in game only: Home/End keep the original cool grey (wake-up untouched).
+  const tint = mix(
+    vec3(...BLACKOUT_TINT_RGB),
+    vec3(...BLACKOUT_TINT_HOME_RGB),
+    uHomeNode || float(0.0)
+  );
+  const blackoutGrey = vec3(surfaceLuma).mul(tint);
   const unfoundLand = mix(lit, blackoutGrey, blackoutAmt.mul(0.88)).mul(blackoutDim);
   return { blackoutAmt, blackoutDim, unfoundLand };
 }

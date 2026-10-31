@@ -20,7 +20,9 @@ import {
   If,
   length,
   materialReference,
+  max,
   mix,
+  mod,
   modelViewProjection,
   normalize,
   positionLocal,
@@ -37,11 +39,22 @@ import {
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { DISCOVERY } from "../discoveryTimeline";
 import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
+import { getSelectionOutlineTexture, selectionOutlineBox } from "../selectionOutline";
+import {
+  SELECT_EDGE_RGB_VALUE,
+  SELECT_HALO_ALPHA_VALUE,
+  SELECT_LAND_TINT_RGB,
+  SELECT_PULSE_S_VALUE,
+  SELECT_PULSE_STEPS_VALUE,
+} from "../selectionStyle";
 import { discoveryLandStep } from "./igniteNodes";
 import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 const PI = 3.14159;
 const CITY_AMBER = vec3(...SELECT_CITY_AMBER_RGB);
+const EDGE_RGB = vec3(...SELECT_EDGE_RGB_VALUE);
+const LAND_TINT = vec3(...SELECT_LAND_TINT_RGB);
+const RAD2DEG = 57.29577951;
 
 let sharedNodes = null;
 /** Shared uniforms (time, pixel scale, success timeline, tear tints). */
@@ -59,6 +72,7 @@ function getSharedNodes(polygonGlitchUniforms) {
       uReducedMotion: mirrorUniform(polygonGlitchUniforms.uReducedMotion),
       uGlitchTintA: mirrorUniform(polygonGlitchUniforms.uGlitchTintA),
       uGlitchTintB: mirrorUniform(polygonGlitchUniforms.uGlitchTintB),
+      uSelOutlineBox: mirrorUniform(selectionOutlineBox),
     };
   }
   return sharedNodes;
@@ -205,19 +219,62 @@ function glitchBase(u, lit) {
   const cityOn = isCityPx.mul(step(hash(selCell.add(3.7)), lightProg.mul(1.15).sub(0.15)));
   const wallOn = side.mul(step(hash(floor(fragPx.mul(0.5)).add(7.0)), lightProg.mul(2.0)));
   const wallTone = vec3(1.0, 0.74, 0.3).div(u.uSideShade.max(0.001));
+  // Flat selection (GLSL parity): surface pixel outline from the per-selection mask.
+  const box = u.uSelOutlineBox;
+  const ocRaw = vec2(atan(sphereDir.x, sphereDir.z).mul(RAD2DEG), sphereLat.mul(RAD2DEG))
+    .sub(box.xy)
+    .div(box.z);
+  const oc = vec2(mod(ocRaw.x, float(360).div(box.z)), ocRaw.y);
+  const ocCell = floor(oc);
+  const inBox = step(oc.x, box.w).mul(step(0.0, oc.y)).mul(step(oc.y, box.w));
+  const edgeV = texture(getSelectionOutlineTexture(), ocCell.add(0.5).div(max(box.w, 1.0)))
+    .r.mul(inBox)
+    .mul(float(1).sub(side));
+  const edgeOn = step(hash(ocCell.add(7.0)), lightProg.mul(2.0)).mul(
+    float(1).sub(transitionActive)
+  );
+  const edgeOuter = step(0.9, edgeV).mul(edgeOn);
+  const edgeHalo = step(0.15, edgeV)
+    .mul(float(1).sub(step(0.9, edgeV)))
+    .mul(edgeOn);
+  // Halo breathes in a few flat steps (pixel-art, no strobe); still under reduced motion.
+  const pulseWave = sin(time.mul(6.2831853 / SELECT_PULSE_S_VALUE))
+    .mul(0.5)
+    .add(0.5);
+  const pulse = mix(
+    floor(pulseWave.mul(SELECT_PULSE_STEPS_VALUE).add(0.5)).div(SELECT_PULSE_STEPS_VALUE),
+    float(0.6),
+    u.uReducedMotion
+  );
+  const haloAmt = edgeHalo.mul(edgeV).mul(SELECT_HALO_ALPHA_VALUE).mul(pulse.mul(0.65).add(0.35));
+  const selLand = vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(LAND_TINT);
   const staticVec = mix(
-    mix(lit, wallTone, wallOn),
-    CITY_AMBER,
-    cityOn.mul(SELECT_CITY_ALPHA_VALUE)
+    mix(
+      mix(mix(lit, selLand, float(1).sub(side)), wallTone, wallOn),
+      CITY_AMBER,
+      cityOn.mul(SELECT_CITY_ALPHA_VALUE)
+    ),
+    EDGE_RGB,
+    haloAmt
   );
   const foundRestingColor = vec3(0.48, 0.34, 0.15);
 
-  const finalColor = vec3(staticVec).toVar();
+  const finalStatic = mix(staticVec, EDGE_RGB, edgeOuter);
+  const finalColor = vec3(finalStatic).toVar();
   If(on(u.uIsError), () => {
     finalColor.assign(errorEffect(time, blockUv, positionWorld));
   })
     .ElseIf(on(u.uIsSuccess), () => {
-      finalColor.assign(discoveryEffect(u, staticVec, foundRestingColor, sphereDir, selCell, side));
+      finalColor.assign(
+        discoveryEffect(
+          u,
+          finalStatic,
+          foundRestingColor,
+          sphereDir,
+          selCell,
+          max(side, step(0.9, edgeV))
+        )
+      );
     })
     .ElseIf(on(u.uIsSelection), () => {
       finalColor.assign(selectionEffect(time));
@@ -232,10 +289,10 @@ function glitchBase(u, lit) {
     glitchAmp,
     fragPx,
     blockUv,
-    staticVec,
+    staticVec: finalStatic,
     finalColor,
     isCityPx,
-    pixelOn: step(0.01, cityOn.add(wallOn)),
+    pixelOn: step(0.01, cityOn.add(wallOn).add(edgeOuter)),
     sideShade,
     foundRestingColor,
   };
