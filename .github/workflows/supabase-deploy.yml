@@ -1,19 +1,25 @@
 name: Deploy Supabase Migrations
 
+# main → projet Supabase de prod (environnement GitHub « production »)
+# dev  → projet Supabase dédié tvrs-maps-dev (environnement GitHub « dev »,
+#        qui surcharge SUPABASE_PROJECT_REF). La prod n'est jamais touchée depuis dev.
 on:
   push:
     branches:
       - main
-      # ⚠️ dev-maps et la prod partagent le même projet Supabase :
-      # un push sur dev migre aussi la base de prod.
       - dev
   workflow_dispatch:
 
+concurrency:
+  group: supabase-deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
-    name: Deploy Migrations
+    name: Deploy Migrations (${{ github.ref_name == 'main' && 'prod' || 'dev' }})
+    if: github.ref_name == 'main' || github.ref_name == 'dev'
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
 
     steps:
       - name: Checkout Code
@@ -24,9 +30,20 @@ jobs:
         with:
           version: latest
 
+      - name: Guard — dev must never target prod
+        if: github.ref_name == 'dev'
+        run: |
+          if [ "${{ secrets.SUPABASE_PROJECT_REF }}" = "tehmjpgghrqjmdfakiic" ]; then
+            echo "::error::Le job dev pointe sur le projet de prod, arrêt."
+            exit 1
+          fi
+
       - name: Link and Push Migrations
         run: |
-          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --password ${{ secrets.SUPABASE_DB_PASSWORD }}
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
           supabase db push
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          # Mot de passe prod uniquement sur main ; sur dev le CLI passe par
+          # un rôle de connexion temporaire via le jeton d'accès.
+          SUPABASE_DB_PASSWORD: ${{ github.ref_name == 'main' && secrets.SUPABASE_DB_PASSWORD || '' }}
