@@ -272,6 +272,11 @@ $$;
 
 -- Ordre aléatoire mais stable par (match, pays) : les 5 types une fois chacun, puis 'extra'.
 RESET ROLE;
+-- Questions France en plus : la chaîne tient quel que soit l'ordre tiré (verrou testé plus bas).
+INSERT INTO conquest_knowledge_questions (id, country_id, category, answer_type, prompt, display, answer)
+SELECT 'T-x' || i, 'France', 'culture', 'choice', 'q',
+       '{"items":[{"label":"A","iconId":"tech-a"},{"label":"B","iconId":"tech-b"}]}', '{"label":"A"}'
+  FROM generate_series(1, 4) i;
 SELECT pg_temp.expected_kind(:'rmid', 'France', 0) AS k0, pg_temp.expected_kind(:'rmid', 'France', 1) AS k1,
        pg_temp.expected_kind(:'rmid', 'France', 2) AS k2 \gset
 SELECT pg_temp.eq('5 distinct base levels',
@@ -486,6 +491,7 @@ SET ROLE authenticated;
 
 -- Revanche : R2 la crée, R1 la rejoint, tous deux prêts, couleurs gardées.
 RESET ROLE; UPDATE matches SET ends_at = now() - interval '1 second' WHERE id = :'rmid'; SET ROLE authenticated;
+SET test.uid = :'R2';
 SELECT id AS remid FROM conquest_rematch(:'rmid') \gset
 SELECT pg_temp.eq('rematch linked on the old match', (SELECT rematch_id FROM matches WHERE id = :'rmid')::text, :'remid');
 SELECT pg_temp.eq('rematch creator hosts', (SELECT host_id FROM matches WHERE id = :'remid')::text, :'R2');
