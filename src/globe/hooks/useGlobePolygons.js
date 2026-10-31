@@ -360,7 +360,7 @@ export function useGlobePolygons({
         !isQuietOwnedFocus(admin) && isSameAdmin(admin, selectedCountry, gameDataMap);
       const darken = isSelected
         ? GLOBE_STYLE.lighting.sideDarken.selected
-        : foundSet.has(admin) || (mode === "learn" && isSelected)
+        : foundSet.has(admin)
           ? GLOBE_STYLE.lighting.sideDarken.found
           : GLOBE_STYLE.lighting.sideDarken.base;
 

@@ -125,7 +125,7 @@ const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badge
 
 const getCardStyle = (pose, isTopCard, reducedMotion, modeKey) => {
   const palette = MODE_PIXEL_PALETTES[modeKey] || MODE_PIXEL_PALETTES.countries;
-  const clipPath = getModeClipPath(modeKey);
+  const clipPath = getModeClipPath();
   const modeVars = {
     "--card-mode-accent": palette.primary,
     "--card-mode-secondary": palette.secondary,

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 
 function computeCenterScroll(track, activeEl) {
-  if (!track || !activeEl) return 0;
   const target = activeEl.offsetLeft + activeEl.offsetWidth / 2 - track.clientWidth / 2;
   const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
   return Math.max(0, Math.min(target, maxScroll));
