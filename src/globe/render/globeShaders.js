@@ -203,13 +203,14 @@ export const GLITCH_FRAGMENT_BODY = `
   // ignition) glow dim amber in stepped order, border traced in square pixels.
   float isWall = step(0.5, uIsSide);
   // Flat selection (no extrusion): pixel outline read from the per-selection mask, on
-  // a lat/lng grid of uSelOutlineBox.z degrees (square cells, see selectionOutline.js).
+  // a lat/lng grid of uSelOutlineBox.zw degrees (square cells on the globe, see selectionOutline.js).
   vec2 selDeg = vec2(degrees(atan(sphereDir.x, sphereDir.z)), degrees(sphereLat));
-  vec2 selOc = (selDeg - uSelOutlineBox.xy) / uSelOutlineBox.z;
-  selOc.x = mod(selOc.x, 360.0 / uSelOutlineBox.z);
+  vec2 selCellSize = uSelOutlineBox.zw;
+  vec2 selOc = (selDeg - uSelOutlineBox.xy) / selCellSize;
+  selOc.x = mod(selOc.x, 360.0 / selCellSize.x);
   vec2 selOcCell = floor(selOc);
-  float selInBox = step(selOc.x, uSelOutlineBox.w) * step(0.0, selOc.y) * step(selOc.y, uSelOutlineBox.w);
-  vec2 selOcUv = (selOcCell + 0.5) / max(uSelOutlineBox.w, 1.0);
+  float selInBox = step(0.0, selOc.x) * step(selOc.x, 1024.0) * step(0.0, selOc.y) * step(selOc.y, 1024.0);
+  vec2 selOcUv = (selOcCell + 0.5) / 1024.0;
   float selEdgeV = texture2D(uSelOutlineMap, selOcUv).r * selInBox * (1.0 - isWall);
   float selectIn = clamp((uTime - uSelectStart) / 0.5, 0.0, 1.0);
   float lightProg = (transitionActive > 0.5) ? 1.0 - floor(uFadeProgress * 5.0) / 5.0 : floor(selectIn * 6.0) / 6.0;
@@ -218,7 +219,7 @@ export const GLITCH_FRAGMENT_BODY = `
   float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall);
   float cityOn = isCityPx * step(hash(selCell + 3.7), lightProg * 1.15 - 0.15);
   float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
-  float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0) * (1.0 - transitionActive);
+  float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0);
   float edgeOuter = step(0.9, selEdgeV) * edgeOn;
   float edgeHalo = step(0.15, selEdgeV) * (1.0 - step(0.9, selEdgeV)) * edgeOn;
   // Halo breathes in a few flat steps (pixel-art, no strobe); still under reduced motion.
@@ -268,7 +269,7 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (isFoundSurface) {
     gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
-    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter));
+    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter + edgeHalo));
   } else {
     gl_FragColor.rgb = mix(staticVec, unfoundRestColor, deselectDone) * sideShade;
   }

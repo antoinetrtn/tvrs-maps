@@ -227,16 +227,17 @@ function glitchBase(u, lit) {
   const box = u.uSelOutlineBox;
   const ocRaw = vec2(atan(sphereDir.x, sphereDir.z).mul(RAD2DEG), sphereLat.mul(RAD2DEG))
     .sub(box.xy)
-    .div(box.z);
+    .div(box.zw);
   const oc = vec2(mod(ocRaw.x, float(360).div(box.z)), ocRaw.y);
   const ocCell = floor(oc);
-  const inBox = step(oc.x, box.w).mul(step(0.0, oc.y)).mul(step(oc.y, box.w));
-  const edgeV = texture(getSelectionOutlineTexture(), ocCell.add(0.5).div(max(box.w, 1.0)))
+  const inBox = step(0.0, oc.x)
+    .mul(step(oc.x, 1024.0))
+    .mul(step(0.0, oc.y))
+    .mul(step(oc.y, 1024.0));
+  const edgeV = texture(getSelectionOutlineTexture(), ocCell.add(0.5).div(1024.0))
     .r.mul(inBox)
     .mul(float(1).sub(side));
-  const edgeOn = step(hash(ocCell.add(7.0)), lightProg.mul(2.0)).mul(
-    float(1).sub(transitionActive)
-  );
+  const edgeOn = step(hash(ocCell.add(7.0)), lightProg.mul(2.0));
   const edgeOuter = step(0.9, edgeV).mul(edgeOn);
   const edgeHalo = step(0.15, edgeV)
     .mul(float(1).sub(step(0.9, edgeV)))
@@ -296,7 +297,7 @@ function glitchBase(u, lit) {
     staticVec: finalStatic,
     finalColor,
     isCityPx,
-    pixelOn: step(0.01, cityOn.add(wallOn).add(edgeOuter)),
+    pixelOn: step(0.01, cityOn.add(wallOn).add(edgeOuter).add(edgeHalo)),
     sideShade,
     foundRestingColor,
     unfoundRestColor: unfoundRestColor(u, lit),

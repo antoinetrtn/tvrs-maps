@@ -23,9 +23,9 @@ describe("rasterizeOutline — contour pixel du pays sélectionné", () => {
       ],
     };
     const box = rasterizeOutline(square, out);
-    expect(box.cell).toBe(0.1);
-    const i0 = Math.round((0.05 - box.ox) / box.cell - 0.5);
-    const mid = i0 + 60;
+    expect(box.cell).toBeLessThanOrEqual(0.1);
+    const i0 = Math.round((0.001 - box.ox) / box.cellX - 0.5);
+    const mid = Math.round((6.0 - box.ox) / box.cellX - 0.5);
     expect(cellAt(out, i0, mid)).toBe(EDGE_VALUE);
     HALO_VALUES.forEach((v, k) => expect(cellAt(out, i0 + 1 + k, mid)).toBe(v));
     expect(cellAt(out, i0 + 1 + HALO_VALUES.length, mid)).toBe(0);
@@ -99,5 +99,30 @@ describe("rasterizeOutline — contour pixel du pays sélectionné", () => {
       rasterizeOutline(geo(admin), out);
       expect(out.some((v) => v === EDGE_VALUE)).toBe(true);
     }
+  });
+
+  const depts = JSON.parse(readFileSync("public/data/departements-1000m.geojson", "utf8"));
+  const deptGeo = (code) => depts.features.find((f) => f.properties.code === code).geometry;
+
+  it.each([
+    ["75", 0.005],
+    ["01", 0.01],
+    ["13", 0.015],
+    ["33", 0.015],
+  ])("départements FR : grille fine et pixels carrés à l'échelle pour %s", (code, maxCell) => {
+    const out = new Uint8Array(N * N);
+    const box = rasterizeOutline(deptGeo(code), out);
+    expect(box.cellY).toBeLessThanOrEqual(maxCell);
+    // True square pixels on the globe surface: cellX is wider in degrees by 1 / cosLat.
+    expect(box.cellX).toBeGreaterThan(box.cellY);
+    let edge = 0,
+      halo = 0;
+    for (const v of out) {
+      if (v === EDGE_VALUE) edge++;
+      else if (v) halo++;
+    }
+    expect(edge).toBeGreaterThan(100);
+    // Bordure + 3 anneaux de halo : le département n'est pas rempli de gros blocs
+    expect(halo).toBeLessThan(edge * HALO_VALUES.length * 1.5);
   });
 });

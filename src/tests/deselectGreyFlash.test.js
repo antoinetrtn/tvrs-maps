@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DESELECT_FADE_START } from "../config/gameConfig";
 import { GLITCH_FRAGMENT_BODY, GLITCH_FRAGMENT_DECLARATIONS } from "../globe/render/globeShaders";
+import { resolveRestingColorForFeature } from "../globe/render/polygonColorResolver";
 import glitchNodeSrc from "../globe/render/webgpu/glitchNode.js?raw";
 
 // Regression: deselecting an unfound country (France → Belgium) flashed the raw lit grey
@@ -20,6 +21,11 @@ describe("deselect fade settles to the unfound blackout look", () => {
     expect(GLITCH_FRAGMENT_BODY).not.toMatch(/settleColor = mix\(litRestingColor/);
     expect(GLITCH_FRAGMENT_BODY).toMatch(/mix\(staticVec, unfoundRestColor, deselectDone\)/);
     expect(GLITCH_FRAGMENT_BODY).toMatch(/mix\(0\.36, 0\.74, uIsRegionalMode\)/);
+    // Outline and halo dissolve progressively without abruptly vanishing on frame 1 of deselect
+    expect(GLITCH_FRAGMENT_BODY).not.toMatch(/edgeOn = .*\(1\.0 - transitionActive\)/);
+    expect(GLITCH_FRAGMENT_BODY).toMatch(
+      /step\(0\.01, cityOn \+ wallOn \+ edgeOuter \+ edgeHalo\)/
+    );
   });
 
   it("WebGPU TSL mirrors the same settle colour", () => {
@@ -28,5 +34,40 @@ describe("deselect fade settles to the unfound blackout look", () => {
     expect(glitchNodeSrc).toMatch(/const settleColor = mix\(\s*restColor/);
     expect(glitchNodeSrc).toMatch(/mix\(staticVec, restColor, deselectDone\)/);
     expect(glitchNodeSrc).toMatch(/mix\(float\(0\.36\), float\(0\.74\), regional\)/);
+    // Parity: no abrupt cut of outline on transition start, halo included in pixelOn
+    expect(glitchNodeSrc).not.toMatch(/edgeOn = .*sub\(transitionActive\)/);
+    expect(glitchNodeSrc).toMatch(
+      /pixelOn: step\(0\.01, cityOn\.add\(wallOn\)\.add\(edgeOuter\)\.add\(edgeHalo\)\)/
+    );
+  });
+
+  it("resolveRestingColorForFeature targets the regional resting land color on home, not grey", () => {
+    const UI_COLORS = { mapBase: "#30343c", black: "#000000" };
+    const getRegionalLandColor = (region) => (region === "Europe" ? "#2b6cb0" : "#d97706");
+    const countryDataMap = { France: { region: "Europe" } };
+
+    // In-game: unfound country resting color resolves to mapBase (blackout look)
+    const inGameResting = resolveRestingColorForFeature({
+      kind: "cap",
+      admin: "France",
+      isFound: false,
+      isHomeScreen: false,
+      UI_COLORS,
+      countryDataMap,
+      getRegionalLandColor,
+    });
+    expect(inGameResting).toBe(UI_COLORS.mapBase);
+
+    // Home screen: unfound country resting color resolves directly to regional resting land
+    const homeResting = resolveRestingColorForFeature({
+      kind: "cap",
+      admin: "France",
+      isFound: false,
+      isHomeScreen: true,
+      UI_COLORS,
+      countryDataMap,
+      getRegionalLandColor,
+    });
+    expect(homeResting).toBe("#2b6cb0");
   });
 });

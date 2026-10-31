@@ -364,6 +364,7 @@ export function resolveRestingColorForFeature({
   admin: _admin,
   isFound,
   isEndScreen,
+  isHomeScreen = false,
   isPerfectScore,
   isRegionalMode: _isRegionalMode,
   UI_COLORS,
@@ -394,11 +395,11 @@ export function resolveRestingColorForFeature({
   }
 
   let base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
-  if (_isRegionalMode && !isFound && _grlc) {
+  if (!isFound && _grlc && (isHomeScreen || _isRegionalMode)) {
     const regionCode =
       _cdm?.[_admin]?.region || _gdm?.[_admin]?.region || _d?.properties?.region || "Americas";
     const regColor = _grlc(regionCode);
-    base = _gfms(_admin, regColor, lerpColor, UI_COLORS);
+    base = _isRegionalMode ? _gfms(_admin, regColor, lerpColor, UI_COLORS) : regColor;
   }
 
   if (kind === "cap") {

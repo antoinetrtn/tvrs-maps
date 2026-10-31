@@ -462,6 +462,7 @@ export function useGlobePolygons({
         admin,
         isFound,
         isEndScreen,
+        isHomeScreen,
         isPerfectScore,
         isRegionalMode,
         UI_COLORS,

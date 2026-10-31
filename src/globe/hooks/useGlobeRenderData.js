@@ -24,7 +24,7 @@ import useModeTransitionSteps from "./useModeTransitionSteps";
 export function buildExitingFeatures(trans, countriesData, departmentsData, usStatesData) {
   const exiting = [];
   const pushRegional = (features, map) =>
-    features
+    (features || [])
       .filter((feature) => map[getFeatureAdmin(feature)])
       .forEach((feature) =>
         exiting.push({
@@ -41,7 +41,7 @@ export function buildExitingFeatures(trans, countriesData, departmentsData, usSt
     const parents = new Set();
     if (trans.toDept) parents.add("France");
     if (trans.toUs) parents.add("United States of America");
-    countriesData
+    (countriesData || [])
       .filter((feature) => parents.has(getFeatureAdmin(feature)))
       .forEach((feature) =>
         exiting.push({
@@ -86,21 +86,38 @@ export function useGlobeRenderData({
     duration: MODE_TRANSITION_MS,
   });
 
-  const prevModeRef = useRef({ isDepartmentMode, isUsStatesMode });
+  const hasDepartments = Boolean(departmentsData && departmentsData.length > 0);
+  const hasUsStates = Boolean(usStatesData && usStatesData.length > 0);
+
+  // If regional data is not yet ready, stay on the previous layer (keep old polygons)
+  // until the incoming features are available so the cross-fade never shows a blank hole.
+  const effectiveDepartmentMode = Boolean(isDepartmentMode && hasDepartments);
+  const effectiveUsStatesMode = Boolean(isUsStatesMode && hasUsStates);
+
+  const prevModeRef = useRef({
+    isDepartmentMode: effectiveDepartmentMode,
+    isUsStatesMode: effectiveUsStatesMode,
+  });
   const reducedMotion = usePrefersReducedMotion();
 
   // Started while rendering (not in an effect) so the very first frame of the new
   // layer already carries the transition: an effect landed after the data swap and
   // left the old layer to vanish in a single frame.
   const prev = prevModeRef.current;
-  if (prev.isDepartmentMode !== isDepartmentMode || prev.isUsStatesMode !== isUsStatesMode) {
-    prevModeRef.current = { isDepartmentMode, isUsStatesMode };
+  if (
+    prev.isDepartmentMode !== effectiveDepartmentMode ||
+    prev.isUsStatesMode !== effectiveUsStatesMode
+  ) {
+    prevModeRef.current = {
+      isDepartmentMode: effectiveDepartmentMode,
+      isUsStatesMode: effectiveUsStatesMode,
+    };
     modeTransitionRef.current = {
       active: !reducedMotion,
       fromDept: prev.isDepartmentMode,
       fromUs: prev.isUsStatesMode,
-      toDept: isDepartmentMode,
-      toUs: isUsStatesMode,
+      toDept: effectiveDepartmentMode,
+      toUs: effectiveUsStatesMode,
       startTime: nowMs(),
       duration: MODE_TRANSITION_MS,
     };
@@ -110,12 +127,20 @@ export function useGlobeRenderData({
   const transitionStep = useModeTransitionSteps(modeTransitionRef, transitionLive);
 
   const selectableCountriesData = useMemo(() => {
-    if (isDepartmentMode)
-      return departmentsData.filter((feature) => departmentsDataMap[getFeatureAdmin(feature)]);
-    if (isUsStatesMode)
-      return usStatesData.filter((feature) => usStatesDataMap[getFeatureAdmin(feature)]);
-    return countriesData.filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
-  }, [countriesData, departmentsData, usStatesData, isDepartmentMode, isUsStatesMode]);
+    if (effectiveDepartmentMode)
+      return (departmentsData || []).filter(
+        (feature) => departmentsDataMap[getFeatureAdmin(feature)]
+      );
+    if (effectiveUsStatesMode)
+      return (usStatesData || []).filter((feature) => usStatesDataMap[getFeatureAdmin(feature)]);
+    return (countriesData || []).filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
+  }, [
+    countriesData,
+    departmentsData,
+    usStatesData,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
+  ]);
 
   const worldCountriesRenderData = useMemo(() => {
     return countriesData.map((feature) => ({
@@ -132,9 +157,9 @@ export function useGlobeRenderData({
   }, [selectableCountriesData]);
 
   const finalRenderCountriesData = useMemo(() => {
-    if (!isDepartmentMode && !isUsStatesMode) return worldCountriesRenderData;
+    if (!effectiveDepartmentMode && !effectiveUsStatesMode) return worldCountriesRenderData;
 
-    const exclusions = isDepartmentMode ? ["France"] : ["United States of America"];
+    const exclusions = effectiveDepartmentMode ? ["France"] : ["United States of America"];
     const exclusionSet = new Set(exclusions);
 
     const ghostWorld = countriesData
@@ -156,8 +181,8 @@ export function useGlobeRenderData({
     worldCountriesRenderData,
     baseRenderCountriesData,
     countriesData,
-    isDepartmentMode,
-    isUsStatesMode,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
   ]);
 
   // While the layers cross-fade, the outgoing features stay in the data; the
@@ -228,7 +253,10 @@ export function useGlobeRenderData({
   }, [selectableFeatureIndex, gameDataMap]);
 
   return {
-    isDepartmentMode,
+    isDepartmentMode: effectiveDepartmentMode,
+    isUsStatesMode: effectiveUsStatesMode,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
     selectableCountriesData,
     baseRenderCountriesData,
     renderCountriesData,
