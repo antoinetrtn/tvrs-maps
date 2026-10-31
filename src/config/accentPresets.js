@@ -64,7 +64,7 @@ export const getAccentOverrides = (id = activeAccent) => {
 
 /** localStorage helpers (safe when storage is unavailable). Migrates retired presets to DEFAULT_ACCENT. */
 export const readStoredAccent = (storage, key) => {
-  let raw = null;
+  let raw;
   try {
     raw = storage?.getItem(key) ?? null;
   } catch {

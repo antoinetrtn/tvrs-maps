@@ -217,7 +217,7 @@ function drawStarfield(ctx, stars, mouseX, mouseY, width, height, frameScale, co
     if (star.x > width) star.x = Math.random() * width;
     if (star.y > height) star.y = Math.random() * height;
 
-    let stepped = 0.5;
+    let stepped;
     if (!reduced) {
       star.phase += star.speed * frameScale;
       const raw = Math.sin(star.phase) * 0.5 + 0.5;
