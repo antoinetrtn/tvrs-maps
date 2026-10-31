@@ -39,8 +39,7 @@ export const GLSL_BAYER_4X4_FN = `
   }
 `;
 
-// Pass the view-space normal and position through to the fragment stage so the
-// fragment shader can compute a true perspective Fresnel term per pixel.
+// View-space normal/position to the fragment stage (per-pixel perspective Fresnel).
 export const FRESNEL_VERTEX_SHADER = `
   varying vec3 vAtmosphereNormal;
   varying vec3 vAtmosphereViewPos;
@@ -68,11 +67,9 @@ export const FRESNEL_FRAGMENT_SHADER = `
     // View/normal dot on the BackSide sphere: positive on the back hemisphere.
     float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
-    // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.62)
-    // to 0.0 at the outer limit of space (x = 0.0).
+    // Soft gradient: max at the horizon (x = 0.62), 0 in space (x = 0).
     float edgeFade = smoothstep(0.0, 0.62, x);
 
-    // Higher exponent creates a more gentle, soft, and diffuse gradient transition
     float exponent = max(1.8, power * 2.0);
     float rawIntensity = pow(edgeFade, exponent) * coef;
 
