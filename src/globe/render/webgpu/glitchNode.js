@@ -230,7 +230,10 @@ function glitchBase(u, lit) {
     sphereLat.div(3.14159265).add(0.5)
   );
   const selCell = floor(selUv.mul(vec2(3600.0, 1800.0)));
-  const isCityPx = step(0.25, texture(getCapitalLightsTexture(), selUv).r).mul(float(1).sub(side));
+  // Regional scale (GLSL parity): no 0.1° city blocks inside a département/state.
+  const isCityPx = step(0.25, texture(getCapitalLightsTexture(), selUv).r)
+    .mul(float(1).sub(side))
+    .mul(float(1).sub(u.uIsRegionalMode));
   const cityOn = isCityPx.mul(step(hash(selCell.add(3.7)), lightProg.mul(1.15).sub(0.15)));
   const wallOn = side.mul(step(hash(floor(fragPx.mul(0.5)).add(7.0)), lightProg.mul(2.0)));
   const wallTone = vec3(1.0, 0.74, 0.3).div(u.uSideShade.max(0.001));
