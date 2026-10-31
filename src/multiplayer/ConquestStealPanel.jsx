@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Button from "../components/ui/Button.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
 import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
+import StateBlock from "../components/ui/StateBlock.jsx";
 import TextField from "../components/ui/TextField.jsx";
 import { ANSWER_INPUT_PROPS, shieldAutofillText } from "../utils/answerField";
 
@@ -13,7 +14,7 @@ const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel, myC
   const [value, setValue] = useState("");
   if (challenge?.kind === "knowledge" || challenge?.needs_knowledge) {
     return (
-      <React.Suspense fallback={<div className="conquest-label">{t.loading}</div>}>
+      <React.Suspense fallback={<StateBlock variant="loading" title={t.loading} />}>
         <LazyKnowledgeCard
           challenge={challenge}
           countryName={countryName}

@@ -3,6 +3,7 @@ import "./ConquestKnowledge.css";
 import React, { useEffect, useState } from "react";
 
 import Button from "../../components/ui/Button.jsx";
+import Card from "../../components/ui/Card.jsx";
 import PanelCloseButton from "../../components/ui/PanelCloseButton.jsx";
 import { countryDataMap } from "../../data/gameData";
 import { remainingMs } from "../conquestLogic";
@@ -79,8 +80,9 @@ const ConquestKnowledgeCard = ({
   const maxSec = Math.ceil(durationMs / 1000);
 
   return (
-    <div
-      className={`cq-knowledge${isFortify ? " is-fortify" : ""}`}
+    <Card
+      look="knowledge"
+      className={isFortify ? "is-fortify" : ""}
       style={isFortify && myColor ? { "--my-color": myColor } : undefined}
       role="group"
       aria-label={t.knowledgeTitle || "Escalade de connaissances"}
@@ -111,8 +113,7 @@ const ConquestKnowledgeCard = ({
         {choices.map((choice, index) => (
           <Button
             key={`${choice.iconId || "icon"}-${index}`}
-            variant="secondary"
-            className="cq-knowledge-choice"
+            look="knowledge-choice"
             disabled={disabled}
             aria-keyshortcuts={String(index + 1)}
             onClick={() => onAnswer?.(index)}
@@ -125,7 +126,7 @@ const ConquestKnowledgeCard = ({
           </Button>
         ))}
       </div>
-    </div>
+    </Card>
   );
 };
 
