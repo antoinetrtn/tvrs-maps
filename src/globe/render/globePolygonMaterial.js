@@ -203,7 +203,6 @@ export function getPolygonMaterialForFeature({
   transitioningPreviousCountryState,
   transitioningIncomingCountryState,
   isDepartmentMode,
-  isLight,
   globeLightingEnabled,
   perfProfile,
   UI_COLORS,
@@ -262,7 +261,6 @@ export function getPolygonMaterialForFeature({
     isDepartmentMode,
     isGhostCountry: d.isGhostCountry,
     globeLightingEnabled,
-    isLight,
     UI_COLORS,
   });
 
@@ -337,7 +335,6 @@ export function getPolygonMaterialForFeature({
         isError,
         isSuccess,
         isSelectionHighlight,
-        isLight,
         isFound: isFound || isLearnSelected,
         isIncomingTransitioning,
         getBaseColorForCountryAndKind,

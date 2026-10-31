@@ -1,6 +1,6 @@
 :root {
-  /* COLORS - Core (Blackout dark is the default — keep these in sync with
-     THEME_OVERRIDES.blackout.dark so first paint matches before React mounts) */
+  /* COLORS - Core (unified nocturnal theme — keep in sync with THEME.dark in
+     src/config/designSystem.js so first paint matches before React mounts) */
   --bg-color: #0e1116;
   --black: #0e1116;
   --text-main: #ede6d6;

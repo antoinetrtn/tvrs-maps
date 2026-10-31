@@ -60,25 +60,6 @@
   opacity: 0.68;
 }
 
-.globe-studio-overlay.light {
-  mix-blend-mode: multiply;
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      var(--highlight) 0%,
-      var(--highlight-soft) 32%,
-      color-mix(in srgb, var(--accent-glow) 8%, transparent) 54%,
-      transparent 74%
-    ),
-    radial-gradient(
-      circle at 50% 50%,
-      color-mix(in srgb, var(--accent) 5%, transparent) 0%,
-      color-mix(in srgb, var(--accent) 2%, transparent) 44%,
-      transparent 68%
-    );
-  opacity: 0.48;
-}
-
 @media (min-width: 769px) {
   .globe-map-shell.home-layout .globe-content-wrapper {
     /* Shift globe into the right pane between the home card and screen edge */

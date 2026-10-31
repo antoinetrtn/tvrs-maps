@@ -26,7 +26,7 @@ src/
                               montage des écrans. Délègue la logique aux hooks d'app.
   App.css                     Coquille app : .app-container, transition d'écran
                               (screen-soft-in/scanline), vignette panique.
-  index.css                   Tokens CSS bootstrap (:root + [data-theme="light"]) et
+  index.css                   Tokens CSS bootstrap (:root, thème nocturne unique) et
                               composants globaux réutilisables (ui/Button, ui/IconButton, glitch…).
   styles/
     panelSystem.css           Système unifié panneaux/overlays : sheet-panel,

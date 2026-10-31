@@ -35,11 +35,11 @@ export function resolveFoundCountryColor() {
 }
 
 /** Dark edge visible on bright found fill. */
-export function resolveFoundCountryStroke({ isLight, isSelected = false, UI_COLORS, lerpColor }) {
+export function resolveFoundCountryStroke({ isSelected = false, UI_COLORS, lerpColor }) {
   if (isSelected) {
-    return lerpColor(FOUND_SURFACE_GREEN, UI_COLORS.black, isLight ? 0.78 : 0.72);
+    return lerpColor(FOUND_SURFACE_GREEN, UI_COLORS.black, 0.72);
   }
-  return lerpColor(FOUND_SURFACE_GREEN, UI_COLORS.black, isLight ? 0.58 : 0.5);
+  return lerpColor(FOUND_SURFACE_GREEN, UI_COLORS.black, 0.5);
 }
 
 export function mutedFoundGreen(_mapBase, _lerpColor) {
@@ -87,7 +87,6 @@ export function resolvePolygonStrokeWidth({
   isRegionalMode,
   foundSet,
   mode,
-  isLight,
   perfProfile,
   UI_COLORS,
 }) {
@@ -100,7 +99,7 @@ export function resolvePolygonStrokeWidth({
   }
   if (isRegionalMode) return 1.1 * strokeScale;
   if (foundSet.has(admin)) {
-    return (0.95 + (isLight ? 0.15 : 0.25)) * strokeScale;
+    return (0.95 + 0.25) * strokeScale;
   }
   const thickness =
     Number(UI_COLORS.strokeWidthDesktop) || Number(UI_COLORS.strokeWidthMobile) || 0.75;
@@ -111,22 +110,18 @@ export function shouldUseRegionalUnfoundLand({ isEndScreen, isFound, isSelected 
   return !isEndScreen && !isFound && !isSelected;
 }
 
-const END_MISSED_ERROR_TINT = {
-  light: 0.16,
-  dark: 0.2,
-};
+const END_MISSED_ERROR_TINT = 0.2;
 
 /**
  * End screen: missed countries stay on a quiet, flat land surface with a
  * subtle warm tint instead of running the TV static shader across the globe.
  */
-export function resolveEndMissedColor({ mapBase, UI_COLORS, lerpColor, isLight = false }) {
+export function resolveEndMissedColor({ mapBase, UI_COLORS, lerpColor }) {
   const base = mapBase || UI_COLORS?.mapBase;
   if (!UI_COLORS?.error || typeof lerpColor !== "function") {
     return base;
   }
-  const amount = isLight ? END_MISSED_ERROR_TINT.light : END_MISSED_ERROR_TINT.dark;
-  return lerpColor(base, UI_COLORS.error, amount);
+  return lerpColor(base, UI_COLORS.error, END_MISSED_ERROR_TINT);
 }
 
 export function resolveCountryCapColor({
@@ -140,7 +135,6 @@ export function resolveCountryCapColor({
   isEndScreen,
   isPerfectScore,
   isLearn,
-  isLight: _isLight = false,
   UI_COLORS,
   lerpColor: _lerpColor,
   mapBase,
@@ -154,7 +148,6 @@ export function resolveCountryCapColor({
       mapBase,
       UI_COLORS,
       lerpColor: _lerpColor,
-      isLight: _isLight,
     });
   }
 
@@ -240,7 +233,6 @@ export function resolveModeTransitionColor({
   transState,
   countryDataMap: cdm = countryDataMap,
   gameDataMap,
-  theme: _th,
   REGION_COLORS_LABELS: _r1,
   REGION_COLORS_ATTENUATED: _r2,
   UI_COLORS,
@@ -313,7 +305,6 @@ export function resolveModeTransitionStroke({
   gameDataMap: _gdm,
   REGION_COLORS_LABELS: _r1,
   UI_COLORS,
-  isLight: _isLight,
   lerpColor,
 }) {
   const { progress, isExitingRegional } = transState;
@@ -371,7 +362,6 @@ export function resolveRestingColorForFeature({
   isEndScreen,
   isPerfectScore,
   isRegionalMode: _isRegionalMode,
-  isLight,
   UI_COLORS,
   REGION_COLORS_LABELS: _r1,
   REGION_COLORS_ATTENUATED: _r2,
@@ -390,13 +380,12 @@ export function resolveRestingColorForFeature({
           mapBase: UI_COLORS.mapBase,
           UI_COLORS,
           lerpColor,
-          isLight,
         });
     if (kind === "cap") {
       return base;
     }
     const sideDarken = GLOBE_STYLE.lighting.sideDarken;
-    const darken = isLight ? sideDarken.baseLight : sideDarken.baseDark;
+    const darken = sideDarken.base;
     return lerpColor(base, UI_COLORS.black, darken);
   }
 
@@ -411,7 +400,7 @@ export function resolveRestingColorForFeature({
   if (kind === "cap") {
     return base;
   }
-  return lerpColor(base, UI_COLORS.black, isLight ? 0.04 : 0.08);
+  return lerpColor(base, UI_COLORS.black, 0.08);
 }
 
 /** Conquête: le focus transitoire d'un pays possédé ne masque pas la couleur du propriétaire. */
@@ -422,7 +411,7 @@ export function isQuietOwnedFocusFor(overlay, admin, gameDataMap) {
 }
 
 /** Conquête: couleur de base (cap / side) d'un pays possédé, cible de la dissolution. */
-export function resolveOwnerBaseColor(owner, kind, { lerpColor, UI_COLORS, isLight }) {
-  const capColor = lerpColor(owner, UI_COLORS.black, isLight ? 0.32 : 0.16);
-  return kind === "side" ? lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08) : capColor;
+export function resolveOwnerBaseColor(owner, kind, { lerpColor, UI_COLORS }) {
+  const capColor = lerpColor(owner, UI_COLORS.black, 0.16);
+  return kind === "side" ? lerpColor(capColor, UI_COLORS.black, 0.08) : capColor;
 }

@@ -11,7 +11,7 @@ import IconButton from "./ui/IconButton";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import TextField from "./ui/TextField";
 
-const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) => {
+const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr" }) => {
   const t = useTranslation(lang);
   const [step, setStep] = useState("initial"); // "initial" | "email" | "password"
   const [email, setEmail] = useState("");
@@ -326,7 +326,7 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr", theme = "dark" }) =>
           : null;
 
   return (
-    <Dialog onClose={onClose} theme={theme}>
+    <Dialog onClose={onClose}>
       {renderHeader()}
       {errorMsg && <div className="form-feedback error">{errorMsg}</div>}
       {successMsg && <div className="form-feedback success">{successMsg}</div>}

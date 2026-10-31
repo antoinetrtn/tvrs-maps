@@ -139,7 +139,6 @@ export function useGlobeBiomes({
     const baseScale = d.scale * BIOME_SCENE_SCALE;
     if (d.type === "mountain" || d.type === "mountain_range") {
       asset = createMountainFeature(
-        "dark",
         isSelected,
         d.isFound,
         d.bearing,

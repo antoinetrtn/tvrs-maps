@@ -141,7 +141,6 @@ export function recordSuccessfulGuessSideEffects({
   mode,
   gameDuration,
   timeLeft,
-  theme,
   t,
   lang,
   userProfile,
@@ -157,7 +156,6 @@ export function recordSuccessfulGuessSideEffects({
     newFound,
     activeDataMap,
     conqueredRegionsThisGameRef: refs.conqueredRegionsThisGameRef,
-    theme,
     t,
     addAchievementToQueue,
   });

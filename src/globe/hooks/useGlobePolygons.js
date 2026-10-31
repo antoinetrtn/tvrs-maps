@@ -52,8 +52,6 @@ const _lerpColor2 = new THREE.Color();
 
 export function useGlobePolygons({
   mode,
-  theme,
-  isLight,
   globeLightingEnabled,
   perfProfile,
   selectedCountry,
@@ -110,7 +108,7 @@ export function useGlobePolygons({
     };
   }, []);
 
-  const UI_COLORS = useMemo(() => getThemeColors(theme), [theme]);
+  const UI_COLORS = useMemo(() => getThemeColors(), []);
 
   const getRegionSurfaceColor = useCallback((region) => getThemeRegionColor(region), []);
 
@@ -155,7 +153,6 @@ export function useGlobePolygons({
             mapBase: UI_COLORS.mapBase,
             UI_COLORS,
             lerpColor,
-            isLight,
           });
 
         const isDeptFound = foundSet.has(admin);
@@ -176,7 +173,7 @@ export function useGlobePolygons({
             if (isError) return UI_COLORS.error;
             return GLITCH_EFFECT_SETTINGS.selectionHighlight;
           }
-          const deptTint = getThemeDepartmentColor(theme);
+          const deptTint = getThemeDepartmentColor();
           return mutedFoundGreen(deptTint, lerpColor);
         }
 
@@ -203,7 +200,6 @@ export function useGlobePolygons({
         isEndScreen,
         isPerfectScore,
         isLearn: mode === "learn",
-        isLight,
         UI_COLORS,
         lerpColor,
         mapBase: UI_COLORS.mapBase,
@@ -239,8 +235,6 @@ export function useGlobePolygons({
       isEndScreen,
       isPerfectScore,
       gameDataMap,
-      theme,
-      isLight,
       lerpColor,
       getRegionSurfaceColor,
       getRegionSurfaceColorDimmed,
@@ -259,7 +253,6 @@ export function useGlobePolygons({
     modeTransitionRef,
     transitionStep,
     gameDataMap,
-    theme,
     REGION_COLORS_LABELS,
     REGION_COLORS_ATTENUATED,
     UI_COLORS,
@@ -276,7 +269,6 @@ export function useGlobePolygons({
           gameDataMap,
           REGION_COLORS_LABELS,
           UI_COLORS,
-          isLight,
           lerpColor,
         });
         if (transStroke) return transStroke;
@@ -292,7 +284,6 @@ export function useGlobePolygons({
         if (isSuccess) return GLITCH_EFFECT_SETTINGS.selectionHighlight;
         if (mode === "learn" || foundSet.has(admin)) {
           return resolveFoundCountryStroke({
-            isLight,
             isSelected: true,
             UI_COLORS,
             lerpColor,
@@ -305,32 +296,25 @@ export function useGlobePolygons({
         if (isRegionalMode && !d.isGhostCountry) {
           // Fall through to show correct regional borders on the home screen
         } else {
-          return isLight
-            ? lerpColor(UI_COLORS.mapSea, UI_COLORS.mapBorderMuted, 0.45)
-            : UI_COLORS.mapBorder;
+          return UI_COLORS.mapBorder;
         }
       }
       if (isRegionalMode) {
-        if (d.isGhostCountry)
-          return isLight
-            ? lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.1)
-            : lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.13);
+        if (d.isGhostCountry) return lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.13);
         if (foundSet.has(admin)) {
           if (isPerfectScore) return UI_COLORS.gold;
-          return resolveFoundCountryStroke({ isLight, isSelected, UI_COLORS, lerpColor });
+          return resolveFoundCountryStroke({ isSelected, UI_COLORS, lerpColor });
         }
-        return isLight
-          ? lerpColor(UI_COLORS.black, UI_COLORS.mapBase, 0.35)
-          : UI_COLORS.accent || UI_COLORS.paper;
+        return UI_COLORS.accent || UI_COLORS.paper;
       }
 
       const isFound = foundSet.has(admin);
 
       if (isFound) {
-        return resolveFoundCountryStroke({ isLight, isSelected, UI_COLORS, lerpColor });
+        return resolveFoundCountryStroke({ isSelected, UI_COLORS, lerpColor });
       }
 
-      return lerpColor(UI_COLORS.borderUnfound, UI_COLORS.paper, isLight ? 0.35 : 0.28);
+      return lerpColor(UI_COLORS.borderUnfound, UI_COLORS.paper, 0.28);
     },
     [
       conquestOverlay,
@@ -341,7 +325,6 @@ export function useGlobePolygons({
       foundSet,
       mode,
       isHomeScreen,
-      isLight,
       isRegionalMode,
       lerpColor,
       isPerfectScore,
@@ -357,30 +340,23 @@ export function useGlobePolygons({
     (d) => {
       if (isRegionalMode) {
         if (d.isGhostCountry) return UI_COLORS.mapSea;
-        return lerpColor(getPolygonColor(d), UI_COLORS.black, isLight ? 0.012 : 0.02);
+        return lerpColor(getPolygonColor(d), UI_COLORS.black, 0.02);
       }
 
       const admin = getFeatureAdmin(d);
       const isSelected =
         !isQuietOwnedFocus(admin) && isSameAdmin(admin, selectedCountry, gameDataMap);
       const darken = isSelected
-        ? isLight
-          ? GLOBE_STYLE.lighting.sideDarken.selectedLight
-          : GLOBE_STYLE.lighting.sideDarken.selectedDark
+        ? GLOBE_STYLE.lighting.sideDarken.selected
         : foundSet.has(admin) || (mode === "learn" && isSelected)
-          ? isLight
-            ? GLOBE_STYLE.lighting.sideDarken.foundLight
-            : GLOBE_STYLE.lighting.sideDarken.foundDark
-          : isLight
-            ? GLOBE_STYLE.lighting.sideDarken.baseLight
-            : GLOBE_STYLE.lighting.sideDarken.baseDark;
+          ? GLOBE_STYLE.lighting.sideDarken.found
+          : GLOBE_STYLE.lighting.sideDarken.base;
 
       return lerpColor(getPolygonColor(d), UI_COLORS.black, darken);
     },
     [
       conquestOverlay,
       getPolygonColor,
-      isLight,
       UI_COLORS,
       selectedCountry,
       gameDataMap,
@@ -395,7 +371,7 @@ export function useGlobePolygons({
   const getBaseColorForCountryAndKind = useCallback(
     (admin, kind) => {
       const owner = conquestOverlay?.colors?.[admin];
-      if (owner) return resolveOwnerBaseColor(owner, kind, { lerpColor, UI_COLORS, isLight });
+      if (owner) return resolveOwnerBaseColor(owner, kind, { lerpColor, UI_COLORS });
 
       const data = countryDataMap[admin];
       const region = data?.region || "Unknown";
@@ -427,15 +403,14 @@ export function useGlobePolygons({
         isEndScreen,
         isPerfectScore,
         isLearn: mode === "learn",
-        isLight,
         UI_COLORS,
         lerpColor,
         mapBase: UI_COLORS.mapBase,
       });
 
-      const capColor = lerpColor(baseColor, UI_COLORS.black, isLight ? 0.32 : 0.16);
+      const capColor = lerpColor(baseColor, UI_COLORS.black, 0.16);
       if (kind === "side") {
-        return lerpColor(capColor, UI_COLORS.black, isLight ? 0.04 : 0.08);
+        return lerpColor(capColor, UI_COLORS.black, 0.08);
       }
       return capColor;
     },
@@ -447,7 +422,6 @@ export function useGlobePolygons({
       isError,
       isSuccess,
       UI_COLORS,
-      isLight,
       lerpColor,
       isEndScreen,
       isPerfectScore,
@@ -479,7 +453,6 @@ export function useGlobePolygons({
         isEndScreen,
         isPerfectScore,
         isRegionalMode,
-        isLight,
         UI_COLORS,
         REGION_COLORS_LABELS,
         REGION_COLORS_ATTENUATED,
@@ -509,7 +482,6 @@ export function useGlobePolygons({
         transitioningPreviousCountryState: prevTransition,
         transitioningIncomingCountryState: incomingTransition,
         isDepartmentMode: isRegionalMode,
-        isLight,
         globeLightingEnabled,
         perfProfile,
         UI_COLORS,
@@ -528,7 +500,6 @@ export function useGlobePolygons({
       conquestOverlay,
       getPolygonColor,
       getPolygonSideColor,
-      isLight,
       globeLightingEnabled,
       UI_COLORS,
       selectedCountry,
@@ -585,7 +556,7 @@ export function useGlobePolygons({
       materialCache.cap.clear();
       materialCache.side.clear();
     };
-  }, [isLight, globeLightingEnabled, mode, isRegionalMode]);
+  }, [globeLightingEnabled, mode, isRegionalMode]);
 
   // The shared material pool owns compiled GPU programs: disposing it on mode
   // switches forced shader recompiles; only theme/lighting invalidates it.
@@ -599,7 +570,7 @@ export function useGlobePolygons({
       sharedPool.clear();
       clearAnimatedPolygonMaterials();
     };
-  }, [isLight, globeLightingEnabled]);
+  }, [globeLightingEnabled]);
 
   const getPolygonAltitude = useCallback(
     (d) => {
@@ -631,7 +602,6 @@ export function useGlobePolygons({
     isRegionalMode,
     foundSet,
     mode,
-    isLight,
     globeLightingEnabled,
     perfProfile,
     UI_COLORS,

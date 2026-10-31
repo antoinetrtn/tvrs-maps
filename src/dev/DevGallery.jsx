@@ -180,7 +180,7 @@ const GalleryColumn = () => {
 
 /** Every UI primitive in the unified nocturnal theme tokens. */
 const DevGallery = () => (
-  <main className="dg-root" style={getThemeCssVariables("dark")}>
+  <main className="dg-root" style={getThemeCssVariables()}>
     <header className="dg-header">
       <h1>Galerie de composants</h1>
       <p>Page de développement uniquement — absente des builds de production.</p>

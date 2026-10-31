@@ -178,31 +178,6 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
     });
   });
 
-  describe("Theme matrix (unified nocturnal theme, light flag)", () => {
-    it("characterizes the light flag on the unified theme", () => {
-      // CHARACTERIZATION: current behavior — THEME in designSystem.js only defines `dark`, so
-      // theme="light" keeps dark base hex tokens in UI_COLORS while isLight=true changes lerp
-      // weights, stroke widths, lighting shininess, and shader uIsLight=1.
-      const { result: lightRes } = renderPolygons({
-        theme: "light",
-        isLight: true,
-        selectedCountry: "France",
-        foundSet: new Set(["Spain"]),
-      });
-      const franceLight = summarizeFeatureOutput(lightRes.current, FEATURE_FRANCE);
-      const spainLight = summarizeFeatureOutput(lightRes.current, FEATURE_SPAIN);
-      expect(franceLight.capMaterial.uniforms.uIsLight).toBe(1);
-      expect(franceLight.baseCapColor).toBe(
-        lightRes.current.lerpColor(
-          lightRes.current.UI_COLORS.mapBase,
-          lightRes.current.UI_COLORS.black,
-          0.32
-        )
-      );
-      expect(spainLight.strokeWidth).toBe(1.1);
-    });
-  });
-
   describe("Modes matrix (capitals, rivers_mountains, departments, us_states, learn, home, end)", () => {
     it("characterizes capitals and rivers_mountains modes on world and relief features", () => {
       const { result: capitalsRes } = renderPolygons({

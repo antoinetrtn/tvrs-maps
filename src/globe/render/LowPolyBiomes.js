@@ -86,7 +86,6 @@ const createSinglePeakMesh = (peakRadius, peakHeight, activeMat, posX, posY, pos
 };
 
 export const createMountainFeature = (
-  themeName = "dark",
   isSelected = false,
   isFound = false,
   bearing = 0,
@@ -99,9 +98,8 @@ export const createMountainFeature = (
   foundColor = null
 ) => {
   const group = new THREE.Group();
-  const isLight = themeName === "light";
 
-  const foundMatKey = `mountainFound_${themeName}_${foundColor || "default"}`;
+  const foundMatKey = `mountainFound_${foundColor || "default"}`;
   const foundMat = getMaterial(foundMatKey, () => {
     const col = new THREE.Color(foundColor || FOUND_SURFACE_GREEN);
     return new THREE.MeshPhongMaterial({
@@ -113,21 +111,20 @@ export const createMountainFeature = (
   });
 
   const gpu = isGlobeWebGPU() ? "_gpu" : ""; // WebGL & WebGPU globes share this cache
-  const glitchMatKey = `mountainGlitch_${themeName}_${isLight ? "light" : "dark"}${gpu}`;
+  const glitchMatKey = `mountainGlitch${gpu}`;
   const glitchMat = getMaterial(glitchMatKey, () => {
-    if (isGlobeWebGPU()) return createMountainGlitchNodeMaterial(mountainGlitchUniforms, isLight);
+    if (isGlobeWebGPU()) return createMountainGlitchNodeMaterial(mountainGlitchUniforms);
     const mat = new THREE.MeshPhongMaterial({
       flatShading: true,
       shininess: 0,
       specular: 0x000000,
     });
-    mat.customProgramCacheKey = () => `mountain-glitch-${themeName}-${isLight ? "light" : "dark"}`;
+    mat.customProgramCacheKey = () => "mountain-glitch";
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = mountainGlitchUniforms.uTime;
       shader.uniforms.uIsError = mountainGlitchUniforms.uIsError;
       shader.uniforms.uIsSuccess = mountainGlitchUniforms.uIsSuccess;
       shader.uniforms.uFoundGreen = mountainGlitchUniforms.uFoundGreen;
-      shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
 
       shader.vertexShader = `
         varying vec3 vLocalPosition;
@@ -141,7 +138,6 @@ export const createMountainFeature = (
       shader.fragmentShader = `
         varying vec3 vLocalPosition;
         uniform float uTime;
-        uniform float uIsLight;
         uniform float uIsError;
         uniform float uIsSuccess;
         uniform vec3 uFoundGreen;
@@ -156,9 +152,9 @@ export const createMountainFeature = (
         float t = uTime * 28.0;
         float noise = hash(noiseUv + sin(t));
 
-        float baseMin = (uIsLight > 0.5) ? 0.65 : 0.12;
-        float baseMax = (uIsLight > 0.5) ? 0.98 : 0.68;
-        float scanline = sin(vLocalPosition.y * 15.0 + uTime * 5.0) * ((uIsLight > 0.5) ? 0.03 : 0.07);
+        float baseMin = 0.12;
+        float baseMax = 0.68;
+        float scanline = sin(vLocalPosition.y * 15.0 + uTime * 5.0) * 0.07;
 
         float staticColor = mix(baseMin, baseMax, noise) + scanline;
         vec3 finalColor = vec3(staticColor);
@@ -187,14 +183,14 @@ export const createMountainFeature = (
     return mat;
   });
 
-  const baseMatKey = `mountainBase_${themeName}`;
+  const baseMatKey = "mountainBase";
   const baseMat = getMaterial(
     baseMatKey,
     () =>
       new THREE.MeshPhongMaterial({
-        color: isLight ? 0x475569 : 0x8ba2b5,
-        emissive: isLight ? 0x000000 : 0x111620,
-        specular: isLight ? 0x222222 : 0x444444,
+        color: 0x8ba2b5,
+        emissive: 0x111620,
+        specular: 0x444444,
         shininess: 15,
         flatShading: true,
       })

@@ -15,7 +15,7 @@ import {
 } from "../globe/render/polygonColorResolver";
 
 const lerpColor = (a, _b, _amount) => a;
-const UI_COLORS = getThemeColors("dark");
+const UI_COLORS = getThemeColors();
 
 describe("polygonColorResolver", () => {
   const baseCtx = {
@@ -87,13 +87,11 @@ describe("polygonColorResolver", () => {
       return toHex(mix(r1, r2), mix(g1, g2), mix(b1, b2));
     };
     const selected = resolveFoundCountryStroke({
-      isLight: false,
       isSelected: true,
       UI_COLORS,
       lerpColor: blend,
     });
     const normal = resolveFoundCountryStroke({
-      isLight: false,
       isSelected: false,
       UI_COLORS,
       lerpColor: blend,
@@ -117,7 +115,6 @@ describe("polygonColorResolver", () => {
       return toHex(mix(r1, r2), mix(g1, g2), mix(b1, b2));
     };
     const stroke = resolveFoundCountryStroke({
-      isLight: false,
       UI_COLORS,
       lerpColor: blend,
     });

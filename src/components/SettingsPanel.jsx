@@ -18,7 +18,6 @@ const MAX_DURATION_MIN = 60;
 const SettingsPanel = ({
   open,
   onClose,
-  theme,
   lang,
   setLang,
   gameDuration,
@@ -40,7 +39,7 @@ const SettingsPanel = ({
       variant="panel"
       open={open}
       onClose={onClose}
-      theme={theme}
+
       labelledBy="settings-panel-title"
       className="settings-panel glass-panel"
     >

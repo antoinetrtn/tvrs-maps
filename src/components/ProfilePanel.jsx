@@ -46,7 +46,6 @@ const ProfilePanel = ({
   onClose,
   isOpen,
   lang = "fr",
-  theme = "dark",
   localRecords,
   session,
   onOpenAuth,
@@ -213,7 +212,7 @@ const ProfilePanel = ({
       variant="panel"
       open
       onClose={onClose}
-      theme={theme}
+
       label={t("tab_profile")}
       className="profile-panel glass-panel"
     >

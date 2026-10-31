@@ -27,7 +27,6 @@ function createGlowMaterial() {
 
 export function useGlobeLighting({
   globeEl,
-  isLight,
   globeLightingEnabled,
   UI_COLORS,
   perfProfile,
@@ -143,15 +142,15 @@ export function useGlobeLighting({
     // globe then looked darker than after a refresh.
 
     // Brighter uniform ambient so country polygons read on the flat dark globe.
-    keyLight.intensity = (isLight ? 0.2 : 0.28) * lightScale;
+    keyLight.intensity = 0.28 * lightScale;
     keyLight.position.set(-3.5, 2.4, 4.2);
-    rimLight.intensity = (isLight ? 0.18 : 0.28) * lightScale;
+    rimLight.intensity = 0.28 * lightScale;
     rimLight.position.set(3.8, 1.3, -3.6);
-    fillLight.intensity = (isLight ? 1.0 : 0.92) * lightScale;
-    studioLight.intensity = (isLight ? 0.72 : 0.62) * lightScale;
-    studioLeft.intensity = (isLight ? 0.12 : 0.15) * lightScale;
+    fillLight.intensity = 0.92 * lightScale;
+    studioLight.intensity = 0.62 * lightScale;
+    studioLeft.intensity = 0.15 * lightScale;
     studioLeft.position.set(-4.5, 2.5, 3.5);
-    studioRight.intensity = (isLight ? 0.12 : 0.15) * lightScale;
+    studioRight.intensity = 0.15 * lightScale;
     studioRight.position.set(4.5, -1.2, 2.8);
 
     rimLight.color.set(safeColor(UI_COLORS.lightingRim));
@@ -161,9 +160,7 @@ export function useGlobeLighting({
     studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
     studioRight.color.set(safeColor(UI_COLORS.lightingRight));
 
-    const glowColorHex = isLight
-      ? Number(UI_COLORS.glowColorHexLight) || Number(UI_COLORS.glowColorHex) || 0x3a76f0
-      : Number(UI_COLORS.glowColorHexDark) || Number(UI_COLORS.glowColorHex) || 0x3a76f0;
+    const glowColorHex = Number(UI_COLORS.glowColorHex) || 0x3a76f0;
     const glowPower = Number(UI_COLORS.glowPower) || 1.2;
     const glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
 
@@ -179,7 +176,7 @@ export function useGlobeLighting({
     }
 
     return true;
-  }, [isLight, globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, safeColor, globeEl]);
+  }, [globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, safeColor, globeEl]);
 
   const styleGlobeGraticules = useCallback(() => {
     const scene = globeEl.current?.scene?.();
@@ -187,12 +184,9 @@ export function useGlobeLighting({
 
     const graticuleColor = new THREE.Color(getOpaqueThreeColor(UI_COLORS.graticule));
     const graticuleOpacity =
-      Number(UI_COLORS.graticuleOpacity) ||
-      (isLight
-        ? GLOBE_STYLE.lighting.graticuleOpacity.light
-        : GLOBE_STYLE.lighting.graticuleOpacity.dark);
+      Number(UI_COLORS.graticuleOpacity) || GLOBE_STYLE.lighting.graticuleOpacity;
 
-    const cacheKey = `${UI_COLORS.graticule}-${isLight}`;
+    const cacheKey = UI_COLORS.graticule;
     if (graticuleCacheKeyRef.current !== cacheKey) {
       graticuleCacheKeyRef.current = cacheKey;
       graticuleMaterialsRef.current = [];
@@ -220,7 +214,7 @@ export function useGlobeLighting({
       material.depthWrite = false;
       material.needsUpdate = true;
     });
-  }, [isLight, UI_COLORS, globeEl]);
+  }, [UI_COLORS, globeEl]);
 
   useEffect(() => {
     updateGlobeLighting();

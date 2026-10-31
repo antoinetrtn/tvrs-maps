@@ -127,8 +127,7 @@ function App() {
     setShowAuthModal(false);
   }, []);
   const { viewport, isKeyboardMode } = useViewport();
-  const appTheme = useAppTheme(viewport?.width); // unified theme + document CSS vars
-  const { theme, appStyle } = appTheme;
+  const { appStyle } = useAppTheme(viewport?.width); // unified theme + document CSS vars
   const {
     countriesData,
     departmentsData,
@@ -199,7 +198,6 @@ function App() {
     updateGameRecord,
     addAchievementToQueue,
     t,
-    theme,
     selectedCountry,
     setSelectedCountry,
     activeDataMap,
@@ -402,7 +400,6 @@ function App() {
     extInputRef,
     foundList,
     activeDataMap,
-    theme,
     viewport,
     isKeyboardMode,
     learnSubMode,
@@ -445,8 +442,7 @@ function App() {
 
   return (
     <div
-      className={`app-container ${theme} ${isScreenGlitching ? "glitch-active" : ""} ${isPanelOpen ? "data-panel-open" : ""}`}
-      data-theme={theme}
+      className={`app-container ${isScreenGlitching ? "glitch-active" : ""} ${isPanelOpen ? "data-panel-open" : ""}`}
       style={appStyle}
     >
       {(panicActive || lifeLostFlash) && (
@@ -455,7 +451,7 @@ function App() {
       {showHome ? (
         <HomeScreen
           onStartGame={startGame}
-          theme={theme}
+
           lang={lang}
           setLang={setLang}
           gameDuration={gameDuration}
@@ -488,7 +484,7 @@ function App() {
           message={confirmState.message}
           onConfirm={confirmState.onConfirm}
           onCancel={() => setConfirmState(null)}
-          theme={theme}
+
           lang={lang}
         />
       )}
@@ -501,7 +497,6 @@ function App() {
         onClose={() => setShowAuthModal(false)}
         onGuest={handleGuest}
         lang={lang}
-        theme={theme}
       />
     </div>
   );

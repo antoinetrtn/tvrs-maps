@@ -21,7 +21,7 @@ const getTargetStarCount = (w, h) => {
   return Math.max(100, Math.min(Math.floor((w * h) / baseDensity), 420));
 };
 
-function renderLimbDither(ctx, cx, cy, limbRadius, colors, isLight) {
+function renderLimbDither(ctx, cx, cy, limbRadius, colors) {
   const rInner = Math.round(limbRadius * 0.88);
   const rOuter = Math.round(limbRadius * 1.32);
   const peak = limbRadius * 1.05;
@@ -40,13 +40,13 @@ function renderLimbDither(ctx, cx, cy, limbRadius, colors, isLight) {
       if (falloff <= bayer) continue;
 
       let col = colors.vignette;
-      let alpha = isLight ? 0.12 : 0.22;
+      let alpha = 0.22;
       if (dist < limbRadius * 1.04) {
         col = colors.dither;
-        alpha = isLight ? 0.22 : 0.38;
+        alpha = 0.38;
       } else if (dist < limbRadius * 1.18) {
         col = colors.reticle;
-        alpha = isLight ? 0.16 : 0.28;
+        alpha = 0.28;
       }
       ctx.fillStyle = toRgba(col, alpha);
       ctx.fillRect(px, py, 1, 1);
@@ -54,9 +54,9 @@ function renderLimbDither(ctx, cx, cy, limbRadius, colors, isLight) {
   }
 }
 
-function renderVignetteDither(ctx, cx, cy, width, height, rOuter, colors, isLight) {
+function renderVignetteDither(ctx, cx, cy, width, height, rOuter, colors) {
   const maxCornerDist = Math.hypot(cx, cy) || 1;
-  const alpha = isLight ? 0.12 : 0.22;
+  const alpha = 0.22;
   ctx.fillStyle = toRgba(colors.vignette, alpha);
 
   for (let py = 0; py < height; py += 4) {
@@ -74,9 +74,9 @@ function renderVignetteDither(ctx, cx, cy, width, height, rOuter, colors, isLigh
   }
 }
 
-function renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, colors, isLight) {
+function renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, colors) {
   const rTicks = Math.round(limbRadius * 1.12);
-  const tickAlpha = isLight ? 0.2 : 0.32;
+  const tickAlpha = 0.32;
   ctx.fillStyle = toRgba(colors.reticle, tickAlpha);
 
   for (let step = 0; step < 72; step++) {
@@ -112,7 +112,7 @@ function renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, co
     [0, 0.44, 5],
   ];
 
-  const crossAlpha = isLight ? 0.22 : 0.36;
+  const crossAlpha = 0.36;
   ctx.fillStyle = toRgba(colors.reticle, crossAlpha);
   crosshairAnchors.forEach(([fx, fy, size]) => {
     const hx = Math.round(cx + fx * width);
@@ -134,7 +134,7 @@ function renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, co
   }
 }
 
-function renderStaticOffscreen(offscreenCanvas, width, height, colors, isLight) {
+function renderStaticOffscreen(offscreenCanvas, width, height, colors) {
   offscreenCanvas.width = width;
   offscreenCanvas.height = height;
   const ctx = offscreenCanvas.getContext("2d");
@@ -148,12 +148,12 @@ function renderStaticOffscreen(offscreenCanvas, width, height, colors, isLight) 
   const limbRadius = Math.round(minDim * 0.36);
   const rOuter = Math.round(limbRadius * 1.32);
 
-  renderLimbDither(ctx, cx, cy, limbRadius, colors, isLight);
-  renderVignetteDither(ctx, cx, cy, width, height, rOuter, colors, isLight);
-  renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, colors, isLight);
+  renderLimbDither(ctx, cx, cy, limbRadius, colors);
+  renderVignetteDither(ctx, cx, cy, width, height, rOuter, colors);
+  renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, colors);
 }
 
-function spawnStarfield(stars, width, height, isLight) {
+function spawnStarfield(stars, width, height) {
   const count = getTargetStarCount(width, height);
   stars.length = 0;
 
@@ -163,7 +163,7 @@ function spawnStarfield(stars, width, height, isLight) {
     let colorKey = "dust";
     let size = 1;
     let parallax = -4;
-    let baseAlpha = isLight ? 0.32 : 0.55;
+    let baseAlpha = 0.55;
     let isPlus = false;
 
     if (layerRand >= 0.85) {
@@ -171,14 +171,14 @@ function spawnStarfield(stars, width, height, isLight) {
       colorKey = Math.random() < 0.65 ? "ivory" : "accent";
       size = 2;
       parallax = -14;
-      baseAlpha = isLight ? 0.65 : 0.95;
+      baseAlpha = 0.95;
       isPlus = Math.random() < 0.14;
     } else if (layerRand >= 0.5) {
       layer = "mid";
       colorKey = "normal";
       size = Math.random() < 0.28 ? 2 : 1;
       parallax = -8;
-      baseAlpha = isLight ? 0.45 : 0.75;
+      baseAlpha = 0.75;
     }
 
     const seedPhase = Math.random() * Math.PI * 2;
@@ -261,7 +261,7 @@ function spawnShootingStar(shootingStars, width, height) {
   });
 }
 
-function drawShootingStars(ctx, shootingStars, width, height, frameScale, colors, isLight) {
+function drawShootingStars(ctx, shootingStars, width, height, frameScale, colors) {
   shootingStars.forEach((s) => {
     s.trail.push({ x: s.x, y: s.y });
     if (s.trail.length > s.maxTrailLength) {
@@ -278,28 +278,28 @@ function drawShootingStars(ctx, shootingStars, width, height, frameScale, colors
     const col = colors[s.colorKey] || colors.normal;
     s.trail.forEach((p, index) => {
       const ratio = index / s.trail.length;
-      const alpha = ratio * (isLight ? 0.35 : 0.65);
+      const alpha = ratio * 0.65;
       ctx.fillStyle = toRgba(col, alpha);
       ctx.fillRect(Math.floor(p.x), Math.floor(p.y), 1, 1);
     });
 
     if (s.active) {
-      ctx.fillStyle = toRgba(col, isLight ? 0.6 : 0.9);
+      ctx.fillStyle = toRgba(col, 0.9);
       ctx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
     }
   });
 }
 
-function stepShootingStars(ctx, shootingStars, width, height, frameScale, colors, isLight) {
+function stepShootingStars(ctx, shootingStars, width, height, frameScale, colors) {
   if (Math.random() < 0.0018 * frameScale && shootingStars.length < 2) {
     spawnShootingStar(shootingStars, width, height);
   }
   const remaining = shootingStars.filter((s) => s.active);
-  drawShootingStars(ctx, remaining, width, height, frameScale, colors, isLight);
+  drawShootingStars(ctx, remaining, width, height, frameScale, colors);
   return remaining;
 }
 
-const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
+const SpaceBackground = React.memo(() => {
   const canvasRef = useRef(null);
   const offscreenRef = useRef(null);
 
@@ -319,13 +319,12 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    const modeKey = isLight ? "light" : "dark";
-    const colors = SPACE_RGB_COMPONENTS[modeKey];
+    const colors = SPACE_RGB_COMPONENTS;
 
-    renderStaticOffscreen(offscreenCanvas, width, height, colors, isLight);
+    renderStaticOffscreen(offscreenCanvas, width, height, colors);
 
     const stars = [];
-    spawnStarfield(stars, width, height, isLight);
+    spawnStarfield(stars, width, height);
 
     let shootingStars = [];
     let mouseX = 0;
@@ -351,23 +350,15 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
       drawStarfield(ctx, stars, mouseX, mouseY, width, height, frameScale, colors, reduced);
 
       if (!reduced) {
-        shootingStars = stepShootingStars(
-          ctx,
-          shootingStars,
-          width,
-          height,
-          frameScale,
-          colors,
-          isLight
-        );
+        shootingStars = stepShootingStars(ctx, shootingStars, width, height, frameScale, colors);
       }
     };
 
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      renderStaticOffscreen(offscreenCanvas, width, height, colors, isLight);
-      spawnStarfield(stars, width, height, isLight);
+      renderStaticOffscreen(offscreenCanvas, width, height, colors);
+      spawnStarfield(stars, width, height);
       if (prefersReducedMotion()) {
         renderFrame(performance.now());
       }
@@ -421,7 +412,7 @@ const SpaceBackground = React.memo(({ theme = "dark", isLight = false }) => {
       window.removeEventListener("mousemove", handleMouseMove);
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [isLight, theme]);
+  }, []);
 
   return (
     <canvas

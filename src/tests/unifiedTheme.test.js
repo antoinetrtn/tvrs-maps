@@ -24,7 +24,7 @@ const contrast = (a, b) => {
 
 describe("unified nocturnal theme", () => {
   it("bone accent meets AA contrast", () => {
-    const { bg, bgElevated } = getThemeColors("dark");
+    const { bg, bgElevated } = getThemeColors();
     for (const surface of [bg, bgElevated]) {
       expect(contrast(ACCENT.accent, surface)).toBeGreaterThanOrEqual(4.5);
       expect(contrast(ACCENT.hover, surface)).toBeGreaterThanOrEqual(4.5);
@@ -33,14 +33,14 @@ describe("unified nocturnal theme", () => {
   });
 
   it("drives CSS variables from the bone accent", () => {
-    const vars = getThemeCssVariables("dark");
+    const vars = getThemeCssVariables();
     expect(vars["--accent"]).toBe(ACCENT.accent);
     expect(vars["--accent-hover"]).toBe(ACCENT.hover);
     expect(vars["--accent-contrast"]).toBe(ACCENT.contrast);
   });
 
   it("pins globe colours to the globe palette", () => {
-    const colors = getThemeColors("dark");
+    const colors = getThemeColors();
     expect(colors.accent).toBe(ACCENT.accent);
     expect(colors.globeMaterialColor).toBe(GLOBE_PALETTE.ocean);
     expect(colors.glitchTintA).toBe(GLOBE_PALETTE.glitchTintA);
@@ -61,7 +61,7 @@ describe("unified nocturnal theme", () => {
     localStorage.setItem("tvrs-globe-renderer", "webgl");
     const { result } = renderHook(() => useAppTheme(1200));
     act(() => {});
-    expect(result.current.theme).toBe("dark");
+    expect(Object.keys(result.current)).toEqual(["appStyle"]);
     expect(result.current.appStyle["--accent"]).toBe(ACCENT.accent);
     RETIRED_STORAGE_KEYS.forEach((key) => expect(localStorage.getItem(key)).toBeNull());
     expect(localStorage.getItem("tvrs-globe-renderer")).toBe("webgl");

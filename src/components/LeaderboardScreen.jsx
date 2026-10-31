@@ -119,7 +119,6 @@ const LeaderboardScreen = ({
   session = null,
   onBack,
   lang = "fr",
-  theme = "dark",
   isOpen = false,
 }) => {
   const t = useTranslation(lang);
@@ -362,7 +361,7 @@ const LeaderboardScreen = ({
       variant="panel"
       open={isOpen}
       onClose={onBack}
-      theme={theme}
+
       className="leaderboard-panel glass-panel"
     >
       <div className="panel-header">

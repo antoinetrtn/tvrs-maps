@@ -134,7 +134,6 @@ export function attachPolygonGlitchShader(
     isError,
     isSuccess,
     isSelectionHighlight,
-    isLight,
     isFound,
     isIncomingTransitioning,
     getBaseColorForCountryAndKind,
@@ -151,7 +150,7 @@ export function attachPolygonGlitchShader(
       uIsError: isSelected && isError ? 1 : 0,
       uIsSuccess: isSelected && isSuccess ? 1 : 0,
       uIsSelection: isSelected && isSelectionHighlight ? 1 : 0,
-      uIsLight: isLight ? 1 : 0,
+      uIsLight: 0, // dark only; uniform kept until the shader body drops it
       uIsSide: kind === "side" ? 1 : 0,
       uIsFound: isFound ? 1 : 0,
       uSelectInTransition: isIncomingTransitioning ? 1 : 0,
@@ -183,7 +182,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uIsSelection = {
       value: isSelected && isSelectionHighlight ? 1.0 : 0.0,
     };
-    shader.uniforms.uIsLight = { value: isLight ? 1.0 : 0.0 };
+    shader.uniforms.uIsLight = { value: 0.0 }; // dark only (see globeShaders)
     shader.uniforms.uIsSide = { value: kind === "side" ? 1.0 : 0.0 };
     shader.uniforms.uIsFound = { value: isFound ? 1.0 : 0.0 };
     shader.uniforms.uSelectInTransition = {
