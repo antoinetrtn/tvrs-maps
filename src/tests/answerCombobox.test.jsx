@@ -143,7 +143,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
   });
 
   it("sans pays sélectionné, la liste de suggestions s'affiche quand même", () => {
-    const { container, input } = typeAndEnter({ selectedCountry: null }, "fran");
+    const { container, input } = typeAndEnter({ selectedCountry: null }, "franc");
 
     expect(input.getAttribute("aria-expanded")).toBe("true");
     expect(container.querySelector('[role="option"]').textContent).toContain("France");
@@ -158,7 +158,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     "clic sur une suggestion (%s) => champ vidé, validation=%s appels, rejet=%s",
     (_label, selectedCountry, returned, calls, rejected, hint) => {
       onEnterMock.mockReturnValue(returned);
-      const { container, input, island } = typeAndEnter({ selectedCountry }, "fran");
+      const { container, input, island } = typeAndEnter({ selectedCountry }, "franc");
 
       fireEvent.click(container.querySelector('[role="option"]'));
 
@@ -174,7 +174,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
-    fireEvent.change(input, { target: { value: "fran" } });
+    fireEvent.change(input, { target: { value: "franc" } });
     const options = container.querySelectorAll('[role="option"]');
     expect(options.length).toBe(1);
 
@@ -199,7 +199,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
-    fireEvent.change(input, { target: { value: "fra" } });
+    fireEvent.change(input, { target: { value: "franc" } });
     expect(input.getAttribute("aria-activedescendant")).toBeNull();
 
     const options = container.querySelectorAll('[role="option"]');
@@ -211,12 +211,12 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     const { container } = renderHUD({ selectedCountry: "USA" });
     const input = screen.getByRole("combobox");
 
-    fireEvent.change(input, { target: { value: "ETATS" } });
+    fireEvent.change(input, { target: { value: "ETATS UNI" } });
     let options = container.querySelectorAll('[role="option"]');
     expect(options.length).toBeGreaterThan(0);
     expect(options[0].textContent).toContain("États-Unis");
 
-    fireEvent.change(input, { target: { value: "états" } });
+    fireEvent.change(input, { target: { value: "états-uni" } });
     options = container.querySelectorAll('[role="option"]');
     expect(options.length).toBeGreaterThan(0);
     expect(options[0].textContent).toContain("États-Unis");
@@ -226,7 +226,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
-    fireEvent.change(input, { target: { value: "fran" } });
+    fireEvent.change(input, { target: { value: "franc" } });
     expect(container.querySelector('[role="listbox"]')).not.toBeNull();
 
     fireEvent.keyDown(input, { key: "Escape" });
@@ -246,7 +246,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     const { container } = renderHUD({ selectedCountry: "FRA", foundList: ["FRA"] });
     const input = screen.getByRole("combobox");
 
-    fireEvent.change(input, { target: { value: "fra" } });
+    fireEvent.change(input, { target: { value: "franc" } });
     const option = container.querySelector('[role="option"]');
     expect(option).not.toBeNull();
     expect(option.getAttribute("data-found")).toBe("true");
@@ -258,7 +258,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     const { container } = renderHUD({ selectedCountry: "FRA" });
     const input = screen.getByRole("combobox");
 
-    fireEvent.change(input, { target: { value: "fran" } });
+    fireEvent.change(input, { target: { value: "franc" } });
     const option = container.querySelector('[role="option"]');
     expect(option).not.toBeNull();
 
@@ -267,7 +267,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(input.value).toBe("");
 
     onEnterMock.mockClear();
-    fireEvent.change(input, { target: { value: "fran" } });
+    fireEvent.change(input, { target: { value: "franc" } });
     const newOption = container.querySelector('[role="option"]');
     expect(newOption).not.toBeNull();
     fireEvent.keyDown(newOption, { key: "Enter" });
@@ -283,7 +283,7 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     const controlsId = input.getAttribute("aria-controls");
     expect(controlsId).toBeTruthy();
 
-    fireEvent.change(input, { target: { value: "fran" } });
+    fireEvent.change(input, { target: { value: "franc" } });
     expect(input.getAttribute("aria-expanded")).toBe("true");
 
     const listbox = container.querySelector('[role="listbox"]');
@@ -370,6 +370,12 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     // In learn mode, pressing Enter directly validates suggestions[0]
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onEnterMock).toHaveBeenCalledWith("Paris");
+  });
+
+  it("anti-triche : 3 lettres ne déroulent plus la liste", () => {
+    const { input, container } = typeAndEnter({ selectedCountry: "FRA" }, "fra");
+    expect(input.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector('[role="option"]')).toBeNull();
   });
 
   it("Entrée pendant une composition IME / touche morte n'est pas traitée", () => {
