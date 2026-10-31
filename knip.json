@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["src/globe/render/threeRenderObjectsShim.js"],
+  "entry": ["src/globe/render/threeRenderObjectsShim.js", "src/globe/render/h3Stub.js"],
   "ignore": ["src/types/supabase.ts", "scripts/setup-hooks.js"],
   "ignoreDependencies": [
     "three-conic-polygon-geometry-original",
