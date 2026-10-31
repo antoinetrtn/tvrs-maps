@@ -4,16 +4,22 @@ import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
 import { getBiomeTexture } from "./biomeTexture";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
+import { registerCountryFeature } from "./countryLandRadius";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
-import { COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY, GLSL_BAYER_4X4_FN } from "./globeShaders";
+import {
+  COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY,
+  DISCOVERY_DEFS,
+  GLSL_BAYER_4X4_FN,
+  GLSL_DISCOVERY_LAND_FN,
+} from "./globeShaders";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { resolvePolygonEmissiveProps } from "./polygonEmissiveProps";
 import {
   attachPolygonGlitchShader,
-  getIgniteSelfHolder,
+  getIgniteHolder,
   homeWakeState,
-  igniteState,
+  isCountryRevealing,
   polygonGlitchUniforms,
   syncPolygonShaderUniforms,
 } from "./polygonGlitchShader";
@@ -23,22 +29,43 @@ import {
 } from "./webgpu/lineMaterialSwap";
 import { countryGrainOutputNode, createPhongMaterial } from "./webgpu/surfaceNodes";
 
+/** WebGPU: per-material ignition values read through materialReference (holder or globals). */
+function defineIgniteReferences(material, igniteHolder) {
+  const g = polygonGlitchUniforms;
+  const refs = {
+    igniteSelf: () => (igniteHolder ? igniteHolder.self.value : 0),
+    igniteOrigin: () => (igniteHolder ? igniteHolder.origin.value : g.uIgniteOrigin.value),
+    igniteStart: () => (igniteHolder ? igniteHolder.start.value : g.uIgniteStart.value),
+    igniteRadius: () => (igniteHolder ? igniteHolder.radius.value : g.uIgniteRadius.value),
+    igniteDuration: () => (igniteHolder ? igniteHolder.duration.value : g.uIgniteDuration.value),
+    revealStart: () => (igniteHolder ? igniteHolder.revealStart.value : g.uRevealStart.value),
+    landRadius: () => (igniteHolder ? igniteHolder.landRadius.value : g.uLandRadius.value),
+  };
+  Object.entries(refs).forEach(([name, get]) => {
+    Object.defineProperty(material.userData, name, { get, enumerable: true });
+  });
+}
+
 export function applyCountrySurfaceGrainShader(
   shader,
-  { isGhostCountry = false, igniteSelf = null } = {}
+  { isGhostCountry = false, igniteHolder = null } = {}
 ) {
+  // A country mid-reveal reads its own holder (origin, timeline, radii); others the globals.
+  const g = polygonGlitchUniforms;
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
   shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
   shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
-  shader.uniforms.uIgniteOrigin = polygonGlitchUniforms.uIgniteOrigin;
-  shader.uniforms.uIgniteStart = polygonGlitchUniforms.uIgniteStart;
-  shader.uniforms.uIgniteRadius = polygonGlitchUniforms.uIgniteRadius;
-  shader.uniforms.uIgniteDuration = polygonGlitchUniforms.uIgniteDuration;
+  shader.uniforms.uIgniteOrigin = igniteHolder ? igniteHolder.origin : g.uIgniteOrigin;
+  shader.uniforms.uIgniteStart = igniteHolder ? igniteHolder.start : g.uIgniteStart;
+  shader.uniforms.uIgniteRadius = igniteHolder ? igniteHolder.radius : g.uIgniteRadius;
+  shader.uniforms.uIgniteDuration = igniteHolder ? igniteHolder.duration : g.uIgniteDuration;
+  shader.uniforms.uRevealStart = igniteHolder ? igniteHolder.revealStart : g.uRevealStart;
+  shader.uniforms.uLandRadius = igniteHolder ? igniteHolder.landRadius : g.uLandRadius;
   shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
   shader.uniforms.uHomeWake = polygonGlitchUniforms.uHomeWake;
   shader.uniforms.uIsGhost = { value: isGhostCountry ? 1.0 : 0.0 };
-  shader.uniforms.uIgniteSelf = igniteSelf || { value: 0.0 };
+  shader.uniforms.uIgniteSelf = igniteHolder ? igniteHolder.self : { value: 0.0 };
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
   shader.vertexShader = `
@@ -72,6 +99,8 @@ export function applyCountrySurfaceGrainShader(
     uniform float uIgniteStart;
     uniform float uIgniteRadius;
     uniform float uIgniteDuration;
+    uniform float uRevealStart;
+    uniform float uLandRadius;
     uniform float uReducedMotion;
     uniform float uHomeWake;
     uniform sampler2D uCapitalLightsMap;
@@ -80,6 +109,8 @@ export function applyCountrySurfaceGrainShader(
     float cityCellHash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
     }
+    ${DISCOVERY_DEFS}
+    ${GLSL_DISCOVERY_LAND_FN}
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
       COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY
@@ -243,6 +274,7 @@ export function getPolygonMaterialForFeature({
     isHomeScreen,
     isError,
     isSuccess,
+    isRegionalMode: Boolean(isDepartmentMode),
   });
   const isShaderCap = shaderMode.useShader;
   const isSelectionHighlight = shaderMode.isSelectionHighlight && !isError && !isSuccess;
@@ -275,12 +307,18 @@ export function getPolygonMaterialForFeature({
   else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}${ghostSuffix}`;
   else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}${ghostSuffix}`;
   else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}${ghostSuffix}`;
-  // The country being ignited gets a private material so only it restarts from dark.
-  const igniteSelf =
-    !isShaderCap && kind === "cap" && !isGhostCountry && admin && admin === igniteState.admin
-      ? getIgniteSelfHolder(admin)
+  // A country mid-reveal gets a private material bound to its own ignition holder, so
+  // only it restarts from dark and two quick finds each keep their own timeline.
+  registerCountryFeature(admin, d);
+  const igniteHolder =
+    !isShaderCap &&
+    (kind === "cap" || kind === "side") &&
+    !isGhostCountry &&
+    admin &&
+    isCountryRevealing(admin, performance.now() / 1000)
+      ? getIgniteHolder(admin)
       : null;
-  if (igniteSelf) cacheKey = `ignite-${admin}-${cacheKey}`;
+  if (igniteHolder) cacheKey = `ignite-${admin}-${cacheKey}`;
 
   let material = sharedMaterialsRef.current.get(cacheKey);
 
@@ -343,16 +381,13 @@ export function getPolygonMaterialForFeature({
     } else {
       if (material.isNodeMaterial) {
         // Read through materialReference: one pipeline, per-material ignition flag.
-        Object.defineProperty(material.userData, "igniteSelf", {
-          get: () => (igniteSelf ? igniteSelf.value : 0),
-          enumerable: true,
-        });
+        defineIgniteReferences(material, igniteHolder);
         material.outputNode = countryGrainOutputNode(isGhostCountry);
       } else {
         material.customProgramCacheKey = () =>
           isGhostCountry ? "country-grain-ghost" : "country-grain-land";
         material.onBeforeCompile = (shader) =>
-          applyCountrySurfaceGrainShader(shader, { isGhostCountry, igniteSelf });
+          applyCountrySurfaceGrainShader(shader, { isGhostCountry, igniteHolder });
       }
     }
 

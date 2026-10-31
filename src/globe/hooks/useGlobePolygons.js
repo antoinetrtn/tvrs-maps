@@ -55,7 +55,7 @@ export function useGlobePolygons({
   globeLightingEnabled,
   perfProfile,
   selectedCountry,
-  foundSet,
+  foundSet: rawFoundSet,
   _foundList,
   conquestOverlay = null, // Conquête: { colors, strokes } by countryId
   isHomeScreen,
@@ -71,6 +71,17 @@ export function useGlobePolygons({
   transitionStep = 0,
 }) {
   const isRegionalMode = isDepartmentMode || isUsStatesMode;
+  // Discovery reveal starts on the correct guess, not after the auto-advance delay: the
+  // guessed country renders as found right away so its own land/cities reveal (grain
+  // shader, discoveryTimeline.js) runs from t = 0 instead of a full-country flash.
+  const foundSet = useMemo(() => {
+    if (!isSuccess || !selectedCountry || isRegionalMode || rawFoundSet.has(selectedCountry)) {
+      return rawFoundSet;
+    }
+    const next = new Set(rawFoundSet);
+    next.add(selectedCountry);
+    return next;
+  }, [rawFoundSet, isSuccess, selectedCountry, isRegionalMode]);
   const { transitioningPreviousCountryState, transitioningIncomingCountryState } =
     selectionTransition.state;
   const polygonMaterialCacheRef = useRef({ cap: new Map(), side: new Map() });

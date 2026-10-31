@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { FEEDBACK_TIMING } from "../../config/gameConstants";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
+import { DISCOVERY } from "./discoveryTimeline";
 import {
   GLITCH_FRAGMENT_BODY,
   GLITCH_FRAGMENT_DECLARATIONS,
@@ -23,9 +24,14 @@ export const polygonGlitchUniforms = {
   // Deselection tear colours, derived from the globe palette.
   uGlitchTintA: { value: new THREE.Color(0x00ccff) },
   uGlitchTintB: { value: new THREE.Color(0xff00cc) },
-  // Success flash timeline — stamped (in uTime seconds) when a guess lands.
+  // Success timeline — stamped (in uTime seconds) when a guess lands. uSuccessDuration is
+  // the gameplay window (auto-advance) during which the selection shader is still active.
   uSuccessStart: { value: -10 },
   uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
+  // Progressive discovery reveal (discoveryTimeline.js): start time + land front radius
+  // (farthest polygon vertex from the capital) of the latest discovery.
+  uRevealStart: { value: -100 },
+  uLandRadius: { value: 0.1 },
   // Selection start (uTime seconds): drives the select-in trace/glow ease.
   uSelectStart: { value: -10 },
   // Discovery ignition: a gold wave lights the found country's city pixels outward
@@ -33,7 +39,7 @@ export const polygonGlitchUniforms = {
   uIgniteOrigin: { value: new THREE.Vector3(0, 1, 0) },
   uIgniteStart: { value: -100 },
   uIgniteRadius: { value: 0.1 },
-  uIgniteDuration: { value: 1.6 },
+  uIgniteDuration: { value: DISCOVERY.CITY_S },
   // 1 when the user prefers reduced motion: ignition and showcase loops resolve instantly.
   uReducedMotion: { value: 0 },
   // Homepage wake-up progress 0 (blackout) -> 1 (world awake), one-shot per arrival.
@@ -44,28 +50,57 @@ export const polygonGlitchUniforms = {
 };
 
 /**
- * Discovery ignition is per country: the found caps share one material, so the country
- * being ignited gets its own material bound to a per-country `{ value }` holder (1 while it
- * is the latest discovery). Previously lit countries keep 0 and never restart from dark.
+ * Discovery ignition is per country: each freshly found country gets its own material
+ * bound to a per-country holder (own origin, start, radii) so two finds within the
+ * reveal window each run their own timeline. Shared materials read the global uniforms
+ * with self = 0 (no restart from dark, only a faint spark from a nearby ignition).
+ * A country never replays: its timeline is anchored on the stamp time and is only
+ * re-stamped by a new correct guess on that same country.
  */
 export const igniteState = { admin: null };
-const igniteSelfHolders = new Map();
+const igniteHolders = new Map();
 
-export function getIgniteSelfHolder(admin) {
-  let holder = igniteSelfHolders.get(admin);
+export function getIgniteHolder(admin) {
+  let holder = igniteHolders.get(admin);
   if (!holder) {
-    holder = { value: igniteState.admin === admin ? 1 : 0 };
-    igniteSelfHolders.set(admin, holder);
+    holder = {
+      self: { value: 0 },
+      origin: { value: new THREE.Vector3(0, 1, 0) },
+      start: { value: -100 },
+      radius: { value: 0.1 },
+      duration: { value: polygonGlitchUniforms.uIgniteDuration.value },
+      revealStart: { value: -100 },
+      landRadius: { value: 0.1 },
+    };
+    igniteHolders.set(admin, holder);
   }
   return holder;
 }
 
+/** Back-compat: the per-country `{ value }` self flag. */
+export function getIgniteSelfHolder(admin) {
+  return getIgniteHolder(admin).self;
+}
+
+/** Copy the latest global ignition stamp into `admin`'s own holder. */
 export function markIgnitingCountry(admin) {
-  igniteSelfHolders.forEach((holder) => {
-    holder.value = 0;
-  });
   igniteState.admin = admin;
-  getIgniteSelfHolder(admin).value = 1;
+  const h = getIgniteHolder(admin);
+  const g = polygonGlitchUniforms;
+  h.self.value = 1;
+  h.origin.value.copy(g.uIgniteOrigin.value);
+  h.start.value = g.uIgniteStart.value;
+  h.radius.value = g.uIgniteRadius.value;
+  h.duration.value = g.uIgniteDuration.value;
+  h.revealStart.value = g.uRevealStart.value;
+  h.landRadius.value = g.uLandRadius.value;
+}
+
+/** True while `admin`'s own discovery reveal is still running (needs its private material). */
+export function isCountryRevealing(admin, time = polygonGlitchUniforms.uTime.value) {
+  const h = igniteHolders.get(admin);
+  if (!h || h.self.value < 0.5) return false;
+  return time < h.revealStart.value + FEEDBACK_TIMING.discoveryRevealMs / 1000 + 0.25;
 }
 
 /** Set once country materials are built (homepage wake-up starts then, not on an empty globe). */
@@ -159,7 +194,7 @@ export function attachPolygonGlitchShader(
     registerAnimatedPolygonMaterial(material);
     return;
   }
-  material.customProgramCacheKey = () => `shader-cap-glitch-v11-${kind}`;
+  material.customProgramCacheKey = () => `shader-cap-glitch-v12-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
@@ -167,6 +202,10 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uGlitchTintB = polygonGlitchUniforms.uGlitchTintB;
     shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
     shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
+    shader.uniforms.uRevealStart = polygonGlitchUniforms.uRevealStart;
+    shader.uniforms.uLandRadius = polygonGlitchUniforms.uLandRadius;
+    shader.uniforms.uIgniteOrigin = polygonGlitchUniforms.uIgniteOrigin;
+    shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
     shader.uniforms.uSelectStart = polygonGlitchUniforms.uSelectStart;
     shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };

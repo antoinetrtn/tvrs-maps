@@ -144,11 +144,11 @@ exports[`useGlobePolygons characterization — Full Matrix Snapshots > freezes t
     "rows": [
       {
         "admin": "France",
-        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#2dffa8 em:#2dffa8@1 sh:true fc:false",
-        "capUniforms": "target:#2dffa8 err:0 ok:1 fnd:1 selIn:0",
+        "capMat": "MeshPhongMaterial vis:true tr:false op:1 wf:false col:#000000 em:#2dffa8@1 sh:false fc:true",
+        "capUniforms": null,
         "colors": "#2dffa8 | side:#2af19f | stroke:#e6dccb | base:#2dffa8/#2dffa8",
         "metrics": "alt:0.008 | w:14 | res:1.5",
-        "sideMat": "MeshPhongMaterial vis:true tr:false op:1 sh:true",
+        "sideMat": "MeshPhongMaterial vis:true tr:false op:1 sh:false",
       },
     ],
   },

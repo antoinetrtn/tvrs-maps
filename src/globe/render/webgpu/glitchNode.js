@@ -7,10 +7,12 @@
 import * as THREE from "three";
 import {
   abs,
+  acos,
   asin,
   atan,
   clamp,
   cos,
+  dot,
   float,
   floor,
   Fn,
@@ -25,7 +27,6 @@ import {
   positionWorld,
   select,
   sin,
-  smoothstep,
   step,
   texture,
   vec2,
@@ -34,7 +35,9 @@ import {
 } from "three/tsl";
 
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
+import { DISCOVERY } from "../discoveryTimeline";
 import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
+import { discoveryLandStep } from "./igniteNodes";
 import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 const PI = 3.14159;
@@ -50,6 +53,10 @@ function getSharedNodes(polygonGlitchUniforms) {
       uSuccessStart: mirrorUniform(polygonGlitchUniforms.uSuccessStart),
       uSelectStart: mirrorUniform(polygonGlitchUniforms.uSelectStart),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
+      uRevealStart: mirrorUniform(polygonGlitchUniforms.uRevealStart),
+      uLandRadius: mirrorUniform(polygonGlitchUniforms.uLandRadius),
+      uIgniteOrigin: mirrorUniform(polygonGlitchUniforms.uIgniteOrigin),
+      uReducedMotion: mirrorUniform(polygonGlitchUniforms.uReducedMotion),
       uGlitchTintA: mirrorUniform(polygonGlitchUniforms.uGlitchTintA),
       uGlitchTintB: mirrorUniform(polygonGlitchUniforms.uGlitchTintB),
     };
@@ -133,31 +140,27 @@ function errorEffect(time, noiseUv, worldPos) {
   return split;
 }
 
-function successEffect(u, time, blockUv, worldPos) {
-  const p = clamp(time.sub(u.uSuccessStart).div(u.uSuccessDuration), 0, 1);
-  const blockNoise = hash(blockUv.mul(0.5).add(17.0));
-  const resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
-  const flick = mix(0.7, 1.35, hash(blockUv.add(floor(time.mul(60)))));
-  const targetTone = vec3(0.96, 0.68, 0.22);
-  const hot = mix(vec3(1.0, 0.97, 0.86), targetTone, 0.25).mul(flick);
-  const sweep = step(fract(worldPos.y.mul(0.18).sub(p.mul(2.8))), 0.22)
-    .mul(float(1).sub(smoothstep(0.3, 0.8, p)))
-    .mul(0.7);
-  const baseTone = mix(hot, targetTone, resolved).add(targetTone.mul(sweep)).toVar();
-  If(p.lessThan(0.85), () => {
-    const burstChroma = float(1)
-      .sub(p)
-      .mul(0.45)
-      .mul(hash(blockUv.add(time.mul(12))).sub(0.5));
-    baseTone.assign(
-      vec3(
-        clamp(baseTone.x.add(burstChroma.mul(0.6)), 0, 1),
-        clamp(baseTone.y.add(abs(burstChroma).mul(0.25)), 0, 1),
-        clamp(baseTone.z.sub(burstChroma.mul(0.7)), 0, 1)
-      )
-    );
+/**
+ * Discovery reveal, success window (GLSL computeDiscoveryEffect twin): stepped land front
+ * from the capital towards the found tone, amber outline (walls) ahead of it. No flash.
+ */
+function discoveryEffect(u, staticColor, foundColor, dir, cell, isWall) {
+  const revealT = u.uTime.sub(u.uRevealStart);
+  const dist = acos(clamp(dot(dir, u.uIgniteOrigin), -1.0, 1.0));
+  const landStep = discoveryLandStep({
+    revealT,
+    dist,
+    radius: u.uLandRadius,
+    cell,
+    reduced: u.uReducedMotion,
   });
-  return baseTone;
+  const color = mix(staticColor, foundColor, landStep);
+  const outlineIn = floor(clamp(revealT.div(DISCOVERY.OUTLINE_S), 0.0, 1.0).mul(2.0)).div(2.0);
+  const outline = isWall
+    .mul(outlineIn)
+    .mul(float(1).sub(landStep))
+    .mul(float(1).sub(u.uReducedMotion));
+  return mix(color, CITY_AMBER.div(u.uSideShade.max(0.001)), outline.mul(DISCOVERY.OUTLINE_ALPHA));
 }
 
 function selectionEffect(time) {
@@ -214,7 +217,7 @@ function glitchBase(u, lit) {
     finalColor.assign(errorEffect(time, blockUv, positionWorld));
   })
     .ElseIf(on(u.uIsSuccess), () => {
-      finalColor.assign(successEffect(u, time, blockUv, positionWorld));
+      finalColor.assign(discoveryEffect(u, staticVec, foundRestingColor, sphereDir, selCell, side));
     })
     .ElseIf(on(u.uIsSelection), () => {
       finalColor.assign(selectionEffect(time));
