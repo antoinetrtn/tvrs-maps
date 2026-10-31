@@ -20,6 +20,9 @@ const BOUNDARY_EPS = 0.004;
 let sharedAudioCtx = null;
 let iosHapticLabel = null;
 let lastNativeVibrateAt = -Infinity;
+let lastTickAt = -Infinity;
+
+const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
 function ensureIosHapticSwitch() {
   if (typeof document === "undefined" || !document.body) return null;
@@ -150,6 +153,7 @@ export function triggerSubtleHapticTick(
   nav = typeof navigator !== "undefined" ? navigator : null
 ) {
   if (prefersReducedMotion()) return false;
+  lastTickAt = nowMs();
   const vibrated = tryNativeVibrate(nav, durationMs);
   // Always run the ultra-short 8ms low-frequency tactile audio tick alongside native vibrate:
   // on Android devices where OS Touch feedback / Ringer / Battery Saver silences the physical
@@ -286,4 +290,25 @@ export function createZoomHapticTracker({
       return { pulsed: Boolean(ok), detent, duration: ZOOM_HAPTIC_TICK_MS };
     },
   };
+}
+
+// Selection tick when the homepage deck lands on another mode card (swipe, keys, dots).
+export const SELECTION_HAPTIC_TICK_MS = 10;
+export const SELECTION_HAPTIC_COOLDOWN_MS = 90;
+
+/**
+ * Light 10ms tick, throttled: skipped if any haptic fired within the cooldown
+ * (fast swipes, or an IconButton arrow that already ticked on click).
+ */
+export function triggerSelectionHaptic(
+  nav = typeof navigator !== "undefined" ? navigator : null,
+  now = nowMs()
+) {
+  if (now - lastTickAt < SELECTION_HAPTIC_COOLDOWN_MS) return false;
+  return triggerSubtleHapticTick(SELECTION_HAPTIC_TICK_MS, nav);
+}
+
+export function resetHapticsThrottleForTests() {
+  lastTickAt = -Infinity;
+  lastNativeVibrateAt = -Infinity;
 }
