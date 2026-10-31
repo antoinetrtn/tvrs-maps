@@ -25,6 +25,7 @@ import PixelIcon, { resolveIconFamily } from "../multiplayer/knowledge/PixelIcon
 const makeValidQuestion = (overrides = {}) => ({
   id: "fr-1",
   category: "tech",
+  answerType: "choice",
   prompt: "Quel train à grande vitesse relie Paris à Lyon depuis 1981 ?",
   choices: [
     { label: "TGV", iconId: "transport-train" },
@@ -123,7 +124,7 @@ describe("knowledgeRules validator logic", () => {
     });
     const errs = validateQuestion(bad, seenIds);
     expect(errs.some((e) => e.includes("id dupliqué"))).toBe(true);
-    expect(errs.some((e) => e.includes("4 labels de choix uniques requis"))).toBe(true);
+    expect(errs.some((e) => e.includes("labels uniques requis"))).toBe(true);
     expect(errs.some((e) => e.includes("année 2015"))).toBe(true);
     expect(errs.some((e) => e.includes('iconId invalide "bad-prefix"'))).toBe(true);
 
@@ -156,6 +157,69 @@ describe("knowledgeRules validator logic", () => {
   });
 });
 
+describe("per answer type schema", () => {
+  const base = { ...makeValidQuestion(), choices: undefined, answerIndex: undefined };
+
+  it("accepts each well-formed answer type", () => {
+    const text = { ...base, answerType: "text", answer: "Le TGV", aliases: ["TGV"] };
+    const number = {
+      ...base,
+      answerType: "number",
+      answer: 1981,
+      min: 1900,
+      max: 2000,
+      step: 1,
+      tolerance: 3,
+      unit: "",
+    };
+    const order = {
+      ...base,
+      answerType: "order",
+      items: [
+        { label: "Vapeur", iconId: "transport-train" },
+        { label: "Diesel", iconId: "transport-train" },
+        { label: "TGV", iconId: "transport-rail" },
+      ],
+    };
+    for (const q of [text, number, order]) expect(validateQuestion(q)).toEqual([]);
+    expect(
+      validateQuestion({
+        ...makeValidQuestion(),
+        sourceUrl: "https://fr.wikipedia.org/wiki/TGV",
+        sourceSafe: false,
+      })
+    ).toEqual([]);
+  });
+
+  it("rejects malformed shapes", () => {
+    const errs = (q) => validateQuestion(q).join(" | ");
+    expect(errs({ ...base, answerType: "quiz" })).toMatch(/answerType invalide/);
+    expect(errs({ ...base, answerType: "text", answer: " TGV" })).toMatch(/answer texte/);
+    expect(
+      errs({
+        ...base,
+        answerType: "number",
+        answer: 5,
+        min: 10,
+        max: 20,
+        step: 1,
+        tolerance: 0,
+        unit: "",
+      })
+    ).toMatch(/hors de/);
+    expect(errs({ ...base, answerType: "number", answer: "5" })).toMatch(/numériques/);
+    expect(
+      errs({ ...base, answerType: "order", items: [{ label: "A", iconId: "tech-a" }] })
+    ).toMatch(/3 à 5/);
+    expect(
+      errs({ ...makeValidQuestion(), sourceUrl: "https://example.com/x", sourceSafe: true })
+    ).toMatch(/non Wikipédia/);
+    expect(
+      errs({ ...makeValidQuestion(), sourceUrl: "https://fr.wikipedia.org/wiki/TGV" })
+    ).toMatch(/sourceSafe/);
+  });
+});
+
 describe("knowledge ladder data stays server-side", () => {
   it("ships no public question pack with answers", () => {
     expect(fs.existsSync(path.resolve(process.cwd(), "public/quiz"))).toBe(false);
@@ -184,13 +248,14 @@ describe("knowledge categories + PixelIcon", () => {
   });
 });
 
-describe("ConquestStealPanel knowledge step (ladder levels 3-5)", () => {
+describe("ConquestStealPanel: one answer component per question", () => {
   const t = conquestText("fr");
   const challenge = {
     ok: true,
     mode: "steal",
     kind: "knowledge",
-    step: 4,
+    level: 4,
+    answer_type: "choice",
     category: "nature",
     country_id: "Mexico",
     prompt: "Quel amphibien vit dans les canaux de Xochimilco ?",
@@ -198,37 +263,78 @@ describe("ConquestStealPanel knowledge step (ladder levels 3-5)", () => {
     icons: ["animal-frog", "animal-axolotl", "animal-lizard", "animal-eel"],
     expires_at: new Date(Date.now() + 20000).toISOString(),
   };
-
-  it("uses the same panel: pick an option, send its label", async () => {
-    const onAnswer = vi.fn();
+  const renderPanel = (overrides = {}, onAnswer = vi.fn()) => {
     render(
       <ConquestStealPanel
         t={t}
         lang="fr"
-        challenge={challenge}
+        challenge={{ ...challenge, ...overrides }}
         countryName={(id) => (id === "Mexico" ? "Mexique" : id)}
         onAnswer={onAnswer}
         onCancel={() => {}}
       />
     );
-    expect(screen.getByText(/Faune & flore · Mexique — Quel amphibien/)).toBeTruthy();
-    const option = await screen.findByRole("radio", { name: "L'axolotl" });
-    fireEvent.click(option);
-    fireEvent.click(screen.getByRole("button", { name: t.stealOffer }));
+    return onAnswer;
+  };
+  const submit = () => fireEvent.click(screen.getByRole("button", { name: t.stealOffer }));
+
+  it("choice grid: pick an option, send its label; only the current level shown", async () => {
+    const onAnswer = renderPanel();
+    expect(screen.getByText(/Niv\. 4 · Faune & flore · Mexique — Quel amphibien/)).toBeTruthy();
+    expect(screen.queryByText(/Niv\. 5/)).toBeNull();
+    fireEvent.click(await screen.findByRole("radio", { name: "L'axolotl" }));
+    submit();
     expect(onAnswer).toHaveBeenCalledWith("L'axolotl");
   });
 
-  it("keeps the capital step as a typed answer", () => {
-    render(
-      <ConquestStealPanel
-        t={t}
-        lang="fr"
-        challenge={{ ...challenge, kind: "capital", step: 1, options: [] }}
-        countryName={(id) => id}
-        onAnswer={() => {}}
-        onCancel={() => {}}
-      />
+  it("text: typed like the capital", () => {
+    const onAnswer = renderPanel({ answer_type: "text", options: [], icons: [] });
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "axolotl" } });
+    submit();
+    expect(onAnswer).toHaveBeenCalledWith("axolotl");
+  });
+
+  it("number: slider starts at the midpoint", async () => {
+    const onAnswer = renderPanel({
+      answer_type: "number",
+      options: [],
+      min: 1900,
+      max: 2000,
+      step: 1,
+      unit: "",
+    });
+    const slider = await screen.findByRole("slider");
+    fireEvent.change(slider, { target: { value: "1907" } });
+    submit();
+    expect(onAnswer).toHaveBeenCalledWith("1907");
+  });
+
+  it("order: move items, send the JSON order", async () => {
+    const onAnswer = renderPanel({
+      answer_type: "order",
+      options: ["B", "A", "C"],
+      icons: ["tech-b", "tech-a", "tech-c"],
+    });
+    fireEvent.click(await screen.findByRole("button", { name: `${t.orderUp} : A` }));
+    submit();
+    expect(onAnswer).toHaveBeenCalledWith(JSON.stringify(["A", "B", "C"]));
+  });
+
+  it("shows the source « i » only when the server sends it", () => {
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    renderPanel({ source_url: "https://fr.wikipedia.org/wiki/Axolotl" });
+    fireEvent.click(screen.getByRole("button", { name: t.questionSource }));
+    expect(open).toHaveBeenCalledWith(
+      "https://fr.wikipedia.org/wiki/Axolotl",
+      "_blank",
+      "noopener,noreferrer"
     );
+    open.mockRestore();
+  });
+
+  it("hides the « i » without a source and keeps the capital typed", () => {
+    renderPanel({ kind: "capital", level: 1, options: [] });
+    expect(screen.queryByRole("button", { name: t.questionSource })).toBeNull();
     expect(screen.getByRole("textbox")).toBeTruthy();
     expect(screen.queryByRole("radio")).toBeNull();
   });

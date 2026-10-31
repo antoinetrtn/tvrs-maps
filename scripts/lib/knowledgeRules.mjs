@@ -1,5 +1,5 @@
 /**
- * Pure validation and pack-building rules for the Conquête knowledge QCM dataset.
+ * Pure validation rules for the Conquête knowledge question bank (choice, text, number, order).
  */
 
 export const ALLOWED_CATEGORIES = ["tech", "nature", "musique", "culture"];
@@ -107,6 +107,93 @@ export function validateCountryCategories(iso, questions = []) {
   return { errors, warnings };
 }
 
+const ANSWER_TYPES = ["choice", "text", "number", "order"];
+
+const isTrimmedText = (value) =>
+  typeof value === "string" && value.trim().length > 0 && value.trim() === value;
+
+/** Labelled pixel items (choice grid and ordering): unique trimmed labels + valid icon ids. */
+function checkItems(items, min, max, what) {
+  if (!Array.isArray(items) || items.length < min || items.length > max) {
+    return [`${what} : ${min === max ? min : `${min} à ${max}`} éléments requis`];
+  }
+  const errors = [];
+  const labels = new Set();
+  for (const item of items) {
+    if (!isTrimmedText(item?.label)) {
+      // Le serveur compare l'étiquette choisie telle quelle.
+      errors.push(`label invalide ou avec espaces en bord "${item?.label}"`);
+    } else {
+      labels.add(item.label.toLowerCase());
+    }
+    if (!isValidIconId(item?.iconId)) errors.push(`iconId invalide "${item?.iconId}"`);
+  }
+  if (labels.size !== items.length) errors.push(`${what} : labels uniques requis`);
+  return errors;
+}
+
+/** Per-answer-type schema (the seed builder maps each shape to display / answer jsonb). */
+const TYPE_CHECKS = {
+  choice: (q) => {
+    const errors = checkItems(q.choices, 4, 4, "choix");
+    if (!Number.isInteger(q.answerIndex) || q.answerIndex < 0 || q.answerIndex > 3) {
+      errors.push(`answerIndex invalide (${q.answerIndex})`);
+    }
+    return errors;
+  },
+  text: (q) => {
+    const errors = [];
+    if (!isTrimmedText(q.answer)) errors.push("answer texte requis");
+    const aliases = q.aliases ?? [];
+    if (!Array.isArray(aliases) || aliases.length > 8 || !aliases.every(isTrimmedText)) {
+      errors.push("aliases : liste de 0 à 8 textes");
+    }
+    if (typeof q.answer === "string" && q.answer.split(/\s+/).length > 4) {
+      errors.push("answer texte trop long (4 mots max)");
+    }
+    return errors;
+  },
+  number: (q) => {
+    const nums = ["answer", "min", "max", "step", "tolerance"];
+    const bad = nums.filter((key) => typeof q[key] !== "number" || !Number.isFinite(q[key]));
+    if (bad.length) return [`champs numériques requis : ${bad.join(", ")}`];
+    const errors = [];
+    if (!(q.min < q.max)) errors.push("min < max requis");
+    if (q.answer < q.min || q.answer > q.max) errors.push("answer hors de [min, max]");
+    if (!(q.step > 0) || (q.max - q.min) / q.step > 2000) errors.push("step invalide");
+    if (q.tolerance < 0 || q.tolerance > (q.max - q.min) / 4) errors.push("tolerance invalide");
+    if (typeof q.unit !== "string") errors.push("unit texte requis (vide autorisé)");
+    return errors;
+  },
+  order: (q) => checkItems(q.items, 3, 5, "items"),
+};
+
+const SOURCE_RE = /^https:\/\/(fr|en)\.wikipedia\.org\/wiki\/[^\s]+$/;
+
+/** Optional Wikipedia source; `sourceSafe` false hides the « i » (URL gives the answer away). */
+function checkSource(q) {
+  if (q?.sourceUrl == null) return [];
+  const errors = [];
+  if (!SOURCE_RE.test(q.sourceUrl)) errors.push(`sourceUrl non Wikipédia "${q.sourceUrl}"`);
+  if (typeof q.sourceSafe !== "boolean") errors.push("sourceSafe booléen requis avec sourceUrl");
+  return errors;
+}
+
+/** Every player-visible / accepted text of a question (scanned for banned references). */
+function answerTexts(q) {
+  if (q?.answerType === "text") return [q.answer, ...(q.aliases || [])];
+  if (q?.answerType === "order") return (q.items || []).map((item) => item?.label);
+  if (q?.answerType === "number") return [];
+  return (q?.choices || []).map((c) => c?.label);
+}
+
+/** Canonical correct answer used to spot answers shared between countries. */
+function correctAnswerLabel(q) {
+  if (q?.answerType === "text") return q.answer;
+  if (q?.answerType === "choice") return q.choices?.[q.answerIndex]?.label;
+  return null;
+}
+
 /** Validates a single question object (excluding country-level culture count). */
 export function validateQuestion(q, seenIds = new Set(), checkCategory = true) {
   const errors = [];
@@ -128,32 +215,12 @@ export function validateQuestion(q, seenIds = new Set(), checkCategory = true) {
     errors.push(`${id}: prompt manquant`);
   }
 
-  if (!Array.isArray(q?.choices) || q.choices.length !== 4) {
-    errors.push(`${id}: 4 choix requis`);
+  if (!ANSWER_TYPES.includes(q?.answerType)) {
+    errors.push(`${id}: answerType invalide "${q?.answerType}"`);
   } else {
-    const normalizedLabels = new Set();
-    for (const choice of q.choices) {
-      const label = typeof choice?.label === "string" ? choice.label.trim() : "";
-      if (!label) {
-        errors.push(`${id}: label de choix manquant`);
-      } else if (label !== choice.label) {
-        // Le serveur compare l'étiquette choisie telle quelle (niveaux d'escalade 3 à 5).
-        errors.push(`${id}: label avec espaces en bord "${choice.label}"`);
-      } else {
-        normalizedLabels.add(label.toLowerCase());
-      }
-      if (!isValidIconId(choice?.iconId)) {
-        errors.push(`${id}: iconId invalide "${choice?.iconId}"`);
-      }
-    }
-    if (normalizedLabels.size !== 4) {
-      errors.push(`${id}: 4 labels de choix uniques requis`);
-    }
+    errors.push(...TYPE_CHECKS[q.answerType](q).map((msg) => `${id}: ${msg}`));
   }
-
-  if (!Number.isInteger(q?.answerIndex) || q.answerIndex < 0 || q.answerIndex > 3) {
-    errors.push(`${id}: answerIndex invalide (${q?.answerIndex})`);
-  }
+  errors.push(...checkSource(q).map((msg) => `${id}: ${msg}`));
 
   if (![1, 2, 3].includes(q?.difficulty)) {
     errors.push(`${id}: difficulty invalide (${q?.difficulty})`);
@@ -167,10 +234,7 @@ export function validateQuestion(q, seenIds = new Set(), checkCategory = true) {
     errors.push(`${id}: needsReview booléen requis`);
   }
 
-  const textsToScan = [
-    q?.prompt,
-    ...(Array.isArray(q?.choices) ? q.choices.map((c) => c?.label) : []),
-  ];
+  const textsToScan = [q?.prompt, ...answerTexts(q)];
   for (const text of textsToScan) {
     const year = findRecentYear(text);
     if (year !== null) {
@@ -195,8 +259,8 @@ export function findSharedCorrectAnswers(entries = []) {
   for (const entry of entries) {
     const iso = entry?.iso;
     for (const q of entry?.questions || []) {
-      const correctChoice = Array.isArray(q?.choices) ? q.choices[q.answerIndex] : null;
-      const rawLabel = typeof correctChoice?.label === "string" ? correctChoice.label.trim() : "";
+      const correct = correctAnswerLabel(q);
+      const rawLabel = typeof correct === "string" ? correct.trim() : "";
       if (!rawLabel || !iso) continue;
       const key = rawLabel.toLowerCase();
       if (!byAnswer.has(key)) {
@@ -224,6 +288,8 @@ export function validateKnowledgeDataset(entries = [], expectedIsos = []) {
   const parCategorie = { tech: 0, nature: 0, musique: 0, culture: 0 };
   let totalQuestions = 0;
   let needsReviewCount = 0;
+  const parType = { choice: 0, text: 0, number: 0, order: 0 };
+  let sources = 0;
 
   for (const entry of entries) {
     if (!entry?.iso) {
@@ -254,6 +320,8 @@ export function validateKnowledgeDataset(entries = [], expectedIsos = []) {
         parCategorie[q.category] = (parCategorie[q.category] || 0) + 1;
       }
       if (q?.needsReview === true) needsReviewCount += 1;
+      if (q?.answerType in parType) parType[q.answerType] += 1;
+      if (q?.sourceUrl) sources += 1;
       erreurs.push(...validateQuestion(q, seenIds, false));
     }
   }
@@ -270,6 +338,8 @@ export function validateKnowledgeDataset(entries = [], expectedIsos = []) {
     pays: byIso.size,
     questions: totalQuestions,
     parCategorie,
+    parType,
+    sources,
     needsReview: needsReviewCount,
     erreurs,
     warnings,

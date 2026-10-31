@@ -123,6 +123,11 @@ const PAIRS = {
   room: ["Salon", "Room"],
   players: ["Joueurs", "Players"],
   flagOption: ["Drapeau", "Flag"],
+  answerPlaceholder: ["Ta réponse…", "Your answer…"],
+  questionSource: ["Source de la question", "Question source"],
+  orderUp: ["Monter", "Move up"],
+  orderDown: ["Descendre", "Move down"],
+  ladderLevel: ["Niv.", "Lvl"],
   elo: ["Elo", "Elo"],
   unrated: ["Non classé", "Unrated"],
   unratedFull: [

@@ -25,21 +25,41 @@ for (const [countryId, data] of Object.entries(countryDataMap)) {
   if (data?.iso2) isoToCountryId.set(data.iso2, countryId);
 }
 
-// Seed SQL côté serveur (avec answer_index).
+const items = (list) => (list || []).map(({ label, iconId }) => ({ label, iconId }));
+
+/** Splits a question into what the client may see (display) and the server-only solution. */
+function toColumns(item) {
+  switch (item.answerType) {
+    case "text":
+      return { display: {}, answer: { aliases: [item.answer, ...(item.aliases || [])] } };
+    case "number":
+      return {
+        display: { min: item.min, max: item.max, step: item.step, unit: item.unit || "" },
+        answer: { value: item.answer, tolerance: item.tolerance },
+      };
+    case "order":
+      return {
+        display: { items: items(item.items) },
+        answer: { order: item.items.map((i) => i.label) },
+      };
+    default:
+      return {
+        display: { items: items(item.choices) },
+        answer: { label: item.choices[item.answerIndex].label },
+      };
+  }
+}
+
+// Seed SQL côté serveur (solutions comprises, jamais exposées au client).
 const sqlRows = [];
 for (const entry of [...entries].sort((a, b) => String(a.iso).localeCompare(String(b.iso)))) {
   const countryId = isoToCountryId.get(entry.iso);
   if (!countryId) continue;
   for (const item of entry.questions || []) {
     if (item.needsReview !== false) continue;
-    const cleanChoices = (item.choices || []).map((c) => ({
-      label: c.label,
-      iconId: c.iconId,
-    }));
-    const answerIndex = Number.isInteger(item.answerIndex) ? item.answerIndex : 0;
-    const difficulty = [1, 2, 3].includes(item.difficulty) ? item.difficulty : 1;
+    const { display, answer } = toColumns(item);
     sqlRows.push(
-      `  (${q(item.id)}, ${q(countryId)}, ${q(item.category)}, ${q(item.prompt)}, ${q(JSON.stringify(cleanChoices))}::jsonb, ${answerIndex}, ${difficulty}, true)`
+      `  (${q(item.id)}, ${q(countryId)}, ${q(item.category)}, ${q(item.answerType)}, ${q(item.prompt)}, ${q(JSON.stringify(display))}::jsonb, ${q(JSON.stringify(answer))}::jsonb, ${item.sourceUrl ? q(item.sourceUrl) : "NULL"}, ${item.sourceSafe === true}, true)`
     );
   }
 }
@@ -48,16 +68,18 @@ const sql = `-- Généré par scripts/build-knowledge-seed.mjs — ne pas édite
 -- Seed de l'escalade de connaissances Conquête : ${sqlRows.length} questions (needsReview = false).
 
 INSERT INTO public.conquest_knowledge_questions
-  (id, country_id, category, prompt, choices, answer_index, difficulty, active)
+  (id, country_id, category, answer_type, prompt, display, answer, source_url, source_safe, active)
 VALUES
 ${sqlRows.join(",\n")}
 ON CONFLICT (id) DO UPDATE
   SET country_id = EXCLUDED.country_id,
       category = EXCLUDED.category,
+      answer_type = EXCLUDED.answer_type,
       prompt = EXCLUDED.prompt,
-      choices = EXCLUDED.choices,
-      answer_index = EXCLUDED.answer_index,
-      difficulty = EXCLUDED.difficulty,
+      display = EXCLUDED.display,
+      answer = EXCLUDED.answer,
+      source_url = EXCLUDED.source_url,
+      source_safe = EXCLUDED.source_safe,
       active = EXCLUDED.active;
 `;
 

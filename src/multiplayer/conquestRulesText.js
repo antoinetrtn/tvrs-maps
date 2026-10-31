@@ -38,11 +38,11 @@ const RULES = {
       ],
       [
         "Protection",
-        "Capture = 20 s de bouclier (pays involable). Re-clique ton pays pour grimper l'échelle : capitale = +30 s, drapeau = +1 min, puis une question tech, faune & flore = +45 s chacune. Chaque renfort rend le vol plus dur. Un pays volé perd ses renforts.",
+        "Capture = 20 s de bouclier (pays involable). Re-clique ton pays : réussis le défi du moment = +30 s, puis un 2e = +1 min (2 renforts max, perdus si le pays est volé). Chaque renfort fait aussi monter l'échelle du pays.",
       ],
       [
         "Vol",
-        "Clique ou touche un pays adverse non protégé → défi de 20 s : le défi dépend des renforts du pays : capitale, puis drapeau parmi 6, puis une question tech, faune & flore ou musique (4 choix). Succès : +15 pts (+20 si l'adversaire mène), le pays est à toi avec un nouveau bouclier.",
+        "Clique ou touche un pays adverse non protégé → défi de 20 s. Chaque pays a son échelle : capitale, drapeau, tech, faune & flore, musique, puis d'autres questions, dans un ordre secret tiré au hasard pour la partie. Seul le défi du moment est dévoilé. Chaque vol réussi fait monter l'échelle pour tout le monde : pour reprendre le pays, il faudra répondre à une nouvelle question, jamais la même. Succès : +15 pts (+20 si l'adversaire mène), le pays est à toi avec un nouveau bouclier.",
       ],
       [
         "Vol raté",
@@ -88,11 +88,11 @@ const RULES = {
       ],
       [
         "Protection",
-        "Capture = 20 s shield (country cannot be stolen). Click your country again to climb the ladder: capital = +30 s, flag = +1 min, then a tech or wildlife & flora question = +45 s each. Each reinforcement makes stealing harder. A stolen country loses its reinforcements.",
+        "Capture = 20 s shield (country cannot be stolen). Click your country again: beat the current challenge = +30 s, then a 2nd one = +1 min (2 reinforcements max, lost if the country is stolen). Each reinforcement also climbs the country's ladder.",
       ],
       [
         "Steal",
-        "Click/tap an opponent's country that is not shielded → 20-second challenge: the challenge depends on the country's reinforcements: capital, then its flag among 6, then a tech, wildlife & flora or music question (4 choices). Success: +15 pts (+20 if your opponent is leading), country becomes yours with a new shield.",
+        "Click/tap an opponent's country that is not shielded → 20-second challenge. Each country has its own ladder: capital, flag, tech, wildlife & flora, music, then more questions, in a secret order drawn at random for the match. Only the current challenge is revealed. Every successful steal climbs the ladder for everyone: to take the country back you'll face a new question, never the same one. Success: +15 pts (+20 if your opponent is leading), country becomes yours with a new shield.",
       ],
       [
         "Failed steal",

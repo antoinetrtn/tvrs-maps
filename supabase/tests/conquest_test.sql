@@ -249,16 +249,55 @@ RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT
 SELECT pg_temp.eq('opponent cannot fortify my country', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'not_yours');
 SELECT pg_temp.eq('opponent cannot steal while shielded', conquest_steal_challenge(:'rmid', 'France')->>'reason', 'shielded');
 
--- Étape 1 : défi drapeau ou capitale, mauvaise réponse → cooldown.
+-- Bonne réponse du défi ouvert (lu en superuser, la table est cachée aux clients).
+CREATE OR REPLACE FUNCTION pg_temp.good(p_kind text, p_country text, p_qid text)
+RETURNS text LANGUAGE sql AS $$
+  SELECT CASE p_kind
+    WHEN 'capital' THEN (SELECT capital_en FROM conquest_countries WHERE country_id = p_country)
+    WHEN 'flag' THEN (SELECT iso2 FROM conquest_countries WHERE country_id = p_country)
+    ELSE (SELECT CASE q.answer_type
+            WHEN 'choice' THEN q.answer ->> 'label'
+            WHEN 'text' THEN upper(q.answer -> 'aliases' ->> 0) || '  '
+            WHEN 'number' THEN (q.answer ->> 'value')
+            ELSE (q.answer -> 'order')::text END
+            FROM conquest_knowledge_questions q WHERE q.id = p_qid) END;
+$$;
+CREATE TEMP TABLE drawn (question_id text);
+CREATE OR REPLACE FUNCTION pg_temp.expected_kind(p_match uuid, p_country text, p_step int)
+RETURNS text LANGUAGE sql AS $$
+  SELECT CASE conquest_ladder_slot(p_match, p_country, p_step)
+    WHEN 'capital' THEN 'capital' WHEN 'flag' THEN 'flag' ELSE 'knowledge' END;
+$$;
+
+-- Ordre aléatoire mais stable par (match, pays) : les 5 types une fois chacun, puis 'extra'.
+RESET ROLE;
+SELECT pg_temp.expected_kind(:'rmid', 'France', 0) AS k0, pg_temp.expected_kind(:'rmid', 'France', 1) AS k1,
+       pg_temp.expected_kind(:'rmid', 'France', 2) AS k2 \gset
+SELECT pg_temp.eq('5 distinct base levels',
+  (SELECT count(DISTINCT conquest_ladder_slot(:'rmid', 'France', s)) FROM generate_series(0, 4) s)::int, 5);
+SELECT pg_temp.eq('slot order is stable',
+  (SELECT string_agg(conquest_ladder_slot(:'rmid', 'France', s), ',' ORDER BY s) FROM generate_series(0, 4) s),
+  (SELECT string_agg(conquest_ladder_slot(:'rmid', 'France', s), ',' ORDER BY s) FROM generate_series(0, 4) s));
+SELECT pg_temp.eq('order differs between countries or matches',
+  (SELECT count(DISTINCT o) FROM (
+     SELECT string_agg(conquest_ladder_slot(m, c, s), ',' ORDER BY s) AS o
+       FROM (VALUES (:'rmid'::uuid), (:'mid'::uuid)) mm(m), (VALUES ('France'), ('Spain'), ('Japan')) cc(c),
+            generate_series(0, 4) s GROUP BY m, c) x) > 1, true);
+SELECT pg_temp.eq('beyond level 5: extra questions', conquest_ladder_slot(:'rmid', 'France', 5), 'extra');
+
+-- Renfort niveau 1 : défi du 1er type de la chaîne, mauvaise réponse → cooldown.
+SET ROLE authenticated;
 SET test.uid = :'R1';
 RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT challenge AS f1 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
-SELECT pg_temp.eq('fortify step 1 opened', (:'f1'::jsonb)->>'step', '1');
-SELECT pg_temp.eq('ladder step 1 is the capital', (:'f1'::jsonb)->>'kind', 'capital');
+SELECT pg_temp.eq('fortify step 1 opened', (:'f1'::jsonb)->>'fortify_step', '1');
+SELECT pg_temp.eq('only the current level is revealed', (:'f1'::jsonb)->>'level', '1');
+SELECT pg_temp.eq('level 1 follows the match order', (:'f1'::jsonb)->>'kind', :'k0');
 SELECT pg_temp.eq('step 1 bonus is 30 s', (:'f1'::jsonb)->>'bonus_seconds', '30');
+SELECT pg_temp.eq('no answer leaked', (:'f1'::jsonb) ?| ARRAY['answer', 'aliases', 'tolerance', 'answer_index'], false);
 SELECT pg_temp.eq('re-request returns the same challenge',
-  (conquest_fortify_challenge(:'rmid', 'France')->>'kind'), (:'f1'::jsonb)->>'kind');
-SELECT pg_temp.eq('wrong fortify answer', conquest_fortify(:'rmid', 'Lyon')->>'reason', 'wrong');
+  (conquest_fortify_challenge(:'rmid', 'France') - 'expires_at'), (:'f1'::jsonb) - 'expires_at');
+SELECT pg_temp.eq('wrong fortify answer', conquest_fortify(:'rmid', 'zzz')->>'reason', 'wrong');
 RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
 SELECT pg_temp.eq('10 s cooldown after a wrong fortify', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'cooldown');
 DO $$ BEGIN
@@ -266,81 +305,132 @@ DO $$ BEGIN
   RAISE EXCEPTION 'FAIL fortify table readable by clients';
 EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  fortify table hidden from clients';
 END $$;
-
--- Bonne réponse (capitale) → +30 s, puis l'autre type (drapeau) → +1 min.
-RESET ROLE;
-DELETE FROM match_events WHERE kind = 'fortify_fail';
-UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
-INSERT INTO match_fortify_challenges VALUES (:'rmid', :'R1', 'France', 1, 'capital', '{}', now() + interval '20 seconds');
-SET ROLE authenticated;
-SELECT pg_temp.eq('right capital fortifies', conquest_fortify(:'rmid', 'paris')->>'ok', 'true');
-SELECT pg_temp.eq('shield +30 s (≈50 s)',
-  (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 50);
-RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
-SELECT challenge AS f2 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
-SELECT pg_temp.eq('step 2 asks the other kind (flag)', (:'f2'::jsonb)->>'kind', 'flag');
-SELECT pg_temp.eq('step 2 has 6 flags', jsonb_array_length((:'f2'::jsonb)->'options'), 6);
-SELECT pg_temp.eq('step 2 bonus is 60 s', (:'f2'::jsonb)->>'bonus_seconds', '60');
-SELECT pg_temp.eq('right flag fortifies', conquest_fortify(:'rmid', (SELECT iso2 FROM conquest_countries WHERE country_id = 'France'))->>'fortify_level', '2');
-SELECT pg_temp.eq('shield +1 min (≈110 s)',
-  (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 110);
--- Niveaux 3 à 5 : questions de connaissances (tech, faune & flore, musique), même défi.
-RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
-SELECT challenge AS f3 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
-SELECT pg_temp.eq('step 3 is a knowledge question', (:'f3'::jsonb)->>'kind', 'knowledge');
-SELECT pg_temp.eq('step 3 category is tech', (:'f3'::jsonb)->>'category', 'tech');
-SELECT pg_temp.eq('step 3 has 4 options + 4 icons',
-  jsonb_array_length((:'f3'::jsonb)->'options') + jsonb_array_length((:'f3'::jsonb)->'icons'), 8);
-SELECT pg_temp.eq('knowledge challenge leaks no answer', (:'f3'::jsonb) ? 'answer_index', false);
 DO $$ BEGIN
   PERFORM count(*) FROM conquest_knowledge_questions;
   RAISE EXCEPTION 'FAIL knowledge questions readable by clients';
 EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  knowledge questions hidden from clients';
 END $$;
-RESET ROLE;
-SELECT (q.choices -> q.answer_index::int) ->> 'label' AS good,
-       (SELECT c ->> 'label' FROM jsonb_array_elements(q.choices) WITH ORDINALITY c(c, i)
-         WHERE i - 1 <> q.answer_index LIMIT 1) AS bad
-  FROM match_fortify_challenges f JOIN conquest_knowledge_questions q ON q.id = f.question_id
- WHERE f.match_id = :'rmid' AND f.user_id = :'R1' \gset
-SET ROLE authenticated;
-SELECT pg_temp.eq('wrong knowledge option fails', conquest_fortify(:'rmid', :'bad')->>'reason', 'wrong');
-SELECT pg_temp.eq('double submit refused', conquest_fortify(:'rmid', :'good')->>'reason', 'no_challenge');
-RESET ROLE; DELETE FROM match_events WHERE kind = 'fortify_fail';
-UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
-SELECT challenge AS f3 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
-RESET ROLE;
-SELECT (q.choices -> q.answer_index::int) ->> 'label' AS good
-  FROM match_fortify_challenges f JOIN conquest_knowledge_questions q ON q.id = f.question_id
- WHERE f.match_id = :'rmid' AND f.user_id = :'R1' \gset
-SET ROLE authenticated;
-SELECT pg_temp.eq('right knowledge option fortifies', conquest_fortify(:'rmid', :'good')->>'fortify_level', '3');
+DO $$ BEGIN
+  PERFORM count(*) FROM match_country_chain;
+  RAISE EXCEPTION 'FAIL country chain readable by clients';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  country chain hidden from clients';
+END $$;
 
--- Expired shield: le voleur affronte le niveau 4 (faune & flore) ; succès = transfert + renforts à 0.
+-- Bonne réponse → +30 s et la chaîne du pays monte d'un niveau.
+RESET ROLE;
+DELETE FROM match_events WHERE kind = 'fortify_fail';
+UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
+SET ROLE authenticated;
+SELECT challenge AS f1 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
+RESET ROLE;
+INSERT INTO drawn SELECT question_id FROM match_fortify_challenges WHERE question_id IS NOT NULL;
+SELECT pg_temp.good(kind, country_id, question_id) AS good FROM match_fortify_challenges WHERE match_id = :'rmid' \gset
+SET ROLE authenticated;
+SELECT pg_temp.eq('right answer fortifies', conquest_fortify(:'rmid', :'good')->>'ok', 'true');
+SELECT pg_temp.eq('shield +30 s (≈50 s)',
+  (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 50);
+SELECT pg_temp.eq('fortify climbs the chain', (SELECT ladder_step FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 1);
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT challenge AS f2 FROM (SELECT conquest_fortify_challenge(:'rmid', 'France') AS challenge) x \gset
+SELECT pg_temp.eq('fortify step 2 is chain level 2', (:'f2'::jsonb)->>'level', '2');
+SELECT pg_temp.eq('level 2 follows the match order', (:'f2'::jsonb)->>'kind', :'k1');
+SELECT pg_temp.eq('step 2 bonus is 60 s', (:'f2'::jsonb)->>'bonus_seconds', '60');
+RESET ROLE;
+INSERT INTO drawn SELECT question_id FROM match_fortify_challenges WHERE question_id IS NOT NULL;
+SELECT pg_temp.good(kind, country_id, question_id) AS good FROM match_fortify_challenges WHERE match_id = :'rmid' \gset
+SET ROLE authenticated;
+SELECT pg_temp.eq('second fortify', conquest_fortify(:'rmid', :'good')->>'fortify_level', '2');
+SELECT pg_temp.eq('shield +1 min (≈110 s)',
+  (SELECT round(extract(epoch FROM shield_until - now())) FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::int, 110);
+RESET ROLE; UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL; SET ROLE authenticated;
+SELECT pg_temp.eq('2 fortifies max per ownership', conquest_fortify_challenge(:'rmid', 'France')->>'reason', 'max_fortified');
+
+-- Vol après le bouclier : le voleur affronte le niveau 3 de la chaîne.
 RESET ROLE;
 UPDATE match_claims SET shield_until = now() - interval '1 second' WHERE match_id = :'rmid';
 UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
 SET ROLE authenticated;
 SET test.uid = :'R2';
-SELECT challenge AS s4 FROM (SELECT conquest_steal_challenge(:'rmid', 'France') AS challenge) x \gset
-SELECT pg_temp.eq('steal of a level-3 country asks step 4', (:'s4'::jsonb)->>'step', '4');
-SELECT pg_temp.eq('step 4 category is nature', (:'s4'::jsonb)->>'category', 'nature');
-SELECT pg_temp.eq('re-request keeps the same question',
-  conquest_steal_challenge(:'rmid', 'France')->>'question_id', (:'s4'::jsonb)->>'question_id');
-SELECT pg_temp.eq('capital does not answer a knowledge step', steal_country(:'rmid', 'Paris')->>'reason', 'wrong');
-SELECT pg_temp.eq('fortify kept after a failed steal', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 3);
+SELECT challenge AS s3 FROM (SELECT conquest_steal_challenge(:'rmid', 'France') AS challenge) x \gset
+SELECT pg_temp.eq('steal faces chain level 3', (:'s3'::jsonb)->>'level', '3');
+SELECT pg_temp.eq('level 3 follows the match order', (:'s3'::jsonb)->>'kind', :'k2');
+SELECT pg_temp.eq('wrong steal answer', steal_country(:'rmid', 'zzz')->>'reason', 'wrong');
+SELECT pg_temp.eq('fortify kept after a failed steal', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 2);
+SELECT pg_temp.eq('failed steal does not climb', (SELECT ladder_step FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 2);
 RESET ROLE;
 DELETE FROM match_events WHERE kind = 'steal_fail';
 UPDATE match_players SET penalty_until = NULL, last_action_at = NULL, steal_fails = 0 WHERE match_id IS NOT NULL;
 SET ROLE authenticated;
-SELECT challenge AS s4 FROM (SELECT conquest_steal_challenge(:'rmid', 'France') AS challenge) x \gset
+SELECT challenge AS s3 FROM (SELECT conquest_steal_challenge(:'rmid', 'France') AS challenge) x \gset
 RESET ROLE;
-SELECT (q.choices -> q.answer_index::int) ->> 'label' AS good
-  FROM match_steal_challenges c JOIN conquest_knowledge_questions q ON q.id = c.question_id
- WHERE c.match_id = :'rmid' AND c.user_id = :'R2' \gset
+INSERT INTO drawn SELECT question_id FROM match_steal_challenges WHERE match_id = :'rmid' AND question_id IS NOT NULL;
+SELECT pg_temp.good(kind, country_id, question_id) AS good FROM match_steal_challenges WHERE match_id = :'rmid' AND user_id = :'R2' \gset
 SET ROLE authenticated;
-SELECT pg_temp.eq('steal after shield expiry', steal_country(:'rmid', :'good')->>'ok', 'true');
+SELECT pg_temp.eq('steal after shield expiry', steal_country(:'rmid', :'good')->>'next_level', '4');
 SELECT pg_temp.eq('steal resets fortify level', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 0);
+SELECT pg_temp.eq('steal climbs the chain (never resets)', (SELECT ladder_step FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 3);
+
+-- Escalade symétrique : chaque reprise affronte le niveau suivant, jusqu'aux questions extra.
+CREATE OR REPLACE FUNCTION pg_temp.resteal(p_uid text, p_level int) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE v jsonb; g text; r jsonb;
+BEGIN
+  RESET ROLE;
+  UPDATE match_claims SET shield_until = now() - interval '1 second' WHERE match_id = current_setting('test.rmid')::uuid;
+  UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
+  DELETE FROM match_events WHERE kind IN ('steal', 'steal_fail');
+  PERFORM set_config('test.uid', p_uid, false);
+  SET ROLE authenticated;
+  v := conquest_steal_challenge(current_setting('test.rmid')::uuid, 'France');
+  PERFORM pg_temp.eq('re-steal faces level ' || p_level, v ->> 'level', p_level::text);
+  RESET ROLE;
+  INSERT INTO drawn SELECT question_id FROM match_steal_challenges WHERE question_id IS NOT NULL;
+  SELECT pg_temp.good(kind, country_id, question_id) INTO g FROM match_steal_challenges;
+  SET ROLE authenticated;
+  r := steal_country(current_setting('test.rmid')::uuid, g);
+  PERFORM pg_temp.eq('re-steal at level ' || p_level, r ->> 'next_level', (p_level + 1)::text);
+END $$;
+SELECT pg_temp.resteal(:'R1', 4);
+SELECT pg_temp.resteal(:'R2', 5);
+SELECT pg_temp.resteal(:'R1', 6);
+SELECT pg_temp.resteal(:'R2', 7);
+RESET ROLE;
+SELECT pg_temp.eq('levels 6+ are knowledge questions', (SELECT count(*) FROM drawn)::int >= 4, true);
+SELECT pg_temp.eq('a question never repeats in the chain', (SELECT count(*) - count(DISTINCT question_id) FROM drawn)::int, 0);
+SELECT pg_temp.eq('chain keeps every drawn question',
+  (SELECT count(*) FROM drawn d WHERE NOT EXISTS (SELECT 1 FROM match_country_chain c
+     WHERE c.match_id = :'rmid' AND c.country_id = 'France' AND c.question_id = d.question_id))::int, 0);
+
+-- Composant de réponse par question : vérification serveur par type.
+INSERT INTO conquest_knowledge_questions (id, country_id, category, answer_type, prompt, display, answer, source_url, source_safe) VALUES
+  ('T-choice', 'France', 'tech', 'choice', 'q', '{"items":[{"label":"A","iconId":"tech-a"},{"label":"B","iconId":"tech-b"}]}', '{"label":"A"}', 'https://fr.wikipedia.org/wiki/A', true),
+  ('T-text', 'France', 'tech', 'text', 'q', '{}', '{"aliases":["Le Saxophone","saxo"]}', 'https://fr.wikipedia.org/wiki/Saxophone', false),
+  ('T-number', 'France', 'tech', 'number', 'q', '{"min":1800,"max":2000,"step":1,"unit":""}', '{"value":1907,"tolerance":5}', NULL, false),
+  ('T-order', 'France', 'tech', 'order', 'q', '{"items":[{"label":"X","iconId":"tech-x"},{"label":"Y","iconId":"tech-y"}]}', '{"order":["X","Y"]}', NULL, false);
+SELECT pg_temp.eq('choice: exact label', conquest_ladder_check('knowledge', 'France', 'T-choice', 'A'), true);
+SELECT pg_temp.eq('choice: other label', conquest_ladder_check('knowledge', 'France', 'T-choice', 'B'), false);
+SELECT pg_temp.eq('text: fuzzy alias', conquest_ladder_check('knowledge', 'France', 'T-text', '  le saxophone '), true);
+SELECT pg_temp.eq('text: short alias', conquest_ladder_check('knowledge', 'France', 'T-text', 'Saxo'), true);
+SELECT pg_temp.eq('text: wrong', conquest_ladder_check('knowledge', 'France', 'T-text', 'piano'), false);
+SELECT pg_temp.eq('text: empty', conquest_ladder_check('knowledge', 'France', 'T-text', '  '), false);
+SELECT pg_temp.eq('number: within tolerance', conquest_ladder_check('knowledge', 'France', 'T-number', '1911'), true);
+SELECT pg_temp.eq('number: outside tolerance', conquest_ladder_check('knowledge', 'France', 'T-number', '1913'), false);
+SELECT pg_temp.eq('number: not a number', conquest_ladder_check('knowledge', 'France', 'T-number', 'abc'), false);
+SELECT pg_temp.eq('order: right order', conquest_ladder_check('knowledge', 'France', 'T-order', '["X","Y"]'), true);
+SELECT pg_temp.eq('order: wrong order', conquest_ladder_check('knowledge', 'France', 'T-order', '["Y","X"]'), false);
+SELECT pg_temp.eq('order: garbage', conquest_ladder_check('knowledge', 'France', 'T-order', '[oops'), false);
+SELECT pg_temp.eq('safe source sent with the question',
+  conquest_ladder_payload('knowledge', ARRAY['B','A'], 'T-choice', 0)->>'source_url', 'https://fr.wikipedia.org/wiki/A');
+SELECT pg_temp.eq('revealing source hidden',
+  conquest_ladder_payload('knowledge', '{}', 'T-text', 0)->>'source_url', NULL);
+SELECT pg_temp.eq('slider bounds sent, not the answer',
+  (conquest_ladder_payload('knowledge', '{}', 'T-number', 0)->>'max') || '/' ||
+  ((conquest_ladder_payload('knowledge', '{}', 'T-number', 0)) ? 'tolerance')::text, '2000/false');
+SELECT pg_temp.eq('icons follow the shuffled options',
+  conquest_ladder_payload('knowledge', ARRAY['B','A'], 'T-choice', 0)->'icons', '["tech-b","tech-a"]'::jsonb);
+DELETE FROM conquest_knowledge_questions WHERE id LIKE 'T-%';
+SELECT pg_temp.eq('seed has every answer type',
+  (SELECT count(DISTINCT answer_type) FROM conquest_knowledge_questions WHERE active)::int, 4);
+SET ROLE authenticated;
 
 -- Revanche : R2 la crée, R1 la rejoint, tous deux prêts, couleurs gardées.
 RESET ROLE; UPDATE matches SET ends_at = now() - interval '1 second' WHERE id = :'rmid'; SET ROLE authenticated;
