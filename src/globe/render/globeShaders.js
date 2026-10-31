@@ -114,7 +114,6 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsError;
   uniform float uIsSuccess;
   uniform float uIsSelection;
-  uniform float uIsLight;
   uniform float uIsSide;
   uniform float uIsFound;
   uniform float uSelectInTransition;

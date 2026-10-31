@@ -103,7 +103,6 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
         uIsError: 0,
         uIsSuccess: 0,
         uIsSelection: 0,
-        uIsLight: 0,
         uIsSide: 0,
         uIsFound: 0,
         uSelectInTransition: 0,

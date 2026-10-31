@@ -63,7 +63,6 @@ const PER_MATERIAL = [
   "uIsError",
   "uIsSuccess",
   "uIsSelection",
-  "uIsLight",
   "uIsSide",
   "uIsFound",
   "uSelectInTransition",
