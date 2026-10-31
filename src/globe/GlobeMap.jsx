@@ -11,6 +11,7 @@ import {
 } from "../config/designSystem";
 import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
+import { useFoundProgramWarmup } from "./hooks/useFoundProgramWarmup";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
@@ -43,6 +44,7 @@ import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
+import { usePolygonMaterialEviction } from "./hooks/usePolygonMaterialEviction";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 import { isGlobeHoverRaycastNeeded } from "./render/pointerRaycast";
 
@@ -240,6 +242,19 @@ const GlobeMap = (props) => {
   useGlobeShaderWarmup(
     globeEl,
     `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}|${theme}`
+  );
+
+  // First correct answer: link the opaque "success" programs ahead of time.
+  useFoundProgramWarmup(globeEl, {
+    active: !isHomeScreen && !isEndScreen && Boolean(selectedCountry) && foundList.length === 0,
+  });
+
+  // Release per-country ignite/selection materials once no mesh uses them.
+  usePolygonMaterialEviction(
+    globeEl,
+    sharedMaterialsRef,
+    polygonMaterialCacheRef,
+    `${foundList.length}|${selectedCountry}`
   );
 
   const { globePathsData } = useGlobePaths({
