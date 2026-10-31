@@ -208,6 +208,8 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uIgniteOrigin = polygonGlitchUniforms.uIgniteOrigin;
     shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
     shader.uniforms.uSelectStart = polygonGlitchUniforms.uSelectStart;
+    shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
+    shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
     shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
     shader.uniforms.uSelOutlineMap = { value: getSelectionOutlineTexture() };
     shader.uniforms.uSelOutlineBox = selectionOutlineBox;

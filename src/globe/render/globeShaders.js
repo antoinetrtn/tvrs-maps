@@ -126,6 +126,8 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSideShade;
   uniform float uSuccessStart;
   uniform float uSelectStart;
+  uniform float uShowcaseLights;
+  uniform float uIsRegionalMode;
   uniform sampler2D uCapitalLightsMap;
   uniform sampler2D uSelOutlineMap;
   uniform vec4 uSelOutlineBox;
@@ -231,6 +233,14 @@ export const GLITCH_FRAGMENT_BODY = `
   staticVec = mix(staticVec, SELECT_EDGE_RGB, haloAmt);
   staticVec = mix(staticVec, SELECT_EDGE_RGB, edgeOuter);
   vec3 foundRestingColor = vec3(0.48, 0.34, 0.15);
+  // Resting unfound land, same formula as the surface blackout pass (unfoundLand): the
+  // deselect fade settles to it instead of the raw lit grey (grey flash on deselect).
+  float restBlackout = (1.0 - uShowcaseLights) * (1.0 - uIsRegionalMode);
+  vec3 restGrey = vec3(dot(litRestingColor, vec3(0.299, 0.587, 0.114)))
+    * mix(BLACKOUT_TINT, BLACKOUT_TINT_HOME, uShowcaseLights);
+  vec3 unfoundRestColor = mix(litRestingColor, restGrey, restBlackout * 0.88)
+    * mix(1.0, mix(0.36, 0.74, uIsRegionalMode), 1.0 - uShowcaseLights);
+  float deselectDone = step(0.994, uFadeProgress);
 
   vec3 finalColor = gl_FragColor.rgb;
   if (uIsError > 0.5) {
@@ -251,7 +261,7 @@ export const GLITCH_FRAGMENT_BODY = `
   bool isFoundSurface = (uIsFound > 0.5);
 
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
-  vec3 settleColor = mix(litRestingColor, foundRestingColor * sideShade, step(0.5, uIsFound));
+  vec3 settleColor = mix(unfoundRestColor * sideShade, foundRestingColor * sideShade, step(0.5, uIsFound));
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
@@ -260,7 +270,7 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (transitionActive > 0.5) {
     gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter));
   } else {
-    gl_FragColor.rgb = staticVec * sideShade;
+    gl_FragColor.rgb = mix(staticVec, unfoundRestColor, deselectDone) * sideShade;
   }
   if (uIsSuccess > 0.5) {
     gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_CITY_AMBER, isCityPx * SELECT_CITY_ALPHA);
