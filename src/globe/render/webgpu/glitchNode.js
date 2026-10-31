@@ -41,6 +41,8 @@ import { DISCOVERY } from "../discoveryTimeline";
 import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
 import { getSelectionOutlineTexture, selectionOutlineBox } from "../selectionOutline";
 import {
+  BLACKOUT_TINT_HOME_RGB,
+  BLACKOUT_TINT_RGB,
   SELECT_EDGE_RGB_VALUE,
   SELECT_HALO_ALPHA_VALUE,
   SELECT_LAND_TINT_RGB,
@@ -65,6 +67,8 @@ function getSharedNodes(polygonGlitchUniforms) {
       uPixelScale: mirrorUniform(polygonGlitchUniforms.uPixelScale),
       uSuccessStart: mirrorUniform(polygonGlitchUniforms.uSuccessStart),
       uSelectStart: mirrorUniform(polygonGlitchUniforms.uSelectStart),
+      uShowcaseLights: mirrorUniform(polygonGlitchUniforms.uShowcaseLights),
+      uIsRegionalMode: mirrorUniform(polygonGlitchUniforms.uIsRegionalMode),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
       uRevealStart: mirrorUniform(polygonGlitchUniforms.uRevealStart),
       uLandRadius: mirrorUniform(polygonGlitchUniforms.uLandRadius),
@@ -295,7 +299,21 @@ function glitchBase(u, lit) {
     pixelOn: step(0.01, cityOn.add(wallOn).add(edgeOuter)),
     sideShade,
     foundRestingColor,
+    unfoundRestColor: unfoundRestColor(u, lit),
   };
+}
+
+/** GLSL parity: resting unfound land (surface blackout formula) the deselect settles to. */
+function unfoundRestColor(u, lit) {
+  const showcase = u.uShowcaseLights;
+  const regional = u.uIsRegionalMode;
+  const restBlackout = float(1).sub(showcase).mul(float(1).sub(regional));
+  const restGrey = vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(
+    mix(vec3(...BLACKOUT_TINT_RGB), vec3(...BLACKOUT_TINT_HOME_RGB), showcase)
+  );
+  return mix(lit, restGrey, restBlackout.mul(0.88)).mul(
+    mix(float(1.0), mix(float(0.36), float(0.74), regional), float(1).sub(showcase))
+  );
 }
 
 /** Smooth crossfade state (no checkerboard). */
@@ -311,14 +329,20 @@ function createGlitchOutputNode(u) {
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
     const { transitionActive, staticVec, sideShade, foundRestingColor, isCityPx, pixelOn } = base;
+    const { unfoundRestColor: restColor } = base;
+    const deselectDone = step(0.994, u.uFadeProgress);
     const { glitchColor } = glitchDissolve(u, base);
-    const settleColor = mix(lit, foundRestingColor.mul(sideShade), step(0.5, u.uIsFound)).toVar();
+    const settleColor = mix(
+      restColor.mul(sideShade),
+      foundRestingColor.mul(sideShade),
+      step(0.5, u.uIsFound)
+    ).toVar();
 
     const feedback = on(u.uIsError).or(on(u.uIsSuccess));
     const isFoundSurface = on(u.uIsFound);
     const transiting = on(transitionActive);
 
-    const rgb = vec3(staticVec.mul(sideShade)).toVar();
+    const rgb = vec3(mix(staticVec, restColor, deselectDone).mul(sideShade)).toVar();
     If(feedback, () => {
       rgb.assign(glitchColor);
     })
