@@ -93,17 +93,7 @@ function setTexelA(data, texWidth, texHeight, x, y, aVal) {
   if (aVal > data[idx + 3]) data[idx + 3] = aVal;
 }
 
-function stampReliefIsoPoint(data, texWidth, texHeight, lat, lng, cosLat, bVal) {
-  const y = Math.floor(((lat + 90) / 180) * texHeight);
-  const x = Math.floor(((lng + 180) / 360) * texWidth);
-  setTexelB(data, texWidth, texHeight, x, y, bVal);
-  if (cosLat < 0.72) setTexelB(data, texWidth, texHeight, x + 1, y, bVal);
-}
-
 function stampMountainSpur(
-  data,
-  texWidth,
-  texHeight,
   sLat,
   sLng,
   cosLat,
@@ -111,7 +101,8 @@ function stampMountainSpur(
   side,
   baseSpurSteps,
   seed,
-  stepId
+  stepId,
+  onPoint
 ) {
   let spurAng = spineAngle + side * (1.22 + (hash1(seed + stepId * 41.3 + side * 7) - 0.5) * 0.48);
   const spurSteps = Math.max(
@@ -132,22 +123,11 @@ function stampMountainSpur(
     const val = isContourGap
       ? Math.round(52 * (1 - spProg * 0.4))
       : Math.round((192 - spProg * 115) * (0.88 + hash1(seed + sp * 29.1) * 0.18));
-    stampReliefIsoPoint(
-      data,
-      texWidth,
-      texHeight,
-      curLat,
-      curLng,
-      cosLat,
-      Math.max(38, Math.min(210, val))
-    );
+    onPoint(curLat, curLng, cosLat, Math.max(38, Math.min(210, val)));
   }
 }
 
 function stampMountainStep(
-  data,
-  texWidth,
-  texHeight,
   cLat,
   cLng,
   cosLat,
@@ -158,39 +138,21 @@ function stampMountainStep(
   baseSpurSteps,
   endTaper,
   seed,
-  globalStep
+  globalStep,
+  onPoint
 ) {
   const crestVal = Math.round(
     Math.min(255, (218 + hash1(seed + globalStep * 23.1) * 37) * elevBoost)
   );
-  stampReliefIsoPoint(data, texWidth, texHeight, cLat, cLng, cosLat, crestVal);
+  onPoint(cLat, cLng, cosLat, crestVal);
   const shoulderVal = Math.round(158 * elevBoost);
-  stampReliefIsoPoint(
-    data,
-    texWidth,
-    texHeight,
-    cLat + nx * 0.085,
-    cLng + (ny * 0.085) / cosLat,
-    cosLat,
-    shoulderVal
-  );
-  stampReliefIsoPoint(
-    data,
-    texWidth,
-    texHeight,
-    cLat - nx * 0.085,
-    cLng - (ny * 0.085) / cosLat,
-    cosLat,
-    58
-  );
+  onPoint(cLat + nx * 0.085, cLng + (ny * 0.085) / cosLat, cosLat, shoulderVal);
+  onPoint(cLat - nx * 0.085, cLng - (ny * 0.085) / cosLat, cosLat, 58);
 
   if (globalStep % 2 !== 0) return;
   const currentSpurSteps = Math.max(3, Math.round(baseSpurSteps * (0.55 + 0.45 * endTaper)));
   if (hash1(seed + globalStep * 37.9) > 0.22) {
     stampMountainSpur(
-      data,
-      texWidth,
-      texHeight,
       cLat,
       cLng,
       cosLat,
@@ -198,14 +160,12 @@ function stampMountainStep(
       1,
       currentSpurSteps,
       seed,
-      globalStep
+      globalStep,
+      onPoint
     );
   }
   if (hash1(seed + globalStep * 53.7) > 0.22) {
     stampMountainSpur(
-      data,
-      texWidth,
-      texHeight,
       cLat,
       cLng,
       cosLat,
@@ -213,19 +173,20 @@ function stampMountainStep(
       -1,
       currentSpurSteps,
       seed,
-      globalStep
+      globalStep,
+      onPoint
     );
   }
 }
 
-function stampMountainChain(
-  data,
-  texWidth,
-  texHeight,
+export function walkMountainChain(
   path,
   spread = 2.5,
   height = 3000,
-  seed = 1
+  seed = 1,
+  texWidth = 3600,
+  texHeight = 1800,
+  onIsoPoint
 ) {
   if (!Array.isArray(path) || path.length < 2) return;
   const elevBoost = Math.min(1.18, Math.max(0.78, height / 3800));
@@ -258,9 +219,6 @@ function stampMountainChain(
       const cLat = lat1 + dLat * p + nx * meander;
       const cLng = lng1 + (dLonScaled * p + ny * meander) / cosLat;
       stampMountainStep(
-        data,
-        texWidth,
-        texHeight,
         cLat,
         cLng,
         cosLat,
@@ -271,13 +229,33 @@ function stampMountainChain(
         baseSpurSteps,
         endTaper,
         seed,
-        globalStep
+        globalStep,
+        (lat, lng, cLatCos, bVal) => {
+          const y = Math.floor(((lat + 90) / 180) * texHeight);
+          const x = Math.floor(((lng + 180) / 360) * texWidth);
+          onIsoPoint(x, y, cLatCos, bVal);
+        }
       );
     }
   }
 }
 
-function stampRiverPolyline(data, texWidth, texHeight, path, seed = 1.0) {
+function stampMountainChain(
+  data,
+  texWidth,
+  texHeight,
+  path,
+  spread = 2.5,
+  height = 3000,
+  seed = 1
+) {
+  walkMountainChain(path, spread, height, seed, texWidth, texHeight, (x, y, cosLat, bVal) => {
+    setTexelB(data, texWidth, texHeight, x, y, bVal);
+    if (cosLat < 0.72) setTexelB(data, texWidth, texHeight, x + 1, y, bVal);
+  });
+}
+
+export function walkRiverPolyline(path, seed = 1.0, texWidth = 3600, texHeight = 1800, onPoint) {
   if (!Array.isArray(path) || path.length < 2) return;
   for (let seg = 0; seg < path.length - 1; seg++) {
     const [lat1, lng1] = path[seg];
@@ -306,12 +284,18 @@ function stampRiverPolyline(data, texWidth, texHeight, path, seed = 1.0) {
 
       const y = Math.floor(((curLat + 90) / 180) * texHeight);
       const x = Math.floor(((curLng + 180) / 360) * texWidth);
-      setTexelA(data, texWidth, texHeight, x, y, 242);
-      if (cosLat < 0.72) setTexelA(data, texWidth, texHeight, x + 1, y, 228);
-      setTexelA(data, texWidth, texHeight, x + 1, y, 98);
-      setTexelA(data, texWidth, texHeight, x, y + 1, 98);
+      onPoint(x, y, cosLat);
     }
   }
+}
+
+function stampRiverPolyline(data, texWidth, texHeight, path, seed = 1.0) {
+  walkRiverPolyline(path, seed, texWidth, texHeight, (x, y, cosLat) => {
+    setTexelA(data, texWidth, texHeight, x, y, 242);
+    if (cosLat < 0.72) setTexelA(data, texWidth, texHeight, x + 1, y, 228);
+    setTexelA(data, texWidth, texHeight, x + 1, y, 98);
+    setTexelA(data, texWidth, texHeight, x, y + 1, 98);
+  });
 }
 
 function stampRegionalPinpoint(data, texWidth, texHeight, lat, lng) {
@@ -324,10 +308,14 @@ function stampRegionalPinpoint(data, texWidth, texHeight, lat, lng) {
   data[idx + 1] = 255;
 }
 
+export function getFeatureSeed(item, idx = 0) {
+  return (item?.lat || idx) * 19.31 + (item?.lng || idx) * 11.73 + idx * 7.1;
+}
+
 export function stampTopographyChannels(data, texWidth, texHeight) {
   Object.values(riversMountainsDataMap).forEach((item, idx) => {
     if (!item?.path) return;
-    const seed = (item.lat || idx) * 19.31 + (item.lng || idx) * 11.73 + idx * 7.1;
+    const seed = getFeatureSeed(item, idx);
     if (item.type === "mountain_range" || item.type === "mountain") {
       stampMountainChain(data, texWidth, texHeight, item.path, item.spread, item.height, seed);
     } else if (item.type === "river") {

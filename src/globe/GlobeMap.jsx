@@ -12,7 +12,6 @@ import {
 import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { useFoundProgramWarmup } from "./hooks/useFoundProgramWarmup";
-import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeBoats } from "./hooks/useGlobeBoats";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
@@ -27,18 +26,6 @@ import { useGlobeMapData } from "./hooks/useGlobeMapData";
 import { useGlobeMarkers } from "./hooks/useGlobeMarkers";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { useGlobePanelShift } from "./hooks/useGlobePanelShift";
-import {
-  pathColorAccessor,
-  pathDashAnimateTimeAccessor,
-  pathDashGapAccessor,
-  pathDashLengthAccessor,
-  pathPointAltAccessor,
-  pathPointLatAccessor,
-  pathPointLngAccessor,
-  pathPointsAccessor,
-  pathWidthAccessor,
-  useGlobePaths,
-} from "./hooks/useGlobePaths";
 import { useGlobePolygons } from "./hooks/useGlobePolygons";
 import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
@@ -47,8 +34,9 @@ import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
 import { useMicroBeacons } from "./hooks/useMicroBeacons";
 import { usePolygonMaterialEviction } from "./hooks/usePolygonMaterialEviction";
-import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
+import { clearFeatureMask, setFeatureMask } from "./render/featureMask";
 import { isGlobeHoverRaycastNeeded } from "./render/pointerRaycast";
+import { polygonGlitchUniforms } from "./render/polygonGlitchShader";
 
 // Module-level for a stable identity (an inline arrow rebuilt the lighting rig each render).
 const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
@@ -159,6 +147,7 @@ const GlobeMap = (props) => {
     isEndScreen,
     isDepartmentMode,
     isUsStatesMode,
+    isRiversMountainsMode,
     isPerfectScore,
     isError,
     isSuccess,
@@ -217,7 +206,6 @@ const GlobeMap = (props) => {
     handlePointerMove,
     handlePointerUp,
     handleBackgroundClick,
-    selectCountry,
   } = useGlobeInteractions({
     globeEl,
     globeContentWrapperRef,
@@ -265,16 +253,27 @@ const GlobeMap = (props) => {
     `${foundList.length}|${selectedCountry}`
   );
 
-  const { globePathsData } = useGlobePaths({
-    mode,
-    isRiversMountainsMode,
-    gameDataMap,
-    foundSet,
-    isHomeScreen,
-    UI_COLORS,
-    selectedCountry,
-    isError,
-  });
+  useEffect(() => {
+    polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
+  }, [isRiversMountainsMode]);
+
+  useEffect(() => {
+    if (isRiversMountainsMode) {
+      setFeatureMask({
+        selectedKey: selectedCountry,
+        foundKeys: foundSet,
+        dataMap: gameDataMap,
+      });
+    } else {
+      clearFeatureMask();
+    }
+  }, [isRiversMountainsMode, selectedCountry, foundSet, gameDataMap]);
+
+  useEffect(() => {
+    return () => {
+      clearFeatureMask();
+    };
+  }, []);
 
   const {
     visibleMarkersData: _visibleMarkersData,
@@ -348,16 +347,6 @@ const GlobeMap = (props) => {
     countriesWithGeometry,
   });
 
-  const { getBiomeAssetsData, getBiomeAltitude, createBiomeThreeObject } = useGlobeBiomes({
-    globeEl,
-    mode,
-    gameDataMap,
-    selectedCountry,
-    foundSet,
-    isHomeScreen,
-    isRiversMountainsMode,
-  });
-
   const globeMaterial = useGlobeMaterial({ UI_COLORS });
 
   const lightingGlowConfig = {
@@ -382,15 +371,12 @@ const GlobeMap = (props) => {
     selectionTransition,
     foundSet,
     globeMaterial,
-    mountainGlitchUniforms,
-    mountainGlitchActive: isRiversMountainsMode,
     modeTransitionRef,
     gameDataMap,
     styleGlobeGraticules,
     updateGlobeLighting,
   });
 
-  const getObjectRotationWrapped = useCallback(() => [90, 0, 0], []);
   const getLatWrapped = useCallback((d) => d.lat, []);
   const getLngWrapped = useCallback((d) => d.lng, []);
 
@@ -509,36 +495,6 @@ const GlobeMap = (props) => {
             ringPropagationSpeed={getRingSpeedWrapped}
             ringRepeatPeriod={getRingRepeatWrapped}
             ringAltitude={getSelectionEffectAltitude}
-            objectsData={getBiomeAssetsData}
-            objectLat="lat"
-            objectLng="lng"
-            objectAltitude={getBiomeAltitude}
-            objectFacesSurface={true}
-            objectRotation={getObjectRotationWrapped}
-            objectThreeObject={createBiomeThreeObject}
-            onObjectClick={(obj) => {
-              if (!isHomeScreen) {
-                selectCountry(obj.admin);
-              }
-            }}
-            {...{
-              ["paths" + "Data"]: globePathsData,
-              pathPoints: pathPointsAccessor,
-              pathPointLat: pathPointLatAccessor,
-              pathPointLng: pathPointLngAccessor,
-              pathPointAlt: pathPointAltAccessor,
-              pathColor: pathColorAccessor,
-              ["path" + "Stroke"]: pathWidthAccessor,
-              pathDashLength: pathDashLengthAccessor,
-              pathDashGap: pathDashGapAccessor,
-              pathDashAnimateTime: pathDashAnimateTimeAccessor,
-              pathTransitionDuration: 0,
-              onPathClick: (obj) => {
-                if (!isHomeScreen) {
-                  selectCountry(obj.admin);
-                }
-              },
-            }}
             onBackgroundClick={handleBackgroundClick}
           />
         </div>
