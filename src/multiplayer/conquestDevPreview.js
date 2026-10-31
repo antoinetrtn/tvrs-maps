@@ -381,6 +381,11 @@ export function createConquestPreview({
       return { ok: true, country_id: countryId };
     },
     cancelFortify: async () => null,
+    countryTimeline: async (countryId) => ({
+      country_id: countryId,
+      locked: Boolean(state.claims.find((c) => c.country_id === countryId)?.locked),
+      events: state.events.filter((e) => e.country_id === countryId),
+    }),
     rematch: async () => {
       setPhase("lobby");
       const players = state.players.map((p) => ({ ...p, ready: true }));
