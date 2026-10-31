@@ -103,6 +103,26 @@ const SUGGEST_SIMILARITY = 0.8;
 /** Noms très courts (Iran, Oman, Cuba, Mali…) : 1 faute tolérée, mais seulement à longueur complète. */
 const SHORT_TARGET_MAX = 5;
 
+function isTransposition(a, b, i, j) {
+  return i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1];
+}
+
+function computeDamerauRow(a, b, i, m, prev, prev2) {
+  const cur = new Array(m + 1);
+  cur[0] = i;
+  let rowMin = cur[0];
+  for (let j = 1; j <= m; j++) {
+    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+    let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    if (prev2 && isTransposition(a, b, i, j)) {
+      v = Math.min(v, prev2[j - 2] + 1);
+    }
+    cur[j] = v;
+    if (v < rowMin) rowMin = v;
+  }
+  return { cur, rowMin };
+}
+
 /** Distance de Damerau-Levenshtein (transpositions adjacentes), coupée au-delà de `max`. */
 export function damerauLevenshtein(a, b, max = Infinity) {
   const n = a.length;
@@ -113,18 +133,7 @@ export function damerauLevenshtein(a, b, max = Infinity) {
   let prev2 = null;
   let prev = Array.from({ length: m + 1 }, (_, j) => j);
   for (let i = 1; i <= n; i++) {
-    const cur = new Array(m + 1);
-    cur[0] = i;
-    let rowMin = cur[0];
-    for (let j = 1; j <= m; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
-      if (prev2 && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
-        v = Math.min(v, prev2[j - 2] + 1);
-      }
-      cur[j] = v;
-      if (v < rowMin) rowMin = v;
-    }
+    const { cur, rowMin } = computeDamerauRow(a, b, i, m, prev, prev2);
     if (rowMin > max) return max + 1;
     prev2 = prev;
     prev = cur;
