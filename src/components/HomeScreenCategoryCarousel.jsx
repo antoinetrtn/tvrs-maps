@@ -11,6 +11,7 @@ import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
 import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
+import { triggerSelectionHaptic } from "../utils/haptics";
 import { getGameModesMetadata } from "./homeHeroText";
 import ModeCard from "./HomeModeCard";
 import { HomeModePixelArt } from "./HomeModePixelArt";
@@ -102,6 +103,16 @@ function useGameModesList(onOpenConquest, homeMode) {
   }, [homeMode, gameModesCarousel]);
 
   return { gameModesCarousel, activeIndex, totalModes: gameModesCarousel.length };
+}
+
+// Haptic tick each time the active card changes after mount (not on first render).
+function useCardChangeHaptic(activeIndex) {
+  const prevRef = useRef(activeIndex);
+  useEffect(() => {
+    if (prevRef.current === activeIndex) return;
+    prevRef.current = activeIndex;
+    triggerSelectionHaptic();
+  }, [activeIndex]);
 }
 
 function useCarouselKeyboardNav(goToNext, goToPrev, exiting) {
@@ -226,6 +237,7 @@ const HomeScreenCategoryCarousel = ({
   });
 
   useCarouselKeyboardNav(goToNext, goToPrev, exiting);
+  useCardChangeHaptic(activeIndex);
 
   return (
     <div
