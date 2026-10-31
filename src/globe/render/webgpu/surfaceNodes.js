@@ -38,10 +38,10 @@ import { MeshPhongNodeMaterial, MeshStandardNodeMaterial } from "three/webgpu";
 
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { isGlobeWebGPU } from "../globeRendererFlag";
-import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { applyBiomePalette } from "./biomeNodes";
 import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
+import { applyDiscoveryAmber, revealLand, wakePower } from "./discoveryNodes";
 import { buildIgnition, homeShowcase, igniteSpark } from "./igniteNodes";
 import { bayer4x4, displayOutput, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
@@ -104,7 +104,8 @@ function buildTerrainReliefAndRivers(p) {
     ridgeSpur.mul(cityHash.mul(0.18).add(0.68))
   );
   const awakeReliefLit = mix(awakeSlope, awakenedCrestTone, ridgeCrest.mul(0.86));
-  const reliefLit = mix(darkReliefLit, awakeReliefLit, cityPower);
+  const terrainPower = p.terrainPower || cityPower;
+  const reliefLit = mix(darkReliefLit, awakeReliefLit, terrainPower);
 
   const riverMask = ghostMask.mul(mix(float(1.0), cityPower.mul(0.52), uRegionalNode));
   const riverCore = step(0.65, capitalSample.a).mul(riverMask);
@@ -131,7 +132,7 @@ function buildTerrainReliefAndRivers(p) {
     riverCore.mul(0.88)
   );
   return {
-    terrainLit: mix(darkRiverLit, awakeRiverLit, cityPower),
+    terrainLit: mix(darkRiverLit, awakeRiverLit, terrainPower),
   };
 }
 
@@ -208,6 +209,18 @@ let ghostGrainNode = null;
 let showcaseLightsNode = null;
 let regionalModeNode = null;
 let igniteSelfNode = null;
+let igniteRefs = null;
+/** Per-material ignition holder values (globePolygonMaterial defineIgniteReferences). */
+function getIgniteRefs() {
+  return (igniteRefs ||= {
+    origin: materialReference("userData.igniteOrigin", "vec3"),
+    start: materialReference("userData.igniteStart", "float"),
+    radius: materialReference("userData.igniteRadius", "float"),
+    duration: materialReference("userData.igniteDuration", "float"),
+    revealStart: materialReference("userData.revealStart", "float"),
+    landRadius: materialReference("userData.landRadius", "float"),
+  });
+}
 /** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
 export function countryGrainOutputNode(isGhostCountry = false) {
   if (isGhostCountry && ghostGrainNode) return ghostGrainNode;
@@ -258,18 +271,23 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       .mul(ghostMask)
       .mul(float(1.0).sub(smoothstep(lumaThresh, lumaThresh.add(0.14), surfaceLuma)));
     const uSelfNode = (igniteSelfNode ||= materialReference("userData.igniteSelf", "float"));
-    const ign = buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode, uSelfNode });
+    const ign = buildIgnition({
+      cartUv,
+      sphereNormal,
+      uTimeNode,
+      uRegionalNode,
+      uSelfNode,
+      refs: getIgniteRefs(),
+    });
     const { showcaseNow, showcaseLand, homeFlash } = homeShowcase({
       cartUv,
       sphereNormal,
       uShowcaseNode,
       uRegionalNode,
     });
-    const cityPower = clamp(
-      max(isAwakenedCap.mul(ign.igniteMask), showcaseNow.mul(isUnfoundDarkCap)),
-      0.0,
-      1.0
-    ).mul(ghostMask);
+    const wake = { isAwakenedCap, showcaseNow, isUnfoundDarkCap, ghostMask };
+    const cityPower = wakePower(ign.igniteMask, wake);
+    const terrainPower = wakePower(ign.landMask, wake);
 
     const { blackoutAmt, unfoundLand } = buildBlackoutLand({
       lit,
@@ -284,21 +302,23 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     );
     const conquestAwakenedLand = lit.mul(0.84).add(lit.mul(0.22).mul(float(1.0).sub(ndv)));
     const baseLand = mix(unfoundLand, conquestAwakenedLand, isConquestOwned);
-    const landSurface = applyBiomePalette({
+    const paletteLand = applyBiomePalette({
       landSurface: mix(baseLand, soloAwakenedLand, isSoloFound),
       ...{ cartUv, ndv, ghostMask, isSoloFound, isConquestOwned, lit, maxC, isUnfoundDarkCap },
       uShowcaseNode: showcaseLand,
       uRegionalNode,
     });
-    const engrave = landSurface
-      .mul(parallelLine.mul(0.04).add(crossTick.mul(0.09)))
-      .add(vec3(rimSheen));
-    const baseLit = landSurface.mul(limbFactor).add(engrave);
-
+    const { landSurface, baseLit } = revealLand(paletteLand, ign.landMask, isAwakenedCap, {
+      parallelLine,
+      crossTick,
+      rimSheen,
+      limbFactor,
+    });
     const { capRgb } = buildCityLightsLayer({
       cartUv,
       baseLit,
       cityPower,
+      terrainPower,
       isSoloFound,
       isConquestOwned,
       uTimeNode,
@@ -307,15 +327,15 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       blackoutAmt,
       igniteFlash: max(ign.igniteFlash, homeFlash),
     });
-    // Ahead of the front the found country's city pixels keep their dim selection glow
-    // (GLSL parity), so the ignition only brightens them.
-    const preLit = isAwakenedCap
-      .mul(float(1.0).sub(ign.igniteMask))
-      .mul(float(1.0).sub(uRegionalNode))
-      .mul(step(0.25, texture(getCapitalLightsTexture(), cartUv).r));
-    const litCap = mix(capRgb, vec3(...SELECT_CITY_AMBER_RGB), preLit.mul(SELECT_CITY_ALPHA_VALUE));
-    const sideRgb = landSurface.mul(0.58);
-    const rgb = mix(litCap, sideRgb, isSideWall);
+    const rgb = applyDiscoveryAmber({
+      capRgb,
+      landSurface,
+      ign,
+      isAwakenedCap,
+      uRegionalNode,
+      cartUv,
+      isSideWall,
+    });
     return displayOutput(rgb, output.a);
   })();
   if (isGhostCountry) ghostGrainNode = node;

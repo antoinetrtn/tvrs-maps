@@ -186,11 +186,15 @@ export function resolvePolygonShaderMode({
   isHomeScreen,
   isError = false,
   isSuccess = false,
+  isRegionalMode = false,
 }) {
   const isFound = foundSet.has(admin);
   const isLearn = mode === "learn";
   const isPlay = !isLearn && !isHomeScreen && !isEndScreen;
-  const playSelectedShader = isPlay && isIsolated && (isError || isSuccess || !isFound);
+  // World modes: a correct guess is already in foundSet (useGlobePolygons) and reveals
+  // through the grain shader; regional modes keep the selection shader's success window.
+  const playSelectedShader =
+    isPlay && isIsolated && (isError || (isSuccess && isRegionalMode) || !isFound);
   const homeSelectedShader = isHomeScreen && isIsolated;
   const isPrevShader = !isEndScreen && isPrevTransitioning && !isFound;
 

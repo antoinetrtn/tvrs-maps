@@ -1,3 +1,5 @@
+import { DISCOVERY_DEFS, discoveryLandFn, GLSL_DISCOVERY_LAND_FN } from "./discoveryShaderChunks";
+export { DISCOVERY_DEFS, GLSL_DISCOVERY_LAND_FN };
 /**
  * ==========================================
  * GLOBE GLSL SHADERS
@@ -90,6 +92,7 @@ export const FRESNEL_FRAGMENT_SHADER = `
 // Luxembourg) and low-frequency local UVs produced globe-sized static bands.
 // Dim amber of a selected (not yet found) country's city pixels — shared by the
 // selection shader and the found ignition so the hand-off is seamless.
+
 export const SELECT_CITY_AMBER_RGB = [0.78, 0.52, 0.18];
 export const SELECT_CITY_ALPHA_VALUE = 0.6;
 const SELECT_CITY_DEFS = `
@@ -124,6 +127,11 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform sampler2D uCapitalLightsMap;
   ${SELECT_CITY_DEFS}
   uniform float uSuccessDuration;
+  uniform float uRevealStart;
+  uniform float uLandRadius;
+  uniform vec3 uIgniteOrigin;
+  uniform float uReducedMotion;
+  ${DISCOVERY_DEFS}
   uniform vec3 uGlitchTintA;
   uniform vec3 uGlitchTintB;
   float hash(vec2 p) {
@@ -152,31 +160,18 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 
     return splitColor;
   }
-  vec3 computeSuccessEffect(vec3 finalColor, float time, vec2 blockUv, vec3 worldPos) {
-    // Progress 0 -> 1 over the success flash (uSuccessStart is stamped on the guess).
-    float p = clamp((time - uSuccessStart) / uSuccessDuration, 0.0, 1.0);
-    // Chunky pixel blocks lock onto the found green, noisiest blocks resolving last.
-    float blockNoise = hash(blockUv * 0.5 + 17.0);
-    float resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
-    // White-hot flicker on the blocks still resolving.
-    float flick = mix(0.7, 1.35, hash(blockUv + floor(time * 60.0)));
-    vec3 targetTone = vec3(0.96, 0.68, 0.22);
-    vec3 hot = mix(vec3(1.0, 0.97, 0.86), targetTone, 0.25) * flick;
-    // Single fast scanline sweep down the country during the burst.
-    float sweep = step(fract(worldPos.y * 0.18 - p * 2.8), 0.22)
-      * (1.0 - smoothstep(0.3, 0.8, p)) * 0.7;
-    // Ends on targetTone so the handoff to the found state is seamless.
-    vec3 baseGreen = mix(hot, targetTone, resolved) + targetTone * sweep;
-
-    // Extremely strong lime-cyan-magenta chromatic split during the resolve phase
-    if (p < 0.85) {
-      float burstChroma = (1.0 - p) * 0.55 * (hash(blockUv + time * 12.0) - 0.5);
-      baseGreen.r = clamp(baseGreen.r + burstChroma * 0.6, 0.0, 1.0);
-      baseGreen.g = clamp(baseGreen.g + abs(burstChroma) * 0.3, 0.0, 1.0);
-      baseGreen.b = clamp(baseGreen.b - burstChroma * 0.8, 0.0, 1.0);
-    }
-
-    return baseGreen;
+  ${discoveryLandFn("hash")}
+  // Discovery reveal, success window (selection shader still active until auto-advance):
+  // the land front leaves the capital in square-pixel steps towards the found tone, the
+  // outline (side walls) turns amber ahead of it. No full-country flash.
+  vec3 computeDiscoveryEffect(vec3 staticColor, vec3 foundColor, vec3 dir, vec2 cell, float isWall) {
+    float revealT = uTime - uRevealStart;
+    float dist = acos(clamp(dot(dir, uIgniteOrigin), -1.0, 1.0));
+    float landStep = discoveryLandStep(revealT, dist, uLandRadius, cell);
+    vec3 color = mix(staticColor, foundColor, landStep);
+    float outlineIn = floor(clamp(revealT / DISC_OUTLINE_S, 0.0, 1.0) * 2.0) / 2.0;
+    float outline = isWall * outlineIn * (1.0 - landStep) * (1.0 - uReducedMotion);
+    return mix(color, SELECT_CITY_AMBER / max(uSideShade, 0.001), outline * DISC_OUTLINE_ALPHA);
   }
   vec3 computeSelectionEffect(float time) {
     float pulse = sin(time * 3.2) * 0.08 + 0.92;
@@ -216,7 +211,7 @@ export const GLITCH_FRAGMENT_BODY = `
   if (uIsError > 0.5) {
     finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, blockUv, vWorldPosition);
   } else if (uIsSuccess > 0.5) {
-    finalColor = computeSuccessEffect(gl_FragColor.rgb, uTime, blockUv, vWorldPosition);
+    finalColor = computeDiscoveryEffect(staticVec, foundRestingColor, sphereDir, selCell, isWall);
   } else if (uIsSelection > 0.5) {
     finalColor = computeSelectionEffect(uTime);
   } else if (uIsFound > 0.5) {
@@ -292,9 +287,24 @@ ${SELECT_CITY_DEFS}
       float ignitePixelOn = step(igniteD, igniteFront);
       // Only the freshly found country (uIgniteSelf) restarts from dark; already-lit
       // neighbours inside the radius keep their lights and only catch a faint spark.
-      float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14))
-        * mix(0.35, 1.0, uIgniteSelf);
-      float igniteMask = mix(1.0, ignitePixelOn, igniteActive * uIgniteSelf);
+      float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * DISC_SPARK_WIDTH))
+        * mix(0.35, 1.0, uIgniteSelf) * DISC_SPARK_GAIN;
+      // Until its front passes, the found country's pixels stay unlit (also during the
+      // CITY_DELAY_S lead, igniteT < 0): no full-country pop before the wave.
+      float igniteWindow = step(igniteDist, uIgniteRadius) * step(igniteT, 1.0)
+        * (1.0 - uReducedMotion) * (1.0 - uIsRegionalMode);
+      float igniteMask = mix(1.0, ignitePixelOn, igniteWindow * uIgniteSelf);
+      // Discovery reveal (homepage-style, centred on the capital): the found land powers
+      // up pixel by pixel ahead of the cities; outline amber ahead of the front, then one
+      // light amber halo along the border before settling on the normal found state.
+      float revealT = uTime - uRevealStart;
+      float revealOn = uIgniteSelf * step(0.0, revealT) * step(revealT, DISC_REVEAL_S) * (1.0 - uIsRegionalMode);
+      float landMask = mix(1.0, discoveryLandStep(revealT, igniteDist, uLandRadius, igniteCell), revealOn);
+      float haloT = (revealT - DISC_HALO_START_S) / (DISC_REVEAL_S - DISC_HALO_START_S);
+      float haloAmt = revealOn * (1.0 - uReducedMotion) * step(0.0, haloT) * step(haloT, 1.0)
+        * ceil((1.0 - haloT) * DISC_HALO_STEPS) / DISC_HALO_STEPS * DISC_HALO_ALPHA;
+      float outlineAmt = revealOn * (1.0 - uReducedMotion) * (1.0 - landMask) * DISC_OUTLINE_ALPHA;
+      float haloBand = revealOn * discoveryHaloBand(revealT, igniteDist, uLandRadius, igniteCell);
       // Homepage wake-up: one discovery ignition stretched over the whole world. The same
       // jittered pixel front rings out from Paris (proximity order, as if every country
       // were found in turn): land powers up, cities follow with a gold spark, then awake.
@@ -311,6 +321,9 @@ ${SELECT_CITY_DEFS}
       float showcaseNow = uShowcaseLights * homeIgnite;
       float showcaseLand = uShowcaseLights * homeLandOn;
       float cityPower = clamp(max(isAwakenedCap * igniteMask, showcaseNow * isUnfoundDarkCap), 0.0, 1.0)
+        * (1.0 - uIsGhost);
+      // Relief and rivers wake with the land front (cities follow behind it).
+      float terrainPower = clamp(max(isAwakenedCap * landMask, showcaseNow * isUnfoundDarkCap), 0.0, 1.0)
         * (1.0 - uIsGhost);
 
       // Blackout: unfound land in world modes is a desaturated, power-less grey derived
@@ -338,6 +351,8 @@ ${SELECT_CITY_DEFS}
       float ownerLuma = dot(landSurface, vec3(0.299, 0.587, 0.114));
       vec3 ownerTint = ownerHue * (0.30 + ownerLuma * 1.1);
       landSurface = mix(landSurface, ownerTint, isConquestOwned * biomeAllowed * 0.5);
+      // Found land (solo tone or Conquête player colour) follows the same reveal mask.
+      landSurface = mix(DISC_DARK_LAND, landSurface, mix(1.0, landMask, isAwakenedCap));
       vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
       vec3 baseLit = landSurface * limbFactor + engrave;
 
@@ -374,7 +389,7 @@ ${SELECT_CITY_DEFS}
       vec3 awakeReliefLit = baseLit * (1.0 - valleyGap * 0.28);
       awakeReliefLit = mix(awakeReliefLit, awakenedSpurTone, ridgeSpur * (0.68 + 0.18 * cityHash));
       awakeReliefLit = mix(awakeReliefLit, awakenedCrestTone, ridgeCrest * 0.86);
-      vec3 reliefLit = mix(darkReliefLit, awakeReliefLit, cityPower);
+      vec3 reliefLit = mix(darkReliefLit, awakeReliefLit, terrainPower);
 
       float riverMask = (1.0 - uIsGhost) * mix(1.0, 0.52 * cityPower, uIsRegionalMode);
       float riverCore = step(0.65, riverVal) * riverMask;
@@ -386,7 +401,7 @@ ${SELECT_CITY_DEFS}
       vec3 conquestRiverColor = mix(vec3(0.05, 0.12, 0.34), vec3(0.36, 0.66, 0.98), riverShimmer * 0.6);
       vec3 awakeRiverTone = mix(soloRiverColor, conquestRiverColor, isConquestOwned);
       vec3 awakeRiverLit = mix(reliefLit * (1.0 - riverBank * 0.22), awakeRiverTone, riverCore * 0.88);
-      vec3 terrainLit = mix(darkRiverLit, awakeRiverLit, cityPower);
+      vec3 terrainLit = mix(darkRiverLit, awakeRiverLit, terrainPower);
 
       float isRegionalPin = step(0.975, cityAura);
       float worldAura = (isRegionalPin > 0.5 && cityDensity < 0.25) ? 0.0 : cityAura;
@@ -437,6 +452,8 @@ ${SELECT_CITY_DEFS}
       // glow, so the ignition only brightens them (no blackout, no restart).
       float preLit = isAwakenedCap * (1.0 - igniteMask) * (1.0 - uIsRegionalMode) * step(0.25, cityDensity);
       capRgb = mix(capRgb, SELECT_CITY_AMBER, preLit * SELECT_CITY_ALPHA);
+      capRgb = mix(capRgb, SELECT_CITY_AMBER, haloBand * isAwakenedCap * DISC_HALO_ALPHA);
 
       vec3 sideRgb = landSurface * 0.58;
+      sideRgb = mix(sideRgb, SELECT_CITY_AMBER, max(haloAmt, outlineAmt) * isAwakenedCap);
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);`;

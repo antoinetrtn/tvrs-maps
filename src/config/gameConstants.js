@@ -38,7 +38,8 @@ export const SCREEN_TRANSITION_MS = 420;
  * in one place.
  */
 export const FEEDBACK_TIMING = {
-  successFlashMs: 380, // success pixel-resolve flash before auto-advancing (drives uSuccessDuration)
+  successFlashMs: 380, // gameplay only: delay before auto-advancing after a correct guess
+  discoveryRevealMs: 2000, // visual only: progressive discovery reveal (outline -> land -> cities -> halo)
   flashMs: 500, // error / "already found" warning flash
   focusGlobeClickMs: 80, // delay before re-focusing input after a globe click
   focusKeyboardMs: 50, // delay before re-focusing input during navigation

@@ -172,7 +172,7 @@ describe("polygonColorResolver", () => {
         isHomeScreen: false,
         isSuccess: true,
       }).useShader
-    ).toBe(true);
+    ).toBe(false); // discovery reveal runs in the grain shader (non-regional)
 
     expect(
       resolvePolygonShaderMode({

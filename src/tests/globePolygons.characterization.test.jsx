@@ -155,9 +155,8 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
       const franceSuccessFound = summarizeFeatureOutput(successRes.current, FEATURE_FRANCE);
       expect(franceSuccessFound.color).toBe(FOUND_SURFACE_GREEN);
       expect(franceSuccessFound.stroke).toBe(GLITCH_EFFECT_SETTINGS.selectionHighlight);
-      expect(franceSuccessFound.capMaterial.userData.isGlitchShaderCap).toBe(true);
-      expect(franceSuccessFound.capMaterial.uniforms.uIsSuccess).toBe(1);
-      expect(franceSuccessFound.capMaterial.uniforms.uIsFound).toBe(1);
+      // Discovery reveal: a found country on success renders through the grain shader.
+      expect(franceSuccessFound.capMaterial.userData.isGlitchShaderCap).not.toBe(true);
 
       // CHARACTERIZATION: current behavior — when isSuccess=true BEFORE the country is added to
       // foundSet, resolveCountryCapColor ignores _isSuccess and returns UI_COLORS.mapBase.
@@ -170,10 +169,9 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
         successUnfoundRes.current,
         FEATURE_FRANCE
       );
-      expect(franceSuccessUnfound.color).toBe(successUnfoundRes.current.UI_COLORS.mapBase);
-      expect(franceSuccessUnfound.stroke).toBe(GLITCH_EFFECT_SETTINGS.selectionHighlight);
-      expect(franceSuccessUnfound.capMaterial.uniforms.uIsSuccess).toBe(1);
-      expect(franceSuccessUnfound.capMaterial.uniforms.uIsFound).toBe(0);
+      // Discovery reveal: the guessed country is treated as found while isSuccess is on.
+      expect(franceSuccessUnfound.color).toBe(FOUND_SURFACE_GREEN);
+      expect(franceSuccessUnfound.capMaterial.userData.isGlitchShaderCap).not.toBe(true);
     });
   });
 
