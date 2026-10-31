@@ -118,7 +118,6 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsSatellite;
   uniform vec3 uGlitchTintA;
   uniform vec3 uGlitchTintB;
-  ${GLSL_BAYER_4X4_FN}
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
   }
@@ -194,7 +193,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
 export const GLITCH_FRAGMENT_BODY = `
   vec3 litRestingColor = gl_FragColor.rgb;
 
-  // Warm pixel-dithered Atlas Lantern selection & Bayer checkerboard dissolve
+  // Warm ember selection & smooth glowing crossfade on deselection
   float transitionActive = step(0.006, uFadeProgress) * (1.0 - step(0.994, uFadeProgress));
   float selectInScale = mix(1.0, 0.52, step(0.5, uSelectInTransition));
   float glitchAmp = transitionActive * (0.4 + 0.6 * sin(uFadeProgress * 3.14159)) * selectInScale;
@@ -205,22 +204,25 @@ export const GLITCH_FRAGMENT_BODY = `
   float sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
   float sphereLng = atan(sphereDir.z, sphereDir.x);
   vec2 fragPx = vec2(sphereLng * cos(sphereLat * 0.65), sphereLat) * 520.0;
-  float bayer = bayer4x4(floor(fragPx));
-  float coarseBayer = bayer4x4(floor(fragPx * 0.5));
   vec2 blockUv = floor(fragPx * 0.85);
 
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
   float ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
   float sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
 
-  float lanternPulse = 0.93 + 0.07 * sin(uTime * 3.2);
-  float stippleStep = step(0.5, coarseBayer);
-  vec3 lanternDark = mix(vec3(0.30, 0.22, 0.12), vec3(0.39, 0.28, 0.15), stippleStep);
-  vec3 lanternLight = mix(vec3(0.82, 0.72, 0.52), vec3(0.90, 0.80, 0.60), stippleStep);
-  vec3 lanternBase = (uIsLight > 0.5) ? lanternLight : lanternDark;
+  // Warm ember selection: clean amber fill (no stipple), slow breathing, a soft
+  // light gleam drifting across the country and glowing side walls that trace
+  // the border like a lit outline. Matches the nocturnal ignition art direction.
+  float emberPulse = 0.9 + 0.1 * sin(uTime * 2.4);
+  vec3 emberCap = (uIsLight > 0.5) ? vec3(0.88, 0.76, 0.52) : vec3(0.42, 0.29, 0.13);
+  vec3 emberWall = (uIsLight > 0.5) ? vec3(0.98, 0.78, 0.40) : vec3(1.0, 0.74, 0.30);
+  float gleamPhase = fract((sphereLng * cos(sphereLat) + sphereLat * 0.5) * 1.6 - uTime * 0.32);
+  float gleam = smoothstep(0.0, 0.05, gleamPhase) * (1.0 - smoothstep(0.05, 0.16, gleamPhase));
   vec3 rimWarmth = pow(1.0 - ndv, 2.0)
     * ((uIsLight > 0.5) ? vec3(0.16, 0.11, 0.04) : vec3(0.34, 0.22, 0.07));
-  vec3 staticVec = lanternBase * sphereShade * lanternPulse + rimWarmth;
+  vec3 emberBase = mix(emberCap, emberWall * (0.75 + 0.35 * emberPulse) / max(uSideShade, 0.001), step(0.5, uIsSide));
+  vec3 staticVec = emberBase * sphereShade * emberPulse + rimWarmth
+    + vec3(1.0, 0.82, 0.46) * gleam * 0.16 * (1.0 - step(0.5, uIsSide));
   vec3 foundRestingColor = ((uTheme > 0.5) && (uIsSatellite < 0.5)) ? vec3(0.48, 0.34, 0.15) : uFoundGreen;
 
   // Caps and extruded side walls share one effect pipeline; sides are shaded
@@ -239,11 +241,11 @@ export const GLITCH_FRAGMENT_BODY = `
   }
   finalColor *= mix(1.0, uSideShade, step(0.5, uIsSide));
 
-  // Ordered pixel-art Bayer dither dissolve with warm amber frontier embers
-  float cellNoise = hash(floor(fragPx * 0.25));
-  float blockVal = mix(bayer, cellNoise, 0.32);
+  // Smooth crossfade (no checkerboard): the ember cools down to the resting colour
+  // with a brief warm afterglow at mid-transition.
   float finalProgress = clamp(uFadeProgress, 0.0, 1.0);
-  float glitchThreshold = finalProgress;
+  float settleMix = smoothstep(0.0, 1.0, finalProgress);
+  float afterglow = sin(finalProgress * 3.14159) * 0.22;
 
   vec3 glitchColor = finalColor;
   bool isFoundSurface = (uIsFound > 0.5);
@@ -255,7 +257,7 @@ export const GLITCH_FRAGMENT_BODY = `
 
   float sideShade = mix(1.0, uSideShade, step(0.5, uIsSide));
   vec3 settleColor = mix(litRestingColor, foundRestingColor * sideShade, step(0.5, uIsFound));
-  vec3 edgeGlow = mix(vec3(0.96, 0.68, 0.22), vec3(1.0, 0.88, 0.48), step(0.5, bayer));
+  vec3 edgeGlow = vec3(1.0, 0.80, 0.40);
 
   if (uIsError > 0.5 || uIsSuccess > 0.5) {
     gl_FragColor.rgb = glitchColor;
@@ -265,13 +267,7 @@ export const GLITCH_FRAGMENT_BODY = `
     if (uIsSatellite > 0.5) {
       gl_FragColor.rgb = glitchColor;
     } else {
-      if (blockVal < glitchThreshold) {
-        gl_FragColor.rgb = settleColor;
-      } else if (blockVal < glitchThreshold + 0.11) {
-        gl_FragColor.rgb = mix(glitchColor, edgeGlow, 0.72);
-      } else {
-        gl_FragColor.rgb = glitchColor;
-      }
+      gl_FragColor.rgb = mix(glitchColor, settleColor, settleMix) + edgeGlow * afterglow * (1.0 - settleMix);
     }
   } else if (isSoftSelectIn && transitionActive > 0.5) {
     float reveal = 1.0 - uFadeProgress;
@@ -287,14 +283,8 @@ export const GLITCH_FRAGMENT_BODY = `
   } else {
     if (transitionActive > 0.5) {
       if (uIsSatellite > 0.5) {
-        if (blockVal < uFadeProgress) {
-          gl_FragColor.a = 0.0;
-        } else {
-          if (blockVal < uFadeProgress + 0.11) {
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, edgeGlow, 0.72);
-          }
-          gl_FragColor.a = 1.0 - uFadeProgress * uFadeProgress;
-        }
+        gl_FragColor.rgb += edgeGlow * afterglow * (1.0 - settleMix);
+        gl_FragColor.a = 1.0 - settleMix;
       } else {
         gl_FragColor.a = 1.0;
       }

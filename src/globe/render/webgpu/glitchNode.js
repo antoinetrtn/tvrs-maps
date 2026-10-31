@@ -34,7 +34,7 @@ import {
   vec4,
 } from "three/tsl";
 
-import { bayer4x4, fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
+import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 const PI = 3.14159;
 
@@ -179,7 +179,7 @@ function selectionEffect(finalColor, green, time, theme, isSatellite) {
   );
 }
 
-const edgeGlowAt = (bayer) => mix(vec3(0.96, 0.68, 0.22), vec3(1.0, 0.88, 0.48), step(0.5, bayer));
+const EDGE_GLOW = vec3(1.0, 0.8, 0.4);
 
 const on = (x) => x.greaterThan(0.5);
 
@@ -198,24 +198,39 @@ function glitchBase(u, lit) {
   const sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
   const sphereLng = atan(sphereDir.z, sphereDir.x);
   const fragPx = vec2(sphereLng.mul(cos(sphereLat.mul(0.65))), sphereLat).mul(520.0);
-  const bayer = bayer4x4(floor(fragPx));
-  const coarseBayer = bayer4x4(floor(fragPx.mul(0.5)));
   const blockUv = floor(fragPx.mul(0.85));
 
   const viewDir = normalize(cameraPosition.sub(positionWorld));
   const ndv = clamp(importDot(sphereDir, viewDir), 0.0, 1.0);
   const sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
 
+  // Warm ember selection (GLSL parity): clean amber fill, breathing, drifting gleam,
+  // glowing side walls tracing the border.
   const light = on(u.uIsLight);
-  const lanternPulse = sin(time.mul(3.2)).mul(0.07).add(0.93);
-  const stippleStep = step(0.5, coarseBayer);
-  const lanternDark = mix(vec3(0.3, 0.22, 0.12), vec3(0.39, 0.28, 0.15), stippleStep);
-  const lanternLight = mix(vec3(0.82, 0.72, 0.52), vec3(0.9, 0.8, 0.6), stippleStep);
-  const lanternBase = select(light, lanternLight, lanternDark);
+  const side = step(0.5, u.uIsSide);
+  const emberPulse = sin(time.mul(2.4)).mul(0.1).add(0.9);
+  const emberCap = select(light, vec3(0.88, 0.76, 0.52), vec3(0.42, 0.29, 0.13));
+  const emberWall = select(light, vec3(0.98, 0.78, 0.4), vec3(1.0, 0.74, 0.3));
+  const gleamPhase = fract(
+    sphereLng.mul(cos(sphereLat)).add(sphereLat.mul(0.5)).mul(1.6).sub(time.mul(0.32))
+  );
+  const gleam = smoothstep(0.0, 0.05, gleamPhase).mul(
+    float(1).sub(smoothstep(0.05, 0.16, gleamPhase))
+  );
   const rimWarmth = pow(float(1.0).sub(ndv), 2.0).mul(
     select(light, vec3(0.16, 0.11, 0.04), vec3(0.34, 0.22, 0.07))
   );
-  const staticVec = lanternBase.mul(sphereShade).mul(lanternPulse).add(rimWarmth).toVar();
+  const emberBase = mix(
+    emberCap,
+    emberWall.mul(emberPulse.mul(0.35).add(0.75)).div(u.uSideShade.max(0.001)),
+    side
+  );
+  const staticVec = emberBase
+    .mul(sphereShade)
+    .mul(emberPulse)
+    .add(rimWarmth)
+    .add(vec3(1.0, 0.82, 0.46).mul(gleam.mul(0.16)).mul(float(1).sub(side)))
+    .toVar();
   const isMonoAwakening = on(u.uTheme).and(on(u.uIsSatellite).not());
   const foundRestingColor = select(isMonoAwakening, vec3(0.48, 0.34, 0.15), u.uFoundGreen);
 
@@ -242,7 +257,6 @@ function glitchBase(u, lit) {
     staticVec,
     finalColor,
     sideShade,
-    bayer,
     foundRestingColor,
   };
 }
@@ -251,12 +265,11 @@ function importDot(a, b) {
   return a.x.mul(b.x).add(a.y.mul(b.y)).add(a.z.mul(b.z));
 }
 
-/** Ordered pixel-art Bayer dither dissolve with warm amber frontier embers. */
+/** Smooth crossfade state (no checkerboard). */
 function glitchDissolve(u, base) {
   const { finalColor } = base;
-  const glitchThreshold = clamp(u.uFadeProgress, 0, 1).toVar();
   const glitchColor = vec3(finalColor).toVar();
-  return { glitchThreshold, glitchColor };
+  return { glitchColor };
 }
 
 /** Fragment output node equivalent to GLITCH_FRAGMENT_BODY. */
@@ -264,13 +277,13 @@ function createGlitchOutputNode(u) {
   return Fn(() => {
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, fragPx, staticVec, sideShade, bayer, foundRestingColor } = base;
-    const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
+    const { transitionActive, staticVec, sideShade, foundRestingColor } = base;
+    const { glitchColor } = glitchDissolve(u, base);
+    const fade = clamp(u.uFadeProgress, 0, 1);
+    const settleMix = smoothstep(0.0, 1.0, fade);
+    const afterglow = EDGE_GLOW.mul(sin(fade.mul(PI)).mul(0.22)).mul(float(1).sub(settleMix));
 
     const settleColor = mix(lit, foundRestingColor.mul(sideShade), step(0.5, u.uIsFound)).toVar();
-    const cellNoise = hash(floor(fragPx.mul(0.25)));
-    const blockVal = mix(bayer, cellNoise, 0.32);
-    const edgeGlow = edgeGlowAt(bayer);
 
     const feedback = on(u.uIsError).or(on(u.uIsSuccess));
     const isFoundSurface = on(u.uIsFound);
@@ -287,24 +300,15 @@ function createGlitchOutputNode(u) {
       .ElseIf(transiting.and(satellite), () => {
         rgb.assign(glitchColor);
       })
-      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold)), () => {
-        rgb.assign(settleColor);
-      })
-      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold.add(0.11))), () => {
-        rgb.assign(mix(glitchColor, edgeGlow, 0.72));
-      })
       .ElseIf(transiting, () => {
-        rgb.assign(glitchColor);
+        rgb.assign(mix(glitchColor, settleColor, settleMix).add(afterglow));
       });
 
     const alpha = float(1).toVar();
-    const fade = u.uFadeProgress;
     const satDissolve = feedback.or(isFoundSurface).not().and(transiting).and(satellite);
-    If(satDissolve.and(blockVal.lessThan(fade)), () => {
-      alpha.assign(0);
-    }).ElseIf(satDissolve, () => {
-      rgb.assign(select(blockVal.lessThan(fade.add(0.11)), mix(rgb, edgeGlow, 0.72), rgb));
-      alpha.assign(float(1).sub(fade.mul(fade)));
+    If(satDissolve, () => {
+      rgb.addAssign(afterglow);
+      alpha.assign(float(1).sub(settleMix));
     });
     If(feedback.or(isFoundSurface).or(transiting).not().and(satellite), () => {
       alpha.assign(float(1).sub(clamp(fade, 0, 1)));
