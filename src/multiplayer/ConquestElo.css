@@ -1,0 +1,15 @@
+/* Elo change on the end screen and the Conquête leaderboard tab. */
+.conquest-elo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  color: var(--text-main);
+}
+
+.conquest-elo .is-up {
+  color: var(--success);
+}
+
+.conquest-elo .is-down {
+  color: var(--error);
+}

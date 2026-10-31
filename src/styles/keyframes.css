@@ -1,0 +1,372 @@
+/* Shared @keyframes — single source for every animation (atomic DS lint, check:ds).
+   Moved verbatim from component CSS, names unchanged. */
+
+/* — from src/App.css — */
+@keyframes float {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100px);
+  }
+}
+
+@keyframes animation-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes game-ui-step-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scanline-step-pass {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes panic-pulse {
+  0% {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--error) 35%, transparent);
+  }
+  100% {
+    box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--error) 75%, transparent);
+  }
+}
+
+@keyframes life-lost-flash {
+  0% {
+    box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--error) 85%, transparent);
+  }
+  60% {
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--error) 45%, transparent);
+  }
+  100% {
+    box-shadow: inset 0 0 0 0 color-mix(in srgb, var(--error) 0%, transparent);
+  }
+}
+
+/* — from src/components/GameDataPanel.css — */
+@keyframes data-panel-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* — from src/components/GameHUD.css — */
+@keyframes input-reject {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes timer-alarm {
+  0% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes score-tick {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* — from src/components/GameHUDLives.css — */
+@keyframes hearts-shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* — from src/components/HomeScreen.css — */
+@keyframes home-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-block-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes home-logo-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* — from src/components/HomeScreenCategoryCarousel.css — */
+@keyframes atlasDeckIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* — from src/components/Logo.css — */
+@keyframes twinkle-goat {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* — from src/components/PassportStamp.css — */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: rotate(-3deg) scale(1.4);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-3deg) scale(0.96);
+  }
+  100% {
+    opacity: 0.92;
+    transform: rotate(-3deg) scale(1);
+  }
+}
+
+@keyframes stamp-in-pb {
+  0% {
+    opacity: 0;
+    transform: rotate(3deg) scale(1.4);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(3deg) scale(0.96);
+  }
+  100% {
+    opacity: 0.92;
+    transform: rotate(3deg) scale(1);
+  }
+}
+
+/* — from src/components/TrainingSheet.css — */
+@keyframes training-cell-fill {
+  from {
+    opacity: 0;
+  }
+}
+
+/* — from src/globe/GlobeMap.css — */
+@keyframes label-appear {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* — from src/multiplayer/ConquestCursors.css — */
+@keyframes cq-hint-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* — from src/multiplayer/ConquestHud.css — */
+@keyframes conquest-timer-blink {
+  50% {
+    color: var(--text-main);
+  }
+}
+
+/* — from src/multiplayer/ConquestReady.css — */
+@keyframes px-ready-pip {
+  from {
+    transform: scale(1.5);
+    opacity: 0.4;
+  }
+}
+
+@keyframes px-ready-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* — from src/multiplayer/ConquestShieldLayer.css — */
+@keyframes cq-shield-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+/* — from src/styles/glitchMoments.css — */
+@keyframes glitch-burst {
+  0% {
+    text-shadow:
+      -2px 0 var(--glitch-magenta),
+      2px 0 var(--glitch-cyan);
+    transform: translateX(-1px) skewX(-3deg);
+  }
+  33% {
+    text-shadow:
+      2px 0 var(--glitch-magenta),
+      -2px 0 var(--glitch-cyan);
+    transform: translateX(1px) skewX(2deg);
+  }
+  66% {
+    text-shadow:
+      -1px 0 var(--glitch-magenta-soft),
+      1px 0 var(--glitch-cyan-soft);
+    transform: translateX(0) skewX(-1deg);
+  }
+  100% {
+    text-shadow: none;
+    transform: none;
+  }
+}
+
+@keyframes glitch-burst-ink {
+  0%,
+  66% {
+    text-shadow:
+      -2px 0 var(--glitch-magenta),
+      2px 0 var(--glitch-cyan);
+    filter: drop-shadow(-1px 0 var(--glitch-magenta-soft))
+      drop-shadow(1px 0 var(--glitch-cyan-soft));
+  }
+  33% {
+    text-shadow:
+      2px 0 var(--glitch-magenta),
+      -2px 0 var(--glitch-cyan);
+  }
+  100% {
+    text-shadow: none;
+    filter: none;
+  }
+}
+
+/* — from src/styles/panelSystem.css — */
+@keyframes sheet-in {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(var(--sheet-clip-bleed));
+  }
+}
+
+@keyframes sheet-out {
+  from {
+    clip-path: inset(var(--sheet-clip-bleed));
+  }
+  to {
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* — from src/components/GameDataPanel.css (was nested in @media (max-width: 1024px), only used there) — */
+@keyframes data-panel-sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

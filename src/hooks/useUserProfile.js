@@ -3,15 +3,22 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getLeaderboard,
   getProfile,
+  getSupabase,
   getUserRecords,
   isSupabaseConfigured,
   submitLeaderboardScore,
-  supabase,
   upsertProfile,
   upsertUserRecord,
 } from "../services/supabaseClient";
 import { evaluateGameRewardsAndBadges, getLevelAndProgress } from "../utils/gamification";
 import { generateUUID } from "../utils/utils";
+
+/**
+ * Session that owns the profile. The anonymous account created for Conquête
+ * multiplayer must not take over the guest's local profile, XP and records,
+ * so it is treated as "no session" here.
+ */
+export const profileSession = (session) => (session?.user?.is_anonymous ? null : session);
 
 export function useUserProfile() {
   const [session, setSession] = useState(null);
@@ -140,24 +147,29 @@ export function useUserProfile() {
 
   // Listen to Supabase Auth State changes
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured) return undefined;
 
-    supabase.auth
-      .getSession()
-      .then(({ data: { session: activeSession } }) => {
-        setSession(activeSession);
-        return;
+    let cancelled = false;
+    let subscription = null;
+
+    getSupabase()
+      .then((supabase) => {
+        if (cancelled || !supabase) return null;
+        const { data } = supabase.auth.onAuthStateChange((_event, activeSession) => {
+          if (!cancelled) setSession(profileSession(activeSession));
+        });
+        subscription = data?.subscription || null;
+        return supabase.auth.getSession();
+      })
+      .then((res) => {
+        if (!cancelled && res?.data) setSession(profileSession(res.data.session));
+        return null;
       })
       .catch(() => {});
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, activeSession) => {
-      setSession(activeSession);
-    });
-
     return () => {
-      subscription.unsubscribe();
+      cancelled = true;
+      subscription?.unsubscribe();
     };
   }, []);
 

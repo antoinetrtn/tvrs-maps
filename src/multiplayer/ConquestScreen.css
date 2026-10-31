@@ -1,0 +1,298 @@
+/* « Conquête » 1v1 — aligned on the UI kit (src/components/ui/ui.css):
+   radius-sm, 1px borders, hard offset shadows, Bitcount titles/numbers,
+   Space Grotesk text, user accent. Buttons are the shared Button component
+   (ui/Button); groups are SettingsSection; ready CTA lives in ConquestReady.css; flag
+   choices are an OptionGroup. Only layout lives here. */
+
+.conquest-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-conquest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-family: var(--font-main);
+  color: var(--text-main);
+}
+
+.conquest-overlay > * {
+  pointer-events: auto;
+}
+
+/* Shared surface: same language as the settings sheet. */
+.conquest-surface {
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+.conquest-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-ms);
+  width: min(440px, calc(100vw - var(--spacing-xl)));
+  max-height: calc(100dvh - var(--spacing-xl));
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+}
+
+.conquest-panel .ui-settings-section {
+  margin-bottom: 0;
+}
+
+.conquest-panel .ui-settings-title {
+  clip-path: inset(50%);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.conquest-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.conquest-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.conquest-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.conquest-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.conquest-title--winner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.conquest-title--winner svg {
+  color: var(--accent);
+}
+
+.conquest-subtitle,
+.conquest-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.conquest-label {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.conquest-error {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--font-size-sm);
+}
+
+.conquest-join-form,
+.conquest-actions-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.conquest-actions-row > * {
+  flex: 1;
+}
+
+.conquest-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.conquest-code-input,
+.conquest-code,
+.conquest-rank,
+.conquest-total,
+.conquest-score {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.conquest-code-input {
+  letter-spacing: 0.12em;
+}
+
+.conquest-room-code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.conquest-room-code .conquest-code {
+  flex: 1;
+  min-width: 0;
+}
+
+.conquest-code {
+  font-size: var(--font-size-xl);
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.conquest-scoreboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conquest-player-chip {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.conquest-player-name {
+  flex-shrink: 0;
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conquest-player-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.conquest-score {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.conquest-tag-host {
+  display: inline-flex;
+  align-items: center;
+  color: var(--warning);
+}
+
+.conquest-tag-me {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.conquest-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+
+.conquest-player-chip--empty {
+  opacity: 0.7;
+}
+
+.conquest-player-waiting {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.conquest-swatch--empty {
+  border: 1px dashed var(--text-muted);
+  background: transparent;
+}
+
+/* Colour + pattern swatch (colour-blind friendly), square like the kit. */
+.conquest-swatch {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 1px solid var(--black);
+  background-color: var(--player-color, var(--accent));
+}
+
+.conquest-swatch.pattern-dots {
+  background-image: conic-gradient(from 90deg at 2px 2px, transparent 90deg, var(--black) 0);
+  background-size: 5px 5px;
+}
+
+.conquest-swatch.pattern-hatch {
+  background-image: repeating-linear-gradient(45deg, var(--black) 0 1.5px, transparent 1.5px 4px);
+}
+
+.conquest-swatch.pattern-cross {
+  background-image:
+    repeating-linear-gradient(0deg, var(--black) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, var(--black) 0 1px, transparent 1px 4px);
+}
+
+/* End screen rows */
+.conquest-end-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.conquest-rank {
+  width: 1.5em;
+  color: var(--accent);
+}
+
+.conquest-total {
+  margin-left: var(--spacing-sm);
+  color: var(--accent);
+}
+
+/* SettingsRow without a label: let the player chip span the whole row. */
+.conquest-panel .ui-settings-row--inline .ui-settings-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.conquest-end-row .conquest-player-chip {
+  flex: 1;
+}
+
+.conquest-rematch-waiting {
+  margin: var(--spacing-xs) 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  color: var(--accent);
+}

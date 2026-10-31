@@ -1,6 +1,6 @@
 import "./ProfilePanel.css";
 
-import { Close, Lock, Trophy, User } from "pixelarticons/react";
+import { Lock, Trophy, User } from "pixelarticons/react";
 import React, { useEffect, useState } from "react";
 
 import { AVATAR_COLORS } from "../config/designSystem";
@@ -14,7 +14,15 @@ import {
 } from "../services/supabaseClient";
 import { getLevelAndProgress } from "../utils/gamification";
 import InvaderAvatar from "./InvaderAvatar";
-import SegmentedControl from "./SegmentedControl";
+import ProfileFooter from "./ProfileFooter";
+import Button from "./ui/Button";
+import Card from "./ui/Card";
+import Dialog from "./ui/Dialog";
+import PanelCloseButton from "./ui/PanelCloseButton";
+import Pressable from "./ui/Pressable";
+import TabBar from "./ui/TabBar";
+import TextField from "./ui/TextField";
+import XpBar from "./XpBar";
 
 // Dictionnaire associant 12 succès spécifiques aux 12 modèles d'envahisseurs et leurs couleurs fixes
 const CHALLENGE_AVATARS = {
@@ -201,59 +209,55 @@ const ProfilePanel = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`sheet-panel profile-panel glass-panel open ${theme}`}
-      onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
+    <Dialog
+      variant="panel"
+      open
+      onClose={onClose}
+      theme={theme}
+      label={t("tab_profile")}
+      className="profile-panel glass-panel"
     >
       <div className="panel-header">
-        <SegmentedControl
+        <TabBar
+          level={1}
+          label={t("tab_profile")}
           options={[
             {
               value: "profile",
               label: t("tab_profile"),
-              icon: <User width={14} height={14} className="tab-icon" />,
+              icon: <User width={16} height={16} aria-hidden="true" />,
             },
             {
               value: "stats",
               label: t("tab_stats"),
-              icon: <Trophy width={14} height={14} className="tab-icon" />,
+              icon: <Trophy width={16} height={16} aria-hidden="true" />,
             },
           ]}
           value={activeTab}
           onChange={setActiveTab}
         />
-        <button
-          className="panel-close-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          title={t("close")}
-        >
-          <Close width={20} height={20} />
-        </button>
+        <PanelCloseButton label={t("close")} onClick={onClose} stopPropagation />
       </div>
 
       <div className="panel-body scrollbar-styled">
         {activeTab === "profile" ? (
-          <div className="profile-tab-content">
+          <div className="profile-tab-content px-band-in">
             {/* Blurring Overlay for guest mode */}
             {isSupabaseConfigured && !session && (
               <div className="profile-blur-overlay">
-                <div className="profile-blur-card glass-panel">
+                <Card look="locked" glass>
                   <p className="profile-blur-text text-natural-case">{t("auth_required")}</p>
-                  <button
-                    type="button"
+                  <Button
+                    variant="primary"
                     onClick={(e) => {
                       e.preventDefault();
                       if (onOpenAuth) onOpenAuth();
                     }}
-                    className="btn-primary profile-blur-btn"
+                    look="profile-unlock"
                   >
                     {t("auth_sign_in")}
-                  </button>
-                </div>
+                  </Button>
+                </Card>
               </div>
             )}
 
@@ -265,27 +269,21 @@ const ProfilePanel = ({
                 <div className="profile-form-middle scrollbar-styled">
                   {/* Sticky Top Header Area (nom/username sticky, like mobile no-double-scroll logic) */}
                   <div className="profile-form-header">
-                    <div className="form-group" style={{ width: "100%" }}>
-                      <label htmlFor="profile-username-input">{t("username")}</label>
-                      <input
-                        id="profile-username-input"
-                        type="text"
-                        value={usernameInput}
-                        onChange={(e) => setUsernameInput(e.target.value)}
-                        placeholder="Pseudo..."
-                        maxLength={20}
-                        className="glass-panel"
-                        disabled={isSupabaseConfigured && !session}
-                      />
-                    </div>
+                    <TextField
+                      id="profile-username-input"
+                      label={t("username")}
+                      type="text"
+                      value={usernameInput}
+                      onChange={(e) => setUsernameInput(e.target.value)}
+                      placeholder="Pseudo..."
+                      maxLength={20}
+                      className="glass-panel"
+                      disabled={isSupabaseConfigured && !session}
+                    />
                   </div>
 
-                  {/* Content: niv (level), invader, stats etc. scroll together as one block */}
-                  {/* Minecraft Style XP Block (Moved to Default Profile Tab) */}
-                  <div
-                    className="xp-progression-card glass-panel"
-                    style={{ marginBottom: "var(--spacing-md)" }}
-                  >
+                  {/* XP progression card */}
+                  <Card look="xp" glass style={{ marginBottom: "var(--spacing-md)" }}>
                     <div className="xp-card-header">
                       <div className="xp-avatar-wrap">
                         <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={36} />
@@ -297,28 +295,29 @@ const ProfilePanel = ({
                         </span>
                       </div>
                     </div>
-                    <div className="minecraft-xp-bar-container">
-                      <div className="minecraft-xp-bar-fill" style={{ width: `${percent}%` }} />
-                    </div>
-                  </div>
+                    <XpBar
+                      percent={percent}
+                      label={t("xp_label", { current: xpInLevel, next: xpNeededForNext })}
+                    />
+                  </Card>
 
                   {/* Quick Stats Grid */}
                   <div className="quick-stats-grid" style={{ marginBottom: "var(--spacing-lg)" }}>
-                    <div className="quick-stat-card glass-panel">
+                    <Card look="stat" glass>
                       <span className="stat-label">{t("stats_total_xp")}</span>
                       <span className="stat-value">{userProfile.xp || 0}</span>
-                    </div>
-                    <div className="quick-stat-card glass-panel">
+                    </Card>
+                    <Card look="stat" glass>
                       <span className="stat-label">{t("stats_games_played")}</span>
                       <span className="stat-value">{totalGamesPlayed}</span>
-                    </div>
-                    <div className="quick-stat-card glass-panel">
+                    </Card>
+                    <Card look="stat" glass>
                       <span className="stat-label">{t("stats_badges_unlocked")}</span>
                       <span className="stat-value">
                         {unlockedBadges.filter((b) => b.startsWith("ch_")).length} /{" "}
                         {CHALLENGES.length}
                       </span>
-                    </div>
+                    </Card>
                   </div>
 
                   {/* Avatar Selector */}
@@ -327,7 +326,7 @@ const ProfilePanel = ({
                     <div className="avatar-grid scrollbar-styled">
                       {allAvatars.map((item) => {
                         return (
-                          <button
+                          <Pressable
                             key={item.id}
                             type="button"
                             className={`avatar-option glass-panel ${selectedAvatar === item.id ? "active" : ""} ${item.isLocked ? "locked" : ""}`}
@@ -349,11 +348,11 @@ const ProfilePanel = ({
                               {item.isLocked && (
                                 <div className="avatar-lock-overlay">
                                   <Lock width={12} height={12} className="lock-icon" />
-                                  <span className="lock-lvl">🏆</span>
+                                  <Trophy width={12} height={12} className="lock-lvl" />
                                 </div>
                               )}
                             </div>
-                          </button>
+                          </Pressable>
                         );
                       })}
                     </div>
@@ -362,63 +361,47 @@ const ProfilePanel = ({
 
                 {formError && <div className="form-feedback error">{formError}</div>}
 
-                {/* Sticky Footer Area */}
-                <div className="profile-sticky-footer">
-                  <button
-                    type="submit"
-                    disabled={isSaving || (isSupabaseConfigured && !session)}
-                    className={`btn-primary form-submit-btn ${saveSuccess ? "save-success-glow" : ""}`}
-                  >
-                    {saveSuccess
-                      ? `✓ ${t("profile_saved")}`
-                      : isSaving
-                        ? t("saving")
-                        : t("save_profile")}
-                  </button>
-
-                  {/* Clean Logout inside the sticky footer */}
-                  {isSupabaseConfigured && session && (
-                    <div className="profile-signout-wrapper">
-                      <button onClick={handleSignOutClick} className="profile-signout-link">
-                        {t("auth_sign_out")}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <ProfileFooter
+                  t={t}
+                  disabled={isSaving || (isSupabaseConfigured && !session)}
+                  isSaving={isSaving}
+                  saveSuccess={saveSuccess}
+                  showSignOut={isSupabaseConfigured && Boolean(session)}
+                  onSignOut={handleSignOutClick}
+                />
               </form>
             </div>
           </div>
         ) : (
-          <div className="stats-tab-content">
+          <div className="stats-tab-content px-band-in">
             {/* Scrollable Middle Area (Contains ONLY Achievements) */}
             <div className="badges-gallery-section">
               <span className="section-label">Challenges & Émotes</span>
 
-              <div className="nav-chips">
-                {["all", "general", "continents", "scores", "speed", "relief"].map((cat) => (
-                  <button
-                    key={cat}
-                    className={`nav-chip ${challengesFilter === cat ? "active" : ""}`}
-                    onClick={() => setChallengesFilter(cat)}
-                  >
-                    {filterLabels[cat] || cat}
-                  </button>
-                ))}
-              </div>
+              <TabBar
+                level={2}
+                label="Challenges & Émotes"
+                options={["all", "general", "continents", "scores", "speed", "relief"].map(
+                  (cat) => ({
+                    value: cat,
+                    label: filterLabels[cat] || cat,
+                  })
+                )}
+                value={challengesFilter}
+                onChange={setChallengesFilter}
+              />
 
-              <div className="badges-grid scrollbar-styled">
+              <div className="badges-grid px-cascade scrollbar-styled">
                 {filteredChallenges.map((ch) => {
                   const isUnlocked = unlockedBadges.includes(ch.id);
                   const isSelected = selectedChallengeId === ch.id;
                   return (
-                    <button
+                    <Pressable
                       key={ch.id}
-                      className={`badge-item-btn glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
+                      type="button"
+                      className={`badge-tile glass-panel ${isUnlocked ? "unlocked" : "locked"} ${isSelected ? "selected" : ""}`}
                       onClick={() => setSelectedChallengeId(ch.id)}
                       style={{
-                        "--badge-color-glow": isUnlocked
-                          ? `${AVATAR_COLORS[ch.color]}33`
-                          : "transparent",
                         "--badge-color-border": isUnlocked
                           ? AVATAR_COLORS[ch.color]
                           : "var(--glass-border)",
@@ -436,14 +419,14 @@ const ProfilePanel = ({
                           </div>
                         )}
                       </div>
-                    </button>
+                    </Pressable>
                   );
                 })}
               </div>
             </div>
 
             {/* Sticky Bottom Area */}
-            <div className="badge-detail-card glass-panel">
+            <Card look="badge-detail" glass>
               <div className="badge-detail-header">
                 <div
                   className="badge-detail-icon-glow"
@@ -471,11 +454,11 @@ const ProfilePanel = ({
                 </div>
               </div>
               <p className="badge-detail-description">{getChallengeDesc(selectedChallengeObj)}</p>
-            </div>
+            </Card>
           </div>
         )}
       </div>
-    </div>
+    </Dialog>
   );
 };
 

@@ -1,0 +1,119 @@
+/* StateViews.css — Shared kit for EmptyState, LoadingState, and ErrorState */
+
+.ui-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xl) var(--spacing-md);
+  text-align: center;
+  color: var(--text-muted);
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.ui-state-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  min-height: 24px;
+}
+
+.ui-state-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+}
+
+.ui-state-glyph svg {
+  width: 24px;
+  height: 24px;
+}
+
+.ui-state-glyph--dashed {
+  color: var(--text-muted);
+}
+
+.ui-state--error .ui-state-visual,
+.ui-state--error .ui-state-glyph {
+  color: var(--error);
+}
+
+/* Stepped 5-cell loader */
+.ui-state-track {
+  position: relative;
+  display: flex;
+  gap: var(--spacing-xs);
+  width: 56px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
+.ui-state-cell {
+  width: 8px;
+  height: 8px;
+  background: var(--glass-border-strong);
+  opacity: 0.4;
+}
+
+.ui-state-runner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  animation: ui-state-step var(--dur-loop) steps(5, end) infinite;
+}
+
+@keyframes ui-state-step {
+  to {
+    transform: translateX(60px);
+  }
+}
+
+.ui-state-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
+.ui-state--error .ui-state-title {
+  color: var(--error);
+}
+
+.ui-state-hint {
+  margin: 0;
+  max-width: 36ch;
+  font-family: var(--font-main);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.ui-state-action {
+  margin-top: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-state-runner {
+    display: none;
+    animation: none;
+  }
+
+  .ui-state-cell:first-child {
+    opacity: 1;
+    background: var(--accent);
+  }
+}
