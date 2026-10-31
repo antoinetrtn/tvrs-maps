@@ -1,3 +1,4 @@
+import { useGlobeIdlePrewarm } from "./useGlobeIdlePrewarm";
 import { useGlobeRenderData } from "./useGlobeRenderData";
 
 export function useGlobeRenderPipeline({
@@ -10,11 +11,18 @@ export function useGlobeRenderPipeline({
   usStatesData,
   gameDataMap,
   selectedCountry,
-  lastCameraPOVRef,
-  lastZoomRef,
+  lastCameraPOVRef: _lastCameraPOVRef,
+  lastZoomRef: _lastZoomRef,
   perfProfile,
   canonicalRef,
 }) {
+  useGlobeIdlePrewarm({
+    countriesData,
+    departmentsData,
+    usStatesData,
+    resolution: perfProfile?.polygonCapCurvatureResolution ?? 1.5,
+  });
+
   const renderDataResult = useGlobeRenderData({
     isDepartmentMode,
     isUsStatesMode,
@@ -25,8 +33,6 @@ export function useGlobeRenderPipeline({
     usStatesData,
     gameDataMap,
     selectedCountry,
-    cameraPOV: lastCameraPOVRef.current,
-    zoomLevel: lastZoomRef.current,
     perfProfile,
   });
 
@@ -34,10 +40,11 @@ export function useGlobeRenderPipeline({
     selectableFeatureIndex,
     countrySizes,
     renderCountriesData,
-    visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions = {},
     modeTransitionRef,
+    transitionStep,
+    transitionLive,
   } = renderDataResult;
 
   canonicalRef.current = canonicalPositions;
@@ -49,10 +56,11 @@ export function useGlobeRenderPipeline({
     selectableFeatureIndex,
     countrySizes,
     renderCountriesData,
-    visibleRenderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,
     modeTransitionRef,
+    transitionStep,
+    transitionLive,
   };
 }

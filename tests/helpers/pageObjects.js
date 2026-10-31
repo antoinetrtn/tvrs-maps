@@ -5,21 +5,21 @@ export class HomeScreen {
     this.page = page;
     this.logo = page.locator(".home-logo");
     this.deckWrapper = page.locator(".cards-deck-wrapper");
-    this.topCard = page.locator(".deck-mode-card.is-top-card");
+    this.topCard = page.locator(".ui-card--mode-deck.is-top-card");
     this.leftArrow = page.locator(".deck-click-zone.left");
     this.rightArrow = page.locator(".deck-click-zone.right");
     this.dots = page.locator(".deck-dots-row .deck-dot");
-    this.settingsBtn = page.locator(".settings-trigger-btn");
-    this.profileBtn = page.locator(".profile-trigger-btn");
+    this.settingsBtn = page.locator(".ui-icon-btn--dock-settings");
+    this.profileBtn = page.locator(".ui-icon-btn--dock-profile");
     this.podiumWidget = page.locator(".home-podium-widget");
     this.settingsPanel = page.locator(".sheet-panel.settings-panel");
     this.profilePanel = page.locator(".sheet-panel.profile-panel");
     this.leaderboardPanel = page.locator(".sheet-panel.leaderboard-panel");
-    this.panelCloseBtn = page.locator(".panel-close-btn");
+    this.panelCloseBtn = page.locator(".ui-icon-btn--panel-close");
   }
 
   async selectMode(modeKey) {
-    const card = this.page.locator(`.deck-mode-card[data-mode="${modeKey}"]`);
+    const card = this.page.locator(`.ui-card--mode-deck[data-mode="${modeKey}"]`);
     if (await card.evaluate((el) => el.classList.contains("is-top-card"))) {
       return;
     }
@@ -32,12 +32,12 @@ export class HomeScreen {
   }
 
   async startTopModePlay() {
-    const playBtn = this.topCard.locator(".card-play-btn");
+    const playBtn = this.topCard.locator(".ui-btn--cta");
     await playBtn.click();
   }
 
   async startTopModeLearn() {
-    const learnBtn = this.topCard.locator(".card-learn-btn");
+    const learnBtn = this.topCard.locator(".ui-btn--tile");
     await learnBtn.click();
   }
 
@@ -47,7 +47,7 @@ export class HomeScreen {
   }
 
   async closeSettings() {
-    await this.settingsPanel.locator(".panel-close-btn").click();
+    await this.settingsPanel.locator(".ui-icon-btn--panel-close").click();
     await expect(this.settingsPanel).not.toHaveClass(/open/);
   }
 
@@ -74,15 +74,24 @@ export class GameHUD {
     this.fullHearts = page.locator(".PixelHeart.heart-full");
     this.lostHearts = page.locator(".PixelHeart.heart-lost");
     this.suggestionsList = page.locator(".suggestions-list");
-    this.suggestionItems = page.locator(".suggestion-item");
-    this.prevBtn = page.locator(".hud-btn-circular.prev-btn");
-    this.nextBtn = page.locator(".hud-btn-circular.next-btn");
+    this.suggestionItems = page.locator("[role=option]");
+    this.prevBtn = page.locator(".ui-icon-btn--hud.prev-btn");
+    this.nextBtn = page.locator(".ui-icon-btn--hud.next-btn");
     this.homeLogo = page.locator(".hud-logo-clickable");
-    this.stopBtn = page.locator(".hud-top-right .hud-btn-circular");
+    this.stopBtn = page.locator(".hud-top-right .ui-icon-btn--hud");
   }
 
   async enterAnswer(answerText) {
     await this.inputField.fill(answerText);
+    try {
+      await this.page
+        .locator(".suggestion-item")
+        .first()
+        .waitFor({ state: "visible", timeout: 250 });
+      await this.inputField.press("ArrowDown");
+    } catch {
+      // Pas de suggestion apparue
+    }
     await this.inputField.press("Enter");
   }
 }
@@ -93,8 +102,8 @@ export class EndScreen {
     this.overlay = page.locator(".end-screen-overlay");
     this.headerTitle = page.locator(".end-screen-header h1");
     this.scoreDisplay = page.locator(".final-score-inline");
-    this.exploreGlobeBtn = page.locator(".end-screen-actions .btn-secondary");
-    this.homeBtn = page.locator(".end-screen-actions .btn-primary");
+    this.exploreGlobeBtn = page.locator(".end-screen-actions .ui-btn--secondary");
+    this.homeBtn = page.locator(".end-screen-actions .ui-btn--primary");
     this.restoreChip = page.locator(".end-screen-restore-chip");
   }
 }
@@ -105,8 +114,9 @@ export class GameDataPanel {
     this.panel = page.locator(".game-data-panel");
     this.searchInput = page.locator(".data-panel-search-input");
     this.learnCarousel = page.locator(".learn-carousel-control");
-    this.learnNextArrow = page.locator(".learn-carousel-arrow").nth(1);
-    this.learnPrevArrow = page.locator(".learn-carousel-arrow").nth(0);
-    this.dataRows = page.locator(".data-panel-table div[data-country-key]");
+    this.learnTabs = this.learnCarousel.locator('[role="tab"]');
+    this.learnNextArrow = this.learnTabs.nth(1);
+    this.learnPrevArrow = this.learnTabs.nth(0);
+    this.dataRows = page.locator(".data-panel-table [data-country-key]");
   }
 }

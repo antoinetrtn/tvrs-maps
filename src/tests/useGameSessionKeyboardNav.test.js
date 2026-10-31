@@ -23,7 +23,7 @@ function buildProps(overrides = {}) {
     updateGameRecord: vi.fn(),
     addAchievementToQueue: vi.fn(),
     t: (key) => key,
-    globeTheme: "blackout",
+    globeTheme: "monochrome",
     theme: "dark",
     selectedCountry: null,
     setSelectedCountry: vi.fn(),

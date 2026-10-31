@@ -1,7 +1,12 @@
 import { useMemo } from "react";
 
+import { geoTranslations } from "./geoText";
+import { trainingTranslations } from "./trainingText";
+
 export const translations = {
   fr: {
+    ...geoTranslations.fr,
+
     // Confirmation Modals
     cancel: "Annuler",
     confirm: "Confirmer",
@@ -10,20 +15,41 @@ export const translations = {
 
     // Home Screen Modes
     mode_countries: "Pays",
+    mode_countries_short: "Pays",
     mode_capitals: "Capitales",
+    mode_capitals_short: "Capitales",
     mode_departments: "Départements",
+    mode_departments_short: "Départements",
     mode_us_states: "États américains",
+    mode_us_states_short: "États US",
     mode_rivers_mountains: "Reliefs & Fleuves",
+    mode_rivers_mountains_short: "Reliefs",
+    game_modes: "Modes de jeu",
     mode_learn: "Apprendre",
-
+    mode_rules: "Règles",
+    card_train_short: "Entraîner",
+    card_rules_short: "Règles",
+    card_learn_short: "Apprendre",
     // Home Screen Controls
     minus_one_minute: "-1 minute",
     plus_one_minute: "+1 minute",
     dark_light_mode: "Mode sombre/clair",
     globe_theme: "Thème du globe",
+    found_style: "Style des pays trouvés",
+    found_style_short: "Trouvés",
+    found_style_surface: "Surface",
+    found_style_mesh: "Maillage",
+    renderer_webgpu: "WebGPU",
+    renderer_webgpu_desc:
+      "Moteur de rendu par défaut du globe. Désactive pour revenir à WebGL en cas de souci.",
+    renderer_webgpu_unsupported: "Indisponible : ce navigateur ne prend pas en charge WebGPU.",
+    renderer_webgpu_unsupported_short: "Indisponible",
+    renderer_webgpu_forced: "Forcé par l'URL (?renderer=…).",
+    renderer_webgpu_forced_short: "Forcé",
     error: "erreur !",
     settings: "Réglages",
     game_duration: "Durée de la partie",
+    game_duration_short: "Durée",
     hardcore_mode: "Mode hardcore",
     hardcore_on: "Hardcore",
     hardcore_off: "Normal",
@@ -31,6 +57,7 @@ export const translations = {
     hardcore_lives: "Vies restantes",
     hardcore_game_over: "Plus de vies !",
     peaceful_mode: "Mode paisible",
+    peaceful_mode_short: "Paisible",
     peaceful_on: "Paisible",
     peaceful_off: "Hardcore (5 vies)",
     peaceful_desc: "Activer pour jouer sans limite de vies.",
@@ -40,17 +67,15 @@ export const translations = {
     interface_theme: "Thème interface",
     theme_light: "Clair",
     theme_dark: "Sombre",
-    theme_light_blackout_hint: "Indisponible avec le globe Noir & Blanc",
+    theme_light_blackout_hint: "Indisponible avec le globe Monochrome",
     interface_scale: "Taille de l'interface",
     scale_auto: "Auto",
-
     // Game HUD Placeholders
     search_placeholder: "Rechercher...",
     answer_placeholder: "Votre réponse...",
     to_guess: "À deviner !",
     preview_capital: "Capitale :",
     preview_region: "Région :",
-
     // Game HUD Controls & Tooltips
     home: "Accueil",
     return_home: "Retour à l'accueil",
@@ -61,7 +86,10 @@ export const translations = {
     previous: "Précédent",
     next: "Suivant",
     quiz_answer: "Réponse du quiz",
-
+    select_on_globe_hint: "Sélectionne un pays sur le globe",
+    pick_in_list_hint: "Choisis un pays dans la liste",
+    answer_placeholder_select: "Sélectionne sur le globe",
+    suggestion_found: "trouvé",
     // Learn Toggles
     show_country_labels: "Afficher les labels des pays",
     labels_pays: "Labels pays",
@@ -76,10 +104,9 @@ export const translations = {
     data_table: "Tableau des données",
     learn_mode_countries: "Pays",
     learn_mode_capitals: "Villes",
-    learn_mode_rivers_mountains: "Mont. & riv.",
-    learn_mode_departments: "Dépt.",
-    learn_mode_us_states: "États",
-
+    learn_mode_rivers_mountains: "Montagnes & rivières",
+    learn_mode_departments: "Départements",
+    learn_mode_us_states: "États US",
     // Focus Badge Prompts
     department_prefix: "Département {code}",
 
@@ -92,6 +119,11 @@ export const translations = {
     // End Screen
     incredible: "Incroyable !",
     well_done: "Bravo !",
+    accent_color: "Couleur d'accent",
+    settings_section_game: "Partie",
+    settings_section_display: "Affichage",
+    travel_journal: "Carnet de voyage",
+    stamp_explored: "Explorés",
     achievement_continent_conquered: "Continent Conquis !",
     achievement_continent_desc:
       "Félicitations ! Tu as trouvé tous les pays de la région {region} !",
@@ -99,14 +131,12 @@ export const translations = {
     new_pb: "Nouveau Record !",
     view_table: "Voir le tableau",
     play_again: "Rejouer",
-
     // Results Modal
     game_over: "Partie terminée",
     progress_title: "Progression",
     close: "Fermer",
     stop_game: "Arrêter la partie",
     continue: "Continuer",
-
     // Continent / Region labels
     region_Europe: "Europe",
     region_Americas: "Amériques",
@@ -117,17 +147,21 @@ export const translations = {
     region_France: "France",
     region_Reliefs: "Reliefs & Fleuves",
     region_Unknown: "Inconnu",
-
     // Globe Themes
     theme_satellite: "Satellite",
-    theme_blackout: "Noir & Blanc",
-
+    theme_blackout: "Monochrome",
     // Profil & Leaderboard
     profile: "Profil",
     profile_screen_title: "Mon Profil & Classements",
     personal_records: "Records Personnels",
     personal_history: "Mon Historique",
+    tab_global: "Global",
+    tab_history: "Historique",
+    you_tag: "toi",
+    leaderboard_guest: "Connecte-toi pour apparaître au classement.",
+    leaderboard_guest_short: "Connecte-toi",
     global_leaderboard: "Classement",
+    leaderboard: "Classement",
     username: "Pseudo",
     save_profile: "Enregistrer",
     select_avatar: "Choisir un avatar",
@@ -151,6 +185,10 @@ export const translations = {
     profile_saved: "Profil enregistré !",
 
     // Auth & Accounts
+    auth_modal_title: "Authentification",
+    auth_tvrs_account: "Compte TVRS",
+    auth_guest: "Continuer en invité",
+    auth_guest_short: "Invité",
     auth_email: "Adresse e-mail",
     auth_password: "Mot de passe",
     auth_sign_in: "Se connecter",
@@ -197,8 +235,11 @@ export const translations = {
     badge_loyal_player_desc: "Joue un total de 10 parties sur TVRS Maps.",
     badge_night_owl_title: "Oiseau de Nuit",
     badge_night_owl_desc: "Termine une partie entre 22h et 4h du matin.",
+    ...trainingTranslations.fr,
   },
   en: {
+    ...geoTranslations.en,
+
     // Confirmation Modals
     cancel: "Cancel",
     confirm: "Confirm",
@@ -207,20 +248,40 @@ export const translations = {
 
     // Home Screen Modes
     mode_countries: "Countries",
+    mode_countries_short: "Countries",
     mode_capitals: "Capitals",
+    mode_capitals_short: "Capitals",
     mode_departments: "Departments",
+    mode_departments_short: "Departments",
     mode_us_states: "US States",
+    mode_us_states_short: "US States",
     mode_rivers_mountains: "Rivers & Peaks",
+    mode_rivers_mountains_short: "Peaks",
+    game_modes: "Game modes",
     mode_learn: "Learn",
-
+    mode_rules: "Rules",
+    card_train_short: "Train",
+    card_rules_short: "Rules",
+    card_learn_short: "Learn",
     // Home Screen Controls
     minus_one_minute: "-1 minute",
     plus_one_minute: "+1 minute",
     dark_light_mode: "Dark/light mode",
     globe_theme: "Globe theme",
+    found_style: "Found countries style",
+    found_style_short: "Found",
+    found_style_surface: "Surface",
+    found_style_mesh: "Mesh",
+    renderer_webgpu: "WebGPU",
+    renderer_webgpu_desc: "Default globe renderer. Turn off to go back to WebGL if needed.",
+    renderer_webgpu_unsupported: "Unavailable: this browser does not support WebGPU.",
+    renderer_webgpu_unsupported_short: "Unavailable",
+    renderer_webgpu_forced: "Forced by the URL (?renderer=…).",
+    renderer_webgpu_forced_short: "Forced",
     error: "error!",
     settings: "Settings",
     game_duration: "Game Duration",
+    game_duration_short: "Time",
     hardcore_mode: "Hardcore mode",
     hardcore_on: "Hardcore",
     hardcore_off: "Normal",
@@ -228,6 +289,7 @@ export const translations = {
     hardcore_lives: "Lives left",
     hardcore_game_over: "Out of lives!",
     peaceful_mode: "Peaceful mode",
+    peaceful_mode_short: "Peaceful",
     peaceful_on: "Peaceful",
     peaceful_off: "Hardcore (5 lives)",
     peaceful_desc: "Enable to play with infinite lives.",
@@ -237,7 +299,7 @@ export const translations = {
     interface_theme: "Interface Theme",
     theme_light: "Light",
     theme_dark: "Dark",
-    theme_light_blackout_hint: "Unavailable with the Blacked Out globe",
+    theme_light_blackout_hint: "Unavailable with the Monochrome globe",
     interface_scale: "Interface Scale",
     scale_auto: "Auto",
 
@@ -258,6 +320,10 @@ export const translations = {
     previous: "Previous",
     next: "Next",
     quiz_answer: "Quiz answer",
+    select_on_globe_hint: "Select a country on the globe",
+    pick_in_list_hint: "Pick a country from the list",
+    answer_placeholder_select: "Select on the globe",
+    suggestion_found: "found",
 
     // Learn Toggles
     show_country_labels: "Show country labels",
@@ -272,9 +338,9 @@ export const translations = {
     data_table: "Data table",
     learn_mode_countries: "Countries",
     learn_mode_capitals: "Cities",
-    learn_mode_rivers_mountains: "Peaks & rivers",
-    learn_mode_departments: "Depts.",
-    learn_mode_us_states: "States",
+    learn_mode_rivers_mountains: "Mountains & rivers",
+    learn_mode_departments: "Departments",
+    learn_mode_us_states: "US States",
     labels_montagnes: "Mountains",
 
     // Focus Badge Prompts
@@ -289,6 +355,11 @@ export const translations = {
     // End Screen
     incredible: "Incredible !",
     well_done: "Well done!",
+    accent_color: "Accent color",
+    settings_section_game: "Game",
+    settings_section_display: "Display",
+    travel_journal: "Travel journal",
+    stamp_explored: "Explored",
     achievement_continent_conquered: "Continent Conquered!",
     achievement_continent_desc: "Congratulations! You found all countries in {region}!",
     last_scores: "Last Scores",
@@ -316,14 +387,20 @@ export const translations = {
 
     // Globe Themes
     theme_satellite: "Satellite",
-    theme_blackout: "Blacked Out",
+    theme_blackout: "Monochrome",
 
     // Profile & Leaderboard
     profile: "Profile",
     profile_screen_title: "My Profile & Leaderboards",
     personal_records: "Personal Records",
     personal_history: "My History",
+    tab_global: "Global",
+    tab_history: "History",
+    you_tag: "you",
+    leaderboard_guest: "Sign in to appear on the leaderboard.",
+    leaderboard_guest_short: "Sign in",
     global_leaderboard: "Leaderboard",
+    leaderboard: "Leaderboard",
     username: "Username",
     save_profile: "Save Profile",
     select_avatar: "Select Avatar",
@@ -347,6 +424,10 @@ export const translations = {
     profile_saved: "Profile saved!",
 
     // Auth & Accounts
+    auth_modal_title: "Auth",
+    auth_tvrs_account: "TVRS Account",
+    auth_guest: "Continue as guest",
+    auth_guest_short: "Guest",
     auth_email: "Email Address",
     auth_password: "Password",
     auth_sign_in: "Sign In",
@@ -392,6 +473,7 @@ export const translations = {
     badge_loyal_player_desc: "Play 10 games in total on TVRS Maps.",
     badge_night_owl_title: "Night Owl",
     badge_night_owl_desc: "Complete a game between 10 PM and 4 AM.",
+    ...trainingTranslations.en,
   },
 };
 

@@ -1,9 +1,46 @@
 import { useCallback, useRef } from "react";
 
 import { BREAKPOINTS } from "../../config/gameConstants";
+import {
+  createZoomHapticTracker,
+  primeHapticsOnUserGesture,
+  triggerSubtleHapticTick,
+} from "../../utils/haptics";
 import { perfTracker } from "../../utils/perfTracker";
 import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
-import { clampGlobeAltitude } from "../render/globeAltitude";
+import {
+  clampGlobeAltitude,
+  getGlobeMinAltitude,
+  GLOBE_MAX_ALTITUDE,
+  syncCameraMapProjection,
+  syncGlobeControlsForAltitude,
+} from "../render/globeAltitude";
+
+// Double-tap-and-drag zoom: the second tap must land quickly and close to the first.
+const DOUBLE_TAP_MS = 280;
+const DOUBLE_TAP_RADIUS_PX = 24;
+
+/**
+ * True when a single-finger touchstart completes a double tap (time + distance
+ * window) and is not the tail of a two-finger pinch.
+ */
+export function isDoubleTapZoomStart({ now, touch, lastTapAt, lastTapPos, hadMultiTouch }) {
+  if (hadMultiTouch || !touch || !lastTapPos || !lastTapAt) return false;
+  if (now - lastTapAt >= DOUBLE_TAP_MS) return false;
+  return (
+    Math.hypot(touch.clientX - lastTapPos.x, touch.clientY - lastTapPos.y) < DOUBLE_TAP_RADIUS_PX
+  );
+}
+
+/** The wrapper "nudge" parallax is a mouse/pen effect only: on touch it fights OrbitControls. */
+const allowsGlobeNudge = (pointerType) => pointerType !== "touch";
+
+export function shouldRestoreInputFocusOnPointerUp({ pointerType, isHomeScreen } = {}) {
+  if (isHomeScreen) {
+    return false;
+  }
+  return pointerType === "mouse" || pointerType === "pen";
+}
 
 export function useGlobeInteractions({
   globeEl,
@@ -22,9 +59,15 @@ export function useGlobeInteractions({
 }) {
   const tapRef = useRef(null);
   const lastTapRef = useRef(0);
+  const lastTapPosRef = useRef(null);
+  const hadMultiTouchRef = useRef(false);
   const isZoomDragging = useRef(false);
   const startY = useRef(0);
   const savedControlsEnabledRef = useRef(true);
+  const zoomDragHapticRef = useRef(null);
+  if (!zoomDragHapticRef.current) {
+    zoomDragHapticRef.current = createZoomHapticTracker();
+  }
 
   const pointerNudgeRafRef = useRef(null);
   const pendingNudgeRef = useRef(null);
@@ -33,6 +76,7 @@ export function useGlobeInteractions({
     (admin) => {
       if (onCountrySelect) {
         if (!admin || gameDataMap[admin]) {
+          if (admin) triggerSubtleHapticTick();
           onCountrySelect(admin);
         }
       }
@@ -131,17 +175,44 @@ export function useGlobeInteractions({
       pointerNudgeRafRef.current = null;
     }
     pendingNudgeRef.current = null;
-    wrapper.style.transition = "transform 520ms cubic-bezier(0.18, 0.9, 0.22, 1.18)";
+    wrapper.style.transition = "transform var(--dur-slow) var(--ease-out)";
     wrapper.style.setProperty("--globe-nudge-x", "0px");
     wrapper.style.setProperty("--globe-nudge-y", "0px");
   }, [globeContentWrapperRef]);
 
+  const restoreRotateAfterZoomDrag = useCallback(() => {
+    if (!isZoomDragging.current) return;
+    isZoomDragging.current = false;
+    zoomDragHapticRef.current?.clearZoomGesture();
+    try {
+      const controls = globeEl.current?.controls?.();
+      if (controls) controls.enableRotate = savedControlsEnabledRef.current;
+    } catch {}
+  }, [globeEl]);
+
   const handleTouchStart = useCallback(
     (e) => {
+      primeHapticsOnUserGesture();
+      if (e.touches.length > 1) {
+        // Two fingers: hand the pinch to OrbitControls, untouched.
+        hadMultiTouchRef.current = true;
+        restoreRotateAfterZoomDrag();
+        lastTapRef.current = 0;
+        lastTapPosRef.current = null;
+        return;
+      }
       if (e.touches.length !== 1) return;
       const now = Date.now();
       const touch = e.touches[0];
-      if (now - lastTapRef.current < 300) {
+      const isDoubleTap = isDoubleTapZoomStart({
+        now,
+        touch,
+        lastTapAt: lastTapRef.current,
+        lastTapPos: lastTapPosRef.current,
+        hadMultiTouch: hadMultiTouchRef.current,
+      });
+      hadMultiTouchRef.current = false;
+      if (isDoubleTap) {
         isZoomDragging.current = true;
         startY.current = touch.clientY;
         try {
@@ -152,38 +223,66 @@ export function useGlobeInteractions({
           }
         } catch {}
         e.preventDefault();
+        // A third tap must start a fresh double-tap window.
+        lastTapRef.current = 0;
+        lastTapPosRef.current = null;
+        return;
       }
       lastTapRef.current = now;
+      lastTapPosRef.current = { x: touch.clientX, y: touch.clientY };
     },
-    [globeEl]
+    [globeEl, restoreRotateAfterZoomDrag]
   );
 
   const handleTouchMove = useCallback(
     (e) => {
+      if (e.touches.length > 1) {
+        hadMultiTouchRef.current = true;
+        lastTapRef.current = 0;
+        restoreRotateAfterZoomDrag();
+        return;
+      }
       if (!isZoomDragging.current || !globeEl.current) return;
       const touch = e.touches[0];
+      if (!touch) return;
       const deltaY = touch.clientY - startY.current;
       const currentPOV = globeEl.current.pointOfView();
-      const zoomSpeed = 0.005;
-      const newAlt = clampGlobeAltitude(currentPOV.altitude - deltaY * zoomSpeed);
+      const zoomScale = Math.pow(0.996, deltaY);
+      const newAlt = clampGlobeAltitude(currentPOV.altitude * zoomScale);
       globeEl.current.pointOfView({ altitude: newAlt }, 0);
+      syncCameraMapProjection(globeEl.current, newAlt);
+      syncGlobeControlsForAltitude(globeEl.current.controls?.(), newAlt, {
+        isMobile: Boolean(perfProfile?.isMobile),
+        isRegionalMap: Boolean(
+          isDepartmentMode || mode === "us_states" || mode?.includes("us_states")
+        ),
+      });
+      zoomDragHapticRef.current?.onAltitudeChange(newAlt, {
+        isZoomGesture: true,
+        minAltitude: getGlobeMinAltitude(),
+        maxAltitude: GLOBE_MAX_ALTITUDE,
+      });
       startY.current = touch.clientY;
       e.preventDefault();
     },
-    [globeEl]
+    [globeEl, isDepartmentMode, mode, perfProfile?.isMobile, restoreRotateAfterZoomDrag]
   );
 
-  const handleTouchEnd = useCallback(() => {
-    if (isZoomDragging.current) {
-      try {
-        const controls = globeEl.current?.controls?.();
-        if (controls) {
-          controls.enableRotate = savedControlsEnabledRef.current;
-        }
-      } catch {}
-    }
-    isZoomDragging.current = false;
-  }, [globeEl]);
+  const handleTouchEnd = useCallback(
+    (e) => {
+      restoreRotateAfterZoomDrag();
+      if ((e?.touches?.length ?? 0) < 2) {
+        zoomDragHapticRef.current?.clearZoomGesture();
+      }
+      // Lifting one finger of a pinch must not count as the first tap of a
+      // double tap (it would turn the next touch into a zoom-drag).
+      if (hadMultiTouchRef.current || (e?.touches?.length ?? 0) > 0) {
+        lastTapRef.current = 0;
+        lastTapPosRef.current = null;
+      }
+    },
+    [restoreRotateAfterZoomDrag]
+  );
 
   const handlePointerDown = useCallback(
     (event) => {
@@ -199,7 +298,7 @@ export function useGlobeInteractions({
         t: performance.now(),
       };
 
-      if (globeContentWrapperRef.current && !isHomeScreen) {
+      if (globeContentWrapperRef.current && !isHomeScreen && allowsGlobeNudge(event.pointerType)) {
         globeContentWrapperRef.current.style.transition = "transform 80ms linear";
       }
     },
@@ -208,27 +307,16 @@ export function useGlobeInteractions({
 
   const handlePointerMove = useCallback(
     (event) => {
-      const t0 = performance.now();
-      let clientX = event.clientX;
-      let clientY = event.clientY;
-      if (window.visualViewport) {
-        clientX += window.visualViewport.offsetLeft || 0;
-        clientY += window.visualViewport.offsetTop || 0;
-      }
-
-      if (globeEl.current?.toGlobeCoords) {
-        const coords = clientToGlobeCoords(globeEl, clientX, clientY);
-        if (coords && selectableFeatureIndex && selectableFeatureIndex.length > 0) {
-          selectableFeatureIndex.find((entry) =>
-            featureContainsLngLat(entry, coords.lng, coords.lat)
-          );
-        }
-      }
-      perfTracker.recordHover(performance.now() - t0);
-
+      // No per-move globe hit-test: its result was never used (selection is
+      // resolved on pointerup), and it cost a raycast + point-in-polygon scan
+      // on every move event during drags.
       const tap = tapRef.current;
       const wrapper = globeContentWrapperRef.current;
       if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen) return;
+      // Touch: no wrapper translation — OrbitControls already moves the globe
+      // under the finger; translating the canvas too feels rubbery and snaps
+      // back on lift.
+      if (!allowsGlobeNudge(event.pointerType)) return;
 
       const dx = event.clientX - tap.x;
       const dy = event.clientY - tap.y;
@@ -248,16 +336,24 @@ export function useGlobeInteractions({
         });
       }
     },
-    [globeEl, selectableFeatureIndex, isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
+    [isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
   );
 
   const handlePointerUp = useCallback(
     (event) => {
+      const shouldRestoreFocus = shouldRestoreInputFocusOnPointerUp({
+        pointerType: event.pointerType,
+        isHomeScreen,
+      });
       const tap = tapRef.current;
       tapRef.current = null;
       resetGlobeNudge();
       if (isHomeScreen) return;
       if (!tap || tap.pointerId !== event.pointerId) return;
+
+      if (shouldRestoreFocus) {
+        onPreserveInputFocus?.();
+      }
 
       const dx = event.clientX - tap.x;
       const dy = event.clientY - tap.y;

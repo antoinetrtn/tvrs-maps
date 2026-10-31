@@ -36,6 +36,10 @@ These rules standardize the retro TV static glitch animation and country polygon
 ## 8. Card & Container Border-Radius Alignment
 * **Strict Token Conformance**: Cards, modals, HUD containers, and category cards MUST use standard compact border-radius tokens (`var(--radius-md)` or `var(--radius-sm)`, ~8px max). Never use oversized rounded corners (such as 16px-24px or arbitrary large radii) that diverge from the retro-technical UI design system.
 
+## 9. Design Ratchets (CI guardrails)
+* **Never add a violation**: `npm run check:css-rules` and `npm run check:a11y` fail when the count of any forbidden pattern (`!important`, raw `z-index`, `blur()` > 4px, `text-transform: uppercase`, circular/large `border-radius`, glow shadows, `100vh` without `100dvh`, raw `cubic-bezier`/durations, `outline: none`, serif fonts, `jsx-a11y` findings) increases. Use tokens (`var(--z-…)`, `--dur-*`, motion tokens) instead.
+* **Lower the baseline, never raise it**: after removing violations run `npm run check:css-rules -- --update` (or `check:a11y -- --update`) and commit `scripts/ratchet-baselines/*.json`. Never use `--allow-increase` just to pass CI. Justified exceptions: `/* css-rules-allow: <rule> — reason */`. See `QUALITY.md`.
+
 ---
 
 *These rules are backed up by the `GLITCH_EFFECT_SETTINGS` exported configuration in [designSystem.js](file:///Users/atrtn/.gemini/antigravity/scratch/tvrs-maps/src/designSystem.js).*

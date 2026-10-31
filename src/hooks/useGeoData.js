@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DEFAULT_LEARN_SUB_MODE } from "../config/gameConfig";
 import { DATA_URLS } from "../config/gameConstants";
@@ -6,179 +6,110 @@ import { departmentsDataMap } from "../data/departmentsData";
 import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
-import { getRenderGeometry } from "../utils/utils";
+import { transformCountries, transformDepartments, transformUsStates } from "./geoDataTransforms";
+import { useGeoResource } from "./useGeoResource";
 
-function mergeGeometries(geomA, geomB) {
-  const getRing = (geom) => {
-    if (!geom) return null;
-    if (geom.type === "Polygon") {
-      return geom.coordinates[0];
-    } else if (geom.type === "MultiPolygon") {
-      let maxLen = 0;
-      let mainRing = null;
-      for (const poly of geom.coordinates) {
-        if (poly[0] && poly[0].length > maxLen) {
-          maxLen = poly[0].length;
-          mainRing = poly[0];
-        }
+// Stable `__id` stamps: three-globe keys its polygon meshes by `polygon.__id`
+// (and stamps a random one otherwise). Every render-data wrapper spreads the
+// source feature, so the id survives mode switches and the existing meshes,
+// triangulated geometries and strokes are reused instead of rebuilt.
+const REGIONAL_PREFETCH_DELAY_MS = 6000;
+
+/** True once the page has been idle for `delayMs` after mount. */
+function useIdleAfter(delayMs) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let idleId = null;
+    const timer = setTimeout(() => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(() => setReady(true), { timeout: 4000 });
+      } else {
+        setReady(true);
       }
-      return mainRing;
-    }
-    return null;
-  };
-
-  const ringA = getRing(geomA);
-  const ringB = getRing(geomB);
-  if (!ringA || !ringB) return geomA;
-
-  const getEdges = (ring) => {
-    const edges = [];
-    for (let i = 0; i < ring.length - 1; i++) {
-      edges.push([ring[i], ring[i + 1]]);
-    }
-    return edges;
-  };
-
-  const edgesA = getEdges(ringA);
-  const edgesB = getEdges(ringB);
-
-  const arePointsEqual = (p1, p2) =>
-    Math.abs(p1[0] - p2[0]) < 1e-5 && Math.abs(p1[1] - p2[1]) < 1e-5;
-
-  const isSharedEdge = (edge, otherEdges) => {
-    const [u, v] = edge;
-    return otherEdges.some(([x, y]) => arePointsEqual(u, y) && arePointsEqual(v, x));
-  };
-
-  const nonSharedA = edgesA.filter((e) => !isSharedEdge(e, edgesB));
-  const nonSharedB = edgesB.filter((e) => !isSharedEdge(e, edgesA));
-
-  const combinedEdges = [...nonSharedA, ...nonSharedB];
-
-  const adj = new Map();
-  for (const [u, v] of combinedEdges) {
-    const key = `${u[0].toFixed(5)},${u[1].toFixed(5)}`;
-    adj.set(key, v);
-  }
-
-  const result = [];
-  if (combinedEdges.length > 0) {
-    const firstEdge = combinedEdges[0];
-    result.push(firstEdge[0]);
-    let current = firstEdge[1];
-    const visited = new Set();
-    while (current) {
-      const key = `${current[0].toFixed(5)},${current[1].toFixed(5)}`;
-      if (visited.has(key)) break;
-      visited.add(key);
-      result.push(current);
-      current = adj.get(key);
-    }
-    const start = result[0];
-    const end = result[result.length - 1];
-    if (!arePointsEqual(start, end)) {
-      result.push(start);
-    }
-  }
-
-  const islands = [];
-  if (geomA.type === "MultiPolygon") {
-    geomA.coordinates.forEach((poly) => {
-      if (poly[0] !== ringA) islands.push(poly);
-    });
-  }
-  if (geomB.type === "MultiPolygon") {
-    geomB.coordinates.forEach((poly) => {
-      if (poly[0] !== ringB) islands.push(poly);
-    });
-  }
-
-  return {
-    type: "MultiPolygon",
-    coordinates: [[result], ...islands],
-  };
+    }, delayMs);
+    return () => {
+      clearTimeout(timer);
+      if (idleId != null) window.cancelIdleCallback?.(idleId);
+    };
+  }, [delayMs]);
+  return ready;
 }
 
 export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
-  const [countriesData, setCountriesData] = useState([]);
-  const [departmentsData, setDepartmentsData] = useState([]);
-  const [usStatesData, setUsStatesData] = useState([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(DATA_URLS.countriesGeoJson)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled && data && data.features) {
-          const features = [...data.features];
-          const somaliaIdx = features.findIndex((f) => f.properties?.ADMIN === "Somalia");
-          const somalilandIdx = features.findIndex((f) => f.properties?.ADMIN === "Somaliland");
-          if (somaliaIdx !== -1 && somalilandIdx !== -1) {
-            const somalia = features[somaliaIdx];
-            const somaliland = features[somalilandIdx];
-            somalia.geometry = mergeGeometries(somalia.geometry, somaliland.geometry);
-            features.splice(somalilandIdx, 1);
-          }
-
-          const mapped = features.map((feature) => ({
-            ...feature,
-            renderGeometry: getRenderGeometry(feature),
-          }));
-          setCountriesData(mapped);
-        }
-        return;
-      })
-      .catch((err) => console.error("Failed to load map data", err));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(DATA_URLS.departmentsGeoJson)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled && data && data.features) {
-          const mapped = data.features.map((feature) => ({
-            ...feature,
-            renderGeometry: getRenderGeometry(feature),
-          }));
-          setDepartmentsData(mapped);
-        }
-        return;
-      })
-      .catch((err) => console.error("Failed to load departments map data", err));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/data/us-states.json")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled && data && data.features) {
-          const mapped = data.features.map((feature) => ({
-            ...feature,
-            renderGeometry: getRenderGeometry(feature),
-          }));
-          setUsStatesData(mapped);
-        }
-        return;
-      })
-      .catch((err) => console.error("Failed to load US states map data", err));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const isLearn = mode === "learn";
   const isDepartmentsMode = mode === "departments" || (isLearn && learnSubMode === "departments");
   const isRiversMountainsMode =
     mode === "rivers_mountains" || (isLearn && learnSubMode === "rivers_mountains");
   const isUsStatesMode = mode === "us_states" || (isLearn && learnSubMode === "us_states");
+
+  // Regional maps (≈1 MB of GeoJSON, parsed and triangulated on the main
+  // thread) are no longer loaded at startup: they load when their mode opens,
+  // or once the browser is idle a few seconds after start, whichever comes first.
+  const idleRegional = useIdleAfter(REGIONAL_PREFETCH_DELAY_MS);
+  const wantDepartments = isDepartmentsMode || idleRegional;
+  const wantUsStates = isUsStatesMode || idleRegional;
+
+  const countriesResource = useGeoResource({
+    url: DATA_URLS.countriesGeoJson,
+    enabled: true,
+    transform: transformCountries,
+  });
+
+  const departmentsResource = useGeoResource({
+    url: DATA_URLS.departmentsGeoJson,
+    enabled: wantDepartments,
+    transform: transformDepartments,
+  });
+
+  const usStatesResource = useGeoResource({
+    url: "/data/us-states.json",
+    enabled: wantUsStates,
+    transform: transformUsStates,
+  });
+
+  const required = useMemo(() => {
+    const list = [{ id: "countries", res: countriesResource }];
+    if (isDepartmentsMode) {
+      list.push({ id: "departments", res: departmentsResource });
+    }
+    if (isUsStatesMode) {
+      list.push({ id: "usStates", res: usStatesResource });
+    }
+    return list;
+  }, [countriesResource, departmentsResource, usStatesResource, isDepartmentsMode, isUsStatesMode]);
+
+  const failed = useMemo(
+    () => required.filter(({ res }) => res.status === "error").map(({ id }) => id),
+    [required]
+  );
+
+  const status = useMemo(() => {
+    if (failed.length > 0) return "error";
+    if (required.some(({ res }) => res.status === "loading" || res.status === "idle")) {
+      return "loading";
+    }
+    return "ready";
+  }, [failed, required]);
+
+  const requiredRef = useRef(required);
+  requiredRef.current = required;
+
+  const retry = useCallback(() => {
+    requiredRef.current.forEach(({ res }) => {
+      if (res.status === "error") {
+        res.retry();
+      }
+    });
+  }, []);
+
+  const geoStatus = useMemo(
+    () => ({
+      status,
+      failed,
+      retry,
+    }),
+    [status, failed, retry]
+  );
 
   const activeDataMap = useMemo(() => {
     if (isRiversMountainsMode) return riversMountainsDataMap;
@@ -191,11 +122,12 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
   const totalPossible = allCountryKeys.length;
 
   return {
-    countriesData,
-    departmentsData,
-    usStatesData,
+    countriesData: countriesResource.data,
+    departmentsData: departmentsResource.data,
+    usStatesData: usStatesResource.data,
     activeDataMap,
     allCountryKeys,
     totalPossible,
+    geoStatus,
   };
 }

@@ -1,14 +1,17 @@
 import "./GameDataPanel.css";
 
-import { Close, Home } from "pixelarticons/react";
+import { Home } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColor } from "../config/designSystem";
+import { getThemeRegionColorLabel } from "../config/designSystem";
 import { GAME_REGIONS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
 import { getPanelData, normalizeString } from "../utils/utils";
 import GameDataPanelRow from "./GameDataPanelRow";
 import LearnModeToggles from "./LearnModeToggles";
+import Button from "./ui/Button";
+import PanelCloseButton from "./ui/PanelCloseButton";
+import TextField from "./ui/TextField";
 
 const GameDataPanel = ({
   dataMap,
@@ -44,7 +47,7 @@ const GameDataPanel = ({
   const colors = useMemo(() => {
     const res = {};
     GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColor(globeTheme, theme, r);
+      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
     });
     return res;
   }, [globeTheme, theme]);
@@ -115,11 +118,7 @@ const GameDataPanel = ({
           {scoreLabel && <span className="data-panel-score">{scoreLabel}</span>}
         </div>
         <div className="data-panel-header-actions">
-          {onClose && (
-            <button className="panel-close-btn" onClick={onClose} aria-label={t("close")}>
-              <Close width={20} height={20} />
-            </button>
-          )}
+          {onClose && <PanelCloseButton label={t("close")} onClick={onClose} />}
         </div>
       </header>
 
@@ -139,7 +138,8 @@ const GameDataPanel = ({
       >
         {showSearch && (
           <div className="data-panel-search-sticky">
-            <input
+            <TextField
+              variant="search"
               type="search"
               className="data-panel-search-input"
               placeholder={t("search_placeholder")}
@@ -195,10 +195,10 @@ const GameDataPanel = ({
 
       {isGameOver && onGoHome && (
         <div className="panel-footer data-panel-footer">
-          <button className="btn-primary" onClick={onGoHome}>
+          <Button variant="primary" className="data-panel-footer-action" onClick={onGoHome}>
             <Home width={16} height={16} />
             {t("home")}
-          </button>
+          </Button>
         </div>
       )}
     </aside>

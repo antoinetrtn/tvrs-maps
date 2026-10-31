@@ -1,10 +1,11 @@
 import { useCallback } from "react";
 
+import { focusAnswerInputSafely } from "../utils/answerField";
+
 const refocusInput = (inputRef) => {
   if (!inputRef?.current) return;
-  inputRef.current.focus();
-  setTimeout(() => inputRef.current?.focus(), 50);
-  setTimeout(() => inputRef.current?.focus(), 150);
+  if (focusAnswerInputSafely(inputRef)) return;
+  setTimeout(() => focusAnswerInputSafely(inputRef), 50);
 };
 
 export function useCountrySelectHandler({

@@ -1,120 +1,204 @@
 import * as THREE from "three";
 
-import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
+import { getGlobePrefs } from "../globePrefs";
+import { getBiomeTexture } from "./biomeTexture";
+import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
+import { isGlobeWebGPU } from "./globeRendererFlag";
+import { COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY, GLSL_BAYER_4X4_FN } from "./globeShaders";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
-import { attachPolygonGlitchShader, syncPolygonShaderUniforms } from "./polygonGlitchShader";
+import { applySatelliteVisibility, resolvePolygonEmissiveProps } from "./polygonEmissiveProps";
+import {
+  attachPolygonGlitchShader,
+  getIgniteSelfHolder,
+  homeWakeState,
+  igniteState,
+  polygonGlitchUniforms,
+  syncPolygonShaderUniforms,
+} from "./polygonGlitchShader";
+import {
+  countryBorderOutputNode,
+  toDitheredLineBasicNodeMaterial,
+} from "./webgpu/lineMaterialSwap";
+import { countryGrainOutputNode, createPhongMaterial } from "./webgpu/surfaceNodes";
 
-function resolvePolygonEmissiveProps({
-  color,
-  kind,
-  isIsolated,
-  showFoundOnGlobe,
-  isHighlightedOnGlobe,
-  isDepartmentMode,
-  isGhostCountry,
-  globeLightingEnabled,
-  isLight,
-  UI_COLORS,
-}) {
-  const emissiveHex = UI_COLORS.black;
-  const emissiveIntensity = 0;
-  const specularHex = new THREE.Color(UI_COLORS.black);
-  const shininess = 0.7;
-
-  if (showFoundOnGlobe && kind === "cap") {
-    return {
-      emissiveHex: color,
-      emissiveIntensity: getFoundCapEmissiveIntensity(),
-      specularHex: new THREE.Color(0, 0, 0),
-      shininess: 0,
-    };
+/** Wireframe found caps are opaque lines; filled caps keep their own state. */
+function applyFoundMeshStyle(material, isMeshFound) {
+  if (material.wireframe !== isMeshFound) {
+    material.wireframe = isMeshFound;
+    material.needsUpdate = true;
   }
-
-  if (UI_COLORS.polyMatMatte) {
-    if (isGhostCountry) {
-      return {
-        emissiveHex: color,
-        emissiveIntensity: 0.12,
-        specularHex: new THREE.Color(0, 0, 0),
-        shininess: 0,
-      };
-    }
-    if (!isHighlightedOnGlobe) {
-      // In regional modes (departments, US states) the resting caps ARE the landmass:
-      // they need a lighting-independent emissive floor, otherwise the side of the
-      // globe facing away from the key light drops to ocean brightness and whole
-      // states become invisible (while staying clickable).
-      const isRegionalLandmass = isDepartmentMode && !isGhostCountry && kind === "cap";
-      return {
-        emissiveHex: color,
-        emissiveIntensity: isRegionalLandmass ? (isLight ? 0.08 : 0.12) : 0.05,
-        specularHex: new THREE.Color(0, 0, 0),
-        shininess: 0,
-      };
-    }
-    return {
-      emissiveHex: color,
-      emissiveIntensity: getFoundCapEmissiveIntensity(),
-      specularHex: new THREE.Color(0, 0, 0),
-      shininess: 0,
-    };
-  }
-
-  if (isDepartmentMode && !isGhostCountry) {
-    return {
-      emissiveHex: color,
-      emissiveIntensity: kind === "cap" ? (isLight ? 0.08 : 0.12) : isLight ? 0.04 : 0.07,
-      specularHex: UI_COLORS.mapBorder,
-      shininess: kind === "cap" ? 2 : 1,
-    };
-  }
-
-  if (globeLightingEnabled) {
-    const baseEmissiveIntensity =
-      kind === "cap"
-        ? isLight
-          ? GLOBE_STYLE.lighting.material.capEmissiveLight
-          : GLOBE_STYLE.lighting.material.capEmissiveDark
-        : isLight
-          ? GLOBE_STYLE.lighting.material.sideEmissiveLight
-          : GLOBE_STYLE.lighting.material.sideEmissiveDark;
-    const emissiveBoost = !isLight ? 0.18 : 0.05;
-    const baseShininess =
-      kind === "cap"
-        ? isLight
-          ? GLOBE_STYLE.lighting.material.capShininessLight
-          : GLOBE_STYLE.lighting.material.capShininessDark
-        : isLight
-          ? GLOBE_STYLE.lighting.material.sideShininessLight
-          : GLOBE_STYLE.lighting.material.sideShininessDark;
-
-    return {
-      emissiveHex: color,
-      emissiveIntensity:
-        baseEmissiveIntensity +
-        emissiveBoost +
-        (isIsolated ? 0.1 : 0) +
-        (showFoundOnGlobe && !isIsolated ? 0.14 : 0),
-      specularHex: isIsolated ? UI_COLORS.paper : UI_COLORS.mapBorder,
-      shininess: baseShininess + (isIsolated ? 30 : isLight ? 0 : 25),
-    };
-  }
-
-  return { emissiveHex, emissiveIntensity, specularHex, shininess };
+  if (!isMeshFound) return;
+  material.visible = true;
+  if (material.transparent) material.needsUpdate = true;
+  material.transparent = false;
+  material.opacity = 1;
 }
 
-function applyCountrySurfaceGrainShader(shader) {
-  shader.fragmentShader = shader.fragmentShader.replace(
-    "#include <dithering_fragment>",
-    `#include <dithering_fragment>
-    vec2 fragPx = gl_FragCoord.xy;
-    float grain = (fract(sin(dot(fragPx, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.08;
-    gl_FragColor.rgb += vec3(grain);
-    `
-  );
+export function applyCountrySurfaceGrainShader(
+  shader,
+  { isGhostCountry = false, igniteSelf = null } = {}
+) {
+  shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+  shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+  shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
+  shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
+  shader.uniforms.uIsSatelliteTheme = polygonGlitchUniforms.uIsSatelliteTheme;
+  shader.uniforms.uIgniteOrigin = polygonGlitchUniforms.uIgniteOrigin;
+  shader.uniforms.uIgniteStart = polygonGlitchUniforms.uIgniteStart;
+  shader.uniforms.uIgniteRadius = polygonGlitchUniforms.uIgniteRadius;
+  shader.uniforms.uIgniteDuration = polygonGlitchUniforms.uIgniteDuration;
+  shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
+  shader.uniforms.uHomeWake = polygonGlitchUniforms.uHomeWake;
+  shader.uniforms.uIsGhost = { value: isGhostCountry ? 1.0 : 0.0 };
+  shader.uniforms.uIgniteSelf = igniteSelf || { value: 0.0 };
+  shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
+  shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
+  shader.vertexShader = `
+    varying vec3 vDitherWorldNormal;
+    varying vec3 vDitherWorldPos;
+    varying vec3 vWorldPos;
+    varying vec3 vViewDir;
+    uniform float uPixelScale;
+    ${shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+      vDitherWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+      vDitherWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+      vWorldPos = vDitherWorldPos;
+      vViewDir = cameraPosition - vDitherWorldPos;
+      `
+    )}
+  `;
+  shader.fragmentShader = `
+    varying vec3 vDitherWorldNormal;
+    varying vec3 vDitherWorldPos;
+    varying vec3 vWorldPos;
+    varying vec3 vViewDir;
+    uniform float uPixelScale;
+    uniform float uTime;
+    uniform float uShowcaseLights;
+    uniform float uIsRegionalMode;
+    uniform float uIsSatelliteTheme;
+    uniform float uIsGhost;
+    uniform float uIgniteSelf;
+    uniform vec3 uIgniteOrigin;
+    uniform float uIgniteStart;
+    uniform float uIgniteRadius;
+    uniform float uIgniteDuration;
+    uniform float uReducedMotion;
+    uniform float uHomeWake;
+    uniform sampler2D uCapitalLightsMap;
+    uniform sampler2D uBiomeMap;
+    ${GLSL_BAYER_4X4_FN}
+    float cityCellHash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    }
+    ${shader.fragmentShader.replace(
+      "#include <dithering_fragment>",
+      COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY
+    )}
+  `;
 }
+
+export function applyCountryBorderDitherShader(shader) {
+  shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+  shader.vertexShader = `
+    varying vec3 vBorderWorldPos;
+    uniform float uPixelScale;
+    ${shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+      vBorderWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+      `
+    )}
+  `;
+  shader.fragmentShader = `
+    varying vec3 vBorderWorldPos;
+    uniform float uPixelScale;
+    ${GLSL_BAYER_4X4_FN}
+    ${shader.fragmentShader.replace(
+      "#include <dithering_fragment>",
+      `#include <dithering_fragment>
+      vec3 borderDir = normalize(vBorderWorldPos);
+      float borderLat = asin(clamp(borderDir.y, -1.0, 1.0));
+      float borderLng = atan(borderDir.z, borderDir.x);
+      float bayer = bayer4x4(floor(vec2(borderLng * 180.0, borderLat * 180.0)));
+      float arcPhase = dot(vBorderWorldPos, vec3(0.24, 0.36, 0.48));
+      float borderStep = step(0.35, fract(arcPhase + bayer * 0.35));
+      float isFoundBorder = step(0.28, gl_FragColor.g)
+        * step(gl_FragColor.b * 1.30, gl_FragColor.g)
+        * step(gl_FragColor.r * 2.2, gl_FragColor.b);
+      vec3 borderColor = mix(gl_FragColor.rgb, vec3(0.98, 0.76, 0.28), isFoundBorder);
+      gl_FragColor.rgb = borderColor * mix(0.92, 1.12, borderStep);
+      `
+    )}
+  `;
+}
+
+/**
+ * three-globe resets `material.transparent = opacity < 1` on every polygon
+ * digest (each selection change). Border colours are opaque, so the strokes
+ * flipped to the opaque pass for a few frames until the next culling pass set
+ * them back to transparent (+ needsUpdate → program switch): the borders
+ * blinked on every click. Locking the flag keeps the stroke material stable;
+ * only its colour changes on selection.
+ */
+function lockBorderTransparency(mat) {
+  if (!mat || mat.userData?.borderTransparencyLocked) return;
+  Object.defineProperty(mat, "transparent", {
+    configurable: true,
+    enumerable: true,
+    get: () => true,
+    set: () => {},
+  });
+  mat.userData.borderTransparencyLocked = true;
+  mat.needsUpdate = true;
+}
+
+function styleBorderMaterial(lineObj, m, allowSwap) {
+  if (!m) return m;
+  if (m.userData?.hasBorderDither) {
+    lockBorderTransparency(m);
+    return m;
+  }
+  m.userData.hasBorderDither = true;
+  if (m.isNodeMaterial) {
+    m.outputNode = countryBorderOutputNode();
+  } else if (allowSwap && isGlobeWebGPU()) {
+    const swapped = toDitheredLineBasicNodeMaterial(m);
+    swapped.userData.hasBorderDither = true;
+    lockBorderTransparency(swapped);
+    return swapped;
+  } else {
+    m.onBeforeCompile = applyCountryBorderDitherShader;
+  }
+  lockBorderTransparency(m);
+  return m;
+}
+
+export function stylePolygonBorderLine(lineObj) {
+  if (!lineObj?.material) return;
+  const mat = lineObj.material;
+  if (Array.isArray(mat)) {
+    mat.forEach((m) => styleBorderMaterial(lineObj, m, false));
+    return;
+  }
+  const styled = styleBorderMaterial(lineObj, mat, true);
+  if (styled !== mat) lineObj.material = styled;
+}
+
+/**
+ * Only glitch-shader materials are re-based when their country is deselected.
+ * Plain materials (Learn highlight, found caps, regional lands) keep the exact
+ * look they were cached with: the old deselect reset dimmed a cached highlight
+ * (emissive 1 → 0.26) for the frames before the new material was applied, then
+ * re-selecting that country brought it back dark.
+ */
+export const isDeselectResettableMaterial = (material) =>
+  Boolean(material?.userData?.isGlitchShaderCap) && !material.userData.isFoundCap;
 
 export function getPolygonMaterialForFeature({
   d,
@@ -146,7 +230,16 @@ export function getPolygonMaterialForFeature({
   mapBase: _mapBase,
   lerpColor: _lerpColor,
   restingColor,
+  ownerTint = false, // Conquête: owned country must stay visible over textures
+  foundStyle = getGlobePrefs().foundStyle, // Settings: "mesh" = found caps as a line mesh
+  ghostVeil = 0, // Satellite regional modes: opacity of the dark veil over the rest of the world
 }) {
+  polygonGlitchUniforms.uShowcaseLights.value = isHomeScreen || isEndScreen ? 1.0 : 0.0;
+  homeWakeState.polygonsReady = true;
+  polygonGlitchUniforms.uReducedMotion.value =
+    typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      ? 1
+      : 0;
   const isSameAdmin = (a, b) => {
     if (!a || !b) return false;
     if (a === b) return true;
@@ -188,24 +281,44 @@ export function getPolygonMaterialForFeature({
     isHighlightedOnGlobe: isHighlightedOnGlobeToUse,
     isDepartmentMode,
     isGhostCountry: d.isGhostCountry,
+    isGhostVeil: ghostVeil > 0 && kind === "cap",
     globeLightingEnabled,
     isLight,
     UI_COLORS,
   });
 
   const isFoundCapMaterial = showFoundOnGlobe && kind === "cap" && !isShaderCap;
-  const cacheKey = isShaderCap
-    ? `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}`
-    : isFoundCapMaterial
-      ? `found-cap-${isMobileStr}-${globeTheme}`
-      : isDepartmentMode || isIsolated
-        ? `${isDepartmentMode ? "dept" : "iso"}-${admin}-${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`
-        : `${kind}-${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`;
+  const look = `${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}-${globeTheme}`;
+  // "Maillage" style: found caps drawn as their triangulation wireframe (the
+  // satellite look before PR 144), in every theme. The selected country keeps its
+  // filled highlight.
+  const isMeshFound =
+    foundStyle === "mesh" && kind === "cap" && (isFound || showFoundOnGlobe) && !isIsolated;
+  const meshSuffix = isMeshFound ? "-mesh" : "";
+  const isGhostCountry = Boolean(d?.isGhostCountry);
+  const ghostSuffix = isGhostCountry ? "-ghost" : "";
+  polygonGlitchUniforms.uIsRegionalMode.value = isDepartmentMode ? 1.0 : 0.0;
+  polygonGlitchUniforms.uIsSatelliteTheme.value = globeTheme === "satellite" ? 1.0 : 0.0;
+
+  let cacheKey = `${kind}-${look}${ownerTint ? "-owner" : ""}${meshSuffix}${ghostSuffix}`;
+  if (isShaderCap)
+    cacheKey = `shader-${admin}-${kind}-${isMobileStr}-${globeTheme}${meshSuffix}${ghostSuffix}`;
+  else if (isFoundCapMaterial)
+    cacheKey = `found-cap-${isMobileStr}-${globeTheme}${meshSuffix}${ghostSuffix}`;
+  else if (ghostVeil > 0) cacheKey = `ghost-veil-${kind}-${look}-${ghostVeil}${ghostSuffix}`;
+  else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}${ghostSuffix}`;
+  else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}${ghostSuffix}`;
+  // The country being ignited gets a private material so only it restarts from dark.
+  const igniteSelf =
+    !isShaderCap && kind === "cap" && !isGhostCountry && admin && admin === igniteState.admin
+      ? getIgniteSelfHolder(admin)
+      : null;
+  if (igniteSelf) cacheKey = `ignite-${admin}-${cacheKey}`;
 
   let material = sharedMaterialsRef.current.get(cacheKey);
 
   if (!material) {
-    material = new THREE.MeshPhongMaterial({
+    material = createPhongMaterial({
       side: THREE.DoubleSide,
       blending: THREE.NormalBlending,
       depthWrite: true,
@@ -234,25 +347,13 @@ export function getPolygonMaterialForFeature({
       isShaderCap && (isSuccess || isFound || isLearnSelected || isIsolated);
 
     if (isSatellite) {
-      if (shaderNeedsOpaque || isLearnSelected) {
-        material.transparent = false;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else if (showFoundOnGlobe) {
-        material.transparent = false;
-        material.wireframe = true;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else if (isPrevTransitioning || isIncomingTransitioning) {
-        material.transparent = true;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else {
-        material.transparent = true;
-        material.visible = false;
-      }
+      applySatelliteVisibility(material, {
+        opaque: shaderNeedsOpaque || isLearnSelected,
+        found: showFoundOnGlobe,
+        transitioning: isPrevTransitioning || isIncomingTransitioning,
+        ownerTint,
+        veil: kind === "cap" ? ghostVeil : 0,
+      });
     }
 
     if (isShaderCap) {
@@ -290,10 +391,23 @@ export function getPolygonMaterialForFeature({
         isSatellite,
       });
     } else {
-      material.onBeforeCompile = applyCountrySurfaceGrainShader;
+      if (material.isNodeMaterial) {
+        // Read through materialReference: one pipeline, per-material ignition flag.
+        Object.defineProperty(material.userData, "igniteSelf", {
+          get: () => (igniteSelf ? igniteSelf.value : 0),
+          enumerable: true,
+        });
+        material.outputNode = countryGrainOutputNode(isGhostCountry);
+      } else {
+        material.customProgramCacheKey = () =>
+          isGhostCountry ? "country-grain-ghost" : "country-grain-land";
+        material.onBeforeCompile = (shader) =>
+          applyCountrySurfaceGrainShader(shader, { isGhostCountry, igniteSelf });
+      }
     }
 
     material.userData.isIsolated = isIsolated;
+    material.userData.isGlitchShaderCap = isShaderCap;
     material.userData.isShared = !isFoundCapMaterial && !(isDepartmentMode || isIsolated);
     material.userData.admin = admin;
     sharedMaterialsRef.current.set(cacheKey, material);
@@ -304,25 +418,12 @@ export function getPolygonMaterialForFeature({
     const oldTransparent = material.transparent;
 
     if (isSatellite) {
-      if (shaderNeedsOpaque || isLearnSelected) {
-        material.transparent = false;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else if (showFoundOnGlobe) {
-        material.transparent = false;
-        material.wireframe = true;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else if (isPrevTransitioning || isIncomingTransitioning) {
-        material.transparent = true;
-        material.wireframe = false;
-        material.visible = true;
-        material.opacity = 1.0;
-      } else {
-        material.transparent = true;
-        material.visible = false;
-      }
+      applySatelliteVisibility(material, {
+        opaque: shaderNeedsOpaque || isLearnSelected,
+        found: showFoundOnGlobe,
+        transitioning: isPrevTransitioning || isIncomingTransitioning,
+        ownerTint: false,
+      });
     }
 
     if (isShaderCap) {
@@ -365,5 +466,6 @@ export function getPolygonMaterialForFeature({
     });
   }
 
+  applyFoundMeshStyle(material, isMeshFound);
   return material;
 }

@@ -29,6 +29,9 @@ Avant d'écrire ou de pousser du code, assurez-vous de respecter les commandes s
     npm run dev:5001
     ```
     *Note : Le port standard `5173` est intentionnellement banni pour éviter des conflits ou des problèmes de cache. Utilisez toujours le port `5001`.*
+*   **Aperçu UI Conquête sans backend (DEV uniquement)** :
+    Ajoutez `?conquestPreview=lobby|live|finished` (ou `idle|countdown|home`, options `&ready=1&waiting=1&urgent=1&lockout=1`) à l'URL locale (`http://localhost:5001/?conquestPreview=live`).
+    Ce mode alimente l'interface Conquête avec un état local interactif sans aucun appel réseau ni RPC Supabase, et est exclu du build de production (`import.meta.env.DEV` + import dynamique).
 
 ### Validation Locale
 Avant de pousser vos modifications, vous **devez** exécuter le script de validation globale :
@@ -38,8 +41,13 @@ npm run check
 Ce script exécute successivement :
 1. `npm run format:check`
 2. `npm run lint` (ESLint + plugins + règles custom + Knip)
-3. `npm run test:run`
-4. `npm run build`
+3. `npm run check:tokens`
+4. `npm run check:css-rules` (ratchet CSS : `!important`, z-index bruts, flou > 4 px, uppercase, rayons circulaires, glow, `100vh` sans `dvh`, `cubic-bezier`/durées bruts, `outline: none`, serif)
+5. `npm run check:a11y` (ratchet `jsx-a11y` : le nombre de violations par fichier ne peut que baisser)
+6. `npm run test:run`
+7. `npm run build`
+
+Les ratchets figent l'état actuel dans `scripts/ratchet-baselines/*.json` : une PR qui **ajoute** une violation échoue ; une PR qui en **retire** doit lancer `npm run check:css-rules -- --update` (ou `check:a11y -- --update`) pour verrouiller le gain. Détails dans `QUALITY.md`.
 
 Hooks :
 - Husky + lint-staged : `git commit` → lint/format rapide sur les fichiers staged seulement.

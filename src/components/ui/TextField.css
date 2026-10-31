@@ -1,0 +1,127 @@
+/* TextField — single text-input primitive of the kit (src/components/ui/TextField.jsx).
+   Provides shared base (border, radius, padding, font, colours, focus) for:
+   - "glass" (default): profile & auth modals
+   - "outline": conquest multiplayer inputs
+   - "search": data panel search inputs
+   Identity: square corners (radius-sm), hard 2px offset shadows, no glow, no scale. */
+
+/* ──── Wrapper for input + label + hint/error ──── */
+.ui-textfield-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 100%;
+}
+
+.ui-textfield__label {
+  display: block;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-main);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.ui-textfield__error {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-main);
+  color: var(--error);
+}
+
+.ui-textfield__hint {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-main);
+  color: var(--text-muted);
+}
+
+/* ──── Shared input base ──── */
+.ui-textfield {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-main);
+  color: var(--text-main);
+  border: 1px solid transparent;
+  touch-action: manipulation;
+  transition:
+    border-color var(--dur-fast) var(--steps-snap),
+    background-color var(--dur-fast) var(--steps-snap),
+    box-shadow var(--dur-fast) var(--steps-snap),
+    color var(--dur-fast) var(--steps-snap);
+}
+
+.ui-textfield::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.ui-textfield:focus {
+  border-color: var(--accent);
+}
+
+.ui-textfield:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 2px 2px 0 var(--ui-ink);
+}
+
+.ui-textfield:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-textfield[aria-invalid="true"] {
+  border-color: var(--error);
+}
+
+.ui-textfield[aria-invalid="true"]:focus-visible {
+  outline: none;
+  border-color: var(--error);
+  box-shadow: 2px 2px 0 var(--error);
+}
+
+/* ──── Variants ──── */
+
+/* glass — solid glass panel surface (ProfilePanel, AuthModal) */
+.ui-textfield--glass {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-md);
+}
+
+/* outline — bordered transparent field (ConquestScreen) */
+.ui-textfield--outline {
+  height: var(--control-lg);
+  padding: 0 var(--spacing-ms);
+  background: transparent;
+  border-color: var(--glass-border-strong);
+  font-size: var(--font-size-base);
+}
+
+/* search — subtle tint search field (GameDataPanel) */
+.ui-textfield--search {
+  background: var(--subtle-tint);
+  border-color: var(--glass-border);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-md);
+}
+
+@media (hover: hover) {
+  .ui-textfield--glass:hover:not(:disabled):not(:focus-visible),
+  .ui-textfield--search:hover:not(:disabled):not(:focus-visible) {
+    border-color: var(--glass-border-strong);
+  }
+
+  .ui-textfield--outline:hover:not(:disabled):not(:focus-visible) {
+    border-color: var(--text-muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-textfield {
+    transition: none;
+  }
+}
