@@ -188,6 +188,11 @@ export const RELIEF = {
 
 /** Shader dissolve when deselecting a country (ms). Kept in sync with polygon altitude tween. */
 export const GLITCH_SELECTION_TRANSITION_MS = 360;
+/**
+ * First deselect-fade value, just above the shader's transitionActive threshold (0.006):
+ * a fade of 0 reads as "still selected" and showed one flat umber frame on deselect.
+ */
+export const DESELECT_FADE_START = 0.01;
 
 /**
  * Smooth 0→1 dissolve curve (smootherstep). The previous version lingered in a
