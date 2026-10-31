@@ -39,7 +39,7 @@ const DeckArrow = ({ side, onClick, label, icon }) => (
   <div className={`deck-click-zone ${side}`}>
     <IconButton
       size="sm"
-      variant="outline"
+      variant="ghost"
       label={label}
       look="deck-arrow"
       onClick={(e) => {

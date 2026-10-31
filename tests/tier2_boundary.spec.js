@@ -1,9 +1,9 @@
-import { expect, test } from "./helpers/fixtures.js";
+import { expect, expectPanelClosed, test } from "./helpers/fixtures.js";
 
 test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   // 1. Spam click carousel right arrow 15 times
   test("T2-CLICK-01: Rapidly click Carousel Right Arrow 15 times", async ({ guestPage: page }) => {
-    const rightArrow = page.locator(".deck-click-zone.right");
+    const rightArrow = page.locator(".deck-click-zone.right button");
     for (let i = 0; i < 5; i++) {
       await rightArrow.click({ force: true });
     }
@@ -15,7 +15,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
 
   // 2. Spam click carousel left arrow 15 times
   test("T2-CLICK-02: Rapidly click Carousel Left Arrow 15 times", async ({ guestPage: page }) => {
-    const leftArrow = page.locator(".deck-click-zone.left");
+    const leftArrow = page.locator(".deck-click-zone.left button");
     for (let i = 0; i < 5; i++) {
       await leftArrow.click({ force: true });
     }
@@ -36,38 +36,28 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await expect(inputField).toBeVisible();
   });
 
-  // 4. Rapid toggle interface theme
-  test("T2-CLICK-04: Rapidly toggle Interface Theme in Settings", async ({ guestPage: page }) => {
+  // 4. Rapid toggle language (le thème clair a été retiré en #250)
+  test("T2-CLICK-04: Rapidly toggle Language in Settings", async ({ guestPage: page }) => {
     await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
-
-    const darkOpt = settingsPanel
-      .locator('.segmented-opt:has-text("Sombre"), .segmented-opt:has-text("Dark")')
-      .first();
-    const lightOpt = settingsPanel
-      .locator('.segmented-opt:has-text("Clair"), .segmented-opt:has-text("Light")')
-      .first();
-
+    const fr = settingsPanel.getByRole("radio", { name: "Français" });
+    const en = settingsPanel.getByRole("radio", { name: "English" });
     for (let i = 0; i < 3; i++) {
-      await lightOpt.click();
-      await darkOpt.click();
+      await en.click();
+      await fr.click();
     }
+    await expect(fr).toHaveAttribute("aria-checked", "true");
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
-    await expect(page.locator(".app-container")).toHaveAttribute("data-theme", "dark");
   });
 
-  // 5. Rapid toggle globe theme
-  test("T2-CLICK-05: Rapidly toggle Globe Theme in Settings", async ({ guestPage: page }) => {
+  // 5. Rapid toggle renderer switch (le choix satellite a été retiré en #248)
+  test("T2-CLICK-05: Rapidly toggle WebGPU Switch in Settings", async ({ guestPage: page }) => {
     await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
-
-    const satOpt = settingsPanel.locator('.segmented-opt:has-text("Satellite")').first();
-    const blackOpt = settingsPanel.locator('.segmented-opt:has-text("Blackout")').first();
-
-    for (let i = 0; i < 3; i++) {
-      await satOpt.click();
-      await blackOpt.click();
-    }
+    const webgpu = settingsPanel.getByRole("switch", { name: "WebGPU" });
+    const before = await webgpu.getAttribute("aria-checked");
+    for (let i = 0; i < 6; i++) await webgpu.click();
+    await expect(webgpu).toHaveAttribute("aria-checked", before);
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
   });
 
@@ -162,12 +152,12 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await expect(profilePanel).toHaveClass(/open/);
 
     await profilePanel.locator(".ui-icon-btn--panel-close").click();
-    await expect(profilePanel).not.toHaveClass(/open/);
+    await expectPanelClosed(page, ".sheet-panel.profile-panel");
   });
 
   // 14. Panel close button dismisses leaderboard panel
   test("T2-DESEL-03: Close Button Dismisses Leaderboard Panel", async ({ guestPage: page }) => {
-    await page.locator(".home-podium-widget").click();
+    await page.locator(".ui-icon-btn--dock-podium").click();
     const lbPanel = page.locator(".sheet-panel.leaderboard-panel");
     await expect(lbPanel).toHaveClass(/open/);
 
@@ -177,8 +167,10 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
 
   // 15. Clear search query input in Learn mode data panel
   test("T2-DESEL-04: Clear Search Input in Learn Data Panel", async ({ guestPage: page }) => {
-    await page.locator(".ui-card--mode-deck.is-top-card .ui-btn--tile").click();
-    const inputField = page.locator("#q-resp-field");
+    await page
+      .locator(".ui-card--mode-deck.is-top-card .ui-btn--tile:not(.ui-btn--tile-train)")
+      .click();
+    const inputField = page.locator(".data-panel-search-input");
 
     await inputField.fill("France");
     await inputField.fill("");
@@ -194,7 +186,9 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await inputField.focus();
 
     const canvas = page.locator("canvas").first();
-    await canvas.click({ position: { x: 100, y: 100 } });
+    // Le HUD recouvre le canvas : clic souris brut aux coordonnées, comme un vrai joueur.
+    const box = await canvas.boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await expect(inputField).toBeVisible();
   });
 
@@ -283,7 +277,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await inputField.press("Enter");
 
     const inputIsland = page.locator(".input-island");
-    await expect(inputIsland).toHaveClass(/error/);
+    await expect(inputIsland).toHaveClass(/error|is-rejected/);
   });
 
   // 26. Duplicate correct answer submission warning/error feedback
@@ -295,6 +289,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
 
     await inputField.fill("France");
     await inputField.press("Enter");
+    await expect(inputField).toHaveValue("");
 
     await inputField.fill("France");
     await inputField.press("Enter");
@@ -308,10 +303,9 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
 
-    const minusBtn = settingsPanel.locator('button.settings-btn-stepper:has-text("-1 Min")');
-    await minusBtn.click();
+    await settingsPanel.getByRole("button", { name: "-1 minute" }).click();
 
-    const durationVal = settingsPanel.locator(".duration-value");
+    const durationVal = settingsPanel.locator(".ui-slider-value");
     await expect(durationVal).toBeVisible();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
   });
@@ -321,10 +315,9 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
 
-    const plusBtn = settingsPanel.locator('button.settings-btn-stepper:has-text("+1 Min")');
-    await plusBtn.click();
+    await settingsPanel.getByRole("button", { name: "+1 minute" }).click();
 
-    const durationVal = settingsPanel.locator(".duration-value");
+    const durationVal = settingsPanel.locator(".ui-slider-value");
     await expect(durationVal).toBeVisible();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
   });
@@ -336,7 +329,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
 
-    const enOpt = settingsPanel.locator('.segmented-opt:has-text("EN")').first();
+    const enOpt = settingsPanel.getByRole("radio", { name: "English" });
     await enOpt.click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
@@ -351,10 +344,10 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await page.locator(".ui-icon-btn--dock-settings").click();
     const settingsPanel = page.locator(".sheet-panel.settings-panel");
 
-    const enOpt = settingsPanel.locator('.segmented-opt:has-text("EN")').first();
+    const enOpt = settingsPanel.getByRole("radio", { name: "English" });
     await enOpt.click();
 
-    const frOpt = settingsPanel.locator('.segmented-opt:has-text("FR")').first();
+    const frOpt = settingsPanel.getByRole("radio", { name: "Français" });
     await frOpt.click();
     await settingsPanel.locator(".ui-icon-btn--panel-close").click();
 
