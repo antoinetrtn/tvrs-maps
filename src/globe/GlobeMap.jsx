@@ -417,6 +417,29 @@ const GlobeMap = (props) => {
     [UI_COLORS.atmosphere]
   );
 
+  // On-screen disc of the globe (viewport px), read by the backdrop so its
+  // limb halo / vignette follow the globe offset and zoom. Pure camera math,
+  // identical for the WebGL and WebGPU renderers.
+  const getGlobeFrame = useCallback(() => {
+    const globe = globeEl.current;
+    const camera = globe?.camera?.();
+    const canvas = globe?.renderer?.()?.domElement;
+    if (!camera || !canvas || !camera.isPerspectiveCamera) return null;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const radius = globe.getGlobeRadius?.() || 100;
+    const dist = camera.position.length();
+    if (dist <= radius) return null;
+    const center = camera.position.clone().set(0, 0, 0).project(camera);
+    const halfFov = (camera.fov * Math.PI) / 360;
+    const angular = Math.asin(radius / dist);
+    return {
+      cx: rect.left + ((center.x + 1) / 2) * rect.width,
+      cy: rect.top + ((1 - center.y) / 2) * rect.height,
+      r: (Math.tan(angular) / Math.tan(halfFov)) * (rect.height / 2),
+    };
+  }, []);
+
   return (
     <div
       className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
@@ -429,7 +452,7 @@ const GlobeMap = (props) => {
         onPointerUp={handlePointerUp}
       >
         <div className="globe-backdrop">
-          <SpaceBackground />
+          <SpaceBackground getGlobeFrame={getGlobeFrame} />
           <div className="globe-backdrop-grid" />
 
           <div className="globe-backdrop-vignette" />

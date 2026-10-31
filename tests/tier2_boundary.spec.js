@@ -1,11 +1,10 @@
-import { expect, expectPanelClosed, test } from "./helpers/fixtures.js";
+import { deckStep, expect, expectPanelClosed, openLearnPanel, test } from "./helpers/fixtures.js";
 
 test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
   // 1. Spam click carousel right arrow 15 times
   test("T2-CLICK-01: Rapidly click Carousel Right Arrow 15 times", async ({ guestPage: page }) => {
-    const rightArrow = page.locator(".deck-click-zone.right button");
     for (let i = 0; i < 5; i++) {
-      await rightArrow.click({ force: true });
+      await deckStep(page, "right");
     }
     await page.waitForTimeout(200);
 
@@ -15,9 +14,8 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
 
   // 2. Spam click carousel left arrow 15 times
   test("T2-CLICK-02: Rapidly click Carousel Left Arrow 15 times", async ({ guestPage: page }) => {
-    const leftArrow = page.locator(".deck-click-zone.left button");
     for (let i = 0; i < 5; i++) {
-      await leftArrow.click({ force: true });
+      await deckStep(page, "left");
     }
     await page.waitForTimeout(200);
 
@@ -170,6 +168,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
     await page
       .locator(".ui-card--mode-deck.is-top-card .ui-btn--tile:not(.ui-btn--tile-train)")
       .click();
+    await openLearnPanel(page);
     const inputField = page.locator(".data-panel-search-input");
 
     await inputField.fill("France");
