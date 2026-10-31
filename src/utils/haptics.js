@@ -20,7 +20,7 @@ const BOUNDARY_EPS = 0.004;
 let sharedAudioCtx = null;
 let iosHapticLabel = null;
 let lastNativeVibrateAt = -Infinity;
-let lastTickAt = -Infinity;
+let lastSelectionAt = -Infinity;
 
 const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
@@ -123,7 +123,7 @@ export function computeZoomDetentIndex(
  * Triggers a subtle haptic pulse via navigator.vibrate (Android), iOS 17.4+ switch
  * Taptic Engine fallback (iPhone Safari), or WebAudio tactile micro-click fallback.
  */
-function tryNativeVibrate(nav, durationMs) {
+function tryNativeVibrate(nav, durationMs, { force = false } = {}) {
   if (!nav || typeof nav.vibrate !== "function") return triggerIosSwitchHaptic();
   if (
     typeof nav.userActivation === "object" &&
@@ -134,7 +134,7 @@ function tryNativeVibrate(nav, durationMs) {
   }
   const isGlobalNavigator = typeof navigator !== "undefined" && nav === navigator;
   const now = typeof performance !== "undefined" ? performance.now() : Date.now();
-  if (isGlobalNavigator && now - lastNativeVibrateAt < MIN_NATIVE_VIBRATE_INTERVAL_MS) {
+  if (!force && isGlobalNavigator && now - lastNativeVibrateAt < MIN_NATIVE_VIBRATE_INTERVAL_MS) {
     return true;
   }
   try {
@@ -150,11 +150,11 @@ function tryNativeVibrate(nav, durationMs) {
 
 export function triggerSubtleHapticTick(
   durationMs = ZOOM_HAPTIC_TICK_MS,
-  nav = typeof navigator !== "undefined" ? navigator : null
+  nav = typeof navigator !== "undefined" ? navigator : null,
+  { force = false } = {}
 ) {
   if (prefersReducedMotion()) return false;
-  lastTickAt = nowMs();
-  const vibrated = tryNativeVibrate(nav, durationMs);
+  const vibrated = tryNativeVibrate(nav, durationMs, { force });
   // Always run the ultra-short 8ms low-frequency tactile audio tick alongside native vibrate:
   // on Android devices where OS Touch feedback / Ringer / Battery Saver silences the physical
   // vibrator despite navigator.vibrate() returning true, the tactile click still gives feedback.
@@ -297,18 +297,23 @@ export const SELECTION_HAPTIC_TICK_MS = 10;
 export const SELECTION_HAPTIC_COOLDOWN_MS = 90;
 
 /**
- * Light 10ms tick, throttled: skipped if any haptic fired within the cooldown
- * (fast swipes, or an IconButton arrow that already ticked on click).
+ * Light 10ms tick, throttled only against previous card changes (fast swipes).
+ * It must NOT be swallowed by the 1ms button tick that precedes it when the
+ * change comes from a deck arrow: that tick is imperceptible on most Android
+ * motors, so the 10ms selection tick overrides it (vibrate() replaces the
+ * running pattern).
  */
 export function triggerSelectionHaptic(
   nav = typeof navigator !== "undefined" ? navigator : null,
   now = nowMs()
 ) {
-  if (now - lastTickAt < SELECTION_HAPTIC_COOLDOWN_MS) return false;
-  return triggerSubtleHapticTick(SELECTION_HAPTIC_TICK_MS, nav);
+  if (now - lastSelectionAt < SELECTION_HAPTIC_COOLDOWN_MS) return false;
+  const ok = triggerSubtleHapticTick(SELECTION_HAPTIC_TICK_MS, nav, { force: true });
+  if (ok) lastSelectionAt = now;
+  return ok;
 }
 
 export function resetHapticsThrottleForTests() {
-  lastTickAt = -Infinity;
+  lastSelectionAt = -Infinity;
   lastNativeVibrateAt = -Infinity;
 }
