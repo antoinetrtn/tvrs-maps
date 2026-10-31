@@ -31,9 +31,10 @@ import {
   createZoomHapticTracker,
   primeHapticsOnUserGesture,
   triggerSubtleHapticTick,
-  ZOOM_HAPTIC_BOUNDARY_MS,
+  triggerZoomLimitHaptic,
   ZOOM_HAPTIC_DETENTS,
   ZOOM_HAPTIC_TICK_MS,
+  ZOOM_LIMIT_HAPTIC_PATTERN,
 } from "../utils/haptics";
 
 describe("globeAltitude", () => {
@@ -321,64 +322,63 @@ describe("globeAltitude", () => {
       expect(computeZoomDetentIndex(NaN)).toBeNull();
     });
 
-    it("pulses only during active user zoom gestures, enforces cooldown, and gives a firmer tick on min/max bounds", () => {
+    it("stays silent while zooming and fires one firm pulse per arrival at min/max", () => {
       const pulses = [];
       const tracker = createZoomHapticTracker({
-        cooldownMs: 50,
-        vibrate: (ms) => {
-          pulses.push(ms);
+        vibrate: () => {
+          pulses.push("limit");
           return true;
         },
       });
-
-      // Inactive camera movement (1-finger pan or programmatic tween) never pulses
-      expect(tracker.onAltitudeChange(2.5, { now: 100 }).pulsed).toBe(false);
-      expect(tracker.onAltitudeChange(1.5, { now: 180 }).pulsed).toBe(false);
+      // Pinch and wheel steps never vibrate
+      expect(tracker.onPinchDistance(100, { now: 0 }).pulsed).toBe(false);
+      expect(tracker.onPinchDistance(160, { now: 10 }).pulsed).toBe(false);
+      expect(tracker.onWheelDelta(120, { now: 20 }).pulsed).toBe(false);
+      // Altitude changes mid-range during the gesture are silent
+      expect(tracker.onAltitudeChange(1.5, { now: 30 }).pulsed).toBe(false);
+      expect(tracker.onAltitudeChange(0.8, { now: 40 }).pulsed).toBe(false);
       expect(pulses).toEqual([]);
 
-      // User starts a wheel / pinch zoom gesture
-      tracker.markZoomGesture(200);
-      // Crossing into a closer detent triggers a 2ms micro-pulse
-      const step1 = tracker.onAltitudeChange(1.1, { now: 210 });
-      expect(step1.pulsed).toBe(true);
-      expect(step1.duration).toBe(ZOOM_HAPTIC_TICK_MS);
-
-      // Immediate crossing within cooldown (< 50ms) is suppressed
-      const cooldownStep = tracker.onAltitudeChange(0.8, { now: 230 });
-      expect(cooldownStep.pulsed).toBe(false);
-      expect(cooldownStep.reason).toBe("cooldown");
-
-      // After cooldown, hitting the exact minAltitude floor triggers a 5ms boundary stop tick
-      const floorStep = tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 275 });
-      expect(floorStep.pulsed).toBe(true);
-      expect(floorStep.duration).toBe(ZOOM_HAPTIC_BOUNDARY_MS);
-      expect(floorStep.boundary).toBe("min");
-
-      // Synchronous 2-finger pinch distance & wheel delta steppers
-      expect(tracker.onPinchDistance(100, { now: 500, stepPx: 14 }).pulsed).toBe(false);
-      const pinchTick = tracker.onPinchDistance(118, { now: 560, stepPx: 14 });
-      expect(pinchTick.pulsed).toBe(true);
-      expect(pinchTick.duration).toBe(ZOOM_HAPTIC_TICK_MS);
-      expect(tracker.onWheelDelta(20, { now: 620, stepDelta: 36 }).pulsed).toBe(false);
-      const wheelTick = tracker.onWheelDelta(20, { now: 680, stepDelta: 36 });
-      expect(wheelTick.pulsed).toBe(true);
-
-      // Clearing gesture stops further pulses
+      // Arriving at the min limit: one firm pulse
+      const hit = tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 50 });
+      expect(hit.pulsed).toBe(true);
+      expect(hit.boundary).toBe("min");
+      expect(hit.pattern).toBe(ZOOM_LIMIT_HAPTIC_PATTERN);
+      // Repeated wheel against the stop: no spam, even after lifting/re-starting
+      tracker.onWheelDelta(-50, { now: 60 });
+      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 70 }).pulsed).toBe(false);
       tracker.clearZoomGesture();
-      expect(tracker.onAltitudeChange(1.8, { now: 800 }).pulsed).toBe(false);
-      // Passing isZoomGesture: true directly activates the gesture window (double-tap-drag zoom)
-      expect(tracker.onAltitudeChange(1.2, { now: 900, isZoomGesture: true }).pulsed).toBe(true);
-      expect(ZOOM_HAPTIC_TICK_MS).toBe(1);
-      expect(ZOOM_HAPTIC_BOUNDARY_MS).toBe(3);
-      expect(typeof primeHapticsOnUserGesture).toBe("function");
-      primeHapticsOnUserGesture();
-      // When navigator.vibrate is absent (iOS Safari), falls back to the hidden switch toggle
-      expect(triggerSubtleHapticTick(ZOOM_HAPTIC_TICK_MS, {})).toBe(true);
+      tracker.markZoomGesture(500);
+      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 510 }).pulsed).toBe(false);
+      expect(pulses).toHaveLength(1);
+
+      // Leaving the limit re-arms, coming back fires again
+      expect(tracker.onAltitudeChange(1.0, { now: 520 }).pulsed).toBe(false);
+      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 530 }).pulsed).toBe(true);
+      // Max limit
       expect(
-        triggerSubtleHapticTick(ZOOM_HAPTIC_TICK_MS, {
-          vibrate: (ms) => ms === ZOOM_HAPTIC_TICK_MS,
-        })
-      ).toBe(true);
+        tracker.onAltitudeChange(GLOBE_MAX_ALTITUDE, { now: 540, isZoomGesture: true }).boundary
+      ).toBe("max");
+      expect(pulses).toHaveLength(3);
+    });
+
+    it("does not pulse when a programmatic camera move reaches a limit", () => {
+      const vibrate = vi.fn(() => true);
+      const tracker = createZoomHapticTracker({ vibrate });
+      expect(tracker.onAltitudeChange(GLOBE_MAX_ALTITUDE, { now: 1000 }).reason).toBe("inactive");
+      expect(vibrate).not.toHaveBeenCalled();
+    });
+
+    it("limit pulse is clearly stronger than the regular ticks and bypasses the throttle", () => {
+      const total = ZOOM_LIMIT_HAPTIC_PATTERN.filter((_, i) => i % 2 === 0).reduce((a, b) => a + b);
+      expect(total).toBeGreaterThanOrEqual(20);
+      expect(ZOOM_LIMIT_HAPTIC_PATTERN[0]).toBeGreaterThan(10);
+      const vibrate = vi.fn(() => true);
+      expect(triggerZoomLimitHaptic({ vibrate })).toBe(true);
+      expect(vibrate).toHaveBeenCalledWith(ZOOM_LIMIT_HAPTIC_PATTERN);
+      expect(ZOOM_HAPTIC_TICK_MS).toBe(1);
+      primeHapticsOnUserGesture();
+      expect(triggerSubtleHapticTick(ZOOM_HAPTIC_TICK_MS, {})).toBe(true);
     });
   });
 
