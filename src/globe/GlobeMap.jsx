@@ -13,6 +13,7 @@ import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../confi
 import { useTranslation } from "../config/i18n";
 import { useFoundProgramWarmup } from "./hooks/useFoundProgramWarmup";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
+import { useGlobeBoats } from "./hooks/useGlobeBoats";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLabels } from "./hooks/useGlobeLabels";
@@ -244,6 +245,12 @@ const GlobeMap = (props) => {
     globeEl,
     `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}`
   );
+
+  // Life: pixel boats between found coastal countries (lazy, world modes only).
+  useGlobeBoats(globeEl, {
+    foundList,
+    enabled: !isHomeScreen && !isDepartmentMode && !isUsStatesMode && mode !== "learn",
+  });
 
   // First correct answer: link the opaque "success" programs ahead of time.
   useFoundProgramWarmup(globeEl, {
