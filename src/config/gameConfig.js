@@ -172,20 +172,6 @@ export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSele
   return isDepartmentMode ? POLYGON_ALTITUDE.departmentBase : POLYGON_ALTITUDE.base;
 };
 
-/**
- * Rivers & mountains sizing.
- *
- * Every relief feature is rendered so it stays clickable, but its NAME stays hidden
- * (scrambled label, only shown when selected) so the answer isn't given away. Found
- * features are drawn at full representative size, unfound ones at a slightly smaller
- * neutral scale — close enough that finding one no longer makes it pop from a tiny
- * placeholder to full size.
- */
-export const RELIEF = {
-  mountainScale: 0.62, // found: stable, geographically-representative size
-  targetHintScale: 0.5, // unfound: neutral, still clearly visible/clickable
-};
-
 /** Shader dissolve when deselecting a country (ms). Kept in sync with polygon altitude tween. */
 export const GLITCH_SELECTION_TRANSITION_MS = 360;
 /**

@@ -23,6 +23,7 @@ import {
   syncCameraMapProjection,
   syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
+import { useFeatureHover } from "./useFeatureHover";
 import { useMicroMagnetHover } from "./useMicroMagnetHover";
 
 // Fallback "nearest centroid" radius when the click misses every polygon.
@@ -334,6 +335,11 @@ export function useGlobeInteractions({
   );
 
   const updateMagnetHover = useMicroMagnetHover(globeEl, gameDataMap);
+  const featureHover = useFeatureHover(
+    globeEl,
+    gameDataMap,
+    Boolean(isRiversMountainsMode) && !isHomeScreen
+  );
 
   const handlePointerMove = useCallback(
     (event) => {
@@ -341,7 +347,10 @@ export function useGlobeInteractions({
       // resolved on pointerup), and it cost a raycast + point-in-polygon scan
       // on every move event during drags.
       const tap = tapRef.current;
-      if (!tap && event.pointerType === "mouse" && !isHomeScreen) updateMagnetHover(event);
+      if (!tap && event.pointerType === "mouse" && !isHomeScreen) {
+        if (isRiversMountainsMode) featureHover.update(event);
+        else updateMagnetHover(event);
+      }
       const wrapper = globeContentWrapperRef.current;
       if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen) return;
       // Touch: no wrapper translation — OrbitControls already moves the globe
@@ -367,7 +376,14 @@ export function useGlobeInteractions({
         });
       }
     },
-    [isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef, updateMagnetHover]
+    [
+      isHomeScreen,
+      isRiversMountainsMode,
+      perfProfile?.isMobile,
+      globeContentWrapperRef,
+      updateMagnetHover,
+      featureHover,
+    ]
   );
 
   const handlePointerUp = useCallback(
@@ -448,6 +464,7 @@ export function useGlobeInteractions({
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handlePointerLeave: featureHover.clear,
     handleBackgroundClick,
     handleGlobeClick,
     selectCountry,

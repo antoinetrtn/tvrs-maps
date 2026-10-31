@@ -9,7 +9,6 @@ import {
 import { PERFORMANCE } from "../../config/gameConstants";
 import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
-import { getFoundGreenThreeColor } from "../render/foundGreenPalette";
 import { loopHasWork } from "../render/globeLoopWork";
 import { isDeselectResettableMaterial } from "../render/globePolygonMaterial";
 import { getCachedMaterial } from "../render/polygonColorResolver";
@@ -51,8 +50,6 @@ export function useGlobeAnimationLoop({
   getBaseColorForCountryAndKind,
   lerpColor,
   globeMaterial,
-  mountainGlitchUniforms,
-  mountainGlitchActive = false,
   GLOBE_STYLE,
   countriesData,
   departmentsData,
@@ -72,8 +69,6 @@ export function useGlobeAnimationLoop({
   const prevSelectedCountryRef = useRef(null);
   // Read by useGlobeShaderClock (time uniforms advance per rendered frame).
   const needsSharedTimeRef = useRef(false);
-  const mountainGlitchActiveRef = useRef(mountainGlitchActive);
-  mountainGlitchActiveRef.current = mountainGlitchActive;
   const globeMaterialRef = useRef(globeMaterial);
   globeMaterialRef.current = globeMaterial;
 
@@ -156,7 +151,6 @@ export function useGlobeAnimationLoop({
       perfTracker.recordFrame(frameDelta, drawCalls, triangles);
 
       const timeSec = time / 1000;
-      const needsMountainFeedback = mountainGlitchActive && (currentIsError || currentIsSuccess);
 
       const capMat = currentSelectedCountry
         ? getCachedMaterial(
@@ -188,23 +182,6 @@ export function useGlobeAnimationLoop({
         polygonGlitchUniforms.uTime.value = timeSec;
       }
       polygonGlitchUniforms.uSelectStart.value = (selectionTransitionStartRef?.current ?? 0) / 1000;
-      if (currentIsError || currentIsSuccess) {
-        if (needsMountainFeedback) {
-          mountainGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
-        }
-      }
-
-      if (mountainGlitchActive) {
-        if (needsMountainFeedback) {
-          mountainGlitchUniforms.uIsError.value =
-            currentSelectedCountry && currentIsError ? 1.0 : 0.0;
-          mountainGlitchUniforms.uIsSuccess.value =
-            currentSelectedCountry && currentIsSuccess ? 1.0 : 0.0;
-        } else {
-          mountainGlitchUniforms.uIsError.value = 0.0;
-          mountainGlitchUniforms.uIsSuccess.value = 0.0;
-        }
-      }
 
       if (needsGraticuleStyleRef.current) {
         if (time - lastGraticuleStyleTimeRef.current > 120) {
@@ -371,7 +348,6 @@ export function useGlobeAnimationLoop({
         hasSelectedCountry,
         currentIsError,
         currentIsSuccess,
-        mountainGlitchActive,
         modeTransitionRef,
         transitioningPreviousCountryRef,
         glowSettled,
@@ -415,8 +391,6 @@ export function useGlobeAnimationLoop({
     targetGlowCoefRef,
     globeLightingRef,
     globeMaterial,
-    mountainGlitchUniforms,
-    mountainGlitchActive,
     polygonMaterialCacheRef,
     sharedMaterialsRef,
     transitioningPreviousCountryRef,
@@ -435,8 +409,6 @@ export function useGlobeAnimationLoop({
     globeEl,
     globeMaterialRef,
     needsSharedTimeRef,
-    mountainGlitchActiveRef,
-    mountainGlitchUniforms,
   });
 
   useEffect(() => {
@@ -447,14 +419,13 @@ export function useGlobeAnimationLoop({
         admin,
         isError,
         isSuccess,
-        mountainGlitchUniforms,
       });
       kickLoop();
     };
     return () => {
       globeFeedbackApplierRef.current = null;
     };
-  }, [globeFeedbackApplierRef, polygonMaterialCacheRef, mountainGlitchUniforms]);
+  }, [globeFeedbackApplierRef, polygonMaterialCacheRef]);
 
   useEffect(() => {
     kickLoop();

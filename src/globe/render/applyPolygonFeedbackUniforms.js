@@ -2,7 +2,6 @@ import { countryDataMap } from "../../data/gameData";
 import { SECONDARY_CITIES_BY_COUNTRY } from "./capitalLightsData";
 import { angularDistance, getCountryLandRadius } from "./countryLandRadius";
 import { DISCOVERY } from "./discoveryTimeline";
-import { getFoundGreenThreeColor } from "./foundGreenPalette";
 import { markIgnitingCountry, polygonGlitchUniforms } from "./polygonGlitchShader";
 
 /** Push success/error flags to cached polygon shaders without waiting for React. */
@@ -11,7 +10,6 @@ export function applyPolygonFeedbackUniforms({
   admin,
   isError = false,
   isSuccess = false,
-  mountainGlitchUniforms,
 }) {
   if (!admin || !polygonMaterialCacheRef?.current) return;
 
@@ -37,15 +35,6 @@ export function applyPolygonFeedbackUniforms({
       shader.uniforms.uIsSelection.value = 0.0;
     }
   });
-
-  if (mountainGlitchUniforms) {
-    mountainGlitchUniforms.uTime.value = time;
-    mountainGlitchUniforms.uIsError.value = isError ? 1.0 : 0.0;
-    mountainGlitchUniforms.uIsSuccess.value = isSuccess ? 1.0 : 0.0;
-    if (isError || isSuccess) {
-      mountainGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
-    }
-  }
 }
 
 const DEG = Math.PI / 180;
