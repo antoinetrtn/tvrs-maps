@@ -40,4 +40,30 @@ export async function expectPanelClosed(page, panelSelector) {
   await expect(page.locator(`${panelSelector}.open`)).toHaveCount(0);
 }
 
+/**
+ * Passe à la carte voisine du carrousel : flèche sur desktop, swipe sur écran tactile
+ * (les flèches y sont masquées par design, cf. HomeScreenCategoryCarousel.css).
+ */
+export async function deckStep(page, dir = "right") {
+  const arrow = page.locator(`.deck-click-zone.${dir} button`);
+  if (await arrow.isVisible()) {
+    await arrow.click({ force: true });
+    return;
+  }
+  const box = await page.locator(".deck-stage").boundingBox();
+  const y = box.y + box.height / 2;
+  const [from, to] = dir === "right" ? [0.8, 0.2] : [0.2, 0.8];
+  await page.mouse.move(box.x + box.width * from, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * to, y, { steps: 8 });
+  await page.mouse.up();
+}
+
+/** Sur mobile, le panneau de données du mode Apprendre s'ouvre via le bouton du HUD. */
+export async function openLearnPanel(page) {
+  const btn = page.getByRole("button", { name: "Tableau des données" });
+  await page.waitForTimeout(400);
+  if (await btn.isVisible()) await btn.click();
+}
+
 export { expect };
