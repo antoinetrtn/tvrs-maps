@@ -293,7 +293,7 @@ test.describe("Tier 1: Feature Coverage (20 Tests)", () => {
 
   // 20. Leaderboard Panel Open & Close
   test("T1-HUD-07: Leaderboard Panel Trigger Open and Close", async ({ guestPage: page }) => {
-    const podiumWidget = page.locator(".home-podium-widget");
+    const podiumWidget = page.locator(".ui-icon-btn--dock-podium");
     await podiumWidget.click();
 
     const panel = page.locator(".sheet-panel.leaderboard-panel");
