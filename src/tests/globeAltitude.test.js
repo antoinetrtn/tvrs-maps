@@ -322,49 +322,59 @@ describe("globeAltitude", () => {
       expect(computeZoomDetentIndex(NaN)).toBeNull();
     });
 
-    it("stays silent while zooming and fires one firm pulse per arrival at min/max", () => {
-      const pulses = [];
+    it("ticks between the limits, jolts once on arrival, stays silent beyond, re-arms inside", () => {
+      const ticks = [];
+      const jolts = [];
       const tracker = createZoomHapticTracker({
-        vibrate: () => {
-          pulses.push("limit");
+        cooldownMs: 50,
+        vibrate: (ms) => {
+          ticks.push(ms);
+          return true;
+        },
+        limitVibrate: () => {
+          jolts.push("jolt");
           return true;
         },
       });
-      // Pinch and wheel steps never vibrate
-      expect(tracker.onPinchDistance(100, { now: 0 }).pulsed).toBe(false);
-      expect(tracker.onPinchDistance(160, { now: 10 }).pulsed).toBe(false);
-      expect(tracker.onWheelDelta(120, { now: 20 }).pulsed).toBe(false);
-      // Altitude changes mid-range during the gesture are silent
-      expect(tracker.onAltitudeChange(1.5, { now: 30 }).pulsed).toBe(false);
-      expect(tracker.onAltitudeChange(0.8, { now: 40 }).pulsed).toBe(false);
-      expect(pulses).toEqual([]);
+      // Programmatic moves are silent
+      expect(tracker.onAltitudeChange(2.5, { now: 100 }).pulsed).toBe(false);
+      // Regular ticks while zooming inside the range (as before)
+      tracker.markZoomGesture(200);
+      const step = tracker.onAltitudeChange(1.1, { now: 210 });
+      expect(step.pulsed).toBe(true);
+      expect(step.duration).toBe(ZOOM_HAPTIC_TICK_MS);
+      expect(tracker.onAltitudeChange(0.8, { now: 230 }).reason).toBe("cooldown");
+      expect(tracker.onPinchDistance(100, { now: 300, stepPx: 14 }).pulsed).toBe(false);
+      expect(tracker.onPinchDistance(118, { now: 360, stepPx: 14 }).pulsed).toBe(true);
+      expect(tracker.onWheelDelta(40, { now: 420, stepDelta: 36 }).pulsed).toBe(true);
+      const ticksInside = ticks.length;
 
-      // Arriving at the min limit: one firm pulse
-      const hit = tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 50 });
+      // Arrival at min: one jolt, even within the tick cooldown
+      const hit = tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 430 });
       expect(hit.pulsed).toBe(true);
-      expect(hit.boundary).toBe("min");
       expect(hit.pattern).toBe(ZOOM_LIMIT_HAPTIC_PATTERN);
-      // Repeated wheel against the stop: no spam, even after lifting/re-starting
-      tracker.onWheelDelta(-50, { now: 60 });
-      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 70 }).pulsed).toBe(false);
+      // Beyond the limit, same direction: nothing at all
+      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 600 }).reason).toBe("at-limit");
+      expect(tracker.onWheelDelta(-80, { now: 700, stepDelta: 36 }).reason).toBe("at-limit");
+      expect(tracker.onPinchDistance(200, { now: 800, stepPx: 14 }).reason).toBe("at-limit");
       tracker.clearZoomGesture();
-      tracker.markZoomGesture(500);
-      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 510 }).pulsed).toBe(false);
-      expect(pulses).toHaveLength(1);
+      tracker.markZoomGesture(900);
+      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 910 }).pulsed).toBe(false);
+      expect(tracker.onPinchDistance(100, { now: 920, stepPx: 14 }).pulsed).toBe(false);
+      expect(tracker.onPinchDistance(60, { now: 990, stepPx: 14 }).pulsed).toBe(false);
+      expect(ticks.length).toBe(ticksInside);
+      expect(jolts).toHaveLength(1);
 
-      // Leaving the limit re-arms, coming back fires again
-      expect(tracker.onAltitudeChange(1.0, { now: 520 }).pulsed).toBe(false);
-      expect(tracker.onAltitudeChange(GLOBE_MIN_ALTITUDE, { now: 530 }).pulsed).toBe(true);
-      // Max limit
-      expect(
-        tracker.onAltitudeChange(GLOBE_MAX_ALTITUDE, { now: 540, isZoomGesture: true }).boundary
-      ).toBe("max");
-      expect(pulses).toHaveLength(3);
+      // Back inside: ticks resume, jolt re-armed
+      expect(tracker.onAltitudeChange(1.0, { now: 1100 }).pulsed).toBe(true);
+      expect(tracker.onWheelDelta(40, { now: 1200, stepDelta: 36 }).pulsed).toBe(true);
+      expect(tracker.onAltitudeChange(GLOBE_MAX_ALTITUDE, { now: 1210 }).boundary).toBe("max");
+      expect(jolts).toHaveLength(2);
     });
 
     it("does not pulse when a programmatic camera move reaches a limit", () => {
       const vibrate = vi.fn(() => true);
-      const tracker = createZoomHapticTracker({ vibrate });
+      const tracker = createZoomHapticTracker({ vibrate, limitVibrate: vibrate });
       expect(tracker.onAltitudeChange(GLOBE_MAX_ALTITUDE, { now: 1000 }).reason).toBe("inactive");
       expect(vibrate).not.toHaveBeenCalled();
     });

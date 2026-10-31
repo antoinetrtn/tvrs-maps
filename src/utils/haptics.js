@@ -11,7 +11,10 @@ export const ZOOM_HAPTIC_TICK_MS = 1;
 const ZOOM_HAPTIC_BOUNDARY_MS = 3;
 // Zoom limit "end stop": 28ms buzz, short gap, 14ms echo (~double knock).
 export const ZOOM_LIMIT_HAPTIC_PATTERN = [28, 40, 14];
+const ZOOM_HAPTIC_COOLDOWN_MS = 26;
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 280;
+const ZOOM_PINCH_STEP_PX = 6;
+const ZOOM_WHEEL_STEP_DELTA = 16;
 const MIN_NATIVE_VIBRATE_INTERVAL_MS = 22;
 
 const BOUNDARY_EPS = 0.004;
@@ -162,80 +165,138 @@ export function triggerSubtleHapticTick(
 }
 
 /**
- * Stateful tracker for globe zoom haptics.
- *
- * Zooming itself (pinch, wheel, double-tap-drag) is silent: no detent ticks.
- * A single firm pulse fires when the zoom ARRIVES at the min or max altitude
- * limit. It fires once per arrival and re-arms only after the altitude leaves
- * the limit, so repeated wheel/pinch against the stop never spams.
+ * Stateful tracker for globe zoom detents.
  */
 export function createZoomHapticTracker({
+  detents = ZOOM_HAPTIC_DETENTS,
+  cooldownMs = ZOOM_HAPTIC_COOLDOWN_MS,
   activeWindowMs = ZOOM_HAPTIC_ACTIVE_WINDOW_MS,
-  vibrate = triggerZoomLimitHaptic,
+  vibrate = triggerSubtleHapticTick,
+  limitVibrate = triggerZoomLimitHaptic,
 } = {}) {
+  let lastDetent = null;
   let lastBoundary = null;
+  let lastPulseAt = -Infinity;
   let activeUntil = -Infinity;
-
-  const mark = (now) => {
-    activeUntil = Math.max(activeUntil, now + activeWindowMs);
-  };
+  let lastPinchBucket = null;
+  let wheelAccum = 0;
 
   return {
-    markZoomGesture(now = nowMs()) {
-      mark(now);
+    markZoomGesture(now = performance.now()) {
+      activeUntil = Math.max(activeUntil, now + activeWindowMs);
     },
     clearZoomGesture() {
-      // Keep lastBoundary: lifting fingers at the stop must not re-arm it.
+      // lastBoundary is kept: lifting fingers at a limit must not re-arm the jolt.
       activeUntil = -Infinity;
+      lastDetent = null;
+      lastPinchBucket = null;
+      wheelAccum = 0;
     },
-    onPinchDistance(distancePx, { now = nowMs() } = {}) {
-      if (!Number.isFinite(distancePx) || distancePx <= 0) {
+    onPinchDistance(distancePx, { now = performance.now(), stepPx = ZOOM_PINCH_STEP_PX } = {}) {
+      if (!Number.isFinite(distancePx) || distancePx <= 0 || stepPx <= 0) {
         return { pulsed: false, reason: "invalid-distance" };
       }
-      mark(now);
-      return { pulsed: false, reason: "silent-zoom" };
+      activeUntil = Math.max(activeUntil, now + activeWindowMs);
+      const bucket = Math.floor(distancePx / stepPx);
+      if (lastPinchBucket === null) {
+        lastPinchBucket = bucket;
+        return { pulsed: false, reason: "seeded", bucket };
+      }
+      if (bucket === lastPinchBucket) {
+        return { pulsed: false, reason: "same-bucket", bucket };
+      }
+      lastPinchBucket = bucket;
+      if (lastBoundary) {
+        return { pulsed: false, reason: "at-limit", bucket };
+      }
+      if (now - lastPulseAt < cooldownMs) {
+        return { pulsed: false, reason: "cooldown", bucket };
+      }
+      lastPulseAt = now;
+      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
+      return { pulsed: Boolean(ok), duration: ZOOM_HAPTIC_TICK_MS, bucket };
     },
-    onWheelDelta(deltaY, { now = nowMs() } = {}) {
-      if (!Number.isFinite(deltaY) || deltaY === 0) {
+    onWheelDelta(deltaY, { now = performance.now(), stepDelta = ZOOM_WHEEL_STEP_DELTA } = {}) {
+      if (!Number.isFinite(deltaY) || deltaY === 0 || stepDelta <= 0) {
         return { pulsed: false, reason: "invalid-delta" };
       }
-      mark(now);
-      return { pulsed: false, reason: "silent-zoom" };
+      activeUntil = Math.max(activeUntil, now + activeWindowMs);
+      wheelAccum += Math.abs(deltaY);
+      if (wheelAccum < stepDelta) {
+        return { pulsed: false, reason: "accumulating" };
+      }
+      wheelAccum %= stepDelta;
+      if (lastBoundary) {
+        return { pulsed: false, reason: "at-limit" };
+      }
+      if (now - lastPulseAt < cooldownMs) {
+        return { pulsed: false, reason: "cooldown" };
+      }
+      lastPulseAt = now;
+      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
+      return { pulsed: Boolean(ok), duration: ZOOM_HAPTIC_TICK_MS };
     },
     onAltitudeChange(
       altitude,
       {
-        now = nowMs(),
+        now = performance.now(),
         isZoomGesture = false,
         minAltitude = GLOBE_MIN_ALTITUDE,
         maxAltitude = GLOBE_MAX_ALTITUDE,
       } = {}
     ) {
-      if (!Number.isFinite(altitude)) return { pulsed: false, boundary: null };
-      if (isZoomGesture) mark(now);
+      if (isZoomGesture) {
+        activeUntil = Math.max(activeUntil, now + activeWindowMs);
+      }
+      const detent = computeZoomDetentIndex(altitude, { minAltitude, maxAltitude, detents });
+      if (detent === null) return { pulsed: false, detent: null };
+
       const safeMin = Math.max(0.01, minAltitude);
       const safeMax = Math.max(safeMin + 0.01, maxAltitude);
-      const boundary =
-        altitude <= safeMin + BOUNDARY_EPS
-          ? "min"
-          : altitude >= safeMax - BOUNDARY_EPS
-            ? "max"
-            : null;
+      const atMin = altitude <= safeMin + BOUNDARY_EPS;
+      const atMax = altitude >= safeMax - BOUNDARY_EPS;
+      const boundary = atMin ? "min" : atMax ? "max" : null;
 
-      if (!boundary) {
-        lastBoundary = null; // left the limit: re-arm
-        return { pulsed: false, boundary: null, reason: "silent-zoom" };
-      }
-      if (boundary === lastBoundary) {
-        return { pulsed: false, boundary, reason: "already-at-limit" };
-      }
-      lastBoundary = boundary;
       if (now > activeUntil) {
-        // Programmatic camera moves (tweens) reach limits silently.
-        return { pulsed: false, boundary, reason: "inactive" };
+        lastDetent = detent;
+        lastBoundary = boundary;
+        return { pulsed: false, detent, reason: "inactive" };
       }
-      const ok = vibrate();
-      return { pulsed: Boolean(ok), boundary, pattern: ZOOM_LIMIT_HAPTIC_PATTERN };
+
+      if (lastDetent === null) {
+        lastDetent = detent;
+        return { pulsed: false, detent, reason: "seeded" };
+      }
+
+      const isNewBoundary = Boolean(boundary && boundary !== lastBoundary);
+      if (isNewBoundary) {
+        lastBoundary = boundary;
+        lastDetent = detent;
+      }
+      if (isNewBoundary) {
+        // Arrival at a limit: one sharp jolt, never throttled by the tick cooldown.
+        lastPulseAt = now;
+        const ok = limitVibrate();
+        return { pulsed: Boolean(ok), detent, boundary, pattern: ZOOM_LIMIT_HAPTIC_PATTERN };
+      }
+      if (boundary) {
+        // Pushing beyond the limit in the same direction: total silence.
+        return { pulsed: false, detent, boundary, reason: "at-limit" };
+      }
+      lastBoundary = null; // back inside the range: ticks resume, jolt re-armed
+
+      if (detent === lastDetent) {
+        return { pulsed: false, detent, reason: "same-detent" };
+      }
+
+      lastDetent = detent;
+      if (now - lastPulseAt < cooldownMs) {
+        return { pulsed: false, detent, reason: "cooldown" };
+      }
+
+      lastPulseAt = now;
+      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
+      return { pulsed: Boolean(ok), detent, duration: ZOOM_HAPTIC_TICK_MS };
     },
   };
 }
