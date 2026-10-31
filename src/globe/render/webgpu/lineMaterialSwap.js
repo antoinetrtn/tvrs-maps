@@ -1,16 +1,9 @@
 /**
- * three-globe draws stroked paths (rivers) with Line2 + LineMaterial, a GLSL
- * ShaderMaterial that WebGPURenderer cannot compile. Under WebGPU we swap
- * each LineMaterial for an equivalent Line2NodeMaterial (same colour, width,
- * dashes, opacity). three-globe keeps writing its usual properties on the
- * swapped material on later updates.
- *
- * It also draws polygon boundary strokes with LineSegments + LineBasicMaterial.
+ * three-globe draws polygon boundary strokes with LineSegments + LineBasicMaterial.
  * Under WebGPU we swap LineBasicMaterial to LineBasicNodeMaterial and attach
  * a continuous Bayer 4x4 pixel-sheen outputNode so country borders stay
  * razor-sharp and unbroken on mobile and desktop.
  */
-import * as THREE from "three";
 import {
   asin,
   atan,
@@ -28,30 +21,9 @@ import {
   vec2,
   vec3,
 } from "three/tsl";
-import { Line2NodeMaterial, LineBasicNodeMaterial } from "three/webgpu";
+import { LineBasicNodeMaterial } from "three/webgpu";
 
 import { bayer4x4, displayOutput, litDisplayColor } from "./tslCommon";
-
-export function toLine2NodeMaterial(lineMaterial) {
-  const material = new Line2NodeMaterial({
-    color: lineMaterial.color.getHex(),
-    linewidth: lineMaterial.linewidth,
-    vertexColors: lineMaterial.vertexColors,
-    dashed: lineMaterial.dashed,
-    transparent: lineMaterial.transparent,
-    opacity: lineMaterial.opacity,
-    worldUnits: lineMaterial.worldUnits,
-  });
-  material.dashScale = lineMaterial.dashScale;
-  material.dashSize = lineMaterial.dashSize;
-  material.gapSize = lineMaterial.gapSize;
-  material.dashOffset = lineMaterial.dashOffset;
-  if (lineMaterial.transparent) material.blending = THREE.NormalBlending;
-  // three-globe toggles `defines.USE_DASH` and sets `resolution` (raycast).
-  material.defines = {};
-  material.resolution = lineMaterial.resolution;
-  return material;
-}
 
 let borderNode = null;
 /** WebGPU outputNode for continuous Bayer-modulated country border LineSegments */
@@ -90,16 +62,12 @@ export function toDitheredLineBasicNodeMaterial(basicMaterial) {
   return material;
 }
 
-/** Swap every LineMaterial and polygon stroke LineBasicMaterial in `scene`; returns how many were swapped. */
+/** Swap every polygon stroke LineBasicMaterial in `scene`; returns how many were swapped. */
 export function swapLineMaterialsForWebGPU(scene) {
   let swapped = 0;
   scene.traverse((obj) => {
     const mat = obj.material;
-    if (mat?.isLineMaterial) {
-      obj.material = toLine2NodeMaterial(mat);
-      mat.dispose();
-      swapped += 1;
-    } else if (
+    if (
       (obj.type === "LineSegments" || obj.isLineSegments) &&
       mat?.isLineBasicMaterial &&
       !mat.isNodeMaterial &&

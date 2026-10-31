@@ -4,7 +4,6 @@ export const loopHasWork = (w) =>
   w.hasSelectedCountry ||
   w.currentIsError ||
   w.currentIsSuccess ||
-  w.mountainGlitchActive ||
   Boolean(w.modeTransitionRef?.current?.active) ||
   Boolean(w.transitioningPreviousCountryRef?.current) ||
   !w.glowSettled ||

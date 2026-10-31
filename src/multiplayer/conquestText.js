@@ -123,6 +123,18 @@ const PAIRS = {
   room: ["Salon", "Room"],
   players: ["Joueurs", "Players"],
   flagOption: ["Drapeau", "Flag"],
+  answerPlaceholder: ["Ta réponse…", "Your answer…"],
+  questionSource: ["Wikipédia", "Wikipedia"],
+  timelineTitle: ["Historique", "History"],
+  timelineLocked: ["verrouillé", "locked"],
+  timelineFortified: ["a renforcé le bouclier", "reinforced the shield"],
+  lockedNow: [
+    "verrouillé : plus de questions, il reste à toi pour de bon",
+    "locked: no questions left, it is yours for good",
+  ],
+  orderUp: ["Monter", "Move up"],
+  orderDown: ["Descendre", "Move down"],
+  ladderLevel: ["Niv.", "Lvl"],
   elo: ["Elo", "Elo"],
   unrated: ["Non classé", "Unrated"],
   unratedFull: [

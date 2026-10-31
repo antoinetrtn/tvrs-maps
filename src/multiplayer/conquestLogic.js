@@ -166,6 +166,7 @@ export function buildConquestOverlay(claims = [], players = [], shieldedIds = []
 export function resolveCountryClick(countryId, claims, userId, clientNowMs, offsetMs) {
   const claim = (claims || []).find((c) => c.country_id === countryId);
   if (!claim) return "free";
+  if (claim.locked) return "locked";
   if (claim.owner_id === userId) return "mine";
   if (claim.shield_until && remainingMs(claim.shield_until, clientNowMs, offsetMs || 0) > 0) {
     return "shielded";
@@ -250,6 +251,10 @@ export function formatFeedEvent(event, { players = [], countryName = (id) => id,
         ? `${who} a volé ${countryName(event.country_id)} à ${from}`
         : `${who} stole ${countryName(event.country_id)} from ${from}`;
     }
+    case "lock":
+      return fr
+        ? `${countryName(event.country_id)} reste à ${who} pour de bon`
+        : `${countryName(event.country_id)} stays with ${who} for good`;
     case "steal_fail":
       return fr
         ? `${who} a raté le vol de ${countryName(event.country_id)}`
@@ -292,6 +297,10 @@ export function describeClaimRefusal(
       return fr ? "Pays inconnu" : "Unknown country";
     case "shielded":
       return fr ? `${name} est sous bouclier` : `${name} is shielded`;
+    case "locked":
+      return fr
+        ? `${name} est verrouillé : plus de questions, il reste à son propriétaire`
+        : `${name} is locked: no questions left, it stays with its owner`;
     case "cooldown":
       return fr ? `Attends avant de re-voler ${name}` : `Wait before stealing ${name} again`;
     case "penalty":

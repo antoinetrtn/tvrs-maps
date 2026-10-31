@@ -4,7 +4,7 @@ import React from "react";
 import { MODE_PIXEL_PALETTES } from "../config/accentPresets";
 import { getCardPose } from "./homeCardPose";
 import { getModeClipPath } from "./homeModeFrameData";
-import { CardPixelOrnaments, HomeModePixelArt } from "./HomeModePixelArt";
+import { HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 import Button from "./ui/Button";
 import Card from "./ui/Card";
@@ -131,7 +131,6 @@ const getCardStyle = (pose, isTopCard, reducedMotion, modeKey) => {
     "--card-mode-secondary": palette.secondary,
     "--card-mode-spark": palette.spark,
     "--card-clip-path": clipPath,
-    clipPath,
   };
   if (reducedMotion) {
     return {
@@ -242,7 +241,6 @@ const ModeCard = ({
       {...interactiveProps}
     >
       <div className="card-plate-pattern" aria-hidden="true" />
-      <CardPixelOrnaments modeKey={modeItem.key} />
       <CardContent
         modeItem={modeItem}
         lang={lang}

@@ -26,7 +26,9 @@ export const LOOKS = [
 export const ICON_LOOKS = [
   "conquest-copy",
   "deck-arrow",
+  "dock-podium",
   "dock-profile",
+  "dock-segment",
   "dock-settings",
   "glass-chrome",
   "hud",

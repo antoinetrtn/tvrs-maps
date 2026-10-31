@@ -5,6 +5,7 @@ import { countryDataMap } from "../../data/gameData";
 import { getBiomeTexture } from "./biomeTexture";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { registerCountryFeature } from "./countryLandRadius";
+import { getFeatureMaskTexture } from "./featureMask";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import { isGlobeWebGPU } from "./globeRendererFlag";
 import {
@@ -57,6 +58,8 @@ export function applyCountrySurfaceGrainShader(
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
   shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
   shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
+  shader.uniforms.uFeatureMode = polygonGlitchUniforms.uFeatureMode;
+  shader.uniforms.uFeatureMap = { value: getFeatureMaskTexture() };
   shader.uniforms.uIgniteOrigin = igniteHolder ? igniteHolder.origin : g.uIgniteOrigin;
   shader.uniforms.uIgniteStart = igniteHolder ? igniteHolder.start : g.uIgniteStart;
   shader.uniforms.uIgniteRadius = igniteHolder ? igniteHolder.radius : g.uIgniteRadius;
@@ -94,6 +97,8 @@ export function applyCountrySurfaceGrainShader(
     uniform float uTime;
     uniform float uShowcaseLights;
     uniform float uIsRegionalMode;
+    uniform float uFeatureMode;
+    uniform sampler2D uFeatureMap;
     uniform float uIsGhost;
     uniform float uIgniteSelf;
     uniform vec3 uIgniteOrigin;
@@ -235,6 +240,7 @@ export function getPolygonMaterialForFeature({
   transitioningPreviousCountryState,
   transitioningIncomingCountryState,
   isDepartmentMode,
+  isRiversMountainsMode = false,
   globeLightingEnabled,
   perfProfile,
   UI_COLORS,
@@ -302,6 +308,7 @@ export function getPolygonMaterialForFeature({
   const isGhostCountry = Boolean(d?.isGhostCountry);
   const ghostSuffix = isGhostCountry ? "-ghost" : "";
   polygonGlitchUniforms.uIsRegionalMode.value = isDepartmentMode ? 1.0 : 0.0;
+  polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
 
   let cacheKey = `${kind}-${look}${ghostSuffix}`;
   if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}${ghostSuffix}`;

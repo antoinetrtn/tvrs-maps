@@ -42,6 +42,7 @@ import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { applyBiomePalette } from "./biomeNodes";
 import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
 import { applyDiscoveryAmber, revealLand, wakePower } from "./discoveryNodes";
+import { applyFeatureMode } from "./featureNodes";
 import { buildIgnition, homeShowcase, igniteSpark } from "./igniteNodes";
 import { bayer4x4, displayOutput, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
@@ -72,6 +73,8 @@ function buildTerrainReliefAndRivers(p) {
     isConquestOwned,
     uTimeNode,
     uRegionalNode,
+    uFeatureNode,
+    uReducedMotionNode,
     ghostMask,
   } = p;
   const reliefMask = ghostMask.mul(mix(float(1.0), cityPower.mul(0.36), uRegionalNode));
@@ -131,13 +134,18 @@ function buildTerrainReliefAndRivers(p) {
     awakeRiverTone,
     riverCore.mul(0.88)
   );
+
   return {
-    terrainLit: mix(darkRiverLit, awakeRiverLit, terrainPower),
+    terrainLit: applyFeatureMode({
+      ...{ baseLit, valleyGap, ridgeSpur, ridgeCrest, cityHash, riverShimmer, riverBank },
+      ...{ riverCore, cartUv, uTimeNode, uFeatureNode, uReducedMotionNode },
+      terrainLit: mix(darkRiverLit, awakeRiverLit, terrainPower),
+    }),
   };
 }
 
 function buildCityLightsLayer(p) {
-  const { cartUv, cityPower, isConquestOwned, uTimeNode, uRegionalNode } = p;
+  const { cartUv, cityPower, isConquestOwned, uTimeNode, uRegionalNode, uFeatureNode } = p;
   const cityCellId = floor(cartUv.mul(vec2(3600.0, 1800.0)));
   const capitalSample = texture(getCapitalLightsTexture(), cartUv);
   const cityDensity = capitalSample.r;
@@ -151,7 +159,9 @@ function buildCityLightsLayer(p) {
   });
   const isRegionalPin = step(0.975, cityAura);
   const worldAura = cityAura.mul(float(1.0).sub(isRegionalPin.mul(step(cityDensity, 0.25))));
-  const effectiveAura = mix(worldAura, isRegionalPin.mul(0.42), uRegionalNode);
+  const effectiveAura = mix(worldAura, isRegionalPin.mul(0.42), uRegionalNode).mul(
+    float(1.0).sub(uFeatureNode)
+  );
   const trafficWave = sin(uTimeNode.mul(2.8).sub(worldAura.mul(8.5)).add(cityHash.mul(6.2831853)))
     .mul(0.2)
     .add(0.8);
@@ -200,7 +210,9 @@ function buildCityLightsLayer(p) {
     .add(tierArterial.mul(cityHash2.mul(0.16).add(0.78)).mul(trafficWave))
     .add(tierTentacle.mul(cityHash2.mul(0.24).add(0.5)).mul(satTwinkle));
   const regionalSparkAlpha = isRegionalPin.mul(satTwinkle.mul(0.12).add(0.88));
-  const sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uRegionalNode).mul(cityPower);
+  const sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uRegionalNode)
+    .mul(cityPower)
+    .mul(float(1.0).sub(uFeatureNode));
   return { capRgb: mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0)) };
 }
 
@@ -208,6 +220,8 @@ let grainNode = null;
 let ghostGrainNode = null;
 let showcaseLightsNode = null;
 let regionalModeNode = null;
+let featureModeNode = null;
+let reducedMotionNode = null;
 let igniteSelfNode = null;
 let igniteRefs = null;
 /** Per-material ignition holder values (globePolygonMaterial defineIgniteReferences). */
@@ -251,6 +265,10 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     ));
     const uRegionalNode = (regionalModeNode ||= mirrorUniform(
       polygonGlitchUniforms.uIsRegionalMode
+    ));
+    const uFeatureNode = (featureModeNode ||= mirrorUniform(polygonGlitchUniforms.uFeatureMode));
+    const uReducedMotionNode = (reducedMotionNode ||= mirrorUniform(
+      polygonGlitchUniforms.uReducedMotion
     ));
     const lit = litDisplayColor();
     const surfaceLuma = dot(lit, vec3(0.299, 0.587, 0.114));
@@ -324,6 +342,8 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       isConquestOwned,
       uTimeNode,
       uRegionalNode,
+      uFeatureNode,
+      uReducedMotionNode,
       ghostMask,
       blackoutAmt,
       igniteFlash: max(ign.igniteFlash, homeFlash),
