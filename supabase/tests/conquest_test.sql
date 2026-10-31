@@ -90,7 +90,11 @@ INSERT INTO match_steal_challenges VALUES (:'mid', :'B', 'France', 'capital', '{
 SET ROLE authenticated;
 SELECT pg_temp.eq('right answer steals', steal_country(:'mid', 'paris')->>'ok', 'true');
 SELECT pg_temp.eq('fail counter reset', (SELECT steal_fails FROM match_players WHERE user_id = :'B'), 0);
-SELECT pg_temp.eq('challenge table hidden from clients', (SELECT count(*) FROM match_steal_challenges)::int, 0);
+DO $$ BEGIN
+  PERFORM count(*) FROM match_steal_challenges;
+  RAISE EXCEPTION 'FAIL challenge table readable by clients';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  challenge table hidden from clients';
+END $$;
 
 -- ---------------------------------------------------- state + forfeit ----
 SELECT pg_temp.eq('state carries a version', (conquest_get_state(:'mid')->>'version')::int > 0, true);
@@ -285,7 +289,42 @@ UPDATE match_players SET last_action_at = NULL WHERE match_id IS NOT NULL;
 INSERT INTO match_steal_challenges VALUES (:'rmid', :'R2', 'France', 'capital', '{}', now() + interval '20 seconds');
 SET ROLE authenticated;
 SET test.uid = :'R2';
-SELECT pg_temp.eq('steal after shield expiry', steal_country(:'rmid', 'Paris')->>'ok', 'true');
+-- Pays renforcé : la bonne capitale ouvre le QCM de connaissances (sans réponse).
+SELECT r AS k1 FROM (SELECT steal_country(:'rmid', 'Paris') AS r) x \gset
+SELECT pg_temp.eq('fortified steal needs knowledge', (:'k1'::jsonb)->>'needs_knowledge', 'true');
+SELECT pg_temp.eq('knowledge challenge has 4 choices', jsonb_array_length((:'k1'::jsonb)->'choices'), 4);
+SELECT pg_temp.eq('knowledge challenge leaks no answer',
+  (:'k1'::jsonb) ? 'answer_index' OR (:'k1'::jsonb) ? 'answer_perm', false);
+SELECT pg_temp.eq('country not transferred yet', (SELECT owner_id FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::text, :'R1');
+DO $$ BEGIN
+  PERFORM count(*) FROM conquest_knowledge_questions;
+  RAISE EXCEPTION 'FAIL knowledge questions readable by clients';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok  knowledge questions hidden from clients';
+END $$;
+-- Mauvaise réponse au QCM → échec + pénalité, le renfort reste.
+RESET ROLE;
+SELECT (SELECT array_position(c.answer_perm, q.answer_index) - 1) AS good,
+       ((SELECT array_position(c.answer_perm, q.answer_index) - 1) + 1) % 4 AS bad
+  FROM match_steal_challenges c JOIN conquest_knowledge_questions q ON q.id = c.question_id
+ WHERE c.match_id = :'rmid' AND c.user_id = :'R2' \gset
+SET ROLE authenticated;
+SELECT pg_temp.eq('wrong knowledge answer fails', conquest_answer_knowledge(:'rmid', :bad)->>'reason', 'wrong');
+SELECT pg_temp.eq('double submit refused', conquest_answer_knowledge(:'rmid', :good)->>'reason', 'no_challenge');
+SELECT pg_temp.eq('fortify kept after failed quiz', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 2);
+-- Bonne réponse → transfert + renfort remis à 0.
+RESET ROLE;
+DELETE FROM match_events WHERE kind IN ('steal_fail', 'knowledge');
+UPDATE match_players SET penalty_until = NULL, last_action_at = NULL, steal_fails = 0 WHERE match_id IS NOT NULL;
+SET ROLE authenticated;
+SELECT r AS k2 FROM (SELECT conquest_knowledge_challenge(:'rmid', 'France') AS r) x \gset
+SELECT pg_temp.eq('attacker gets a knowledge challenge', (:'k2'::jsonb)->>'kind', 'knowledge');
+RESET ROLE;
+SELECT array_position(c.answer_perm, q.answer_index) - 1 AS good
+  FROM match_steal_challenges c JOIN conquest_knowledge_questions q ON q.id = c.question_id
+ WHERE c.match_id = :'rmid' AND c.user_id = :'R2' \gset
+SET ROLE authenticated;
+SELECT pg_temp.eq('right knowledge answer steals', conquest_answer_knowledge(:'rmid', :good)->>'ok', 'true');
+SELECT pg_temp.eq('steal after shield expiry', (SELECT owner_id FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France')::text, :'R2');
 SELECT pg_temp.eq('steal resets fortify level', (SELECT fortify_level FROM match_claims WHERE match_id = :'rmid' AND country_id = 'France'), 0);
 
 -- Revanche : R2 la crée, R1 la rejoint, tous deux prêts, couleurs gardées.
