@@ -1,0 +1,3650 @@
+[
+  {
+    "id": "AL-nature-1",
+    "iso": "AL",
+    "category": "nature",
+    "prompt": "Quel massif montagneux du nord de l'Albanie, abritant les parcs de Theth et de Valbona, porte le surnom traditionnel de « Montagnes maudites » ?",
+    "choices": [
+      {
+        "label": "Les monts Rhodopes",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Les Carpates méridionales",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Les Alpes albanaises (Bjeshkët e Nemuna)",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le massif du Pinde",
+        "iconId": "landform-mountain"
+      }
+    ]
+  },
+  {
+    "id": "AL-musique-1",
+    "iso": "AL",
+    "category": "musique",
+    "prompt": "Quelle tradition de chant vocal à plusieurs voix du sud de l'Albanie, soutenue par un bourdon continu, est inscrite à l'UNESCO depuis 2005 ?",
+    "choices": [
+      {
+        "label": "Le chant diphonique touvain",
+        "iconId": "music-choir"
+      },
+      {
+        "label": "L'iso-polyphonie albanaise",
+        "iconId": "music-choir"
+      },
+      {
+        "label": "Le joik lapon",
+        "iconId": "music-choir"
+      },
+      {
+        "label": "Le yodel alpin",
+        "iconId": "music-choir"
+      }
+    ]
+  },
+  {
+    "id": "AL-culture-1",
+    "iso": "AL",
+    "category": "culture",
+    "prompt": "Quel grand écrivain albanais a publié en 1963 le célèbre roman « Le Général de l'armée morte » ?",
+    "choices": [
+      {
+        "label": "Mircea Eliade",
+        "iconId": "person-writer"
+      },
+      {
+        "label": "Nikos Kazantzakis",
+        "iconId": "person-writer"
+      },
+      {
+        "label": "Milan Kundera",
+        "iconId": "person-writer"
+      },
+      {
+        "label": "Ismail Kadaré",
+        "iconId": "person-writer"
+      }
+    ]
+  },
+  {
+    "id": "AX-nature-1",
+    "iso": "AX",
+    "category": "nature",
+    "prompt": "Quelle fleur jaune printanière, appelée « gullviva » en suédois, est l'emblème floral officiel de l'archipel d'Åland ?",
+    "choices": [
+      {
+        "label": "La primevère officinale (coucou)",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "La tulipe sauvage",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le chardon bleu",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le coquelicot des champs",
+        "iconId": "plant-flower"
+      }
+    ]
+  },
+  {
+    "id": "AX-culture-1",
+    "iso": "AX",
+    "category": "culture",
+    "prompt": "Quelle particularité géopolitique et linguistique caractérise l'archipel finlandais d'Åland depuis la décision de la Société des Nations en 1921 ?",
+    "choices": [
+      {
+        "label": "Il est gouverné conjointement par la Suède et la Norvège",
+        "iconId": "symbol-treaty"
+      },
+      {
+        "label": "Il est démilitarisé, neutre et exclusivement suédophone",
+        "iconId": "symbol-peace"
+      },
+      {
+        "label": "Il utilise le rouble comme monnaie officielle",
+        "iconId": "currency-coin"
+      },
+      {
+        "label": "Il possède sa propre monarchie héréditaire",
+        "iconId": "symbol-crown"
+      }
+    ]
+  },
+  {
+    "id": "AD-nature-1",
+    "iso": "AD",
+    "category": "nature",
+    "prompt": "Quel bovidé sauvage de montagne, cousin du chamois des Alpes, est l'animal emblématique des sommets pyrénéens d'Andorre ?",
+    "choices": [
+      {
+        "label": "L'isard",
+        "iconId": "animal-goat"
+      },
+      {
+        "label": "Le mouflon à manchettes",
+        "iconId": "animal-sheep"
+      },
+      {
+        "label": "Le daim européen",
+        "iconId": "animal-deer"
+      },
+      {
+        "label": "L'élan",
+        "iconId": "animal-deer"
+      }
+    ]
+  },
+  {
+    "id": "AD-musique-1",
+    "iso": "AD",
+    "category": "musique",
+    "prompt": "Quelle danse traditionnelle solennelle de Sant Julià de Lòria en Andorre commémore la signature des Paréages en mettant en scène les deux coprinces ?",
+    "choices": [
+      {
+        "label": "La tarentelle",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La marratxa",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La bourrée auvergnate",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le sirtaki",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "AD-culture-1",
+    "iso": "AD",
+    "category": "culture",
+    "prompt": "Qui sont les deux chefs d'État (coprinces) qui règnent conjointement sur la principauté d'Andorre selon une tradition remontant à 1278 ?",
+    "choices": [
+      {
+        "label": "Le roi d'Espagne et le pape",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "Le maire de Barcelone et le maire de Toulouse",
+        "iconId": "person-leader"
+      },
+      {
+        "label": "L'évêque d'Urgell et le chef de l'État français",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "Deux capitaines-régents élus tous les six mois",
+        "iconId": "person-leader"
+      }
+    ]
+  },
+  {
+    "id": "AT-tech-1",
+    "iso": "AT",
+    "category": "tech",
+    "prompt": "Quelle entreprise mondialement célèbre pour la taille de précision du cristal (verre au plomb) a été fondée à Wattens, dans le Tyrol autrichien, en 1895 ?",
+    "choices": [
+      {
+        "label": "Baccarat",
+        "iconId": "brand-luxury"
+      },
+      {
+        "label": "Murano",
+        "iconId": "brand-luxury"
+      },
+      {
+        "label": "Swarovski",
+        "iconId": "brand-luxury"
+      },
+      {
+        "label": "Fabergé",
+        "iconId": "brand-luxury"
+      }
+    ]
+  },
+  {
+    "id": "AT-nature-1",
+    "iso": "AT",
+    "category": "nature",
+    "prompt": "Quelle plante de haute montagne aux bractées blanches étoilées et feutrées est la fleur emblématique des Alpes autrichiennes ?",
+    "choices": [
+      {
+        "label": "Le chardon d'Écosse",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "L'edelweiss",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "L'orchidée vanille",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le nénuphar géant",
+        "iconId": "plant-flower"
+      }
+    ]
+  },
+  {
+    "id": "AT-musique-1",
+    "iso": "AT",
+    "category": "musique",
+    "prompt": "Quel compositeur autrichien né à Salzbourg en 1756 est l'auteur des opéras « La Flûte enchantée » et « Don Giovanni » ?",
+    "choices": [
+      {
+        "label": "Wolfgang Amadeus Mozart",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Jean-Sébastien Bach",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Giuseppe Verdi",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Frédéric Chopin",
+        "iconId": "person-composer"
+      }
+    ]
+  },
+  {
+    "id": "BE-tech-1",
+    "iso": "BE",
+    "category": "tech",
+    "prompt": "Quel chimiste belge né à Gand a inventé en 1907 la bakélite, toute première matière plastique entièrement synthétique de l'histoire industrielle ?",
+    "choices": [
+      {
+        "label": "Leo Baekeland",
+        "iconId": "tech-plastic"
+      },
+      {
+        "label": "Alfred Nobel",
+        "iconId": "person-scientist"
+      },
+      {
+        "label": "Louis Pasteur",
+        "iconId": "person-scientist"
+      },
+      {
+        "label": "Carl Bosch",
+        "iconId": "person-scientist"
+      }
+    ]
+  },
+  {
+    "id": "BE-nature-1",
+    "iso": "BE",
+    "category": "nature",
+    "prompt": "Quel massif forestier du sud-est de la Belgique abrite le plateau tourbeux des Hautes Fagnes ainsi que des populations de cerfs élaphes et de sangliers ?",
+    "choices": [
+      {
+        "label": "La Forêt-Noire",
+        "iconId": "landform-forest"
+      },
+      {
+        "label": "L'Ardenne",
+        "iconId": "landform-forest"
+      },
+      {
+        "label": "Les Cévennes",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le massif du Harz",
+        "iconId": "landform-mountain"
+      }
+    ]
+  },
+  {
+    "id": "BE-musique-1",
+    "iso": "BE",
+    "category": "musique",
+    "prompt": "Quel instrument à vent en laiton doté d'une anche simple en roseau a été inventé dans les années 1840 par le facteur d'instruments belge Adolphe Sax ?",
+    "choices": [
+      {
+        "label": "Le trombone à coulisse",
+        "iconId": "instrument-horn"
+      },
+      {
+        "label": "Le basson",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "Le saxophone",
+        "iconId": "instrument-saxophone"
+      },
+      {
+        "label": "L'accordéon chromatique",
+        "iconId": "instrument-accordion"
+      }
+    ]
+  },
+  {
+    "id": "BG-tech-1",
+    "iso": "BG",
+    "category": "tech",
+    "prompt": "Quel micro-organisme responsable de la fermentation du yaourt a été isolé et identifié en 1905 par le médecin bulgare Stamen Grigorov ?",
+    "choices": [
+      {
+        "label": "Saccharomyces cerevisiae",
+        "iconId": "tech-microscope"
+      },
+      {
+        "label": "Penicillium notatum",
+        "iconId": "tech-microscope"
+      },
+      {
+        "label": "Spirulina platensis",
+        "iconId": "tech-microscope"
+      },
+      {
+        "label": "Lactobacillus bulgaricus",
+        "iconId": "tech-microscope"
+      }
+    ]
+  },
+  {
+    "id": "BG-nature-1",
+    "iso": "BG",
+    "category": "nature",
+    "prompt": "Quelle fleur cultivée depuis des siècles dans la vallée de Kazanlak fait de la Bulgarie une référence mondiale dans la production d'essence de haute parfumerie ?",
+    "choices": [
+      {
+        "label": "La rose de Damas",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "La tulipe perroquet",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "L'ylang-ylang",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le tiaré",
+        "iconId": "plant-flower"
+      }
+    ]
+  },
+  {
+    "id": "BG-musique-1",
+    "iso": "BG",
+    "category": "musique",
+    "prompt": "Quelle cornemuse traditionnelle en peau de chèvre est l'instrument emblématique de la musique folklorique des monts Rhodopes en Bulgarie ?",
+    "choices": [
+      {
+        "label": "Le bandonéon",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La gaïda (kaba gaïda)",
+        "iconId": "instrument-bagpipe"
+      },
+      {
+        "label": "Le kulintang",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "Le shamisen",
+        "iconId": "instrument-lute"
+      }
+    ]
+  },
+  {
+    "id": "BA-nature-1",
+    "iso": "BA",
+    "category": "nature",
+    "prompt": "Quelle forêt vierge située dans le parc national de Sutjeska en Bosnie-Herzégovine est l'une des dernières grandes forêts primaires d'Europe ?",
+    "choices": [
+      {
+        "label": "La forêt de Sherwood",
+        "iconId": "landform-forest"
+      },
+      {
+        "label": "La forêt de Brocéliande",
+        "iconId": "landform-forest"
+      },
+      {
+        "label": "La forêt de Fontainebleau",
+        "iconId": "landform-forest"
+      },
+      {
+        "label": "La forêt de Perućica",
+        "iconId": "landform-forest"
+      }
+    ]
+  },
+  {
+    "id": "BA-musique-1",
+    "iso": "BA",
+    "category": "musique",
+    "prompt": "Quel genre de chant traditionnel mélancolique bosnien, souvent surnommé le « blues de Bosnie », exprime la peine amoureuse et la nostalgie ?",
+    "choices": [
+      {
+        "label": "La sevdalinka",
+        "iconId": "music-song"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "music-song"
+      },
+      {
+        "label": "Le fado",
+        "iconId": "music-song"
+      },
+      {
+        "label": "La morna",
+        "iconId": "music-song"
+      }
+    ]
+  },
+  {
+    "id": "BA-culture-1",
+    "iso": "BA",
+    "category": "culture",
+    "prompt": "Quel célèbre pont ottoman du XVIe siècle à une seule arche en dos d'âne franchit la rivière Neretva dans la ville de Mostar ?",
+    "choices": [
+      {
+        "label": "Le pont du Rialto",
+        "iconId": "landmark-bridge"
+      },
+      {
+        "label": "Le Stari Most",
+        "iconId": "landmark-bridge"
+      },
+      {
+        "label": "Le pont Charles",
+        "iconId": "landmark-bridge"
+      },
+      {
+        "label": "Le pont des Soupirs",
+        "iconId": "landmark-bridge"
+      }
+    ]
+  },
+  {
+    "id": "BY-tech-1",
+    "iso": "BY",
+    "category": "tech",
+    "prompt": "Quel constructeur industriel biélorusse fondé en 1948 à Jodzina est célèbre dans le monde entier pour fabriquer des camions-bennes miniers géants parmi les plus grands de la planète ?",
+    "choices": [
+      {
+        "label": "Scania",
+        "iconId": "brand-truck"
+      },
+      {
+        "label": "BelAZ",
+        "iconId": "brand-truck"
+      },
+      {
+        "label": "Mack Trucks",
+        "iconId": "brand-truck"
+      },
+      {
+        "label": "Iveco",
+        "iconId": "brand-truck"
+      }
+    ]
+  },
+  {
+    "id": "BY-nature-1",
+    "iso": "BY",
+    "category": "nature",
+    "prompt": "Quel grand bovidé sauvage, le plus lourd mammifère terrestre d'Europe, est l'animal symbole de la Biélorussie et vit dans la forêt de Belavejskaïa Pouchtcha ?",
+    "choices": [
+      {
+        "label": "Le bœuf musqué",
+        "iconId": "animal-bison"
+      },
+      {
+        "label": "Le yack sauvage",
+        "iconId": "animal-bison"
+      },
+      {
+        "label": "Le bison d'Europe (zoubr)",
+        "iconId": "animal-bison"
+      },
+      {
+        "label": "Le buffle d'eau",
+        "iconId": "animal-bison"
+      }
+    ]
+  },
+  {
+    "id": "BY-musique-1",
+    "iso": "BY",
+    "category": "musique",
+    "prompt": "Quel instrument traditionnel à cordes frappées à l'aide de deux petits maillets en bois (cousin du cymbalum) occupe une place centrale dans les orchestres folkloriques de Biélorussie ?",
+    "choices": [
+      {
+        "label": "La tsymbaly",
+        "iconId": "instrument-string"
+      },
+      {
+        "label": "La mandoline",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le banjo",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le violoncelle",
+        "iconId": "instrument-string"
+      }
+    ]
+  },
+  {
+    "id": "CH-tech-1",
+    "iso": "CH",
+    "category": "tech",
+    "prompt": "Quelle entreprise fondée en 1884 par Karl Elsener dans le canton de Schwytz est le fabricant historique du célèbre « couteau suisse » ?",
+    "choices": [
+      {
+        "label": "Victorinox",
+        "iconId": "object-knife"
+      },
+      {
+        "label": "Opinel",
+        "iconId": "object-blade"
+      },
+      {
+        "label": "Leatherman",
+        "iconId": "object-tool"
+      },
+      {
+        "label": "Fiskars",
+        "iconId": "brand-tool"
+      }
+    ]
+  },
+  {
+    "id": "CH-nature-1",
+    "iso": "CH",
+    "category": "nature",
+    "prompt": "Quelle race de grand chien de montagne, élevée à l'origine par les chanoines d'un hospice alpin du Valais pour secourir les voyageurs égarés dans la neige, est un emblème de la Suisse ?",
+    "choices": [
+      {
+        "label": "Le Terre-Neuve",
+        "iconId": "animal-dog"
+      },
+      {
+        "label": "Le Saint-Bernard",
+        "iconId": "animal-dog"
+      },
+      {
+        "label": "Le Husky sibérien",
+        "iconId": "animal-dog"
+      },
+      {
+        "label": "Le Dogue du Tibet",
+        "iconId": "animal-dog"
+      }
+    ]
+  },
+  {
+    "id": "CH-musique-1",
+    "iso": "CH",
+    "category": "musique",
+    "prompt": "Quel long instrument à vent en bois de plusieurs mètres, posé au sol et dépourvu de pistons, servait autrefois aux bergers suisses pour communiquer d'un alpage à l'autre ?",
+    "choices": [
+      {
+        "label": "Le biniou",
+        "iconId": "instrument-bagpipe"
+      },
+      {
+        "label": "Le clairon",
+        "iconId": "instrument-trumpet"
+      },
+      {
+        "label": "Le cor des Alpes",
+        "iconId": "instrument-horn"
+      },
+      {
+        "label": "Le basson",
+        "iconId": "instrument-woodwind"
+      }
+    ]
+  },
+  {
+    "id": "CY-nature-1",
+    "iso": "CY",
+    "category": "nature",
+    "prompt": "Quel ovidé sauvage aux cornes recourbées (appelé localement « agrino »), endémique des forêts du massif du Troodos et de Paphos, est l'animal national de Chypre ?",
+    "choices": [
+      {
+        "label": "Le chamois des Pyrénées",
+        "iconId": "animal-goat"
+      },
+      {
+        "label": "Le mouflon de Chypre",
+        "iconId": "animal-sheep"
+      },
+      {
+        "label": "Le bœuf musqué",
+        "iconId": "animal-bison"
+      },
+      {
+        "label": "Le cerf élaphe",
+        "iconId": "animal-deer"
+      }
+    ]
+  },
+  {
+    "id": "CY-musique-1",
+    "iso": "CY",
+    "category": "musique",
+    "prompt": "Quel luth à caisse bombée et à quatre chœurs de cordes doubles forme avec le violon le duo instrumental traditionnel des mariages et fêtes villageoises à Chypre ?",
+    "choices": [
+      {
+        "label": "La harpe celtique",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "Le banjo américain",
+        "iconId": "instrument-banjo"
+      },
+      {
+        "label": "Le laouto",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "La kora",
+        "iconId": "instrument-guitar"
+      }
+    ]
+  },
+  {
+    "id": "CY-culture-1",
+    "iso": "CY",
+    "category": "culture",
+    "prompt": "Quel fromage traditionnel chypriote à pâte mi-dure, souvent parfumé à la menthe, possède la particularité de pouvoir être grillé ou poêlé sans fondre ?",
+    "choices": [
+      {
+        "label": "Le camembert",
+        "iconId": "dish-food"
+      },
+      {
+        "label": "Le gorgonzola",
+        "iconId": "dish-dairy"
+      },
+      {
+        "label": "La mozzarella",
+        "iconId": "dish-pizza"
+      },
+      {
+        "label": "Le halloumi",
+        "iconId": "dish-cheese"
+      }
+    ]
+  },
+  {
+    "id": "CZ-tech-1",
+    "iso": "CZ",
+    "category": "tech",
+    "prompt": "Quel constructeur automobile fondé en 1895 à Mladá Boleslav en Bohême (initialement sous le nom Laurin & Klement) est le fleuron industriel historique de la Tchéquie ?",
+    "choices": [
+      {
+        "label": "Škoda",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "Dacia",
+        "iconId": "transport-car"
+      },
+      {
+        "label": "Volvo",
+        "iconId": "transport-truck"
+      },
+      {
+        "label": "SEAT",
+        "iconId": "brand-auto"
+      }
+    ]
+  },
+  {
+    "id": "CZ-nature-1",
+    "iso": "CZ",
+    "category": "nature",
+    "prompt": "Quel arbre aux feuilles en forme de cœur, dont les fleurs parfumées servent en infusion, est l'arbre national de la Tchéquie et figure sur son étendard présidentiel ?",
+    "choices": [
+      {
+        "label": "L'olivier",
+        "iconId": "plant-olive"
+      },
+      {
+        "label": "Le tilleul",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le palmier dattier",
+        "iconId": "plant-palm"
+      },
+      {
+        "label": "Le bambou",
+        "iconId": "plant-bamboo"
+      }
+    ]
+  },
+  {
+    "id": "CZ-musique-1",
+    "iso": "CZ",
+    "category": "musique",
+    "prompt": "Quel compositeur tchèque du XIXe siècle a célébré le fleuve qui traverse Prague dans son célèbre poème symphonique « La Moldau » (Vltava), issu du cycle « Ma patrie » ?",
+    "choices": [
+      {
+        "label": "Frédéric Chopin",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Giuseppe Verdi",
+        "iconId": "music-voice"
+      },
+      {
+        "label": "Bedřich Smetana",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Jean Sibelius",
+        "iconId": "instrument-violin"
+      }
+    ]
+  },
+  {
+    "id": "DE-tech-1",
+    "iso": "DE",
+    "category": "tech",
+    "prompt": "Quel ingénieur allemand a breveté en 1886 à Mannheim la « Patent-Motorwagen », universellement reconnue comme la première automobile à moteur à combustion interne de l'histoire ?",
+    "choices": [
+      {
+        "label": "Henry Ford",
+        "iconId": "transport-car"
+      },
+      {
+        "label": "Enzo Ferrari",
+        "iconId": "sport-racing"
+      },
+      {
+        "label": "Louis Renault",
+        "iconId": "tech-engine"
+      },
+      {
+        "label": "Carl Benz",
+        "iconId": "brand-car"
+      }
+    ]
+  },
+  {
+    "id": "DE-nature-1",
+    "iso": "DE",
+    "category": "nature",
+    "prompt": "Quel arbre majestueux aux feuilles lobées et aux glands est le symbole traditionnel de l'Allemagne, dont le rameau orne les pièces allemandes de 1, 2 et 5 centimes d'euro ?",
+    "choices": [
+      {
+        "label": "Le chêne",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le cyprès",
+        "iconId": "plant-pine"
+      },
+      {
+        "label": "Le figuier",
+        "iconId": "plant-leaf"
+      },
+      {
+        "label": "Le baobab",
+        "iconId": "plant-baobab"
+      }
+    ]
+  },
+  {
+    "id": "DE-musique-1",
+    "iso": "DE",
+    "category": "musique",
+    "prompt": "Quel compositeur allemand né à Bonn en 1770 a composé neuf symphonies majeures, dont la dernière intègre le poème de Schiller « L'Ode à la joie » ?",
+    "choices": [
+      {
+        "label": "Claude Debussy",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Ludwig van Beethoven",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Antonio Vivaldi",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Piotr Ilitch Tchaïkovski",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "DK-tech-1",
+    "iso": "DK",
+    "category": "tech",
+    "prompt": "Quelle entreprise danoise fondée en 1932 à Billund par le menuisier Ole Kirk Christiansen est devenue célèbre dans le monde entier pour ses briques de construction emboîtables ?",
+    "choices": [
+      {
+        "label": "Lego",
+        "iconId": "brand-toy"
+      },
+      {
+        "label": "Playmobil",
+        "iconId": "object-toy"
+      },
+      {
+        "label": "Meccano",
+        "iconId": "object-gear"
+      },
+      {
+        "label": "Mattel",
+        "iconId": "brand-game"
+      }
+    ]
+  },
+  {
+    "id": "DK-nature-1",
+    "iso": "DK",
+    "category": "nature",
+    "prompt": "Quel grand oiseau aquatique blanc au bec orangé, immortalisé par le conte d'Andersen « Le Vilain Petit Canard », est l'oiseau national du Danemark ?",
+    "choices": [
+      {
+        "label": "Le macareux moine",
+        "iconId": "bird-puffin"
+      },
+      {
+        "label": "Le cygne tuberculé",
+        "iconId": "bird-swan"
+      },
+      {
+        "label": "La cigogne blanche",
+        "iconId": "bird-stork"
+      },
+      {
+        "label": "Le héron cendré",
+        "iconId": "bird-heron"
+      }
+    ]
+  },
+  {
+    "id": "DK-musique-1",
+    "iso": "DK",
+    "category": "musique",
+    "prompt": "Quelle grande trompe recourbée en bronze datant de l'âge du bronze nordique, dont la majorité des exemplaires ont été découverts par paires dans les tourbières du Danemark, est un symbole national danois ?",
+    "choices": [
+      {
+        "label": "Le vuvuzela",
+        "iconId": "instrument-trumpet"
+      },
+      {
+        "label": "Le shofar",
+        "iconId": "instrument-bugle"
+      },
+      {
+        "label": "Le lur",
+        "iconId": "instrument-horn"
+      },
+      {
+        "label": "L'ocarina",
+        "iconId": "instrument-flute"
+      }
+    ]
+  },
+  {
+    "id": "ES-tech-1",
+    "iso": "ES",
+    "category": "tech",
+    "prompt": "Quel constructeur automobile espagnol, fondé en 1950 et installé à Martorell près de Barcelone, est connu pour les modèles Ibiza et León ?",
+    "choices": [
+      {
+        "label": "SEAT",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "Fiat",
+        "iconId": "transport-car"
+      },
+      {
+        "label": "Dacia",
+        "iconId": "tech-gear"
+      },
+      {
+        "label": "Skoda",
+        "iconId": "transport-wheel"
+      }
+    ]
+  },
+  {
+    "id": "ES-nature-1",
+    "iso": "ES",
+    "category": "nature",
+    "prompt": "Quel félin tacheté menacé est endémique de la péninsule Ibérique, notamment dans le parc national de Doñana en Espagne ?",
+    "choices": [
+      {
+        "label": "Le puma",
+        "iconId": "animal-cougar"
+      },
+      {
+        "label": "Le lynx pardelle",
+        "iconId": "animal-cat"
+      },
+      {
+        "label": "L'ocelot",
+        "iconId": "animal-leopard"
+      },
+      {
+        "label": "Le caracal",
+        "iconId": "animal-lynx"
+      }
+    ]
+  },
+  {
+    "id": "ES-musique-1",
+    "iso": "ES",
+    "category": "musique",
+    "prompt": "Quel art musical et chorégraphique né en Andalousie associe le chant (« cante »), la guitare (« toque ») et la danse (« baile ») ?",
+    "choices": [
+      {
+        "label": "Le fado",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "La tarentelle",
+        "iconId": "instrument-tambourine"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La sardane",
+        "iconId": "person-dancer"
+      }
+    ]
+  },
+  {
+    "id": "EE-tech-1",
+    "iso": "EE",
+    "category": "tech",
+    "prompt": "Quel célèbre logiciel pionnier des appels téléphoniques et vidéo sur Internet a été développé par des ingénieurs estoniens en 2003 ?",
+    "choices": [
+      {
+        "label": "Minitel",
+        "iconId": "tech-monitor"
+      },
+      {
+        "label": "ICQ",
+        "iconId": "tech-chat"
+      },
+      {
+        "label": "Napster",
+        "iconId": "music-headphones"
+      },
+      {
+        "label": "Skype",
+        "iconId": "tech-computer"
+      }
+    ]
+  },
+  {
+    "id": "EE-nature-1",
+    "iso": "EE",
+    "category": "nature",
+    "prompt": "Quel petit oiseau migrateur à la queue fourchue et à la gorge rousse est l'oiseau national de l'Estonie ?",
+    "choices": [
+      {
+        "label": "L'hirondelle rustique",
+        "iconId": "bird-swallow"
+      },
+      {
+        "label": "Le hibou grand-duc",
+        "iconId": "bird-owl"
+      },
+      {
+        "label": "Le martin-pêcheur",
+        "iconId": "bird-kingfisher"
+      },
+      {
+        "label": "La cigogne blanche",
+        "iconId": "bird-stork"
+      }
+    ]
+  },
+  {
+    "id": "EE-musique-1",
+    "iso": "EE",
+    "category": "musique",
+    "prompt": "Quel compositeur estonien né en 1935 est mondialement célèbre pour ses œuvres minimalistes sacrées de style « tintinnabuli » comme « Spiegel im Spiegel » ?",
+    "choices": [
+      {
+        "label": "Edvard Grieg",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Arvo Pärt",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Béla Bartók",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Antonín Dvořák",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "FI-tech-1",
+    "iso": "FI",
+    "category": "tech",
+    "prompt": "Quelle entreprise finlandaise, longtemps numéro un mondial des téléphones portables avec le mythique 3310, tire son nom d'une ville du pays ?",
+    "choices": [
+      {
+        "label": "Ericsson",
+        "iconId": "tech-antenna"
+      },
+      {
+        "label": "Nokia",
+        "iconId": "tech-smartphone"
+      },
+      {
+        "label": "Siemens",
+        "iconId": "tech-chip"
+      },
+      {
+        "label": "Philips",
+        "iconId": "tech-lightbulb"
+      }
+    ]
+  },
+  {
+    "id": "FI-nature-1",
+    "iso": "FI",
+    "category": "nature",
+    "prompt": "Quel mammifère marin rare possède une sous-espèce vivant exclusivement dans les eaux douces du lac Saimaa, en Finlande ?",
+    "choices": [
+      {
+        "label": "Le dauphin rose",
+        "iconId": "sea-dolphin"
+      },
+      {
+        "label": "La loutre de mer",
+        "iconId": "animal-otter"
+      },
+      {
+        "label": "Le phoque annelé",
+        "iconId": "sea-seal"
+      },
+      {
+        "label": "Le lamantin",
+        "iconId": "sea-manatee"
+      }
+    ]
+  },
+  {
+    "id": "FI-musique-1",
+    "iso": "FI",
+    "category": "musique",
+    "prompt": "Quel compositeur romantique finlandais a écrit le célèbre poème symphonique patriotique « Finlandia » en 1899 ?",
+    "choices": [
+      {
+        "label": "Gustav Mahler",
+        "iconId": "person-conductor"
+      },
+      {
+        "label": "Franz Liszt",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Carl Nielsen",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Jean Sibelius",
+        "iconId": "person-composer"
+      }
+    ]
+  },
+  {
+    "id": "FR-tech-1",
+    "iso": "FR",
+    "category": "tech",
+    "prompt": "Quelle entreprise française de pneumatiques, fondée à Clermont-Ferrand en 1889, a pour mascotte le personnage blanc Bibendum ?",
+    "choices": [
+      {
+        "label": "Pirelli",
+        "iconId": "transport-wheel"
+      },
+      {
+        "label": "Goodyear",
+        "iconId": "transport-blimp"
+      },
+      {
+        "label": "Michelin",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "Bridgestone",
+        "iconId": "tech-gear"
+      }
+    ]
+  },
+  {
+    "id": "FR-nature-1",
+    "iso": "FR",
+    "category": "nature",
+    "prompt": "Quel grand oiseau échassier au plumage rose est emblématique des lagunes et marais salants de la Camargue, en France ?",
+    "choices": [
+      {
+        "label": "La grue cendrée",
+        "iconId": "bird-crane"
+      },
+      {
+        "label": "Le héron garde-bœufs",
+        "iconId": "bird-heron"
+      },
+      {
+        "label": "L'ibis rouge",
+        "iconId": "bird-ibis"
+      },
+      {
+        "label": "Le flamant rose",
+        "iconId": "bird-flamingo"
+      }
+    ]
+  },
+  {
+    "id": "FR-musique-1",
+    "iso": "FR",
+    "category": "musique",
+    "prompt": "Quelle chanteuse française surnommée « la Môme » a immortalisé « La Vie en rose » et « Non, je ne regrette rien » ?",
+    "choices": [
+      {
+        "label": "Édith Piaf",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Barbara",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Juliette Gréco",
+        "iconId": "music-microphone"
+      },
+      {
+        "label": "Dalida",
+        "iconId": "music-vinyl"
+      }
+    ]
+  },
+  {
+    "id": "FO-culture-1",
+    "iso": "FO",
+    "category": "culture",
+    "prompt": "Quelle particularité recouvre traditionnellement les toits des anciennes maisons en bois des îles Féroé pour les isoler du froid et de la pluie ?",
+    "choices": [
+      {
+        "label": "Des tuiles en terre cuite vernissée",
+        "iconId": "building-roof"
+      },
+      {
+        "label": "Une couche d'herbe et de tourbe",
+        "iconId": "building-house"
+      },
+      {
+        "label": "Des feuilles de palmier tressées",
+        "iconId": "plant-palm"
+      },
+      {
+        "label": "Des plaques de cuivre doré",
+        "iconId": "mineral-metal"
+      }
+    ]
+  },
+  {
+    "id": "FO-nature-1",
+    "iso": "FO",
+    "category": "nature",
+    "prompt": "Quel oiseau marin au bec triangulaire très coloré niche par centaines de milliers sur les falaises herbeuses des îles Féroé ?",
+    "choices": [
+      {
+        "label": "Le toucan toco",
+        "iconId": "bird-toucan"
+      },
+      {
+        "label": "Le manchot empereur",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Le macareux moine",
+        "iconId": "bird-puffin"
+      },
+      {
+        "label": "Le colibri",
+        "iconId": "bird-hummingbird"
+      }
+    ]
+  },
+  {
+    "id": "FO-musique-1",
+    "iso": "FO",
+    "category": "musique",
+    "prompt": "Quelle tradition médiévale préservée aux îles Féroé consiste à chanter de longues ballades (« kvæði ») sans instruments tout en dansant main dans la main ?",
+    "choices": [
+      {
+        "label": "La valse viennoise",
+        "iconId": "music-note"
+      },
+      {
+        "label": "La mazurka",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La danse en chaîne féroïenne",
+        "iconId": "person-dancer"
+      }
+    ]
+  },
+  {
+    "id": "GB-tech-1",
+    "iso": "GB",
+    "category": "tech",
+    "prompt": "Quelle marque britannique d'automobiles de prestige et de moteurs d'avion, fondée en 1906, a pour emblème la statuette « Spirit of Ecstasy » ?",
+    "choices": [
+      {
+        "label": "Ferrari",
+        "iconId": "transport-car"
+      },
+      {
+        "label": "Porsche",
+        "iconId": "transport-wheel"
+      },
+      {
+        "label": "Rolls-Royce",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "Bugatti",
+        "iconId": "tech-gear"
+      }
+    ]
+  },
+  {
+    "id": "GB-nature-1",
+    "iso": "GB",
+    "category": "nature",
+    "prompt": "Quel petit passereau familier à la poitrine orangée est considéré comme l'oiseau national officieux du Royaume-Uni ?",
+    "choices": [
+      {
+        "label": "Le geai bleu",
+        "iconId": "bird-jay"
+      },
+      {
+        "label": "Le pinson des arbres",
+        "iconId": "bird-finch"
+      },
+      {
+        "label": "Le merle noir",
+        "iconId": "bird-crow"
+      },
+      {
+        "label": "Le rouge-gorge familier",
+        "iconId": "bird-robin"
+      }
+    ]
+  },
+  {
+    "id": "GB-musique-1",
+    "iso": "GB",
+    "category": "musique",
+    "prompt": "Quel groupe de rock britannique originaire de Liverpool a révolutionné la musique populaire dans les années 1960 avec John Lennon et Paul McCartney ?",
+    "choices": [
+      {
+        "label": "The Beatles",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Abba",
+        "iconId": "music-microphone"
+      },
+      {
+        "label": "U2",
+        "iconId": "music-vinyl"
+      },
+      {
+        "label": "AC/DC",
+        "iconId": "music-speaker"
+      }
+    ]
+  },
+  {
+    "id": "GG-culture-1",
+    "iso": "GG",
+    "category": "culture",
+    "prompt": "Quel grand écrivain français a vécu quinze ans en exil à Hauteville House sur l'île de Guernesey, où il a achevé « Les Misérables » ?",
+    "choices": [
+      {
+        "label": "Victor Hugo",
+        "iconId": "person-writer"
+      },
+      {
+        "label": "Émile Zola",
+        "iconId": "object-book"
+      },
+      {
+        "label": "Voltaire",
+        "iconId": "object-feather"
+      },
+      {
+        "label": "Honoré de Balzac",
+        "iconId": "object-scroll"
+      }
+    ]
+  },
+  {
+    "id": "GG-nature-1",
+    "iso": "GG",
+    "category": "nature",
+    "prompt": "Quel animal d'élevage originaire de l'île de Guernesey, à la robe fauve et blanche, est mondialement réputé pour son lait riche à la teinte dorée ?",
+    "choices": [
+      {
+        "label": "La chèvre angora",
+        "iconId": "animal-goat"
+      },
+      {
+        "label": "La vache de Guernesey",
+        "iconId": "animal-cow"
+      },
+      {
+        "label": "Le mouton mérinos",
+        "iconId": "animal-sheep"
+      },
+      {
+        "label": "Le poney Shetland",
+        "iconId": "animal-horse"
+      }
+    ]
+  },
+  {
+    "id": "GG-musique-1",
+    "iso": "GG",
+    "category": "musique",
+    "prompt": "Quel est le titre de l'hymne patriotique traditionnel de Guernesey, composé en 1911 et baptisé d'après le nom antique supposé de l'île ?",
+    "choices": [
+      {
+        "label": "La Marseillaise",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Rule, Britannia!",
+        "iconId": "transport-ship"
+      },
+      {
+        "label": "Sarnia Chérie",
+        "iconId": "music-microphone"
+      },
+      {
+        "label": "Land of Hope and Glory",
+        "iconId": "instrument-trumpet"
+      }
+    ]
+  },
+  {
+    "id": "GR-tech-1",
+    "iso": "GR",
+    "category": "tech",
+    "prompt": "Quel instrument de bronze à engrenages du IIe siècle av. J.-C., repêché dans une épave grecque, est considéré comme le premier calculateur astronomique de l'histoire ?",
+    "choices": [
+      {
+        "label": "Le disque de Phaistos",
+        "iconId": "mineral-stone"
+      },
+      {
+        "label": "L'astrolabe persan",
+        "iconId": "tech-compass"
+      },
+      {
+        "label": "La machine d'Anticythère",
+        "iconId": "tech-gear"
+      },
+      {
+        "label": "Le gnomon babylonien",
+        "iconId": "landmark-obelisk"
+      }
+    ]
+  },
+  {
+    "id": "GR-nature-1",
+    "iso": "GR",
+    "category": "nature",
+    "prompt": "Quel arbre méditerranéen au tronc noueux était sacré dans la Grèce antique, offert selon le mythe par la déesse Athéna à la cité d'Athènes ?",
+    "choices": [
+      {
+        "label": "Le dattier",
+        "iconId": "plant-palm"
+      },
+      {
+        "label": "Le chêne-liège",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le pommier d'or",
+        "iconId": "fruit-apple"
+      },
+      {
+        "label": "L'olivier",
+        "iconId": "plant-olive"
+      }
+    ]
+  },
+  {
+    "id": "GR-musique-1",
+    "iso": "GR",
+    "category": "musique",
+    "prompt": "Quel instrument à cordes pincées au long manche et à la caisse bombée accompagne le « rebetiko » et la danse du sirtaki en Grèce ?",
+    "choices": [
+      {
+        "label": "Le bouzouki",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le dulcimer",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "L'accordéon",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La cornemuse",
+        "iconId": "instrument-bagpipe"
+      }
+    ]
+  },
+  {
+    "id": "HR-tech-1",
+    "iso": "HR",
+    "category": "tech",
+    "prompt": "Quel instrument d'écriture moderne Slavoljub Penkala a-t-il fait breveter à Zagreb en 1906, donnant naissance à une célèbre marque croate ?",
+    "choices": [
+      {
+        "label": "La machine à écrire électrique",
+        "iconId": "tech-typewriter"
+      },
+      {
+        "label": "Le ruban correcteur",
+        "iconId": "object-tape"
+      },
+      {
+        "label": "L'imprimante thermique",
+        "iconId": "tech-printer"
+      },
+      {
+        "label": "Le porte-mine mécanique",
+        "iconId": "object-pen"
+      }
+    ]
+  },
+  {
+    "id": "HR-nature-1",
+    "iso": "HR",
+    "category": "nature",
+    "prompt": "Quelle célèbre race de chien au pelage blanc tacheté de noir tire son nom d'une région côtière historique de la Croatie ?",
+    "choices": [
+      {
+        "label": "Le dalmatien",
+        "iconId": "animal-dog"
+      },
+      {
+        "label": "Le lévrier hongrois",
+        "iconId": "animal-hound"
+      },
+      {
+        "label": "L'épagneul breton",
+        "iconId": "animal-spaniel"
+      },
+      {
+        "label": "Le bouvier bernois",
+        "iconId": "animal-shepherd"
+      }
+    ]
+  },
+  {
+    "id": "HR-musique-1",
+    "iso": "HR",
+    "category": "musique",
+    "prompt": "Quel chant traditionnel polyphonique a cappella originaire de Dalmatie, en Croatie, est inscrit au patrimoine immatériel de l'UNESCO ?",
+    "choices": [
+      {
+        "label": "Le fado",
+        "iconId": "music-vocal"
+      },
+      {
+        "label": "La klapa",
+        "iconId": "music-choir"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "music-guitar"
+      },
+      {
+        "label": "Le yodel",
+        "iconId": "music-mountain"
+      }
+    ]
+  },
+  {
+    "id": "HU-tech-1",
+    "iso": "HU",
+    "category": "tech",
+    "prompt": "Quel casse-tête géométrique en trois dimensions a été inventé en 1974 par un professeur d'architecture hongrois à Budapest ?",
+    "choices": [
+      {
+        "label": "Le Tangram",
+        "iconId": "object-puzzle"
+      },
+      {
+        "label": "Le Rubik's Cube",
+        "iconId": "object-cube"
+      },
+      {
+        "label": "Le Sudoku",
+        "iconId": "number-grid"
+      },
+      {
+        "label": "Le Meccano",
+        "iconId": "tech-gear"
+      }
+    ]
+  },
+  {
+    "id": "HU-nature-1",
+    "iso": "HU",
+    "category": "nature",
+    "prompt": "Quelle race ancienne de porc hongrois est célèbre pour son épaisse toison laineuse et frisée semblable à celle d'un mouton ?",
+    "choices": [
+      {
+        "label": "Le porc ibérique",
+        "iconId": "animal-boar"
+      },
+      {
+        "label": "Le Tamworth",
+        "iconId": "animal-pig"
+      },
+      {
+        "label": "Le Mangalitza",
+        "iconId": "animal-sheep"
+      },
+      {
+        "label": "Le Piétrain",
+        "iconId": "animal-farm"
+      }
+    ]
+  },
+  {
+    "id": "HU-musique-1",
+    "iso": "HU",
+    "category": "musique",
+    "prompt": "Quelle danse traditionnelle hongroise débute sur un mouvement lent (lassú) avant de s'achever sur un tempo très vif et tourbillonnant (friss) ?",
+    "choices": [
+      {
+        "label": "La polka",
+        "iconId": "music-accordion"
+      },
+      {
+        "label": "La mazurka",
+        "iconId": "music-piano"
+      },
+      {
+        "label": "La tarentelle",
+        "iconId": "music-tambourine"
+      },
+      {
+        "label": "La csárdás",
+        "iconId": "music-violin"
+      }
+    ]
+  },
+  {
+    "id": "IM-nature-1",
+    "iso": "IM",
+    "category": "nature",
+    "prompt": "Quelle particularité anatomique distingue la race de chat Manx, originaire de l'île de Man ?",
+    "choices": [
+      {
+        "label": "Ses oreilles repliées",
+        "iconId": "animal-cat"
+      },
+      {
+        "label": "Son absence totale de poils",
+        "iconId": "animal-kitten"
+      },
+      {
+        "label": "Son pelage tacheté comme un léopard",
+        "iconId": "animal-leopard"
+      },
+      {
+        "label": "Son absence de queue",
+        "iconId": "animal-feline"
+      }
+    ]
+  },
+  {
+    "id": "IM-musique-1",
+    "iso": "IM",
+    "category": "musique",
+    "prompt": "Quel célèbre groupe pop-disco composé des trois frères Barry, Robin et Maurice Gibb a vu naître ses membres à Douglas, sur l'île de Man ?",
+    "choices": [
+      {
+        "label": "Les Bee Gees",
+        "iconId": "music-disco"
+      },
+      {
+        "label": "Les Beach Boys",
+        "iconId": "music-surf"
+      },
+      {
+        "label": "Oasis",
+        "iconId": "music-rock"
+      },
+      {
+        "label": "ABBA",
+        "iconId": "music-pop"
+      }
+    ]
+  },
+  {
+    "id": "IM-culture-1",
+    "iso": "IM",
+    "category": "culture",
+    "prompt": "Quel motif composé de trois jambes en armure fléchies et réunies au centre est le symbole historique de l'île de Man depuis le XIIIe siècle ?",
+    "choices": [
+      {
+        "label": "La croix celtique",
+        "iconId": "symbol-cross"
+      },
+      {
+        "label": "Le triskèle de Man",
+        "iconId": "symbol-triskelion"
+      },
+      {
+        "label": "Le dragon rouge",
+        "iconId": "symbol-dragon"
+      },
+      {
+        "label": "Le chardon couronné",
+        "iconId": "plant-thistle"
+      }
+    ]
+  },
+  {
+    "id": "IE-tech-1",
+    "iso": "IE",
+    "category": "tech",
+    "prompt": "Quelle célèbre brasserie de bière noire de type stout a été fondée à Dublin en 1759 à la brasserie de St. James's Gate ?",
+    "choices": [
+      {
+        "label": "Guinness",
+        "iconId": "drink-beer"
+      },
+      {
+        "label": "Carlsberg",
+        "iconId": "drink-mug"
+      },
+      {
+        "label": "Heineken",
+        "iconId": "drink-bottle"
+      },
+      {
+        "label": "Paulaner",
+        "iconId": "drink-glass"
+      }
+    ]
+  },
+  {
+    "id": "IE-nature-1",
+    "iso": "IE",
+    "category": "nature",
+    "prompt": "Quelle petite plante à trois folioles est l'emblème végétal traditionnel de l'Irlande, associée à la légende de saint Patrick ?",
+    "choices": [
+      {
+        "label": "Le chardon",
+        "iconId": "plant-thistle"
+      },
+      {
+        "label": "Le trèfle",
+        "iconId": "plant-clover"
+      },
+      {
+        "label": "Le poireau",
+        "iconId": "plant-leaf"
+      },
+      {
+        "label": "La bruyère",
+        "iconId": "plant-flower"
+      }
+    ]
+  },
+  {
+    "id": "IE-musique-1",
+    "iso": "IE",
+    "category": "musique",
+    "prompt": "Quel instrument de musique traditionnel est également l'emblème héraldique officiel de la République d'Irlande ?",
+    "choices": [
+      {
+        "label": "La cornemuse",
+        "iconId": "instrument-bagpipe"
+      },
+      {
+        "label": "Le violon",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "La harpe celtique",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "La flûte traversière",
+        "iconId": "instrument-flute"
+      }
+    ]
+  },
+  {
+    "id": "IS-nature-1",
+    "iso": "IS",
+    "category": "nature",
+    "prompt": "Quelle allure naturelle supplémentaire à quatre temps rapides fait la renommée mondiale du cheval islandais ?",
+    "choices": [
+      {
+        "label": "Le galop volant",
+        "iconId": "animal-horse"
+      },
+      {
+        "label": "Le tölt",
+        "iconId": "animal-stallion"
+      },
+      {
+        "label": "La courbette",
+        "iconId": "animal-pony"
+      },
+      {
+        "label": "Le piaffer",
+        "iconId": "sport-equestrian"
+      }
+    ]
+  },
+  {
+    "id": "IS-musique-1",
+    "iso": "IS",
+    "category": "musique",
+    "prompt": "Quelle chanteuse et compositrice islandaise au style éclectique a connu un succès mondial dans les années 1990 avec les albums « Debut » et « Post » ?",
+    "choices": [
+      {
+        "label": "Enya",
+        "iconId": "music-harp"
+      },
+      {
+        "label": "Tori Amos",
+        "iconId": "music-piano"
+      },
+      {
+        "label": "Björk",
+        "iconId": "music-singer"
+      },
+      {
+        "label": "Kate Bush",
+        "iconId": "music-vocal"
+      }
+    ]
+  },
+  {
+    "id": "IS-culture-1",
+    "iso": "IS",
+    "category": "culture",
+    "prompt": "Comment nomme-t-on les grands récits médiévaux en prose rédigés en Islande aux XIIe et XIIIe siècles, relatant les exploits des premières familles vikings ?",
+    "choices": [
+      {
+        "label": "Les cantigas",
+        "iconId": "object-scroll"
+      },
+      {
+        "label": "Les haïkus",
+        "iconId": "object-feather"
+      },
+      {
+        "label": "Les fabliaux",
+        "iconId": "object-book"
+      },
+      {
+        "label": "Les sagas islandaises",
+        "iconId": "object-manuscript"
+      }
+    ]
+  },
+  {
+    "id": "IT-tech-1",
+    "iso": "IT",
+    "category": "tech",
+    "prompt": "Quel constructeur italien de voitures de sport, reconnaissable à son emblème du cheval cabré sur fond jaune, a été fondé à Maranello par Enzo Ferrari ?",
+    "choices": [
+      {
+        "label": "Bugatti",
+        "iconId": "transport-car"
+      },
+      {
+        "label": "Porsche",
+        "iconId": "brand-wheel"
+      },
+      {
+        "label": "Aston Martin",
+        "iconId": "transport-racing"
+      },
+      {
+        "label": "Ferrari",
+        "iconId": "brand-car"
+      }
+    ]
+  },
+  {
+    "id": "IT-nature-1",
+    "iso": "IT",
+    "category": "nature",
+    "prompt": "Quel grand conifère à la cime étalée, producteur de pignons comestibles, dessine les paysages classiques de Rome et du littoral italien ?",
+    "choices": [
+      {
+        "label": "Le pin parasol",
+        "iconId": "plant-pine"
+      },
+      {
+        "label": "Le séquoia géant",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le baobab",
+        "iconId": "plant-trunk"
+      },
+      {
+        "label": "L'érable à sucre",
+        "iconId": "plant-leaf"
+      }
+    ]
+  },
+  {
+    "id": "IT-musique-1",
+    "iso": "IT",
+    "category": "musique",
+    "prompt": "Quel célèbre maître luthier de Crémone, en Italie, a fabriqué aux XVIIe et XVIIIe siècles des violons considérés comme les plus prestigieux de l'histoire ?",
+    "choices": [
+      {
+        "label": "Adolphe Sax",
+        "iconId": "instrument-saxophone"
+      },
+      {
+        "label": "Antonio Stradivari",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Steinway",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Leo Fender",
+        "iconId": "instrument-guitar"
+      }
+    ]
+  },
+  {
+    "id": "JE-tech-1",
+    "iso": "JE",
+    "category": "tech",
+    "prompt": "Quel textile en maille tricotée souple et extensible, utilisé à l'origine pour les chandails de pêcheurs avant d'entrer dans la haute couture, tire son nom de l'île de Jersey ?",
+    "choices": [
+      {
+        "label": "Le denim",
+        "iconId": "object-jeans"
+      },
+      {
+        "label": "Le jersey",
+        "iconId": "object-shirt"
+      },
+      {
+        "label": "Le velours",
+        "iconId": "object-fabric"
+      },
+      {
+        "label": "La gabardine",
+        "iconId": "object-coat"
+      }
+    ]
+  },
+  {
+    "id": "JE-nature-1",
+    "iso": "JE",
+    "category": "nature",
+    "prompt": "Quelle race bovine originaire de l'île de Jersey, reconnaissable à sa robe fauve et à ses grands yeux doux, est réputée pour son lait très riche en crème ?",
+    "choices": [
+      {
+        "label": "La Charolaise",
+        "iconId": "animal-bull"
+      },
+      {
+        "label": "La Prim'Holstein",
+        "iconId": "animal-dairy"
+      },
+      {
+        "label": "La Jersiaise",
+        "iconId": "animal-cow"
+      },
+      {
+        "label": "La Highland",
+        "iconId": "animal-cattle"
+      }
+    ]
+  },
+  {
+    "id": "JE-culture-1",
+    "iso": "JE",
+    "category": "culture",
+    "prompt": "Comment s'appelle la langue régionale traditionnelle de l'île de Jersey, issue du normand médiéval et utilisée par le poète Wace au XIIe siècle ?",
+    "choices": [
+      {
+        "label": "Le mannois",
+        "iconId": "language-celtic"
+      },
+      {
+        "label": "Le cornique",
+        "iconId": "language-scroll"
+      },
+      {
+        "label": "Le breton",
+        "iconId": "language-book"
+      },
+      {
+        "label": "Le jersiais",
+        "iconId": "language-speech"
+      }
+    ]
+  },
+  {
+    "id": "XK-nature-1",
+    "iso": "XK",
+    "category": "nature",
+    "prompt": "Quelle race ancienne de grand chien de berger rustique tire son nom du massif montagneux des monts Šar (Sharr), situé au sud du Kosovo ?",
+    "choices": [
+      {
+        "label": "Le chihuahua",
+        "iconId": "animal-dog"
+      },
+      {
+        "label": "Le caniche royal",
+        "iconId": "animal-poodle"
+      },
+      {
+        "label": "Le teckel",
+        "iconId": "animal-hound"
+      },
+      {
+        "label": "Le berger de Charplanina",
+        "iconId": "animal-shepherd"
+      }
+    ]
+  },
+  {
+    "id": "XK-musique-1",
+    "iso": "XK",
+    "category": "musique",
+    "prompt": "Quel petit luth traditionnel à long manche et à seulement deux cordes accompagne les chants épiques et folkloriques au Kosovo ?",
+    "choices": [
+      {
+        "label": "La çifteli",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le violoncelle",
+        "iconId": "instrument-cello"
+      },
+      {
+        "label": "L'ukulélé",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La harpe",
+        "iconId": "instrument-harp"
+      }
+    ]
+  },
+  {
+    "id": "XK-culture-1",
+    "iso": "XK",
+    "category": "culture",
+    "prompt": "Quelle statuette néolithique en terre cuite vieille de plus de 6 000 ans, découverte près de Pristina en 1956, est devenue le symbole culturel du Kosovo ?",
+    "choices": [
+      {
+        "label": "La Vénus de Milo",
+        "iconId": "landmark-statue"
+      },
+      {
+        "label": "La Déesse sur le trône",
+        "iconId": "object-statue"
+      },
+      {
+        "label": "Le Penseur",
+        "iconId": "person-thinker"
+      },
+      {
+        "label": "Le Discobole",
+        "iconId": "sport-discus"
+      }
+    ]
+  },
+  {
+    "id": "LI-tech-1",
+    "iso": "LI",
+    "category": "tech",
+    "prompt": "Quel fabricant mondial d'outillage électroportatif professionnel pour la construction (perforateurs, systèmes de fixation), reconnaissable à ses coffrets rouges, a été fondé à Schaan au Liechtenstein en 1941 ?",
+    "choices": [
+      {
+        "label": "Makita",
+        "iconId": "brand-tool"
+      },
+      {
+        "label": "DeWalt",
+        "iconId": "tech-drill"
+      },
+      {
+        "label": "Hilti",
+        "iconId": "brand-construction"
+      },
+      {
+        "label": "Metabo",
+        "iconId": "tech-machine"
+      }
+    ]
+  },
+  {
+    "id": "LI-nature-1",
+    "iso": "LI",
+    "category": "nature",
+    "prompt": "Quelle fleur sauvage protégée recouvre d'un tapis bleu-violet les prairies humides de la réserve naturelle du Ruggeller Riet, dans le nord du Liechtenstein, chaque printemps ?",
+    "choices": [
+      {
+        "label": "La tulipe noire",
+        "iconId": "plant-tulip"
+      },
+      {
+        "label": "Le lotus sacré",
+        "iconId": "plant-lotus"
+      },
+      {
+        "label": "Le chardon bleu des dunes",
+        "iconId": "plant-thistle"
+      },
+      {
+        "label": "L'iris de Sibérie",
+        "iconId": "plant-flower"
+      }
+    ]
+  },
+  {
+    "id": "LI-musique-1",
+    "iso": "LI",
+    "category": "musique",
+    "prompt": "Quel compositeur et organiste romantique du XIXe siècle, né à Vaduz en 1839 et auteur de vingt sonates pour orgue, est la plus grande figure musicale historique du Liechtenstein ?",
+    "choices": [
+      {
+        "label": "Josef Gabriel Rheinberger",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Franz Liszt",
+        "iconId": "person-musician"
+      },
+      {
+        "label": "Anton Bruckner",
+        "iconId": "instrument-organ"
+      },
+      {
+        "label": "Bedřich Smetana",
+        "iconId": "music-classical"
+      }
+    ]
+  },
+  {
+    "id": "LT-tech-1",
+    "iso": "LT",
+    "category": "tech",
+    "prompt": "Quelle plateforme en ligne de vente de vêtements de seconde main entre particuliers a été fondée à Vilnius en Lituanie en 2008 par Milda Mitkutė et Justas Janauskas ?",
+    "choices": [
+      {
+        "label": "Zalando",
+        "iconId": "brand-fashion"
+      },
+      {
+        "label": "Spotify",
+        "iconId": "tech-app"
+      },
+      {
+        "label": "Skype",
+        "iconId": "tech-software"
+      },
+      {
+        "label": "Vinted",
+        "iconId": "brand-app"
+      }
+    ]
+  },
+  {
+    "id": "LT-nature-1",
+    "iso": "LT",
+    "category": "nature",
+    "prompt": "Quel grand oiseau échassier migrateur, nichant fréquemment sur les toits et les poteaux des campagnes baltes, est l'oiseau national officiel de la Lituanie depuis 1973 ?",
+    "choices": [
+      {
+        "label": "La cigogne blanche",
+        "iconId": "bird-stork"
+      },
+      {
+        "label": "Le flamant rose",
+        "iconId": "bird-flamingo"
+      },
+      {
+        "label": "Le pélican blanc",
+        "iconId": "bird-pelican"
+      },
+      {
+        "label": "L'ibis rouge",
+        "iconId": "bird-ibis"
+      }
+    ]
+  },
+  {
+    "id": "LT-musique-1",
+    "iso": "LT",
+    "category": "musique",
+    "prompt": "Comment s'appellent les chants polyphoniques traditionnels lituaniens a cappella, inscrits à l'UNESCO et reposant sur des canons vocaux anciens chantés par les femmes ?",
+    "choices": [
+      {
+        "label": "Les joiks",
+        "iconId": "music-vocal"
+      },
+      {
+        "label": "Les sutartinės",
+        "iconId": "music-choir"
+      },
+      {
+        "label": "Les fados",
+        "iconId": "music-song"
+      },
+      {
+        "label": "Les rébétikos",
+        "iconId": "music-folk"
+      }
+    ]
+  },
+  {
+    "id": "LU-tech-1",
+    "iso": "LU",
+    "category": "tech",
+    "prompt": "Quel géant historique de la sidérurgie luxembourgeoise, créé en 1911 par le regroupement des aciéries du pays, est à l'origine du groupe mondial ArcelorMittal dont le siège est au Luxembourg ?",
+    "choices": [
+      {
+        "label": "Krupp",
+        "iconId": "brand-industry"
+      },
+      {
+        "label": "Thyssen",
+        "iconId": "tech-factory"
+      },
+      {
+        "label": "ARBED",
+        "iconId": "brand-steel"
+      },
+      {
+        "label": "Voestalpine",
+        "iconId": "mineral-iron"
+      }
+    ]
+  },
+  {
+    "id": "LU-nature-1",
+    "iso": "LU",
+    "category": "nature",
+    "prompt": "Quel minuscule passereau forestier à la couronne de plumes jaunes ou orangées est l'oiseau national du Luxembourg ?",
+    "choices": [
+      {
+        "label": "Le martin-pêcheur",
+        "iconId": "bird-kingfisher"
+      },
+      {
+        "label": "Le grand tétras",
+        "iconId": "bird-grouse"
+      },
+      {
+        "label": "Le macareux moine",
+        "iconId": "bird-puffin"
+      },
+      {
+        "label": "Le roitelet huppé",
+        "iconId": "bird-songbird"
+      }
+    ]
+  },
+  {
+    "id": "LU-musique-1",
+    "iso": "LU",
+    "category": "musique",
+    "prompt": "Dans quelle ville abbatiale du Luxembourg se déroule chaque mardi de Pentecôte une célèbre procession dansante séculaire au rythme d'une mélodie de polka traditionnelle ?",
+    "choices": [
+      {
+        "label": "Echternach",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Vianden",
+        "iconId": "landmark-castle"
+      },
+      {
+        "label": "Schengen",
+        "iconId": "landmark-monument"
+      },
+      {
+        "label": "Clervaux",
+        "iconId": "building-abbey"
+      }
+    ]
+  },
+  {
+    "id": "LV-tech-1",
+    "iso": "LV",
+    "category": "tech",
+    "prompt": "Quel célèbre appareil photographique subminiature, devenu l'outil favori des services de renseignement pendant la Guerre froide, a été inventé en 1936 et fabriqué par l'usine VEF en Lettonie ?",
+    "choices": [
+      {
+        "label": "Le Polaroid",
+        "iconId": "tech-camera"
+      },
+      {
+        "label": "Le Minox",
+        "iconId": "object-camera"
+      },
+      {
+        "label": "Le Hasselblad",
+        "iconId": "brand-camera"
+      },
+      {
+        "label": "Le Leica",
+        "iconId": "tech-lens"
+      }
+    ]
+  },
+  {
+    "id": "LV-nature-1",
+    "iso": "LV",
+    "category": "nature",
+    "prompt": "Quel petit passereau insectivore au plumage noir, blanc et gris, connu pour hocher constamment sa longue queue, est l'oiseau national de la Lettonie ?",
+    "choices": [
+      {
+        "label": "Le rouge-gorge familier",
+        "iconId": "bird-robin"
+      },
+      {
+        "label": "Le geai des chênes",
+        "iconId": "bird-jay"
+      },
+      {
+        "label": "La bergeronnette grise",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "Le hibou grand-duc",
+        "iconId": "bird-owl"
+      }
+    ]
+  },
+  {
+    "id": "LV-musique-1",
+    "iso": "LV",
+    "category": "musique",
+    "prompt": "Quel nom portent les courts poèmes chantés traditionnels à quatre vers, transmis oralement depuis des siècles et formant le socle du folklore musical letton ?",
+    "choices": [
+      {
+        "label": "Les runes",
+        "iconId": "music-folk"
+      },
+      {
+        "label": "Les doïnas",
+        "iconId": "music-song"
+      },
+      {
+        "label": "Les ballades",
+        "iconId": "music-vocal"
+      },
+      {
+        "label": "Les dainas",
+        "iconId": "music-choir"
+      }
+    ]
+  },
+  {
+    "id": "MC-nature-1",
+    "iso": "MC",
+    "category": "nature",
+    "prompt": "Quelle famille de plantes adaptées à la sécheresse fait la renommée mondiale du Jardin exotique de Monaco, accroché aux falaises du Rocher depuis 1933 ?",
+    "choices": [
+      {
+        "label": "Les fougères arborescentes",
+        "iconId": "plant-fern"
+      },
+      {
+        "label": "Les plantes succulentes et cactées",
+        "iconId": "plant-cactus"
+      },
+      {
+        "label": "Les orchidées tropicales",
+        "iconId": "plant-orchid"
+      },
+      {
+        "label": "Les plantes carnivores",
+        "iconId": "plant-flower"
+      }
+    ]
+  },
+  {
+    "id": "MC-musique-1",
+    "iso": "MC",
+    "category": "musique",
+    "prompt": "Quel grand ensemble symphonique fondé en 1856 réside à l'Opéra de Monte-Carlo (salle Garnier) et a créé de nombreux chefs-d'œuvre pour les Ballets russes de Diaghilev ?",
+    "choices": [
+      {
+        "label": "L'Orchestre de la Suisse romande",
+        "iconId": "music-orchestra"
+      },
+      {
+        "label": "La Philharmonie de Vienne",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "L'Orchestre philharmonique de Monte-Carlo",
+        "iconId": "music-classical"
+      },
+      {
+        "label": "L'Orchestre de la Scala",
+        "iconId": "building-opera"
+      }
+    ]
+  },
+  {
+    "id": "MC-culture-1",
+    "iso": "MC",
+    "category": "culture",
+    "prompt": "À quelle langue régionale italienne est directement apparenté le monégasque, langue traditionnelle enseignée dans les écoles de la principauté de Monaco ?",
+    "choices": [
+      {
+        "label": "Au sicilien",
+        "iconId": "language-book"
+      },
+      {
+        "label": "Au vénitien",
+        "iconId": "language-scroll"
+      },
+      {
+        "label": "Au napolitain",
+        "iconId": "language-speech"
+      },
+      {
+        "label": "Au ligure génois",
+        "iconId": "language-alphabet"
+      }
+    ]
+  },
+  {
+    "id": "MD-nature-1",
+    "iso": "MD",
+    "category": "nature",
+    "prompt": "Comment s'appellent les vastes forêts anciennes de chênes et de hêtres qui recouvrent les collines du centre de la Moldavie et constituent sa plus ancienne réserve naturelle ?",
+    "choices": [
+      {
+        "label": "Les Codri",
+        "iconId": "plant-forest"
+      },
+      {
+        "label": "La Taïga",
+        "iconId": "plant-conifer"
+      },
+      {
+        "label": "Le Maquis",
+        "iconId": "plant-shrub"
+      },
+      {
+        "label": "La Puszta",
+        "iconId": "landform-plain"
+      }
+    ]
+  },
+  {
+    "id": "MD-musique-1",
+    "iso": "MD",
+    "category": "musique",
+    "prompt": "Quel instrument à vent composé d'une rangée de tuyaux de roseau incurvés, appelé « nai », est l'instrument roi des orchestres folkloriques traditionnels de Moldavie ?",
+    "choices": [
+      {
+        "label": "L'accordéon chromatique",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La flûte de Pan",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "La balalaïka",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le cymbalum",
+        "iconId": "instrument-zither"
+      }
+    ]
+  },
+  {
+    "id": "MD-culture-1",
+    "iso": "MD",
+    "category": "culture",
+    "prompt": "Quel domaine viticole moldave est célèbre pour ses galeries souterraines de calcaire s'étendant sur 200 kilomètres et abritant la plus grande cave de bouteilles au monde ?",
+    "choices": [
+      {
+        "label": "Tokaj",
+        "iconId": "drink-wine"
+      },
+      {
+        "label": "Château Margaux",
+        "iconId": "building-cellar"
+      },
+      {
+        "label": "Mileștii Mici",
+        "iconId": "drink-bottle"
+      },
+      {
+        "label": "Vega Sicilia",
+        "iconId": "fruit-grape"
+      }
+    ]
+  },
+  {
+    "id": "MK-nature-1",
+    "iso": "MK",
+    "category": "nature",
+    "prompt": "Quel poisson endémique aux taches rouges et noires vit exclusivement dans les eaux anciennes du lac d'Ohrid, en Macédoine du Nord ?",
+    "choices": [
+      {
+        "label": "L'esturgeon béluga",
+        "iconId": "sea-fish"
+      },
+      {
+        "label": "Le piranha à ventre rouge",
+        "iconId": "water-fish"
+      },
+      {
+        "label": "La carpe koï",
+        "iconId": "water-pond"
+      },
+      {
+        "label": "La truite d'Ohrid",
+        "iconId": "water-lake"
+      }
+    ]
+  },
+  {
+    "id": "MK-musique-1",
+    "iso": "MK",
+    "category": "musique",
+    "prompt": "Quel grand tambour à double membrane, frappé d'une main avec une mailloche en bois courbé et de l'autre avec une fine baguette, marque les rythmes impairs de la musique traditionnelle macédonienne ?",
+    "choices": [
+      {
+        "label": "Le tapan",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "Le bongo",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "Le cajón",
+        "iconId": "instrument-box"
+      },
+      {
+        "label": "Le tabla",
+        "iconId": "music-percussion"
+      }
+    ]
+  },
+  {
+    "id": "MK-culture-1",
+    "iso": "MK",
+    "category": "culture",
+    "prompt": "Dans quelle ville historique lacustre de Macédoine du Nord saint Clément et saint Naum ont-ils fondé au IXe siècle une célèbre école littéraire slave ?",
+    "choices": [
+      {
+        "label": "Bitola",
+        "iconId": "building-city"
+      },
+      {
+        "label": "Ohrid",
+        "iconId": "landmark-church"
+      },
+      {
+        "label": "Tetovo",
+        "iconId": "building-mosque"
+      },
+      {
+        "label": "Prilep",
+        "iconId": "landmark-fortress"
+      }
+    ]
+  },
+  {
+    "id": "MT-nature-1",
+    "iso": "MT",
+    "category": "nature",
+    "prompt": "Quel oiseau passereau au plumage bleu ardoise, nichant dans les falaises calcaires de l'archipel et appelé « Il-Merill » en maltais, est l'oiseau national de Malte ?",
+    "choices": [
+      {
+        "label": "Le geai bleu",
+        "iconId": "bird-jay"
+      },
+      {
+        "label": "Le monticole bleu",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "L'ara hyacinthe",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "Le paon bleu",
+        "iconId": "bird-peacock"
+      }
+    ]
+  },
+  {
+    "id": "MT-musique-1",
+    "iso": "MT",
+    "category": "musique",
+    "prompt": "Comment s'appelle le chant folklorique traditionnel maltais, souvent pratiqué sous forme de joute vocale improvisée entre deux chanteurs accompagnés de guitares ?",
+    "choices": [
+      {
+        "label": "Le yodel",
+        "iconId": "music-vocal"
+      },
+      {
+        "label": "La morna",
+        "iconId": "music-song"
+      },
+      {
+        "label": "Le għana",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le klapa",
+        "iconId": "music-choir"
+      }
+    ]
+  },
+  {
+    "id": "MT-culture-1",
+    "iso": "MT",
+    "category": "culture",
+    "prompt": "Quels temples préhistoriques de l'île de Gozo (Malte), érigés vers 3600 av. J.-C. avant même les pyramides d'Égypte, tirent leur nom d'une légende locale de géantes ?",
+    "choices": [
+      {
+        "label": "Carnac",
+        "iconId": "landmark-stone"
+      },
+      {
+        "label": "Göbekli Tepe",
+        "iconId": "landmark-ruins"
+      },
+      {
+        "label": "Newgrange",
+        "iconId": "landmark-monument"
+      },
+      {
+        "label": "Ġgantija",
+        "iconId": "landmark-temple"
+      }
+    ]
+  },
+  {
+    "id": "ME-nature-1",
+    "iso": "ME",
+    "category": "nature",
+    "prompt": "Quel grand oiseau aquatique menacé à la poche gulaire orange vif niche sur des radeaux de végétation flottante au lac de Skadar, au Monténégro ?",
+    "choices": [
+      {
+        "label": "Le cygne tuberculé",
+        "iconId": "bird-swan"
+      },
+      {
+        "label": "Le fou de Bassan",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "Le héron garde-bœufs",
+        "iconId": "bird-heron"
+      },
+      {
+        "label": "Le pélican frisé",
+        "iconId": "bird-pelican"
+      }
+    ]
+  },
+  {
+    "id": "ME-musique-1",
+    "iso": "ME",
+    "category": "musique",
+    "prompt": "Quelle danse traditionnelle monténégrine, dont le nom signifie « aigle », se termine par la formation d'une ronde où des danseurs montent sur les épaules des autres ?",
+    "choices": [
+      {
+        "label": "L'oro monténégrin",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le sirtaki",
+        "iconId": "music-folk"
+      },
+      {
+        "label": "La tarentelle",
+        "iconId": "music-festival"
+      },
+      {
+        "label": "La czardas",
+        "iconId": "music-couple"
+      }
+    ]
+  },
+  {
+    "id": "ME-culture-1",
+    "iso": "ME",
+    "category": "culture",
+    "prompt": "Quelle baie sinueuse du littoral monténégrin, bordée de cités vénitiennes fortifiées et de hautes parois calcaires, est inscrite au patrimoine mondial de l'UNESCO ?",
+    "choices": [
+      {
+        "label": "Le golfe de Corinthe",
+        "iconId": "water-bay"
+      },
+      {
+        "label": "Les bouches de Kotor",
+        "iconId": "landform-fjord"
+      },
+      {
+        "label": "La baie d'Ha Long",
+        "iconId": "water-sea"
+      },
+      {
+        "label": "Le détroit de Messine",
+        "iconId": "water-strait"
+      }
+    ]
+  },
+  {
+    "id": "NL-tech-1",
+    "iso": "NL",
+    "category": "tech",
+    "prompt": "Quelle entreprise d'électronique fondée en 1891 à Eindhoven aux Pays-Bas a inventé la cassette audio compacte en 1963 puis co-développé le disque compact (CD) ?",
+    "choices": [
+      {
+        "label": "Siemens",
+        "iconId": "tech-factory"
+      },
+      {
+        "label": "Philips",
+        "iconId": "tech-audio"
+      },
+      {
+        "label": "Grundig",
+        "iconId": "tech-radio"
+      },
+      {
+        "label": "Telefunken",
+        "iconId": "tech-tv"
+      }
+    ]
+  },
+  {
+    "id": "NL-nature-1",
+    "iso": "NL",
+    "category": "nature",
+    "prompt": "Quel oiseau échassier limicole au long bec droit orangé, qui revient nicher chaque printemps dans les prairies humides des polders, a été désigné oiseau national des Pays-Bas ?",
+    "choices": [
+      {
+        "label": "La cigogne blanche",
+        "iconId": "bird-stork"
+      },
+      {
+        "label": "Le macareux moine",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "La barge à queue noire (Grutto)",
+        "iconId": "bird-wader"
+      },
+      {
+        "label": "Le héron cendré",
+        "iconId": "bird-heron"
+      }
+    ]
+  },
+  {
+    "id": "NL-musique-1",
+    "iso": "NL",
+    "category": "musique",
+    "prompt": "Quel grand orgue mécanique ambulant aux façades richement sculptées et peintes, fonctionnant à l'aide de livres de cartons perforés pliés en zigzag, anime traditionnellement les rues des villes néerlandaises ?",
+    "choices": [
+      {
+        "label": "Le bandonéon",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La vielle à roue",
+        "iconId": "instrument-string"
+      },
+      {
+        "label": "Le célesta",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Le draaiorgel",
+        "iconId": "instrument-organ"
+      }
+    ]
+  },
+  {
+    "id": "NO-tech-1",
+    "iso": "NO",
+    "category": "tech",
+    "prompt": "Quel ustensile de cuisine du quotidien, conçu sur le modèle d'un outil de menuiserie et breveté en 1925 à Lillehammer par Thor Bjørklund, est une invention norvégienne ?",
+    "choices": [
+      {
+        "label": "Le rabot à fromage (ostehøvel)",
+        "iconId": "object-knife"
+      },
+      {
+        "label": "Le tire-bouchon à levier",
+        "iconId": "object-tool"
+      },
+      {
+        "label": "L'ouvre-boîte à molette",
+        "iconId": "object-metal"
+      },
+      {
+        "label": "Le moulin à poivre mécanique",
+        "iconId": "object-kitchen"
+      }
+    ]
+  },
+  {
+    "id": "NO-nature-1",
+    "iso": "NO",
+    "category": "nature",
+    "prompt": "Quel bovidé arctique massif à la longue toison laineuse vit à l'état sauvage sur le plateau montagneux du parc national de Dovrefjell en Norvège ?",
+    "choices": [
+      {
+        "label": "Le bison d'Europe",
+        "iconId": "animal-bison"
+      },
+      {
+        "label": "Le bœuf musqué",
+        "iconId": "animal-ox"
+      },
+      {
+        "label": "Le bouquetin des Alpes",
+        "iconId": "animal-goat"
+      },
+      {
+        "label": "Le mouflon boréal",
+        "iconId": "animal-sheep"
+      }
+    ]
+  },
+  {
+    "id": "NO-musique-1",
+    "iso": "NO",
+    "category": "musique",
+    "prompt": "Quel violon traditionnel norvégien de la région de Hardanger, orné de motifs floraux et d'une tête de lion sculptée, possède quatre ou cinq cordes sympathiques résonnant sous les cordes principales ?",
+    "choices": [
+      {
+        "label": "La nyckelharpa",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Le kantele",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "Le hardingfele",
+        "iconId": "instrument-string"
+      },
+      {
+        "label": "La langeleik",
+        "iconId": "instrument-zither"
+      }
+    ]
+  },
+  {
+    "id": "PL-tech-1",
+    "iso": "PL",
+    "category": "tech",
+    "prompt": "Quelle invention d'éclairage domestique et industrielle a été mise au point en 1853 à Lwów et en Galicie par le pharmacien polonais Ignacy Łukasiewicz, fondateur de la première raffinerie moderne ?",
+    "choices": [
+      {
+        "label": "La lampe à pétrole (kérosène)",
+        "iconId": "object-lamp"
+      },
+      {
+        "label": "L'ampoule à filament de carbone",
+        "iconId": "tech-lightbulb"
+      },
+      {
+        "label": "Le tube néon luminescent",
+        "iconId": "tech-energy"
+      },
+      {
+        "label": "La bougie stéarique",
+        "iconId": "object-fire"
+      }
+    ]
+  },
+  {
+    "id": "PL-nature-1",
+    "iso": "PL",
+    "category": "nature",
+    "prompt": "Quel grand mammifère herbivore, le plus lourd animal terrestre d'Europe appelé « żubr » en polonais, a été sauvé de l'extinction au XXe siècle grâce au troupeau de la forêt primaire de Białowieża en Pologne ?",
+    "choices": [
+      {
+        "label": "L'élan d'Eurasie",
+        "iconId": "animal-deer"
+      },
+      {
+        "label": "Le bison d'Europe",
+        "iconId": "animal-bison"
+      },
+      {
+        "label": "L'aurochs de Heck",
+        "iconId": "animal-ox"
+      },
+      {
+        "label": "Le sanglier des Carpates",
+        "iconId": "animal-boar"
+      }
+    ]
+  },
+  {
+    "id": "PL-musique-1",
+    "iso": "PL",
+    "category": "musique",
+    "prompt": "Quel compositeur et pianiste romantique né en 1810 à Żelazowa Wola, près de Varsovie, a porté au sommet de l'art pianistique des danses traditionnelles polonaises comme la mazurka et la polonaise ?",
+    "choices": [
+      {
+        "label": "Franz Liszt",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Antonín Dvořák",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Frédéric Chopin",
+        "iconId": "person-composer"
+      },
+      {
+        "label": "Bedřich Smetana",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "PT-tech-1",
+    "iso": "PT",
+    "category": "tech",
+    "prompt": "Quel type de navire léger à voiles latines triangulaires, mis au point au XVe siècle par les charpentiers portugais sous l'impulsion d'Henri le Navigateur pour remonter au vent, a permis les Grandes Découvertes ?",
+    "choices": [
+      {
+        "label": "Le drakkar à rames",
+        "iconId": "transport-boat"
+      },
+      {
+        "label": "La caravelle",
+        "iconId": "transport-ship"
+      },
+      {
+        "label": "La jonque à lattes",
+        "iconId": "transport-sail"
+      },
+      {
+        "label": "La trière antique",
+        "iconId": "water-wave"
+      }
+    ]
+  },
+  {
+    "id": "PT-nature-1",
+    "iso": "PT",
+    "category": "nature",
+    "prompt": "Quel arbre à feuillage persistant des plaines de l'Alentejo (« montado »), dont l'écorce épaisse et spongieuse est récoltée tous les neuf ans sans abattre le tronc, est l'arbre national protégé du Portugal ?",
+    "choices": [
+      {
+        "label": "L'olivier sauvage",
+        "iconId": "plant-olive"
+      },
+      {
+        "label": "Le pin parasol",
+        "iconId": "plant-pine"
+      },
+      {
+        "label": "Le chêne-liège",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le châtaignier",
+        "iconId": "plant-forest"
+      }
+    ]
+  },
+  {
+    "id": "PT-musique-1",
+    "iso": "PT",
+    "category": "musique",
+    "prompt": "Quel chant urbain mélancolique né au XIXe siècle dans les quartiers de Lisbonne, incarné par Amália Rodrigues et accompagné à la guitare portugaise à douze cordes, exprime le sentiment de la « saudade » ?",
+    "choices": [
+      {
+        "label": "Le flamenco",
+        "iconId": "person-dancer"
+      },
+      {
+        "label": "La morna",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "La bossa nova",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le fado",
+        "iconId": "music-vocal"
+      }
+    ]
+  },
+  {
+    "id": "RO-tech-1",
+    "iso": "RO",
+    "category": "tech",
+    "prompt": "Quel constructeur automobile fondé en 1966 à Mioveni en Roumanie tire son nom de l'ancienne province habitée dans l'Antiquité par les ancêtres des Roumains ?",
+    "choices": [
+      {
+        "label": "Dacia",
+        "iconId": "transport-car"
+      },
+      {
+        "label": "Škoda",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "Zastava",
+        "iconId": "transport-truck"
+      },
+      {
+        "label": "Trabant",
+        "iconId": "tech-factory"
+      }
+    ]
+  },
+  {
+    "id": "RO-nature-1",
+    "iso": "RO",
+    "category": "nature",
+    "prompt": "Quelle vaste réserve de biosphère située à l'est de la Roumanie, au bord de la mer Noire, abrite la plus grande étendue de roseaux d'Europe et la principale colonie européenne de pélicans blancs ?",
+    "choices": [
+      {
+        "label": "La Camargue",
+        "iconId": "bird-flamingo"
+      },
+      {
+        "label": "Le delta du Danube",
+        "iconId": "bird-pelican"
+      },
+      {
+        "label": "Les marais du Pripiat",
+        "iconId": "water-swamp"
+      },
+      {
+        "label": "La puszta de Hortobágy",
+        "iconId": "landform-plain"
+      }
+    ]
+  },
+  {
+    "id": "RO-musique-1",
+    "iso": "RO",
+    "category": "musique",
+    "prompt": "Quel instrument à vent composé d'une rangée de tuyaux de bambou ou de roseau légèrement incurvés, appelé « nai » en roumain, a été rendu célèbre dans le monde entier par le virtuose roumain Gheorghe Zamfir ?",
+    "choices": [
+      {
+        "label": "Le duduk en abricotier",
+        "iconId": "instrument-wind"
+      },
+      {
+        "label": "L'accordéon chromatique",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La flûte de Pan roumaine (nai)",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "Le cymbalum",
+        "iconId": "instrument-string"
+      }
+    ]
+  },
+  {
+    "id": "RU-tech-1",
+    "iso": "RU",
+    "category": "tech",
+    "prompt": "Quel célèbre jeu vidéo de réflexion, conçu en 1984 au Centre de calcul de l'Académie des sciences de Moscou par l'informaticien russe Alekseï Pajitnov, consiste à assembler des pièces géométriques de quatre blocs ?",
+    "choices": [
+      {
+        "label": "Pac-Man",
+        "iconId": "tech-arcade"
+      },
+      {
+        "label": "Space Invaders",
+        "iconId": "tech-screen"
+      },
+      {
+        "label": "Pong",
+        "iconId": "tech-computer"
+      },
+      {
+        "label": "Tetris",
+        "iconId": "tech-gamepad"
+      }
+    ]
+  },
+  {
+    "id": "RU-nature-1",
+    "iso": "RU",
+    "category": "nature",
+    "prompt": "Quel mammifère aquatique endémique de Sibérie, appelé « nerpa » en russe, détient la particularité d'être la seule espèce de phoque au monde vivant exclusivement en eau douce ?",
+    "choices": [
+      {
+        "label": "Le phoque du Baïkal",
+        "iconId": "sea-seal"
+      },
+      {
+        "label": "Le morse de l'Arctique",
+        "iconId": "animal-walrus"
+      },
+      {
+        "label": "La loutre de mer du Kamtchatka",
+        "iconId": "animal-otter"
+      },
+      {
+        "label": "Le béluga blanc",
+        "iconId": "sea-whale"
+      }
+    ]
+  },
+  {
+    "id": "RU-musique-1",
+    "iso": "RU",
+    "category": "musique",
+    "prompt": "Quel luth traditionnel russe à trois cordes est immédiatement reconnaissable à la forme triangulaire de sa caisse de résonance ?",
+    "choices": [
+      {
+        "label": "La domra",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "La balalaïka",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La gousli",
+        "iconId": "instrument-zither"
+      },
+      {
+        "label": "Le bouzouki",
+        "iconId": "instrument-string"
+      }
+    ]
+  },
+  {
+    "id": "SM-nature-1",
+    "iso": "SM",
+    "category": "nature",
+    "prompt": "Sur quelle montagne calcaire des Apennins, couronnée de trois pics fortifiés (Guaita, Cesta et Montale), est perchée la république de Saint-Marin ?",
+    "choices": [
+      {
+        "label": "Le mont Titano",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le mont Vésuve",
+        "iconId": "landform-volcano"
+      },
+      {
+        "label": "Le mont Olympe",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le Cervin",
+        "iconId": "landform-mountain"
+      }
+    ]
+  },
+  {
+    "id": "SM-musique-1",
+    "iso": "SM",
+    "category": "musique",
+    "prompt": "Quelle est la particularité de l'« Inno Nazionale della Repubblica », l'hymne national de Saint-Marin adopté en 1894 sur une mélodie de Federico Consolo ?",
+    "choices": [
+      {
+        "label": "Il ne comporte aucune parole officielle",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Il est chanté exclusivement en grec ancien",
+        "iconId": "language-speech"
+      },
+      {
+        "label": "Il dure plus de quarante-cinq minutes",
+        "iconId": "object-clock"
+      },
+      {
+        "label": "Il se joue uniquement avec des cloches d'église",
+        "iconId": "instrument-bell"
+      }
+    ]
+  },
+  {
+    "id": "SM-culture-1",
+    "iso": "SM",
+    "category": "culture",
+    "prompt": "Quel métier exerçait saint Marin (Marinus), l'artisan chrétien venu de l'île dalmate de Rab au début du IVe siècle à qui l'on attribue la fondation de la république ?",
+    "choices": [
+      {
+        "label": "Souffleur de verre",
+        "iconId": "object-glass"
+      },
+      {
+        "label": "Tailleur de pierre",
+        "iconId": "mineral-rock"
+      },
+      {
+        "label": "Armateur de galères",
+        "iconId": "transport-ship"
+      },
+      {
+        "label": "Horloger royal",
+        "iconId": "object-clock"
+      }
+    ]
+  },
+  {
+    "id": "RS-tech-1",
+    "iso": "RS",
+    "category": "tech",
+    "prompt": "Quelle célèbre petite voiture économique, exportée jusqu'aux États-Unis dans les années 1980, était produite par le constructeur Zastava dans son usine de Kragujevac en Serbie ?",
+    "choices": [
+      {
+        "label": "La Trabant",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "La Yugo",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "La Lada Niva",
+        "iconId": "brand-car"
+      },
+      {
+        "label": "La Dacia 1300",
+        "iconId": "brand-car"
+      }
+    ]
+  },
+  {
+    "id": "RS-nature-1",
+    "iso": "RS",
+    "category": "nature",
+    "prompt": "Quel conifère rare à la silhouette très élancée (*Picea omorika*), découvert en 1875 par le botaniste Josif Pančić, est une espèce relique endémique de la vallée de la Drina en Serbie ?",
+    "choices": [
+      {
+        "label": "L'épicéa de Serbie",
+        "iconId": "plant-pine"
+      },
+      {
+        "label": "Le séquoia géant",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le cèdre du Liban",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "L'araucaria du Chili",
+        "iconId": "plant-pine"
+      }
+    ]
+  },
+  {
+    "id": "RS-musique-1",
+    "iso": "RS",
+    "category": "musique",
+    "prompt": "Quel instrument à vent en cuivre est à l'honneur chaque été depuis 1961 lors du grand festival de musique balkanique du village de Guča, en Serbie ?",
+    "choices": [
+      {
+        "label": "La trompette",
+        "iconId": "instrument-trumpet"
+      },
+      {
+        "label": "La flûte traversière",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "Le basson",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "Le cor des Alpes",
+        "iconId": "instrument-horn"
+      }
+    ]
+  },
+  {
+    "id": "SK-tech-1",
+    "iso": "SK",
+    "category": "tech",
+    "prompt": "Quelle entreprise mondiale de cybersécurité, célèbre pour son logiciel antivirus NOD32 dont la première version fut créée en 1987, a été fondée en Slovaquie ?",
+    "choices": [
+      {
+        "label": "ESET",
+        "iconId": "tech-security"
+      },
+      {
+        "label": "Kaspersky",
+        "iconId": "tech-security"
+      },
+      {
+        "label": "Norton",
+        "iconId": "tech-security"
+      },
+      {
+        "label": "McAfee",
+        "iconId": "tech-security"
+      }
+    ]
+  },
+  {
+    "id": "SK-nature-1",
+    "iso": "SK",
+    "category": "nature",
+    "prompt": "Quel massif alpin de la chaîne des Carpates, situé à la frontière nord de la Slovaquie, abrite le mont Gerlachovský (2 655 m), point culminant du pays ?",
+    "choices": [
+      {
+        "label": "Les Hautes Tatras",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Les Dolomites",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Les Rhodopes",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Les Sudètes",
+        "iconId": "landform-mountain"
+      }
+    ]
+  },
+  {
+    "id": "SK-musique-1",
+    "iso": "SK",
+    "category": "musique",
+    "prompt": "Quelle très longue flûte verticale de berger en bois, pouvant mesurer jusqu'à 1,80 mètre et dotée de trois trous de jeu, est l'instrument folklorique emblématique de la Slovaquie ?",
+    "choices": [
+      {
+        "label": "La fujara",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "La balalaïka",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le cymbalum",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "L'ocarina",
+        "iconId": "instrument-flute"
+      }
+    ]
+  },
+  {
+    "id": "SI-tech-1",
+    "iso": "SI",
+    "category": "tech",
+    "prompt": "Quel fabricant d'équipements sportifs slovène, fondé en 1945 à Begunje, a révolutionné le ski alpin au début des années 1990 en inventant les skis paraboliques modernes (« carving ») ?",
+    "choices": [
+      {
+        "label": "Rossignol",
+        "iconId": "sport-ski"
+      },
+      {
+        "label": "Salomon",
+        "iconId": "sport-ski"
+      },
+      {
+        "label": "Elan",
+        "iconId": "sport-ski"
+      },
+      {
+        "label": "Atomic",
+        "iconId": "sport-ski"
+      }
+    ]
+  },
+  {
+    "id": "SI-nature-1",
+    "iso": "SI",
+    "category": "nature",
+    "prompt": "Quel amphibien cavernicole aveugle à la peau rosée, surnommé « poisson humain » ou « bébé dragon », vit dans les rivières souterraines des grottes de Postojna en Slovénie ?",
+    "choices": [
+      {
+        "label": "Le protée anguillard",
+        "iconId": "animal-salamander"
+      },
+      {
+        "label": "La salamandre géante de Chine",
+        "iconId": "animal-salamander"
+      },
+      {
+        "label": "Le crapaud buffle",
+        "iconId": "animal-frog"
+      },
+      {
+        "label": "Le triton alpestre",
+        "iconId": "animal-salamander"
+      }
+    ]
+  },
+  {
+    "id": "SI-musique-1",
+    "iso": "SI",
+    "category": "musique",
+    "prompt": "Quel style de polka alpine joyeuse, popularisé dès 1953 par les frères slovènes Slavko et Vilko Avsenik, associe accordéon, clarinette, trompette, guitare et baryton ?",
+    "choices": [
+      {
+        "label": "La musique Oberkrainer",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "Le Klezmer",
+        "iconId": "instrument-clarinet"
+      },
+      {
+        "label": "Le Fado",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le Rebetiko",
+        "iconId": "instrument-lute"
+      }
+    ]
+  },
+  {
+    "id": "SE-tech-1",
+    "iso": "SE",
+    "category": "tech",
+    "prompt": "Quelle plateforme mondiale de streaming musical a été fondée en 2006 en Suède par les entrepreneurs Daniel Ek et Martin Lorentzon ?",
+    "choices": [
+      {
+        "label": "Deezer",
+        "iconId": "tech-music"
+      },
+      {
+        "label": "Spotify",
+        "iconId": "tech-music"
+      },
+      {
+        "label": "Apple Music",
+        "iconId": "tech-music"
+      },
+      {
+        "label": "Napster",
+        "iconId": "tech-music"
+      }
+    ]
+  },
+  {
+    "id": "SE-nature-1",
+    "iso": "SE",
+    "category": "nature",
+    "prompt": "Quel grand mammifère aux larges bois palmés, surnommé « le roi de la forêt » en Suède, est le plus grand cervidé vivant au monde ?",
+    "choices": [
+      {
+        "label": "L'élan d'Europe (orignal)",
+        "iconId": "animal-moose"
+      },
+      {
+        "label": "Le daim moucheté",
+        "iconId": "animal-deer"
+      },
+      {
+        "label": "Le chevreuil",
+        "iconId": "animal-deer"
+      },
+      {
+        "label": "Le bouquetin des Alpes",
+        "iconId": "animal-goat"
+      }
+    ]
+  },
+  {
+    "id": "SE-musique-1",
+    "iso": "SE",
+    "category": "musique",
+    "prompt": "Quel instrument traditionnel suédois à cordes frottées avec un archet se distingue par une rangée de touches en bois (clavier) sur lesquelles le musicien appuie pour changer les notes ?",
+    "choices": [
+      {
+        "label": "Le nyckelharpa",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Le kantele",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "L'hardingfele",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "La mandoline",
+        "iconId": "instrument-lute"
+      }
+    ]
+  },
+  {
+    "id": "UA-tech-1",
+    "iso": "UA",
+    "category": "tech",
+    "prompt": "Quel célèbre bureau d'études et constructeur aéronautique basé à Kyiv, concepteur des avions cargos géants An-124 et An-225, est un fleuron de l'industrie ukrainienne ?",
+    "choices": [
+      {
+        "label": "Embraer",
+        "iconId": "transport-plane"
+      },
+      {
+        "label": "Bombardier",
+        "iconId": "transport-plane"
+      },
+      {
+        "label": "Antonov",
+        "iconId": "transport-plane"
+      },
+      {
+        "label": "Lockheed Martin",
+        "iconId": "transport-plane"
+      }
+    ]
+  },
+  {
+    "id": "UA-nature-1",
+    "iso": "UA",
+    "category": "nature",
+    "prompt": "Comment appelle-t-on le sol très fertile, riche en humus et surnommé « terre noire », qui recouvre une grande partie des plaines agricoles d'Ukraine ?",
+    "choices": [
+      {
+        "label": "Le tchernoziom",
+        "iconId": "landform-soil"
+      },
+      {
+        "label": "Le pergélisol",
+        "iconId": "landform-ice"
+      },
+      {
+        "label": "La latérite",
+        "iconId": "landform-soil"
+      },
+      {
+        "label": "La banquise",
+        "iconId": "landform-ice"
+      }
+    ]
+  },
+  {
+    "id": "UA-musique-1",
+    "iso": "UA",
+    "category": "musique",
+    "prompt": "Quel instrument à cordes pincées traditionnel d'Ukraine, hybride entre le luth et la cithare pouvant compter plus de cinquante cordes, accompagne les chants épiques des bardes « kobzars » ?",
+    "choices": [
+      {
+        "label": "Le banjo",
+        "iconId": "instrument-banjo"
+      },
+      {
+        "label": "La cornemuse",
+        "iconId": "instrument-wind"
+      },
+      {
+        "label": "Le marimba",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "La bandoura",
+        "iconId": "instrument-lute"
+      }
+    ]
+  },
+  {
+    "id": "VA-nature-1",
+    "iso": "VA",
+    "category": "nature",
+    "prompt": "Quelle part approximative de la superficie totale de la Cité du Vatican est occupée par les célèbres Jardins du Vatican, aménagés depuis la Renaissance ?",
+    "choices": [
+      {
+        "label": "Aucune, l'État est entièrement minéral",
+        "iconId": "building-city"
+      },
+      {
+        "label": "Environ la moitié du territoire",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Moins de 1 % du territoire",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "La totalité du territoire",
+        "iconId": "plant-forest"
+      }
+    ]
+  },
+  {
+    "id": "VA-musique-1",
+    "iso": "VA",
+    "category": "musique",
+    "prompt": "Quel chant liturgique monodique a cappella en latin, qui porte le nom d'un pape du VIe siècle, est le chant sacré officiel historique de l'Église catholique romaine au Vatican ?",
+    "choices": [
+      {
+        "label": "Le chant grégorien",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Le qawwali",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Le reggae",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Le mariachi",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "VA-culture-1",
+    "iso": "VA",
+    "category": "culture",
+    "prompt": "Quel grand maître de la Renaissance italienne a peint la voûte de la chapelle Sixtine ainsi que la fresque du « Jugement dernier » au Vatican ?",
+    "choices": [
+      {
+        "label": "Claude Monet",
+        "iconId": "person-artist"
+      },
+      {
+        "label": "Pablo Picasso",
+        "iconId": "person-artist"
+      },
+      {
+        "label": "Michel-Ange",
+        "iconId": "person-artist"
+      },
+      {
+        "label": "Rembrandt",
+        "iconId": "person-artist"
+      }
+    ]
+  }
+]

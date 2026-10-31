@@ -34,6 +34,8 @@
     "supabase:migration": "npx supabase migration new",
     "check:bundle": "node scripts/check-bundle-budget.mjs",
     "check:ds": "node scripts/check-ds-atoms.mjs",
+    "check:knowledge": "node scripts/validate-knowledge.mjs",
+    "build:knowledge": "node scripts/build-knowledge-packs.mjs",
     "build:sea-lanes": "node scripts/build-sea-lanes.mjs && prettier --write src/globe/render/life/seaLanes.generated.js"
   },
   "keywords": [],

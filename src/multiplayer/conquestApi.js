@@ -62,6 +62,12 @@ export const fortifyConquestCountry = (matchId, answer) =>
 export const cancelFortifyChallenge = (matchId) =>
   rpc("conquest_cancel_fortify", { p_match_id: matchId });
 
+export const requestKnowledgeChallenge = (matchId, countryId) =>
+  rpc("conquest_knowledge_challenge", { p_match_id: matchId, p_country_id: countryId });
+
+export const answerKnowledge = (matchId, choice) =>
+  rpc("conquest_answer_knowledge", { p_match_id: matchId, p_choice: Number(choice) });
+
 /** Rematch from the end screen: creates or joins the linked lobby, already ready. */
 export const rematchConquestMatch = (matchId) => rpc("conquest_rematch", { p_match_id: matchId });
 

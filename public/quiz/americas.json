@@ -1,0 +1,3650 @@
+[
+  {
+    "id": "AW-nature-1",
+    "iso": "AW",
+    "category": "nature",
+    "prompt": "Quel arbre au tronc courbé vers le sud-ouest par les alizés constants est le symbole naturel le plus célèbre d'Aruba ?",
+    "choices": [
+      {
+        "label": "Le baobab africain",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le divi-divi (watapana)",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le cèdre du Liban",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le séquoia géant",
+        "iconId": "plant-tree"
+      }
+    ]
+  },
+  {
+    "id": "AW-musique-1",
+    "iso": "AW",
+    "category": "musique",
+    "prompt": "Quelle tradition musicale du Nouvel An propre à Aruba consiste pour des groupes de musiciens à aller de porte en porte souhaiter la prospérité ?",
+    "choices": [
+      {
+        "label": "Le dande",
+        "iconId": "music-song"
+      },
+      {
+        "label": "Le fado",
+        "iconId": "music-song"
+      },
+      {
+        "label": "Le mariachi",
+        "iconId": "music-band"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "AW-culture-1",
+    "iso": "AW",
+    "category": "culture",
+    "prompt": "Quelle langue créole à base lexicale ibérique est la langue maternelle historique et co-officielle d'Aruba avec le néerlandais ?",
+    "choices": [
+      {
+        "label": "Le sranan tongo",
+        "iconId": "language-book"
+      },
+      {
+        "label": "Le créole haïtien",
+        "iconId": "language-book"
+      },
+      {
+        "label": "Le papiamento",
+        "iconId": "language-book"
+      },
+      {
+        "label": "Le guarani",
+        "iconId": "language-book"
+      }
+    ]
+  },
+  {
+    "id": "AI-nature-1",
+    "iso": "AI",
+    "category": "nature",
+    "prompt": "Quel oiseau de la famille des Colombidés est officiellement désigné comme l'oiseau national d'Anguilla ?",
+    "choices": [
+      {
+        "label": "Le colibri huppé",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "La tourterelle à queue carrée",
+        "iconId": "bird-dove"
+      },
+      {
+        "label": "Le perroquet impérial",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "Le toucan toco",
+        "iconId": "bird-toucan"
+      }
+    ]
+  },
+  {
+    "id": "AI-musique-1",
+    "iso": "AI",
+    "category": "musique",
+    "prompt": "Quel chanteur de reggae anguillais, surnommé le « Bob Dylan d'Anguilla », a fondé en 1991 le festival Moonsplash sur l'île ?",
+    "choices": [
+      {
+        "label": "Jimmy Cliff",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Eddy Grant",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Bankie Banx",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Burning Spear",
+        "iconId": "person-singer"
+      }
+    ]
+  },
+  {
+    "id": "AI-culture-1",
+    "iso": "AI",
+    "category": "culture",
+    "prompt": "Quelle discipline sportive maritime, héritée des anciens navires de transport des marins de l'île, est le sport national d'Anguilla ?",
+    "choices": [
+      {
+        "label": "La régate de bateaux à voile (Boat racing)",
+        "iconId": "sport-sailing"
+      },
+      {
+        "label": "Le water-polo",
+        "iconId": "sport-water"
+      },
+      {
+        "label": "Le plongeon de falaise",
+        "iconId": "sport-water"
+      },
+      {
+        "label": "Le ski nautique",
+        "iconId": "sport-water"
+      }
+    ]
+  },
+  {
+    "id": "AR-tech-1",
+    "iso": "AR",
+    "category": "tech",
+    "prompt": "Quel objet du quotidien, encore appelé « birome » en Argentine, a été perfectionné et industrialisé à Buenos Aires dans les années 1940 par László Bíró ?",
+    "choices": [
+      {
+        "label": "La fermeture à glissière",
+        "iconId": "object-tool"
+      },
+      {
+        "label": "L'agrafeuse de bureau",
+        "iconId": "object-tool"
+      },
+      {
+        "label": "Le stylo à bille",
+        "iconId": "tech-pen"
+      },
+      {
+        "label": "Le trombone métallique",
+        "iconId": "object-tool"
+      }
+    ]
+  },
+  {
+    "id": "AR-nature-1",
+    "iso": "AR",
+    "category": "nature",
+    "prompt": "Quel passereau est l'oiseau national de l'Argentine, célèbre pour façonner un nid en terre crue en forme de four à pain ?",
+    "choices": [
+      {
+        "label": "Le quetzal resplendissant",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "Le fournier roux (Hornero)",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "Le coq-de-roche péruvien",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "L'ara hyacinthe",
+        "iconId": "bird-parrot"
+      }
+    ]
+  },
+  {
+    "id": "AR-musique-1",
+    "iso": "AR",
+    "category": "musique",
+    "prompt": "Quel compositeur et bandonéoniste argentin du XXe siècle a créé le « nuevo tango » et composé « Libertango » ?",
+    "choices": [
+      {
+        "label": "Astor Piazzolla",
+        "iconId": "person-musician"
+      },
+      {
+        "label": "Heitor Villa-Lobos",
+        "iconId": "person-musician"
+      },
+      {
+        "label": "Paco de Lucía",
+        "iconId": "person-musician"
+      },
+      {
+        "label": "Compay Segundo",
+        "iconId": "person-musician"
+      }
+    ]
+  },
+  {
+    "id": "AG-nature-1",
+    "iso": "AG",
+    "category": "nature",
+    "prompt": "Quel grand oiseau marin à la poche gulaire rouge écarlate possède dans la lagune de Codrington à Barbuda l'une des plus grandes colonies de nidification au monde ?",
+    "choices": [
+      {
+        "label": "Le fou de Bassan",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "La frégate superbe",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "Le cygne tuberculé",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "La cigogne blanche",
+        "iconId": "bird-seabird"
+      }
+    ]
+  },
+  {
+    "id": "AG-musique-1",
+    "iso": "AG",
+    "category": "musique",
+    "prompt": "De quel type d'instruments est composé le Hell's Gate Steel Orchestra, fondé à Antigua en 1945 et considéré comme le plus ancien groupe du genre toujours en activité ?",
+    "choices": [
+      {
+        "label": "De cornemuses en peau de chèvre",
+        "iconId": "instrument-bagpipe"
+      },
+      {
+        "label": "De harpes celtiques",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "De tambours métalliques (steelpans)",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "De cithares sur table",
+        "iconId": "instrument-string"
+      }
+    ]
+  },
+  {
+    "id": "AG-culture-1",
+    "iso": "AG",
+    "category": "culture",
+    "prompt": "Quel amiral britannique de la fin du XVIIIe siècle a donné son nom au chantier naval géorgien d'English Harbour à Antigua, classé à l'UNESCO ?",
+    "choices": [
+      {
+        "label": "Horatio Nelson",
+        "iconId": "person-admiral"
+      },
+      {
+        "label": "Francis Drake",
+        "iconId": "person-admiral"
+      },
+      {
+        "label": "Walter Raleigh",
+        "iconId": "person-admiral"
+      },
+      {
+        "label": "Henry Morgan",
+        "iconId": "person-admiral"
+      }
+    ]
+  },
+  {
+    "id": "BS-nature-1",
+    "iso": "BS",
+    "category": "nature",
+    "prompt": "Quel grand oiseau échassier au plumage rose-orangé est l'oiseau national des Bahamas et niche par dizaines de milliers sur l'île de Great Inagua ?",
+    "choices": [
+      {
+        "label": "La grue couronnée",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "Le flamant des Caraïbes",
+        "iconId": "bird-flamingo"
+      },
+      {
+        "label": "L'autruche d'Afrique",
+        "iconId": "bird-ostrich"
+      },
+      {
+        "label": "Le manchot royal",
+        "iconId": "bird-penguin"
+      }
+    ]
+  },
+  {
+    "id": "BS-musique-1",
+    "iso": "BS",
+    "category": "musique",
+    "prompt": "Quel grand défilé musical et costumé des Bahamas, rythmé par des tambours en peau de chèvre (goombay) et des cloches à vache, anime les rues le lendemain de Noël et au Nouvel An ?",
+    "choices": [
+      {
+        "label": "Le Junkanoo",
+        "iconId": "music-festival"
+      },
+      {
+        "label": "La Fête des Morts",
+        "iconId": "music-festival"
+      },
+      {
+        "label": "L'Oktoberfest",
+        "iconId": "music-festival"
+      },
+      {
+        "label": "Le Fest-noz",
+        "iconId": "music-festival"
+      }
+    ]
+  },
+  {
+    "id": "BS-culture-1",
+    "iso": "BS",
+    "category": "culture",
+    "prompt": "Sur quelle île des Bahamas (appelée Guanahani par ses habitants lucayens) Christophe Colomb a-t-il accosté pour la première fois aux Amériques le 12 octobre 1492 ?",
+    "choices": [
+      {
+        "label": "Cozumel",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Marajó",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "San Salvador",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Margarita",
+        "iconId": "landform-island"
+      }
+    ]
+  },
+  {
+    "id": "BL-nature-1",
+    "iso": "BL",
+    "category": "nature",
+    "prompt": "Quel reptile arboricole herbivore endémique de l'arc antillais, dépourvu de rayures sur la queue, trouve à Saint-Barthélemy l'un de ses derniers refuges ?",
+    "choices": [
+      {
+        "label": "Le monstre de Gila",
+        "iconId": "animal-lizard"
+      },
+      {
+        "label": "Le caméléon casqué",
+        "iconId": "animal-lizard"
+      },
+      {
+        "label": "L'iguane des Petites Antilles",
+        "iconId": "animal-lizard"
+      },
+      {
+        "label": "Le dragon barbu",
+        "iconId": "animal-lizard"
+      }
+    ]
+  },
+  {
+    "id": "BL-musique-1",
+    "iso": "BL",
+    "category": "musique",
+    "prompt": "Quel chanteur américain a popularisé le bar « Le Select » de Saint-Barthélemy à la fin des années 1970, associé à sa célèbre chanson « Cheeseburger in Paradise » ?",
+    "choices": [
+      {
+        "label": "Jimmy Buffett",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Elvis Presley",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Frank Sinatra",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Johnny Cash",
+        "iconId": "person-singer"
+      }
+    ]
+  },
+  {
+    "id": "BL-culture-1",
+    "iso": "BL",
+    "category": "culture",
+    "prompt": "Quel royaume scandinave a possédé et administré l'île de Saint-Barthélemy de 1784 à 1878 avant de la rétrocéder à la France ?",
+    "choices": [
+      {
+        "label": "Le Danemark",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "La Norvège",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "L'Islande",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "La Suède",
+        "iconId": "symbol-crown"
+      }
+    ]
+  },
+  {
+    "id": "BZ-nature-1",
+    "iso": "BZ",
+    "category": "nature",
+    "prompt": "Quel mammifère herbivore à museau en forme de courte trompe est l'animal national du Belize, où il est surnommé localement « vache de montagne » (mountain cow) ?",
+    "choices": [
+      {
+        "label": "Le capybara",
+        "iconId": "animal-rodent"
+      },
+      {
+        "label": "Le fourmilier géant",
+        "iconId": "animal-mammal"
+      },
+      {
+        "label": "Le paresseux à trois doigts",
+        "iconId": "animal-sloth"
+      },
+      {
+        "label": "Le tapir de Baird",
+        "iconId": "animal-tapir"
+      }
+    ]
+  },
+  {
+    "id": "BZ-musique-1",
+    "iso": "BZ",
+    "category": "musique",
+    "prompt": "Quel genre musical et de danse rythmé par les tambours des Garifunas du Belize, inscrit à l'UNESCO en 2001, a été popularisé mondialement par Andy Palacio ?",
+    "choices": [
+      {
+        "label": "La punta",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La cueca",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La milonga",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La polka",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "BZ-culture-1",
+    "iso": "BZ",
+    "category": "culture",
+    "prompt": "Quelle ancienne civilisation précolombienne a édifié les cités monumentales de Caracol, Xunantunich et Altun Ha sur le territoire du Belize ?",
+    "choices": [
+      {
+        "label": "Les Incas",
+        "iconId": "landmark-ruins"
+      },
+      {
+        "label": "Les Mayas",
+        "iconId": "landmark-pyramid"
+      },
+      {
+        "label": "Les Nazcas",
+        "iconId": "landmark-ruins"
+      },
+      {
+        "label": "Les Chibchas",
+        "iconId": "landmark-ruins"
+      }
+    ]
+  },
+  {
+    "id": "BM-nature-1",
+    "iso": "BM",
+    "category": "nature",
+    "prompt": "Quel oiseau marin nocturne endémique des Bermudes, cru éteint pendant plus de trois siècles avant sa redécouverte en 1951, est l'oiseau national de l'archipel ?",
+    "choices": [
+      {
+        "label": "Le dodo",
+        "iconId": "bird-flightless"
+      },
+      {
+        "label": "Le kiwi austral",
+        "iconId": "bird-flightless"
+      },
+      {
+        "label": "Le pétrel des Bermudes (Cahow)",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "Le condor de Californie",
+        "iconId": "bird-vulture"
+      }
+    ]
+  },
+  {
+    "id": "BM-musique-1",
+    "iso": "BM",
+    "category": "musique",
+    "prompt": "Comment appelle-t-on les troupes de danseurs masqués des Bermudes, coiffés de hautes plumes de paon et dansant au son des tambours et des sifflets ?",
+    "choices": [
+      {
+        "label": "Les Gombey",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Les Derviches tourneurs",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Les Cosaques",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Les Gilles de Binche",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "BM-culture-1",
+    "iso": "BM",
+    "category": "culture",
+    "prompt": "Quel vêtement coupé juste au-dessus du genou tire son nom de l'archipel des Bermudes, où il est porté avec de hautes chaussettes comme tenue de ville et d'affaires officielle ?",
+    "choices": [
+      {
+        "label": "Le kilt",
+        "iconId": "object-clothing"
+      },
+      {
+        "label": "Le sarouel",
+        "iconId": "object-clothing"
+      },
+      {
+        "label": "Le pantalon gaucho",
+        "iconId": "object-clothing"
+      },
+      {
+        "label": "Le short bermuda",
+        "iconId": "object-clothing"
+      }
+    ]
+  },
+  {
+    "id": "BO-nature-1",
+    "iso": "BO",
+    "category": "nature",
+    "prompt": "Quel grand rapace planeur des hautes montagnes est représenté au sommet des armoiries de la Bolivie comme symbole d'horizons infinis ?",
+    "choices": [
+      {
+        "label": "Le condor des Andes",
+        "iconId": "bird-condor"
+      },
+      {
+        "label": "La harpie féroce",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "Le caracara huppé",
+        "iconId": "bird-falcon"
+      },
+      {
+        "label": "L'urubu roi",
+        "iconId": "bird-vulture"
+      }
+    ]
+  },
+  {
+    "id": "BO-musique-1",
+    "iso": "BO",
+    "category": "musique",
+    "prompt": "Quel petit instrument à dix cordes pincées, autrefois fabriqué avec une carapace de tatou, est emblématique du folklore musical bolivien (notamment à Potosí et Sucre) ?",
+    "choices": [
+      {
+        "label": "Le cuatro",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le charango",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le bandoléon",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La marimba",
+        "iconId": "instrument-xylophone"
+      }
+    ]
+  },
+  {
+    "id": "BO-culture-1",
+    "iso": "BO",
+    "category": "culture",
+    "prompt": "Quel immense désert de sel perché à plus de 3 600 mètres d'altitude sur l'Altiplano bolivien est le plus vaste du monde ?",
+    "choices": [
+      {
+        "label": "Le désert d'Atacama",
+        "iconId": "landform-desert"
+      },
+      {
+        "label": "La puna de Atacama",
+        "iconId": "landform-plateau"
+      },
+      {
+        "label": "Le salar d'Uyuni",
+        "iconId": "landform-saltflat"
+      },
+      {
+        "label": "Le salar de Arizaro",
+        "iconId": "landform-valley"
+      }
+    ]
+  },
+  {
+    "id": "BR-tech-1",
+    "iso": "BR",
+    "category": "tech",
+    "prompt": "Quel constructeur aéronautique fondé en 1969 à São José dos Campos est devenu un géant mondial des avions civils régionaux et militaires ?",
+    "choices": [
+      {
+        "label": "Bombardier",
+        "iconId": "transport-plane"
+      },
+      {
+        "label": "ATR",
+        "iconId": "transport-propeller"
+      },
+      {
+        "label": "CASA",
+        "iconId": "transport-jet"
+      },
+      {
+        "label": "Embraer",
+        "iconId": "brand-aviation"
+      }
+    ]
+  },
+  {
+    "id": "BR-nature-1",
+    "iso": "BR",
+    "category": "nature",
+    "prompt": "Quel grand félin tacheté, le plus imposant du continent américain, trouve son principal bastion mondial dans le Pantanal et l'Amazonie brésilienne ?",
+    "choices": [
+      {
+        "label": "Le jaguar",
+        "iconId": "animal-jaguar"
+      },
+      {
+        "label": "Le puma",
+        "iconId": "animal-cougar"
+      },
+      {
+        "label": "Le léopard",
+        "iconId": "animal-leopard"
+      },
+      {
+        "label": "Le guépard",
+        "iconId": "animal-cheetah"
+      }
+    ]
+  },
+  {
+    "id": "BR-musique-1",
+    "iso": "BR",
+    "category": "musique",
+    "prompt": "Quel courant musical né à Rio de Janeiro à la fin des années 1950 mêle samba et jazz sous l'impulsion d'Antônio Carlos Jobim et João Gilberto ?",
+    "choices": [
+      {
+        "label": "Le tango nuevo",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La bossa nova",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Le reggaeton",
+        "iconId": "music-beat"
+      },
+      {
+        "label": "La bachata",
+        "iconId": "instrument-guitar"
+      }
+    ]
+  },
+  {
+    "id": "BB-nature-1",
+    "iso": "BB",
+    "category": "nature",
+    "prompt": "Quel poisson capable de planer hors de l'eau grâce à ses longues nageoires pectorales est l'emblème national de la Barbade ?",
+    "choices": [
+      {
+        "label": "L'espadon",
+        "iconId": "sea-swordfish"
+      },
+      {
+        "label": "La dorade coryphène",
+        "iconId": "sea-fish"
+      },
+      {
+        "label": "Le poisson volant",
+        "iconId": "sea-flyingfish"
+      },
+      {
+        "label": "Le barracuda",
+        "iconId": "sea-predator"
+      }
+    ]
+  },
+  {
+    "id": "BB-musique-1",
+    "iso": "BB",
+    "category": "musique",
+    "prompt": "Quel genre musical créé dans les années 1960 par le chanteur barbadien Jackie Opel fusionne le ska jamaïcain, le calypso et le rhythm and blues ?",
+    "choices": [
+      {
+        "label": "Le kompa",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La biguine",
+        "iconId": "instrument-clarinet"
+      },
+      {
+        "label": "Le zouk",
+        "iconId": "music-beat"
+      },
+      {
+        "label": "Le spouge",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "BB-culture-1",
+    "iso": "BB",
+    "category": "culture",
+    "prompt": "Quel spiritueux à base de canne à sucre est produit à la Barbade par la distillerie Mount Gay depuis 1703, ce qui en fait la plus ancienne marque attestée au monde ?",
+    "choices": [
+      {
+        "label": "Le rhum",
+        "iconId": "drink-rum"
+      },
+      {
+        "label": "La tequila",
+        "iconId": "drink-spirit"
+      },
+      {
+        "label": "Le gin",
+        "iconId": "drink-bottle"
+      },
+      {
+        "label": "Le mezcal",
+        "iconId": "drink-glass"
+      }
+    ]
+  },
+  {
+    "id": "CA-tech-1",
+    "iso": "CA",
+    "category": "tech",
+    "prompt": "Quelle marque de smartphones à clavier physique complet, lancée en 1999 par l'entreprise canadienne Research In Motion (RIM) à Waterloo, a dominé le marché professionnel mondial dans les années 2000 ?",
+    "choices": [
+      {
+        "label": "Nokia",
+        "iconId": "tech-phone"
+      },
+      {
+        "label": "BlackBerry",
+        "iconId": "tech-smartphone"
+      },
+      {
+        "label": "Motorola",
+        "iconId": "tech-mobile"
+      },
+      {
+        "label": "Ericsson",
+        "iconId": "brand-tech"
+      }
+    ]
+  },
+  {
+    "id": "CA-nature-1",
+    "iso": "CA",
+    "category": "nature",
+    "prompt": "Quel grand rongeur semi-aquatique bâtisseur de barrages, dont la fourrure a façonné l'histoire économique de la Nouvelle-France, est un emblème officiel du Canada ?",
+    "choices": [
+      {
+        "label": "La loutre de mer",
+        "iconId": "animal-otter"
+      },
+      {
+        "label": "La marmotte commune",
+        "iconId": "animal-rodent"
+      },
+      {
+        "label": "Le castor du Canada",
+        "iconId": "animal-beaver"
+      },
+      {
+        "label": "Le capybara",
+        "iconId": "animal-mammal"
+      }
+    ]
+  },
+  {
+    "id": "CA-musique-1",
+    "iso": "CA",
+    "category": "musique",
+    "prompt": "Quel poète et auteur-compositeur-interprète né à Montréal en 1934 a écrit les classiques « Suzanne », « So Long, Marianne » et « Hallelujah » ?",
+    "choices": [
+      {
+        "label": "Bob Dylan",
+        "iconId": "instrument-harmonica"
+      },
+      {
+        "label": "Lou Reed",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Johnny Cash",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Leonard Cohen",
+        "iconId": "person-singer"
+      }
+    ]
+  },
+  {
+    "id": "CL-nature-1",
+    "iso": "CL",
+    "category": "nature",
+    "prompt": "Quel petit cervidé trapu des forêts andines de Patagonie figure sur le blason national du Chili face au condor des Andes ?",
+    "choices": [
+      {
+        "label": "Le caribou",
+        "iconId": "animal-reindeer"
+      },
+      {
+        "label": "L'élan",
+        "iconId": "animal-moose"
+      },
+      {
+        "label": "Le daim européen",
+        "iconId": "animal-stag"
+      },
+      {
+        "label": "Le huemul",
+        "iconId": "animal-deer"
+      }
+    ]
+  },
+  {
+    "id": "CL-musique-1",
+    "iso": "CL",
+    "category": "musique",
+    "prompt": "Quelle danse traditionnelle de séduction, où les deux partenaires tournent en agitant un mouchoir blanc au-dessus de leur tête, est la danse nationale du Chili ?",
+    "choices": [
+      {
+        "label": "La cueca",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La samba",
+        "iconId": "music-beat"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le merengue",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "CL-culture-1",
+    "iso": "CL",
+    "category": "culture",
+    "prompt": "Quel grand poète chilien, auteur du recueil épique « Canto General », a reçu le prix Nobel de littérature en 1971 ?",
+    "choices": [
+      {
+        "label": "Jorge Luis Borges",
+        "iconId": "person-author"
+      },
+      {
+        "label": "Pablo Neruda",
+        "iconId": "person-writer"
+      },
+      {
+        "label": "Octavio Paz",
+        "iconId": "person-poet"
+      },
+      {
+        "label": "Mario Vargas Llosa",
+        "iconId": "language-book"
+      }
+    ]
+  },
+  {
+    "id": "CO-nature-1",
+    "iso": "CO",
+    "category": "nature",
+    "prompt": "Quel palmier géant de la vallée de Cocora, pouvant culminer à 60 mètres de haut en pleine montagne andine, est l'arbre national de la Colombie ?",
+    "choices": [
+      {
+        "label": "Le palmier à cire du Quindío",
+        "iconId": "plant-palm"
+      },
+      {
+        "label": "Le séquoia géant",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le baobab africain",
+        "iconId": "plant-baobab"
+      },
+      {
+        "label": "Le cèdre du Liban",
+        "iconId": "plant-pine"
+      }
+    ]
+  },
+  {
+    "id": "CO-musique-1",
+    "iso": "CO",
+    "category": "musique",
+    "prompt": "Quel genre musical et danse traditionnelle né sur la côte caraïbe de la Colombie marie tambours d'origine africaine, flûtes amérindiennes (« gaitas ») et costumes hispaniques ?",
+    "choices": [
+      {
+        "label": "La milonga",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La cumbia",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le mariachi",
+        "iconId": "instrument-trumpet"
+      },
+      {
+        "label": "La polka",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "CO-culture-1",
+    "iso": "CO",
+    "category": "culture",
+    "prompt": "Quel écrivain colombien surnommé « Gabo », auteur du roman « Cent Ans de solitude », a reçu le prix Nobel de littérature en 1982 ?",
+    "choices": [
+      {
+        "label": "Miguel de Cervantes",
+        "iconId": "language-book"
+      },
+      {
+        "label": "Julio Cortázar",
+        "iconId": "person-author"
+      },
+      {
+        "label": "Gabriel García Márquez",
+        "iconId": "person-writer"
+      },
+      {
+        "label": "Carlos Fuentes",
+        "iconId": "language-script"
+      }
+    ]
+  },
+  {
+    "id": "CR-nature-1",
+    "iso": "CR",
+    "category": "nature",
+    "prompt": "Quelle petite grenouille arboricole au corps vert vif, aux flancs bleus et aux grands yeux écarlates est devenue l'icône mondiale des forêts tropicales du Costa Rica ?",
+    "choices": [
+      {
+        "label": "La salamandre tachetée",
+        "iconId": "animal-salamander"
+      },
+      {
+        "label": "La rainette aux yeux rouges",
+        "iconId": "animal-frog"
+      },
+      {
+        "label": "Le crapaud commun",
+        "iconId": "animal-toad"
+      },
+      {
+        "label": "Le protée anguillard",
+        "iconId": "animal-amphibian"
+      }
+    ]
+  },
+  {
+    "id": "CR-musique-1",
+    "iso": "CR",
+    "category": "musique",
+    "prompt": "Quel grand instrument de percussion à lames de bois, pilier des fêtes folkloriques de la province du Guanacaste, a été déclaré instrument national du Costa Rica en 1996 ?",
+    "choices": [
+      {
+        "label": "Le clavecin",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "Le violoncelle",
+        "iconId": "instrument-violin"
+      },
+      {
+        "label": "Le marimba",
+        "iconId": "instrument-xylophone"
+      },
+      {
+        "label": "Le cor d'harmonie",
+        "iconId": "instrument-horn"
+      }
+    ]
+  },
+  {
+    "id": "CR-culture-1",
+    "iso": "CR",
+    "category": "culture",
+    "prompt": "Quelle mesure historique, proclamée en 1948 par José Figueres Ferrer et inscrite dans la Constitution de 1949, fait la singularité politique du Costa Rica ?",
+    "choices": [
+      {
+        "label": "Le vote obligatoire dès 12 ans",
+        "iconId": "symbol-vote"
+      },
+      {
+        "label": "L'interdiction des voitures",
+        "iconId": "transport-car"
+      },
+      {
+        "label": "L'adoption du latin comme langue",
+        "iconId": "language-book"
+      },
+      {
+        "label": "L'abolition de l'armée permanente",
+        "iconId": "symbol-peace"
+      }
+    ]
+  },
+  {
+    "id": "CU-nature-1",
+    "iso": "CU",
+    "category": "nature",
+    "prompt": "Quel oiseau endémique de Cuba (surnommé localement « zunzuncito »), mesurant moins de 6 centimètres et pesant moins de 2 grammes, est le plus petit oiseau du monde ?",
+    "choices": [
+      {
+        "label": "Le colibri d'Elena (colibri-abeille)",
+        "iconId": "bird-hummingbird"
+      },
+      {
+        "label": "Le roitelet huppé",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "Le martin-pêcheur nain",
+        "iconId": "bird-kingfisher"
+      },
+      {
+        "label": "Le toucan toco",
+        "iconId": "bird-toucan"
+      }
+    ]
+  },
+  {
+    "id": "CU-musique-1",
+    "iso": "CU",
+    "category": "musique",
+    "prompt": "Quel style musical cubain né dans la région de Santiago de Cuba au XIXe siècle, matrice de la salsa, a connu un triomphe mondial en 1997 avec l'album « Buena Vista Social Club » ?",
+    "choices": [
+      {
+        "label": "La capoeira",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le son cubain",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le calypso",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "La ranchera",
+        "iconId": "instrument-trumpet"
+      }
+    ]
+  },
+  {
+    "id": "CU-culture-1",
+    "iso": "CU",
+    "category": "culture",
+    "prompt": "Quel produit traditionnel roulé à la main par les « torcedores » à partir des feuilles cultivées dans la vallée de Viñales fait la renommée mondiale de Cuba sous le nom de « habano » ?",
+    "choices": [
+      {
+        "label": "Le chapeau panama",
+        "iconId": "object-hat"
+      },
+      {
+        "label": "Le tapis persan",
+        "iconId": "object-carpet"
+      },
+      {
+        "label": "Le cigare",
+        "iconId": "object-cigar"
+      },
+      {
+        "label": "L'éventail en dentelle",
+        "iconId": "object-fan"
+      }
+    ]
+  },
+  {
+    "id": "CW-nature-1",
+    "iso": "CW",
+    "category": "nature",
+    "prompt": "Quel arbre côtier des Antilles néerlandaises, dont la couronne pousse complètement penchée d'un seul côté sous l'effet constant des vents alizés, est un symbole naturel de Curaçao ?",
+    "choices": [
+      {
+        "label": "L'érable à sucre",
+        "iconId": "plant-maple"
+      },
+      {
+        "label": "Le bouleau blanc",
+        "iconId": "plant-birch"
+      },
+      {
+        "label": "Le sapin de Nordmann",
+        "iconId": "plant-pine"
+      },
+      {
+        "label": "Le divi-divi",
+        "iconId": "plant-tree"
+      }
+    ]
+  },
+  {
+    "id": "CW-musique-1",
+    "iso": "CW",
+    "category": "musique",
+    "prompt": "Quel genre musical afro-caribéen en rythme 6/8 est la musique officielle du carnaval de Curaçao, où un grand festival annuel couronne le « Rei di Tumba » ?",
+    "choices": [
+      {
+        "label": "La tumba",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "La tarentelle",
+        "iconId": "instrument-tambourine"
+      },
+      {
+        "label": "Le sirtaki",
+        "iconId": "instrument-lute"
+      },
+      {
+        "label": "Le yodel",
+        "iconId": "music-voice"
+      }
+    ]
+  },
+  {
+    "id": "CW-culture-1",
+    "iso": "CW",
+    "category": "culture",
+    "prompt": "Quel agrume amer endémique de l'île (descendant des orangers de Valence devenus fibreux dans le climat aride) fournit ses écorces séchées pour fabriquer la célèbre liqueur de Curaçao ?",
+    "choices": [
+      {
+        "label": "Le pamplemousse rose",
+        "iconId": "fruit-citrus"
+      },
+      {
+        "label": "Le laraha",
+        "iconId": "fruit-orange"
+      },
+      {
+        "label": "La clémentine corse",
+        "iconId": "fruit-mandarin"
+      },
+      {
+        "label": "Le kumquat",
+        "iconId": "fruit-lemon"
+      }
+    ]
+  },
+  {
+    "id": "KY-nature-1",
+    "iso": "KY",
+    "category": "nature",
+    "prompt": "Quel grand lézard herbivore à la peau azurée (Cyclura lewisi) est une espèce strictement endémique de l'île de Grand Cayman ?",
+    "choices": [
+      {
+        "label": "Le dragon de Komodo",
+        "iconId": "animal-dragon"
+      },
+      {
+        "label": "Le caméléon panthère",
+        "iconId": "animal-chameleon"
+      },
+      {
+        "label": "L'iguane bleu",
+        "iconId": "animal-lizard"
+      },
+      {
+        "label": "Le monstre de Gila",
+        "iconId": "animal-reptile"
+      }
+    ]
+  },
+  {
+    "id": "KY-musique-1",
+    "iso": "KY",
+    "category": "musique",
+    "prompt": "Quel ustensile de cuisine métallique est traditionnellement gratté avec une tige de fer pour accompagner le violon et l'accordéon dans la musique folklorique des Îles Caïmans (« Kitchen Dance ») ?",
+    "choices": [
+      {
+        "label": "Une passoire à thé",
+        "iconId": "object-cup"
+      },
+      {
+        "label": "Un rouleau à pâtisserie",
+        "iconId": "object-tool"
+      },
+      {
+        "label": "Un moulin à poivre",
+        "iconId": "object-jar"
+      },
+      {
+        "label": "Une râpe à fromage (ou à coco)",
+        "iconId": "instrument-percussion"
+      }
+    ]
+  },
+  {
+    "id": "DM-nature-1",
+    "iso": "DM",
+    "category": "nature",
+    "prompt": "Quel grand perroquet au poitrail violet foncé et au dos vert, endémique des forêts pluviales montagneuses de la Dominique, est l'oiseau national représenté sur le blason du pays ?",
+    "choices": [
+      {
+        "label": "Le cacatoès à huppe jaune",
+        "iconId": "bird-cockatoo"
+      },
+      {
+        "label": "L'amazone impériale (Sisserou)",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "L'ara hyacinthe",
+        "iconId": "bird-macaw"
+      },
+      {
+        "label": "Le kea de Nouvelle-Zélande",
+        "iconId": "bird-tropical"
+      }
+    ]
+  },
+  {
+    "id": "DM-musique-1",
+    "iso": "DM",
+    "category": "musique",
+    "prompt": "Quel genre musical créé dans les années 1970 par le chanteur dominiquais Gordon Henderson et son groupe Exile One a fusionné la cadence haïtienne et le calypso avant de donner naissance au zouk ?",
+    "choices": [
+      {
+        "label": "La bossa nova",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le tango",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La cadence-lypso",
+        "iconId": "music-note"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "DM-culture-1",
+    "iso": "DM",
+    "category": "culture",
+    "prompt": "Quelle merveille géothermique située dans le parc national de Morne Trois Pitons à la Dominique est une fumarole inondée formant le deuxième plus grand lac bouillonnant naturel du monde ?",
+    "choices": [
+      {
+        "label": "Old Faithful",
+        "iconId": "water-fountain"
+      },
+      {
+        "label": "Le lagon bleu d'Islande",
+        "iconId": "water-pool"
+      },
+      {
+        "label": "Pamukkale",
+        "iconId": "landform-terrace"
+      },
+      {
+        "label": "Le Boiling Lake",
+        "iconId": "water-geyser"
+      }
+    ]
+  },
+  {
+    "id": "DO-nature-1",
+    "iso": "DO",
+    "category": "nature",
+    "prompt": "Quel passereau endémique d'Hispaniola (appelé localement « cigua palmera »), célèbre pour bâtir d'immenses nids collectifs dans les palmiers royaux, est l'oiseau national de la République dominicaine ?",
+    "choices": [
+      {
+        "label": "Le merle d'Amérique",
+        "iconId": "bird-robin"
+      },
+      {
+        "label": "Le cardinal rouge",
+        "iconId": "bird-cardinal"
+      },
+      {
+        "label": "Le geai bleu",
+        "iconId": "bird-jay"
+      },
+      {
+        "label": "L'esclave palmiste",
+        "iconId": "bird-songbird"
+      }
+    ]
+  },
+  {
+    "id": "DO-musique-1",
+    "iso": "DO",
+    "category": "musique",
+    "prompt": "Quel genre musical et danse au tempo vif, traditionnellement joué avec un accordéon, un tambour à double face (« tambora ») et une « güira » métallique, est né en République dominicaine au XIXe siècle ?",
+    "choices": [
+      {
+        "label": "Le merengue",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le fado",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La polka",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "Le blues",
+        "iconId": "instrument-harmonica"
+      }
+    ]
+  },
+  {
+    "id": "DO-culture-1",
+    "iso": "DO",
+    "category": "culture",
+    "prompt": "Quelle pierre fine de pectolite bleue aux reflets turquoise, surnommée la « pierre de l'Atlantide », possède son unique gisement mondial connu dans la province de Barahona en République dominicaine ?",
+    "choices": [
+      {
+        "label": "Le rubis birman",
+        "iconId": "mineral-ruby"
+      },
+      {
+        "label": "Le larimar",
+        "iconId": "mineral-gem"
+      },
+      {
+        "label": "L'ambre de la Baltique",
+        "iconId": "mineral-amber"
+      },
+      {
+        "label": "Le jade impérial",
+        "iconId": "mineral-crystal"
+      }
+    ]
+  },
+  {
+    "id": "EC-culture-1",
+    "iso": "EC",
+    "category": "culture",
+    "prompt": "Quel célèbre chapeau de paille finement tressée est en réalité originaire d'Équateur malgré son nom géographique trompeur ?",
+    "choices": [
+      {
+        "label": "Le borsalino",
+        "iconId": "object-hat"
+      },
+      {
+        "label": "Le sombrero",
+        "iconId": "object-sombrero"
+      },
+      {
+        "label": "Le béret",
+        "iconId": "object-cap"
+      },
+      {
+        "label": "Le chapeau Panama",
+        "iconId": "object-crown"
+      }
+    ]
+  },
+  {
+    "id": "EC-nature-1",
+    "iso": "EC",
+    "category": "nature",
+    "prompt": "Quel archipel volcanique équatorien a inspiré à Charles Darwin sa théorie de l'évolution grâce à ses espèces endémiques ?",
+    "choices": [
+      {
+        "label": "Les îles Galápagos",
+        "iconId": "animal-turtle"
+      },
+      {
+        "label": "L'archipel Juan Fernández",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Les îles Malouines",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Les Açores",
+        "iconId": "sea-whale"
+      }
+    ]
+  },
+  {
+    "id": "EC-musique-1",
+    "iso": "EC",
+    "category": "musique",
+    "prompt": "Quel genre musical mélancolique à la guitare, immortalisé par Julio Jaramillo, est considéré comme l'âme musicale de l'Équateur ?",
+    "choices": [
+      {
+        "label": "La cumbia",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "Le pasillo",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le tango",
+        "iconId": "person-dancer"
+      },
+      {
+        "label": "La bossa nova",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "FK-culture-1",
+    "iso": "FK",
+    "category": "culture",
+    "prompt": "Quelle activité d'élevage introduite au XIXe siècle constitue historiquement le pilier rural des fermes des îles Malouines ?",
+    "choices": [
+      {
+        "label": "L'élevage de rennes",
+        "iconId": "animal-deer"
+      },
+      {
+        "label": "L'élevage d'alpagas",
+        "iconId": "animal-llama"
+      },
+      {
+        "label": "L'élevage de bisons",
+        "iconId": "animal-bison"
+      },
+      {
+        "label": "L'élevage de moutons",
+        "iconId": "animal-sheep"
+      }
+    ]
+  },
+  {
+    "id": "FK-nature-1",
+    "iso": "FK",
+    "category": "nature",
+    "prompt": "Quel oiseau marin reconnaissable à ses aigrettes jaunes sur la tête niche en vastes colonies sur les falaises rocheuses des Malouines ?",
+    "choices": [
+      {
+        "label": "Le gorfou sauteur",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Le pélican brun",
+        "iconId": "bird-pelican"
+      },
+      {
+        "label": "Le fou à pieds bleus",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "L'autruche",
+        "iconId": "bird-ostrich"
+      }
+    ]
+  },
+  {
+    "id": "FK-musique-1",
+    "iso": "FK",
+    "category": "musique",
+    "prompt": "Quelle célèbre chanson du groupe britannique Dire Straits, sortie en 1985, a été écrite en référence au conflit des îles Malouines de 1982 ?",
+    "choices": [
+      {
+        "label": "Sunday Bloody Sunday",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "Brothers in Arms",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Wind of Change",
+        "iconId": "music-microphone"
+      },
+      {
+        "label": "Zombie",
+        "iconId": "music-vinyl"
+      }
+    ]
+  },
+  {
+    "id": "GD-culture-1",
+    "iso": "GD",
+    "category": "culture",
+    "prompt": "Quelle épice aromatique à l'arille rouge (« macis ») vaut à la Grenade le surnom d'« île aux épices » ?",
+    "choices": [
+      {
+        "label": "Le safran",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "La noix de muscade",
+        "iconId": "fruit-nut"
+      },
+      {
+        "label": "L'anis étoilé",
+        "iconId": "plant-seed"
+      },
+      {
+        "label": "Le piment d'Espelette",
+        "iconId": "plant-pepper"
+      }
+    ]
+  },
+  {
+    "id": "GD-nature-1",
+    "iso": "GD",
+    "category": "nature",
+    "prompt": "Quel oiseau colombidé menacé d'extinction, endémique des fourrés secs de l'île, est l'oiseau national de la Grenade ?",
+    "choices": [
+      {
+        "label": "Le condor des Andes",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "Le perroquet jaco",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "La colombe de Grenade",
+        "iconId": "bird-dove"
+      },
+      {
+        "label": "Le casoar à casque",
+        "iconId": "bird-ostrich"
+      }
+    ]
+  },
+  {
+    "id": "GD-musique-1",
+    "iso": "GD",
+    "category": "musique",
+    "prompt": "Quel style musical caribéen dérivé du calypso, dont la variante rapide « Jab Jab » anime le carnaval de Grenade (« Spicemas »), fait danser l'île ?",
+    "choices": [
+      {
+        "label": "Le merengue",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La bachata",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le mariachi",
+        "iconId": "instrument-trumpet"
+      },
+      {
+        "label": "La soca",
+        "iconId": "instrument-drum"
+      }
+    ]
+  },
+  {
+    "id": "GL-culture-1",
+    "iso": "GL",
+    "category": "culture",
+    "prompt": "Quelle embarcation individuelle légère, autrefois constituée d'une armature recouverte de peaux de phoque, a été perfectionnée par les chasseurs inuits du Groenland ?",
+    "choices": [
+      {
+        "label": "Le kayak",
+        "iconId": "transport-boat"
+      },
+      {
+        "label": "La gondole",
+        "iconId": "transport-ship"
+      },
+      {
+        "label": "Le catamaran",
+        "iconId": "transport-sail"
+      },
+      {
+        "label": "La jonque",
+        "iconId": "water-wave"
+      }
+    ]
+  },
+  {
+    "id": "GL-nature-1",
+    "iso": "GL",
+    "category": "nature",
+    "prompt": "Quel grand prédateur arctique au pelage blanc figure sur les armoiries du Groenland ?",
+    "choices": [
+      {
+        "label": "Le tigre de Sibérie",
+        "iconId": "animal-tiger"
+      },
+      {
+        "label": "L'ours polaire",
+        "iconId": "animal-bear"
+      },
+      {
+        "label": "Le loup gris",
+        "iconId": "animal-wolf"
+      },
+      {
+        "label": "Le léopard des neiges",
+        "iconId": "animal-leopard"
+      }
+    ]
+  },
+  {
+    "id": "GL-musique-1",
+    "iso": "GL",
+    "category": "musique",
+    "prompt": "Quel tambour sur cadre traditionnel des Inuits du Groenland, frappé sur son cercle de bois, accompagnait autrefois les chants de chamanes et les duels poétiques ?",
+    "choices": [
+      {
+        "label": "Le djembe",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "Le gong",
+        "iconId": "instrument-cymbal"
+      },
+      {
+        "label": "Le qilaat",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "Le tabla",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "GT-culture-1",
+    "iso": "GT",
+    "category": "culture",
+    "prompt": "Quelle grande cité maya antique nichée dans la jungle du Petén, au Guatemala, est célèbre pour ses pyramides abruptes émergeant au-dessus de la canopée ?",
+    "choices": [
+      {
+        "label": "Machu Picchu",
+        "iconId": "landmark-ruins"
+      },
+      {
+        "label": "Teotihuacan",
+        "iconId": "landmark-monument"
+      },
+      {
+        "label": "Chichén Itzá",
+        "iconId": "landmark-temple"
+      },
+      {
+        "label": "Tikal",
+        "iconId": "landmark-pyramid"
+      }
+    ]
+  },
+  {
+    "id": "GT-nature-1",
+    "iso": "GT",
+    "category": "nature",
+    "prompt": "Quel oiseau tropical au plumage vert émeraude et à la très longue traîne est à la fois l'oiseau national et le nom de la monnaie du Guatemala ?",
+    "choices": [
+      {
+        "label": "Le quetzal resplendissant",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "L'ara rouge",
+        "iconId": "bird-macaw"
+      },
+      {
+        "label": "Le paon bleu",
+        "iconId": "bird-peacock"
+      },
+      {
+        "label": "Le flamant des Caraïbes",
+        "iconId": "bird-flamingo"
+      }
+    ]
+  },
+  {
+    "id": "GT-musique-1",
+    "iso": "GT",
+    "category": "musique",
+    "prompt": "Quel grand instrument de percussion à lames de bois de « hormigo », souvent joué à plusieurs musiciens simultanément, est l'instrument national du Guatemala ?",
+    "choices": [
+      {
+        "label": "Le clavecin",
+        "iconId": "instrument-piano"
+      },
+      {
+        "label": "La marimba",
+        "iconId": "instrument-xylophone"
+      },
+      {
+        "label": "La harpe des Andes",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "L'ocarina",
+        "iconId": "instrument-flute"
+      }
+    ]
+  },
+  {
+    "id": "GY-culture-1",
+    "iso": "GY",
+    "category": "culture",
+    "prompt": "Quel sucre roux naturel à gros cristaux dorés et croquants tire son nom d'une région et d'un fleuve historiques du Guyana ?",
+    "choices": [
+      {
+        "label": "Le sucre candi",
+        "iconId": "mineral-crystal"
+      },
+      {
+        "label": "Le sucre Demerara",
+        "iconId": "plant-sugarcane"
+      },
+      {
+        "label": "Le sirop d'érable",
+        "iconId": "plant-leaf"
+      },
+      {
+        "label": "La mélasse noire",
+        "iconId": "drink-bottle"
+      }
+    ]
+  },
+  {
+    "id": "GY-nature-1",
+    "iso": "GY",
+    "category": "nature",
+    "prompt": "Quel oiseau singulier des rivières du Guyana, dont les poussins possèdent deux griffes aux ailes pour grimper aux branches, est l'oiseau national du pays ?",
+    "choices": [
+      {
+        "label": "L'aigle harpie",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "Le toucan de Cuvier",
+        "iconId": "bird-toucan"
+      },
+      {
+        "label": "L'hoazin huppé",
+        "iconId": "bird-pheasant"
+      },
+      {
+        "label": "Le jabiru d'Amérique",
+        "iconId": "bird-stork"
+      }
+    ]
+  },
+  {
+    "id": "GY-musique-1",
+    "iso": "GY",
+    "category": "musique",
+    "prompt": "Quel genre musical caribéen plein d'humour et de satire sociale est traditionnellement chanté lors de compétitions pendant le festival national de « Mashramani » au Guyana ?",
+    "choices": [
+      {
+        "label": "Le fado",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La polka",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "Le blues",
+        "iconId": "instrument-saxophone"
+      },
+      {
+        "label": "Le calypso",
+        "iconId": "music-microphone"
+      }
+    ]
+  },
+  {
+    "id": "HN-nature-1",
+    "iso": "HN",
+    "category": "nature",
+    "prompt": "Quel oiseau au plumage écarlate, jaune et bleu est l'oiseau national du Honduras ?",
+    "choices": [
+      {
+        "label": "Le quetzal resplendissant",
+        "iconId": "bird-quetzal"
+      },
+      {
+        "label": "L'ara rouge",
+        "iconId": "bird-macaw"
+      },
+      {
+        "label": "Le toucan à carène",
+        "iconId": "bird-toucan"
+      },
+      {
+        "label": "Le condor des Andes",
+        "iconId": "bird-condor"
+      }
+    ]
+  },
+  {
+    "id": "HN-musique-1",
+    "iso": "HN",
+    "category": "musique",
+    "prompt": "Quel grand arc musical monocorde doté d'une calebasse servant de résonateur, dont la corde métallique est frappée avec une baguette, est l'instrument folklorique typique du Honduras ?",
+    "choices": [
+      {
+        "label": "Le bandonéon",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La caramba",
+        "iconId": "instrument-string"
+      },
+      {
+        "label": "La cornemuse",
+        "iconId": "instrument-bagpipe"
+      },
+      {
+        "label": "La balalaïka",
+        "iconId": "instrument-lute"
+      }
+    ]
+  },
+  {
+    "id": "HN-culture-1",
+    "iso": "HN",
+    "category": "culture",
+    "prompt": "Quel grand site archéologique maya situé dans l'ouest du Honduras est célèbre pour son escalier hiéroglyphique ?",
+    "choices": [
+      {
+        "label": "Tikal",
+        "iconId": "landmark-pyramid"
+      },
+      {
+        "label": "Chichén Itzá",
+        "iconId": "landmark-temple"
+      },
+      {
+        "label": "Copán",
+        "iconId": "landmark-ruins"
+      },
+      {
+        "label": "Palenque",
+        "iconId": "landmark-monument"
+      }
+    ]
+  },
+  {
+    "id": "HT-nature-1",
+    "iso": "HT",
+    "category": "nature",
+    "prompt": "Quel oiseau endémique d'Hispaniola, de la famille des trogons, est l'oiseau national d'Haïti ?",
+    "choices": [
+      {
+        "label": "Le flamant des Caraïbes",
+        "iconId": "bird-flamingo"
+      },
+      {
+        "label": "L'émeraude d'Hispaniola",
+        "iconId": "bird-hummingbird"
+      },
+      {
+        "label": "Le caleçon rouge",
+        "iconId": "bird-trogon"
+      },
+      {
+        "label": "La frégate superbe",
+        "iconId": "bird-frigate"
+      }
+    ]
+  },
+  {
+    "id": "HT-musique-1",
+    "iso": "HT",
+    "category": "musique",
+    "prompt": "Quel genre musical et danse populaire haïtien a été créé dans les années 1950 par le saxophoniste Nemours Jean-Baptiste ?",
+    "choices": [
+      {
+        "label": "La bachata",
+        "iconId": "music-guitar"
+      },
+      {
+        "label": "Le calypso",
+        "iconId": "music-drum"
+      },
+      {
+        "label": "La salsa",
+        "iconId": "music-trumpet"
+      },
+      {
+        "label": "Le compas",
+        "iconId": "music-saxophone"
+      }
+    ]
+  },
+  {
+    "id": "HT-culture-1",
+    "iso": "HT",
+    "category": "culture",
+    "prompt": "Quelle immense forteresse militaire perchée au sommet d'une montagne a été bâtie en Haïti au début du XIXe siècle après l'indépendance ?",
+    "choices": [
+      {
+        "label": "La Citadelle Laferrière",
+        "iconId": "landmark-fortress"
+      },
+      {
+        "label": "Le Fort de France",
+        "iconId": "building-castle"
+      },
+      {
+        "label": "El Morro",
+        "iconId": "landmark-tower"
+      },
+      {
+        "label": "La Fortaleza",
+        "iconId": "building-wall"
+      }
+    ]
+  },
+  {
+    "id": "JM-nature-1",
+    "iso": "JM",
+    "category": "nature",
+    "prompt": "Quel oiseau endémique à longues plumes caudales, surnommé localement « Doctor Bird », est l'oiseau national de la Jamaïque ?",
+    "choices": [
+      {
+        "label": "Le perroquet amazone",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "Le pélican brun",
+        "iconId": "bird-pelican"
+      },
+      {
+        "label": "Le colibri à tête noire",
+        "iconId": "bird-hummingbird"
+      },
+      {
+        "label": "L'ibis rouge",
+        "iconId": "bird-ibis"
+      }
+    ]
+  },
+  {
+    "id": "JM-musique-1",
+    "iso": "JM",
+    "category": "musique",
+    "prompt": "Quel genre musical né en Jamaïque à la fin des années 1960, issu du ska et du rocksteady, a été rendu célèbre dans le monde entier par Bob Marley ?",
+    "choices": [
+      {
+        "label": "Le zouk",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La cumbia",
+        "iconId": "instrument-maracas"
+      },
+      {
+        "label": "Le blues",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le reggae",
+        "iconId": "music-reggae"
+      }
+    ]
+  },
+  {
+    "id": "JM-culture-1",
+    "iso": "JM",
+    "category": "culture",
+    "prompt": "Quel mouvement spirituel et culturel né en Jamaïque dans les années 1930 adopte les couleurs vert, or et rouge ainsi que le port des dreadlocks ?",
+    "choices": [
+      {
+        "label": "Le mouvement rastafari",
+        "iconId": "person-dreadlocks"
+      },
+      {
+        "label": "Le soufisme",
+        "iconId": "symbol-crescent"
+      },
+      {
+        "label": "Le shintoïsme",
+        "iconId": "landmark-shrine"
+      },
+      {
+        "label": "Le jaïnisme",
+        "iconId": "symbol-lotus"
+      }
+    ]
+  },
+  {
+    "id": "KN-nature-1",
+    "iso": "KN",
+    "category": "nature",
+    "prompt": "Quel grand oiseau marin plongeur doté d'une large poche sous le bec est l'oiseau national de Saint-Christophe-et-Niévès ?",
+    "choices": [
+      {
+        "label": "Le cygne tuberculé",
+        "iconId": "bird-swan"
+      },
+      {
+        "label": "Le pélican brun",
+        "iconId": "bird-pelican"
+      },
+      {
+        "label": "L'aigle royal",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "Le hibou grand-duc",
+        "iconId": "bird-owl"
+      }
+    ]
+  },
+  {
+    "id": "KN-musique-1",
+    "iso": "KN",
+    "category": "musique",
+    "prompt": "Quelle danse folklorique caribéenne de Saint-Christophe-et-Niévès met en scène des danseurs costumés portant de hautes coiffes ornées de plumes de paon au son des tambours et du fifre ?",
+    "choices": [
+      {
+        "label": "La capoeira",
+        "iconId": "sport-martial"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La Masquerade",
+        "iconId": "object-mask"
+      },
+      {
+        "label": "La valse viennoise",
+        "iconId": "music-couple"
+      }
+    ]
+  },
+  {
+    "id": "KN-culture-1",
+    "iso": "KN",
+    "category": "culture",
+    "prompt": "Quelle imposante forteresse britannique du XVIIIe siècle, surnommée le « Gibraltar des Antilles », domine une colline volcanique de l'île de Saint-Christophe ?",
+    "choices": [
+      {
+        "label": "Fort Boyard",
+        "iconId": "building-fort"
+      },
+      {
+        "label": "Alcatraz",
+        "iconId": "building-prison"
+      },
+      {
+        "label": "La Tour de Londres",
+        "iconId": "landmark-tower"
+      },
+      {
+        "label": "La forteresse de Brimstone Hill",
+        "iconId": "landmark-fortress"
+      }
+    ]
+  },
+  {
+    "id": "LC-nature-1",
+    "iso": "LC",
+    "category": "nature",
+    "prompt": "Quel oiseau endémique des forêts tropicales de Sainte-Lucie, localement surnommé « Jacquot », est l'oiseau national de l'île ?",
+    "choices": [
+      {
+        "label": "Le quetzal resplendissant",
+        "iconId": "bird-tropical"
+      },
+      {
+        "label": "Le toucan toco",
+        "iconId": "bird-toucan"
+      },
+      {
+        "label": "Le colibri porte-épée",
+        "iconId": "bird-hummingbird"
+      },
+      {
+        "label": "L'amazone de Sainte-Lucie",
+        "iconId": "bird-parrot"
+      }
+    ]
+  },
+  {
+    "id": "LC-musique-1",
+    "iso": "LC",
+    "category": "musique",
+    "prompt": "Quelle tradition musicale et chantée de Sainte-Lucie oppose depuis des siècles deux confréries culturelles rivales portant le nom de deux fleurs ?",
+    "choices": [
+      {
+        "label": "La Rose et La Marguerite",
+        "iconId": "music-choir"
+      },
+      {
+        "label": "Le Lys et L'Orchidée",
+        "iconId": "music-festival"
+      },
+      {
+        "label": "L'Hibiscus et Le Jasmin",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La Tulipe et Le Magnolia",
+        "iconId": "music-folk"
+      }
+    ]
+  },
+  {
+    "id": "LC-culture-1",
+    "iso": "LC",
+    "category": "culture",
+    "prompt": "Quel poète et dramaturge né à Sainte-Lucie a reçu le prix Nobel de littérature en 1992 pour son œuvre inspirée des Caraïbes, dont l'épopée « Omeros » ?",
+    "choices": [
+      {
+        "label": "Aimé Césaire",
+        "iconId": "person-writer"
+      },
+      {
+        "label": "Derek Walcott",
+        "iconId": "person-poet"
+      },
+      {
+        "label": "V. S. Naipaul",
+        "iconId": "person-author"
+      },
+      {
+        "label": "Édouard Glissant",
+        "iconId": "person-scholar"
+      }
+    ]
+  },
+  {
+    "id": "MF-nature-1",
+    "iso": "MF",
+    "category": "nature",
+    "prompt": "Quel cactus globulaire surmonté d'une coiffe laineuse rouge-orangé en forme de bonnet, surnommé pour cette raison en référence aux soldats britanniques, pousse sur les falaises arides de Saint-Martin ?",
+    "choices": [
+      {
+        "label": "La fougère arborescente",
+        "iconId": "plant-fern"
+      },
+      {
+        "label": "L'érable à sucre",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le bouleau nain arctique",
+        "iconId": "plant-tree"
+      },
+      {
+        "label": "Le cactus tête-à-l'Anglais",
+        "iconId": "plant-cactus"
+      }
+    ]
+  },
+  {
+    "id": "MF-musique-1",
+    "iso": "MF",
+    "category": "musique",
+    "prompt": "Quelle danse et musique traditionnelle de Saint-Martin, rythmée par le tambour « pump drum », a été créée en 1848 pour célébrer l'abolition de l'esclavage sur l'île ?",
+    "choices": [
+      {
+        "label": "Le ponum",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La samba",
+        "iconId": "music-carnival"
+      },
+      {
+        "label": "Le tango",
+        "iconId": "music-couple"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "instrument-guitar"
+      }
+    ]
+  },
+  {
+    "id": "MF-culture-1",
+    "iso": "MF",
+    "category": "culture",
+    "prompt": "Quel traité signé en 1648 entre Français et Néerlandais organise depuis près de quatre siècles le partage pacifique de l'île de Saint-Martin ?",
+    "choices": [
+      {
+        "label": "Le traité de Tordesillas",
+        "iconId": "object-scroll"
+      },
+      {
+        "label": "Le traité de Concordia",
+        "iconId": "symbol-treaty"
+      },
+      {
+        "label": "Le traité d'Utrecht",
+        "iconId": "object-document"
+      },
+      {
+        "label": "Le traité de Ryswick",
+        "iconId": "symbol-peace"
+      }
+    ]
+  },
+  {
+    "id": "MX-tech-1",
+    "iso": "MX",
+    "category": "tech",
+    "prompt": "Quelle invention majeure de l'audiovisuel l'ingénieur mexicain Guillermo González Camarena a-t-il fait breveter dès 1940 à l'âge de 23 ans ?",
+    "choices": [
+      {
+        "label": "Le disque vinyle microsillon",
+        "iconId": "music-vinyl"
+      },
+      {
+        "label": "Un système de télévision couleur",
+        "iconId": "tech-tv"
+      },
+      {
+        "label": "Le four à micro-ondes",
+        "iconId": "tech-appliance"
+      },
+      {
+        "label": "Le téléphone cellulaire",
+        "iconId": "tech-phone"
+      }
+    ]
+  },
+  {
+    "id": "MX-nature-1",
+    "iso": "MX",
+    "category": "nature",
+    "prompt": "Quel amphibien endémique des lacs de la vallée de Mexico possède la capacité de régénérer ses organes et de passer toute sa vie à l'état larvaire avec ses branchies externes ?",
+    "choices": [
+      {
+        "label": "Le caméléon panthère",
+        "iconId": "animal-lizard"
+      },
+      {
+        "label": "L'iguane marin",
+        "iconId": "animal-reptile"
+      },
+      {
+        "label": "L'axolotl",
+        "iconId": "animal-amphibian"
+      },
+      {
+        "label": "La grenouille taureau",
+        "iconId": "animal-frog"
+      }
+    ]
+  },
+  {
+    "id": "MX-musique-1",
+    "iso": "MX",
+    "category": "musique",
+    "prompt": "De quel État de l'ouest du Mexique sont originaires les ensembles de musique mariachi, mêlant violons, trompettes, vihuela et guitarrón ?",
+    "choices": [
+      {
+        "label": "Le Yucatán",
+        "iconId": "landmark-pyramid"
+      },
+      {
+        "label": "Le Chiapas",
+        "iconId": "landform-jungle"
+      },
+      {
+        "label": "La Basse-Californie",
+        "iconId": "landform-desert"
+      },
+      {
+        "label": "Le Jalisco",
+        "iconId": "instrument-guitar"
+      }
+    ]
+  },
+  {
+    "id": "MS-nature-1",
+    "iso": "MS",
+    "category": "nature",
+    "prompt": "Quel passereau au plumage noir et jaune orangé, endémique des forêts humides des collines de l'île, est l'oiseau national de Montserrat ?",
+    "choices": [
+      {
+        "label": "Le flamant des Caraïbes",
+        "iconId": "bird-flamingo"
+      },
+      {
+        "label": "L'ara macao",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "L'oriole de Montserrat",
+        "iconId": "bird-songbird"
+      },
+      {
+        "label": "La frégate superbe",
+        "iconId": "bird-seabird"
+      }
+    ]
+  },
+  {
+    "id": "MS-musique-1",
+    "iso": "MS",
+    "category": "musique",
+    "prompt": "Quel producteur légendaire des Beatles a fondé en 1979 les studios AIR Montserrat, où ont enregistré The Police, Dire Straits et Elton John avant le passage de l'ouragan Hugo en 1989 ?",
+    "choices": [
+      {
+        "label": "Phil Spector",
+        "iconId": "music-vinyl"
+      },
+      {
+        "label": "Quincy Jones",
+        "iconId": "music-studio"
+      },
+      {
+        "label": "Brian Eno",
+        "iconId": "tech-audio"
+      },
+      {
+        "label": "George Martin",
+        "iconId": "person-musician"
+      }
+    ]
+  },
+  {
+    "id": "MS-culture-1",
+    "iso": "MS",
+    "category": "culture",
+    "prompt": "Quel volcan actif de Montserrat est entré en éruption en 1995, recouvrant de cendres et de coulées pyroclastiques tout le sud de l'île ?",
+    "choices": [
+      {
+        "label": "La Soufrière de Montserrat",
+        "iconId": "landform-volcano"
+      },
+      {
+        "label": "La montagne Pelée",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le volcan Cotopaxi",
+        "iconId": "landform-peak"
+      },
+      {
+        "label": "Le mont Vésuve",
+        "iconId": "landform-crater"
+      }
+    ]
+  },
+  {
+    "id": "NI-nature-1",
+    "iso": "NI",
+    "category": "nature",
+    "prompt": "Quel oiseau au plumage bleu-vert iridescent et aux deux longues plumes caudales terminées en raquettes, appelé localement « Guardabarranco », est l'oiseau national du Nicaragua ?",
+    "choices": [
+      {
+        "label": "Le quetzal resplendissant",
+        "iconId": "bird-tropical"
+      },
+      {
+        "label": "Le toucan à carène",
+        "iconId": "bird-toucan"
+      },
+      {
+        "label": "L'ara rouge",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "Le motmot à sourcils bleus",
+        "iconId": "bird-exotic"
+      }
+    ]
+  },
+  {
+    "id": "NI-musique-1",
+    "iso": "NI",
+    "category": "musique",
+    "prompt": "Quel instrument à percussion mélodique du folklore de Masaya au Nicaragua possède une branche flexible courbée en arc sur laquelle le musicien s'assoit tout en frappant des lames de bois ?",
+    "choices": [
+      {
+        "label": "Le marimba à arc (marimba de arco)",
+        "iconId": "instrument-xylophone"
+      },
+      {
+        "label": "Le charango andin",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le cajón afro-péruvien",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "La vihuela mexicaine",
+        "iconId": "instrument-string"
+      }
+    ]
+  },
+  {
+    "id": "NI-culture-1",
+    "iso": "NI",
+    "category": "culture",
+    "prompt": "Quelle comédie satirique et danse masquée du XVIIe siècle, mêlant espagnol et nahuatl pour se moquer de l'administration coloniale à Diriamba, est l'œuvre théâtrale emblématique du Nicaragua ?",
+    "choices": [
+      {
+        "label": "Le Rabinal Achí",
+        "iconId": "symbol-mask"
+      },
+      {
+        "label": "El Güegüense",
+        "iconId": "person-actor"
+      },
+      {
+        "label": "La Diablada",
+        "iconId": "person-dancer"
+      },
+      {
+        "label": "L'Ollantay",
+        "iconId": "landmark-monument"
+      }
+    ]
+  },
+  {
+    "id": "PA-tech-1",
+    "iso": "PA",
+    "category": "tech",
+    "prompt": "Quel vaste lac artificiel d'eau douce, créé en 1913 par le barrage du fleuve Chagres à 26 mètres au-dessus du niveau de la mer, permet aux navires de franchir l'isthme et alimente les écluses du canal de Panama ?",
+    "choices": [
+      {
+        "label": "Le lac Titicaca",
+        "iconId": "water-lake"
+      },
+      {
+        "label": "Le lac Maracaibo",
+        "iconId": "water-bay"
+      },
+      {
+        "label": "Le lac Gatún",
+        "iconId": "transport-ship"
+      },
+      {
+        "label": "Le lac Nasser",
+        "iconId": "building-dam"
+      }
+    ]
+  },
+  {
+    "id": "PA-nature-1",
+    "iso": "PA",
+    "category": "nature",
+    "prompt": "Quel puissant rapace des forêts tropicales du Darién, reconnaissable à sa double huppe noire et capable de capturer des paresseux dans la canopée, est l'oiseau national du Panama ?",
+    "choices": [
+      {
+        "label": "Le condor des Andes",
+        "iconId": "bird-vulture"
+      },
+      {
+        "label": "Le pygargue à tête blanche",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "Le faucon pèlerin",
+        "iconId": "bird-falcon"
+      },
+      {
+        "label": "L'aigle harpie",
+        "iconId": "bird-raptor"
+      }
+    ]
+  },
+  {
+    "id": "PA-musique-1",
+    "iso": "PA",
+    "category": "musique",
+    "prompt": "Quel chanteur et compositeur panaméen surnommé le « poète de la salsa » a révolutionné la musique latine dans les années 1970 avec la chanson « Pedro Navaja » et l'album « Siembra » ?",
+    "choices": [
+      {
+        "label": "Rubén Blades",
+        "iconId": "person-singer"
+      },
+      {
+        "label": "Tito Puente",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "Compay Segundo",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Juan Luis Guerra",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "PE-tech-1",
+    "iso": "PE",
+    "category": "tech",
+    "prompt": "Quel dispositif de cordelettes de coton ou de laine de camélidé comportant des nœuds codés selon un système décimal servait aux administrateurs incas du Pérou d'outil de calcul et de recensement ?",
+    "choices": [
+      {
+        "label": "Le quipu",
+        "iconId": "object-rope"
+      },
+      {
+        "label": "Le boulier suanpan",
+        "iconId": "tech-calculator"
+      },
+      {
+        "label": "L'astrolabe solaire",
+        "iconId": "tech-compass"
+      },
+      {
+        "label": "Le cylindre-sceau",
+        "iconId": "object-stone"
+      }
+    ]
+  },
+  {
+    "id": "PE-nature-1",
+    "iso": "PE",
+    "category": "nature",
+    "prompt": "Quel oiseau des forêts de nuages andines, dont le mâle arbore un plumage rouge orangé éclatant et une crête semi-circulaire recouvrant le bec, est l'oiseau national du Pérou (appelé « tunki » en quechua) ?",
+    "choices": [
+      {
+        "label": "Le manchot de Humboldt",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Le coq-de-roche péruvien",
+        "iconId": "bird-tropical"
+      },
+      {
+        "label": "Le nandou de Darwin",
+        "iconId": "bird-ostrich"
+      },
+      {
+        "label": "Le colibri géant",
+        "iconId": "bird-hummingbird"
+      }
+    ]
+  },
+  {
+    "id": "PE-musique-1",
+    "iso": "PE",
+    "category": "musique",
+    "prompt": "Quelle célèbre mélodie instrumentale et vocale andine, composée en 1913 par le musicien péruvien Daniel Alomía Robles à partir d'airs populaires quechuas, est devenue l'air péruvien le plus connu au monde ?",
+    "choices": [
+      {
+        "label": "La Cumparsita",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "Guantanamera",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "El Cóndor Pasa",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "Alma Llanera",
+        "iconId": "instrument-harp"
+      }
+    ]
+  },
+  {
+    "id": "PR-nature-1",
+    "iso": "PR",
+    "category": "nature",
+    "prompt": "Quelle minuscule grenouille arboricole endémique de Porto Rico, emblème de la forêt tropicale d'El Yunque, doit son nom au chant puissant à deux syllabes que lancent les mâles la nuit ?",
+    "choices": [
+      {
+        "label": "L'axolotl",
+        "iconId": "animal-amphibian"
+      },
+      {
+        "label": "La dendrobate bleue",
+        "iconId": "animal-frog"
+      },
+      {
+        "label": "Le crapaud buffle",
+        "iconId": "animal-toad"
+      },
+      {
+        "label": "Le coquí",
+        "iconId": "animal-forest"
+      }
+    ]
+  },
+  {
+    "id": "PR-musique-1",
+    "iso": "PR",
+    "category": "musique",
+    "prompt": "Quel instrument à cordes pincées traditionnel de la musique « jíbara » de Porto Rico, dont la caisse rappelle les courbes d'un violon, possède en réalité dix cordes métalliques doublées (cinq chœurs) malgré son nom signifiant « quatre » ?",
+    "choices": [
+      {
+        "label": "Le cuatro portoricain",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le tres cubain",
+        "iconId": "instrument-string"
+      },
+      {
+        "label": "Le cavaquinho",
+        "iconId": "instrument-ukulele"
+      },
+      {
+        "label": "La mandoline napolitaine",
+        "iconId": "instrument-lute"
+      }
+    ]
+  },
+  {
+    "id": "PR-culture-1",
+    "iso": "PR",
+    "category": "culture",
+    "prompt": "Quel cocktail mondialement célèbre à base de rhum blanc, de crème de coco et de jus d'ananas, créé à San Juan en 1954, a été déclaré boisson officielle de Porto Rico en 1978 ?",
+    "choices": [
+      {
+        "label": "Le Mojito",
+        "iconId": "drink-mint"
+      },
+      {
+        "label": "La Piña Colada",
+        "iconId": "drink-cocktail"
+      },
+      {
+        "label": "La Caïpirinha",
+        "iconId": "fruit-lime"
+      },
+      {
+        "label": "La Margarita",
+        "iconId": "drink-glass"
+      }
+    ]
+  },
+  {
+    "id": "PY-tech-1",
+    "iso": "PY",
+    "category": "tech",
+    "prompt": "Quel gigantesque barrage hydroélectrique binational inauguré en 1984 sur le fleuve Paraná, dont le nom en guarani signifie « la pierre qui chante », fournit la quasi-totalité de l'électricité du Paraguay ?",
+    "choices": [
+      {
+        "label": "Le barrage d'Itaipu",
+        "iconId": "building-dam"
+      },
+      {
+        "label": "Le barrage d'Assouan",
+        "iconId": "water-river"
+      },
+      {
+        "label": "Le barrage Hoover",
+        "iconId": "tech-energy"
+      },
+      {
+        "label": "Le barrage de Kariba",
+        "iconId": "water-lake"
+      }
+    ]
+  },
+  {
+    "id": "PY-nature-1",
+    "iso": "PY",
+    "category": "nature",
+    "prompt": "Quelle plante originaire des collines du Paraguay, appelée « ka'a he'ê » (« herbe sucrée ») par les Guaranis qui l'utilisent depuis des siècles dans le maté, produit des feuilles au pouvoir édulcorant naturel intense ?",
+    "choices": [
+      {
+        "label": "La betterave sucrière",
+        "iconId": "plant-root"
+      },
+      {
+        "label": "La stévia (Stevia rebaudiana)",
+        "iconId": "plant-leaf"
+      },
+      {
+        "label": "L'agave bleu",
+        "iconId": "plant-cactus"
+      },
+      {
+        "label": "L'érable à sucre",
+        "iconId": "plant-tree"
+      }
+    ]
+  },
+  {
+    "id": "PY-musique-1",
+    "iso": "PY",
+    "category": "musique",
+    "prompt": "Quel genre musical lent et mélodieux à trois temps, créé en 1925 à Asunción par le compositeur José Asunción Flores et souvent joué à la harpe paraguayenne, est le style musical national du Paraguay ?",
+    "choices": [
+      {
+        "label": "La cumbia",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "Le merengue",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "La guarania",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "La samba",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "SV-nature-1",
+    "iso": "SV",
+    "category": "nature",
+    "prompt": "Quelle plante arbustive de la famille des agavacées, dont les grandes grappes de fleurs blanches en clochettes sont aussi cuisinées localement, est la fleur nationale officielle du Salvador ?",
+    "choices": [
+      {
+        "label": "La fleur d'izote",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le chardon bleu des Alpes",
+        "iconId": "plant-thistle"
+      },
+      {
+        "label": "La tulipe de Hollande",
+        "iconId": "plant-tulip"
+      },
+      {
+        "label": "Le lotus sacré d'Asie",
+        "iconId": "plant-lotus"
+      }
+    ]
+  },
+  {
+    "id": "SV-musique-1",
+    "iso": "SV",
+    "category": "musique",
+    "prompt": "Quel genre de musique et de danse folklorique salvadorienne a été créé en 1942 par le musicien Paquito Palaviccini avec son morceau « Adentro Cojutepeque » ?",
+    "choices": [
+      {
+        "label": "Le Xuc",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le Merengue",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La Cueca",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le Joropo",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "SV-culture-1",
+    "iso": "SV",
+    "category": "culture",
+    "prompt": "Quelle galette épaisse de farine de maïs ou de riz, farcie de fromage fondant, de haricots rouges ou de porc avant d'être cuite sur une plaque chaude, est le plat national du Salvador ?",
+    "choices": [
+      {
+        "label": "L'empanada",
+        "iconId": "dish-bread"
+      },
+      {
+        "label": "La pupusa",
+        "iconId": "dish-bread"
+      },
+      {
+        "label": "Le ceviche",
+        "iconId": "dish-fish"
+      },
+      {
+        "label": "La feijoada",
+        "iconId": "dish-stew"
+      }
+    ]
+  },
+  {
+    "id": "PM-nature-1",
+    "iso": "PM",
+    "category": "nature",
+    "prompt": "Quel petit oiseau marin pélagique au croupion blanc, qui ne regagne son terrier à terre que la nuit, forme sur l'îlot du Grand Colombier la plus vaste colonie nicheuse de Saint-Pierre-et-Miquelon avec plus de cent mille couples ?",
+    "choices": [
+      {
+        "label": "L'océanite cul-blanc",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "L'autruche d'Afrique",
+        "iconId": "bird-ostrich"
+      },
+      {
+        "label": "Le paon bleu d'Inde",
+        "iconId": "bird-peacock"
+      },
+      {
+        "label": "Le toucan d'Amazonie",
+        "iconId": "bird-toucan"
+      }
+    ]
+  },
+  {
+    "id": "PM-musique-1",
+    "iso": "PM",
+    "category": "musique",
+    "prompt": "Quel instrument à soufflet, apporté par les marins au XIXe siècle, était au cœur des bals populaires et des « veillées » traditionnelles d'hiver à Saint-Pierre-et-Miquelon ?",
+    "choices": [
+      {
+        "label": "L'accordéon diatonique",
+        "iconId": "instrument-accordion"
+      },
+      {
+        "label": "La kora",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "Le didgeridoo",
+        "iconId": "instrument-flute"
+      },
+      {
+        "label": "Le bouzouki",
+        "iconId": "instrument-lute"
+      }
+    ]
+  },
+  {
+    "id": "PM-culture-1",
+    "iso": "PM",
+    "category": "culture",
+    "prompt": "Quel sport traditionnel, témoignant de l'héritage des marins-pêcheurs venus des Pyrénées-Atlantiques, se pratique chaque été sur le fronton « Zazpiak Bat » construit en 1906 à Saint-Pierre ?",
+    "choices": [
+      {
+        "label": "Le cricket",
+        "iconId": "sport-bat"
+      },
+      {
+        "label": "La pelote basque",
+        "iconId": "sport-ball"
+      },
+      {
+        "label": "Le curling",
+        "iconId": "sport-ice"
+      },
+      {
+        "label": "Le polo à cheval",
+        "iconId": "sport-horse"
+      }
+    ]
+  },
+  {
+    "id": "SR-nature-1",
+    "iso": "SR",
+    "category": "nature",
+    "prompt": "Quel passereau au plumage orange flamboyant et à la crête en demi-disque couvrant son bec niche dans les parois rocheuses de la réserve naturelle du Surinam central ?",
+    "choices": [
+      {
+        "label": "Le coq-de-roche orange",
+        "iconId": "bird-colorful"
+      },
+      {
+        "label": "Le cardinal rouge",
+        "iconId": "bird-small"
+      },
+      {
+        "label": "Le cacatoès à huppe jaune",
+        "iconId": "bird-parrot"
+      },
+      {
+        "label": "Le paon bleu",
+        "iconId": "bird-peacock"
+      }
+    ]
+  },
+  {
+    "id": "SR-musique-1",
+    "iso": "SR",
+    "category": "musique",
+    "prompt": "Quel genre musical festif afro-surinamais, né au début du XXe siècle, associe des percussions complexes (comme la grosse caisse skratji), des cuivres et des chants en appel-réponse ?",
+    "choices": [
+      {
+        "label": "Le Kaseko",
+        "iconId": "music-drum"
+      },
+      {
+        "label": "Le Kompa",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La Champeta",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le Son cubain",
+        "iconId": "instrument-trumpet"
+      }
+    ]
+  },
+  {
+    "id": "SR-culture-1",
+    "iso": "SR",
+    "category": "culture",
+    "prompt": "Quelle est la seule langue officielle du Surinam, héritée de plus de trois siècles d'histoire coloniale avant l'indépendance de 1975 ?",
+    "choices": [
+      {
+        "label": "L'espagnol",
+        "iconId": "language-speech"
+      },
+      {
+        "label": "Le portugais",
+        "iconId": "language-speech"
+      },
+      {
+        "label": "Le néerlandais",
+        "iconId": "language-speech"
+      },
+      {
+        "label": "Le français",
+        "iconId": "language-speech"
+      }
+    ]
+  },
+  {
+    "id": "SX-nature-1",
+    "iso": "SX",
+    "category": "nature",
+    "prompt": "Quel arbuste aromatique aux bouquets de petites fleurs jaunes et orangées, résistant à la sécheresse caribéenne, est la fleur nationale officielle de Sint Maarten et figure sur ses armoiries ?",
+    "choices": [
+      {
+        "label": "La sauge jaune",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le perce-neige boréal",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "La pivoine impériale",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le coquelicot des Flandres",
+        "iconId": "plant-flower"
+      }
+    ]
+  },
+  {
+    "id": "SX-musique-1",
+    "iso": "SX",
+    "category": "musique",
+    "prompt": "Quelle danse traditionnelle de Saint-Martin, accompagnée par le rythme d'un tambour appelé « pump-drum », fut créée en 1848 pour célébrer l'abolition de l'esclavage sur l'île ?",
+    "choices": [
+      {
+        "label": "La danse Ponum",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La Biguine",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le Gwoka",
+        "iconId": "music-drum"
+      },
+      {
+        "label": "La Bachata",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "SX-culture-1",
+    "iso": "SX",
+    "category": "culture",
+    "prompt": "Pour quel spectacle impressionnant la plage de Maho Beach, située du côté néerlandais de Saint-Martin, est-elle célèbre dans le monde entier ?",
+    "choices": [
+      {
+        "label": "Des geysers d'eau bouillante sur le sable",
+        "iconId": "water-geyser"
+      },
+      {
+        "label": "Les avions de ligne qui frôlent la plage juste avant d'atterrir",
+        "iconId": "transport-plane"
+      },
+      {
+        "label": "Des courses de chars à voile sur un lac salé",
+        "iconId": "sport-sailing"
+      },
+      {
+        "label": "Une forteresse espagnole engloutie sous deux mètres d'eau",
+        "iconId": "building-castle"
+      }
+    ]
+  },
+  {
+    "id": "TC-nature-1",
+    "iso": "TC",
+    "category": "nature",
+    "prompt": "Quelle plante épineuse coiffée d'une excroissance cylindrique rouge vif rappelant un fez ottoman a donné le nom d'« îles Turques » à l'archipel des Turques-et-Caïques ?",
+    "choices": [
+      {
+        "label": "Le cactus tête-d'anglais (Melocactus)",
+        "iconId": "plant-cactus"
+      },
+      {
+        "label": "L'agave bleu",
+        "iconId": "plant-cactus"
+      },
+      {
+        "label": "L'aloe vera",
+        "iconId": "plant-leaf"
+      },
+      {
+        "label": "Le figuier de Barbarie",
+        "iconId": "plant-cactus"
+      }
+    ]
+  },
+  {
+    "id": "TC-musique-1",
+    "iso": "TC",
+    "category": "musique",
+    "prompt": "Quel outil de menuiserie ordinaire est gratté avec une lame de couteau ou un clou pour produire le rythme métallique du « Ripsaw », la musique traditionnelle des Îles Turques-et-Caïques ?",
+    "choices": [
+      {
+        "label": "Une scie à main dentée",
+        "iconId": "instrument-tool"
+      },
+      {
+        "label": "Un marteau d'enclume",
+        "iconId": "object-tool"
+      },
+      {
+        "label": "Un rabot en chêne",
+        "iconId": "object-tool"
+      },
+      {
+        "label": "Une truelle de maçon",
+        "iconId": "object-tool"
+      }
+    ]
+  },
+  {
+    "id": "TC-culture-1",
+    "iso": "TC",
+    "category": "culture",
+    "prompt": "Quelle ressource blanche, récoltée dans des marais d'évaporation aménagés par les colons bermudiens dès le XVIIe siècle sur Grand Turk et Salt Cay, a fait la fortune historique de l'archipel ?",
+    "choices": [
+      {
+        "label": "La craie calcaire",
+        "iconId": "mineral-rock"
+      },
+      {
+        "label": "Le sel marin",
+        "iconId": "mineral-salt"
+      },
+      {
+        "label": "Le sucre de betterave",
+        "iconId": "dish-sweet"
+      },
+      {
+        "label": "Le marbre blanc",
+        "iconId": "mineral-rock"
+      }
+    ]
+  },
+  {
+    "id": "TT-tech-1",
+    "iso": "TT",
+    "category": "tech",
+    "prompt": "Quel célèbre amer aromatique concentré, reconnaissable à son étiquette en papier trop grande pour sa bouteille et utilisé dans les cocktails du monde entier, est produit à Trinité-et-Tobago depuis 1875 ?",
+    "choices": [
+      {
+        "label": "Le Campari",
+        "iconId": "drink-bottle"
+      },
+      {
+        "label": "La Chartreuse",
+        "iconId": "drink-bottle"
+      },
+      {
+        "label": "L'amer Angostura",
+        "iconId": "drink-bottle"
+      },
+      {
+        "label": "Le Jägermeister",
+        "iconId": "drink-bottle"
+      }
+    ]
+  },
+  {
+    "id": "TT-nature-1",
+    "iso": "TT",
+    "category": "nature",
+    "prompt": "Quel échassier au plumage rouge écarlate, qui niche par milliers dans les mangroves du marais de Caroni, est l'oiseau national de l'île de la Trinité ?",
+    "choices": [
+      {
+        "label": "L'ibis rouge",
+        "iconId": "bird-flamingo"
+      },
+      {
+        "label": "Le quetzal resplendissant",
+        "iconId": "bird-tropical"
+      },
+      {
+        "label": "Le condor des Andes",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "Le manchot empereur",
+        "iconId": "bird-penguin"
+      }
+    ]
+  },
+  {
+    "id": "TT-musique-1",
+    "iso": "TT",
+    "category": "musique",
+    "prompt": "Quel instrument de percussion mélodique, fabriqué à partir de bidons métalliques de pétrole martelés au XXe siècle, a été inventé à Trinité-et-Tobago ?",
+    "choices": [
+      {
+        "label": "Le djembé",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "Le cajón",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "Le marimba",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "Le steelpan (ou steel drum)",
+        "iconId": "instrument-drum"
+      }
+    ]
+  },
+  {
+    "id": "UY-nature-1",
+    "iso": "UY",
+    "category": "nature",
+    "prompt": "Quel oiseau échassier au cri strident, qui niche à même le sol dans les prairies de la pampa et défend farouchement son territoire, est l'oiseau national de l'Uruguay ?",
+    "choices": [
+      {
+        "label": "Le harfang des neiges",
+        "iconId": "bird-owl"
+      },
+      {
+        "label": "Le vanneau téro (tero)",
+        "iconId": "bird-crane"
+      },
+      {
+        "label": "Le kiwi",
+        "iconId": "bird-kiwi"
+      },
+      {
+        "label": "L'autruche d'Afrique",
+        "iconId": "bird-ostrich"
+      }
+    ]
+  },
+  {
+    "id": "UY-musique-1",
+    "iso": "UY",
+    "category": "musique",
+    "prompt": "Quel genre musical et défilé de percussions d'origine afro-uruguayenne, joué dans la rue avec trois tambours appelés « chico », « repique » et « piano », est inscrit au patrimoine immatériel de l'UNESCO ?",
+    "choices": [
+      {
+        "label": "Le candombe",
+        "iconId": "instrument-drum"
+      },
+      {
+        "label": "La valse viennoise",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le bluegrass",
+        "iconId": "instrument-banjo"
+      },
+      {
+        "label": "Le gagaku",
+        "iconId": "music-note"
+      }
+    ]
+  },
+  {
+    "id": "UY-culture-1",
+    "iso": "UY",
+    "category": "culture",
+    "prompt": "Quel tournoi sportif planétaire l'Uruguay a-t-il été le tout premier pays de l'histoire à organiser et à remporter en 1930 ?",
+    "choices": [
+      {
+        "label": "Les Jeux olympiques d'hiver",
+        "iconId": "sport-medal"
+      },
+      {
+        "label": "Le Tour de France cycliste",
+        "iconId": "sport-bicycle"
+      },
+      {
+        "label": "La Coupe du monde de football",
+        "iconId": "sport-trophy"
+      },
+      {
+        "label": "Le tournoi de Wimbledon",
+        "iconId": "sport-ball"
+      }
+    ]
+  },
+  {
+    "id": "US-tech-1",
+    "iso": "US",
+    "category": "tech",
+    "prompt": "Quelle entreprise informatique américaine, fondée en 1976 dans un garage de Los Altos, en Californie par Steve Jobs et Steve Wozniak, a commercialisé l'ordinateur Macintosh en 1984 ?",
+    "choices": [
+      {
+        "label": "Nokia",
+        "iconId": "tech-smartphone"
+      },
+      {
+        "label": "Nintendo",
+        "iconId": "tech-console"
+      },
+      {
+        "label": "Samsung",
+        "iconId": "tech-smartphone"
+      },
+      {
+        "label": "Apple",
+        "iconId": "tech-computer"
+      }
+    ]
+  },
+  {
+    "id": "US-nature-1",
+    "iso": "US",
+    "category": "nature",
+    "prompt": "Quel grand rapace au plumage brun et à la tête entièrement blanche est l'oiseau national et l'emblème officiel des États-Unis depuis 1782 ?",
+    "choices": [
+      {
+        "label": "Le pygargue à tête blanche",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "Le condor des Andes",
+        "iconId": "bird-eagle"
+      },
+      {
+        "label": "L'albatros hurleur",
+        "iconId": "bird-albatross"
+      },
+      {
+        "label": "Le gypaète barbu",
+        "iconId": "bird-eagle"
+      }
+    ]
+  },
+  {
+    "id": "US-musique-1",
+    "iso": "US",
+    "category": "musique",
+    "prompt": "Quel genre musical majeur, né à la fin du XIXe et au début du XXe siècle à La Nouvelle-Orléans en Louisiane, repose sur le swing, les notes bleues et l'improvisation ?",
+    "choices": [
+      {
+        "label": "Le flamenco",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le jazz",
+        "iconId": "instrument-saxophone"
+      },
+      {
+        "label": "Le fado",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La polka",
+        "iconId": "instrument-accordion"
+      }
+    ]
+  },
+  {
+    "id": "VC-nature-1",
+    "iso": "VC",
+    "category": "nature",
+    "prompt": "Quel perroquet au plumage bigarré vert, jaune, bleu et bronze, strictement endémique des forêts tropicales de l'île principale, est l'oiseau national de Saint-Vincent-et-les-Grenadines ?",
+    "choices": [
+      {
+        "label": "Le macareux moine",
+        "iconId": "bird-puffin"
+      },
+      {
+        "label": "Le manchot du Cap",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Le kiwi roa",
+        "iconId": "bird-kiwi"
+      },
+      {
+        "label": "L'amazone de Saint-Vincent",
+        "iconId": "bird-parrot"
+      }
+    ]
+  },
+  {
+    "id": "VC-musique-1",
+    "iso": "VC",
+    "category": "musique",
+    "prompt": "Quelle fête musicale matinale unique au monde, propre à Saint-Vincent-et-les-Grenadines, voit les habitants chanter et défiler dès l'aube au son des groupes à cordes et des « steel bands » durant les neuf jours précédant Noël ?",
+    "choices": [
+      {
+        "label": "Les Nine Mornings",
+        "iconId": "music-festival"
+      },
+      {
+        "label": "L'Oktoberfest bavaroise",
+        "iconId": "music-festival"
+      },
+      {
+        "label": "Le Fest-noz breton",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La Feria de Séville",
+        "iconId": "music-dance"
+      }
+    ]
+  },
+  {
+    "id": "VC-culture-1",
+    "iso": "VC",
+    "category": "culture",
+    "prompt": "Quel stratovolcan actif culminant à 1 234 mètres domine le nord de l'île principale de Saint-Vincent-et-les-Grenadines ?",
+    "choices": [
+      {
+        "label": "Le Vésuve",
+        "iconId": "landform-volcano"
+      },
+      {
+        "label": "La Soufrière de Saint-Vincent",
+        "iconId": "landform-volcano"
+      },
+      {
+        "label": "Le mont Fuji",
+        "iconId": "landform-volcano"
+      },
+      {
+        "label": "L'Etna",
+        "iconId": "landform-volcano"
+      }
+    ]
+  },
+  {
+    "id": "VE-nature-1",
+    "iso": "VE",
+    "category": "nature",
+    "prompt": "Quelle chute d'eau du parc national de Canaima au Venezuela, plongeant de 979 mètres depuis le sommet d'un tepuy, est la plus haute cascade ininterrompue du monde ?",
+    "choices": [
+      {
+        "label": "Les chutes du Niagara",
+        "iconId": "water-waterfall"
+      },
+      {
+        "label": "Les chutes du Rhin",
+        "iconId": "water-waterfall"
+      },
+      {
+        "label": "Le Salto Ángel",
+        "iconId": "water-waterfall"
+      },
+      {
+        "label": "Les chutes d'Iguazú",
+        "iconId": "water-waterfall"
+      }
+    ]
+  },
+  {
+    "id": "VE-musique-1",
+    "iso": "VE",
+    "category": "musique",
+    "prompt": "Quel style musical et danse nationale du Venezuela, originaire des plaines des Llanos, se joue traditionnellement avec la harpe llanera, le cuatro et les maracas ?",
+    "choices": [
+      {
+        "label": "Le joropo",
+        "iconId": "instrument-harp"
+      },
+      {
+        "label": "Le sirtaki",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "La valse viennoise",
+        "iconId": "music-dance"
+      },
+      {
+        "label": "Le reggae",
+        "iconId": "instrument-guitar"
+      }
+    ]
+  },
+  {
+    "id": "VE-culture-1",
+    "iso": "VE",
+    "category": "culture",
+    "prompt": "Quel chef militaire et homme d'État né à Caracas en 1783, surnommé « El Libertador », a dirigé les guerres d'indépendance du Venezuela et de plusieurs nations sud-américaines ?",
+    "choices": [
+      {
+        "label": "Emiliano Zapata",
+        "iconId": "person-leader"
+      },
+      {
+        "label": "Toussaint Louverture",
+        "iconId": "person-leader"
+      },
+      {
+        "label": "Dom Pedro Ier",
+        "iconId": "person-leader"
+      },
+      {
+        "label": "Simón Bolívar",
+        "iconId": "person-leader"
+      }
+    ]
+  },
+  {
+    "id": "VG-nature-1",
+    "iso": "VG",
+    "category": "nature",
+    "prompt": "Quel site naturel célèbre de l'île de Virgin Gorda, aux Îles Vierges britanniques, est formé d'immenses blocs de granit arrondis créant des piscines naturelles et des grottes en bord de mer ?",
+    "choices": [
+      {
+        "label": "La Chaussée des Géants",
+        "iconId": "landform-rock"
+      },
+      {
+        "label": "The Baths",
+        "iconId": "landform-rock"
+      },
+      {
+        "label": "Uluru",
+        "iconId": "landform-rock"
+      },
+      {
+        "label": "Les falaises de Moher",
+        "iconId": "landform-cliff"
+      }
+    ]
+  },
+  {
+    "id": "VG-musique-1",
+    "iso": "VG",
+    "category": "musique",
+    "prompt": "Quel genre musical folklorique traditionnel des Îles Vierges britanniques, joué par des « scratch bands » à l'aide de calebasses striées, d'un tube de ferblanc et d'un ukulélé, partage son nom avec un plat local à base de maïs ?",
+    "choices": [
+      {
+        "label": "La fungi music",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "Le gagaku",
+        "iconId": "instrument-zither"
+      },
+      {
+        "label": "Le flamenco",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La polka",
+        "iconId": "instrument-accordion"
+      }
+    ]
+  },
+  {
+    "id": "VG-culture-1",
+    "iso": "VG",
+    "category": "culture",
+    "prompt": "Quelle est la devise officielle ayant cours légal aux Îles Vierges britanniques depuis 1959, bien qu'il s'agisse d'un territoire britannique d'outre-mer ?",
+    "choices": [
+      {
+        "label": "La livre sterling",
+        "iconId": "currency-coin"
+      },
+      {
+        "label": "L'euro",
+        "iconId": "currency-coin"
+      },
+      {
+        "label": "Le dollar américain",
+        "iconId": "currency-coin"
+      },
+      {
+        "label": "Le franc suisse",
+        "iconId": "currency-coin"
+      }
+    ]
+  },
+  {
+    "id": "VI-nature-1",
+    "iso": "VI",
+    "category": "nature",
+    "prompt": "Laquelle des trois îles principales des Îles Vierges des États-Unis est recouverte aux deux tiers par un parc national protégé abritant forêts tropicales et récifs coralliens ?",
+    "choices": [
+      {
+        "label": "Manhattan",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Bornéo",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Madagascar",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Saint John",
+        "iconId": "landform-island"
+      }
+    ]
+  },
+  {
+    "id": "VI-musique-1",
+    "iso": "VI",
+    "category": "musique",
+    "prompt": "Quel genre musical folklorique des Îles Vierges des États-Unis, né sur l'île de Sainte-Croix et accompagné de flûtes, de banjos et d'une calebasse grattée appelée « squash », est la musique officielle du territoire ?",
+    "choices": [
+      {
+        "label": "Le quelbe",
+        "iconId": "instrument-percussion"
+      },
+      {
+        "label": "Le fado",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "La bossa nova",
+        "iconId": "instrument-guitar"
+      },
+      {
+        "label": "Le mariachi",
+        "iconId": "instrument-horn"
+      }
+    ]
+  },
+  {
+    "id": "VI-culture-1",
+    "iso": "VI",
+    "category": "culture",
+    "prompt": "À quel royaume européen les États-Unis ont-ils acheté les Îles Vierges américaines en 1917 pour 25 millions de dollars en or ?",
+    "choices": [
+      {
+        "label": "Le Portugal",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "Le Danemark",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "La Russie",
+        "iconId": "symbol-crown"
+      },
+      {
+        "label": "La Belgique",
+        "iconId": "symbol-crown"
+      }
+    ]
+  }
+]

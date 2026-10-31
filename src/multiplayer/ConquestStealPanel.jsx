@@ -6,9 +6,25 @@ import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import TextField from "../components/ui/TextField.jsx";
 import { ANSWER_INPUT_PROPS, shieldAutofillText } from "../utils/answerField";
 
-/** Harder steal challenge: type the capital, or pick the right flag among four. */
+const LazyKnowledgeCard = React.lazy(() => import("./knowledge/ConquestKnowledgeCard.jsx"));
+
+/** Harder steal challenge: type the capital, pick the right flag, or answer the knowledge QCM. */
 const ConquestStealPanel = ({ t, challenge, countryName, onAnswer, onCancel, myColor }) => {
   const [value, setValue] = useState("");
+  if (challenge?.kind === "knowledge" || challenge?.needs_knowledge) {
+    return (
+      <React.Suspense fallback={<div className="conquest-label">{t.loading}</div>}>
+        <LazyKnowledgeCard
+          challenge={challenge}
+          countryName={countryName}
+          t={t}
+          myColor={myColor}
+          onAnswer={onAnswer}
+          onCancel={onCancel}
+        />
+      </React.Suspense>
+    );
+  }
   const name = countryName(challenge.country_id);
   const isFlag = challenge.kind === "flag";
   // Same panel for a steal and for reinforcing my own country (+30 s / +1 min).

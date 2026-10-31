@@ -38,11 +38,11 @@ const RULES = {
       ],
       [
         "Protection",
-        "Capture = 20 s de bouclier (pays involable). Re-clique ton pays : drapeau ou capitale = +30 s ; puis l'autre = +1 min. Un pays volé perd ses renforts.",
+        "Capture = 20 s de bouclier (pays involable). Re-clique ton pays : drapeau ou capitale = +30 s ; puis l'autre = +1 min ; une question d'escalade QCM de 15 s prolonge encore le bouclier. Un pays volé perd ses renforts.",
       ],
       [
         "Vol",
-        "Clique ou touche un pays adverse non protégé → défi de 20 s : trouve sa capitale ou son drapeau parmi 6. Succès : +15 pts (+20 si l'adversaire mène), le pays est à toi avec un nouveau bouclier.",
+        "Clique ou touche un pays adverse non protégé → défi de 20 s : trouve sa capitale ou son drapeau parmi 6, puis une question d'escalade QCM de 15 s si le pays est déjà renforcé. Succès : +15 pts (+20 si l'adversaire mène), le pays est à toi avec un nouveau bouclier.",
       ],
       [
         "Vol raté",
@@ -88,11 +88,11 @@ const RULES = {
       ],
       [
         "Protection",
-        "Capture = 20 s shield (country cannot be stolen). Click your country again: flag or capital = +30 s; then the other = +1 min. A stolen country loses its reinforcements.",
+        "Capture = 20 s shield (country cannot be stolen). Click your country again: flag or capital = +30 s; then the other = +1 min; a 15 s knowledge QCM extends the shield further. A stolen country loses its reinforcements.",
       ],
       [
         "Steal",
-        "Click/tap an opponent's country that is not shielded → 20-second challenge: guess its capital or pick its flag among 6. Success: +15 pts (+20 if your opponent is leading), country becomes yours with a new shield.",
+        "Click/tap an opponent's country that is not shielded → 20-second challenge: guess its capital or pick its flag among 6, then a 15 s knowledge QCM if the country is reinforced. Success: +15 pts (+20 if your opponent is leading), country becomes yours with a new shield.",
       ],
       [
         "Failed steal",

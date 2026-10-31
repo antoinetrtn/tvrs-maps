@@ -80,13 +80,23 @@ function useConquestActions({
       else if (res) showToast({ message: refusal(res), tone: "error" });
     });
 
-  // Re-click on my own country: reinforcement challenge (flag or capital).
+  // Re-click on my own country: reinforcement challenge (flag/capital, then knowledge).
   const openFortify = (cid) =>
     guarded(async () => {
       if (!conquest.requestFortify) return;
       const res = await conquest.requestFortify(cid);
-      if (res?.ok) setChallenge({ ...res, mode: "fortify" });
-      else if (res) showToast({ message: refusal({ ...res, mode: "fortify" }), tone: "error" });
+      if (res?.ok) {
+        setChallenge({ ...res, mode: "fortify" });
+        return;
+      }
+      if (res?.reason === "max_fortified" && conquest.requestKnowledge) {
+        const kRes = await conquest.requestKnowledge(cid);
+        if (kRes?.ok) {
+          setChallenge({ ...kRes, kind: "knowledge", mode: "fortify" });
+          return;
+        }
+      }
+      if (res) showToast({ message: refusal({ ...res, mode: "fortify" }), tone: "error" });
     });
 
   const submit = (e) => {
@@ -107,10 +117,44 @@ function useConquestActions({
     });
   };
 
+  const handleKnowledgeVerdict = (res, mode) => {
+    setChallenge(null);
+    if (res?.ok) {
+      const msg =
+        mode === "fortify" || res.mode === "fortify"
+          ? `${countryName(res.country_id)} ${t.fortified} +${res.bonus_seconds || 45} s`
+          : `${countryName(res.country_id)} ${t.stole}`;
+      showToast({ message: msg, tone: "success" });
+    } else if (res) {
+      showToast({ message: refusal({ ...res, mode }), tone: "error" });
+    }
+  };
+
+  const transitionToKnowledge = async (res, fallbackCountryId, mode) => {
+    if (Array.isArray(res?.choices)) {
+      setChallenge({ ...res, kind: "knowledge", mode });
+      return true;
+    }
+    const kRes = await conquest.requestKnowledge?.(res?.country_id || fallbackCountryId);
+    if (kRes?.ok) {
+      setChallenge({ ...kRes, kind: "knowledge", mode });
+      return true;
+    }
+    return false;
+  };
+
   const answerSteal = (val) =>
     guarded(async () => {
+      if (challenge?.kind === "knowledge" || challenge?.needs_knowledge) {
+        const res = await conquest.answerKnowledge?.(val);
+        handleKnowledgeVerdict(res, challenge?.mode);
+        return;
+      }
       if (challenge?.mode === "fortify") {
         const res = await conquest.fortify(val);
+        if (res?.ok && (res.kind === "knowledge" || res.needs_knowledge)) {
+          if (await transitionToKnowledge(res, challenge.country_id, "fortify")) return;
+        }
         setChallenge(null);
         if (res?.ok) {
           const message = `${countryName(res.country_id)} ${t.fortified} +${res.bonus_seconds} s`;
@@ -119,6 +163,9 @@ function useConquestActions({
         return;
       }
       const res = await conquest.steal(val);
+      if (res?.ok && (res.kind === "knowledge" || res.needs_knowledge)) {
+        if (await transitionToKnowledge(res, challenge?.country_id, "steal")) return;
+      }
       setChallenge(null);
       if (res?.ok) {
         showToast({ message: `${countryName(res.country_id)} ${t.stole}`, tone: "success" });

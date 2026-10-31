@@ -1,0 +1,290 @@
+[
+  {
+    "id": "AQ-nature-1",
+    "iso": "AQ",
+    "category": "nature",
+    "prompt": "Quelle est la plus grande espèce de manchot au monde, la seule à nicher sur la banquise de l'Antarctique en plein hiver austral ?",
+    "choices": [
+      {
+        "label": "Le manchot des Galápagos",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Le gorfou sauteur",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Le macareux moine",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "Le manchot empereur",
+        "iconId": "bird-penguin"
+      }
+    ]
+  },
+  {
+    "id": "AQ-culture-1",
+    "iso": "AQ",
+    "category": "culture",
+    "prompt": "Quel explorateur norvégien a été le premier homme à atteindre le pôle Sud géographique en décembre 1911 ?",
+    "choices": [
+      {
+        "label": "Roald Amundsen",
+        "iconId": "person-explorer"
+      },
+      {
+        "label": "Robert Falcon Scott",
+        "iconId": "person-explorer"
+      },
+      {
+        "label": "Ernest Shackleton",
+        "iconId": "person-explorer"
+      },
+      {
+        "label": "Vitus Béring",
+        "iconId": "person-explorer"
+      }
+    ]
+  },
+  {
+    "id": "AQ-culture-2",
+    "iso": "AQ",
+    "category": "culture",
+    "prompt": "Quel accord international signé à Washington en 1959 consacre l'Antarctique comme une réserve naturelle dédiée à la paix et à la science ?",
+    "choices": [
+      {
+        "label": "Le Traité du Svalbard",
+        "iconId": "symbol-treaty"
+      },
+      {
+        "label": "Le Traité sur l'Antarctique",
+        "iconId": "symbol-treaty"
+      },
+      {
+        "label": "La Convention de Ramsar",
+        "iconId": "symbol-treaty"
+      },
+      {
+        "label": "Les Accords d'Évian",
+        "iconId": "symbol-treaty"
+      }
+    ]
+  },
+  {
+    "id": "TF-nature-1",
+    "iso": "TF",
+    "category": "nature",
+    "prompt": "Quelle plante endémique des îles subantarctiques comme Kerguelen et Crozet était consommée par les marins aux XVIIIe et XIXe siècles pour prévenir le scorbut ?",
+    "choices": [
+      {
+        "label": "La fougère arborescente",
+        "iconId": "plant-herb"
+      },
+      {
+        "label": "Le lotus bleu",
+        "iconId": "plant-flower"
+      },
+      {
+        "label": "Le chou de Kerguelen",
+        "iconId": "plant-herb"
+      },
+      {
+        "label": "L'agave bleu",
+        "iconId": "plant-herb"
+      }
+    ]
+  },
+  {
+    "id": "TF-culture-1",
+    "iso": "TF",
+    "category": "culture",
+    "prompt": "Quel navigateur breton a découvert en 1772 dans le sud de l'océan Indien le grand archipel des TAAF que James Cook surnomma les « îles de la Désolation » ?",
+    "choices": [
+      {
+        "label": "Jacques Cartier",
+        "iconId": "person-explorer"
+      },
+      {
+        "label": "Samuel de Champlain",
+        "iconId": "person-explorer"
+      },
+      {
+        "label": "René Duguay-Trouin",
+        "iconId": "person-explorer"
+      },
+      {
+        "label": "Yves Joseph de Kerguelen de Trémarec",
+        "iconId": "person-explorer"
+      }
+    ]
+  },
+  {
+    "id": "TF-culture-2",
+    "iso": "TF",
+    "category": "culture",
+    "prompt": "Lequel de ces archipels subantarctiques de l'océan Indien constitue l'un des districts historiques des Terres australes et antarctiques françaises ?",
+    "choices": [
+      {
+        "label": "L'archipel Crozet",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Les îles Malouines",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "Les îles Féroé",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "L'archipel des Açores",
+        "iconId": "landform-island"
+      }
+    ]
+  },
+  {
+    "id": "HM-culture-1",
+    "iso": "HM",
+    "category": "culture",
+    "prompt": "À quel pays sont rattachées les îles subantarctiques inhabitées Heard-et-MacDonald, situées dans le sud de l'océan Indien ?",
+    "choices": [
+      {
+        "label": "L'Afrique du Sud",
+        "iconId": "landmark-monument"
+      },
+      {
+        "label": "Le Chili",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "La Nouvelle-Zélande",
+        "iconId": "landform-island"
+      },
+      {
+        "label": "L'Australie",
+        "iconId": "symbol-globe"
+      }
+    ]
+  },
+  {
+    "id": "HM-nature-1",
+    "iso": "HM",
+    "category": "nature",
+    "prompt": "Quel volcan actif recouvert de glaciers, culminant à 2 745 mètres sur l'île Heard, est le plus haut sommet du massif de Big Ben ?",
+    "choices": [
+      {
+        "label": "Le pic Mawson",
+        "iconId": "landform-volcano"
+      },
+      {
+        "label": "Le mont Erebus",
+        "iconId": "landform-peak"
+      },
+      {
+        "label": "Le mont Fuji",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le piton de la Fournaise",
+        "iconId": "weather-fire"
+      }
+    ]
+  },
+  {
+    "id": "HM-nature-2",
+    "iso": "HM",
+    "category": "nature",
+    "prompt": "Quel imposant mammifère marin au museau renflé chez le mâle se reproduit en grandes colonies sur les plages volcaniques de l'île Heard ?",
+    "choices": [
+      {
+        "label": "Le morse de l'Arctique",
+        "iconId": "sea-walrus"
+      },
+      {
+        "label": "L'éléphant de mer austral",
+        "iconId": "sea-seal"
+      },
+      {
+        "label": "La loutre géante",
+        "iconId": "animal-otter"
+      },
+      {
+        "label": "Le narval",
+        "iconId": "sea-whale"
+      }
+    ]
+  },
+  {
+    "id": "GS-nature-1",
+    "iso": "GS",
+    "category": "nature",
+    "prompt": "Quel grand oiseau marin incapable de voler forme d'immenses colonies de centaines de milliers de couples sur la plaine de Salisbury et dans la baie de Saint Andrews en Géorgie du Sud ?",
+    "choices": [
+      {
+        "label": "Le manchot royal",
+        "iconId": "bird-penguin"
+      },
+      {
+        "label": "Le macareux moine",
+        "iconId": "bird-puffin"
+      },
+      {
+        "label": "Le fou à pieds bleus",
+        "iconId": "bird-seabird"
+      },
+      {
+        "label": "Le flamant nain",
+        "iconId": "bird-flamingo"
+      }
+    ]
+  },
+  {
+    "id": "GS-culture-1",
+    "iso": "GS",
+    "category": "culture",
+    "prompt": "Dans quelle ancienne station baleinière de Géorgie du Sud, fondée en 1904 par le capitaine norvégien Carl Anton Larsen, repose l'explorateur polaire britannique Ernest Shackleton ?",
+    "choices": [
+      {
+        "label": "Grytviken",
+        "iconId": "landmark-monument"
+      },
+      {
+        "label": "Ushuaïa",
+        "iconId": "building-port"
+      },
+      {
+        "label": "Port-aux-Français",
+        "iconId": "building-house"
+      },
+      {
+        "label": "McMurdo",
+        "iconId": "building-station"
+      }
+    ]
+  },
+  {
+    "id": "GS-culture-2",
+    "iso": "GS",
+    "category": "culture",
+    "prompt": "Quel sommet englacé culminant à 2 934 mètres dans la chaîne d'Allardyce constitue le point le plus élevé de la Géorgie du Sud ?",
+    "choices": [
+      {
+        "label": "Le mont Erebus",
+        "iconId": "landform-volcano"
+      },
+      {
+        "label": "Le mont Paget",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le mont Cook",
+        "iconId": "landform-mountain"
+      },
+      {
+        "label": "Le mont Ross",
+        "iconId": "landform-mountain"
+      }
+    ]
+  }
+]

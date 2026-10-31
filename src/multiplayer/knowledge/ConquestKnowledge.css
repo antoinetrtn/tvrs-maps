@@ -1,0 +1,142 @@
+.cq-knowledge {
+  --timer-scale: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.cq-knowledge.is-fortify {
+  border-left: 2px solid var(--my-color, var(--accent));
+  padding-left: var(--spacing-xs);
+}
+
+.cq-knowledge-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+}
+
+.cq-knowledge-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.cq-knowledge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.cq-knowledge-country {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cq-knowledge-timer {
+  height: 6px;
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--black);
+  overflow: hidden;
+}
+
+.cq-knowledge-timer-fill {
+  height: 4px;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(var(--timer-scale, 1));
+  transition: transform var(--dur-fast) var(--steps-snap);
+}
+
+.cq-knowledge-timer.is-urgent .cq-knowledge-timer-fill {
+  background: var(--warning);
+}
+
+.cq-knowledge-prompt {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.cq-knowledge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-xs);
+}
+
+.cq-knowledge-grid .cq-knowledge-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  min-height: 76px;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  text-align: center;
+}
+
+.cq-knowledge-key {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.cq-knowledge-label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.cq-pixel-icon {
+  display: inline-grid;
+  grid-template-columns: repeat(12, 3px);
+  grid-template-rows: repeat(12, 3px);
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.cq-pixel-icon--plant,
+.cq-pixel-icon--animal,
+.cq-pixel-icon--bird,
+.cq-pixel-icon--sea,
+.cq-pixel-icon--fruit {
+  color: var(--success);
+}
+
+.cq-pixel-icon--instrument,
+.cq-pixel-icon--music,
+.cq-pixel-icon--dish,
+.cq-pixel-icon--drink,
+.cq-pixel-icon--sport {
+  color: var(--warning);
+}
+
+.cq-pixel-px {
+  background-color: currentColor;
+  box-shadow: 1px 1px 0 var(--black);
+}
