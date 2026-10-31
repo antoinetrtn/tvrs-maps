@@ -8,35 +8,37 @@ export const MAX_BOATS = 24;
 // Beyond this a capital has no usable "port" waypoint.
 const MAX_PORT_KM = 1600;
 const EARTH_KM = 6371;
-// Sprite size in screen pixels per texel: true square pixels.
-const PX_PER_TEXEL = 3;
 // Sea speed in radians of arc per second (≈ 50 km/s on screen time).
 const SPEED = 0.008;
-// Radius offset above the globe (radius 100) so boats sit over the ocean.
-const ALTITUDE = 0.006;
+// Boats lie flat on the ocean (surface-tangent quads), just above the extruded
+// coastline caps (POLYGON_ALTITUDE.base = 0.0012) so the depth test never
+// swallows them; polygonOffset settles the remaining z-fight with the sea.
+const ALTITUDE = 0.0015;
+// One sprite texel in world units (globe radius 100 ≈ 76 km), so boats scale
+// with the zoom like the map. Rounded to whole screen px per texel (square
+// pixels), clamped so a boat is a dot at world zoom and stays discreet up close.
+export const TEXEL_WORLD = 0.12;
+const MIN_PX_PER_TEXEL = 1;
+const MAX_PX_PER_TEXEL = 4;
 
-// 16×6 side-view boat (bow on the left, flipped to face its heading): dark
-// warm hull, amber cabin and mast lamp, and a short dim-amber wake trailing
-// behind the stern so the boat reads at world zoom.
-const SPRITE = [
-  ".....m..........",
-  "....hah.........",
-  ".hhaaaaahhh.....",
-  "hhhhhhhhhhhhk...",
-  ".hhhhhhhhhhkk.k.",
-  "w.w......w.wk.k.",
-];
-// Hull centre column: the waterline anchor sits under it, not under the wake.
-const HULL_CENTRE = 6;
+// 3×2 top-view boat, bow on the right (+x = heading): two light hull pixels and
+// one dim wake pixel behind the stern. Symbolic: a moving dot on the sea.
+const SPRITE = ["khh", "khh"];
 const SPRITE_W = SPRITE[0].length;
 const SPRITE_H = SPRITE.length;
 const PALETTE = {
-  h: [110, 90, 64, 255],
-  a: [255, 184, 77, 255],
-  m: [255, 210, 122, 255],
-  w: [61, 85, 102, 255],
-  k: [150, 98, 38, 255],
+  h: [201, 180, 138, 255],
+  k: [61, 85, 102, 255],
 };
+
+/** Whole screen px per sprite texel for a world-units-per-pixel ratio. */
+export function boatPxPerTexel(worldPerPx) {
+  const px = Math.round(TEXEL_WORLD / Math.max(worldPerPx, 1e-9));
+  return Math.min(MAX_PX_PER_TEXEL, Math.max(MIN_PX_PER_TEXEL, px));
+}
+
+/** Heading snapped to 4 directions (90°): texels stay axis-aligned squares on the map grid. */
+export const snapHeading = (angle) => Math.round(angle / (Math.PI / 2)) * (Math.PI / 2);
 
 function buildSpriteTexture() {
   const data = new Uint8Array(SPRITE_W * SPRITE_H * 4);
@@ -172,9 +174,10 @@ export function planBoatRoutes(graph, foundList, dataMap) {
 }
 
 /**
- * One InstancedMesh of camera-facing pixel-art boats. Positions are updated in
- * onBeforeRender from preallocated buffers (no per-frame allocation) and the
- * sprite is sized in screen pixels, so texels stay square at every zoom.
+ * One InstancedMesh of tiny top-view boats lying flat on the ocean (quads in
+ * the local tangent plane, oriented to their heading). Positions are updated in
+ * onBeforeRender from preallocated buffers (no per-frame allocation); size is
+ * world-space (scales with zoom) rounded to whole screen px per texel.
  * MeshBasicMaterial + alphaTest renders identically under WebGL and WebGPU.
  */
 export function createBoatLayer(globe) {
@@ -187,13 +190,13 @@ export function createBoatLayer(globe) {
     transparent: false,
     toneMapped: false,
     depthWrite: true,
+    side: THREE.DoubleSide,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -4,
   });
-  // Anchor at the bottom edge so the waterline sits on the route point.
-  const geometry = new THREE.PlaneGeometry(1, 1).translate(
-    0.5 - (HULL_CENTRE + 0.5) / SPRITE_W,
-    0.5,
-    0
-  );
+  // Centred on the route point; the quad lies in the local tangent plane.
+  const geometry = new THREE.PlaneGeometry(1, 1);
   const mesh = new THREE.InstancedMesh(geometry, material, MAX_BOATS);
   mesh.name = "tvrs-life-boats";
   mesh.frustumCulled = false;
@@ -215,12 +218,14 @@ export function createBoatLayer(globe) {
   // Scratch objects (reused every frame).
   const p = new THREE.Vector3();
   const q = new THREE.Vector3();
-  const right = new THREE.Vector3();
-  const up = new THREE.Vector3();
-  const look = new THREE.Vector3();
+  const n = new THREE.Vector3();
+  const east = new THREE.Vector3();
+  const north = new THREE.Vector3();
+  const tx = new THREE.Vector3();
+  const ty = new THREE.Vector3();
   const camPos = new THREE.Vector3();
   const m = new THREE.Matrix4();
-  const toScreenDir = new THREE.Vector3();
+  const POLE = new THREE.Vector3(0, 1, 0);
 
   const pointAt = (b, s, out) => {
     const base = b * MAX_PTS;
@@ -244,7 +249,6 @@ export function createBoatLayer(globe) {
   mesh.onBeforeRender = (renderer, _scene, camera) => {
     if (mesh.count === 0 || !camera.isPerspectiveCamera) return;
     const now = reducedMotion ? 0 : performance.now() / 1000;
-    camera.matrixWorld.extractBasis(right, up, look);
     camPos.setFromMatrixPosition(camera.matrixWorld);
     const h = renderer.domElement?.clientHeight || 800;
     const fov = ((camera.fov || 50) * Math.PI) / 180;
@@ -257,17 +261,24 @@ export function createBoatLayer(globe) {
       pointAt(b, s, p);
       pointAt(b, Math.min(len, s + 0.002), q);
       if (s + 0.002 > len) q.sub(p).negate().add(p);
-      toScreenDir.copy(q).sub(p);
-      // Bow faces the travel direction on screen (flip the sprite horizontally).
-      const goingRight = toScreenDir.dot(right) >= 0 !== back;
+      q.sub(p);
+      if (back) q.negate();
+      // Local tangent frame (east/north) at the boat; heading snapped to 90°.
+      n.copy(p);
+      east.crossVectors(POLE, n);
+      if (east.lengthSq() < 1e-8) east.set(1, 0, 0);
+      east.normalize();
+      north.crossVectors(n, east);
+      const heading = snapHeading(Math.atan2(q.dot(north), q.dot(east)));
+      tx.copy(east).multiplyScalar(Math.cos(heading)).addScaledVector(north, Math.sin(heading));
+      ty.crossVectors(n, tx);
       p.multiplyScalar(radius);
+      // World size from whole screen px per texel at this distance (square pixels).
       const worldPerPx = (2 * p.distanceTo(camPos) * Math.tan(fov / 2)) / h;
-      const sx = SPRITE_W * PX_PER_TEXEL * worldPerPx * (goingRight ? -1 : 1);
-      const sy = SPRITE_H * PX_PER_TEXEL * worldPerPx;
-      // Tiny radial lift above the ocean surface to avoid z-fighting.
-      p.multiplyScalar(1.002);
-      m.makeBasis(right, up, look);
-      m.scale(q.set(sx, sy, 1));
+      const texel = boatPxPerTexel(worldPerPx) * worldPerPx;
+      tx.multiplyScalar(SPRITE_W * texel);
+      ty.multiplyScalar(SPRITE_H * texel);
+      m.makeBasis(tx, ty, n);
       m.setPosition(p);
       mesh.setMatrixAt(b, m);
     }

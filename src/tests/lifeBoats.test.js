@@ -51,3 +51,17 @@ describe("life boats sea graph", () => {
     layer.dispose();
   });
 });
+
+describe("flat top-view boats", () => {
+  it("rounds to whole screen px per texel, clamped 1..4", async () => {
+    const { boatPxPerTexel, TEXEL_WORLD } = await import("../globe/render/life/lifeBoats");
+    expect(boatPxPerTexel(TEXEL_WORLD * 10)).toBe(1); // far: a dot
+    expect(boatPxPerTexel(TEXEL_WORLD / 2)).toBe(2);
+    expect(boatPxPerTexel(TEXEL_WORLD / 50)).toBe(4); // close: capped
+  });
+  it("snaps headings to 90° (axis-aligned square texels)", async () => {
+    const { snapHeading } = await import("../globe/render/life/lifeBoats");
+    expect(snapHeading(1.2)).toBeCloseTo(Math.PI / 2);
+    expect(snapHeading(0.6)).toBe(0);
+  });
+});
