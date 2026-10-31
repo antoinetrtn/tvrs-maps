@@ -41,7 +41,7 @@
   bottom: 4px;
   width: auto;
   pointer-events: none;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 /* css-rules-allow: breakpoint-offscale — same breakpoint as HomeDock.css, kept identical to avoid a visual change */
 @media (min-width: 769px) and (max-width: 1279px) {
@@ -207,7 +207,7 @@
 
 .profile-panel .ui-icon-btn--panel-close {
   position: relative;
-  z-index: 301;
+  z-index: var(--z-panel-menu-top);
 }
 
 /* — moved from src/multiplayer/ConquestScreen.css — */

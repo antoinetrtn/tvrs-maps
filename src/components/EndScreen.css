@@ -4,7 +4,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 100;
+  z-index: var(--z-floating-3);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -78,7 +78,7 @@
   right: 0;
   margin-inline: auto;
   width: fit-content;
-  z-index: 6;
+  z-index: var(--z-raised-6);
   min-height: var(--control-lg);
   padding: var(--spacing-xs) var(--spacing-lg);
   border-radius: var(--radius-sm);
@@ -205,7 +205,7 @@
   animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
   position: sticky;
   bottom: 0;
-  z-index: 5;
+  z-index: var(--z-raised-5);
   flex-shrink: 0;
   padding-top: var(--spacing-md);
   padding-bottom: max(var(--spacing-md), var(--safe-bottom));

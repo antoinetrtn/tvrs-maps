@@ -176,6 +176,11 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.profile-xp {
+  margin-bottom: var(--spacing-md);
 }
 
 .stat-label {
@@ -359,7 +364,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: var(--z-floating-2);
   /* TODO(design): pointed at --xp-shadow-trans, a token that never existed — the
      overlay has always rendered without a dimming backdrop. Kept identical;
      likely intended: a translucent scrim such as var(--overlay-bg). */
@@ -469,7 +474,7 @@
 /* Header above internal overlays so close button is always reachable */
 .profile-panel .panel-header {
   position: relative;
-  z-index: 300;
+  z-index: var(--z-panel-menu);
 }
 
 form.profile-form {
@@ -484,7 +489,7 @@ form.profile-form {
 .profile-form-header {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--z-floating);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -518,7 +523,7 @@ form.profile-form {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
-  z-index: 100;
+  z-index: var(--z-floating-3);
   border-top: 1px solid var(--glass-border);
   margin-top: auto;
   width: 100%;

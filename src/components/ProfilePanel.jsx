@@ -282,7 +282,7 @@ const ProfilePanel = ({
                   </div>
 
                   {/* XP progression card */}
-                  <Card look="xp" glass style={{ marginBottom: "var(--spacing-md)" }}>
+                  <Card look="xp" glass className="profile-xp">
                     <div className="xp-card-header">
                       <div className="xp-avatar-wrap">
                         <InvaderAvatar invaderId={selectedAvatar} color={selectedColor} size={36} />
@@ -301,7 +301,7 @@ const ProfilePanel = ({
                   </Card>
 
                   {/* Quick Stats Grid */}
-                  <div className="quick-stats-grid" style={{ marginBottom: "var(--spacing-lg)" }}>
+                  <div className="quick-stats-grid">
                     <Card look="stat" glass>
                       <span className="stat-label">{t("stats_total_xp")}</span>
                       <span className="stat-value">{userProfile.xp || 0}</span>

@@ -111,7 +111,7 @@
 .cards-deck-wrapper.is-user-dragging
   .deck-stage[data-drag-dir="next"]
   .ui-card--mode-deck[data-stack-pos="1"] {
-  z-index: 95 !important;
+  z-index: var(--z-carousel-lift) !important;
   transform: translate3d(
       calc(var(--card-x) * (1 - var(--drag-progress, 0))),
       calc(var(--card-y) * (1 - var(--drag-progress, 0))),
@@ -126,7 +126,7 @@
 .cards-deck-wrapper.is-user-dragging
   .deck-stage[data-drag-dir="prev"]
   .ui-card--mode-deck[data-is-prev="true"] {
-  z-index: 95 !important;
+  z-index: var(--z-carousel-lift) !important;
   transform: translate3d(
       calc(var(--card-x) * (1 - var(--drag-progress, 0))),
       calc(var(--card-y) * (1 - var(--drag-progress, 0))),
@@ -307,7 +307,7 @@
   flex-direction: column;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-md);
-  z-index: 10;
+  z-index: var(--z-floating);
 }
 
 .ui-card--locked {

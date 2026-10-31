@@ -199,7 +199,7 @@
   transition:
     opacity 0.15s ease,
     transform 0.15s ease;
-  z-index: 10;
+  z-index: var(--z-floating);
   min-width: 70px;
   box-shadow: var(--glass-shadow-strong);
 }

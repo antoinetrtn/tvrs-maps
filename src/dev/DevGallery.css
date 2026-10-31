@@ -76,3 +76,7 @@ body:has(.dg-root),
   height: auto !important;
   overflow: auto !important;
 }
+
+.dg-stack-gap {
+  margin-top: var(--spacing-sm);
+}

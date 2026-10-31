@@ -436,45 +436,17 @@ const GlobeMap = (props) => {
       className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
     >
       <div
-        className="globe-container"
+        className="globe-container globe-stage"
         ref={globeContainerRef}
-        style={{ width: "100%", height: "100%", position: "relative" }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        >
+        <div className="globe-backdrop">
           <SpaceBackground />
-          <div
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              backgroundImage: `radial-gradient(var(--grid-dot) 1.1px, transparent 0)`,
-              backgroundSize: "20px 20px",
-              opacity: 1,
-            }}
-          />
+          <div className="globe-backdrop-grid" />
 
-          <div
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              background: `radial-gradient(circle at center, transparent 0%, var(--bg-color) 100%)`,
-              opacity: 0.6,
-            }}
-          />
+          <div className="globe-backdrop-vignette" />
           {/* The two 80 px and 100 px blurred decorative gradients were removed:
               their `--decor-glow-*` variables are defined nowhere, so they painted
               nothing (background: none) while still costing a full-screen blur layer. */}

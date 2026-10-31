@@ -18,7 +18,7 @@
   transform: translateY(-50%);
   width: 75px;
   height: 250px;
-  z-index: 180;
+  z-index: var(--z-carousel-controls);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -67,7 +67,7 @@
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  z-index: 1;
+  z-index: var(--z-raised);
   background:
     radial-gradient(
       circle at 86% 24%,
@@ -116,7 +116,7 @@
 
 .card-content {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-raised-2);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -166,7 +166,7 @@
 
 .card-actions {
   position: relative;
-  z-index: 5;
+  z-index: var(--z-raised-5);
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);

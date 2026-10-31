@@ -117,7 +117,7 @@ const GalleryColumn = () => {
             { value: "c", label: "Onglet 3" },
           ]}
         />
-        <div style={{ marginTop: "var(--spacing-sm)" }}>
+        <div className="dg-stack-gap">
           <TabBar
             level={2}
             label="Sous-menu démo"
