@@ -5,19 +5,21 @@ import { Settings2, User } from "pixelarticons/react";
 import React, { useCallback, useEffect, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
-import ConquestRulesSheet from "../multiplayer/ConquestRulesSheet.jsx";
+import useMountedOnce from "../hooks/useMountedOnce";
 import { getLevelAndProgress } from "../utils/gamification";
 import GlassIconButton from "./GlassIconButton";
 import { getHomeHeroText } from "./homeHeroText";
 import HomeScreenCategoryCarousel from "./HomeScreenCategoryCarousel";
 import InvaderAvatar from "./InvaderAvatar";
-import LeaderboardScreen from "./LeaderboardScreen";
 import Logo from "./Logo";
 import ModeShutter from "./ModeShutter";
-import ProfilePanel from "./ProfilePanel";
-import SettingsPanel from "./SettingsPanel";
-import TrainingSheet from "./TrainingSheet";
 import XpBar from "./XpBar";
+
+const ConquestRulesSheet = React.lazy(() => import("../multiplayer/ConquestRulesSheet.jsx"));
+const LeaderboardScreen = React.lazy(() => import("./LeaderboardScreen"));
+const ProfilePanel = React.lazy(() => import("./ProfilePanel"));
+const SettingsPanel = React.lazy(() => import("./SettingsPanel"));
+const TrainingSheet = React.lazy(() => import("./TrainingSheet"));
 
 const HomeScreen = ({
   onStartGame,
@@ -46,6 +48,12 @@ const HomeScreen = ({
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [conquestRulesOpen, setConquestRulesOpen] = useState(false);
   const [trainingMode, setTrainingMode] = useState(null);
+  // Lazy panels: fetched on first open, then kept mounted (exit animations).
+  const settingsMounted = useMountedOnce(settingsOpen);
+  const profileMounted = useMountedOnce(profileOpen);
+  const leaderboardMounted = useMountedOnce(leaderboardOpen);
+  const conquestRulesMounted = useMountedOnce(conquestRulesOpen);
+  const trainingMounted = useMountedOnce(Boolean(trainingMode));
   const t = useTranslation(lang);
   const hero = getHomeHeroText(lang);
 
@@ -212,54 +220,78 @@ const HomeScreen = ({
         onPointerDown={(e) => e.stopPropagation()}
       />
 
-      <SettingsPanel
-        open={settingsOpen}
-        onClose={(e) => {
-          e?.stopPropagation();
-          setSettingsOpen(false);
-        }}
+      {settingsMounted && (
+        <React.Suspense fallback={null}>
+          <SettingsPanel
+            open={settingsOpen}
+            onClose={(e) => {
+              e?.stopPropagation();
+              setSettingsOpen(false);
+            }}
 
-        lang={lang}
-        setLang={setLang}
-        gameDuration={gameDuration}
-        setGameDuration={setGameDuration}
-        peacefulMode={peacefulMode}
-        setPeacefulMode={setPeacefulMode}
-        setHardcoreMode={setHardcoreMode}
-      />
+            lang={lang}
+            setLang={setLang}
+            gameDuration={gameDuration}
+            setGameDuration={setGameDuration}
+            peacefulMode={peacefulMode}
+            setPeacefulMode={setPeacefulMode}
+            setHardcoreMode={setHardcoreMode}
+          />
+        </React.Suspense>
+      )}
 
-      <ProfilePanel
-        userProfile={userProfile}
-        setUserProfile={setUserProfile}
-        isOpen={profileOpen}
-        onClose={handleCloseProfile}
-        lang={lang}
+      {profileMounted && (
+        <React.Suspense fallback={null}>
+          <ProfilePanel
+            userProfile={userProfile}
+            setUserProfile={setUserProfile}
+            isOpen={profileOpen}
+            onClose={handleCloseProfile}
+            lang={lang}
 
-        localRecords={localRecords}
-        session={session}
-        onOpenAuth={handleOpenAuth}
-      />
+            localRecords={localRecords}
+            session={session}
+            onOpenAuth={handleOpenAuth}
+          />
+        </React.Suspense>
+      )}
 
-      <LeaderboardScreen
-        userProfile={userProfile}
-        localRecords={localRecords}
-        localGameHistory={localGameHistory}
-        session={session}
-        onBack={() => setLeaderboardOpen(false)}
-        lang={lang}
+      {leaderboardMounted && (
+        <React.Suspense fallback={null}>
+          <LeaderboardScreen
+            userProfile={userProfile}
+            localRecords={localRecords}
+            localGameHistory={localGameHistory}
+            session={session}
+            onBack={() => setLeaderboardOpen(false)}
+            lang={lang}
 
-        isOpen={leaderboardOpen}
-      />
+            isOpen={leaderboardOpen}
+          />
+        </React.Suspense>
+      )}
 
-      <ConquestRulesSheet open={conquestRulesOpen} onClose={handleCloseConquestRules} lang={lang} />
-      <TrainingSheet
-        open={Boolean(trainingMode)}
-        mode={trainingMode || "countries"}
-        lang={lang}
-        profileId={userProfile?.id}
-        onClose={() => setTrainingMode(null)}
-        onStart={(pool) => onStartGame(trainingMode, undefined, pool)}
-      />
+      {conquestRulesMounted && (
+        <React.Suspense fallback={null}>
+          <ConquestRulesSheet
+            open={conquestRulesOpen}
+            onClose={handleCloseConquestRules}
+            lang={lang}
+          />
+        </React.Suspense>
+      )}
+      {trainingMounted && (
+        <React.Suspense fallback={null}>
+          <TrainingSheet
+            open={Boolean(trainingMode)}
+            mode={trainingMode || "countries"}
+            lang={lang}
+            profileId={userProfile?.id}
+            onClose={() => setTrainingMode(null)}
+            onStart={(pool) => onStartGame(trainingMode, undefined, pool)}
+          />
+        </React.Suspense>
+      )}
     </>
   );
 };

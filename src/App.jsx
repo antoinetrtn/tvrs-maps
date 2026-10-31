@@ -1,10 +1,8 @@
 import "./App.css";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import AchievementStack from "./components/AchievementStack.jsx";
-import AuthModal from "./components/AuthModal.jsx";
-import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import GeoDataStatus from "./components/GeoDataStatus.jsx";
 import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
@@ -29,6 +27,7 @@ import { useGameSession } from "./hooks/useGameSession";
 import { useGameSessionProps } from "./hooks/useGameSessionProps";
 import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
+import useMountedOnce from "./hooks/useMountedOnce";
 import { usePerfProfile } from "./hooks/usePerfProfile";
 import useScreenExit, { EXIT_MS } from "./hooks/useScreenExit";
 import useScreenGlitch from "./hooks/useScreenGlitch";
@@ -39,6 +38,9 @@ import { useViewport } from "./hooks/useViewport";
 import { isGuestLaunch } from "./multiplayer/conquestLink";
 import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import { isSupabaseConfigured } from "./services/supabaseClient";
+
+const AuthModal = React.lazy(() => import("./components/AuthModal.jsx"));
+const ConfirmationModal = React.lazy(() => import("./components/ConfirmationModal.jsx"));
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home");
@@ -92,6 +94,7 @@ function App() {
   const [confirmState, setConfirmState] = useState(null);
   const isScreenGlitching = useScreenGlitch(currentScreen);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const authMounted = useMountedOnce(showAuthModal);
 
   const { addAchievementToQueue, achievements, dismissAchievement } = useAchievementToasts();
   if (import.meta.env.DEV) globalThis.__TVRS_PUSH_ACHIEVEMENT__ = addAchievementToQueue;
@@ -480,24 +483,30 @@ function App() {
       />
       {cq.screen}
       {confirmState && (
-        <ConfirmationModal
-          message={confirmState.message}
-          onConfirm={confirmState.onConfirm}
-          onCancel={() => setConfirmState(null)}
+        <React.Suspense fallback={null}>
+          <ConfirmationModal
+            message={confirmState.message}
+            onConfirm={confirmState.onConfirm}
+            onCancel={() => setConfirmState(null)}
 
-          lang={lang}
-        />
+            lang={lang}
+          />
+        </React.Suspense>
       )}
 
       <ToastViewport />
       <AchievementStack achievements={achievements} onDismiss={dismissAchievement} />
       <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onGuest={handleGuest}
-        lang={lang}
-      />
+      {authMounted && (
+        <React.Suspense fallback={null}>
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            onGuest={handleGuest}
+            lang={lang}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 }

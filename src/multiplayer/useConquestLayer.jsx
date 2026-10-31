@@ -1,11 +1,9 @@
 import "../components/ui/ui.css";
-import "./ConquestScreen.css";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import ModeShutter from "../components/ModeShutter.jsx";
 import { isConquestEnabled, readConquestPreview } from "./conquestConfig";
-import ConquestCursorLayer from "./ConquestCursorLayer.jsx";
 import {
   CONQUEST_FOCUS_HOLD_MS,
   nextConquestFocus,
@@ -13,9 +11,13 @@ import {
   withQuietFocus,
 } from "./conquestFocus";
 import { clearConquestParam, readConquestCode } from "./conquestLink";
-import ConquestScreen from "./ConquestScreen.jsx";
-import ConquestShieldLayer from "./ConquestShieldLayer.jsx";
 import { hasStoredConquestMatch, useConquestMatch } from "./useConquestMatch";
+
+/* eslint-disable react-refresh/only-export-components */
+const ConquestCursorLayer = React.lazy(() => import("./ConquestCursorLayer.jsx"));
+const ConquestShieldLayer = React.lazy(() => import("./ConquestShieldLayer.jsx"));
+const ConquestScreen = React.lazy(() => import("./ConquestScreen.jsx"));
+/* eslint-enable react-refresh/only-export-components */
 
 const EMPTY_FOUND = [];
 
@@ -160,21 +162,23 @@ export function useConquestLayer({
     active && activeConquest ? (
       <>
         <ModeShutter screen="conquest" />
-        <ConquestCursorLayer
-          conquest={activeConquest}
-          countriesData={sessionView.globeProps.countriesData}
-          selectedCountryId={focus?.id || null}
-        />
-        <ConquestShieldLayer conquest={activeConquest} />
-        <ConquestScreen
-          lang={lang}
-          conquest={activeConquest}
-          onExit={exit}
-          onOverlayChange={setOverlay}
-          onFocusCountry={focusCountry}
-          onSelectCountry={selectCountry}
-          countryClickRef={countryClickRef}
-        />
+        <React.Suspense fallback={null}>
+          <ConquestCursorLayer
+            conquest={activeConquest}
+            countriesData={sessionView.globeProps.countriesData}
+            selectedCountryId={focus?.id || null}
+          />
+          <ConquestShieldLayer conquest={activeConquest} />
+          <ConquestScreen
+            lang={lang}
+            conquest={activeConquest}
+            onExit={exit}
+            onOverlayChange={setOverlay}
+            onFocusCountry={focusCountry}
+            onSelectCountry={selectCountry}
+            countryClickRef={countryClickRef}
+          />
+        </React.Suspense>
       </>
     ) : null;
 

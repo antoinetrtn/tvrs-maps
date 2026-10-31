@@ -12,7 +12,7 @@ import TextField from "../components/ui/TextField.jsx";
 import { showToast } from "../components/ui/Toast.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
-import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
+import { ConquestRulesButton } from "./ConquestRulesButton.jsx";
 import { conquestText } from "./conquestText";
 
 const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
