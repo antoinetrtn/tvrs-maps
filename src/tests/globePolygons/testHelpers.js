@@ -184,7 +184,6 @@ export function summarizeMaterial(material, { compileShader = true } = {}) {
         uIsError: roundNum(u.uIsError?.value),
         uIsSuccess: roundNum(u.uIsSuccess?.value),
         uIsSelection: roundNum(u.uIsSelection?.value),
-        uIsLight: roundNum(u.uIsLight?.value),
         uIsSide: roundNum(u.uIsSide?.value),
         uIsFound: roundNum(u.uIsFound?.value),
         uSelectInTransition: roundNum(u.uSelectInTransition?.value),
