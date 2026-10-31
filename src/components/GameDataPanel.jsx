@@ -21,7 +21,6 @@ const GameDataPanel = ({
   onClose,
   onGoHome,
   mode,
-  theme = "dark",
   lang = "fr",
   isGameOver = false,
   revealAll = false,
@@ -108,7 +107,7 @@ const GameDataPanel = ({
 
   return (
     <aside
-      className={`game-data-panel ${theme} ${variant} ${isLearnMode ? "learn-mode" : ""} ${isGameOver ? "is-game-over" : ""}`}
+      className={`game-data-panel ${variant} ${isLearnMode ? "learn-mode" : ""} ${isGameOver ? "is-game-over" : ""}`}
       aria-label={panelTitle}
     >
       <header className="data-panel-header">

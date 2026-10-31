@@ -29,8 +29,6 @@ export function useGlobeMarkers({
   UI_COLORS,
   isPerfectScore,
   isError,
-  isLight,
-  theme,
   canonicalPositions = {},
   gameDataMap,
 }) {
@@ -121,11 +119,7 @@ export function useGlobeMarkers({
         const baseColor = getRegionSurfaceColor(region);
         if (isSelected) {
           if (isError) return UI_COLORS.error;
-          return lerpColor(
-            baseColor,
-            UI_COLORS.paper,
-            0.5 * GLOBE_STYLE.lighting.capPulseToPaper[isLight ? "light" : "dark"]
-          );
+          return lerpColor(baseColor, UI_COLORS.paper, 0.5 * GLOBE_STYLE.lighting.capPulseToPaper);
         }
         return baseColor;
       }
@@ -149,9 +143,7 @@ export function useGlobeMarkers({
       isEndScreen,
       isPerfectScore,
       getRegionSurfaceColor,
-      isLight,
       lerpColor,
-      theme,
     ]
   );
 

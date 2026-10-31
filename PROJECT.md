@@ -25,7 +25,7 @@
 - Data input: GeoJSON features (Countries, Departments, US States, Rivers & Mountains).
 - State uniform: DataTexture holding per-feature attributes `[r, g, b, stateFlags]`.
 - Output picking: `getPickedFeatureId(x, y): string | null` returning feature ID in <1ms.
-- Render API: `updateFeatureState(featureId, state)`, `setTheme(theme)`, `setTime(time)`.
+- Render API: `updateFeatureState(featureId, state)`, `setTime(time)`.
 
 ## Code Layout
 - `src/globe/`: GPU Batched Mesh engine, DataTexture shaders, offscreen picking render target.

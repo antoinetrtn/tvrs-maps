@@ -28,7 +28,6 @@ export function useGlobeRings({
   isHomeScreen,
   REGION_COLORS_LABELS,
   REGION_COLORS,
-  isLight,
   countriesWithGeometry,
 }) {
   const lerpColor = useCallback((a, b, amount) => {
@@ -69,7 +68,7 @@ export function useGlobeRings({
           REGION_COLORS[region] ||
           UI_COLORS.accent;
 
-    const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
+    const softColor = lerpColor(baseColor, UI_COLORS.paper, 0.2);
 
     // Marker-only target: same coordinates as the pin (data lat/lng is the
     // canonical position fallback for geometry-less entries), snappy ping.
@@ -103,7 +102,6 @@ export function useGlobeRings({
     UI_COLORS,
     REGION_COLORS_LABELS,
     REGION_COLORS,
-    isLight,
     lerpColor,
   ]);
 

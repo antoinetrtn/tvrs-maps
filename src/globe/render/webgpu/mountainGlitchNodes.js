@@ -1,33 +1,20 @@
 /** Node twin of LowPolyBiomes' mountain glitch material (WebGPU renderer only). */
-import {
-  clamp,
-  float,
-  Fn,
-  fract,
-  If,
-  mix,
-  positionLocal,
-  select,
-  sin,
-  step,
-  vec2,
-  vec3,
-} from "three/tsl";
+import { clamp, float, Fn, fract, If, mix, positionLocal, sin, step, vec2, vec3 } from "three/tsl";
 import { MeshPhongNodeMaterial } from "three/webgpu";
 
 import { displayOutput, hash, mirrorUniform } from "./tslCommon";
 
 let mountainShared = null;
 /** Node twin of LowPolyBiomes' mountain glitch material. */
-export function createMountainGlitchNodeMaterial(mountainGlitchUniforms, isLight) {
+export function createMountainGlitchNodeMaterial(mountainGlitchUniforms) {
   const mat = new MeshPhongNodeMaterial({ flatShading: true, shininess: 0, specular: 0x000000 });
-  mat.outputNode = mountainGlitchOutputNode(mountainGlitchUniforms, isLight);
-  mat.customProgramCacheKey = () => `mountain-glitch-gpu-${isLight ? "light" : "dark"}`;
+  mat.outputNode = mountainGlitchOutputNode(mountainGlitchUniforms);
+  mat.customProgramCacheKey = () => "mountain-glitch-gpu";
   return mat;
 }
 
 /** Mountain glitch (LowPolyBiomes glitchMat onBeforeCompile). */
-function mountainGlitchOutputNode(mountainGlitchUniforms, isLight) {
+function mountainGlitchOutputNode(mountainGlitchUniforms) {
   if (!mountainShared) {
     mountainShared = {
       uTime: mirrorUniform(mountainGlitchUniforms.uTime),
@@ -37,19 +24,13 @@ function mountainGlitchOutputNode(mountainGlitchUniforms, isLight) {
     };
   }
   const u = mountainShared;
-  // A constant, not a uniform: light/dark materials get distinct pipelines
-  // through customProgramCacheKey (see LowPolyBiomes).
-  const uIsLight = float(isLight ? 1 : 0);
   return Fn(() => {
     const p = positionLocal;
-    const light = uIsLight.greaterThan(0.5);
     const noiseUv = p.xy.mul(8.0).add(vec2(p.z.mul(4.0)));
     const noise = hash(noiseUv.add(sin(u.uTime.mul(28.0))));
-    const baseMin = select(light, float(0.65), float(0.12));
-    const baseMax = select(light, float(0.98), float(0.68));
-    const scanline = sin(p.y.mul(15.0).add(u.uTime.mul(5.0))).mul(
-      select(light, float(0.03), float(0.07))
-    );
+    const baseMin = float(0.12);
+    const baseMax = float(0.68);
+    const scanline = sin(p.y.mul(15.0).add(u.uTime.mul(5.0))).mul(0.07);
     const finalColor = vec3(mix(baseMin, baseMax, noise).add(scanline)).toVar();
     const pulse = sin(u.uTime.mul(18.0)).mul(0.35).add(0.65);
     const sweep = step(fract(p.y.mul(1.5).sub(u.uTime.mul(4.0))), 0.35).mul(0.4);

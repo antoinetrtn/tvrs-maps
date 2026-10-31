@@ -22,7 +22,6 @@ import XpBar from "./XpBar";
 const HomeScreen = ({
   onStartGame,
   onOpenConquest = null,
-  theme,
   lang,
   setLang,
   gameDuration,
@@ -91,7 +90,7 @@ const HomeScreen = ({
     <>
       <ModeShutter screen="home" />
       <div
-        className={`home-screen-overlay ${theme} ${exiting ? "is-exiting" : ""}`}
+        className={`home-screen-overlay ${exiting ? "is-exiting" : ""}`}
         inert={exiting ? "" : undefined}
         aria-hidden={exiting ? "true" : undefined}
       >
@@ -219,7 +218,7 @@ const HomeScreen = ({
           e?.stopPropagation();
           setSettingsOpen(false);
         }}
-        theme={theme}
+
         lang={lang}
         setLang={setLang}
         gameDuration={gameDuration}
@@ -235,7 +234,7 @@ const HomeScreen = ({
         isOpen={profileOpen}
         onClose={handleCloseProfile}
         lang={lang}
-        theme={theme}
+
         localRecords={localRecords}
         session={session}
         onOpenAuth={handleOpenAuth}
@@ -248,7 +247,7 @@ const HomeScreen = ({
         session={session}
         onBack={() => setLeaderboardOpen(false)}
         lang={lang}
-        theme={theme}
+
         isOpen={leaderboardOpen}
       />
 

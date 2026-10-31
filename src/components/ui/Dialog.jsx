@@ -46,7 +46,6 @@ export default function Dialog({
   labelledBy,
   closeOnBackdrop = true,
   closeOnEscape = true,
-  theme = "",
   className = "",
   backdropClassName = "",
   backdropTestId,
@@ -80,7 +79,7 @@ export default function Dialog({
           {...ariaName}
           inert={!open}
           aria-hidden={open ? undefined : true}
-          className={["sheet-panel", className, open && "open", theme].filter(Boolean).join(" ")}
+          className={["sheet-panel", className, open && "open"].filter(Boolean).join(" ")}
           onClick={stop}
           onPointerDown={stop}
           {...rest}
@@ -98,7 +97,6 @@ export default function Dialog({
     "ui-dialog-backdrop",
     isSheet ? "ui-dialog-backdrop--sheet" : "dialog-panel",
     backdropClassName,
-    theme,
   ]
     .filter(Boolean)
     .join(" ");

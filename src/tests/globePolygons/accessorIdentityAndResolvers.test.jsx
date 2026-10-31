@@ -136,8 +136,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         isSuccess: runDiff((p) => ({ ...p, isSuccess: true })),
         conquestOverlay: runDiff((p) => ({ ...p, conquestOverlay: CONQUEST_OVERLAY_FIXTURE })),
         mode: runDiff((p) => ({ ...p, mode: "learn" })),
-        theme: runDiff((p) => ({ ...p, theme: "light" })),
-        isLight: runDiff((p) => ({ ...p, isLight: true })),
         globeLightingEnabled: runDiff((p) => ({ ...p, globeLightingEnabled: false })),
         perfProfileSameResolution: runDiff((p) => ({
           ...p,
@@ -170,13 +168,9 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         selectionTransitionWrapperOnly: [],
         // G-2: changing selectedCountry rebuilds 11 of 14 accessors
         selectedCountry: REBUILT_ON_SELECTION_OR_GLOBE_THEME,
-        // Changing foundSet, mode, theme, or isLight rebuilds 10 of 14 accessors (all except altitude, curvature, lerpColor, isQuietOwnedFocus)
+        // Changing foundSet or mode rebuilds 10 of 14 accessors (all except altitude, curvature, lerpColor, isQuietOwnedFocus)
         foundSet: REBUILT_ON_FOUND_MODE_THEME,
         mode: REBUILT_ON_FOUND_MODE_THEME,
-        theme: REBUILT_ON_FOUND_MODE_THEME,
-        isLight: REBUILT_ON_FOUND_MODE_THEME,
-        // CHARACTERIZATION: current behavior — isSuccess and isPerfectScore rebuild 9 accessors
-        // (including getPolygonColor) even when isSuccess/isPerfectScore do not change the cap color!
         isError: REBUILT_ON_FEEDBACK_OR_SCORE,
         isSuccess: REBUILT_ON_FEEDBACK_OR_SCORE,
         isPerfectScore: REBUILT_ON_FEEDBACK_OR_SCORE,
@@ -402,7 +396,7 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
       expect(getCachedMaterial(map, "France")).toBeNull();
       expect(getCachedMaterial(map, null)).toBeNull();
 
-      const uiColors = getThemeColors("dark");
+      const uiColors = getThemeColors();
       expect(mutedFoundGreen(uiColors.mapBase, () => uiColors.black)).toBe(FOUND_SURFACE_GREEN);
       expect(getFeatureMonochromeShade(null, uiColors.mapBase, (a) => a, uiColors)).toBe(
         uiColors.mapBase
@@ -418,7 +412,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         isRegionalMode: false,
         foundSet: new Set(),
         mode: "countries",
-        isLight: false,
         perfProfile: { isMobile: true },
         UI_COLORS: { strokeWidthDesktop: 0.75 },
       });
@@ -436,7 +429,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         resolveOwnerBaseColor(CONQUEST_PLAYER_COLORS.teal, "side", {
           lerpColor: lerpMock,
           UI_COLORS: { black: uiColors.black },
-          isLight: false,
         })
       ).toBe(`${CONQUEST_PLAYER_COLORS.teal}->${uiColors.black}@0.16->${uiColors.black}@0.08`);
 
@@ -449,7 +441,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
           isEndScreen: true,
           isPerfectScore: false,
           isRegionalMode: false,
-          isLight: false,
           UI_COLORS: { mapBase: uiColors.mapBase, error: uiColors.error, black: uiColors.black },
           lerpColor: lerpMock,
         })

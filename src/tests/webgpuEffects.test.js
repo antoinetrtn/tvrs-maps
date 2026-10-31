@@ -240,7 +240,6 @@ describe("WebGPU effect ports", () => {
     const baseCtx = {
       UI_COLORS: {},
       REGION_COLORS_LABELS: {},
-      isLightTheme: false,
       labelColors: {
         foundText: "var(--text-primary)",
         selectedText: "var(--text-primary)",

@@ -24,7 +24,6 @@ const EndScreen = ({
   activeDataMap,
   onRestart,
   onViewTable,
-  theme = "dark",
   lang = "fr",
   lastScores = [],
   maxScore = 0,
@@ -103,7 +102,7 @@ const EndScreen = ({
 
   if (minimized) {
     return (
-      <div className={`end-screen-overlay minimized ${theme}`}>
+      <div className={"end-screen-overlay minimized"}>
         <Button
           variant="secondary"
           size="sm"
@@ -122,7 +121,7 @@ const EndScreen = ({
   }
 
   return (
-    <div className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""} ${theme}`}>
+    <div className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""}`}>
       {/* XP Orbs Particle Component */}
       {xpResult && gainedXp > 0 && (
         <XpOrbsAnimation

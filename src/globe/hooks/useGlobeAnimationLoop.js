@@ -23,7 +23,6 @@ const _transitionTargetColor = new THREE.Color();
 
 export function useGlobeAnimationLoop({
   globeEl,
-  isLight,
   UI_COLORS,
   globeLightingEnabled,
   perfProfile,
@@ -264,13 +263,9 @@ export function useGlobeAnimationLoop({
 
             if (globeLightingEnabled) {
               const baseEmissiveIntensity = isCap
-                ? isLight
-                  ? GLOBE_STYLE.lighting.material.capEmissiveLight
-                  : GLOBE_STYLE.lighting.material.capEmissiveDark
-                : isLight
-                  ? GLOBE_STYLE.lighting.material.sideEmissiveLight
-                  : GLOBE_STYLE.lighting.material.sideEmissiveDark;
-              const emissiveBoost = !isLight ? 0.18 : 0.05;
+                ? GLOBE_STYLE.lighting.material.capEmissive
+                : GLOBE_STYLE.lighting.material.sideEmissive;
+              const emissiveBoost = 0.18;
               mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost;
             } else if (mat.userData.originalColor) {
               mat.color.copy(mat.userData.originalColor);
@@ -288,7 +283,6 @@ export function useGlobeAnimationLoop({
           mat.userData.kind = matIndex === 0 ? "cap" : "side";
           syncSelectedCountryShaderUniforms({
             shader: mat.userData.shader,
-            isLight,
             isError: currentIsError,
             isSuccess: currentIsSuccess,
             isFound: foundSet.has(currentSelectedCountry),
@@ -401,7 +395,6 @@ export function useGlobeAnimationLoop({
       clearScheduledFrame();
     };
   }, [
-    isLight,
     UI_COLORS,
     styleGlobeGraticules,
     updateGlobeLighting,

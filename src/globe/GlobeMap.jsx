@@ -62,7 +62,6 @@ const GlobeMap = (props) => {
     onCountrySelect,
     shouldAutoRotate,
     selectedCountry,
-    theme,
     viewport,
     isError,
     isSuccess,
@@ -105,7 +104,6 @@ const GlobeMap = (props) => {
 
   const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode, gameDataMap);
 
-  const isLight = theme === "light";
   const {
     selectableFeatureIndex,
     countrySizes,
@@ -149,8 +147,6 @@ const GlobeMap = (props) => {
     lerpColor,
   } = useGlobePolygons({
     mode,
-    theme,
-    isLight,
     globeLightingEnabled,
     perfProfile,
     selectedCountry,
@@ -179,7 +175,6 @@ const GlobeMap = (props) => {
     targetGlowCoefRef,
   } = useGlobeLighting({
     globeEl,
-    isLight,
     globeLightingEnabled,
     UI_COLORS,
     perfProfile,
@@ -241,7 +236,7 @@ const GlobeMap = (props) => {
   useGlobeVisibilityPause(globeEl);
   useGlobeShaderWarmup(
     globeEl,
-    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}|${theme}`
+    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}`
   );
 
   // First correct answer: link the opaque "success" programs ahead of time.
@@ -289,8 +284,6 @@ const GlobeMap = (props) => {
     UI_COLORS,
     isPerfectScore,
     isError,
-    isLight,
-    theme,
     canonicalPositions,
     gameDataMap,
   });
@@ -316,7 +309,6 @@ const GlobeMap = (props) => {
     UI_COLORS,
     t,
     globeEl,
-    isLight,
     isPanelOpen,
     canonicalPositions,
   });
@@ -340,7 +332,6 @@ const GlobeMap = (props) => {
     isHomeScreen,
     REGION_COLORS_LABELS,
     REGION_COLORS,
-    isLight,
     countriesWithGeometry,
   });
 
@@ -373,7 +364,6 @@ const GlobeMap = (props) => {
     ...lightingGlowConfig,
     ...stylesAndHelpersConfig,
     globeEl,
-    isLight,
     polygonMaterialCacheRef,
     sharedMaterialsRef,
     selectionTransition,
@@ -433,7 +423,7 @@ const GlobeMap = (props) => {
       className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
     >
       <div
-        className={`globe-container ${theme}`}
+        className="globe-container"
         ref={globeContainerRef}
         style={{ width: "100%", height: "100%", position: "relative" }}
         onPointerDown={handlePointerDown}
@@ -451,7 +441,7 @@ const GlobeMap = (props) => {
             zIndex: 0,
           }}
         >
-          <SpaceBackground theme={theme} isLight={isLight} />
+          <SpaceBackground />
           <div
             style={{
               position: "absolute",
@@ -495,7 +485,7 @@ const GlobeMap = (props) => {
             backgroundImageUrl={null}
             showAtmosphere={false}
             atmosphereColor={activeAtmosphereColor}
-            atmosphereDayQuotient={isLight ? 0.2 : 0.1}
+            atmosphereDayQuotient={0.1}
             onGlobeReady={handleGlobeReady}
             backgroundColor={GLOBE_TRANSPARENT_BACKGROUND}
             lineHoverPrecision={0}

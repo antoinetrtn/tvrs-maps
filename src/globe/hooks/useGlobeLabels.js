@@ -160,7 +160,6 @@ export function useGlobeLabels({
   UI_COLORS,
   t,
   globeEl,
-  isLight,
   isPanelOpen = false,
   canonicalPositions = {},
 }) {
@@ -305,24 +304,13 @@ export function useGlobeLabels({
         UI_COLORS,
         isHomeScreen,
         isEndScreen,
-        isLight,
         gameDataMap,
         mode,
         t,
         isPanelOpen,
       });
     },
-    [
-      REGION_COLORS_LABELS,
-      UI_COLORS,
-      isHomeScreen,
-      isEndScreen,
-      isLight,
-      gameDataMap,
-      mode,
-      t,
-      isPanelOpen,
-    ]
+    [REGION_COLORS_LABELS, UI_COLORS, isHomeScreen, isEndScreen, gameDataMap, mode, t, isPanelOpen]
   );
 
   const getHtmlAltitude = useCallback(

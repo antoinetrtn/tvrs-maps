@@ -86,10 +86,7 @@ const STYLE_TOKENS = {
 // 2. CORE THEMES
 // ==========================================
 
-// LIGHT PALETTE — soft near-black ink on warm paper. No pure #000 in the UI:
-// pure black reads harsh/dated on light surfaces ("noir trop noir"). Shadows are
-// ink-tinted, low-opacity and multi-layered instead of heavy black blurs.
-// KEEP IN SYNC with [data-theme="light"] in src/index.css (first-paint mirror).
+// Unified nocturnal palette. KEEP IN SYNC with :root in src/index.css (first-paint mirror).
 const THEME = {
   dark: {
     bg: "#0e1116",
@@ -160,10 +157,7 @@ const THEME = {
 const GLOBE_SETTINGS = {
   globeMaterialColor: "#0f2a33",
   polyMatMatte: true,
-  polyMatEmissiveIntensityFoundLight: 0.22,
-  polyMatEmissiveIntensityFoundDark: 0.52,
-  glowColorHexLight: 0xbbbbbb,
-  glowColorHexDark: 0x4f8a96,
+  glowColorHex: 0x4f8a96,
   glowPower: 0.8,
   glowCoef: 0.45,
   graticuleOpacity: 0.12,
@@ -177,8 +171,7 @@ const p = GLOBE_PALETTE;
 const GLOBE_ONLY_SETTINGS = {
   ...GLOBE_SETTINGS,
   globeMaterialColor: p.ocean,
-  glowColorHexDark: p.glow,
-  glowColorHexLight: p.glow,
+  glowColorHex: p.glow,
   glowPower: 1.6,
   glowCoef: 0.5,
   graticuleOpacity: 0.32,
@@ -198,36 +191,15 @@ export const GLOBE_TRANSPARENT_BACKGROUND = "rgba(0, 0, 0, 0)";
 
 export const GLOBE_STYLE = {
   lighting: {
-    sideOpacity: { light: 0.8, dark: 0.55 },
-    capOpacity: { light: 0.9, dark: 0.6 },
-    selectedSideOpacity: { light: 0.9, dark: 0.7 },
-    sideDarken: {
-      selectedLight: 0.08,
-      selectedDark: 0.12,
-      foundLight: 0.06,
-      foundDark: 0.08,
-      baseLight: 0.04,
-      baseDark: 0.06,
-    },
-    capPulseToPaper: { light: 0.16, dark: 0.28 },
-    selectedStrokeGlow: { light: 0.42, dark: 0.5 },
-    selectedEmissiveBoost: { light: 0.08, dark: 0.1 },
-    strokeDarken: { light: 0.28, dark: 0.2 },
-    graticuleOpacity: { light: 0.24, dark: 0.18 },
+    sideDarken: { selected: 0.12, found: 0.08, base: 0.06 },
+    capPulseToPaper: 0.28,
+    graticuleOpacity: 0.18,
     material: {
-      capEmissiveLight: 0.18,
-      capEmissiveDark: 0.24,
-      sideEmissiveLight: 0.05,
-      sideEmissiveDark: 0.08,
-      capShininessLight: 7,
-      capShininessDark: 8,
-      sideShininessLight: 2,
-      sideShininessDark: 3,
+      capEmissive: 0.24,
+      sideEmissive: 0.08,
+      capShininess: 8,
+      sideShininess: 3,
     },
-  },
-  overlay: {
-    darkOpacity: 0.68,
-    lightOpacity: 0.48,
   },
 };
 
@@ -261,19 +233,18 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
   return fallback;
 };
 
-const buildColors = (systemTheme, settings, locked = null) => {
-  const baseTheme = THEME[systemTheme] || THEME.dark;
-  const overrides = { ...settings };
-  if (systemTheme === "light") overrides.globeMaterialColor = "#ffffff";
-  return { ...baseTheme, ...overrides, ...ACCENT_OVERRIDES, ...(locked || {}) };
-};
+const buildColors = (settings, locked = null) => ({
+  ...THEME.dark,
+  ...settings,
+  ...ACCENT_OVERRIDES,
+  ...(locked || {}),
+});
 
 /** Globe colours (polygons, ocean, glow, graticule) for the unified theme. */
-export const getThemeColors = (systemTheme = "dark") =>
-  buildColors(systemTheme, GLOBE_ONLY_SETTINGS, GLOBE_LOCKED_COLORS);
+export const getThemeColors = () => buildColors(GLOBE_ONLY_SETTINGS, GLOBE_LOCKED_COLORS);
 
-export const getThemeCssVariables = (systemTheme = "dark", { uiScale = 1 } = {}) => {
-  const theme = buildColors(systemTheme, GLOBE_SETTINGS);
+export const getThemeCssVariables = ({ uiScale = 1 } = {}) => {
+  const theme = buildColors(GLOBE_SETTINGS);
 
   const scale = Math.max(0.72, Math.min(1.05, uiScale || 1));
   const s = (px) => `${Math.round(px * scale)}px`;
@@ -376,40 +347,25 @@ export const getThemeRegionColorLabel = (region) =>
   p.label[normalizeRegion(region)] || p.label.Unknown;
 
 /** Department tint in the regional modes: the selected-surface accent. */
-export const getThemeDepartmentColor = (systemTheme = "dark") => {
-  const uiColors = getThemeColors(systemTheme);
+export const getThemeDepartmentColor = () => {
+  const uiColors = getThemeColors();
   return uiColors.mapSurfaceSelected || uiColors.mapBase;
 };
 
 // SpaceBackground canvas: strictly monochrome (bone / slate / muted teal). The legacy
 // keys (cyan, magenta, glitch*) are kept as aliases so any older lookup stays valid.
 export const SPACE_RGB_COMPONENTS = {
-  light: {
-    normal: [44, 50, 58],
-    cyan: [46, 104, 98],
-    magenta: [58, 54, 48],
-    glitchRed: [72, 66, 58],
-    glitchCyan: [86, 98, 104],
-    dust: [112, 120, 126],
-    ivory: [36, 34, 30],
-    accent: [46, 104, 98],
-    reticle: [118, 128, 132],
-    dither: [96, 120, 118],
-    vignette: [62, 66, 72],
-  },
-  dark: {
-    normal: [237, 230, 214],
-    cyan: [124, 186, 178],
-    magenta: [246, 240, 226],
-    glitchRed: [214, 204, 186],
-    glitchCyan: [104, 142, 140],
-    dust: [110, 120, 124],
-    ivory: [246, 240, 226],
-    accent: [124, 186, 178],
-    reticle: [70, 84, 86],
-    dither: [52, 82, 82],
-    vignette: [6, 8, 11],
-  },
+  normal: [237, 230, 214],
+  cyan: [124, 186, 178],
+  magenta: [246, 240, 226],
+  glitchRed: [214, 204, 186],
+  glitchCyan: [104, 142, 140],
+  dust: [110, 120, 124],
+  ivory: [246, 240, 226],
+  accent: [124, 186, 178],
+  reticle: [70, 84, 86],
+  dither: [52, 82, 82],
+  vignette: [6, 8, 11],
 };
 // Canvas FX (fireworks, XP orbs) and Learn selection read the live CSS tokens so they
 // follow the theme; the hex values are first-paint / test fallbacks only.
@@ -440,7 +396,6 @@ export const GLITCH_EFFECT_SETTINGS = {
   // ratios (mobile cap 1.25) are compensated in-shader via uPixelScale.
   referencePixelRatio: 2.0,
   noiseRangeDark: { min: 0.12, max: 0.68 },
-  noiseRangeLight: { min: 0.65, max: 0.98 },
   asciiScramble: {
     glyphs: "░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ",
     idleProbability: 0.015,

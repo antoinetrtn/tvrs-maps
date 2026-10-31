@@ -55,7 +55,6 @@ export function createGlobeLabelElement(
     UI_COLORS,
     isHomeScreen,
     isEndScreen,
-    _isLight,
     gameDataMap,
     mode,
     t,

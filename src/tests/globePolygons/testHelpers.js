@@ -125,11 +125,8 @@ export function createHookProps(overrides = {}) {
         ? RIVERS_MOUNTAINS_MAP
         : countryDataMap;
 
-  const theme = overrides.theme ?? "dark";
   return {
     mode,
-    theme,
-    isLight: theme === "light",
     globeLightingEnabled: true,
     perfProfile: { isMobile: false, polygonCapCurvatureResolution: 1.5 },
     selectedCountry: null,

@@ -7,7 +7,6 @@ import { useGlobeAnimationLoop } from "./useGlobeAnimationLoop";
 export function useGlobeSceneAnimation({
   foundList,
   globeEl,
-  isLight,
   UI_COLORS,
   globeLightingEnabled,
   perfProfile,
@@ -51,7 +50,6 @@ export function useGlobeSceneAnimation({
 
   useGlobeAnimationLoop({
     globeEl,
-    isLight,
     UI_COLORS,
     globeLightingEnabled,
     perfProfile,
