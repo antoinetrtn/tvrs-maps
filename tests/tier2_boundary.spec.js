@@ -167,7 +167,7 @@ test.describe("Tier 2: Boundary & Corner Cases (30 Tests)", () => {
 
   // 14. Panel close button dismisses leaderboard panel
   test("T2-DESEL-03: Close Button Dismisses Leaderboard Panel", async ({ guestPage: page }) => {
-    await page.locator(".home-podium-widget").click();
+    await page.locator(".ui-icon-btn--dock-podium").click();
     const lbPanel = page.locator(".sheet-panel.leaderboard-panel");
     await expect(lbPanel).toHaveClass(/open/);
 

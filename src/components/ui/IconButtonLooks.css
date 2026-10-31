@@ -17,7 +17,39 @@
   }
 }
 
-/* — moved from src/components/HomeScreen.css — */
+/* — moved from src/components/HomeDock.css & src/components/HomeScreen.css — */
+
+.ui-icon-btn--dock-segment {
+  position: relative;
+  height: var(--control-lg);
+  min-height: var(--control-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+  border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  color: var(--text-muted);
+  touch-action: manipulation;
+  font: inherit;
+  overflow: visible;
+}
+
+.ui-icon-btn--dock-podium {
+  pointer-events: auto;
+  width: auto;
+  padding: 0;
+}
+
+.ui-icon-btn--dock-podium:active .widget-spot,
+.ui-icon-btn--dock-podium:active .widget-rank-num {
+  color: var(--accent-contrast);
+}
+
+.ui-icon-btn--dock-podium:active .widget-spot.rank-1::after {
+  background: var(--accent-contrast);
+}
 
 .ui-icon-btn--dock-profile {
   position: relative;
@@ -31,14 +63,27 @@
   overflow: visible;
 }
 
-/* — moved from src/components/HomeScreen.css — */
-
 .ui-icon-btn--dock-profile > .profile-btn-level-tag {
   position: static;
   order: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  background: color-mix(in srgb, var(--text-main) 10%, transparent);
+  color: var(--text-main);
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: 0 var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--text-main) 18%, transparent);
+  box-shadow: none;
+  pointer-events: none;
+  z-index: var(--z-raised-2);
 }
-
-/* — moved from src/components/HomeScreen.css — */
 
 .ui-icon-btn--dock-profile .profile-btn-xp-bar {
   position: absolute;
@@ -50,6 +95,85 @@
   opacity: 0.65;
   pointer-events: none;
   z-index: var(--z-raised);
+}
+
+@media (min-width: 769px) {
+  .ui-icon-btn--dock-segment {
+    position: relative;
+    height: var(--control-lg);
+    min-height: var(--control-lg);
+    width: auto;
+    padding: 0 var(--spacing-ms);
+    gap: var(--spacing-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+    border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
+    border-radius: var(--radius-sm);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    box-shadow: none;
+    color: var(--text-muted);
+    touch-action: manipulation;
+    font: inherit;
+    overflow: visible;
+    transition:
+      background var(--dur-fast) linear,
+      border-color var(--dur-fast) linear,
+      color var(--dur-fast) linear;
+  }
+
+  .ui-icon-btn--dock-podium {
+    padding: 0 var(--spacing-ms) 0 0;
+    gap: var(--spacing-sm);
+  }
+
+  .ui-icon-btn--dock-segment:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+    z-index: var(--z-hud-top);
+  }
+
+  .ui-icon-btn--dock-segment:active,
+  .ui-icon-btn.ui-icon-btn--dock-segment:active:not(:disabled) {
+    transform: var(--press-offset);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    animation: px-press-flash var(--dur-micro) steps(1, end);
+    box-shadow: none;
+  }
+
+  .ui-icon-btn--dock-segment:active .home-dock-label {
+    color: var(--accent-contrast);
+  }
+}
+
+@media (min-width: 769px) and (hover: hover) {
+  .ui-icon-btn--dock-segment:hover,
+  .ui-icon-btn.ui-icon-btn--dock-segment:hover:not(:disabled) {
+    transform: none;
+    background: color-mix(in srgb, var(--text-main) 10%, var(--bg-color));
+    border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
+    color: var(--text-main);
+    box-shadow: none;
+  }
+
+  .ui-icon-btn--dock-segment:hover .home-dock-label {
+    color: var(--text-main);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-icon-btn--dock-segment {
+    transition: none;
+  }
+
+  .ui-icon-btn--dock-segment:active,
+  .ui-icon-btn.ui-icon-btn--dock-segment:active:not(:disabled) {
+    transform: none;
+    animation: none;
+  }
 }
 
 /* — moved from src/components/HomeScreenCategoryCarousel.css — */

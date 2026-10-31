@@ -109,21 +109,7 @@
   }
 }
 
-/* Podium widget */
-.home-podium-widget {
-  pointer-events: auto;
-  width: auto;
-  height: var(--control-lg);
-  min-height: var(--control-lg);
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
-  border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
-  border-radius: var(--radius-sm);
-  box-shadow: none;
-}
-
+/* Podium widget spots */
 .home-podium-spots {
   display: inline-flex;
   align-items: center;
@@ -183,16 +169,7 @@
   color: currentColor;
 }
 
-.home-podium-widget:active .widget-spot,
-.home-podium-widget:active .widget-rank-num {
-  color: var(--accent-contrast);
-}
-
-.home-podium-widget:active .widget-spot.rank-1::after {
-  background: var(--accent-contrast);
-}
-
-/* Profile trigger: icon + inline level badge + bottom mini XP bar */
+/* Profile trigger icon */
 .profile-icon {
   display: inline-flex;
   align-items: center;
@@ -206,28 +183,6 @@
 .profile-icon svg {
   display: block;
   flex-shrink: 0;
-}
-
-.profile-btn-level-tag {
-  position: static;
-  order: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  background: color-mix(in srgb, var(--text-main) 10%, transparent);
-  color: var(--text-main);
-  font-family: var(--font-display);
-  font-size: var(--font-size-2xs);
-  font-weight: 600;
-  line-height: 1;
-  padding: 0 var(--spacing-xs);
-  border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--text-main) 18%, transparent);
-  box-shadow: none;
-  pointer-events: none;
-  z-index: var(--z-raised-2);
 }
 
 /* Settings panel (CRT/glass) — desktop-only dimensions; below 1025px the

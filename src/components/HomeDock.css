@@ -6,23 +6,6 @@
   display: none;
 }
 
-.home-bottom-right .home-dock-segment {
-  position: relative;
-  height: var(--control-lg);
-  min-height: var(--control-lg);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
-  border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
-  border-radius: var(--radius-sm);
-  box-shadow: none;
-  color: var(--text-muted);
-  touch-action: manipulation;
-  font: inherit;
-  overflow: visible;
-}
-
 @media (min-width: 769px) {
   .home-bottom-right {
     position: fixed;
@@ -56,73 +39,8 @@
     transition: color var(--dur-fast) linear;
   }
 
-  .home-bottom-right .home-dock-segment {
-    position: relative;
-    height: var(--control-lg);
-    min-height: var(--control-lg);
-    width: auto;
-    padding: 0 var(--spacing-ms);
-    gap: var(--spacing-sm);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
-    border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
-    border-radius: var(--radius-sm);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
-    box-shadow: none;
-    color: var(--text-muted);
-    touch-action: manipulation;
-    font: inherit;
-    overflow: visible;
-    transition:
-      background var(--dur-fast) linear,
-      border-color var(--dur-fast) linear,
-      color var(--dur-fast) linear;
-  }
-
-  .home-bottom-right .home-podium-widget {
-    padding: 0 var(--spacing-ms) 0 0;
-    gap: var(--spacing-sm);
-  }
-
   .home-bottom-right .home-podium-spots {
     border-right: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
-  }
-
-  /* Inline level badge on profile button (never overlapping borders or text) */
-  .home-bottom-right .profile-btn-level-tag {
-    position: static;
-    order: 3;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    background: color-mix(in srgb, var(--text-main) 10%, transparent);
-    color: var(--text-main);
-    font-family: var(--font-display);
-    font-size: var(--font-size-2xs);
-    font-weight: 600;
-    line-height: 1;
-    padding: 0 var(--spacing-xs);
-    border: 1px solid color-mix(in srgb, var(--text-main) 18%, transparent);
-    border-radius: var(--radius-sm);
-    box-shadow: none;
-    z-index: var(--z-hud-top);
-  }
-
-  /* Mini XP bar along bottom inner edge of profile button */
-  .home-bottom-right .profile-btn-xp-bar {
-    position: absolute;
-    left: var(--spacing-xs);
-    right: var(--spacing-xs);
-    bottom: 2px;
-    width: auto;
-    height: 2px;
-    opacity: 0.65;
-    z-index: var(--z-home-content);
   }
 
   .home-bottom-right .profile-icon,
@@ -138,46 +56,6 @@
   .home-bottom-right svg {
     shape-rendering: crispEdges;
   }
-
-  /* Micro-interactions: hover, focus-visible, active */
-  .home-bottom-right .home-dock-segment:hover {
-    transform: none;
-    background: color-mix(in srgb, var(--text-main) 10%, var(--bg-color));
-    border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
-    color: var(--text-main);
-    box-shadow: none;
-  }
-
-  .home-bottom-right .home-dock-segment:hover .home-dock-label {
-    color: var(--text-main);
-  }
-
-  .home-bottom-right .home-dock-segment:focus-visible {
-    outline: 2px solid var(--text-main);
-    outline-offset: 2px;
-    z-index: var(--z-hud-top);
-  }
-
-  .home-bottom-right .home-dock-segment:active {
-    transform: var(--press-offset);
-    background: var(--accent);
-    color: var(--accent-contrast);
-    animation: px-press-flash var(--dur-micro) steps(1, end);
-    box-shadow: none;
-  }
-
-  .home-bottom-right .home-dock-segment:active .home-dock-label {
-    color: var(--accent-contrast);
-  }
-
-  .home-bottom-right .home-podium-widget:active .widget-spot,
-  .home-bottom-right .home-podium-widget:active .widget-rank-num {
-    color: var(--accent-contrast);
-  }
-
-  .home-bottom-right .home-podium-widget:active .widget-spot.rank-1::after {
-    background: var(--accent-contrast);
-  }
 }
 
 /* >= 1440px: clamp margin up to 32px */
@@ -190,13 +68,7 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .home-bottom-right .home-dock-segment,
   .home-dock-label {
     transition: none;
-  }
-
-  .home-bottom-right .home-dock-segment:active {
-    transform: none;
-    animation: none;
   }
 }
