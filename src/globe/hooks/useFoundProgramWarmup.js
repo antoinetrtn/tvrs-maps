@@ -35,7 +35,7 @@ function opaqueVariant(source, toneMapped) {
  * program key) while the browser is idle. Rendering is unchanged: probes are
  * never added to the scene.
  */
-export function precompileFoundPrograms(globe) {
+function precompileFoundPrograms(globe) {
   const renderer = globe?.renderer?.();
   const scene = globe?.scene?.();
   const camera = globe?.camera?.();
