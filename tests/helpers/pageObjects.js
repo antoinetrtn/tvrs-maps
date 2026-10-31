@@ -6,8 +6,8 @@ export class HomeScreen {
     this.logo = page.locator(".home-logo");
     this.deckWrapper = page.locator(".cards-deck-wrapper");
     this.topCard = page.locator(".ui-card--mode-deck.is-top-card");
-    this.leftArrow = page.locator(".deck-click-zone.left");
-    this.rightArrow = page.locator(".deck-click-zone.right");
+    this.leftArrow = page.locator(".deck-click-zone.left button");
+    this.rightArrow = page.locator(".deck-click-zone.right button");
     this.dots = page.locator(".deck-dots-row .deck-dot");
     this.settingsBtn = page.locator(".ui-icon-btn--dock-settings");
     this.profileBtn = page.locator(".ui-icon-btn--dock-profile");
@@ -37,7 +37,7 @@ export class HomeScreen {
   }
 
   async startTopModeLearn() {
-    const learnBtn = this.topCard.locator(".ui-btn--tile");
+    const learnBtn = this.topCard.locator(".ui-btn--tile:not(.ui-btn--tile-train)");
     await learnBtn.click();
   }
 
@@ -48,17 +48,7 @@ export class HomeScreen {
 
   async closeSettings() {
     await this.settingsPanel.locator(".ui-icon-btn--panel-close").click();
-    await expect(this.settingsPanel).not.toHaveClass(/open/);
-  }
-
-  async setInterfaceTheme(themeName) {
-    // themeName: 'dark' | 'light'
-    await this.openSettings();
-    const opt = this.settingsPanel.locator(
-      `.segmented-opt:has-text("${themeName === "dark" ? "Sombre" : "Clair"}"), .segmented-opt:has-text("${themeName === "dark" ? "Dark" : "Light"}")`
-    );
-    await opt.first().click();
-    await this.closeSettings();
+    await expect(this.page.locator(".sheet-panel.settings-panel.open")).toHaveCount(0);
   }
 }
 
