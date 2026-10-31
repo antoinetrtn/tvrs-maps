@@ -128,6 +128,8 @@ const getCardStyle = (pose, isTopCard, reducedMotion, modeKey) => {
   const clipPath = getModeClipPath(modeKey);
   const modeVars = {
     "--card-mode-accent": palette.primary,
+    "--card-mode-secondary": palette.secondary,
+    "--card-mode-spark": palette.spark,
     "--card-clip-path": clipPath,
   };
   if (reducedMotion) {
@@ -238,6 +240,7 @@ const ModeCard = ({
       style={cardStyle}
       {...interactiveProps}
     >
+      <div className="card-plate-pattern" aria-hidden="true" />
       <CardContent
         modeItem={modeItem}
         lang={lang}

@@ -44,14 +44,4 @@ describe("getCardPose", () => {
   it("les rangs au-delà des presets retombent sur le dernier preset", () => {
     expect(getCardPose({ ...base, stackPos: 5 }).zIndex).toBe(20);
   });
-
-  it("les cartes empilées restent droites (rotateZ 0) et centrées (translateX 0)", () => {
-    const first = getCardPose({ ...base, stackPos: 1 });
-    const second = getCardPose({ ...base, stackPos: 2 });
-    expect(first.rotateZ).toBe(0);
-    expect(first.translateX).toBe(0);
-    expect(second.rotateZ).toBe(0);
-    expect(second.translateX).toBe(0);
-    expect(second.translateY).toBeLessThan(first.translateY);
-  });
 });

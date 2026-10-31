@@ -141,7 +141,7 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
     expect(learnLabel.className).toContain("desktop-reveal");
 
     expect(document.querySelector(".card-pixel-ornaments")).toBeNull();
-    expect(document.querySelector(".card-plate-pattern")).toBeNull();
+    expect(document.querySelector(".card-plate-pattern")).not.toBeNull();
   });
 
   it("ModeCard in conquest mode renders rules button with desktop-reveal label", () => {

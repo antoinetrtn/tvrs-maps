@@ -19,16 +19,23 @@
 
 .ui-card--mode-deck {
   position: absolute;
-  top: 14px;
+  top: 18px;
   width: 320px;
   height: 216px;
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 7%, var(--bg-color)) 0%,
+    color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) 100%
+  );
+  background-color: var(--bg-color);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  --card-mode-accent: var(--text-muted);
-  border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
+  --card-mode-accent: var(--accent);
+  --card-mode-secondary: var(--text-main);
+  --card-mode-spark: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 22%, transparent);
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
@@ -40,16 +47,16 @@
 
 .ui-card--mode-deck.is-top-card {
   height: 216px;
-  border-color: color-mix(in srgb, var(--text-main) 18%, transparent);
+  border-color: color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 24%, transparent);
   box-shadow: var(--shadow-card);
 }
 
 .ui-card--mode-deck.is-stacked-card {
   cursor: pointer;
   height: 216px;
-  background: color-mix(in srgb, var(--text-main) 3%, var(--bg-color));
-  border-color: color-mix(in srgb, var(--text-main) 12%, transparent);
-  box-shadow: none;
+  background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main));
+  border-color: color-mix(in srgb, var(--text-main) 14%, transparent);
+  box-shadow: var(--glass-shadow);
   transition:
     transform var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) ease,
@@ -58,27 +65,10 @@
 }
 
 .ui-card--mode-deck.is-stacked-card:hover {
-  border-color: color-mix(in srgb, var(--text-main) 22%, transparent);
+  border-color: color-mix(in srgb, var(--text-main) 24%, transparent);
 }
 
-.ui-card--mode-deck.is-stacked-card .card-content,
 .ui-card--mode-deck.is-stacked-card .card-actions {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.ui-card--mode-deck.is-stacked-card:not([data-stack-pos="1"]):not([data-stack-pos="2"]):not(
-    [data-is-prev="true"]
-  ) {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.cards-deck-wrapper:not(.is-user-dragging)
-  .ui-card--mode-deck.is-stacked-card[data-is-prev="true"]:not([data-stack-pos="1"]):not(
-    [data-stack-pos="2"]
-  ) {
-  opacity: 0;
   pointer-events: none;
 }
 
@@ -193,8 +183,26 @@
        visible top card is exactly --deck-w x --deck-h. */
     width: calc(var(--deck-w) * 0.92);
     height: calc(var(--deck-h) * 0.92);
-    top: calc(var(--deck-h) * 0.06);
-    padding: var(--spacing-lg);
+    top: calc(var(--deck-h) * 0.04);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+  .ui-card--mode-deck .card-plate-pattern {
+    background:
+      radial-gradient(
+        circle at 86% 26%,
+        color-mix(in srgb, var(--card-mode-accent, var(--accent)) 18%, transparent) 0%,
+        transparent 56%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
+        transparent 1px 40px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
+        transparent 1px 40px
+      );
   }
   .ui-card--mode-deck.is-stacked-card .card-desc {
     visibility: hidden;

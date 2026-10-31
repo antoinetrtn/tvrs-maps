@@ -1,9 +1,9 @@
 const STACK_PRESETS = [
   { rotateZ: 0, translateX: 0, translateY: 0, translateZ: 80, scale: 1.0, zIndex: 100 },
-  { rotateZ: 0, translateX: 0, translateY: -9, translateZ: 70, scale: 0.98, zIndex: 80 },
-  { rotateZ: 0, translateX: 0, translateY: -17, translateZ: 60, scale: 0.95, zIndex: 60 },
-  { rotateZ: 0, translateX: 0, translateY: -17, translateZ: 40, scale: 0.92, zIndex: 40 },
-  { rotateZ: 0, translateX: 0, translateY: -17, translateZ: 20, scale: 0.9, zIndex: 20 },
+  { rotateZ: 7.5, translateX: 8, translateY: -8, translateZ: 40, scale: 0.98, zIndex: 80 },
+  { rotateZ: -5.2, translateX: -7, translateY: -14, translateZ: 25, scale: 0.96, zIndex: 60 },
+  { rotateZ: 6.8, translateX: 7, translateY: -19, translateZ: 10, scale: 0.94, zIndex: 40 },
+  { rotateZ: -7.0, translateX: -8, translateY: -24, translateZ: -5, scale: 0.92, zIndex: 20 },
 ];
 
 const FRONT_POSE = { rotateZ: 0, translateX: 0, translateY: 0, translateZ: 80, scale: 1.0 };
