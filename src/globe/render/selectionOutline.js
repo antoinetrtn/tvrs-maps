@@ -8,13 +8,18 @@
  */
 import * as THREE from "three";
 
-const N = 128;
+// One byte per cell; large enough that a country with far-flung parts (France with
+// Guyane/Réunion, USA with Alaska/Hawaii) keeps a fine grid over its whole extent.
+const N = 1024;
 const CELLS = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1, 1.5, 2, 3, 4];
-// Longest side in cells: finer grid = thinner one-pixel border.
-const MAX_CELLS = 110;
+// Longest side of the MAIN landmass, in cells (only bites on very large countries):
+// finer grid = thinner one-pixel border, never coarser than needed for Russia/Canada.
+// Sized on the largest polygon, not the whole bbox, so overseas parts never coarsen it.
+const MAX_CELLS = 400;
+export const OUTLINE_TEX_SIZE = N;
 export const EDGE_VALUE = 255;
 export const HALO_VALUES = [170, 115, 60];
-const data = new Uint8Array(N * N * 4);
+const data = new Uint8Array(N * N);
 let tex = null;
 let current = null;
 
@@ -22,41 +27,55 @@ export const selectionOutlineBox = { value: new THREE.Vector4(0, 0, 1, 0) };
 
 export function getSelectionOutlineTexture() {
   if (!tex) {
-    tex = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+    tex = new THREE.DataTexture(data, N, N, THREE.RedFormat, THREE.UnsignedByteType);
     tex.magFilter = tex.minFilter = THREE.NearestFilter;
     tex.generateMipmaps = false;
+    tex.unpackAlignment = 1;
     tex.needsUpdate = true;
   }
   return tex;
 }
 
-const ringsOf = ({ type, coordinates } = {}) =>
-  type === "Polygon" ? coordinates : type === "MultiPolygon" ? coordinates.flat() : [];
+const polysOf = ({ type, coordinates } = {}) =>
+  type === "Polygon" ? [coordinates] : type === "MultiPolygon" ? coordinates : [];
 
-/** Rasterises `geometry` (GeoJSON, [lng, lat]) into the outline texture. Pure data, testable. */
-export function rasterizeOutline(geometry, out = data) {
-  const rings = ringsOf(geometry || {});
-  out.fill(0);
-  if (!rings.length) return null;
-  // Unwrap longitudes around the first vertex so antimeridian countries stay contiguous.
-  const ref = rings[0][0][0];
-  const wrap = (lng) => lng + Math.round((ref - lng) / 360) * 360;
+const extentOf = (ring) => {
   let x0 = Infinity,
     x1 = -Infinity,
     y0 = Infinity,
     y1 = -Infinity;
-  const pts = rings.map((r) =>
-    r.map(([lng, lat]) => {
-      const x = wrap(lng);
-      x0 = Math.min(x0, x);
-      x1 = Math.max(x1, x);
-      y0 = Math.min(y0, lat);
-      y1 = Math.max(y1, lat);
-      return [x, lat];
-    })
+  for (const [x, y] of ring) {
+    x0 = Math.min(x0, x);
+    x1 = Math.max(x1, x);
+    y0 = Math.min(y0, y);
+    y1 = Math.max(y1, y);
+  }
+  return { x0, x1, y0, y1, w: x1 - x0, h: y1 - y0 };
+};
+
+/** Grid cell (degrees) for a geometry: driven by its main landmass, capped by the texture. */
+function pickOutlineCell(mainExtent, fullExtent) {
+  return (
+    CELLS.find((c) => mainExtent / c <= MAX_CELLS && fullExtent / c <= N - 8) ||
+    CELLS[CELLS.length - 1]
   );
-  const cell =
-    CELLS.find((c) => Math.max(x1 - x0, y1 - y0) / c <= MAX_CELLS) || CELLS[CELLS.length - 1];
+}
+
+/** Rasterises `geometry` (GeoJSON, [lng, lat]) into the outline texture. Pure data, testable. */
+export function rasterizeOutline(geometry, out = data) {
+  const polys = polysOf(geometry || {}).filter((p) => p?.[0]?.length);
+  out.fill(0);
+  if (!polys.length) return null;
+  // Main landmass = outer ring with the largest bbox; unwrap longitudes around it so
+  // antimeridian countries (Russia, Fiji) stay contiguous.
+  const main = polys
+    .map((p) => extentOf(p[0]))
+    .reduce((best, e) => (e.w * e.h > best.w * best.h ? e : best));
+  const ref = (main.x0 + main.x1) / 2;
+  const wrap = (lng) => lng + Math.round((ref - lng) / 360) * 360;
+  const pts = polys.flat().map((r) => r.map(([lng, lat]) => [wrap(lng), lat]));
+  const { x0, x1, y0, y1 } = extentOf(pts.flat());
+  const cell = pickOutlineCell(Math.max(main.w, main.h), Math.max(x1 - x0, y1 - y0));
   const ox = Math.floor(x0 / cell) - 2,
     oy = Math.floor(y0 / cell) - 2;
   const w = Math.min(N, Math.ceil(x1 / cell) - ox + 3),
@@ -79,6 +98,15 @@ export function rasterizeOutline(geometry, out = data) {
         i++
       )
         inside[j * N + i] = 1;
+  }
+  // Islets/microstates thinner than a cell: light the cell under their centre, so
+  // Monaco or an atoll still shows one amber pixel instead of nothing.
+  for (const r of pts) {
+    const e = extentOf(r);
+    const i = Math.floor((e.x0 + e.x1) / 2 / cell) - ox,
+      j = Math.floor((e.y0 + e.y1) / 2 / cell) - oy;
+    if (e.w < cell * 2 && e.h < cell * 2 && i >= 0 && j >= 0 && i < w && j < h)
+      inside[j * N + i] = 1;
   }
   const at = (i, j) => (i < 0 || j < 0 || i >= N || j >= N ? 0 : inside[j * N + i]);
   const nb = [
@@ -110,7 +138,7 @@ export function rasterizeOutline(geometry, out = data) {
     front = next;
   }
   for (let k = 0; k < N * N; k++)
-    out[k * 4] =
+    out[k] =
       dist[k] === 0 ? EDGE_VALUE : dist[k] <= HALO_VALUES.length ? HALO_VALUES[dist[k] - 1] : 0;
   return { ox: ox * cell, oy: oy * cell, cell };
 }
