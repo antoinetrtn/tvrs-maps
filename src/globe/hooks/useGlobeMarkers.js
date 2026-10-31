@@ -30,7 +30,6 @@ export function useGlobeMarkers({
   isPerfectScore,
   isError,
   isLight,
-  globeTheme,
   theme,
   canonicalPositions = {},
   gameDataMap,
@@ -50,9 +49,9 @@ export function useGlobeMarkers({
 
   const getRegionSurfaceColor = useCallback(
     (region) => {
-      return getThemeRegionColor(globeTheme, theme, region) || UI_COLORS.success;
+      return getThemeRegionColor(region) || UI_COLORS.success;
     },
-    [globeTheme, theme, UI_COLORS]
+    [UI_COLORS]
   );
 
   const markersData = useMemo(() => {
@@ -133,9 +132,8 @@ export function useGlobeMarkers({
 
       if (isSelected) {
         if (isError) return UI_COLORS.error;
-        const baseColor =
-          getThemeRegionColorAttenuated(globeTheme, theme, region) || UI_COLORS.accent;
-        const targetColor = getThemeRegionColor(globeTheme, theme, region) || UI_COLORS.accent;
+        const baseColor = getThemeRegionColorAttenuated(region) || UI_COLORS.accent;
+        const targetColor = getThemeRegionColor(region) || UI_COLORS.accent;
         return lerpColor(baseColor, targetColor, 0.3);
       }
 
@@ -151,7 +149,6 @@ export function useGlobeMarkers({
       isEndScreen,
       isPerfectScore,
       getRegionSurfaceColor,
-      globeTheme,
       isLight,
       lerpColor,
       theme,

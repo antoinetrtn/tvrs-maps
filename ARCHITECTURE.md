@@ -165,9 +165,9 @@ thèmes, langue, mode, learn toggles. La logique est déléguée :
   (prop drilling assumé — voir dette technique dans QUALITY.md).
 - **`useGeoData`** : fetch des GeoJSON runtime. **`useViewport`** : viewport +
   détection clavier mobile (comparaison à une baseline `initialWidth/Height`).
-- **Thème** : `theme` (`dark`|`light`, = chrome UI), `globeTheme`
-  (`satellite`|`blackout`, = apparence du globe). Persistés via `localStorage`
-  (`STORAGE_KEYS.globeTheme`). `setGlobeTheme('blackout')` force `theme='dark'`.
+- **Thème** : un seul thème nocturne pixel-art, non configurable. `useAppTheme`
+  renvoie `{ theme: "dark", appStyle }` et purge une fois les anciennes clés
+  `localStorage` (`RETIRED_STORAGE_KEYS`).
 - **Langue** : `lang` (`fr`|`en`).
 
 **Boucle de saisie** (cœur du gameplay) :
@@ -200,7 +200,7 @@ trail, `getClosestUnfound` choisit le prochain pays (même région prioritaire).
    "nudge" de drag (écritures DOM coalescées en 1 rAF/frame).
 4. **Palettes de région** — memo unique produisant `REGION_COLORS`,
    `REGION_COLORS_ATTENUATED`, `REGION_COLORS_LABELS` (mêmes clés `GAME_REGIONS`,
-   mêmes deps `[globeTheme, theme]`). `UI_COLORS = getThemeColors(globeTheme, theme)`.
+   palette unique). `UI_COLORS = getThemeColors(theme)`.
 5. **`useGlobePolygons`** — couleurs/stroke/matériaux des polygones ;
    ShaderMaterials compilés et cachés (`render/globePolygonMaterial.js`,
    `render/polygonGlitchShader.js`, résolution des couleurs via
@@ -209,9 +209,8 @@ trail, `getClosestUnfound` choisit le prochain pays (même région prioritaire).
    `render/globeLabelBuilder.js` (effet glitch/scramble, préfixes via `t()`).
 7. **`useGlobePaths` / `useGlobeBiomes`** — fleuves (paths) et reliefs
    (objets 3D `render/LowPolyBiomes.js`).
-8. **`useGlobeMaterial`** — matériau du globe : `MeshBasicMaterial` sombre en
-   blackout, `MeshPhong` + texture blue-marble en satellite (chargée en async →
-   un seul swap au load).
+8. **`useGlobeMaterial`** — matériau de l'océan : `MeshStandard` sombre avec
+   liseré tramé et graticule (GLSL + TSL).
 9. **`useGlobeLighting`** — lights attachées à la caméra + mesh "inner glow"
    (sphère BackSide, shader Fresnel de `render/globeShaders.js`). Voir §6 pour
    le flicker.
@@ -225,24 +224,18 @@ Composant exporté en `React.memo`, monté par `components/GameSessionView.jsx`.
 
 ## 6. Système de thèmes (CRITIQUE)
 
-Deux axes **orthogonaux** :
+Un **thème unique** nocturne pixel-art : plus de choix de thème, de globe
+satellite, d'accent ni de style des pays trouvés.
 
-- `theme` : `light` / `dark` → **chrome UI** (panneaux, texte, accents, verre).
-- `globeTheme` : `satellite` / `blackout` → **apparence du globe**.
+- `getThemeColors(theme)` = chrome `THEME[theme]` + `GLOBE_ONLY_SETTINGS` +
+  couleurs verrouillées sur `GLOBE_PALETTE` (`src/config/globePalette.js`, dérivée
+  de l'accent `bone`).
+- `getThemeCssVariables(theme)` = variables CSS du chrome (sans les verrous globe).
 
-`designSystem.getThemeColors(globeTheme, theme)` = `{ ...THEME[theme], ...GLOBE_THEMES[globeTheme].globeSettings }`.
-→ Le chrome vient du `THEME` de base **partagé**. Un `globeTheme` ne doit
-overrider QUE des concerns "scène globe" (matériau, glow, graticules, largeur de
-trait, mode de couleur des labels, palettes continents/départements). **Conséquence
-voulue : changer le thème du globe change le globe, pas l'interface.** Tout ce qui
-n'est pas listé dans `globeSettings` reste identique entre satellite et blackout.
-
-**Accent par défaut** : `DEFAULT_ACCENT` (`src/config/accentPresets.js`) vaut `bone`
-(« Os (sobre) »), lié au globe Monochrome via `monochrome@<accent>`. Il ne s'applique
-qu'aux utilisateurs sans accent enregistré : `readStoredAccent` renvoie toujours
-l'accent déjà sauvegardé (`STORAGE_KEYS.accent`) s'il est valide, sans jamais
-l'écraser. Les valeurs de repli du `:root` de `src/index.css` (premier paint) doivent
-rester alignées sur ce preset (garde `npm run check:tokens`).
+L'accent `ACCENT` (`src/config/accentPresets.js`) vaut `bone`. Les valeurs de
+repli du `:root` de `src/index.css` (premier paint) doivent rester alignées sur ce
+preset (garde `npm run check:tokens`). Toute modif des shaders garde la parité
+WebGL (GLSL) / WebGPU (TSL).
 
 Helpers de couleur région : `getThemeRegionColor` (surface), `…Attenuated`
 (non-trouvé), `…Label`. Blackout n'a pas de palette `attenuated`/`label` → fallback
@@ -287,10 +280,8 @@ Exceptions assumées : `FR`/`EN` (codes de langue), noms géographiques (dataset
    --screenshot=out.png --virtual-time-budget=12000 http://localhost:5001/`.
    (`--disable-gpu` seul échoue : "Error creating WebGL context" = limite
    d'environnement, pas un bug.)
-3. Vérifier chaque **mode** ET chaque **globeTheme** (satellite/blackout) ET
-   `theme` (light/dark) — beaucoup de bugs sont spécifiques à une combinaison.
-4. Sur changement de thème : vérifier qu'il n'y a PAS de dérive/clignotement de
-   l'atmosphère, et que seul le globe change (pas le chrome UI).
+3. Vérifier chaque **mode** et les deux moteurs (WebGL / WebGPU).
+4. Vérifier qu'il n'y a PAS de dérive/clignotement de l'atmosphère au chargement.
 
 ## 10. Dette technique connue
 

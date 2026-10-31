@@ -127,8 +127,8 @@ function App() {
     setShowAuthModal(false);
   }, []);
   const { viewport, isKeyboardMode } = useViewport();
-  const appTheme = useAppTheme(viewport?.width); // theme + accent + document CSS vars
-  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = appTheme;
+  const appTheme = useAppTheme(viewport?.width); // unified theme + document CSS vars
+  const { theme, appStyle } = appTheme;
   const {
     countriesData,
     departmentsData,
@@ -199,7 +199,6 @@ function App() {
     updateGameRecord,
     addAchievementToQueue,
     t,
-    globeTheme,
     theme,
     selectedCountry,
     setSelectedCountry,
@@ -406,7 +405,6 @@ function App() {
     theme,
     viewport,
     isKeyboardMode,
-    globeTheme: appTheme.globeRenderTheme,
     learnSubMode,
     onLearnSubModeChange,
     learnSearchQuery,
@@ -458,7 +456,6 @@ function App() {
         <HomeScreen
           onStartGame={startGame}
           theme={theme}
-          setTheme={setTheme}
           lang={lang}
           setLang={setLang}
           gameDuration={gameDuration}
@@ -467,9 +464,6 @@ function App() {
           setHardcoreMode={setHardcoreMode}
           peacefulMode={peacefulMode}
           setPeacefulMode={setPeacefulMode}
-          globeTheme={globeTheme}
-          setGlobeTheme={setGlobeTheme}
-          {...appTheme.accentProps}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}

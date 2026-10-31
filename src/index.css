@@ -8,7 +8,7 @@
   --text-inverse: #0e1116;
 
   /* COLORS - Semantic */
-  /* Default accent = ACCENT_PRESETS.bone (src/config/accentPresets.js) */
+  /* Accent = ACCENT (bone, src/config/accentPresets.js) */
   --accent: #e6dccb;
   --accent-hover: #f4eee3;
   --accent-soft: rgba(230, 220, 203, 0.16);

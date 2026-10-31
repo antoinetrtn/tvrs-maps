@@ -61,54 +61,23 @@ export function getFeatureMonochromeShade(adminKey, baseHex, lerpColorFn, UI_COL
 
 export function resolveRegionalLandColor(
   rawRegion,
-  {
-    globeTheme: _globeTheme,
-    regionColorsLabels: _r1,
-    regionColorsAttenuated: _r2,
-    fallbackAccent: _f1,
-    fallbackRegionColor,
-  }
+  { regionColorsLabels: _r1, regionColorsAttenuated: _r2, fallbackAccent: _f1, fallbackRegionColor }
 ) {
   return fallbackRegionColor || GLOBE_STYLE.base.mapBase;
 }
 
 /** Share of the sea tone mixed into the rest of the world while a regional layer is played. */
 export const GHOST_DIM_AMOUNT = 0.62;
-/** Satellite: the dark veil laid over the imagery outside the played region. */
-export const GHOST_VEIL_OPACITY = 0.58;
 
 /**
  * Rest-of-the-world tone in regional modes (US states, departments): the
  * attenuated region colour pulled toward the sea so the played region is the
- * only land that reads. Satellite shows imagery, so the ghosts become a dark
- * veil instead (see GHOST_VEIL_OPACITY).
+ * only land that reads.
  */
 export function resolveGhostCountryColor(d, countryDataMapOpts, opts) {
   const base = opts?.fallbackRegionColor || GLOBE_STYLE.base.mapBase;
-  if (opts?.isSatellite && opts?.veilColor) return opts.veilColor;
   if (opts?.lerpColor && opts?.mapSea) return opts.lerpColor(base, opts.mapSea, GHOST_DIM_AMOUNT);
   return base;
-}
-
-/**
- * Satellite shows imagery instead of coloured land, so the rest of the world is
- * dimmed by a dark veil: full while a regional layer is played, stepped in or out
- * during the layer transition. 0 = no veil.
- */
-export function resolveGhostVeil({ d, isRegionalMode, globeTheme, transState = null }) {
-  if (globeTheme !== "satellite") return 0;
-  if (isRegionalMode) {
-    if (!d.isGhostCountry) return 0;
-    const fadingIn = transState && transState.isEnteringRegional;
-    return fadingIn
-      ? Math.round(GHOST_VEIL_OPACITY * transState.progress * 100) / 100
-      : GHOST_VEIL_OPACITY;
-  }
-  // Back to the world layer: the veil of the former ghost countries steps out.
-  if (transState?.isExitingRegional && !d.isParentCountryFeature && !d.isExitingDepartmentFeature) {
-    return Math.round(GHOST_VEIL_OPACITY * (1 - transState.progress) * 100) / 100;
-  }
-  return 0;
 }
 
 export function resolvePolygonStrokeWidth({
@@ -119,7 +88,6 @@ export function resolvePolygonStrokeWidth({
   foundSet,
   mode,
   isLight,
-  globeLightingEnabled,
   perfProfile,
   UI_COLORS,
 }) {
@@ -136,9 +104,6 @@ export function resolvePolygonStrokeWidth({
   }
   const thickness =
     Number(UI_COLORS.strokeWidthDesktop) || Number(UI_COLORS.strokeWidthMobile) || 0.75;
-  if (!UI_COLORS.isBlackoutTheme && (isLight || globeLightingEnabled)) {
-    return (thickness + 0.2) * strokeScale;
-  }
   return thickness * strokeScale;
 }
 
@@ -275,7 +240,6 @@ export function resolveModeTransitionColor({
   transState,
   countryDataMap: cdm = countryDataMap,
   gameDataMap,
-  globeTheme: _gt,
   theme: _th,
   REGION_COLORS_LABELS: _r1,
   REGION_COLORS_ATTENUATED: _r2,
@@ -347,7 +311,6 @@ export function resolveModeTransitionStroke({
   d,
   transState,
   gameDataMap: _gdm,
-  globeTheme,
   REGION_COLORS_LABELS: _r1,
   UI_COLORS,
   isLight: _isLight,
@@ -357,14 +320,12 @@ export function resolveModeTransitionStroke({
   const _admin = getFeatureAdmin(d);
 
   if (d.isEnteringDepartmentFeature || d.isDepartmentFeature) {
-    const baseStroke =
-      globeTheme === "satellite" ? UI_COLORS.mapBorder : UI_COLORS.accent || UI_COLORS.paper;
+    const baseStroke = UI_COLORS.accent || UI_COLORS.paper;
     return lerpColor(UI_COLORS.mapSea, baseStroke, progress);
   }
 
   if (d.isExitingDepartmentFeature) {
-    const baseStroke =
-      globeTheme === "satellite" ? UI_COLORS.mapBorder : UI_COLORS.accent || UI_COLORS.paper;
+    const baseStroke = UI_COLORS.accent || UI_COLORS.paper;
     return lerpColor(UI_COLORS.mapSea, baseStroke, 1 - progress);
   }
 
@@ -410,7 +371,6 @@ export function resolveRestingColorForFeature({
   isEndScreen,
   isPerfectScore,
   isRegionalMode: _isRegionalMode,
-  globeTheme: _globeTheme,
   isLight,
   UI_COLORS,
   REGION_COLORS_LABELS: _r1,

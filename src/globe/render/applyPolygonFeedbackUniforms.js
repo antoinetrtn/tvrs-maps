@@ -15,9 +15,6 @@ export function applyPolygonFeedbackUniforms({
 
   const time = performance.now() / 1000;
   polygonGlitchUniforms.uTime.value = time;
-  if (isError || isSuccess) {
-    polygonGlitchUniforms.uFoundGreen.value.copy(getFoundGreenThreeColor());
-  }
   if (isSuccess) {
     // Stamp the success flash start so the shader's pixel-resolve runs 0 -> 1.
     polygonGlitchUniforms.uSuccessStart.value = time;

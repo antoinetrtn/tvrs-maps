@@ -26,7 +26,6 @@ const EndScreen = ({
   onViewTable,
   theme = "dark",
   lang = "fr",
-  globeTheme = "satellite",
   lastScores = [],
   maxScore = 0,
   isNewPB = false,
@@ -56,10 +55,10 @@ const EndScreen = ({
   const colors = useMemo(() => {
     const res = {};
     GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
+      res[r] = getThemeRegionColorLabel(r);
     });
     return res;
-  }, [globeTheme, theme]);
+  }, []);
 
   const isPerfectScore = foundList.length === totalCountries;
 

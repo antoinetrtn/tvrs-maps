@@ -23,7 +23,6 @@ const GameDataPanel = ({
   mode,
   theme = "dark",
   lang = "fr",
-  globeTheme = "satellite",
   isGameOver = false,
   revealAll = false,
   variant = "side",
@@ -47,10 +46,10 @@ const GameDataPanel = ({
   const colors = useMemo(() => {
     const res = {};
     GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
+      res[r] = getThemeRegionColorLabel(r);
     });
     return res;
-  }, [globeTheme, theme]);
+  }, []);
 
   const { rowsByRegion, CONTINENT_ORDER } = useMemo(
     () =>

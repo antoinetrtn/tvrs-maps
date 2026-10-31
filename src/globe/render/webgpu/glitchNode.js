@@ -39,7 +39,7 @@ import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 const PI = 3.14159;
 
 let sharedNodes = null;
-/** Shared uniforms (time, found green, pixel scale, success timeline). */
+/** Shared uniforms (time, pixel scale, success timeline, tear tints). */
 function getSharedNodes(polygonGlitchUniforms) {
   if (!sharedNodes) {
     sharedNodes = {
@@ -48,7 +48,6 @@ function getSharedNodes(polygonGlitchUniforms) {
       uSuccessStart: mirrorUniform(polygonGlitchUniforms.uSuccessStart),
       uSelectStart: mirrorUniform(polygonGlitchUniforms.uSelectStart),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
-      uFoundGreen: mirrorUniform(polygonGlitchUniforms.uFoundGreen),
       uGlitchTintA: mirrorUniform(polygonGlitchUniforms.uGlitchTintA),
       uGlitchTintB: mirrorUniform(polygonGlitchUniforms.uGlitchTintB),
     };
@@ -63,12 +62,10 @@ const PER_MATERIAL = [
   "uIsSuccess",
   "uIsSelection",
   "uIsLight",
-  "uTheme",
   "uIsSide",
   "uIsFound",
   "uSelectInTransition",
   "uSideShade",
-  "uIsSatellite",
 ];
 
 let outputNode = null;
@@ -115,7 +112,7 @@ export function attachGlitchNodes(material, polygonGlitchUniforms, initial) {
   return { uniforms };
 }
 
-function errorEffect(finalColor, time, theme, noiseUv, worldPos) {
+function errorEffect(time, noiseUv, worldPos) {
   const pulse = sin(time.mul(24)).mul(0.4).add(0.6);
   const sweep = step(fract(worldPos.y.mul(0.24).sub(time.mul(6))), 0.2).mul(0.5);
   const errorNoise = hash(noiseUv.add(sin(time.mul(60))));
@@ -132,8 +129,7 @@ function errorEffect(finalColor, time, theme, noiseUv, worldPos) {
   }).ElseIf(errorNoise.lessThan(0.15), () => {
     split.assign(mix(split, vec3(1, 0, 1), 0.75));
   });
-  const isBlackout = theme.greaterThan(0.9).and(theme.lessThan(1.1));
-  return select(isBlackout, split, mix(finalColor, split, 0.95));
+  return split;
 }
 
 function successEffect(u, time, blockUv, worldPos) {
@@ -141,8 +137,7 @@ function successEffect(u, time, blockUv, worldPos) {
   const blockNoise = hash(blockUv.mul(0.5).add(17.0));
   const resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
   const flick = mix(0.7, 1.35, hash(blockUv.add(floor(time.mul(60)))));
-  const isMonoAwakening = u.uTheme.greaterThan(0.5).and(u.uIsSatellite.lessThan(0.5));
-  const targetTone = select(isMonoAwakening, vec3(0.96, 0.68, 0.22), u.uFoundGreen);
+  const targetTone = vec3(0.96, 0.68, 0.22);
   const hot = mix(vec3(1.0, 0.97, 0.86), targetTone, 0.25).mul(flick);
   const sweep = step(fract(worldPos.y.mul(0.18).sub(p.mul(2.8))), 0.22)
     .mul(float(1).sub(smoothstep(0.3, 0.8, p)))
@@ -164,20 +159,9 @@ function successEffect(u, time, blockUv, worldPos) {
   return baseTone;
 }
 
-function selectionEffect(finalColor, green, time, theme, isSatellite) {
+function selectionEffect(time) {
   const pulse = sin(time.mul(3.2)).mul(0.08).add(0.92);
-  const isMonoAwakening = theme.greaterThan(0.5).and(isSatellite.lessThan(0.5));
-  const targetTone = select(isMonoAwakening, vec3(0.92, 0.68, 0.24), green);
-  const isBlackout = theme.greaterThan(0.9).and(theme.lessThan(1.1));
-  return select(
-    isMonoAwakening,
-    targetTone.mul(pulse.mul(0.72).add(0.16)),
-    select(
-      isBlackout,
-      targetTone.mul(pulse.mul(0.36).add(0.26)),
-      mix(finalColor, targetTone.mul(pulse.mul(0.48).add(0.36)), 0.56)
-    )
-  );
+  return vec3(0.92, 0.68, 0.24).mul(pulse.mul(0.72).add(0.16));
 }
 
 const on = (x) => x.greaterThan(0.5);
@@ -230,18 +214,17 @@ function glitchBase(u, lit) {
     .add(rimWarmth)
     .add(vec3(1.0, 0.82, 0.46).mul(gleam.mul(0.16)).mul(float(1).sub(side)))
     .toVar();
-  const isMonoAwakening = on(u.uTheme).and(on(u.uIsSatellite).not());
-  const foundRestingColor = select(isMonoAwakening, vec3(0.48, 0.34, 0.15), u.uFoundGreen);
+  const foundRestingColor = vec3(0.48, 0.34, 0.15);
 
   const finalColor = vec3(staticVec).toVar();
   If(on(u.uIsError), () => {
-    finalColor.assign(errorEffect(lit, time, u.uTheme, blockUv, positionWorld));
+    finalColor.assign(errorEffect(time, blockUv, positionWorld));
   })
     .ElseIf(on(u.uIsSuccess), () => {
       finalColor.assign(successEffect(u, time, blockUv, positionWorld));
     })
     .ElseIf(on(u.uIsSelection), () => {
-      finalColor.assign(selectionEffect(lit, u.uFoundGreen, time, u.uTheme, u.uIsSatellite));
+      finalColor.assign(selectionEffect(time));
     })
     .ElseIf(on(u.uIsFound), () => {
       finalColor.assign(foundRestingColor);
@@ -289,7 +272,6 @@ function createGlitchOutputNode(u) {
     const feedback = on(u.uIsError).or(on(u.uIsSuccess));
     const isFoundSurface = on(u.uIsFound);
     const transiting = on(transitionActive);
-    const satellite = on(u.uIsSatellite);
 
     const rgb = vec3(mix(lit, staticVec.mul(sideShade), inMix)).toVar();
     If(feedback, () => {
@@ -298,23 +280,11 @@ function createGlitchOutputNode(u) {
       .ElseIf(isFoundSurface, () => {
         rgb.assign(foundRestingColor.mul(sideShade));
       })
-      .ElseIf(transiting.and(satellite), () => {
-        rgb.assign(glitchColor);
-      })
       .ElseIf(transiting, () => {
         rgb.assign(mix(glitchColor, settleColor, settleMix));
       });
 
-    const alpha = float(1).toVar();
-    const satDissolve = feedback.or(isFoundSurface).not().and(transiting).and(satellite);
-    If(satDissolve, () => {
-      alpha.assign(float(1).sub(settleMix));
-    });
-    If(feedback.or(isFoundSurface).or(transiting).not().and(satellite), () => {
-      alpha.assign(float(1).sub(clamp(fade, 0, 1)));
-    });
-
-    return vec4(fromDisplay(clamp(rgb, 0, 1)), alpha);
+    return vec4(fromDisplay(clamp(rgb, 0, 1)), 1.0);
   })();
 }
 

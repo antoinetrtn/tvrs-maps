@@ -1,17 +1,17 @@
-import { act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { ACCENT_PRESETS, setActiveAccent } from "../config/accentPresets";
-import { getThemeRegionColor, GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
+import { getThemeRegionColorAttenuated, GLITCH_EFFECT_SETTINGS } from "../config/designSystem";
 import { POLYGON_ALTITUDE } from "../config/gameConfig";
-import { buildMonochromePalette } from "../config/monochromeGlobe";
-import { setGlobePref } from "../globe/globePrefs";
-import { FOUND_HIGHLIGHT, FOUND_SURFACE_GREEN } from "../globe/render/polygonColorResolver";
+import { GLOBE_PALETTE } from "../config/globePalette";
+import {
+  FOUND_HIGHLIGHT,
+  FOUND_SURFACE_GREEN,
+  GHOST_DIM_AMOUNT,
+} from "../globe/render/polygonColorResolver";
 import {
   FEATURE_BRAZIL,
   FEATURE_DEPT_AIN,
   FEATURE_FRANCE,
-  FEATURE_JAPAN,
   FEATURE_RIVER_AMAZON,
   FEATURE_SOMALILAND,
   FEATURE_SPAIN,
@@ -21,7 +21,7 @@ import {
   summarizeFeatureOutput,
 } from "./globePolygons/testHelpers";
 
-describe("useGlobePolygons characterization — modes, themes, and states", () => {
+describe("useGlobePolygons characterization — modes, theme, and states", () => {
   beforeEach(() => {
     resetGlobePolygonTestGlobals();
   });
@@ -33,7 +33,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
   describe("Core state invariants (world countries mode)", () => {
     it("freezes neutral, selected, found, and selected+found outputs in monochrome dark theme", () => {
       const { result: neutralRes } = renderPolygons({
-        globeTheme: "monochrome",
         selectedCountry: null,
         foundSet: new Set(["Spain"]),
       });
@@ -45,8 +44,8 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       // Neutral country uses regional surface color and shared non-shader material; side is invisible
       expect(franceNeutral.color).toBe(neutralRes.current.REGION_COLORS.Europe);
       expect(brazilNeutral.color).toBe(neutralRes.current.REGION_COLORS.Americas);
-      expect(brazilNeutral.color).toBe(neutralRes.current.UI_COLORS.mapBase);
-      expect(franceNeutral.color).toBe(brazilNeutral.color);
+      expect(franceNeutral.color).toBe(GLOBE_PALETTE.land.Europe);
+      expect(brazilNeutral.color).toBe(GLOBE_PALETTE.land.Americas);
       expect(franceNeutral.altitude).toBe(POLYGON_ALTITUDE.base);
       expect(franceNeutral.strokeWidth).toBe(1.6);
       expect(franceNeutral.capMaterial.userData).toEqual({
@@ -76,7 +75,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
 
       // Selected unfound country
       const { result: selectedRes } = renderPolygons({
-        globeTheme: "monochrome",
         selectedCountry: "France",
         foundSet: new Set(["Spain"]),
       });
@@ -91,7 +89,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       // getPolygonColor from the region surface color to UI_COLORS.mapBase,
       // while the cap material switches to the isolated glitch shader using restingColor.
       expect(franceSelected.color).toBe(selectedRes.current.UI_COLORS.mapBase);
-      expect(franceSelected.color).toBe(franceNeutral.color);
       expect(franceSelected.stroke).toBe(selectedRes.current.UI_COLORS.accent);
       expect(franceSelected.strokeWidth).toBe(7.5);
       expect(franceSelected.altitude).toBe(POLYGON_ALTITUDE.selected);
@@ -107,10 +104,8 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
         uIsSuccess: 0,
         uIsSelection: 0,
         uIsLight: 0,
-        uTheme: 1,
         uIsSide: 0,
         uIsFound: 0,
-        uIsSatellite: 0,
         uSelectInTransition: 0,
       });
       expect(franceSelected.sideMaterial.visible).toBe(true);
@@ -120,7 +115,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
 
       // Selected + Found country (Spain selected when already in foundSet)
       const { result: selectedFoundRes } = renderPolygons({
-        globeTheme: "monochrome",
         selectedCountry: "Spain",
         foundSet: new Set(["Spain"]),
       });
@@ -137,7 +131,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
 
     it("freezes error flash and success flash states on a selected country", () => {
       const { result: errorRes } = renderPolygons({
-        globeTheme: "monochrome",
         selectedCountry: "France",
         isError: true,
       });
@@ -156,7 +149,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       expect(franceError.sideMaterial.uniforms.uIsError).toBe(1);
 
       const { result: successRes } = renderPolygons({
-        globeTheme: "monochrome",
         selectedCountry: "France",
         isSuccess: true,
         foundSet: new Set(["France"]),
@@ -171,7 +163,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       // CHARACTERIZATION: current behavior — when isSuccess=true BEFORE the country is added to
       // foundSet, resolveCountryCapColor ignores _isSuccess and returns UI_COLORS.mapBase.
       const { result: successUnfoundRes } = renderPolygons({
-        globeTheme: "monochrome",
         selectedCountry: "France",
         isSuccess: true,
         foundSet: new Set(),
@@ -187,108 +178,14 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
     });
   });
 
-  describe("Themes matrix (satellite, monochrome, blackout, monochrome@accent, default, light/dark, foundStyle)", () => {
-    it("characterizes satellite theme visibility, opacity, altitude, and stroke rules", () => {
-      const { result } = renderPolygons({
-        globeTheme: "satellite",
-        selectedCountry: "France",
-        foundSet: new Set(["Spain"]),
-      });
-
-      const franceSelected = summarizeFeatureOutput(result.current, FEATURE_FRANCE);
-      const spainFound = summarizeFeatureOutput(result.current, FEATURE_SPAIN);
-      const japanNeutral = summarizeFeatureOutput(result.current, FEATURE_JAPAN);
-
-      expect(japanNeutral.color).toBe(result.current.REGION_COLORS.Asia);
-      expect(japanNeutral.stroke).toBe(result.current.UI_COLORS.mapBorder);
-      expect(japanNeutral.strokeWidth).toBe(0.95);
-      expect(japanNeutral.altitude).toBe(POLYGON_ALTITUDE.satelliteBase);
-      expect(japanNeutral.capMaterial.visible).toBe(false);
-      expect(japanNeutral.capMaterial.transparent).toBe(true);
-      expect(japanNeutral.sideMaterial.visible).toBe(false);
-
-      expect(spainFound.color).toBe(FOUND_SURFACE_GREEN);
-      expect(spainFound.capMaterial.visible).toBe(true);
-      expect(spainFound.capMaterial.transparent).toBe(true);
-      expect(spainFound.capMaterial.opacity).toBe(0.5);
-      expect(spainFound.capMaterial.wireframe).toBe(false);
-      expect(spainFound.altitude).toBe(POLYGON_ALTITUDE.satelliteBase);
-
-      expect(franceSelected.capMaterial.visible).toBe(true);
-      expect(franceSelected.capMaterial.transparent).toBe(false);
-      expect(franceSelected.capMaterial.opacity).toBe(1);
-      expect(franceSelected.capMaterial.uniforms.uIsSatellite).toBe(1);
-      expect(franceSelected.capMaterial.uniforms.uTheme).toBe(0);
-      expect(franceSelected.altitude).toBe(POLYGON_ALTITUDE.selected);
-    });
-
-    it("characterizes foundStyle='mesh' wireframe mode across themes", () => {
-      act(() => {
-        setGlobePref("foundStyle", "mesh");
-      });
-
-      const { result } = renderPolygons({
-        globeTheme: "satellite",
-        selectedCountry: "France",
-        foundSet: new Set(["France", "Spain"]),
-      });
-
-      const spainFoundMesh = summarizeFeatureOutput(result.current, FEATURE_SPAIN);
-      const franceSelectedFound = summarizeFeatureOutput(result.current, FEATURE_FRANCE);
-
-      expect(spainFoundMesh.capMaterial.wireframe).toBe(true);
-      expect(spainFoundMesh.capMaterial.visible).toBe(true);
-      expect(spainFoundMesh.capMaterial.transparent).toBe(false);
-      expect(spainFoundMesh.capMaterial.opacity).toBe(1);
-      expect(franceSelectedFound.capMaterial.wireframe).toBe(false);
-    });
-
-    it("characterizes blackout alias, monochrome@accent, default fallback, and light theme", () => {
-      const { result: blackoutRes } = renderPolygons({ globeTheme: "blackout" });
-      const { result: monoRes } = renderPolygons({ globeTheme: "monochrome" });
-      expect(summarizeFeatureOutput(blackoutRes.current, FEATURE_FRANCE).color).toBe(
-        summarizeFeatureOutput(monoRes.current, FEATURE_FRANCE).color
-      );
-
-      const { result: monoTealRes } = renderPolygons({ globeTheme: "monochrome@teal" });
-      const franceMonoTeal = summarizeFeatureOutput(monoTealRes.current, FEATURE_FRANCE);
-      const tealMonoPalette = buildMonochromePalette("teal");
-      expect(franceMonoTeal.color).toBe(tealMonoPalette.land.Europe);
-      expect(franceMonoTeal.stroke).toBe(
-        monoTealRes.current.lerpColor(
-          tealMonoPalette.border,
-          monoTealRes.current.UI_COLORS.paper,
-          0.28
-        )
-      );
-
-      act(() => {
-        setActiveAccent("teal");
-      });
-      const { result: accentRes } = renderPolygons({
-        globeTheme: "monochrome",
-        selectedCountry: "France",
-      });
-      expect(summarizeFeatureOutput(accentRes.current, FEATURE_FRANCE).stroke).toBe(
-        ACCENT_PRESETS.teal.accent
-      );
-
-      // CHARACTERIZATION: current behavior — globeTheme="default" is not in GLOBE_THEMES, so
-      // getGlobeThemeCfg("default") falls back to GLOBE_THEMES.satellite, while strict
-      // `globeTheme === "satellite"` checks evaluate to false (cap remains visible & opaque).
-      const { result: defaultThemeRes } = renderPolygons({ globeTheme: "default" });
-      const franceDefaultTheme = summarizeFeatureOutput(defaultThemeRes.current, FEATURE_FRANCE);
-      expect(franceDefaultTheme.color).toBe(getThemeRegionColor("satellite", "dark", "Europe"));
-      expect(franceDefaultTheme.capMaterial.visible).toBe(true);
-      expect(franceDefaultTheme.altitude).toBe(POLYGON_ALTITUDE.base);
-
+  describe("Theme matrix (unified nocturnal theme, light flag)", () => {
+    it("characterizes the light flag on the unified theme", () => {
       // CHARACTERIZATION: current behavior — THEME in designSystem.js only defines `dark`, so
       // theme="light" keeps dark base hex tokens in UI_COLORS while isLight=true changes lerp
       // weights, stroke widths, lighting shininess, and shader uIsLight=1.
       const { result: lightRes } = renderPolygons({
         theme: "light",
         isLight: true,
-        globeTheme: "satellite",
         selectedCountry: "France",
         foundSet: new Set(["Spain"]),
       });
@@ -345,7 +242,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       const { result: deptRes } = renderPolygons({
         mode: "departments",
         isDepartmentMode: true,
-        globeTheme: "satellite",
         selectedCountry: "01",
         foundSet: new Set(),
       });
@@ -373,18 +269,23 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
         )
       );
 
-      expect(spainGhost.color).toBe(deptRes.current.UI_COLORS.bg);
+      expect(spainGhost.color).toBe(
+        deptRes.current.lerpColor(
+          getThemeRegionColorAttenuated("Europe"),
+          deptRes.current.UI_COLORS.mapSea,
+          GHOST_DIM_AMOUNT
+        )
+      );
       expect(spainGhost.sideColor).toBe(deptRes.current.UI_COLORS.mapSea);
       expect(spainGhost.altitude).toBe(POLYGON_ALTITUDE.ghostCountry);
       expect(spainGhost.strokeWidth).toBe(0.15);
       expect(spainGhost.capMaterial.visible).toBe(true);
-      expect(spainGhost.capMaterial.transparent).toBe(true);
-      expect(spainGhost.capMaterial.opacity).toBe(0.58);
+      expect(spainGhost.capMaterial.transparent).toBe(false);
+      expect(spainGhost.capMaterial.opacity).toBe(1);
 
       const { result: usRes } = renderPolygons({
         mode: "us_states",
         isUsStatesMode: true,
-        globeTheme: "monochrome",
         selectedCountry: null,
         foundSet: new Set(["California"]),
       });
@@ -397,7 +298,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
     it("characterizes learn mode, home screen, and end screen (normal vs perfect score)", () => {
       const { result: learnRes } = renderPolygons({
         mode: "learn",
-        globeTheme: "monochrome",
         selectedCountry: "France",
       });
       const franceLearn = summarizeFeatureOutput(learnRes.current, FEATURE_FRANCE);
@@ -408,7 +308,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
 
       const { result: homeRes } = renderPolygons({
         isHomeScreen: true,
-        globeTheme: "monochrome",
         selectedCountry: "France",
       });
       expect(
@@ -422,7 +321,6 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       const { result: endRes } = renderPolygons({
         isEndScreen: true,
         isPerfectScore: false,
-        globeTheme: "monochrome",
         foundSet: new Set(["Spain"]),
       });
       const franceMissedEnd = summarizeFeatureOutput(endRes.current, FEATURE_FRANCE);
@@ -442,23 +340,11 @@ describe("useGlobePolygons characterization — modes, themes, and states", () =
       const { result: endPerfectRes } = renderPolygons({
         isEndScreen: true,
         isPerfectScore: true,
-        globeTheme: "monochrome",
         foundSet: new Set(["Spain"]),
       });
       expect(summarizeFeatureOutput(endPerfectRes.current, FEATURE_SPAIN).color).toBe(
         endPerfectRes.current.UI_COLORS.gold
       );
-
-      // CHARACTERIZATION: current behavior — on the end screen in satellite theme, missed countries
-      // have isGlitchShaderCap=true (via isEndMissed) yet applySatelliteVisibility sets visible=false!
-      const { result: endSatRes } = renderPolygons({
-        isEndScreen: true,
-        globeTheme: "satellite",
-        foundSet: new Set(["Spain"]),
-      });
-      const franceMissedSatEnd = summarizeFeatureOutput(endSatRes.current, FEATURE_FRANCE);
-      expect(franceMissedSatEnd.capMaterial.userData.isGlitchShaderCap).toBe(false);
-      expect(franceMissedSatEnd.capMaterial.visible).toBe(false);
 
       // CHARACTERIZATION: current behavior — on the end screen in regional mode, found features
       // return FOUND_SURFACE_GREEN instead of UI_COLORS.gold or UI_COLORS.success.

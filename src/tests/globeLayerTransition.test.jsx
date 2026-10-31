@@ -13,9 +13,7 @@ import {
 import {
   getTransitionState,
   GHOST_DIM_AMOUNT,
-  GHOST_VEIL_OPACITY,
   resolveGhostCountryColor,
-  resolveGhostVeil,
   resolveModeTransitionColor,
 } from "../globe/render/polygonColorResolver";
 
@@ -110,7 +108,7 @@ describe("buildExitingFeatures", () => {
 describe("ghost world dimming", () => {
   const lerp = (a, b, amount) => `${a}>${b}@${amount}`;
 
-  it("pulls the ghost colour toward the sea (Monochrome)", () => {
+  it("pulls the ghost colour toward the sea", () => {
     const color = resolveGhostCountryColor(
       {},
       {},
@@ -121,47 +119,6 @@ describe("ghost world dimming", () => {
       }
     );
     expect(color).toBe(`tone-region>tone-sea@${GHOST_DIM_AMOUNT}`);
-  });
-
-  it("uses a dark veil on satellite", () => {
-    const color = resolveGhostCountryColor(
-      {},
-      {},
-      {
-        fallbackRegionColor: "tone-region",
-        isSatellite: true,
-        veilColor: "tone-veil",
-        lerpColor: lerp,
-        mapSea: "tone-sea",
-      }
-    );
-    expect(color).toBe("tone-veil");
-  });
-
-  it("veil: only on satellite ghosts, stepped in/out during layer transitions", () => {
-    const ghost = { isGhostCountry: true };
-    const world = {};
-    expect(resolveGhostVeil({ d: ghost, isRegionalMode: true, globeTheme: "monochrome" })).toBe(0);
-    expect(resolveGhostVeil({ d: ghost, isRegionalMode: true, globeTheme: "satellite" })).toBe(
-      GHOST_VEIL_OPACITY
-    );
-    expect(
-      resolveGhostVeil({
-        d: ghost,
-        isRegionalMode: true,
-        globeTheme: "satellite",
-        transState: { isEnteringRegional: true, progress: 0.4 },
-      })
-    ).toBeCloseTo(GHOST_VEIL_OPACITY * 0.4, 2);
-    expect(
-      resolveGhostVeil({
-        d: world,
-        isRegionalMode: false,
-        globeTheme: "satellite",
-        transState: { isExitingRegional: true, progress: 0.8 },
-      })
-    ).toBeCloseTo(GHOST_VEIL_OPACITY * 0.2, 2);
-    expect(resolveGhostVeil({ d: world, isRegionalMode: false, globeTheme: "satellite" })).toBe(0);
   });
 
   it("transition ghost colour targets the dimmed colour", () => {

@@ -1,10 +1,9 @@
 /**
- * Monochrome globe (CRT look): the whole palette is derived from the user's
- * accent preset — ocean, land shades, graticule, halo and glitch tint. Land
- * shades target a fixed luminance so every accent keeps the same contrast
- * (magenta is dim, acid green is bright: both land at the same lightness).
+ * Globe palette of the unified nocturnal theme: ocean, land shades, graticule,
+ * halo and glitch tint are all derived from the bone accent. Land shades target
+ * a fixed luminance so the contrast stays stable if the accent is retuned.
  */
-import { ACCENT_PRESETS, resolveAccentId } from "./accentPresets.js";
+import { ACCENT } from "./accentPresets.js";
 
 const INK = "#07060a";
 const REGIONS = [
@@ -65,8 +64,8 @@ const isPaperAccent = (accent) => {
   return relativeLuminance(accent) > 0.6 && Math.max(r, g, b) - Math.min(r, g, b) < 60;
 };
 
-export const buildMonochromePalette = (accentId) => {
-  const accent = ACCENT_PRESETS[resolveAccentId(accentId)].accent;
+const buildGlobePalette = () => {
+  const { accent } = ACCENT;
   // Bone/"os": sober paper-on-ink — paler land, quieter halo.
   const paper = isPaperAccent(accent);
   const landTarget = paper ? 0.14 : 0.09;
@@ -92,3 +91,5 @@ export const buildMonochromePalette = (accentId) => {
     glitchTintB: mixHex(accent, "#ffffff", 0.6),
   };
 };
+
+export const GLOBE_PALETTE = Object.freeze(buildGlobePalette());

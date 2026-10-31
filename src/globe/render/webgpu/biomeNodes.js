@@ -19,12 +19,11 @@ export function applyBiomePalette(p) {
     isUnfoundDarkCap,
     uShowcaseNode,
     uRegionalNode,
-    uSatThemeNode,
   } = p;
   const biomeSample = texture(getBiomeTexture(), cartUv);
   const biomeTone = biomeSample.rgb;
   const biomeLand = biomeTone.mul(float(1.0).sub(ndv).mul(0.18).add(0.88));
-  const biomeAllowed = biomeSample.a.mul(ghostMask).mul(float(1.0).sub(uSatThemeNode));
+  const biomeAllowed = biomeSample.a.mul(ghostMask);
   const biomeReveal = max(
     max(isSoloFound, isConquestOwned),
     uShowcaseNode.mul(isUnfoundDarkCap)
