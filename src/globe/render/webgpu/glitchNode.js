@@ -9,7 +9,6 @@ import {
   abs,
   asin,
   atan,
-  cameraPosition,
   clamp,
   cos,
   float,
@@ -24,19 +23,22 @@ import {
   normalize,
   positionLocal,
   positionWorld,
-  pow,
   select,
   sin,
   smoothstep,
   step,
+  texture,
   vec2,
   vec3,
   vec4,
 } from "three/tsl";
 
+import { getCapitalLightsTexture } from "../capitalLightsTexture";
+import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
 import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 const PI = 3.14159;
+const CITY_AMBER = vec3(...SELECT_CITY_AMBER_RGB);
 
 let sharedNodes = null;
 /** Shared uniforms (time, pixel scale, success timeline, tear tints). */
@@ -183,37 +185,29 @@ function glitchBase(u, lit) {
   const fragPx = vec2(sphereLng.mul(cos(sphereLat.mul(0.65))), sphereLat).mul(520.0);
   const blockUv = floor(fragPx.mul(0.85));
 
-  const viewDir = normalize(cameraPosition.sub(positionWorld));
-  const ndv = clamp(importDot(sphereDir, viewDir), 0.0, 1.0);
-  const sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
-
-  // Warm ember selection (GLSL parity): clean amber fill, breathing, drifting gleam,
-  // glowing side walls tracing the border.
-  const light = on(u.uIsLight);
+  // Selection (GLSL parity): the country's real city-light pixels (same texture cells
+  // as the found ignition) glow dim amber in stepped order, border in square pixels.
   const side = step(0.5, u.uIsSide);
-  const emberPulse = sin(time.mul(2.4)).mul(0.1).add(0.9);
-  const emberCap = mix(lit, vec3(1.0, 0.72, 0.32), 0.38).mul(1.18);
-  const emberWall = select(light, vec3(0.98, 0.78, 0.4), vec3(1.0, 0.74, 0.3));
-  const gleamPhase = fract(
-    sphereLng.mul(cos(sphereLat)).add(sphereLat.mul(0.5)).mul(1.6).sub(time.mul(0.32))
+  const selectIn = clamp(time.sub(u.uSelectStart).div(0.5), 0, 1);
+  const lightProg = select(
+    on(transitionActive),
+    float(1).sub(floor(u.uFadeProgress.mul(5.0)).div(5.0)),
+    floor(selectIn.mul(6.0)).div(6.0)
   );
-  const gleam = smoothstep(0.0, 0.05, gleamPhase).mul(
-    float(1).sub(smoothstep(0.05, 0.16, gleamPhase))
+  const selUv = vec2(
+    atan(sphereDir.x, sphereDir.z).div(6.2831853).add(0.5),
+    sphereLat.div(3.14159265).add(0.5)
   );
-  const rimWarmth = pow(float(1.0).sub(ndv), 2.0).mul(
-    select(light, vec3(0.16, 0.11, 0.04), vec3(0.34, 0.22, 0.07))
+  const selCell = floor(selUv.mul(vec2(3600.0, 1800.0)));
+  const isCityPx = step(0.25, texture(getCapitalLightsTexture(), selUv).r).mul(float(1).sub(side));
+  const cityOn = isCityPx.mul(step(hash(selCell.add(3.7)), lightProg.mul(1.15).sub(0.15)));
+  const wallOn = side.mul(step(hash(floor(fragPx.mul(0.5)).add(7.0)), lightProg.mul(2.0)));
+  const wallTone = vec3(1.0, 0.74, 0.3).div(u.uSideShade.max(0.001));
+  const staticVec = mix(
+    mix(lit, wallTone, wallOn),
+    CITY_AMBER,
+    cityOn.mul(SELECT_CITY_ALPHA_VALUE)
   );
-  const emberBase = mix(
-    emberCap,
-    emberWall.mul(emberPulse.mul(0.35).add(0.75)).div(u.uSideShade.max(0.001)),
-    side
-  );
-  const staticVec = emberBase
-    .mul(sphereShade)
-    .mul(emberPulse)
-    .add(rimWarmth)
-    .add(vec3(1.0, 0.82, 0.46).mul(gleam.mul(0.16)).mul(float(1).sub(side)))
-    .toVar();
   const foundRestingColor = vec3(0.48, 0.34, 0.15);
 
   const finalColor = vec3(staticVec).toVar();
@@ -238,13 +232,11 @@ function glitchBase(u, lit) {
     blockUv,
     staticVec,
     finalColor,
+    isCityPx,
+    pixelOn: step(0.01, cityOn.add(wallOn)),
     sideShade,
     foundRestingColor,
   };
-}
-
-function importDot(a, b) {
-  return a.x.mul(b.x).add(a.y.mul(b.y)).add(a.z.mul(b.z));
 }
 
 /** Smooth crossfade state (no checkerboard). */
@@ -259,21 +251,15 @@ function createGlitchOutputNode(u) {
   return Fn(() => {
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, staticVec, sideShade, foundRestingColor } = base;
+    const { transitionActive, staticVec, sideShade, foundRestingColor, isCityPx, pixelOn } = base;
     const { glitchColor } = glitchDissolve(u, base);
-    const fade = clamp(u.uFadeProgress, 0, 1);
-    const isWall = step(0.5, u.uIsSide);
-    const settleMix = mix(smoothstep(0.0, 0.7, fade), smoothstep(0.3, 1.0, fade), isWall);
-    const selectIn = clamp(u.uTime.sub(u.uSelectStart).div(0.6), 0, 1);
-    const inMix = mix(smoothstep(0.35, 1.0, selectIn), smoothstep(0.0, 0.5, selectIn), isWall);
-
     const settleColor = mix(lit, foundRestingColor.mul(sideShade), step(0.5, u.uIsFound)).toVar();
 
     const feedback = on(u.uIsError).or(on(u.uIsSuccess));
     const isFoundSurface = on(u.uIsFound);
     const transiting = on(transitionActive);
 
-    const rgb = vec3(mix(lit, staticVec.mul(sideShade), inMix)).toVar();
+    const rgb = vec3(staticVec.mul(sideShade)).toVar();
     If(feedback, () => {
       rgb.assign(glitchColor);
     })
@@ -281,8 +267,11 @@ function createGlitchOutputNode(u) {
         rgb.assign(foundRestingColor.mul(sideShade));
       })
       .ElseIf(transiting, () => {
-        rgb.assign(mix(glitchColor, settleColor, settleMix));
+        rgb.assign(mix(settleColor, staticVec.mul(sideShade), pixelOn));
       });
+    If(on(u.uIsSuccess), () => {
+      rgb.assign(mix(rgb, CITY_AMBER, isCityPx.mul(SELECT_CITY_ALPHA_VALUE)));
+    });
 
     return vec4(fromDisplay(clamp(rgb, 0, 1)), 1.0);
   })();

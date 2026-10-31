@@ -88,6 +88,15 @@ export const FRESNEL_FRAGMENT_SHADER = `
 // Vertices coordinate definitions for custom polygon effects.
 // World-space is required: mesh-local bounds vary wildly per country (Algeria vs
 // Luxembourg) and low-frequency local UVs produced globe-sized static bands.
+// Dim amber of a selected (not yet found) country's city pixels — shared by the
+// selection shader and the found ignition so the hand-off is seamless.
+export const SELECT_CITY_AMBER_RGB = [0.78, 0.52, 0.18];
+export const SELECT_CITY_ALPHA_VALUE = 0.6;
+const SELECT_CITY_DEFS = `
+  #define SELECT_CITY_AMBER vec3(${SELECT_CITY_AMBER_RGB.join(", ")})
+  #define SELECT_CITY_ALPHA ${SELECT_CITY_ALPHA_VALUE.toFixed(2)}
+`;
+
 export const GLITCH_VERTEX_DECLARATIONS = `
   varying vec3 vWorldPosition;
 `;
@@ -113,6 +122,8 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSideShade;
   uniform float uSuccessStart;
   uniform float uSelectStart;
+  uniform sampler2D uCapitalLightsMap;
+  ${SELECT_CITY_DEFS}
   uniform float uSuccessDuration;
   uniform vec3 uGlitchTintA;
   uniform vec3 uGlitchTintB;
@@ -188,20 +199,18 @@ export const GLITCH_FRAGMENT_BODY = `
   vec2 fragPx = vec2(sphereLng * cos(sphereLat * 0.65), sphereLat) * 520.0;
   vec2 blockUv = floor(fragPx * 0.85);
 
-  vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-  float ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
-  float sphereShade = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
-
-  float emberPulse = 0.9 + 0.1 * sin(uTime * 2.4);
-  vec3 emberCap = mix(litRestingColor, vec3(1.0, 0.72, 0.32), 0.38) * 1.18;
-  vec3 emberWall = (uIsLight > 0.5) ? vec3(0.98, 0.78, 0.40) : vec3(1.0, 0.74, 0.30);
-  float gleamPhase = fract((sphereLng * cos(sphereLat) + sphereLat * 0.5) * 1.6 - uTime * 0.32);
-  float gleam = smoothstep(0.0, 0.05, gleamPhase) * (1.0 - smoothstep(0.05, 0.16, gleamPhase));
-  vec3 rimWarmth = pow(1.0 - ndv, 2.0)
-    * ((uIsLight > 0.5) ? vec3(0.16, 0.11, 0.04) : vec3(0.34, 0.22, 0.07));
-  vec3 emberBase = mix(emberCap, emberWall * (0.75 + 0.35 * emberPulse) / max(uSideShade, 0.001), step(0.5, uIsSide));
-  vec3 staticVec = emberBase * sphereShade * emberPulse + rimWarmth
-    + vec3(1.0, 0.82, 0.46) * gleam * 0.16 * (1.0 - step(0.5, uIsSide));
+  // Selection: the country's real city-light pixels (same texture cells as the found
+  // ignition) glow dim amber in stepped order, border traced in square pixels.
+  float isWall = step(0.5, uIsSide);
+  float selectIn = clamp((uTime - uSelectStart) / 0.5, 0.0, 1.0);
+  float lightProg = (transitionActive > 0.5) ? 1.0 - floor(uFadeProgress * 5.0) / 5.0 : floor(selectIn * 6.0) / 6.0;
+  vec2 selUv = vec2(atan(sphereDir.x, sphereDir.z) / 6.2831853 + 0.5, sphereLat / 3.14159265 + 0.5);
+  vec2 selCell = floor(selUv * vec2(3600.0, 1800.0));
+  float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall);
+  float cityOn = isCityPx * step(hash(selCell + 3.7), lightProg * 1.15 - 0.15);
+  float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
+  vec3 staticVec = mix(litRestingColor, vec3(1.0, 0.74, 0.3) / max(uSideShade, 0.001), wallOn);
+  staticVec = mix(staticVec, SELECT_CITY_AMBER, cityOn * SELECT_CITY_ALPHA);
   vec3 foundRestingColor = vec3(0.48, 0.34, 0.15);
 
   vec3 finalColor = gl_FragColor.rgb;
@@ -218,12 +227,6 @@ export const GLITCH_FRAGMENT_BODY = `
   }
   finalColor *= mix(1.0, uSideShade, step(0.5, uIsSide));
 
-  float finalProgress = clamp(uFadeProgress, 0.0, 1.0);
-  float isWall = step(0.5, uIsSide);
-  float settleMix = mix(smoothstep(0.0, 0.7, finalProgress), smoothstep(0.3, 1.0, finalProgress), isWall);
-  float selectIn = clamp((uTime - uSelectStart) / 0.6, 0.0, 1.0);
-  float inMix = mix(smoothstep(0.35, 1.0, selectIn), smoothstep(0.0, 0.5, selectIn), isWall);
-
   vec3 glitchColor = finalColor;
   bool isFoundSurface = (uIsFound > 0.5);
 
@@ -235,16 +238,19 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (isFoundSurface) {
     gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
-    gl_FragColor.rgb = mix(glitchColor, settleColor, settleMix);
+    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn));
   } else {
-    gl_FragColor.rgb = mix(litRestingColor, staticVec * sideShade, inMix);
+    gl_FragColor.rgb = staticVec * sideShade;
+  }
+  if (uIsSuccess > 0.5) {
+    gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_CITY_AMBER, isCityPx * SELECT_CITY_ALPHA);
   }
 
-  // Clean cartographic finish
   gl_FragColor.a = 1.0;
 `;
 
 export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment>
+${SELECT_CITY_DEFS}
       vec3 sphereNormal = normalize(vDitherWorldPos);
       vec3 geomNormal = normalize(vDitherWorldNormal);
       float isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
@@ -428,6 +434,10 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       // Leading edge of the ignition wave burns in the existing win gold.
       sparkColor = mix(sparkColor, vec3(0.96, 0.68, 0.22) * 1.25, igniteFlash);
       vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
+      // Ahead of the front, the found country's city pixels keep their dim selection
+      // glow, so the ignition only brightens them (no blackout, no restart).
+      float preLit = isAwakenedCap * (1.0 - igniteMask) * (1.0 - uIsRegionalMode) * step(0.25, cityDensity);
+      capRgb = mix(capRgb, SELECT_CITY_AMBER, preLit * SELECT_CITY_ALPHA);
 
       vec3 sideRgb = landSurface * 0.58;
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);`;
