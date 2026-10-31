@@ -8,6 +8,7 @@ import {
   SELECTION_HAPTIC_COOLDOWN_MS,
   SELECTION_HAPTIC_TICK_MS,
   triggerSelectionHaptic,
+  triggerSubtleHapticTick,
 } from "../utils/haptics";
 
 const setMatchMedia = (reduced) => {
@@ -48,6 +49,13 @@ describe("home card change haptics", () => {
     triggerSelectionHaptic(nav, 1000);
     expect(triggerSelectionHaptic(nav, 1000 + SELECTION_HAPTIC_COOLDOWN_MS - 1)).toBe(false);
     expect(nav.vibrate).toHaveBeenCalledTimes(1);
+  });
+
+  it("regression: a deck-arrow button tick does not swallow the card-change tick", () => {
+    // IconButton fires a 1ms tick on click, then the card-change effect runs ~16ms later.
+    triggerSubtleHapticTick();
+    expect(triggerSelectionHaptic()).toBe(true);
+    expect(vibrate.mock.calls).toEqual([[1], [SELECTION_HAPTIC_TICK_MS]]);
   });
 
   it("no-ops without throwing when vibrate is unsupported", () => {
