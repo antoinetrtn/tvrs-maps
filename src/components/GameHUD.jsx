@@ -212,14 +212,7 @@ const GameHUD = ({
                   <InfoBox width={18} height={18} />
                 </IconButton>
               ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "var(--spacing-sm)",
-                    alignItems: "center",
-                    pointerEvents: "auto",
-                  }}
-                >
+                <div className="hud-play-controls">
                   {isPlaying && !isGameOver ? (
                     <IconButton
                       label={t("stop")}

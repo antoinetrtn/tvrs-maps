@@ -5,13 +5,48 @@
   overscroll-behavior: none;
 }
 
+/* Stage + decorative backdrop (were inline styles in GlobeMap.jsx) */
+.globe-container.globe-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.globe-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+.globe-backdrop-grid,
+.globe-backdrop-vignette {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.globe-backdrop-grid {
+  background-image: radial-gradient(var(--grid-dot) 1.1px, transparent 0);
+  background-size: 20px 20px;
+  opacity: 1;
+}
+
+.globe-backdrop-vignette {
+  background: radial-gradient(circle at center, transparent 0%, var(--bg-color) 100%);
+  opacity: 0.6;
+}
+
 .globe-map-shell {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  z-index: 0;
+  z-index: var(--z-base);
   pointer-events: auto;
 }
 
@@ -28,7 +63,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: var(--z-raised);
   transform: translate3d(
     calc(var(--globe-layout-x) + var(--globe-panel-shift) + var(--globe-nudge-x)),
     calc(var(--globe-keyboard-shift) + var(--globe-nudge-y)),
@@ -40,7 +75,7 @@
 .globe-studio-overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: var(--z-raised-2);
   pointer-events: none;
   mix-blend-mode: screen;
   background:
@@ -79,7 +114,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: var(--z-raised);
   pointer-events: none;
   /* Fine, faint phosphor lines (1px every 2px). They fade out toward the
      centre so the play area stays clean and only the rim reads as "CRT". */
@@ -97,7 +132,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: var(--z-raised);
   pointer-events: none;
   background: radial-gradient(
     ellipse at center,

@@ -111,13 +111,13 @@
   bottom: 0;
   background: var(--text-main);
   opacity: 0.12;
-  z-index: 0;
+  z-index: var(--z-base);
 }
 
 .progress-linear-fill {
   display: block;
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
   height: 100%;
   background: var(--accent);
   border-radius: var(--radius-sm);
@@ -199,7 +199,7 @@
 
 .input-island > * {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 
 .input-field {
@@ -434,4 +434,12 @@
   .input-island.is-rejected {
     animation: none;
   }
+}
+
+/* Mobile play/stop + timer cluster (was an inline style in GameHUD.jsx) */
+.hud-play-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  pointer-events: auto;
 }

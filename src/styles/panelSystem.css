@@ -106,7 +106,7 @@
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
-  z-index: 10;
+  z-index: var(--z-floating);
 }
 
 /* Leaderboard controls row: no extra side padding so the mode selector

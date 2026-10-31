@@ -207,7 +207,7 @@
   align-items: center;
   justify-content: center;
   grid-area: 1 / 1;
-  z-index: 1;
+  z-index: var(--z-raised);
   width: auto;
   height: auto;
   pointer-events: none;
@@ -232,7 +232,7 @@
   border: 1px solid var(--bg-color);
   box-shadow: none;
   pointer-events: none;
-  z-index: 2;
+  z-index: var(--z-raised-2);
 }
 
 /* Settings panel (CRT/glass) — desktop-only dimensions; below 1025px the

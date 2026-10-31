@@ -213,7 +213,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: var(--z-base);
   border-radius: inherit;
   -webkit-backdrop-filter: var(--glass-blur-compact);
   backdrop-filter: var(--glass-blur-compact);
@@ -235,7 +235,7 @@ body {
   )
   > * {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-raised);
 }
 
 .glass-panel {
