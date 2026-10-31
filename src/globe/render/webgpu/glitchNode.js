@@ -209,7 +209,7 @@ function glitchBase(u, lit) {
   const light = on(u.uIsLight);
   const side = step(0.5, u.uIsSide);
   const emberPulse = sin(time.mul(2.4)).mul(0.1).add(0.9);
-  const emberCap = select(light, vec3(0.88, 0.76, 0.52), vec3(0.42, 0.29, 0.13));
+  const emberCap = mix(lit, vec3(1.0, 0.72, 0.32), 0.38).mul(1.18);
   const emberWall = select(light, vec3(0.98, 0.78, 0.4), vec3(1.0, 0.74, 0.3));
   const gleamPhase = fract(
     sphereLng.mul(cos(sphereLat)).add(sphereLat.mul(0.5)).mul(1.6).sub(time.mul(0.32))

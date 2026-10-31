@@ -214,7 +214,7 @@ export const GLITCH_FRAGMENT_BODY = `
   // light gleam drifting across the country and glowing side walls that trace
   // the border like a lit outline. Matches the nocturnal ignition art direction.
   float emberPulse = 0.9 + 0.1 * sin(uTime * 2.4);
-  vec3 emberCap = (uIsLight > 0.5) ? vec3(0.88, 0.76, 0.52) : vec3(0.42, 0.29, 0.13);
+  vec3 emberCap = mix(litRestingColor, vec3(1.0, 0.72, 0.32), 0.38) * 1.18;
   vec3 emberWall = (uIsLight > 0.5) ? vec3(0.98, 0.78, 0.40) : vec3(1.0, 0.74, 0.30);
   float gleamPhase = fract((sphereLng * cos(sphereLat) + sphereLat * 0.5) * 1.6 - uTime * 0.32);
   float gleam = smoothstep(0.0, 0.05, gleamPhase) * (1.0 - smoothstep(0.05, 0.16, gleamPhase));
