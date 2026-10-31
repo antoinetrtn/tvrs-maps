@@ -271,11 +271,25 @@ export function createBoatLayer(globe) {
     mesh.count = routes.length;
   };
 
-  globe.scene().add(mesh);
+  // Compile the boat program off the critical path before the layer shows up,
+  // so the first fleet does not cause a shader-compile hitch on a find.
+  let disposed = false;
+  const scene = globe.scene();
+  const renderer = globe.renderer?.();
+  const camera = globe.camera?.();
+  const attach = () => {
+    if (!disposed) scene.add(mesh);
+  };
+  if (renderer?.compileAsync && camera) {
+    renderer.compileAsync(mesh, camera, scene).then(attach, attach).catch(attach);
+  } else {
+    attach();
+  }
   return {
     mesh,
     setFound,
     dispose() {
+      disposed = true;
       mesh.removeFromParent();
       geometry.dispose();
       material.dispose();
