@@ -397,7 +397,9 @@ export const GLITCH_EFFECT_SETTINGS = {
   referencePixelRatio: 2.0,
   noiseRangeDark: { min: 0.12, max: 0.68 },
   asciiScramble: {
-    glyphs: "░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ",
+    // ASCII only and HTML-safe (no < > &): every glyph exists in the pixel display font
+    // and the labels are built as HTML strings (no tofu, no stray entities like "#x21").
+    glyphs: "@#$%?*[]{}/=+_~^0123456789X",
     idleProbability: 0.015,
     hoverProbability: 0.08,
     updateIntervalMs: 80,

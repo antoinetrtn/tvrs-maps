@@ -88,7 +88,7 @@ export function resolvePolygonStrokeWidth({
   selectedCountry,
   isRegionalMode,
   foundSet,
-  mode,
+  mode: _mode,
   perfProfile,
   UI_COLORS,
 }) {
@@ -96,7 +96,7 @@ export function resolvePolygonStrokeWidth({
   const isSelected = isSameAdmin(admin, selectedCountry);
   if (isRegionalMode && isGhostCountry) return 0.15 * strokeScale;
   if (isSelected) {
-    const isGreenFill = foundSet.has(admin) || mode === "learn";
+    const isGreenFill = foundSet.has(admin);
     return (isGreenFill ? 14 : 7.5) * strokeScale;
   }
   if (isRegionalMode) return 1.1 * strokeScale;
@@ -153,13 +153,8 @@ export function resolveCountryCapColor({
     });
   }
 
-  if (isLearn) {
-    if (isSelected) {
-      if (isError) return UI_COLORS.error;
-      return GLITCH_EFFECT_SETTINGS.selectionHighlight;
-    }
-    return mapBase;
-  }
+  // Learn looks like home: no mode-specific fill, the selection shader draws the pick.
+  if (isLearn) return isSelected && isError ? UI_COLORS.error : mapBase;
 
   if (isFound) {
     if (isSelected) {
