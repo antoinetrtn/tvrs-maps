@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { FEEDBACK_TIMING } from "../../config/gameConstants";
+import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import {
   GLITCH_FRAGMENT_BODY,
   GLITCH_FRAGMENT_DECLARATIONS,
@@ -159,7 +160,7 @@ export function attachPolygonGlitchShader(
     registerAnimatedPolygonMaterial(material);
     return;
   }
-  material.customProgramCacheKey = () => `shader-cap-glitch-v10-${kind}`;
+  material.customProgramCacheKey = () => `shader-cap-glitch-v11-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
@@ -168,6 +169,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
     shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
     shader.uniforms.uSelectStart = polygonGlitchUniforms.uSelectStart;
+    shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
     shader.uniforms.uFadeProgress = { value: 0.0 };
     shader.uniforms.uTargetColor = {

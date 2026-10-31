@@ -38,6 +38,7 @@ import { MeshPhongNodeMaterial, MeshStandardNodeMaterial } from "three/webgpu";
 
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { isGlobeWebGPU } from "../globeRendererFlag";
+import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
 import { applyBiomePalette } from "./biomeNodes";
 import { blackoutRiverTone, buildBlackoutLand } from "./blackoutNodes.js";
@@ -306,8 +307,15 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       blackoutAmt,
       igniteFlash: max(ign.igniteFlash, homeFlash),
     });
+    // Ahead of the front the found country's city pixels keep their dim selection glow
+    // (GLSL parity), so the ignition only brightens them.
+    const preLit = isAwakenedCap
+      .mul(float(1.0).sub(ign.igniteMask))
+      .mul(float(1.0).sub(uRegionalNode))
+      .mul(step(0.25, texture(getCapitalLightsTexture(), cartUv).r));
+    const litCap = mix(capRgb, vec3(...SELECT_CITY_AMBER_RGB), preLit.mul(SELECT_CITY_ALPHA_VALUE));
     const sideRgb = landSurface.mul(0.58);
-    const rgb = mix(capRgb, sideRgb, isSideWall);
+    const rgb = mix(litCap, sideRgb, isSideWall);
     return displayOutput(rgb, output.a);
   })();
   if (isGhostCountry) ghostGrainNode = node;
