@@ -23,6 +23,7 @@ import {
   polygonGlitchUniforms,
   syncPolygonShaderUniforms,
 } from "./polygonGlitchShader";
+import { setSelectionOutline } from "./selectionOutline";
 import {
   countryBorderOutputNode,
   toDitheredLineBasicNodeMaterial,
@@ -310,6 +311,7 @@ export function getPolygonMaterialForFeature({
   // A country mid-reveal gets a private material bound to its own ignition holder, so
   // only it restarts from dark and two quick finds each keep their own timeline.
   registerCountryFeature(admin, d);
+  if (isShaderCap && isIsolated && kind === "cap") setSelectionOutline(admin, d?.geometry);
   const igniteHolder =
     !isShaderCap &&
     (kind === "cap" || kind === "side") &&

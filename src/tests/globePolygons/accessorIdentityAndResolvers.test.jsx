@@ -58,7 +58,6 @@ function diffAccessors(prev, next) {
 // Common rebuilt accessor groups for G-2 characterization assertions
 const REBUILT_ON_FEEDBACK_OR_SCORE = [
   "getPolygonCapMaterial",
-  "getPolygonSideMaterial",
   "getPolygonCapColorWrapped",
   "getPolygonSideColorWrapped",
   "getPolygonStrokeColorWrapped",
@@ -70,7 +69,6 @@ const REBUILT_ON_FEEDBACK_OR_SCORE = [
 
 const REBUILT_ON_FOUND_MODE_THEME = [
   "getPolygonCapMaterial",
-  "getPolygonSideMaterial",
   "getPolygonStrokeWidth",
   "getPolygonCapColorWrapped",
   "getPolygonSideColorWrapped",
@@ -83,7 +81,6 @@ const REBUILT_ON_FOUND_MODE_THEME = [
 
 const REBUILT_ON_SELECTION_OR_GLOBE_THEME = [
   "getPolygonCapMaterial",
-  "getPolygonSideMaterial",
   "getPolygonAltitude",
   "getPolygonStrokeWidth",
   "getPolygonCapColorWrapped",
@@ -175,33 +172,18 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         isSuccess: REBUILT_ON_FEEDBACK_OR_SCORE,
         isPerfectScore: REBUILT_ON_FEEDBACK_OR_SCORE,
         conquestOverlay: [...REBUILT_ON_FEEDBACK_OR_SCORE, "isQuietOwnedFocus"],
-        globeLightingEnabled: [
-          "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
-          "getPolygonStrokeWidth",
-        ],
-        perfProfileSameResolution: [
-          "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
-          "getPolygonStrokeWidth",
-        ],
+        globeLightingEnabled: ["getPolygonCapMaterial", "getPolygonStrokeWidth"],
+        perfProfileSameResolution: ["getPolygonCapMaterial", "getPolygonStrokeWidth"],
         perfProfileNewResolution: [
           "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
           "getPolygonStrokeWidth",
           "getPolygonCurvatureResolution",
         ],
         // isHomeScreen rebuilds stroke + material, NOT getPolygonColor
-        isHomeScreen: [
-          "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
-          "getPolygonStrokeColorWrapped",
-          "getPolygonStroke",
-        ],
+        isHomeScreen: ["getPolygonCapMaterial", "getPolygonStrokeColorWrapped", "getPolygonStroke"],
         // isEndScreen rebuilds color + material, NOT getPolygonStroke
         isEndScreen: [
           "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
           "getPolygonCapColorWrapped",
           "getPolygonSideColorWrapped",
           "getBaseColorForCountryAndKind",
@@ -211,7 +193,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         // isDepartmentMode does NOT rebuild getBaseColorForCountryAndKind
         isDepartmentMode: [
           "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
           "getPolygonAltitude",
           "getPolygonStrokeWidth",
           "getPolygonCapColorWrapped",
@@ -224,7 +205,6 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
         // gameDataMap does NOT rebuild getPolygonStrokeWidth
         gameDataMap: [
           "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
           "getPolygonAltitude",
           "getPolygonCapColorWrapped",
           "getPolygonSideColorWrapped",
@@ -235,16 +215,11 @@ describe("useGlobePolygons characterization — Accessor Identity (G-2), Cache L
           "getPolygonStroke",
           "isQuietOwnedFocus",
         ],
-        transitioningPrevCountry: [
-          "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
-          "getPolygonAltitude",
-        ],
+        transitioningPrevCountry: ["getPolygonCapMaterial", "getPolygonAltitude"],
         // CHARACTERIZATION: current behavior — transitionStep rebuilds 9 accessors even when
         // modeTransitionRef.current is inactive/null
         transitionStepWhenIdle: [
           "getPolygonCapMaterial",
-          "getPolygonSideMaterial",
           "getPolygonStrokeWidth",
           "getPolygonCapColorWrapped",
           "getPolygonSideColorWrapped",

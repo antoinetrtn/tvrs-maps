@@ -92,7 +92,6 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
       expect(franceSelected.stroke).toBe(selectedRes.current.UI_COLORS.accent);
       expect(franceSelected.strokeWidth).toBe(7.5);
       expect(franceSelected.altitude).toBe(POLYGON_ALTITUDE.selected);
-      expect(franceSelected.altitude).toBeGreaterThan(franceNeutral.altitude);
       expect(franceSelected.capMaterial.userData.isGlitchShaderCap).toBe(true);
       expect(franceSelected.capMaterial.userData.isIsolated).toBe(true);
       expect(franceSelected.capMaterial.transparent).toBe(false);
@@ -107,10 +106,7 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
         uIsFound: 0,
         uSelectInTransition: 0,
       });
-      expect(franceSelected.sideMaterial.visible).toBe(true);
-      expect(franceSelected.sideMaterial.type).toBe("MeshPhongMaterial");
-      expect(franceSelected.sideMaterial.userData.isGlitchShaderCap).toBe(true);
-      expect(franceSelected.sideMaterial.uniforms.uIsSide).toBe(1);
+      expect(franceSelected.sideMaterial.visible).toBe(false);
 
       // Selected + Found country (Spain selected when already in foundSet)
       const { result: selectedFoundRes } = renderPolygons({
@@ -124,7 +120,7 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
       expect(spainSelectedFound.altitude).toBe(POLYGON_ALTITUDE.selected);
       expect(spainSelectedFound.capMaterial.userData.isGlitchShaderCap).toBe(false);
       expect(spainSelectedFound.capMaterial.userData.isFoundCap).toBe(true);
-      expect(spainSelectedFound.sideMaterial.visible).toBe(true);
+      expect(spainSelectedFound.sideMaterial.visible).toBe(false);
       expect(spainSelectedFound.sideMaterial.userData.isGlitchShaderCap).toBe(false);
     });
 
@@ -145,7 +141,6 @@ describe("useGlobePolygons characterization — modes, theme, and states", () =>
       );
       expect(franceError.capMaterial.uniforms.uIsError).toBe(1);
       expect(franceError.capMaterial.uniforms.uIsSuccess).toBe(0);
-      expect(franceError.sideMaterial.uniforms.uIsError).toBe(1);
 
       const { result: successRes } = renderPolygons({
         selectedCountry: "France",

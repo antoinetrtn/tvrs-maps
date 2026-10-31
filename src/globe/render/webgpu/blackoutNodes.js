@@ -5,6 +5,8 @@
  */
 import { float, mix, vec3 } from "three/tsl";
 
+import { BLACKOUT_TINT_RGB } from "../globeShaders";
+
 export function buildBlackoutLand({
   lit,
   surfaceLuma,
@@ -17,7 +19,7 @@ export function buildBlackoutLand({
   const blackoutAmt = unlit.mul(float(1.0).sub(uRegionalNode));
   const dimTarget = mix(float(0.36), float(0.74), uRegionalNode);
   const blackoutDim = mix(mix(float(1.0), dimTarget, unlit), float(0.42), uGhost);
-  const blackoutGrey = vec3(surfaceLuma).mul(vec3(0.97, 0.99, 1.03));
+  const blackoutGrey = vec3(surfaceLuma).mul(vec3(...BLACKOUT_TINT_RGB));
   const unfoundLand = mix(lit, blackoutGrey, blackoutAmt.mul(0.88)).mul(blackoutDim);
   return { blackoutAmt, blackoutDim, unfoundLand };
 }

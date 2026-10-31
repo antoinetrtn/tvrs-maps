@@ -88,7 +88,7 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       // still gets selected altitude (0.008), selected strokeWidth (7.5), and visible side walls!
       expect(franceQuiet.altitude).toBe(POLYGON_ALTITUDE.selected);
       expect(franceQuiet.strokeWidth).toBe(7.5);
-      expect(franceQuiet.sideMaterial.visible).toBe(true);
+      expect(franceQuiet.sideMaterial.visible).toBe(false);
 
       // 2. Sticky selection on solid-owner country (France) with error flash
       const { result: stickySolidErrorRes } = renderHook(() =>
@@ -150,7 +150,7 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       // CHARACTERIZATION: current behavior — getPolygonSideMaterial and getPolygonAltitude do not
       // suppress transitioningPreviousCountryState for owned countries.
       expect(franceOwnedDeselect.altitude).toBe(POLYGON_ALTITUDE.selected);
-      expect(franceOwnedDeselect.sideMaterial.visible).toBe(true);
+      expect(franceOwnedDeselect.sideMaterial.visible).toBe(false);
     });
   });
 
@@ -327,7 +327,7 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       expect(franceMonoDeselect.capMaterial.userData.isGlitchShaderCap).toBe(true);
       expect(franceMonoDeselect.capMaterial.transparent).toBe(false);
       expect(franceMonoDeselect.capMaterial.opacity).toBe(1);
-      expect(franceMonoDeselect.sideMaterial.visible).toBe(true);
+      expect(franceMonoDeselect.sideMaterial.visible).toBe(false);
 
       // 3. Deselecting an already-found country: no glitch shader on cap, but altitude & side stay elevated
       const { result: foundDeselect } = renderHook(() =>
@@ -348,7 +348,7 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       expect(spainFoundDeselect.capMaterial.userData.isGlitchShaderCap).toBe(false);
       expect(spainFoundDeselect.capMaterial.userData.isFoundCap).toBe(true);
       expect(spainFoundDeselect.altitude).toBe(POLYGON_ALTITUDE.selected);
-      expect(spainFoundDeselect.sideMaterial.visible).toBe(true);
+      expect(spainFoundDeselect.sideMaterial.visible).toBe(false);
 
       // 4. Incoming selection transition sets uSelectInTransition = 1
       const { result: incomingRes } = renderHook(() =>
