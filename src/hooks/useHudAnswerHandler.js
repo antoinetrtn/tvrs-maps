@@ -29,7 +29,13 @@ export function useHudAnswerHandler({
       }
 
       const res = specificCountryGuess(val);
-      return res === "SUCCESS" || res === true || res === "ERROR" || res === "ALREADY_FOUND";
+      return (
+        res === "SUCCESS" ||
+        res === true ||
+        res === "ERROR" ||
+        res === "ALREADY_FOUND" ||
+        res === "QUEUED"
+      );
     },
     [mode, selectedCountry, handleSearch, specificCountryGuess, handleInput, setPopupError]
   );
