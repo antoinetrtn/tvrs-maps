@@ -17,6 +17,12 @@ import {
   validateKnowledgeDataset,
   validateQuestion,
 } from "../../scripts/lib/knowledgeRules.mjs";
+import ConquestCountryTimeline from "../multiplayer/ConquestCountryTimeline.jsx";
+import {
+  describeClaimRefusal,
+  formatFeedEvent,
+  resolveCountryClick,
+} from "../multiplayer/conquestLogic";
 import ConquestStealPanel from "../multiplayer/ConquestStealPanel.jsx";
 import { conquestText } from "../multiplayer/conquestText";
 import { getCategoryLabel } from "../multiplayer/knowledge/knowledgeCategories";
@@ -186,7 +192,6 @@ describe("per answer type schema", () => {
       validateQuestion({
         ...makeValidQuestion(),
         sourceUrl: "https://fr.wikipedia.org/wiki/TGV",
-        sourceSafe: false,
       })
     ).toEqual([]);
   });
@@ -211,12 +216,9 @@ describe("per answer type schema", () => {
     expect(
       errs({ ...base, answerType: "order", items: [{ label: "A", iconId: "tech-a" }] })
     ).toMatch(/3 à 5/);
-    expect(
-      errs({ ...makeValidQuestion(), sourceUrl: "https://example.com/x", sourceSafe: true })
-    ).toMatch(/non Wikipédia/);
-    expect(
-      errs({ ...makeValidQuestion(), sourceUrl: "https://fr.wikipedia.org/wiki/TGV" })
-    ).toMatch(/sourceSafe/);
+    expect(errs({ ...makeValidQuestion(), sourceUrl: "https://example.com/x" })).toMatch(
+      /non Wikipédia/
+    );
   });
 });
 
@@ -320,22 +322,92 @@ describe("ConquestStealPanel: one answer component per question", () => {
     expect(onAnswer).toHaveBeenCalledWith(JSON.stringify(["A", "B", "C"]));
   });
 
-  it("shows the source « i » only when the server sends it", () => {
-    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+  it("never shows the source before answering, even if one is sent", () => {
     renderPanel({ source_url: "https://fr.wikipedia.org/wiki/Axolotl" });
-    fireEvent.click(screen.getByRole("button", { name: t.questionSource }));
-    expect(open).toHaveBeenCalledWith(
-      "https://fr.wikipedia.org/wiki/Axolotl",
-      "_blank",
-      "noopener,noreferrer"
-    );
-    open.mockRestore();
+    expect(screen.queryByRole("button", { name: /Wikip/ })).toBeNull();
   });
 
-  it("hides the « i » without a source and keeps the capital typed", () => {
+  it("keeps the capital typed", () => {
     renderPanel({ kind: "capital", level: 1, options: [] });
-    expect(screen.queryByRole("button", { name: t.questionSource })).toBeNull();
     expect(screen.getByRole("textbox")).toBeTruthy();
     expect(screen.queryByRole("radio")).toBeNull();
+  });
+});
+
+describe("exhausted country lock + timeline", () => {
+  const t = conquestText("fr");
+  const players = [
+    { user_id: "a", display_name: "Ana", color: "amber" },
+    { user_id: "b", display_name: "Bob", color: "teal" },
+  ];
+  const countryName = (id) => id;
+
+  it("a locked country opens its history instead of a challenge", () => {
+    const claims = [{ country_id: "France", owner_id: "b", locked: true }];
+    expect(resolveCountryClick("France", claims, "a", Date.now(), 0)).toBe("locked");
+    expect(resolveCountryClick("France", claims, "b", Date.now(), 0)).toBe("locked");
+    expect(describeClaimRefusal({ reason: "locked", country_id: "France" }, {})).toMatch(
+      /verrouillé/
+    );
+    expect(
+      formatFeedEvent({ kind: "lock", actor_id: "b", country_id: "France" }, { players })
+    ).toBe("France reste à Bob pour de bon");
+  });
+
+  it("lists captures, steals, reinforcements and the lock", async () => {
+    const events = [
+      {
+        id: 1,
+        kind: "capture",
+        actor_id: "a",
+        country_id: "France",
+        created_at: "2026-10-31T10:00:00Z",
+      },
+      {
+        id: 2,
+        kind: "steal",
+        actor_id: "b",
+        country_id: "France",
+        payload: { victim: "a" },
+        created_at: "2026-10-31T10:01:00Z",
+      },
+      {
+        id: 3,
+        kind: "fortify",
+        actor_id: "b",
+        country_id: "France",
+        created_at: "2026-10-31T10:02:00Z",
+      },
+      {
+        id: 4,
+        kind: "lock",
+        actor_id: "b",
+        country_id: "France",
+        created_at: "2026-10-31T10:03:00Z",
+      },
+    ];
+    const load = vi.fn(async () => ({ country_id: "France", locked: true, events }));
+    render(
+      <ConquestCountryTimeline
+        t={t}
+        lang="fr"
+        countryId="France"
+        title="France"
+        load={load}
+        colorOf={() => undefined}
+        describe={(event) =>
+          event.kind === "fortify"
+            ? `Bob ${t.timelineFortified}`
+            : formatFeedEvent(event, { players, countryName })
+        }
+        close={null}
+      />
+    );
+    expect(await screen.findByText("Bob a volé France à Ana")).toBeTruthy();
+    expect(screen.getByText("Ana a capturé France")).toBeTruthy();
+    expect(screen.getByText(`Bob ${t.timelineFortified}`)).toBeTruthy();
+    expect(screen.getByText("France reste à Bob pour de bon")).toBeTruthy();
+    expect(screen.getByText(/Historique · France · verrouillé/)).toBeTruthy();
+    expect(load).toHaveBeenCalledWith("France");
   });
 });

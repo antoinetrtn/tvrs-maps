@@ -7,6 +7,7 @@ import {
   createConquestMatch,
   ensureConquestUser,
   fortifyConquestCountry,
+  getConquestCountryTimeline,
   getConquestState,
   getExistingConquestUser,
   getMyActiveConquestMatch,
@@ -286,6 +287,11 @@ export function useConquestMatch({ lang, displayName }) {
     () => callGame((id) => cancelFortifyChallenge(id), null),
     [callGame]
   );
+  // Per-country history (captures, steals, reinforcements, lock), read on demand.
+  const countryTimeline = useCallback(
+    (countryId) => callGame((id) => getConquestCountryTimeline(id, countryId), null),
+    [callGame]
+  );
 
   /**
    * « Rejouer » : creates (or joins) the rematch lobby linked to the finished
@@ -398,6 +404,7 @@ export function useConquestMatch({ lang, displayName }) {
     requestFortify,
     fortify,
     cancelFortify,
+    countryTimeline,
     rematch,
     leave,
     refresh,

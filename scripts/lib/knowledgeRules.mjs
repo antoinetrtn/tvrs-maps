@@ -170,12 +170,11 @@ const TYPE_CHECKS = {
 
 const SOURCE_RE = /^https:\/\/(fr|en)\.wikipedia\.org\/wiki\/[^\s]+$/;
 
-/** Optional Wikipedia source; `sourceSafe` false hides the « i » (URL gives the answer away). */
+/** Optional Wikipedia source, shown to the player only after answering. */
 function checkSource(q) {
   if (q?.sourceUrl == null) return [];
   const errors = [];
   if (!SOURCE_RE.test(q.sourceUrl)) errors.push(`sourceUrl non Wikipédia "${q.sourceUrl}"`);
-  if (typeof q.sourceSafe !== "boolean") errors.push("sourceSafe booléen requis avec sourceUrl");
   return errors;
 }
 

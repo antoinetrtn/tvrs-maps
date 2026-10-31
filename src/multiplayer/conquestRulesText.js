@@ -42,7 +42,7 @@ const RULES = {
       ],
       [
         "Vol",
-        "Clique ou touche un pays adverse non protégé → défi de 20 s. Chaque pays a son échelle : capitale, drapeau, tech, faune & flore, musique, puis d'autres questions, dans un ordre secret tiré au hasard pour la partie. Seul le défi du moment est dévoilé. Chaque vol réussi fait monter l'échelle pour tout le monde : pour reprendre le pays, il faudra répondre à une nouvelle question, jamais la même. Succès : +15 pts (+20 si l'adversaire mène), le pays est à toi avec un nouveau bouclier.",
+        "Clique ou touche un pays adverse non protégé → défi de 20 s. Chaque pays a son échelle : capitale, drapeau, tech, faune & flore, musique, puis d'autres questions, dans un ordre secret tiré au hasard pour la partie. Seul le défi du moment est dévoilé. Chaque vol réussi fait monter l'échelle pour tout le monde : pour reprendre le pays, il faudra répondre à une nouvelle question, jamais la même. Succès : +15 pts (+20 si l'adversaire mène), le pays est à toi avec un nouveau bouclier. Après ta réponse, le lien Wikipédia de la question s'affiche. Quand un pays n'a plus de question inédite, il est verrouillé : il reste à son propriétaire jusqu'à la fin (historique au clic).",
       ],
       [
         "Vol raté",
@@ -92,7 +92,7 @@ const RULES = {
       ],
       [
         "Steal",
-        "Click/tap an opponent's country that is not shielded → 20-second challenge. Each country has its own ladder: capital, flag, tech, wildlife & flora, music, then more questions, in a secret order drawn at random for the match. Only the current challenge is revealed. Every successful steal climbs the ladder for everyone: to take the country back you'll face a new question, never the same one. Success: +15 pts (+20 if your opponent is leading), country becomes yours with a new shield.",
+        "Click/tap an opponent's country that is not shielded → 20-second challenge. Each country has its own ladder: capital, flag, tech, wildlife & flora, music, then more questions, in a secret order drawn at random for the match. Only the current challenge is revealed. Every successful steal climbs the ladder for everyone: to take the country back you'll face a new question, never the same one. Success: +15 pts (+20 if your opponent is leading), country becomes yours with a new shield. Once you answer, the question's Wikipedia link is shown. When a country has no unseen question left, it is locked: it stays with its owner until the end (click it for its history).",
       ],
       [
         "Failed steal",

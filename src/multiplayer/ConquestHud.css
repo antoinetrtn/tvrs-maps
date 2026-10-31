@@ -380,3 +380,31 @@
     display: none;
   }
 }
+
+/* Country history (lazy panel in the answer slot) */
+.conquest-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  max-height: 180px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  font-size: var(--font-size-xs);
+}
+.conquest-timeline-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+.conquest-timeline-list li.is-lock {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.conquest-timeline-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}

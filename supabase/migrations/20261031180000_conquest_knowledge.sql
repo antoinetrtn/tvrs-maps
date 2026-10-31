@@ -4,7 +4,11 @@
 --   * Niveaux 1 à 5 = capitale, drapeau, tech, faune & flore, musique, dans un
 --     ordre ALÉATOIRE propre au couple (match, pays), stable pendant le match
 --     (tri par md5(match_id || pays || type)). Au-delà : questions de
---     connaissances supplémentaires du pays (puis d'ailleurs en dernier recours).
+--     connaissances supplémentaires du pays, jamais celles d'un autre pays.
+--   * Pays épuisé : quand le niveau suivant n'a plus de question inédite du
+--     pays, match_claims.locked passe à true (événement 'lock') : le pays reste
+--     à son propriétaire jusqu'à la fin (ni vol ni renfort).
+--   * Source Wikipédia : renvoyée seulement dans le résultat d'une réponse.
 --   * match_claims.ladder_step = niveau courant de la chaîne. Il ne redescend
 --     jamais : chaque vol réussi ET chaque renfort réussi le font monter de 1.
 --     Le vol suivant (y compris le contre-vol de l'ancien propriétaire) affronte
@@ -31,9 +35,8 @@ CREATE TABLE IF NOT EXISTS public.conquest_knowledge_questions (
     display jsonb NOT NULL DEFAULT '{}'::jsonb,
     -- Solution, jamais envoyée au client.
     answer jsonb NOT NULL,
+    -- Source Wikipédia, envoyée seulement après la réponse.
     source_url text,
-    -- false quand l'URL de la source trahit la réponse : le « i » n'est alors pas affiché.
-    source_safe boolean NOT NULL DEFAULT false,
     active boolean NOT NULL DEFAULT true
 );
 CREATE INDEX IF NOT EXISTS conquest_knowledge_questions_country_idx
@@ -53,7 +56,14 @@ ALTER TABLE public.match_country_chain ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.match_country_chain FROM PUBLIC, anon, authenticated;
 
 ALTER TABLE public.match_claims
-    ADD COLUMN IF NOT EXISTS ladder_step integer NOT NULL DEFAULT 0;
+    ADD COLUMN IF NOT EXISTS ladder_step integer NOT NULL DEFAULT 0,
+    -- Chaîne épuisée : pays définitivement acquis à son propriétaire.
+    ADD COLUMN IF NOT EXISTS locked boolean NOT NULL DEFAULT false;
+
+ALTER TABLE public.match_events DROP CONSTRAINT IF EXISTS match_events_kind_check;
+ALTER TABLE public.match_events ADD CONSTRAINT match_events_kind_check
+    CHECK (kind IN ('join', 'ready', 'start', 'capture', 'fail', 'finish',
+                    'steal', 'steal_fail', 'leave', 'forfeit', 'fortify', 'fortify_fail', 'lock'));
 
 ALTER TABLE public.match_steal_challenges DROP CONSTRAINT IF EXISTS match_steal_challenges_kind_check;
 ALTER TABLE public.match_steal_challenges ADD CONSTRAINT match_steal_challenges_kind_check
@@ -122,25 +132,17 @@ BEGIN
     RETURN;
   END IF;
 
-  -- Catégorie du niveau, puis culture, puis toute question du pays, puis d'ailleurs.
+  -- Question inédite du pays : catégorie du niveau, puis culture, puis les autres.
   SELECT q.* INTO v_q FROM public.conquest_knowledge_questions q
-    LEFT JOIN public.match_country_chain c
-      ON c.match_id = p_match_id AND c.country_id = p_country_id AND c.question_id = q.id
-   WHERE q.active
-   ORDER BY c.question_id IS NOT NULL, c.drawn_at NULLS FIRST,
-            q.country_id <> p_country_id,
-            CASE WHEN q.category = v_slot THEN 0 WHEN q.category = 'culture' THEN 1 ELSE 2 END,
+   WHERE q.active AND q.country_id = p_country_id
+     AND NOT EXISTS (SELECT 1 FROM public.match_country_chain c
+                      WHERE c.match_id = p_match_id AND c.country_id = p_country_id
+                        AND c.question_id = q.id)
+   ORDER BY CASE WHEN q.category = v_slot THEN 0 WHEN q.category = 'culture' THEN 1 ELSE 2 END,
             random()
    LIMIT 1;
   IF NOT FOUND THEN
-    -- Pas de banque de questions : on retombe sur le drapeau.
-    kind := 'flag';
-    SELECT array_agg(iso2 ORDER BY random()) INTO options FROM (
-      SELECT v_country.iso2 AS iso2
-      UNION ALL
-      (SELECT iso2 FROM public.conquest_countries
-        WHERE iso2 IS NOT NULL AND iso2 <> v_country.iso2 ORDER BY random() LIMIT 5)
-    ) o;
+    -- Chaîne épuisée : kind NULL, l'appelant verrouille le pays.
     RETURN;
   END IF;
   kind := 'knowledge';
@@ -151,7 +153,80 @@ BEGIN
   END IF;
   INSERT INTO public.match_country_chain (match_id, country_id, question_id)
   VALUES (p_match_id, p_country_id, v_q.id)
-  ON CONFLICT ON CONSTRAINT match_country_chain_pkey DO UPDATE SET drawn_at = now();
+  ON CONFLICT ON CONSTRAINT match_country_chain_pkey DO NOTHING;
+END;
+$$;
+
+-- Le niveau p_step du pays peut-il encore être servi ? Sinon le pays est verrouillé
+-- (événement 'lock') et reste à son propriétaire. Renvoie true si verrouillé.
+CREATE OR REPLACE FUNCTION public.conquest_lock_if_exhausted(
+  p_match_id uuid, p_country_id text, p_step integer)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_slot text := public.conquest_ladder_slot(p_match_id, p_country_id, p_step);
+  v_owner uuid;
+BEGIN
+  IF (v_slot = 'capital' AND EXISTS (SELECT 1 FROM public.conquest_countries
+                                      WHERE country_id = p_country_id AND capital_en IS NOT NULL))
+     OR (v_slot = 'flag' AND EXISTS (SELECT 1 FROM public.conquest_countries
+                                      WHERE country_id = p_country_id AND iso2 IS NOT NULL))
+     OR EXISTS (SELECT 1 FROM public.conquest_knowledge_questions q
+                 WHERE q.active AND q.country_id = p_country_id
+                   AND NOT EXISTS (SELECT 1 FROM public.match_country_chain c
+                                    WHERE c.match_id = p_match_id AND c.country_id = p_country_id
+                                      AND c.question_id = q.id)) THEN
+    RETURN false;
+  END IF;
+  UPDATE public.match_claims SET locked = true
+   WHERE match_id = p_match_id AND country_id = p_country_id AND NOT locked
+  RETURNING owner_id INTO v_owner;
+  IF FOUND THEN
+    INSERT INTO public.match_events (match_id, kind, actor_id, country_id, payload)
+    VALUES (p_match_id, 'lock', v_owner, p_country_id, jsonb_build_object('level', p_step + 1));
+  END IF;
+  RETURN true;
+END;
+$$;
+
+-- Source Wikipédia d'une question, pour le résultat (après la réponse).
+CREATE OR REPLACE FUNCTION public.conquest_question_source(p_question_id text)
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE WHEN p_question_id IS NULL THEN '{}'::jsonb ELSE coalesce(
+    (SELECT jsonb_build_object('source_url', source_url) FROM public.conquest_knowledge_questions
+      WHERE id = p_question_id AND source_url IS NOT NULL), '{}'::jsonb) END;
+$$;
+
+-- Historique d'un pays (captures, vols, renforts, verrou), visible en jeu.
+CREATE OR REPLACE FUNCTION public.conquest_country_timeline(p_match_id uuid, p_country_id text)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.conquest_is_player(p_match_id) THEN
+    RAISE EXCEPTION 'not_a_player' USING ERRCODE = '42501';
+  END IF;
+  RETURN jsonb_build_object(
+    'country_id', p_country_id,
+    'locked', coalesce((SELECT locked FROM public.match_claims
+                         WHERE match_id = p_match_id AND country_id = p_country_id), false),
+    'events', coalesce((SELECT jsonb_agg(jsonb_build_object(
+                 'id', e.id, 'kind', e.kind, 'actor_id', e.actor_id, 'country_id', e.country_id,
+                 'payload', e.payload, 'created_at', e.created_at) ORDER BY e.id)
+               FROM public.match_events e
+              WHERE e.match_id = p_match_id AND e.country_id = p_country_id
+                AND e.kind IN ('capture', 'steal', 'fortify', 'lock')), '[]'::jsonb));
 END;
 $$;
 
@@ -181,8 +256,7 @@ BEGIN
     'question_id', v_q.id, 'category', v_q.category, 'prompt', v_q.prompt,
     'options', to_jsonb(p_options), 'icons', coalesce(v_icons, '[]'::jsonb),
     'min', v_q.display -> 'min', 'max', v_q.display -> 'max',
-    'step', v_q.display -> 'step', 'unit', v_q.display ->> 'unit',
-    'source_url', CASE WHEN v_q.source_safe THEN v_q.source_url END);
+    'step', v_q.display -> 'step', 'unit', v_q.display ->> 'unit');
 END;
 $$;
 
@@ -303,6 +377,9 @@ BEGIN
   IF v_claim.owner_id = v_uid THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'already_yours', 'country_id', p_country_id);
   END IF;
+  IF v_claim.locked THEN
+    RETURN jsonb_build_object('ok', false, 'reason', 'locked', 'country_id', p_country_id);
+  END IF;
   IF v_claim.shield_until > now() THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'shielded', 'country_id', p_country_id,
                               'until', v_claim.shield_until);
@@ -321,6 +398,10 @@ BEGIN
 
   -- Défi du niveau courant de la chaîne du pays (ordre aléatoire par match).
   SELECT * INTO v_pick FROM public.conquest_ladder_pick(p_match_id, p_country_id, v_claim.ladder_step);
+  IF v_pick.kind IS NULL THEN
+    PERFORM public.conquest_lock_if_exhausted(p_match_id, p_country_id, v_claim.ladder_step);
+    RETURN jsonb_build_object('ok', false, 'reason', 'locked', 'country_id', p_country_id);
+  END IF;
 
   v_expires := now() + interval '20 seconds';
   INSERT INTO public.match_steal_challenges
@@ -376,7 +457,8 @@ BEGIN
   SELECT * INTO v_claim FROM public.match_claims
    WHERE match_id = p_match_id AND country_id = v_challenge.country_id
    FOR UPDATE;
-  IF NOT FOUND OR v_claim.owner_id = v_uid OR v_claim.ladder_step <> v_challenge.ladder_step THEN
+  IF NOT FOUND OR v_claim.owner_id = v_uid OR v_claim.ladder_step <> v_challenge.ladder_step
+     OR v_claim.locked THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'changed', 'country_id', v_challenge.country_id);
   END IF;
   IF v_claim.shield_until > now() THEN
@@ -391,7 +473,8 @@ BEGIN
   IF NOT v_correct THEN
     v_until := public.conquest_register_steal_fail(v_match, v_uid, v_country.country_id, 'wrong');
     RETURN jsonb_build_object('ok', false, 'reason', 'wrong', 'country_id', v_country.country_id,
-                              'penalty_until', v_until);
+                              'penalty_until', v_until)
+        || public.conquest_question_source(v_challenge.question_id);
   END IF;
 
   v_leader := public.conquest_leader(p_match_id);
@@ -420,7 +503,10 @@ BEGIN
   RETURN jsonb_build_object('ok', true, 'country_id', v_country.country_id, 'owner_id', v_uid,
                             'victim', v_victim, 'points', v_points, 'score', v_score,
                             'shield_until', v_claim.shield_until,
-                            'next_level', v_claim.ladder_step + 1);
+                            'next_level', v_claim.ladder_step + 1,
+                            'locked', public.conquest_lock_if_exhausted(p_match_id, v_country.country_id,
+                                                                        v_claim.ladder_step))
+      || public.conquest_question_source(v_challenge.question_id);
 END;
 $$;
 
@@ -456,6 +542,9 @@ BEGIN
    WHERE match_id = p_match_id AND country_id = p_country_id;
   IF NOT FOUND OR v_claim.owner_id <> v_uid THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'not_yours', 'country_id', p_country_id);
+  END IF;
+  IF v_claim.locked THEN
+    RETURN jsonb_build_object('ok', false, 'reason', 'locked', 'country_id', p_country_id);
   END IF;
   IF v_claim.fortify_level >= public.conquest_rule(v_match.rules, 'fortify_max_level', 2) THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'max_fortified', 'country_id', p_country_id,
@@ -493,6 +582,10 @@ BEGIN
   END IF;
 
   SELECT * INTO v_pick FROM public.conquest_ladder_pick(p_match_id, p_country_id, v_claim.ladder_step);
+  IF v_pick.kind IS NULL THEN
+    PERFORM public.conquest_lock_if_exhausted(p_match_id, p_country_id, v_claim.ladder_step);
+    RETURN jsonb_build_object('ok', false, 'reason', 'locked', 'country_id', p_country_id);
+  END IF;
 
   v_expires := now() + interval '20 seconds';
   INSERT INTO public.match_fortify_challenges
@@ -549,7 +642,7 @@ BEGIN
   SELECT * INTO v_claim FROM public.match_claims
    WHERE match_id = p_match_id AND country_id = v_challenge.country_id FOR UPDATE;
   IF NOT FOUND OR v_claim.owner_id <> v_uid OR v_claim.fortify_level + 1 <> v_challenge.step
-     OR v_claim.ladder_step <> v_challenge.ladder_step THEN
+     OR v_claim.ladder_step <> v_challenge.ladder_step OR v_claim.locked THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'changed', 'country_id', v_challenge.country_id);
   END IF;
 
@@ -561,7 +654,8 @@ BEGIN
     INSERT INTO public.match_events (match_id, kind, actor_id, country_id, payload)
     VALUES (p_match_id, 'fortify_fail', v_uid, v_country.country_id,
             jsonb_build_object('step', v_challenge.step, 'kind', v_challenge.kind));
-    RETURN jsonb_build_object('ok', false, 'reason', 'wrong', 'country_id', v_country.country_id);
+    RETURN jsonb_build_object('ok', false, 'reason', 'wrong', 'country_id', v_country.country_id)
+        || public.conquest_question_source(v_challenge.question_id);
   END IF;
 
   v_bonus := public.conquest_fortify_bonus(v_match.rules, v_challenge.step);
@@ -577,7 +671,10 @@ BEGIN
   RETURN jsonb_build_object('ok', true, 'mode', 'fortify', 'country_id', v_country.country_id,
                             'step', v_challenge.step, 'bonus_seconds', v_bonus,
                             'fortify_level', v_claim.fortify_level,
-                            'shield_until', v_claim.shield_until);
+                            'shield_until', v_claim.shield_until,
+                            'locked', public.conquest_lock_if_exhausted(p_match_id, v_country.country_id,
+                                                                        v_claim.ladder_step))
+      || public.conquest_question_source(v_challenge.question_id);
 END;
 $$;
 REVOKE ALL ON FUNCTION public.conquest_fortify(uuid, text) FROM PUBLIC, anon;
@@ -592,6 +689,10 @@ REVOKE ALL ON FUNCTION public.conquest_ladder_slot(uuid, text, integer) FROM PUB
 REVOKE ALL ON FUNCTION public.conquest_ladder_pick(uuid, text, integer) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.conquest_ladder_payload(text, text[], text, integer) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.conquest_ladder_check(text, text, text, text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.conquest_lock_if_exhausted(uuid, text, integer) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.conquest_question_source(text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.conquest_country_timeline(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.conquest_country_timeline(uuid, text) TO authenticated;
 REVOKE ALL ON FUNCTION public.conquest_steal_challenge(uuid, text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.steal_country(uuid, text) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.conquest_fortify_challenge(uuid, text) FROM PUBLIC, anon;

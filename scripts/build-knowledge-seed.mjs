@@ -59,7 +59,7 @@ for (const entry of [...entries].sort((a, b) => String(a.iso).localeCompare(Stri
     if (item.needsReview !== false) continue;
     const { display, answer } = toColumns(item);
     sqlRows.push(
-      `  (${q(item.id)}, ${q(countryId)}, ${q(item.category)}, ${q(item.answerType)}, ${q(item.prompt)}, ${q(JSON.stringify(display))}::jsonb, ${q(JSON.stringify(answer))}::jsonb, ${item.sourceUrl ? q(item.sourceUrl) : "NULL"}, ${item.sourceSafe === true}, true)`
+      `  (${q(item.id)}, ${q(countryId)}, ${q(item.category)}, ${q(item.answerType)}, ${q(item.prompt)}, ${q(JSON.stringify(display))}::jsonb, ${q(JSON.stringify(answer))}::jsonb, ${item.sourceUrl ? q(item.sourceUrl) : "NULL"}, true)`
     );
   }
 }
@@ -68,7 +68,7 @@ const sql = `-- Généré par scripts/build-knowledge-seed.mjs — ne pas édite
 -- Seed de l'escalade de connaissances Conquête : ${sqlRows.length} questions (needsReview = false).
 
 INSERT INTO public.conquest_knowledge_questions
-  (id, country_id, category, answer_type, prompt, display, answer, source_url, source_safe, active)
+  (id, country_id, category, answer_type, prompt, display, answer, source_url, active)
 VALUES
 ${sqlRows.join(",\n")}
 ON CONFLICT (id) DO UPDATE
@@ -79,7 +79,6 @@ ON CONFLICT (id) DO UPDATE
       display = EXCLUDED.display,
       answer = EXCLUDED.answer,
       source_url = EXCLUDED.source_url,
-      source_safe = EXCLUDED.source_safe,
       active = EXCLUDED.active;
 `;
 

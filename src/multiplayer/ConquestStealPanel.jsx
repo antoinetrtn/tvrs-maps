@@ -1,8 +1,6 @@
-import { InfoBox } from "pixelarticons/react";
 import React, { useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
-import IconButton from "../components/ui/IconButton.jsx";
 import OptionGroup from "../components/ui/OptionGroup.jsx";
 import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
 import TextField from "../components/ui/TextField.jsx";
@@ -75,16 +73,6 @@ const ConquestStealPanel = ({ t, lang, challenge, countryName, onAnswer, onCance
     >
       <div className="conquest-steal-header">
         <span className="conquest-label">{headerText}</span>
-        {isKnowledge && challenge.source_url && (
-          <IconButton
-            variant="ghost"
-            size="sm"
-            label={t.questionSource}
-            onClick={() => window.open(challenge.source_url, "_blank", "noopener,noreferrer")}
-          >
-            <InfoBox width={16} height={16} />
-          </IconButton>
-        )}
         <PanelCloseButton label={t.stealCancel} onClick={onCancel} />
       </div>
       {isKnowledge && !isTyped ? (
