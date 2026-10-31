@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 import {
+  DESELECT_FADE_START,
   getDeselectGlitchFadeProgress,
   GLITCH_SELECTION_TRANSITION_MS,
 } from "../../config/gameConfig";
@@ -254,6 +255,11 @@ export function useGlobeAnimationLoop({
               if (shader.uniforms.uIsError) shader.uniforms.uIsError.value = 0.0;
               if (shader.uniforms.uIsSuccess) shader.uniforms.uIsSuccess.value = 0.0;
               if (shader.uniforms.uIsSelection) shader.uniforms.uIsSelection.value = 0.0;
+              // Enter the deselect fade on this very frame: at 0 the shader still shows the
+              // flat selection umber (the new selection restarted uSelectStart) for a frame.
+              if (mode !== "learn" && shader.uniforms.uFadeProgress) {
+                shader.uniforms.uFadeProgress.value = DESELECT_FADE_START;
+              }
             }
           });
           [oldCapMat, oldSideMat].forEach((mat, index) => {
@@ -323,7 +329,10 @@ export function useGlobeAnimationLoop({
         } else {
           const fadeProgress = Math.min(
             1,
-            Math.max(0, getDeselectGlitchFadeProgress(elapsed, TRANSITION_DURATION))
+            Math.max(
+              DESELECT_FADE_START,
+              getDeselectGlitchFadeProgress(elapsed, TRANSITION_DURATION)
+            )
           );
 
           if (transitionColorsPrimedRef.current !== prevCountry) {
