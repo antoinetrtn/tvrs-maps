@@ -39,7 +39,7 @@ export function useGlobeBoats(globeEl, { foundList, enabled }) {
         loadingRef.current = false;
       }
     };
-    load();
+    void load();
   }, [active, foundList, globeEl]);
 
   useEffect(

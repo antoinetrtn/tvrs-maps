@@ -13,7 +13,8 @@ export class TaskService {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
       return crypto.randomUUID();
     }
-    return `task-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
+    const rand = globalThis.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000;
+    return `task-${rand.toString(36).slice(2, 11)}-${Date.now()}`;
   }
 
   /**

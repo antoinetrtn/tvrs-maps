@@ -122,7 +122,10 @@ export function setFeatureMask({
     : foundKeys instanceof Set
       ? Array.from(foundKeys)
       : [];
-  const foundHash = foundArray.slice().sort().join("|");
+  const foundHash = foundArray
+    .slice()
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    .join("|");
 
   if (
     selectedKey === lastSelectedKey &&

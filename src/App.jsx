@@ -38,6 +38,7 @@ import { useViewport } from "./hooks/useViewport";
 import { isGuestLaunch } from "./multiplayer/conquestLink";
 import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import { isSupabaseConfigured } from "./services/supabaseClient";
+import { secureRandomInt } from "./utils/secureRandom";
 
 const AuthModal = React.lazy(() => import("./components/AuthModal.jsx"));
 const ConfirmationModal = React.lazy(() => import("./components/ConfirmationModal.jsx"));
@@ -153,7 +154,7 @@ function App() {
     if (activeDataMap) {
       const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
       if (keys.length > 0) {
-        const index = Math.floor(Math.random() * keys.length);
+        const index = secureRandomInt(0, keys.length);
         setSelectedCountry(keys[index]);
       }
     }

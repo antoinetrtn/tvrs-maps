@@ -37,7 +37,7 @@ export function useMicroBeacons(globeEl, { foundList, enabled }) {
         loadingRef.current = false;
       }
     };
-    load();
+    void load();
   }, [enabled, foundList, globeEl]);
 
   useEffect(

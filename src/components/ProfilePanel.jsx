@@ -166,10 +166,10 @@ const ProfilePanel = ({
   const filterLabels = {
     all: lang === "fr" ? "Tout" : "All",
     general: lang === "fr" ? "Général" : "General",
-    continents: lang === "fr" ? "Continents" : "Continents",
-    scores: lang === "fr" ? "Scores" : "Scores",
+    continents: "Continents",
+    scores: "Scores",
     speed: lang === "fr" ? "Vitesse" : "Speed",
-    relief: lang === "fr" ? "Relief" : "Relief",
+    relief: "Relief",
   };
 
   const filteredChallenges = CHALLENGES.filter((ch) => {
