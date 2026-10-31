@@ -7,12 +7,11 @@ export const ZOOM_HAPTIC_DETENTS = 64;
 // feather-light mechanical detent ("watch crown" feel) instead of a full-scale buzz,
 // and lets Blink VibrationController finish timer_do_vibrate_ in 4ms so closely-spaced
 // detents (26ms cooldown, 6px pinch step, 64 log detents) never self-cancel.
-const ZOOM_HAPTIC_COOLDOWN_MS = 26;
 export const ZOOM_HAPTIC_TICK_MS = 1;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 3;
+const ZOOM_HAPTIC_BOUNDARY_MS = 3;
+// Zoom limit "end stop": 28ms buzz, short gap, 14ms echo (~double knock).
+export const ZOOM_LIMIT_HAPTIC_PATTERN = [28, 40, 14];
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 280;
-const ZOOM_PINCH_STEP_PX = 6;
-const ZOOM_WHEEL_STEP_DELTA = 16;
 const MIN_NATIVE_VIBRATE_INTERVAL_MS = 22;
 
 const BOUNDARY_EPS = 0.004;
@@ -163,133 +162,93 @@ export function triggerSubtleHapticTick(
 }
 
 /**
- * Stateful tracker for globe zoom detents.
+ * Stateful tracker for globe zoom haptics.
+ *
+ * Zooming itself (pinch, wheel, double-tap-drag) is silent: no detent ticks.
+ * A single firm pulse fires when the zoom ARRIVES at the min or max altitude
+ * limit. It fires once per arrival and re-arms only after the altitude leaves
+ * the limit, so repeated wheel/pinch against the stop never spams.
  */
 export function createZoomHapticTracker({
-  detents = ZOOM_HAPTIC_DETENTS,
-  cooldownMs = ZOOM_HAPTIC_COOLDOWN_MS,
   activeWindowMs = ZOOM_HAPTIC_ACTIVE_WINDOW_MS,
-  vibrate = triggerSubtleHapticTick,
+  vibrate = triggerZoomLimitHaptic,
 } = {}) {
-  let lastDetent = null;
   let lastBoundary = null;
-  let lastPulseAt = -Infinity;
   let activeUntil = -Infinity;
-  let lastPinchBucket = null;
-  let wheelAccum = 0;
+
+  const mark = (now) => {
+    activeUntil = Math.max(activeUntil, now + activeWindowMs);
+  };
 
   return {
-    markZoomGesture(now = performance.now()) {
-      activeUntil = Math.max(activeUntil, now + activeWindowMs);
+    markZoomGesture(now = nowMs()) {
+      mark(now);
     },
     clearZoomGesture() {
+      // Keep lastBoundary: lifting fingers at the stop must not re-arm it.
       activeUntil = -Infinity;
-      lastDetent = null;
-      lastBoundary = null;
-      lastPinchBucket = null;
-      wheelAccum = 0;
     },
-    onPinchDistance(distancePx, { now = performance.now(), stepPx = ZOOM_PINCH_STEP_PX } = {}) {
-      if (!Number.isFinite(distancePx) || distancePx <= 0 || stepPx <= 0) {
+    onPinchDistance(distancePx, { now = nowMs() } = {}) {
+      if (!Number.isFinite(distancePx) || distancePx <= 0) {
         return { pulsed: false, reason: "invalid-distance" };
       }
-      activeUntil = Math.max(activeUntil, now + activeWindowMs);
-      const bucket = Math.floor(distancePx / stepPx);
-      if (lastPinchBucket === null) {
-        lastPinchBucket = bucket;
-        return { pulsed: false, reason: "seeded", bucket };
-      }
-      if (bucket === lastPinchBucket) {
-        return { pulsed: false, reason: "same-bucket", bucket };
-      }
-      lastPinchBucket = bucket;
-      if (now - lastPulseAt < cooldownMs) {
-        return { pulsed: false, reason: "cooldown", bucket };
-      }
-      lastPulseAt = now;
-      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
-      return { pulsed: Boolean(ok), duration: ZOOM_HAPTIC_TICK_MS, bucket };
+      mark(now);
+      return { pulsed: false, reason: "silent-zoom" };
     },
-    onWheelDelta(deltaY, { now = performance.now(), stepDelta = ZOOM_WHEEL_STEP_DELTA } = {}) {
-      if (!Number.isFinite(deltaY) || deltaY === 0 || stepDelta <= 0) {
+    onWheelDelta(deltaY, { now = nowMs() } = {}) {
+      if (!Number.isFinite(deltaY) || deltaY === 0) {
         return { pulsed: false, reason: "invalid-delta" };
       }
-      activeUntil = Math.max(activeUntil, now + activeWindowMs);
-      wheelAccum += Math.abs(deltaY);
-      if (wheelAccum < stepDelta) {
-        return { pulsed: false, reason: "accumulating" };
-      }
-      wheelAccum %= stepDelta;
-      if (now - lastPulseAt < cooldownMs) {
-        return { pulsed: false, reason: "cooldown" };
-      }
-      lastPulseAt = now;
-      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
-      return { pulsed: Boolean(ok), duration: ZOOM_HAPTIC_TICK_MS };
+      mark(now);
+      return { pulsed: false, reason: "silent-zoom" };
     },
     onAltitudeChange(
       altitude,
       {
-        now = performance.now(),
+        now = nowMs(),
         isZoomGesture = false,
         minAltitude = GLOBE_MIN_ALTITUDE,
         maxAltitude = GLOBE_MAX_ALTITUDE,
       } = {}
     ) {
-      if (isZoomGesture) {
-        activeUntil = Math.max(activeUntil, now + activeWindowMs);
-      }
-      const detent = computeZoomDetentIndex(altitude, { minAltitude, maxAltitude, detents });
-      if (detent === null) return { pulsed: false, detent: null };
-
-      if (now > activeUntil) {
-        lastDetent = detent;
-        lastBoundary = null;
-        return { pulsed: false, detent, reason: "inactive" };
-      }
-
-      if (lastDetent === null) {
-        lastDetent = detent;
-        return { pulsed: false, detent, reason: "seeded" };
-      }
-
+      if (!Number.isFinite(altitude)) return { pulsed: false, boundary: null };
+      if (isZoomGesture) mark(now);
       const safeMin = Math.max(0.01, minAltitude);
       const safeMax = Math.max(safeMin + 0.01, maxAltitude);
-      const atMin = altitude <= safeMin + BOUNDARY_EPS;
-      const atMax = altitude >= safeMax - BOUNDARY_EPS;
-      const boundary = atMin ? "min" : atMax ? "max" : null;
+      const boundary =
+        altitude <= safeMin + BOUNDARY_EPS
+          ? "min"
+          : altitude >= safeMax - BOUNDARY_EPS
+            ? "max"
+            : null;
 
-      const isNewBoundary = Boolean(boundary && boundary !== lastBoundary);
-      if (isNewBoundary) {
-        lastBoundary = boundary;
-        lastDetent = detent;
-      }
-      if (isNewBoundary && now - lastPulseAt < cooldownMs * 0.75) {
-        return { pulsed: false, detent, boundary, reason: "cooldown" };
-      }
-      if (isNewBoundary) {
-        lastPulseAt = now;
-        const ok = vibrate(ZOOM_HAPTIC_BOUNDARY_MS);
-        return { pulsed: Boolean(ok), detent, boundary, duration: ZOOM_HAPTIC_BOUNDARY_MS };
-      }
       if (!boundary) {
-        lastBoundary = null;
+        lastBoundary = null; // left the limit: re-arm
+        return { pulsed: false, boundary: null, reason: "silent-zoom" };
       }
-
-      if (detent === lastDetent) {
-        return { pulsed: false, detent, reason: "same-detent" };
+      if (boundary === lastBoundary) {
+        return { pulsed: false, boundary, reason: "already-at-limit" };
       }
-
-      lastDetent = detent;
-      if (now - lastPulseAt < cooldownMs) {
-        return { pulsed: false, detent, reason: "cooldown" };
+      lastBoundary = boundary;
+      if (now > activeUntil) {
+        // Programmatic camera moves (tweens) reach limits silently.
+        return { pulsed: false, boundary, reason: "inactive" };
       }
-
-      lastPulseAt = now;
-      const ok = vibrate(ZOOM_HAPTIC_TICK_MS);
-      return { pulsed: Boolean(ok), detent, duration: ZOOM_HAPTIC_TICK_MS };
+      const ok = vibrate();
+      return { pulsed: Boolean(ok), boundary, pattern: ZOOM_LIMIT_HAPTIC_PATTERN };
     },
   };
+}
+
+/**
+ * Firm "end stop" pulse when the zoom hits its min/max limit: clearly stronger
+ * than the 1-10ms ticks used elsewhere. Bypasses the native throttle.
+ */
+export function triggerZoomLimitHaptic(nav = typeof navigator !== "undefined" ? navigator : null) {
+  if (prefersReducedMotion()) return false;
+  const vibrated = tryNativeVibrate(nav, ZOOM_LIMIT_HAPTIC_PATTERN, { force: true });
+  const audioClicked = playTactileAudioTick(true);
+  return Boolean(vibrated || audioClicked);
 }
 
 // Selection tick when the homepage deck lands on another mode card (swipe, keys, dots).
