@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { SEA_LANES, SEA_NODE_POS } from "./seaLanes.generated";
 import { LANDLOCKED, SEA_EDGES, SEA_NODES } from "./seaRoutes";
 
 // Ring buffer of boats (one InstancedMesh, one draw call).
@@ -8,21 +9,25 @@ export const MAX_BOATS = 24;
 const MAX_PORT_KM = 1600;
 const EARTH_KM = 6371;
 // Sprite size in screen pixels per texel: true square pixels.
-const PX_PER_TEXEL = 2;
+const PX_PER_TEXEL = 3;
 // Sea speed in radians of arc per second (≈ 50 km/s on screen time).
 const SPEED = 0.008;
 // Radius offset above the globe (radius 100) so boats sit over the ocean.
 const ALTITUDE = 0.006;
 
-// 12×6 side-view boat: dark warm hull, amber cabin and mast lamps, faint wake.
+// 16×6 side-view boat (bow on the left, flipped to face its heading): dark
+// warm hull, amber cabin and mast lamp, and a short dim-amber wake trailing
+// behind the stern so the boat reads at world zoom.
 const SPRITE = [
-  ".....m......",
-  "....hah.....",
-  ".hhaaaaahhh.",
-  "hhhhhhhhhhhh",
-  ".hhhhhhhhhh.",
-  "w.w......w.w",
+  ".....m..........",
+  "....hah.........",
+  ".hhaaaaahhh.....",
+  "hhhhhhhhhhhhk...",
+  ".hhhhhhhhhhkk.k.",
+  "w.w......w.wk.k.",
 ];
+// Hull centre column: the waterline anchor sits under it, not under the wake.
+const HULL_CENTRE = 6;
 const SPRITE_W = SPRITE[0].length;
 const SPRITE_H = SPRITE.length;
 const PALETTE = {
@@ -30,6 +35,7 @@ const PALETTE = {
   a: [255, 184, 77, 255],
   m: [255, 210, 122, 255],
   w: [61, 85, 102, 255],
+  k: [150, 98, 38, 255],
 };
 
 function buildSpriteTexture() {
@@ -61,14 +67,22 @@ const arc = (a, b) => Math.acos(Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[
 /** Sea graph in unit-sphere coords + Dijkstra. Pure: testable without WebGL. */
 export function buildSeaGraph() {
   const index = new Map(SEA_NODES.map(([id], i) => [id, i]));
-  const pos = SEA_NODES.map(([, lat, lng]) => toUnit(lat, lng));
+  // Waypoints snapped to open sea by scripts/build-sea-lanes.mjs.
+  const pos = SEA_NODES.map(([id]) => toUnit(...SEA_NODE_POS[id]));
+  const lanes = new Map();
   const adj = SEA_NODES.map(() => []);
   SEA_EDGES.split(/\s+/)
     .filter(Boolean)
     .forEach((edge) => {
       const [a, b] = edge.split("-").map((id) => index.get(id));
       if (a == null || b == null) throw new Error(`sea edge: ${edge}`);
-      const w = arc(pos[a], pos[b]);
+      // Lane = via points that keep every leg at sea (baked against land).
+      const vias = (SEA_LANES[edge] || []).map(([lat, lng]) => toUnit(lat, lng));
+      const lane = [pos[a], ...vias, pos[b]];
+      lanes.set(`${a}-${b}`, lane);
+      lanes.set(`${b}-${a}`, [...lane].reverse());
+      let w = 0;
+      for (let i = 1; i < lane.length; i++) w += arc(lane[i - 1], lane[i]);
       adj[a].push([b, w]);
       adj[b].push([a, w]);
     });
@@ -115,7 +129,15 @@ export function buildSeaGraph() {
     return out;
   };
 
-  return { pos, portOf, path, nodeCount: pos.length };
+  /** Unit-vector polyline of a node path, following each lane's via points. */
+  const points = (nodes) => {
+    const out = [pos[nodes[0]]];
+    for (let i = 1; i < nodes.length; i++)
+      out.push(...lanes.get(`${nodes[i - 1]}-${nodes[i]}`).slice(1));
+    return out;
+  };
+
+  return { pos, portOf, path, points, nodeCount: pos.length };
 }
 
 /**
@@ -167,7 +189,11 @@ export function createBoatLayer(globe) {
     depthWrite: true,
   });
   // Anchor at the bottom edge so the waterline sits on the route point.
-  const geometry = new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0);
+  const geometry = new THREE.PlaneGeometry(1, 1).translate(
+    0.5 - (HULL_CENTRE + 0.5) / SPRITE_W,
+    0.5,
+    0
+  );
   const mesh = new THREE.InstancedMesh(geometry, material, MAX_BOATS);
   mesh.name = "tvrs-life-boats";
   mesh.frustumCulled = false;
@@ -176,7 +202,7 @@ export function createBoatLayer(globe) {
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
   // Per boat: up to MAX_LEGS+1 points (unit vectors) and cumulative arc length.
-  const MAX_PTS = 32;
+  const MAX_PTS = 128;
   const pts = new Float32Array(MAX_BOATS * MAX_PTS * 3);
   const cum = new Float32Array(MAX_BOATS * MAX_PTS);
   const npts = new Int32Array(MAX_BOATS);
@@ -255,18 +281,19 @@ export function createBoatLayer(globe) {
     lastKey = key;
     const routes = planBoatRoutes(graph, foundList, dataMap);
     routes.forEach((nodes, b) => {
-      const n = Math.min(nodes.length, MAX_PTS);
+      const line = graph.points(nodes);
+      // Never truncate a lane mid-sea-route: a too-long route keeps its first legs whole.
+      const n = Math.min(line.length, MAX_PTS);
       const base = b * MAX_PTS;
       let total = 0;
       for (let i = 0; i < n; i++) {
-        const v = graph.pos[nodes[i]];
-        pts.set(v, (base + i) * 3);
-        if (i > 0) total += arc(graph.pos[nodes[i - 1]], v);
+        pts.set(line[i], (base + i) * 3);
+        if (i > 0) total += arc(line[i - 1], line[i]);
         cum[base + i] = total;
       }
       npts[b] = n;
       // Spread boats along their lanes, deterministic per route.
-      phase[b] = (((nodes[0] * 7919 + nodes[n - 1] * 104729) % 1000) / 1000) * 2 * total;
+      phase[b] = (((nodes[0] * 7919 + nodes[nodes.length - 1] * 104729) % 1000) / 1000) * 2 * total;
     });
     mesh.count = routes.length;
   };
