@@ -30,7 +30,7 @@ async function fetchWithTimeout(url, controller, timeoutMs) {
     return validateFeatures(json);
   } catch (err) {
     if (timedOut) {
-      throw new Error("Request timed out");
+      throw new Error("Request timed out", { cause: err });
     }
     throw err;
   } finally {

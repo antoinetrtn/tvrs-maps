@@ -435,7 +435,7 @@ export function useGameSession({
 
       for (const adminKey of trainingPool ?? Object.keys(activeDataMap)) {
         const mapped = activeDataMap[adminKey];
-        let matchName = null;
+        let matchName;
         let matchCapital = null;
         const aliases = mapped?.aliases || [];
 
@@ -514,7 +514,7 @@ export function useGameSession({
       const aliases = mapped.aliases || [];
 
       const config = getActiveModeConfig(mode);
-      let isSuccessVal = false;
+      let isSuccessVal;
       if (config.targetCheck === "capital") {
         isSuccessVal = matchCapital && matchCapital === normalizedInput;
       } else {

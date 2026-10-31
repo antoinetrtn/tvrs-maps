@@ -25,6 +25,8 @@ export const polygonGlitchUniforms = {
   // Success flash timeline — stamped (in uTime seconds) when a guess lands.
   uSuccessStart: { value: -10 },
   uSuccessDuration: { value: FEEDBACK_TIMING.successFlashMs / 1000 },
+  // Selection start (uTime seconds): drives the select-in trace/glow ease.
+  uSelectStart: { value: -10 },
   // Discovery ignition: a gold wave lights the found country's city pixels outward
   // from its capital (unit direction in world space), over uIgniteDuration seconds.
   uIgniteOrigin: { value: new THREE.Vector3(0, 1, 0) },
@@ -158,7 +160,7 @@ export function attachPolygonGlitchShader(
     registerAnimatedPolygonMaterial(material);
     return;
   }
-  material.customProgramCacheKey = () => `shader-cap-glitch-v9-${kind}`;
+  material.customProgramCacheKey = () => `shader-cap-glitch-v10-${kind}`;
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = polygonGlitchUniforms.uTime;
     shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
@@ -166,6 +168,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uGlitchTintB = polygonGlitchUniforms.uGlitchTintB;
     shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
     shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
+    shader.uniforms.uSelectStart = polygonGlitchUniforms.uSelectStart;
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
     shader.uniforms.uFadeProgress = { value: 0.0 };
     shader.uniforms.uTargetColor = {
