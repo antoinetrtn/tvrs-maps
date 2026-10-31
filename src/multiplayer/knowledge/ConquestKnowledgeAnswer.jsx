@@ -44,6 +44,7 @@ const NumberAnswer = ({ challenge, value, onChange, label }) => {
       value={Number(value)}
       onChange={(next) => onChange(String(next))}
       label={label}
+      hideLabel
       formatValue={(v) => `${v}${unit}`}
     />
   );

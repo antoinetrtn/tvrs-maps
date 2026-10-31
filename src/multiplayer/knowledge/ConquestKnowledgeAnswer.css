@@ -59,3 +59,11 @@
   background-color: currentColor;
   box-shadow: 1px 1px 0 var(--black);
 }
+
+/* Choice grid: smaller visuals so the label stays the focus (12 × 2 px cells). */
+.conquest-knowledge-options .cq-pixel-icon {
+  grid-template-columns: repeat(12, 2px);
+  grid-template-rows: repeat(12, 2px);
+  width: 24px;
+  height: 24px;
+}

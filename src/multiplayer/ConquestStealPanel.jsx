@@ -64,7 +64,7 @@ const ConquestStealPanel = ({ t, lang, challenge, countryName, onAnswer, onCance
   return (
     <form
       autoComplete="off"
-      className={`conquest-steal${isFortify ? " is-fortify" : ""}`}
+      className={`conquest-steal${isFortify ? " is-fortify" : ""}${isKnowledge ? " is-knowledge" : ""}`}
       style={isFortify && myColor ? { "--my-color": myColor } : undefined}
       onSubmit={(e) => {
         e.preventDefault();

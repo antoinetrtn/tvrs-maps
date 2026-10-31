@@ -408,3 +408,19 @@
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* Knowledge questions are long: header text proportionate to the close cross. */
+.conquest-steal.is-knowledge .conquest-steal-header .conquest-label {
+  font-size: var(--font-size-2xs);
+  line-height: 1.5;
+}
+
+/* In a conquest match, result toasts sit at the top, under the score bar. */
+body:has(.conquest-hud) .ui-toast-viewport {
+  top: calc(var(--safe-top) + var(--spacing-md) * 2 + var(--control-lg) * 1.5);
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  width: min(92vw, 420px);
+  transform: translateX(-50%);
+}
