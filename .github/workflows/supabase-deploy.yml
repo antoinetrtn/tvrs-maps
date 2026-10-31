@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+      # ⚠️ dev-maps et la prod partagent le même projet Supabase :
+      # un push sur dev migre aussi la base de prod.
+      - dev
   workflow_dispatch:
 
 jobs:
