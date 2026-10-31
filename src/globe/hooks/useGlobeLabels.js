@@ -78,9 +78,9 @@ function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx
   const fromMap = ctxCanonical[key];
   const canonical = fromMap || getCanonicalPosition(data, null);
   const useLat =
-    data && data.lat !== undefined && data.lat !== null ? data.lat : canonical ? canonical.lat : 0;
+    data.lat !== undefined && data.lat !== null ? data.lat : canonical ? canonical.lat : 0;
   const useLng =
-    data && data.lng !== undefined && data.lng !== null ? data.lng : canonical ? canonical.lng : 0;
+    data.lng !== undefined && data.lng !== null ? data.lng : canonical ? canonical.lng : 0;
 
   let dLng = Math.abs(useLng - pov.lng);
   if (dLng > 180) dLng = 360 - dLng;
