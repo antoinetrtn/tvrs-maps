@@ -44,6 +44,7 @@ import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
+import { useMicroBeacons } from "./hooks/useMicroBeacons";
 import { usePolygonMaterialEviction } from "./hooks/usePolygonMaterialEviction";
 import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
 import { isGlobeHoverRaycastNeeded } from "./render/pointerRaycast";
@@ -234,6 +235,11 @@ const GlobeMap = (props) => {
 
   useGlobeNativeTouch(globeContainerRef, { handleTouchStart, handleTouchMove, handleTouchEnd });
   useGlobeVisibilityPause(globeEl);
+  // Pixel beacons on every micro-territory (lazy layer, world modes only).
+  useMicroBeacons(globeEl, {
+    foundList,
+    enabled: !isHomeScreen && !isDepartmentMode && !isUsStatesMode && !isRiversMountainsMode,
+  });
   useGlobeShaderWarmup(
     globeEl,
     `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}`

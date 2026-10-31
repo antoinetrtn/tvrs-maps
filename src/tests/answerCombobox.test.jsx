@@ -377,4 +377,13 @@ describe("answerCombobox (<GameHUD> integration)", () => {
     expect(input.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelector('[role="option"]')).toBeNull();
   });
+
+  it("Entrée pendant une composition IME / touche morte n'est pas traitée", () => {
+    renderHUD({ selectedCountry: "FRA" });
+    const input = screen.getByRole("combobox");
+    fireEvent.change(input, { target: { value: "Franc" } });
+    fireEvent.keyDown(input, { key: "Enter", keyCode: 229 });
+    expect(onEnterMock).not.toHaveBeenCalled();
+    expect(input.value).toBe("Franc");
+  });
 });

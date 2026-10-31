@@ -81,6 +81,10 @@ export function useGameSession({
   const lastGuessTimeRef = useRef(0);
   const lightningCountRef = useRef(0);
   const successPendingRef = useRef(new Set());
+  // Saisie validée pendant le flash de réussite (successFlashMs) : la sélection
+  // pointe encore le pays tout juste trouvé, donc on garde la réponse et on la
+  // rejoue sur le pays suivant dès l'auto-avance, au lieu de l'avaler (bug Entrée).
+  const queuedGuessRef = useRef(null);
 
   const navigationTrailRef = useRef([]);
   const navigationTrailIndexRef = useRef(-1);
@@ -314,6 +318,7 @@ export function useGameSession({
       lastGuessTimeRef.current = Date.now();
       lightningCountRef.current = 0;
       successPendingRef.current.clear();
+      queuedGuessRef.current = null;
       setMistakes(0);
     },
     [activeDataMap, resetNavigationTrail, gameDuration, setSelectedCountry]
@@ -520,6 +525,11 @@ export function useGameSession({
           aliases.some((alias) => normalizeString(alias) === normalizedInput);
       }
 
+      if (!isSuccessVal && successPendingRef.current.has(selectedCountry)) {
+        queuedGuessRef.current = { from: selectedCountry, value: inputVal };
+        return "QUEUED";
+      }
+
       if (isSuccessVal) {
         if (foundList.includes(selectedCountry) || successPendingRef.current.has(selectedCountry)) {
           setPopupWarning(true);
@@ -554,6 +564,13 @@ export function useGameSession({
       registerMistake,
     ]
   );
+
+  useEffect(() => {
+    const queued = queuedGuessRef.current;
+    if (!queued || !selectedCountry || selectedCountry === queued.from) return;
+    queuedGuessRef.current = null;
+    specificCountryGuess(queued.value);
+  }, [selectedCountry, specificCountryGuess]);
 
   const handleSearch = useCallback(
     (inputVal) => {

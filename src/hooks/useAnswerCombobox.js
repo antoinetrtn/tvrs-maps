@@ -295,6 +295,9 @@ export default function useAnswerCombobox({
       }
 
       if (e.key === "Enter") {
+        // Entrée qui valide une composition IME / touche morte : la valeur n'est
+        // pas encore finale, on laisse le navigateur la terminer.
+        if (e.nativeEvent?.isComposing || e.isComposing || e.keyCode === 229) return;
         handleEnterKey({
           e,
           currentValue,
