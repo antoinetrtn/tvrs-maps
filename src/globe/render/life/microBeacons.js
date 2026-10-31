@@ -1,17 +1,29 @@
 import * as THREE from "three";
 
-// 5×5 pixel lantern (grey levels, tinted per instance): true square pixels.
-const SPRITE = ["..o..", ".oxo.", "oxXxo", ".oxo.", "..o.."];
+// Found: 5×5 golden lantern. Unfound: small 3×3 neutral cross, so a dark game
+// start does not read as "already lit". Grey levels, tinted per instance; true
+// square pixels (screen px per texel is an integer).
+const SPRITE_FOUND = ["..o..", ".oxo.", "oxXxo", ".oxo.", "..o.."];
+const SPRITE_UNFOUND = [".o.", "oXo", ".o."];
 const LEVEL = { o: 110, x: 200, X: 255 };
-const N = SPRITE.length;
-const PX_PER_TEXEL = 2; // 10×10 screen px, constant at every zoom
+const PX_PER_TEXEL = 2; // found 10×10 px, unfound 6×6 px, constant at every zoom
 const CLUSTER_PX = 14; // beacons closer than this on screen merge into one
 const ALTITUDE = 0.008;
-const UNFOUND = [1.0, 0.62, 0.22]; // amber (city-light lanterns)
+const UNFOUND = [0.55, 0.62, 0.72]; // cool neutral grey-blue (blackout family)
 const FOUND = [1.0, 0.84, 0.47]; // golden, lit
-const PULSE_HZ = 0.35; // slow
+const PULSE_HZ = 0.2; // slow, barely-there breathing
+const POP_S = 0.6; // discovery pop: 6 → 12 → 10 px, gain 1.4 → 1.0
 
-function buildSpriteTexture() {
+/** Discovery pop at age `a` seconds: { scale, gain } (1,1 once settled). */
+export function beaconPop(a) {
+  if (!(a >= 0) || a >= POP_S) return { scale: 1, gain: 1 };
+  const k = a / POP_S;
+  // Integer texel steps keep pixels square: 12 px for the first half, then 10.
+  return { scale: k < 0.5 ? 1.2 : 1, gain: 1.4 - 0.4 * k };
+}
+
+function buildSpriteTexture(SPRITE) {
+  const N = SPRITE.length;
   const data = new Uint8Array(N * N * 4);
   SPRITE.forEach((row, y) => {
     const ty = N - 1 - y;
@@ -54,7 +66,7 @@ export function clusterScreenPoints(pts, radiusPx = CLUSTER_PX) {
 
 /** Beacon colour (linear RGB) for a lit fraction (0 = all unfound) at time t. */
 export function beaconColor(litFraction, t, phase = 0) {
-  const pulse = 0.32 + 0.18 * (0.5 + 0.5 * Math.sin(2 * Math.PI * PULSE_HZ * t + phase));
+  const pulse = 0.22 + 0.1 * (0.5 + 0.5 * Math.sin(2 * Math.PI * PULSE_HZ * t + phase));
   const k = litFraction;
   const gain = pulse * (1 - k) + 1.0 * k;
   return UNFOUND.map((c, i) => (c * (1 - k) + FOUND[i] * k) * gain);
@@ -73,21 +85,33 @@ export function createMicroBeaconLayer(globe, admins, dataMap) {
   const found = new Uint8Array(count);
   const radius = (globe.getGlobeRadius?.() || 100) * (1 + ALTITUDE);
 
-  const map = buildSpriteTexture();
-  const material = new THREE.MeshBasicMaterial({
-    map,
-    alphaTest: 0.5,
-    toneMapped: false,
-    depthWrite: true,
-  });
+  const foundAt = new Float64Array(count).fill(-1);
   const geometry = new THREE.PlaneGeometry(1, 1);
-  const mesh = new THREE.InstancedMesh(geometry, material, count);
-  mesh.name = "tvrs-micro-beacons";
-  mesh.frustumCulled = false;
-  mesh.renderOrder = 2;
-  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   const color = new THREE.Color();
-  for (let i = 0; i < count; i++) mesh.setColorAt(i, color.setRGB(0, 0, 0));
+  const makeLayer = (sprite, name) => {
+    const map = buildSpriteTexture(sprite);
+    const material = new THREE.MeshBasicMaterial({
+      map,
+      alphaTest: 0.5,
+      toneMapped: false,
+      depthWrite: true,
+    });
+    const im = new THREE.InstancedMesh(geometry, material, count);
+    im.name = name;
+    im.frustumCulled = false;
+    im.renderOrder = 2;
+    im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    for (let i = 0; i < count; i++) im.setColorAt(i, color.setRGB(0, 0, 0));
+    im.userData.texels = sprite.length;
+    return im;
+  };
+  // Two instanced draws (one per sprite); both plain MeshBasicMaterial, so the
+  // look is identical in WebGL and WebGPU. Group = scene node, mesh = updater.
+  const mesh = makeLayer(SPRITE_FOUND, "tvrs-micro-beacons");
+  const dim = makeLayer(SPRITE_UNFOUND, "tvrs-micro-beacons-unfound");
+  const group = new THREE.Group();
+  group.name = "tvrs-micro-beacons-layer";
+  group.add(dim, mesh);
 
   const reducedMotion =
     typeof window !== "undefined" &&
@@ -108,7 +132,8 @@ export function createMicroBeaconLayer(globe, admins, dataMap) {
 
   mesh.onBeforeRender = (renderer, _scene, camera) => {
     if (!camera.isPerspectiveCamera) return;
-    const t = reducedMotion ? 0 : performance.now() / 1000;
+    const now = performance.now() / 1000;
+    const t = reducedMotion ? 0 : now;
     camera.matrixWorld.extractBasis(right, up, look);
     camPos.setFromMatrixPosition(camera.matrixWorld);
     const w = renderer.domElement?.clientWidth || 800;
@@ -139,25 +164,40 @@ export function createMicroBeaconLayer(globe, admins, dataMap) {
     for (let i = 0; i < count; i++) {
       if (leader[i] !== i) {
         mesh.setMatrixAt(i, zero);
+        dim.setMatrixAt(i, zero);
         continue;
       }
+      const lit = litSum[i] / members[i];
+      const target = lit > 0 ? mesh : dim;
+      (lit > 0 ? dim : mesh).setMatrixAt(i, zero);
+      const pop = beaconPop(reducedMotion ? -1 : now - foundAt[i]);
       p.fromArray(world, i * 3);
       const worldPerPx = (2 * p.distanceTo(camPos) * Math.tan(fov / 2)) / h;
-      const size = N * PX_PER_TEXEL * worldPerPx;
+      const size = target.userData.texels * PX_PER_TEXEL * pop.scale * worldPerPx;
       m.makeBasis(right, up, look);
       m.scale(s.set(size, size, 1));
       m.setPosition(p);
-      mesh.setMatrixAt(i, m);
-      const [r, g, b] = beaconColor(litSum[i] / members[i], t, phases[i]);
-      mesh.setColorAt(i, color.setRGB(r, g, b));
+      target.setMatrixAt(i, m);
+      const [r, g, b] = beaconColor(lit, t, phases[i]);
+      target.setColorAt(i, color.setRGB(r * pop.gain, g * pop.gain, b * pop.gain));
     }
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    for (const im of [mesh, dim]) {
+      im.instanceMatrix.needsUpdate = true;
+      if (im.instanceColor) im.instanceColor.needsUpdate = true;
+    }
   };
 
+  let initialised = false;
   const setFound = (foundList) => {
     const set = new Set(foundList);
-    list.forEach((a, i) => (found[i] = set.has(a) ? 1 : 0));
+    const now = performance.now() / 1000;
+    list.forEach((a, i) => {
+      const f = set.has(a) ? 1 : 0;
+      // Pop only on a live discovery, not when a saved game restores its finds.
+      if (f && !found[i] && initialised) foundAt[i] = now;
+      found[i] = f;
+    });
+    initialised = true;
   };
 
   let disposed = false;
@@ -165,23 +205,26 @@ export function createMicroBeaconLayer(globe, admins, dataMap) {
   const renderer = globe.renderer?.();
   const camera = globe.camera?.();
   const attach = () => {
-    if (!disposed) scene.add(mesh);
+    if (!disposed) scene.add(group);
   };
   if (renderer?.compileAsync && camera) {
-    renderer.compileAsync(mesh, camera, scene).then(attach, attach).catch(attach);
+    renderer.compileAsync(group, camera, scene).then(attach, attach).catch(attach);
   } else {
     attach();
   }
   return {
-    mesh,
+    // Scene node (visibility toggles both sprites).
+    mesh: group,
     setFound,
     dispose() {
       disposed = true;
-      mesh.removeFromParent();
+      group.removeFromParent();
       geometry.dispose();
-      material.dispose();
-      map.dispose();
-      mesh.dispose?.();
+      for (const im of [mesh, dim]) {
+        im.material.map?.dispose();
+        im.material.dispose();
+        im.dispose?.();
+      }
     },
   };
 }

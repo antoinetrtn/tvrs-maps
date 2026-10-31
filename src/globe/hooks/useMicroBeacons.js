@@ -4,7 +4,7 @@ import { countryDataMap } from "../../data/gameData";
 import { loadMicroAdmins } from "../microSnap";
 
 /**
- * Pixel beacons on all micro-territories (unfound: faint amber pulse, found:
+ * Pixel beacons on all micro-territories (unfound: dim neutral cross, found:
  * golden lit). Layer code + list are loaded lazily: no initial bundle growth.
  */
 export function useMicroBeacons(globeEl, { foundList, enabled }) {
