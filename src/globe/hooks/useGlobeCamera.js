@@ -98,16 +98,19 @@ const buildSelectedCountryCameraTarget = (opts) => {
     isAntarctica && currentPOV && Number.isFinite(currentPOV.lng) ? currentPOV.lng : (useLng ?? 0);
   const antarcticaAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.5) : isMobile ? 1.7 : 1.35;
 
-  if (customPOV && !isHomeScreen && !isAntarctica) {
+  if (customPOV && !isAntarctica) {
+    const targetAltitude = isHomeScreen
+      ? customPOV.altitude
+      : clampGlobeAltitude(
+          Math.min(
+            preservedAltitude,
+            customPOV.altitude * (hasPreviousSelection ? REGIONAL_PICK_ZOOM : 1)
+          )
+        );
     return {
       lat: targetLat,
       lng: targetLng,
-      altitude: clampGlobeAltitude(
-        Math.min(
-          preservedAltitude,
-          customPOV.altitude * (hasPreviousSelection ? REGIONAL_PICK_ZOOM : 1)
-        )
-      ),
+      altitude: targetAltitude,
     };
   }
 
@@ -141,15 +144,19 @@ const applyIdleCameraPointOfView = ({
     );
     return;
   }
+  if (customPOV) {
+    const ms = isHomeScreen
+      ? CAMERA_MS.customPov
+      : wasHomeScreen
+        ? CAMERA_MS.gameStart
+        : CAMERA_MS.customPov;
+    animateGlobePov(globeEl.current, customPOV, cameraDuration(ms, reduced));
+    return;
+  }
   if (isHomeScreen) {
     const isMobile = viewport.width < BREAKPOINTS.mobile;
     const targetPov = isMobile ? { lat: 18, lng: 20, altitude: 2.2 } : getHomeDesktopPov(viewport);
     animateGlobePov(globeEl.current, targetPov, cameraDuration(CAMERA_MS.home, reduced));
-    return;
-  }
-  if (customPOV) {
-    const ms = wasHomeScreen ? CAMERA_MS.gameStart : CAMERA_MS.customPov;
-    animateGlobePov(globeEl.current, customPOV, cameraDuration(ms, reduced));
     return;
   }
   if (wasHomeScreen) {
@@ -362,8 +369,9 @@ export function useGlobeCamera(props) {
     } else if (selectedCountry && globeEl.current) {
       const data =
         gameDataMap[selectedCountry] ||
-        countryDataMap[selectedCountry] ||
-        riversMountainsDataMap[selectedCountry];
+        (customPOV
+          ? null
+          : countryDataMap[selectedCountry] || riversMountainsDataMap[selectedCountry]);
 
       if (data && data.lat !== undefined) {
         const hasPreviousSelection = Boolean(previousSelectedCountryRef.current);
@@ -400,6 +408,13 @@ export function useGlobeCamera(props) {
           );
           lastTargetRef.current = target;
         }
+      } else if (customPOV) {
+        animateGlobePov(
+          globeEl.current,
+          customPOV,
+          cameraDuration(CAMERA_MS.customPov, prefersReducedMotion())
+        );
+        lastTargetRef.current = customPOV;
       }
     } else if (
       (selectionChanged || modeChanged || isHomeScreen !== wasHomeScreenRef.current) &&

@@ -60,4 +60,62 @@ describe("regional mode switch without flash or missing geometry", () => {
     expect(result.current.modeTransitionRef.current.active).toBe(true);
     expect(result.current.modeTransitionRef.current.toDept).toBe(true);
   });
+
+  it("keeps department polygons intact when switching to US states if US states data is not yet ready", () => {
+    let isDepartmentMode = true;
+    let isUsStatesMode = false;
+    const departmentsData = deptFeatures;
+    let usStatesData = [];
+
+    const { result, rerender } = renderHook(() =>
+      useGlobeRenderData({
+        isDepartmentMode,
+        isUsStatesMode,
+        countriesData: worldFeatures,
+        departmentsData,
+        usStatesData,
+      })
+    );
+
+    // Initial departments state
+    expect(result.current.effectiveDepartmentMode).toBe(true);
+    expect(result.current.effectiveUsStatesMode).toBe(false);
+
+    // User switches to US states mode card before usStatesData arrives
+    isDepartmentMode = false;
+    isUsStatesMode = true;
+    rerender();
+
+    // Stays on departments mode; does not drop to world mode or empty map
+    expect(result.current.effectiveDepartmentMode).toBe(true);
+    expect(result.current.effectiveUsStatesMode).toBe(false);
+    expect(result.current.renderCountriesData.some((f) => f.properties.nom === "Paris")).toBe(true);
+
+    // US states data arrives
+    const usFeatures = [
+      { properties: { name: "California" }, geometry: { type: "Polygon", coordinates: [] } },
+      { properties: { name: "Texas" }, geometry: { type: "Polygon", coordinates: [] } },
+    ];
+    usStatesData = usFeatures;
+    rerender();
+
+    // Transitions directly from departments to US states without intermediate world drop
+    expect(result.current.effectiveDepartmentMode).toBe(false);
+    expect(result.current.effectiveUsStatesMode).toBe(true);
+    expect(result.current.modeTransitionRef.current.active).toBe(true);
+    expect(result.current.modeTransitionRef.current.fromDept).toBe(true);
+    expect(result.current.modeTransitionRef.current.toUs).toBe(true);
+    // US states are incoming
+    expect(result.current.renderCountriesData.some((f) => f.properties.name === "California")).toBe(
+      true
+    );
+    // French departments remain in exiting
+    expect(
+      result.current.renderCountriesData.some(
+        (f) => f.properties.nom === "Paris" && f.isExitingDepartmentFeature
+      )
+    ).toBe(true);
+    // Regional-to-regional transition: ghost world remains intact
+    expect(result.current.renderCountriesData.some((f) => f.isGhostCountry)).toBe(true);
+  });
 });

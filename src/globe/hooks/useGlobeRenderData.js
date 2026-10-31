@@ -89,33 +89,45 @@ export function useGlobeRenderData({
   const hasDepartments = Boolean(departmentsData && departmentsData.length > 0);
   const hasUsStates = Boolean(usStatesData && usStatesData.length > 0);
 
-  // If regional data is not yet ready, stay on the previous layer (keep old polygons)
-  // until the incoming features are available so the cross-fade never shows a blank hole.
-  const effectiveDepartmentMode = Boolean(isDepartmentMode && hasDepartments);
-  const effectiveUsStatesMode = Boolean(isUsStatesMode && hasUsStates);
+  const targetMode = isDepartmentMode ? "departments" : isUsStatesMode ? "us_states" : "world";
 
-  const prevModeRef = useRef({
-    isDepartmentMode: effectiveDepartmentMode,
-    isUsStatesMode: effectiveUsStatesMode,
-  });
+  const isTargetReady =
+    targetMode === "departments" ? hasDepartments : targetMode === "us_states" ? hasUsStates : true;
+
+  const effectiveModeRef = useRef(
+    isDepartmentMode && hasDepartments
+      ? "departments"
+      : isUsStatesMode && hasUsStates
+        ? "us_states"
+        : "world"
+  );
+
+  const currentEffective = effectiveModeRef.current;
+  let nextEffective = currentEffective;
+  if (isTargetReady) {
+    nextEffective = targetMode;
+  } else {
+    // If incoming data is not ready, stay on previous layer if its data is still valid, else fallback to world.
+    if (currentEffective === "departments" && !hasDepartments) nextEffective = "world";
+    if (currentEffective === "us_states" && !hasUsStates) nextEffective = "world";
+  }
+
+  const effectiveDepartmentMode = nextEffective === "departments";
+  const effectiveUsStatesMode = nextEffective === "us_states";
+
   const reducedMotion = usePrefersReducedMotion();
 
   // Started while rendering (not in an effect) so the very first frame of the new
   // layer already carries the transition: an effect landed after the data swap and
   // left the old layer to vanish in a single frame.
-  const prev = prevModeRef.current;
-  if (
-    prev.isDepartmentMode !== effectiveDepartmentMode ||
-    prev.isUsStatesMode !== effectiveUsStatesMode
-  ) {
-    prevModeRef.current = {
-      isDepartmentMode: effectiveDepartmentMode,
-      isUsStatesMode: effectiveUsStatesMode,
-    };
+  if (nextEffective !== currentEffective) {
+    const fromDept = currentEffective === "departments";
+    const fromUs = currentEffective === "us_states";
+    effectiveModeRef.current = nextEffective;
     modeTransitionRef.current = {
       active: !reducedMotion,
-      fromDept: prev.isDepartmentMode,
-      fromUs: prev.isUsStatesMode,
+      fromDept,
+      fromUs,
       toDept: effectiveDepartmentMode,
       toUs: effectiveUsStatesMode,
       startTime: nowMs(),
@@ -223,13 +235,23 @@ export function useGlobeRenderData({
 
   const countriesWithGeometry = useMemo(() => {
     const set = new Set();
-    const list = isDepartmentMode ? departmentsData : isUsStatesMode ? usStatesData : countriesData;
-    list.forEach((feature) => {
+    const list = effectiveDepartmentMode
+      ? departmentsData
+      : effectiveUsStatesMode
+        ? usStatesData
+        : countriesData;
+    (list || []).forEach((feature) => {
       const admin = getFeatureAdmin(feature);
       if (admin) set.add(admin);
     });
     return set;
-  }, [countriesData, departmentsData, usStatesData, isDepartmentMode, isUsStatesMode]);
+  }, [
+    countriesData,
+    departmentsData,
+    usStatesData,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
+  ]);
 
   const canonicalPositions = useMemo(() => {
     const map = {};

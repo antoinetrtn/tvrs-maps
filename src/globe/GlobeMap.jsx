@@ -11,6 +11,7 @@ import {
 } from "../config/designSystem";
 import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
+import { resolveEffectiveMode } from "./effectiveMode";
 import { useFoundProgramWarmup } from "./hooks/useFoundProgramWarmup";
 import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
 import { useGlobeBoats } from "./hooks/useGlobeBoats";
@@ -133,6 +134,12 @@ const GlobeMap = (props) => {
     perfProfile,
     canonicalRef,
   });
+  const { effectiveMode, effectiveGameDataMap } = resolveEffectiveMode({
+    mode,
+    gameDataMap,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
+  });
   const {
     getPolygonCapMaterial,
     getPolygonSideMaterial,
@@ -150,7 +157,7 @@ const GlobeMap = (props) => {
     getBaseColorForCountryAndKind,
     lerpColor,
   } = useGlobePolygons({
-    mode,
+    mode: effectiveMode,
     globeLightingEnabled,
     perfProfile,
     selectedCountry,
@@ -165,7 +172,7 @@ const GlobeMap = (props) => {
     isError,
     isSuccess,
     selectionTransition,
-    gameDataMap,
+    gameDataMap: effectiveGameDataMap,
     modeTransitionRef,
     transitionStep,
   });

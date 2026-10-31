@@ -281,11 +281,14 @@ export function resolveModeTransitionColor({
   // World France / USA while a regional layer takes over: they stay as the backdrop
   // of the incoming departments / states (which start from this very colour).
   if (d.isParentCountryFeature) {
-    return isExitingRegional ? null : worldColorOf(regionOf("Europe"));
+    const parentRegion = admin === "United States of America" ? "Americas" : "Europe";
+    const baseColor = fromDept || fromUs ? ghostColorOf(parentRegion) : worldColorOf(parentRegion);
+    return isExitingRegional ? null : baseColor;
   }
 
   if (d.isEnteringDepartmentFeature || d.isDepartmentFeature) {
-    const regionCode = regionOf("Americas");
+    const fallbackRegion = toUs || fromUs ? "Americas" : "Europe";
+    const regionCode = regionOf(fallbackRegion);
     const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
     const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
     // Regional → regional: the area was dimmed ghost land; from the world it was the world colour.
@@ -294,7 +297,8 @@ export function resolveModeTransitionColor({
   }
 
   if (d.isExitingDepartmentFeature) {
-    const regionCode = regionOf("Americas");
+    const fallbackRegion = fromUs ? "Americas" : "Europe";
+    const regionCode = regionOf(fallbackRegion);
     const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
     const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
     // Dissolves into what takes its place: the world colour, or the dimmed ghost land.
