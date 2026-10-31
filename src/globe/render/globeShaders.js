@@ -350,16 +350,18 @@ export const COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY = `#include <dithering_fragment
       float igniteFlash = igniteActive * ignitePixelOn * (1.0 - step(igniteD, igniteFront - uIgniteRadius * 0.14))
         * mix(0.35, 1.0, uIgniteSelf);
       float igniteMask = mix(1.0, ignitePixelOn, igniteActive * uIgniteSelf);
-      // Homepage wake-up: the discovery ignition applied to the whole world at once.
-      // Land powers up pixel by pixel, then every city pixel switches on with a gold
-      // spark (per-pixel jitter on the 3600x1800 grid, no tiles), then stays awake.
-      float homeWakeAt = 0.12 + cityCellHash(igniteCell) * 0.78;
-      float homeLandAt = 0.02 + cityCellHash(igniteCell + vec2(17.1, 3.7)) * 0.5;
+      // Homepage wake-up: one discovery ignition stretched over the whole world. The same
+      // jittered pixel front rings out from Paris (proximity order, as if every country
+      // were found in turn): land powers up, cities follow with a gold spark, then awake.
+      float homeDist = acos(clamp(dot(sphereNormal, vec3(0.027, 0.753, 0.6575)), -1.0, 1.0))
+        + cityCellHash(igniteCell + vec2(5.3, 11.9)) * 0.14;
+      float homeLandAt = homeDist / 3.6;
+      float homeWakeAt = homeLandAt + 0.022;
       float homeOn = max(uReducedMotion, uIsRegionalMode);
       float homeIgnite = max(step(homeWakeAt, uHomeWake), homeOn);
       float homeLandOn = max(step(homeLandAt, uHomeWake), homeOn);
       float homeFlash = uShowcaseLights * (1.0 - homeOn) * homeIgnite
-        * (1.0 - step(homeWakeAt + 0.06, uHomeWake));
+        * (1.0 - step(homeLandAt + 0.07, uHomeWake));
       igniteFlash = max(igniteFlash, homeFlash);
       float showcaseNow = uShowcaseLights * homeIgnite;
       float showcaseLand = uShowcaseLights * homeLandOn;
