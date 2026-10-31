@@ -36,9 +36,52 @@ export function getAvatarUnlockLevel(avatarId) {
   return 1;
 }
 
-export function evaluateGameRewardsAndBadges({
-  userProfile,
-  localRecords,
+const LEVEL_BADGE_MILESTONES = [2, 5, 10, 15, 20];
+
+function calculateBaseXp(finalScore, totalPossible, continentsConquered) {
+  const foundXp = finalScore * 10;
+  const completionXp = 50;
+  const conquestXp = (Array.isArray(continentsConquered) ? continentsConquered.length : 0) * 100;
+  const perfectXp = finalScore > 0 && finalScore === totalPossible ? 250 : 0;
+  return {
+    foundXp,
+    completionXp,
+    conquestXp,
+    perfectXp,
+    baseGainedXp: foundXp + completionXp + conquestXp + perfectXp,
+  };
+}
+
+function getLevelBadgesInRange(fromLevel, toLevel, existingBadges) {
+  const badges = [];
+  for (const lvl of LEVEL_BADGE_MILESTONES) {
+    if (lvl >= fromLevel && lvl <= toLevel) {
+      const chId = `ch_gen_lvl_${lvl}`;
+      if (!existingBadges.includes(chId)) {
+        badges.push(chId);
+      }
+    }
+  }
+  return badges;
+}
+
+function getContinentMarkers(continentsConquered, currentBadges) {
+  if (!Array.isArray(continentsConquered) || continentsConquered.length === 0) {
+    return [];
+  }
+  const markers = [];
+  for (const region of continentsConquered) {
+    const prevCompletions = currentBadges.filter((b) =>
+      b.startsWith(`conquered_${region}_`)
+    ).length;
+    if (prevCompletions < 5) {
+      markers.push(`conquered_${region}_${prevCompletions + 1}`);
+    }
+  }
+  return markers;
+}
+
+function buildSessionData({
   gameMode,
   finalScore,
   timeSpent,
@@ -46,48 +89,16 @@ export function evaluateGameRewardsAndBadges({
   gameDuration,
   continentsConquered,
 }) {
-  const oldXp = userProfile.xp || 0;
-  const foundXp = finalScore * 10;
-  const completionXp = 50;
-  const conquestXp = (Array.isArray(continentsConquered) ? continentsConquered.length : 0) * 100;
-  const perfectXp = finalScore > 0 && finalScore === totalPossible ? 250 : 0;
-  let gainedXp = foundXp + completionXp + conquestXp + perfectXp;
-
-  const intermediateXp = oldXp + gainedXp;
-  const { level: intermediateLevel } = getLevelAndProgress(intermediateXp);
-
-  const currentBadges = userProfile.unlockedBadges || [];
-  const levelBadges = [];
-  for (let lvl = 2; lvl <= intermediateLevel; lvl++) {
-    if ([2, 5, 10, 15, 20].includes(lvl)) {
-      const chId = `ch_gen_lvl_${lvl}`;
-      if (!currentBadges.includes(chId)) {
-        levelBadges.push(chId);
-      }
-    }
-  }
-
-  const continentMarkers = [];
-  if (Array.isArray(continentsConquered) && continentsConquered.length > 0) {
-    continentsConquered.forEach((region) => {
-      const prevCompletions = currentBadges.filter((b) =>
-        b.startsWith(`conquered_${region}_`)
-      ).length;
-      if (prevCompletions < 5) {
-        continentMarkers.push(`conquered_${region}_${prevCompletions + 1}`);
-      }
-    });
-  }
-
   const hour = new Date().getHours();
-  const sessionData = {
+  const isPerfect = finalScore > 0 && finalScore === totalPossible;
+  return {
     mode: gameMode,
     score: finalScore,
     timeSpent,
     timeLeft: gameDuration - timeSpent,
     accuracy: totalPossible > 0 ? finalScore / totalPossible : 1,
     isGameOver: true,
-    perfect: finalScore > 0 && finalScore === totalPossible,
+    perfect: isPerfect,
     continentsConquered,
     consecutiveCorrect: finalScore,
     lastGuessDuration: 0,
@@ -99,6 +110,41 @@ export function evaluateGameRewardsAndBadges({
     isNight: hour >= 22 || hour < 4,
     isLunch: hour >= 12 && hour < 14,
   };
+}
+
+export function evaluateGameRewardsAndBadges({
+  userProfile,
+  localRecords,
+  gameMode,
+  finalScore,
+  timeSpent,
+  totalPossible,
+  gameDuration,
+  continentsConquered,
+}) {
+  const oldXp = userProfile.xp || 0;
+  const { foundXp, completionXp, conquestXp, perfectXp, baseGainedXp } = calculateBaseXp(
+    finalScore,
+    totalPossible,
+    continentsConquered
+  );
+  let gainedXp = baseGainedXp;
+
+  const intermediateXp = oldXp + gainedXp;
+  const { level: intermediateLevel } = getLevelAndProgress(intermediateXp);
+
+  const currentBadges = userProfile.unlockedBadges || [];
+  const levelBadges = getLevelBadgesInRange(2, intermediateLevel, currentBadges);
+  const continentMarkers = getContinentMarkers(continentsConquered, currentBadges);
+
+  const sessionData = buildSessionData({
+    gameMode,
+    finalScore,
+    timeSpent,
+    totalPossible,
+    gameDuration,
+    continentsConquered,
+  });
 
   const baseBadgesPlusMarkers = [...currentBadges, ...levelBadges, ...continentMarkers];
   const newlyUnlocked = checkChallengesRealTime(baseBadgesPlusMarkers, localRecords, sessionData);
@@ -111,15 +157,11 @@ export function evaluateGameRewardsAndBadges({
   const { level: newLevel } = getLevelAndProgress(newXp);
   const updatedBadges = [...baseBadgesPlusMarkers, ...newlyUnlocked];
 
-  for (let lvl = intermediateLevel + 1; lvl <= newLevel; lvl++) {
-    if ([2, 5, 10, 15, 20].includes(lvl)) {
-      const chId = `ch_gen_lvl_${lvl}`;
-      if (!updatedBadges.includes(chId)) {
-        updatedBadges.push(chId);
-        gainedXp += 100;
-        totalNewlyUnlocked.push(chId);
-      }
-    }
+  const postLevelBadges = getLevelBadgesInRange(intermediateLevel + 1, newLevel, updatedBadges);
+  for (const chId of postLevelBadges) {
+    updatedBadges.push(chId);
+    gainedXp += 100;
+    totalNewlyUnlocked.push(chId);
   }
 
   return {
