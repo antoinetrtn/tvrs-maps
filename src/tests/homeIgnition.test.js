@@ -14,6 +14,8 @@ describe("Homepage wake-up", () => {
     // Whole-world pixel ignition, no coarse tiles.
     expect(body).not.toContain("homeBlockHash");
     expect(body).toContain("igniteFlash = max(igniteFlash, homeFlash);");
+    // One radial wave from Paris, not per-pixel random noise.
+    expect(body).toContain("float homeLandAt = homeDist / 3.6;");
     expect(body).toContain("float homeIgnite = max(step(homeWakeAt, uHomeWake), homeOn);");
     expect(body).toContain("float homeOn = max(uReducedMotion, uIsRegionalMode);");
     expect(body).toContain("showcaseNow * isUnfoundDarkCap");

@@ -49,22 +49,25 @@ export function igniteSpark(baseColor, igniteFlash) {
 
 let homeNodes = null;
 
-/** Homepage wake-up (GLSL twin): whole-world pixel ignition from blackout, then awake. */
-export function homeShowcase({ cartUv, uShowcaseNode, uRegionalNode }) {
+/** Homepage wake-up (GLSL twin): one ignition front ringing out from Paris over the world. */
+export function homeShowcase({ cartUv, sphereNormal, uShowcaseNode, uRegionalNode }) {
   const n = (homeNodes ||= {
     reduced: mirrorUniform(polygonGlitchUniforms.uReducedMotion),
     wake: mirrorUniform(polygonGlitchUniforms.uHomeWake),
   });
   const cell = floor(cartUv.mul(vec2(3600.0, 1800.0)));
-  const wakeAt = float(0.12).add(hash(cell).mul(0.78));
-  const landAt = float(0.02).add(hash(cell.add(vec2(17.1, 3.7))).mul(0.5));
+  const dist = acos(clamp(dot(sphereNormal, vec3(0.027, 0.753, 0.6575)), -1.0, 1.0)).add(
+    hash(cell.add(vec2(5.3, 11.9))).mul(0.14)
+  );
+  const landAt = dist.div(3.6);
+  const wakeAt = landAt.add(0.022);
   const on = max(n.reduced, uRegionalNode);
   const homeIgnite = max(step(wakeAt, n.wake), on);
   const homeLandOn = max(step(landAt, n.wake), on);
   const homeFlash = uShowcaseNode
     .mul(float(1.0).sub(on))
     .mul(homeIgnite)
-    .mul(float(1.0).sub(step(wakeAt.add(0.06), n.wake)));
+    .mul(float(1.0).sub(step(landAt.add(0.07), n.wake)));
   return {
     showcaseNow: uShowcaseNode.mul(homeIgnite),
     showcaseLand: uShowcaseNode.mul(homeLandOn),
