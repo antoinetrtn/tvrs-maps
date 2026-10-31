@@ -12,10 +12,14 @@ export const setMicroAdmins = (list) => {
   microAdmins = list ? new Set(list) : null;
 };
 export function loadMicroAdmins() {
-  if (microAdmins || loading || typeof fetch !== "function") return loading;
+  if (microAdmins) return Promise.resolve(microAdmins);
+  if (loading || typeof fetch !== "function") return loading;
   loading = fetch(`${import.meta.env.BASE_URL}data/micro-territories.json`)
     .then((r) => r.json())
-    .then((d) => setMicroAdmins(d.admins))
+    .then((d) => {
+      setMicroAdmins(d.admins);
+      return microAdmins;
+    })
     .catch(() => (loading = null));
   return loading;
 }
