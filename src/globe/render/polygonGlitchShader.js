@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { FEEDBACK_TIMING } from "../../config/gameConstants";
+import { getBiomeTexture } from "./biomeTexture";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { DISCOVERY } from "./discoveryTimeline";
 import {
@@ -211,6 +212,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
     shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
     shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
+    shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
     shader.uniforms.uSelOutlineMap = { value: getSelectionOutlineTexture() };
     shader.uniforms.uSelOutlineBox = selectionOutlineBox;
     shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };

@@ -10,6 +10,7 @@ import {
   acos,
   asin,
   atan,
+  cameraPosition,
   clamp,
   cos,
   dot,
@@ -36,6 +37,7 @@ import {
   vec4,
 } from "three/tsl";
 
+import { getBiomeTexture } from "../biomeTexture";
 import { getCapitalLightsTexture } from "../capitalLightsTexture";
 import { DISCOVERY } from "../discoveryTimeline";
 import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
@@ -300,21 +302,28 @@ function glitchBase(u, lit) {
     pixelOn: step(0.01, cityOn.add(wallOn).add(edgeOuter).add(edgeHalo)),
     sideShade,
     foundRestingColor,
-    unfoundRestColor: unfoundRestColor(u, lit),
+    unfoundRestColor: unfoundRestColor(u, lit, sphereDir, selUv, side),
   };
 }
 
 /** GLSL parity: resting unfound land (surface blackout formula) the deselect settles to. */
-function unfoundRestColor(u, lit) {
+function unfoundRestColor(u, lit, sphereDir, selUv, side) {
   const showcase = u.uShowcaseLights;
   const regional = u.uIsRegionalMode;
   const restBlackout = float(1).sub(showcase).mul(float(1).sub(regional));
   const restGrey = vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(
     mix(vec3(...BLACKOUT_TINT_RGB), vec3(...BLACKOUT_TINT_HOME_RGB), showcase)
   );
-  return mix(lit, restGrey, restBlackout.mul(0.88)).mul(
+  const baseRest = mix(lit, restGrey, restBlackout.mul(0.88)).mul(
     mix(float(1.0), mix(float(0.36), float(0.74), regional), float(1).sub(showcase))
   );
+  const biomeSample = texture(getBiomeTexture(), selUv);
+  const biomeTone = biomeSample.rgb;
+  const viewDir = normalize(cameraPosition.sub(positionWorld));
+  const ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
+  const biomeLand = biomeTone.mul(float(1.0).sub(ndv).mul(0.18).add(0.88));
+  const homeRegional = showcase.mul(regional).mul(biomeSample.a).mul(float(1).sub(side));
+  return mix(baseRest, biomeLand, homeRegional.mul(0.92));
 }
 
 /** Smooth crossfade state (no checkerboard). */

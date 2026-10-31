@@ -11,10 +11,7 @@ import * as THREE from "three";
 // One byte per cell; large enough that a country with far-flung parts (France with
 // Guyane/Réunion, USA with Alaska/Hawaii) keeps a fine grid over its whole extent.
 const N = 1024;
-const CELLS = [
-  0.0025, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.025, 0.035, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3,
-  0.4, 0.5, 0.75, 1, 1.5, 2, 3, 4,
-];
+const CELLS = [0.035, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1, 1.5, 2, 3, 4];
 // Longest side of the MAIN landmass, in cells (only bites on very large countries):
 // finer grid = thinner one-pixel border, never coarser than needed for Russia/Canada.
 // Sized on the largest polygon, not the whole bbox, so overseas parts never coarsen it.

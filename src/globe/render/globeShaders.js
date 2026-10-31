@@ -65,10 +65,7 @@ export const FRESNEL_FRAGMENT_SHADER = `
     vec3 normal = normalize(vAtmosphereNormal);
     vec3 viewDir = normalize(vAtmosphereViewPos);
 
-    // True perspective dot product between view direction and surface normal.
-    // For BackSide rendering, normal points outwards, and viewDir points from camera
-    // to the vertex (which is also generally away from the camera).
-    // Thus, the dot product is positive on the back hemisphere.
+    // View/normal dot on the BackSide sphere: positive on the back hemisphere.
     float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
     // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.62)
@@ -129,6 +126,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uShowcaseLights;
   uniform float uIsRegionalMode;
   uniform sampler2D uCapitalLightsMap;
+  uniform sampler2D uBiomeMap;
   uniform sampler2D uSelOutlineMap;
   uniform vec4 uSelOutlineBox;
   ${SELECT_CITY_DEFS}
@@ -241,6 +239,10 @@ export const GLITCH_FRAGMENT_BODY = `
     * mix(BLACKOUT_TINT, BLACKOUT_TINT_HOME, uShowcaseLights);
   vec3 unfoundRestColor = mix(litRestingColor, restGrey, restBlackout * 0.88)
     * mix(1.0, mix(0.36, 0.74, uIsRegionalMode), 1.0 - uShowcaseLights);
+  vec4 biomeS = texture2D(uBiomeMap, selUv);
+  float ndv = clamp(dot(sphereDir, normalize(cameraPosition - vWorldPosition)), 0.0, 1.0);
+  unfoundRestColor = mix(unfoundRestColor, biomeS.rgb * (0.88 + 0.18 * (1.0 - ndv)),
+    uShowcaseLights * uIsRegionalMode * biomeS.a * (1.0 - isWall) * 0.92);
   float deselectDone = step(0.994, uFadeProgress);
 
   vec3 finalColor = gl_FragColor.rgb;

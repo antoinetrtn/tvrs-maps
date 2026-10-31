@@ -1,4 +1,5 @@
 import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { WORLD_PALETTE } from "../../config/worldPaletteTokens";
 import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
@@ -6,6 +7,7 @@ import { stepProgress } from "./modeTransition";
 
 export { FOUND_SURFACE_GREEN };
 export const FOUND_HIGHLIGHT = GLITCH_EFFECT_SETTINGS.selectionHighlight;
+export const REGIONAL_HOME_RESTING_LAND = WORLD_PALETTE.temperate[1];
 
 export const isSameAdmin = (a, b, dataMap = countryDataMap) => {
   if (!a || !b) return false;
@@ -395,11 +397,15 @@ export function resolveRestingColorForFeature({
   }
 
   let base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
-  if (!isFound && _grlc && (isHomeScreen || _isRegionalMode)) {
-    const regionCode =
-      _cdm?.[_admin]?.region || _gdm?.[_admin]?.region || _d?.properties?.region || "Americas";
-    const regColor = _grlc(regionCode);
-    base = _isRegionalMode ? _gfms(_admin, regColor, lerpColor, UI_COLORS) : regColor;
+  if (!isFound && (isHomeScreen || _isRegionalMode)) {
+    if (isHomeScreen && _isRegionalMode) {
+      base = REGIONAL_HOME_RESTING_LAND;
+    } else if (_grlc) {
+      const regionCode =
+        _cdm?.[_admin]?.region || _gdm?.[_admin]?.region || _d?.properties?.region || "Americas";
+      const regColor = _grlc(regionCode);
+      base = _isRegionalMode ? _gfms(_admin, regColor, lerpColor, UI_COLORS) : regColor;
+    }
   }
 
   if (kind === "cap") {
