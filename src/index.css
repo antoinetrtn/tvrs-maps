@@ -146,11 +146,11 @@ select {
 
 /* Explicitly target the quiz input by its ID to kill the browser default */
 #q-resp-field {
-  outline: none !important; /* css-rules-allow: outline-none, important — focus is shown by .input-island:focus-within */
-  box-shadow: none !important;
-  border: none !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
+  outline: none; /* css-rules-allow: outline-none — focus is shown by .input-island:focus-within */
+  box-shadow: none;
+  border: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 html,

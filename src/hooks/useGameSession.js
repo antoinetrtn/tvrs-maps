@@ -513,16 +513,15 @@ export function useGameSession({
 
   const handleInput = useCallback(
     (inputVal) => {
-      // NOSONAR
       if (handleDebugInput(inputVal, activeDataMap, setFoundList, setIsGameOver)) {
-        return true;
+        return "SUCCESS";
       }
 
       if (!isPlaying && mode !== "learn") setIsPlaying(true);
-      if (selectedCountry) return false;
+      if (selectedCountry) return "";
 
       const normalizedInput = normalizeString(inputVal);
-      if (!normalizedInput) return false;
+      if (!normalizedInput) return "";
 
       const candidateKeys = trainingPool ?? Object.keys(activeDataMap);
       const matchFound = findMatchingCountryKey({
@@ -559,12 +558,11 @@ export function useGameSession({
 
   const specificCountryGuess = useCallback(
     (inputVal) => {
-      // NOSONAR
-      if (!selectedCountry) return false;
+      if (!selectedCountry) return "";
       const mapped = Object.hasOwn(activeDataMap, selectedCountry)
         ? activeDataMap[selectedCountry]
         : null;
-      if (!mapped) return false;
+      if (!mapped) return "";
 
       if (!isPlaying && mode !== "learn") setIsPlaying(true);
 

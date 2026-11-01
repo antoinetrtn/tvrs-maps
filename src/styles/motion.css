@@ -169,15 +169,36 @@
    and shape changes (active tab, filled button, open sheet) still carry the
    meaning. Shutter blinds are not rendered at all. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-micro: var(--dur-reduced);
+    --dur-fast: var(--dur-reduced);
+    --dur-base: var(--dur-reduced);
+    --dur-slow: var(--dur-reduced);
+    --dur-sheet-in: var(--dur-reduced);
+    --dur-sheet-out: var(--dur-reduced);
+    --dur-screen-exit: var(--dur-reduced);
+    --dur-fling: var(--dur-reduced);
+    --dur-settle: var(--dur-reduced);
+    --dur-loop: var(--dur-reduced);
+    --dur-pop: var(--dur-reduced);
+    --dur-stamp: var(--dur-reduced);
+    --dur-fill: var(--dur-reduced);
+    --dur-reveal: var(--dur-reduced);
+    --dur-count: var(--dur-reduced);
+    --dur-ambient: var(--dur-reduced);
+    --dur-ambient-slow: var(--dur-reduced);
+    --stagger: 0s;
+  }
+
   *,
   *::before,
   *::after {
-    animation-duration: var(--dur-reduced) !important;
-    animation-delay: 0s !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: var(--dur-reduced) !important;
-    transition-delay: 0s !important;
-    scroll-behavior: auto !important;
+    animation-duration: var(--dur-reduced);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    transition-duration: var(--dur-reduced);
+    transition-delay: 0s;
+    scroll-behavior: auto;
   }
 
   .mode-shutter {

@@ -29,10 +29,5 @@
     "src/globe/GlobeMap.css": 1,
     "src/multiplayer/ConquestRules.css": 1,
     "src/styles/panelSystem.css": 1
-  },
-  "important": {
-    "src/index.css": 3,
-    "src/styles/motion.css": 6,
-    "src/styles/panelSystem.css": 16
   }
 }
