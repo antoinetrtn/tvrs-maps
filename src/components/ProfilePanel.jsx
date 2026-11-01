@@ -40,6 +40,75 @@ const CHALLENGE_AVATARS = {
   ch_relief_score_20: { invaderId: "invader_12", color: "green" }, // Alpiniste Amateur
 };
 
+async function saveAuthenticatedProfile({
+  session,
+  cleanUsername,
+  selectedAvatar,
+  selectedColor,
+  userProfile,
+  t,
+}) {
+  if (cleanUsername.toLowerCase() !== (userProfile.username || "").toLowerCase()) {
+    const taken = await isUsernameTaken(cleanUsername);
+    if (taken) {
+      return { error: t("username_taken") };
+    }
+  }
+
+  const updatedProfile = {
+    ...userProfile,
+    username: cleanUsername,
+    avatarId: selectedAvatar,
+    avatarColor: selectedColor,
+  };
+
+  const { error } = await upsertProfile(
+    session.user.id,
+    cleanUsername,
+    selectedAvatar,
+    selectedColor,
+    userProfile.xp,
+    userProfile.level,
+    userProfile.unlockedBadges
+  );
+
+  if (error) throw error;
+  return { profile: updatedProfile };
+}
+
+function saveGuestProfile({ cleanUsername, selectedAvatar, selectedColor, userProfile }) {
+  const guestProfile = {
+    ...userProfile,
+    username: cleanUsername,
+    avatarId: selectedAvatar,
+    avatarColor: selectedColor,
+  };
+  return { profile: guestProfile, persistLocally: true };
+}
+
+function buildChallengeAvatarItem(chId, mapping, unlockedBadges, lang) {
+  const ch = CHALLENGES.find((c) => c.id === chId);
+  const isFrench = lang === "fr";
+  const label = ch ? (isFrench ? ch.titleFr : ch.titleEn) : "Mission";
+  const desc = ch ? (isFrench ? ch.descFr : ch.descEn) : "";
+  const isLocked = chId === "ch_gen_play_1" ? false : !unlockedBadges.includes(chId);
+
+  return {
+    id: mapping.invaderId,
+    challengeId: chId,
+    isLocked,
+    label,
+    unlockDesc: `${label}: ${desc}`,
+    color: mapping.color,
+  };
+}
+
+function buildAllAvatars(unlockedBadges, lang) {
+  return Object.entries(CHALLENGE_AVATARS).map(([chId, mapping]) =>
+    buildChallengeAvatarItem(chId, mapping, unlockedBadges, lang)
+  );
+}
+
 const ProfilePanel = ({
   userProfile,
   setUserProfile,
@@ -84,49 +153,28 @@ const ProfilePanel = ({
 
     setIsSaving(true);
     try {
-      if (isSupabaseConfigured && session) {
-        // Username taken check
-        if (cleanUsername.toLowerCase() !== (userProfile.username || "").toLowerCase()) {
-          const taken = await isUsernameTaken(cleanUsername);
-          if (taken) {
-            setFormError(t("username_taken"));
-            setIsSaving(false);
-            return;
-          }
-        }
+      const isRemote = isSupabaseConfigured && session;
+      const result = isRemote
+        ? await saveAuthenticatedProfile({
+            session,
+            cleanUsername,
+            selectedAvatar,
+            selectedColor,
+            userProfile,
+            t,
+          })
+        : saveGuestProfile({ cleanUsername, selectedAvatar, selectedColor, userProfile });
 
-        const updatedProfile = {
-          ...userProfile,
-          username: cleanUsername,
-          avatarId: selectedAvatar,
-          avatarColor: selectedColor,
-        };
-
-        const { error } = await upsertProfile(
-          session.user.id,
-          cleanUsername,
-          selectedAvatar,
-          selectedColor,
-          userProfile.xp,
-          userProfile.level,
-          userProfile.unlockedBadges
-        );
-
-        if (error) throw error;
-
-        setUserProfile(updatedProfile);
-      } else {
-        // Guest Profile Save
-        const guestProfile = {
-          ...userProfile,
-          username: cleanUsername,
-          avatarId: selectedAvatar,
-          avatarColor: selectedColor,
-        };
-        setUserProfile(guestProfile);
-        localStorage.setItem("tvrs-user-profile", JSON.stringify(guestProfile));
+      if (result.error) {
+        setFormError(result.error);
+        setIsSaving(false);
+        return;
       }
 
+      setUserProfile(result.profile);
+      if (result.persistLocally) {
+        localStorage.setItem("tvrs-user-profile", JSON.stringify(result.profile));
+      }
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
     } catch (err) {
@@ -185,21 +233,7 @@ const ProfilePanel = ({
   const getChallengeDesc = (ch) => (lang === "fr" ? ch.descFr : ch.descEn);
 
   // Génération des 12 avatars basés sur les missions
-  const allAvatars = Object.entries(CHALLENGE_AVATARS).map(([chId, mapping]) => {
-    const ch = CHALLENGES.find((c) => c.id === chId);
-    const label = ch ? (lang === "fr" ? ch.titleFr : ch.titleEn) : "Mission";
-    const desc = ch ? (lang === "fr" ? ch.descFr : ch.descEn) : "";
-    const isLocked = chId === "ch_gen_play_1" ? false : !unlockedBadges.includes(chId);
-
-    return {
-      id: mapping.invaderId,
-      challengeId: chId,
-      isLocked,
-      label,
-      unlockDesc: `${label}: ${desc}`,
-      color: mapping.color,
-    };
-  });
+  const allAvatars = buildAllAvatars(unlockedBadges, lang);
 
   // Guard AFTER all hooks (useState/useEffect) and derived values.
   // This ensures we fully unmount the panel subtree when closed (important on mobile/guest

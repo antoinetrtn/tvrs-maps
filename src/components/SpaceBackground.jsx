@@ -21,6 +21,23 @@ const getTargetStarCount = (w, h) => {
   return Math.max(100, Math.min(Math.floor((w * h) / baseDensity), 420));
 };
 
+function getLimbFalloff(dist, rInner, rOuter, peak) {
+  if (dist < peak) {
+    return (dist - rInner) / (peak - rInner);
+  }
+  return (rOuter - dist) / (rOuter - peak);
+}
+
+function getLimbPixelStyle(dist, limbRadius, styleDither, styleReticle, styleVignette) {
+  if (dist < limbRadius * 1.04) {
+    return styleDither;
+  }
+  if (dist < limbRadius * 1.18) {
+    return styleReticle;
+  }
+  return styleVignette;
+}
+
 function renderLimbDither(ctx, cx, cy, limbRadius, colors) {
   const rInner = Math.round(limbRadius * 0.88);
   const rOuter = Math.round(limbRadius * 1.32);
@@ -30,25 +47,19 @@ function renderLimbDither(ctx, cx, cy, limbRadius, colors) {
   const startY = Math.max(0, cy - rOuter);
   const endY = Math.min(ctx.canvas.height, cy + rOuter);
 
+  const styleDither = toRgba(colors.dither, 0.38);
+  const styleReticle = toRgba(colors.reticle, 0.28);
+  const styleVignette = toRgba(colors.vignette, 0.22);
+
   for (let py = startY; py < endY; py += 2) {
     for (let px = startX; px < endX; px += 2) {
       const dist = Math.hypot(px - cx, py - cy);
       if (dist < rInner || dist > rOuter) continue;
-      const falloff =
-        dist < peak ? (dist - rInner) / (peak - rInner) : (rOuter - dist) / (rOuter - peak);
+      const falloff = getLimbFalloff(dist, rInner, rOuter, peak);
       const bayer = BAYER_4X4[(py >> 1) % 4][(px >> 1) % 4] / 16;
       if (falloff <= bayer) continue;
 
-      let col = colors.vignette;
-      let alpha = 0.22;
-      if (dist < limbRadius * 1.04) {
-        col = colors.dither;
-        alpha = 0.38;
-      } else if (dist < limbRadius * 1.18) {
-        col = colors.reticle;
-        alpha = 0.28;
-      }
-      ctx.fillStyle = toRgba(col, alpha);
+      ctx.fillStyle = getLimbPixelStyle(dist, limbRadius, styleDither, styleReticle, styleVignette);
       ctx.fillRect(px, py, 1, 1);
     }
   }
