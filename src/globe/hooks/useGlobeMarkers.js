@@ -14,6 +14,44 @@ import { isSameAdmin } from "../render/polygonColorResolver";
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();
 
+function getDepartmentPointColor(
+  isEndScreen,
+  isFound,
+  isSelected,
+  isPerfectScore,
+  isError,
+  UI_COLORS
+) {
+  if (isEndScreen && !isFound) return UI_COLORS.error;
+  if (isFound) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
+  if (isSelected) return isError ? UI_COLORS.error : UI_COLORS.accent;
+  return UI_COLORS.mapBorderMuted;
+}
+
+function getFoundPointColor(
+  isSelected,
+  isError,
+  region,
+  getRegionSurfaceColor,
+  lerpColor,
+  UI_COLORS
+) {
+  if (!isSelected) return getRegionSurfaceColor(region);
+  if (isError) return UI_COLORS.error;
+  return lerpColor(
+    getRegionSurfaceColor(region),
+    UI_COLORS.paper,
+    0.5 * GLOBE_STYLE.lighting.capPulseToPaper
+  );
+}
+
+function getSelectedUnfoundPointColor(isError, region, lerpColor, UI_COLORS) {
+  if (isError) return UI_COLORS.error;
+  const baseColor = getThemeRegionColorAttenuated(region) || UI_COLORS.accent;
+  const targetColor = getThemeRegionColor(region) || UI_COLORS.accent;
+  return lerpColor(baseColor, targetColor, 0.3);
+}
+
 export function useGlobeMarkers({
   mode,
   isDepartmentMode,
@@ -98,37 +136,42 @@ export function useGlobeMarkers({
   const getPointColor = useCallback(
     (d) => {
       const isSelected = isSameAdmin(d.admin, selectedCountry, gameDataMap);
+      const isFoundInSet = foundSet.has(d.admin);
+
       if (isDepartmentMode) {
-        if (isEndScreen && !foundSet.has(d.admin)) return UI_COLORS.error;
-        if (foundSet.has(d.admin)) return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
-        if (isSelected) return isError ? UI_COLORS.error : UI_COLORS.accent;
-        return UI_COLORS.mapBorderMuted;
+        return getDepartmentPointColor(
+          isEndScreen,
+          isFoundInSet,
+          isSelected,
+          isPerfectScore,
+          isError,
+          UI_COLORS
+        );
       }
 
-      const isFound = foundSet.has(d.admin) || mode === "learn";
-      const region = d.region || "Unknown";
-
       if (isEndScreen) {
-        if (foundSet.has(d.admin)) {
+        if (isFoundInSet) {
           return isPerfectScore ? UI_COLORS.gold : UI_COLORS.success;
         }
         return UI_COLORS.error;
       }
 
+      const isFound = isFoundInSet || mode === "learn";
+      const region = d.region || "Unknown";
+
       if (isFound) {
-        const baseColor = getRegionSurfaceColor(region);
-        if (isSelected) {
-          if (isError) return UI_COLORS.error;
-          return lerpColor(baseColor, UI_COLORS.paper, 0.5 * GLOBE_STYLE.lighting.capPulseToPaper);
-        }
-        return baseColor;
+        return getFoundPointColor(
+          isSelected,
+          isError,
+          region,
+          getRegionSurfaceColor,
+          lerpColor,
+          UI_COLORS
+        );
       }
 
       if (isSelected) {
-        if (isError) return UI_COLORS.error;
-        const baseColor = getThemeRegionColorAttenuated(region) || UI_COLORS.accent;
-        const targetColor = getThemeRegionColor(region) || UI_COLORS.accent;
-        return lerpColor(baseColor, targetColor, 0.3);
+        return getSelectedUnfoundPointColor(isError, region, lerpColor, UI_COLORS);
       }
 
       return UI_COLORS.mapBase;
