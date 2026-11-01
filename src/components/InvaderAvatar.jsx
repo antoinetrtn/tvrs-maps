@@ -125,68 +125,81 @@ const INVADER_DESIGNS = {
   ],
 };
 
-/* eslint-disable react-refresh/only-export-components -- shared design helper for avatar variants */
-export const getProceduralDesign = (id) => {
-  if (!id) return INVADER_DESIGNS.invader_1;
+const FALLBACK_PROCEDURAL_INVADER = [
+  "00100000100",
+  "00010001000",
+  "00111111100",
+  "01101110110",
+  "11111111111",
+  "10111111101",
+  "10100000101",
+  "00011011000",
+];
+
+function hashStringId(id) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = id.charCodeAt(i) + ((hash << 5) - hash);
   }
+  return hash;
+}
 
-  const design = [];
-  for (let r = 0; r < 8; r++) {
-    const halfRow = [];
-    for (let c = 0; c < 6; c++) {
-      // Deterministic pseudo-randomness based on ID
-      const x = Math.sin(hash + r * 17 + c * 31) * 10000;
-      const rand = x - Math.floor(x);
+function getPixelThreshold(r, c) {
+  if (r === 0) return 0.72; // antennae
+  if (r === 7) return 0.65; // feet
+  if (c === 0) return 0.68; // edges
+  return 0.52;
+}
 
-      let threshold = 0.52;
-      if (r === 0) threshold = 0.72; // antennae
-      if (r === 7) threshold = 0.65; // feet
-      if (c === 0) threshold = 0.68; // edges
-
-      halfRow.push(rand > threshold ? "1" : "0");
-    }
-
-    // Mirror design: columns 0-4, column 5 (center), columns 4-0
-    const fullRow = [
-      halfRow[0],
-      halfRow[1],
-      halfRow[2],
-      halfRow[3],
-      halfRow[4],
-      halfRow[5],
-      halfRow[4],
-      halfRow[3],
-      halfRow[2],
-      halfRow[1],
-      halfRow[0],
-    ].join("");
-
-    design.push(fullRow);
+function generateProceduralRow(hash, r) {
+  const halfRow = [];
+  for (let c = 0; c < 6; c++) {
+    // Deterministic pseudo-randomness based on ID
+    const x = Math.sin(hash + r * 17 + c * 31) * 10000;
+    const rand = x - Math.floor(x);
+    halfRow.push(rand > getPixelThreshold(r, c) ? "1" : "0");
   }
 
-  // Count total pixels to make sure it looks reasonable
+  // Mirror design: columns 0-4, column 5 (center), columns 4-0
+  return [
+    halfRow[0],
+    halfRow[1],
+    halfRow[2],
+    halfRow[3],
+    halfRow[4],
+    halfRow[5],
+    halfRow[4],
+    halfRow[3],
+    halfRow[2],
+    halfRow[1],
+    halfRow[0],
+  ].join("");
+}
+
+function countActivePixels(design) {
   let totalPixels = 0;
-  design.forEach((row) => {
+  for (let r = 0; r < design.length; r++) {
+    const row = design[r];
     for (let i = 0; i < row.length; i++) {
       if (row[i] === "1") totalPixels++;
     }
-  });
+  }
+  return totalPixels;
+}
 
+/* eslint-disable react-refresh/only-export-components -- shared design helper for avatar variants */
+export const getProceduralDesign = (id) => {
+  if (!id) return INVADER_DESIGNS.invader_1;
+  const hash = hashStringId(id);
+
+  const design = [];
+  for (let r = 0; r < 8; r++) {
+    design.push(generateProceduralRow(hash, r));
+  }
+
+  const totalPixels = countActivePixels(design);
   if (totalPixels < 12 || totalPixels > 60) {
-    // Fallback invader
-    return [
-      "00100000100",
-      "00010001000",
-      "00111111100",
-      "01101110110",
-      "11111111111",
-      "10111111101",
-      "10100000101",
-      "00011011000",
-    ];
+    return [...FALLBACK_PROCEDURAL_INVADER];
   }
   return design;
 };

@@ -11,6 +11,63 @@ import IconButton from "./ui/IconButton";
 import PanelCloseButton from "./ui/PanelCloseButton";
 import TextField from "./ui/TextField";
 
+function isRateLimitMessage(message) {
+  const msg = (message || "").toLowerCase();
+  return msg.includes("rate") || msg.includes("too many") || msg.includes("429");
+}
+
+function getAuthCatchErrorMessage(err, t) {
+  if (isRateLimitMessage(err?.message)) {
+    return "Trop de tentatives. Veuillez attendre quelques minutes (limite Supabase).";
+  }
+  return err.message || t("auth_error");
+}
+
+function handleSignUpFailure(signUpError, t, setKnownAccountExists, setErrorMsg) {
+  const msg = (signUpError?.message || "").toLowerCase();
+  if (isRateLimitMessage(msg)) {
+    setErrorMsg("Trop de tentatives. Veuillez attendre quelques minutes (limite Supabase).");
+    return;
+  }
+  if (msg.includes("already registered") || msg.includes("user already registered")) {
+    setKnownAccountExists(true);
+    setErrorMsg("Un compte existe déjà avec cet e-mail, mais le mot de passe est incorrect.");
+    return;
+  }
+  setErrorMsg(signUpError.message || t("auth_error"));
+}
+
+async function handleSignUpSuccess({
+  signUpData,
+  cleanEmail,
+  cleanPassword,
+  setSuccessMsg,
+  setPassword,
+  onClose,
+  t,
+}) {
+  setSuccessMsg(t("account_created"));
+
+  if (signUpData?.session) {
+    setSuccessMsg(t("auth_success"));
+    setPassword("");
+    setTimeout(() => onClose(), 800);
+    return;
+  }
+
+  const loginAfterRes = await signInWithEmail(cleanEmail, cleanPassword);
+  if (!loginAfterRes.error) {
+    setSuccessMsg(t("auth_success"));
+    setPassword("");
+    setTimeout(() => onClose(), 800);
+    return;
+  }
+
+  // created but no immediate session (e.g. email confirm on)
+  setPassword("");
+  setTimeout(() => onClose(), 1500);
+}
+
 const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr" }) => {
   const t = useTranslation(lang);
   const [step, setStep] = useState("initial"); // "initial" | "email" | "password"
@@ -100,59 +157,26 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr" }) => {
       // signIn failed or we know it's new -> attempt signUp (only if not known existing)
       if (knownAccountExists !== true) {
         const signUpRes = await signUpWithEmail(cleanEmail, cleanPassword);
-        const signUpError = signUpRes.error;
-        const signUpData = signUpRes.data;
-
-        if (!signUpError) {
-          setSuccessMsg(t("account_created"));
-
-          if (signUpData?.session) {
-            setSuccessMsg(t("auth_success"));
-            setPassword("");
-            setTimeout(() => onClose(), 800);
-          } else {
-            const loginAfterRes = await signInWithEmail(cleanEmail, cleanPassword);
-            if (!loginAfterRes.error) {
-              setSuccessMsg(t("auth_success"));
-              setPassword("");
-              setTimeout(() => onClose(), 800);
-            } else {
-              // created but no immediate session (e.g. email confirm on)
-              setPassword("");
-              setTimeout(() => onClose(), 1500);
-            }
-          }
-          return;
-        } else {
-          const msg = (signUpError.message || "").toLowerCase();
-          if (msg.includes("rate") || msg.includes("too many") || msg.includes("429")) {
-            setErrorMsg(
-              "Trop de tentatives. Veuillez attendre quelques minutes (limite Supabase)."
-            );
-          } else if (
-            msg.includes("already registered") ||
-            msg.includes("user already registered")
-          ) {
-            setKnownAccountExists(true);
-            setErrorMsg(
-              "Un compte existe déjà avec cet e-mail, mais le mot de passe est incorrect."
-            );
-          } else {
-            setErrorMsg(signUpError.message || t("auth_error"));
-          }
+        if (!signUpRes.error) {
+          await handleSignUpSuccess({
+            signUpData: signUpRes.data,
+            cleanEmail,
+            cleanPassword,
+            setSuccessMsg,
+            setPassword,
+            onClose,
+            t,
+          });
           return;
         }
+        handleSignUpFailure(signUpRes.error, t, setKnownAccountExists, setErrorMsg);
+        return;
       }
 
       // known existing, signIn failed
       setErrorMsg(signInError?.message || "Email ou mot de passe incorrect.");
     } catch (err) {
-      const msg = (err.message || "").toLowerCase();
-      if (msg.includes("rate") || msg.includes("too many") || msg.includes("429")) {
-        setErrorMsg("Trop de tentatives. Veuillez attendre quelques minutes (limite Supabase).");
-      } else {
-        setErrorMsg(err.message || t("auth_error"));
-      }
+      setErrorMsg(getAuthCatchErrorMessage(err, t));
     } finally {
       setLoading(false);
       submittingRef.current = false;
