@@ -30,9 +30,7 @@ describe("deselect fade settles to the unfound blackout look", () => {
     expect(GLITCH_FRAGMENT_BODY).toMatch(/uBiomeMap/);
     // Outline and halo dissolve progressively without abruptly vanishing on frame 1 of deselect
     expect(GLITCH_FRAGMENT_BODY).not.toMatch(/edgeOn = .*\(1\.0 - transitionActive\)/);
-    expect(GLITCH_FRAGMENT_BODY).toMatch(
-      /step\(0\.01, cityOn \+ wallOn \+ edgeOuter \+ edgeHalo\)/
-    );
+    expect(GLITCH_FRAGMENT_BODY).toMatch(/step\(0\.01, cityOn \+ wallOn \+ edgeOuter\)/);
   });
 
   it("WebGPU TSL mirrors the same settle colour", () => {
@@ -46,7 +44,7 @@ describe("deselect fade settles to the unfound blackout look", () => {
     // Parity: no abrupt cut of outline on transition start, halo included in pixelOn
     expect(glitchNodeSrc).not.toMatch(/edgeOn = .*sub\(transitionActive\)/);
     expect(glitchNodeSrc).toMatch(
-      /pixelOn: step\(0\.01, cityOn\.add\(wallOn\)\.add\(edgeOuter\)\.add\(edgeHalo\)\)/
+      /pixelOn: step\(0\.01, cityOn\.add\(wallOn\)\.add\(edgeOuter\)\)/
     );
   });
 

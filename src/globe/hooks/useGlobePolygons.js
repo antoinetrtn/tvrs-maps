@@ -175,11 +175,8 @@ export function useGlobePolygons({
         const isDeptFound = foundSet.has(admin);
         const isDeptSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
 
+        // Learn = home look: the selection is drawn by the shared selection shader.
         if (mode === "learn") {
-          if (isDeptSelected) {
-            if (isError) return UI_COLORS.error;
-            return GLITCH_EFFECT_SETTINGS.selectionHighlight;
-          }
           const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
           const baseColor = getRegionSurfaceColorDimmed(regionCode);
           return getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
@@ -303,7 +300,7 @@ export function useGlobePolygons({
       if (isSelected) {
         if (isError) return UI_COLORS.error;
         if (isSuccess) return GLITCH_EFFECT_SETTINGS.selectionHighlight;
-        if (mode === "learn" || foundSet.has(admin)) {
+        if (foundSet.has(admin)) {
           return resolveFoundCountryStroke({
             isSelected: true,
             UI_COLORS,
@@ -471,9 +468,9 @@ export function useGlobePolygons({
       const prevTransition = owned ? null : transitioningPreviousCountryState;
       const incomingTransition = owned ? null : transitioningIncomingCountryState;
       const isFound = foundSet.has(admin);
-      const isLearnSelected = !quiet && mode === "learn" && admin === selectedCountry;
-      const isHighlightedOnGlobe =
-        !quiet && (isFound || isLearnSelected || admin === selectedCountry);
+      // Learn reuses the home bricks (showcase-lit globe + shared selection shader).
+      const isHomeLike = isHomeScreen || mode === "learn";
+      const isHighlightedOnGlobe = !quiet && (isFound || admin === selectedCountry);
 
       const restingColor = resolveRestingColorForFeature({
         d,
@@ -502,12 +499,11 @@ export function useGlobePolygons({
         selectedCountry: quiet ? null : selectedCountry,
         showFoundOnGlobe: isFound,
         isHighlightedOnGlobe,
-        isLearnSelected,
         isFound,
         mode,
         foundSet,
         isEndScreen,
-        isHomeScreen,
+        isHomeScreen: isHomeLike,
         isError,
         isSuccess,
         transitioningPreviousCountryState: prevTransition,

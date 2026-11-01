@@ -62,15 +62,15 @@ describe("polygonColorResolver", () => {
     ).toBe(UI_COLORS.mapBase);
   });
 
-  it("returns green for learn selection", () => {
-    expect(
-      resolveCountryCapColor({
-        ...baseCtx,
-        mode: "learn",
-        isLearn: true,
-        selectedCountry: "FRA",
-      })
-    ).toBe(FOUND_HIGHLIGHT);
+  it("learn selection keeps the home land colour (no white highlight fill)", () => {
+    const color = resolveCountryCapColor({
+      ...baseCtx,
+      mode: "learn",
+      isLearn: true,
+      selectedCountry: "FRA",
+    });
+    expect(color).not.toBe(FOUND_HIGHLIGHT);
+    expect(color).toBe(baseCtx.mapBase);
   });
 
   it("uses darker green stroke when found country is selected", () => {

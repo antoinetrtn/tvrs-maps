@@ -127,6 +127,7 @@ ${FEAT.FEATURE_DECLARATIONS}
   uniform sampler2D uBiomeMap;
   uniform sampler2D uSelOutlineMap;
   uniform vec4 uSelOutlineBox;
+  uniform float uSelOutlinePx;
   ${SELECT_CITY_DEFS}
   uniform float uSuccessDuration;
   uniform float uRevealStart;
@@ -198,36 +199,33 @@ export const GLITCH_FRAGMENT_BODY = `
   // Selection: the country's real city-light pixels (same texture cells as the found
   // ignition) glow dim amber in stepped order, border traced in square pixels.
   float isWall = step(0.5, uIsSide);
-  // Flat selection (no extrusion): pixel outline read from the per-selection mask, on
-  // a lat/lng grid of uSelOutlineBox.zw degrees (square cells on the globe, see selectionOutline.js).
+  // Flat selection (no extrusion): one outline brick for every feature. The coverage
+  // mask (selectionOutline.js) is read bilinearly; its 0.5 contour becomes a hard line of
+  // uSelOutlinePx device pixels via fwidth, so the width is constant on screen.
   vec2 selDeg = vec2(degrees(atan(sphereDir.x, sphereDir.z)), degrees(sphereLat));
-  vec2 selCellSize = uSelOutlineBox.zw;
-  vec2 selOc = (selDeg - uSelOutlineBox.xy) / selCellSize;
-  selOc.x = mod(selOc.x, 360.0 / selCellSize.x);
+  vec2 selOc = (selDeg - uSelOutlineBox.xy) / uSelOutlineBox.z;
+  selOc.x = mod(selOc.x, min(360.0 / uSelOutlineBox.z, uSelOutlineBox.w));
   vec2 selOcCell = floor(selOc);
-  float selInBox = step(0.0, selOc.x) * step(selOc.x, 1024.0) * step(0.0, selOc.y) * step(selOc.y, 1024.0);
-  vec2 selOcUv = (selOcCell + 0.5) / 1024.0;
-  float selEdgeV = texture2D(uSelOutlineMap, selOcUv).r * selInBox * (1.0 - isWall);
+  float selInBox = step(0.5, uSelOutlineBox.w) * step(0.0, selOc.x) * step(selOc.x, 1024.0)
+    * step(0.0, selOc.y) * step(selOc.y, 1024.0);
+  float selMask = texture2D(uSelOutlineMap, selOc / 1024.0).r;
+  float selFw = max(fwidth(selMask), 1e-4);
+  float selEdgeV = step(selMask, 0.5 + selFw * uSelOutlinePx) * selInBox * (1.0 - isWall);
   float selectIn = clamp((uTime - uSelectStart) / 0.5, 0.0, 1.0);
   float lightProg = (transitionActive > 0.5) ? 1.0 - floor(uFadeProgress * 5.0) / 5.0 : floor(selectIn * 6.0) / 6.0;
   vec2 selUv = vec2(atan(sphereDir.x, sphereDir.z) / 6.2831853 + 0.5, sphereLat / 3.14159265 + 0.5);
   vec2 selCell = floor(selUv * vec2(3600.0, 1800.0));
-  float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall);
+  float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall)
+    * (1.0 - uIsRegionalMode); // no 0.1° city blocks at regional scale
   float cityOn = isCityPx * step(hash(selCell + 3.7), lightProg * 1.15 - 0.15);
   float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
   float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0);
-  float edgeOuter = step(0.9, selEdgeV) * edgeOn;
-  float edgeHalo = step(0.15, selEdgeV) * (1.0 - step(0.9, selEdgeV)) * edgeOn;
-  // Halo breathes in a few flat steps (pixel-art, no strobe); still under reduced motion.
-  float pulseWave = 0.5 + 0.5 * sin(uTime * 6.2831853 / SELECT_PULSE_S);
-  float pulse = mix(floor(pulseWave * SELECT_PULSE_STEPS + 0.5) / SELECT_PULSE_STEPS, 0.6, uReducedMotion);
-  float haloAmt = edgeHalo * selEdgeV * SELECT_HALO_ALPHA * (0.35 + 0.65 * pulse);
+  float edgeOuter = selEdgeV * edgeOn;
   // Warm night umber under the selection instead of the cold map grey.
   vec3 selLand = vec3(dot(litRestingColor, vec3(0.299, 0.587, 0.114))) * SELECT_LAND_TINT;
   vec3 wallTone = vec3(1.0, 0.74, 0.3) / max(uSideShade, 0.001);
   vec3 staticVec = mix(mix(litRestingColor, selLand, 1.0 - isWall), wallTone, wallOn);
   staticVec = mix(staticVec, SELECT_CITY_AMBER, cityOn * SELECT_CITY_ALPHA);
-  staticVec = mix(staticVec, SELECT_EDGE_RGB, haloAmt);
   staticVec = mix(staticVec, SELECT_EDGE_RGB, edgeOuter);
   vec3 foundRestingColor = vec3(0.48, 0.34, 0.15);
   // Resting unfound land, same formula as the surface blackout pass (unfoundLand): the
@@ -247,7 +245,7 @@ export const GLITCH_FRAGMENT_BODY = `
   if (uIsError > 0.5) {
     finalColor = computeErrorEffect(gl_FragColor.rgb, uTime, blockUv, vWorldPosition);
   } else if (uIsSuccess > 0.5) {
-    float discEdge = max(isWall, step(0.9, selEdgeV));
+    float discEdge = max(isWall, selEdgeV);
     finalColor = computeDiscoveryEffect(staticVec, foundRestingColor, sphereDir, selCell, discEdge);
   } else if (uIsSelection > 0.5) {
     finalColor = computeSelectionEffect(uTime);
@@ -269,7 +267,7 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (isFoundSurface) {
     gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
-    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter + edgeHalo));
+    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter));
   } else {
     gl_FragColor.rgb = mix(staticVec, unfoundRestColor, deselectDone) * sideShade;
   }
@@ -381,7 +379,8 @@ ${SELECT_CITY_DEFS}
       vec3 biomeTone = biomeSample.rgb;
       vec3 biomeLand = biomeTone * (0.88 + 0.18 * (1.0 - ndv));
       float biomeAllowed = biomeSample.a * (1.0 - uIsGhost);
-      float biomeReveal = max(max(isSoloFound, isConquestOwned), showcaseLand * isUnfoundDarkCap) * biomeAllowed;
+      float biomeShown = max(showcaseLand, uIsRegionalMode) * isUnfoundDarkCap; // regional: terrain
+      float biomeReveal = max(max(isSoloFound, isConquestOwned), biomeShown) * biomeAllowed;
       float biomeHint = (1.0 - showcaseLand) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
       landSurface = mix(landSurface, biomeTone * 0.3, biomeHint * 0.34);
       landSurface = mix(landSurface, biomeLand, biomeReveal * 0.92);
