@@ -71,99 +71,43 @@ function evaluateScore(id, gameMode, score, addBadge) {
   }
 }
 
+const SPEED_CHALLENGE_RULES = {
+  ch_speed_fast_guess: (s) => s.lastGuessDuration > 0 && s.lastGuessDuration <= 3,
+  ch_speed_10_guesses_30s: (s) => s.speedGuessCount3s >= 10,
+  ch_speed_20_guesses_60s: (s) => s.speedGuessCount3s >= 20,
+  ch_speed_under_2m: (s) => s.isGameOver && s.timeSpent <= 120 && s.score > 0,
+  ch_speed_under_1m: (s) => s.isGameOver && s.timeSpent <= 60 && s.score > 0,
+  ch_speed_under_30s: (s) => s.isGameOver && s.timeSpent <= 30 && s.score > 0,
+  ch_speed_half_time: (s) =>
+    s.isGameOver && s.gameDuration > 0 && s.timeSpent <= s.gameDuration / 2 && s.score > 0,
+  ch_speed_blitz: (s) => s.lastGuessDuration > 0 && s.lastGuessDuration <= 1,
+  ch_speed_perfect_100: (s) => s.isGameOver && s.perfect && s.score >= 100 && s.timeSpent <= 120,
+  ch_speed_lightning: (s) => s.lightningCount >= 1,
+};
+
 function evaluateSpeed(id, sessionData, addBadge) {
-  if (
-    id === "ch_speed_fast_guess" &&
-    sessionData.lastGuessDuration > 0 &&
-    sessionData.lastGuessDuration <= 3
-  ) {
-    addBadge(id);
-  } else if (id === "ch_speed_10_guesses_30s" && sessionData.speedGuessCount3s >= 10) {
-    addBadge(id);
-  } else if (id === "ch_speed_20_guesses_60s" && sessionData.speedGuessCount3s >= 20) {
-    addBadge(id);
-  } else if (
-    id === "ch_speed_under_2m" &&
-    sessionData.isGameOver &&
-    sessionData.timeSpent <= 120 &&
-    sessionData.score > 0
-  ) {
-    addBadge(id);
-  } else if (
-    id === "ch_speed_under_1m" &&
-    sessionData.isGameOver &&
-    sessionData.timeSpent <= 60 &&
-    sessionData.score > 0
-  ) {
-    addBadge(id);
-  } else if (
-    id === "ch_speed_under_30s" &&
-    sessionData.isGameOver &&
-    sessionData.timeSpent <= 30 &&
-    sessionData.score > 0
-  ) {
-    addBadge(id);
-  } else if (
-    id === "ch_speed_half_time" &&
-    sessionData.isGameOver &&
-    sessionData.gameDuration > 0 &&
-    sessionData.timeSpent <= sessionData.gameDuration / 2 &&
-    sessionData.score > 0
-  ) {
-    addBadge(id);
-  } else if (
-    id === "ch_speed_blitz" &&
-    sessionData.lastGuessDuration > 0 &&
-    sessionData.lastGuessDuration <= 1
-  ) {
-    addBadge(id);
-  } else if (
-    id === "ch_speed_perfect_100" &&
-    sessionData.isGameOver &&
-    sessionData.perfect &&
-    sessionData.score >= 100 &&
-    sessionData.timeSpent <= 120
-  ) {
-    addBadge(id);
-  } else if (id === "ch_speed_lightning" && sessionData.lightningCount >= 1) {
+  const rule = SPEED_CHALLENGE_RULES[id];
+  if (rule && rule(sessionData)) {
     addBadge(id);
   }
 }
 
+const SPECIAL_CHALLENGE_RULES = {
+  ch_us_states_speed_under_2m: (mode, s) =>
+    mode === "us_states" && s.isGameOver && s.timeSpent <= 120 && s.score >= 50,
+  ch_us_states_perfect: (mode, s) =>
+    mode === "us_states" && s.isGameOver && s.perfect && s.score >= 50,
+  ch_special_night: (_mode, s) => Boolean(s.isNight),
+  ch_special_lunch: (_mode, s) => Boolean(s.isLunch),
+  ch_special_perfect: (_mode, s) => s.isGameOver && s.perfect && s.score > 0,
+  ch_special_islands: (_mode, s) =>
+    (s.guessesThisGame?.filter((k) => ISLANDS_LIST.includes(k)).length || 0) >= 5,
+};
+
 function evaluateUsStatesAndSpecial(id, gameMode, sessionData, addBadge) {
-  if (id === "ch_us_states_speed_under_2m") {
-    if (
-      gameMode === "us_states" &&
-      sessionData.isGameOver &&
-      sessionData.timeSpent <= 120 &&
-      sessionData.score >= 50
-    ) {
-      addBadge(id);
-    }
-  } else if (id === "ch_us_states_perfect") {
-    if (
-      gameMode === "us_states" &&
-      sessionData.isGameOver &&
-      sessionData.perfect &&
-      sessionData.score >= 50
-    ) {
-      addBadge(id);
-    }
-  } else if (id === "ch_special_night" && sessionData.isNight) {
+  const rule = SPECIAL_CHALLENGE_RULES[id];
+  if (rule && rule(gameMode, sessionData)) {
     addBadge(id);
-  } else if (id === "ch_special_lunch" && sessionData.isLunch) {
-    addBadge(id);
-  } else if (
-    id === "ch_special_perfect" &&
-    sessionData.isGameOver &&
-    sessionData.perfect &&
-    sessionData.score > 0
-  ) {
-    addBadge(id);
-  } else if (id === "ch_special_islands") {
-    const islands =
-      sessionData.guessesThisGame?.filter((k) => ISLANDS_LIST.includes(k)).length || 0;
-    if (islands >= 5) addBadge(id);
   }
 }
 

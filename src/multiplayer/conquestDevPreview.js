@@ -37,19 +37,39 @@ function readPreviewOptions(loc = globalThis.location) {
   }
 }
 
+function computePreviewStartedAt(phase, baseMs) {
+  if (phase === "lobby") return null;
+  const offset = phase === "countdown" ? 4000 : -205000;
+  return new Date(baseMs + offset).toISOString();
+}
+
+function computePreviewEndsAt(phase, baseMs, urgent) {
+  if (phase === "lobby") return null;
+  if (phase === "finished") return new Date(baseMs - 5000).toISOString();
+  const offset = urgent ? 90000 : 395000;
+  return new Date(baseMs + offset).toISOString();
+}
+
+function computePreviewStatus(phase) {
+  if (phase === "lobby") return "lobby";
+  if (phase === "finished") return "finished";
+  return "live";
+}
+
+function computePreviewResult(isFinished) {
+  if (!isFinished) return null;
+  return {
+    winner: "me",
+    elo: {
+      me: { delta: 16, after: 1048 },
+      opp: { delta: -16, after: 984 },
+    },
+  };
+}
+
 function buildPreviewMatch(phase, baseMs, urgent, rematch = false) {
   if (phase === "idle" || phase === "home") return null;
-  const isLobby = phase === "lobby";
-  const isCountdown = phase === "countdown";
   const isFinished = phase === "finished";
-  const startedAt = isLobby
-    ? null
-    : new Date(baseMs + (isCountdown ? 4000 : -205000)).toISOString();
-  const endsAt = isLobby
-    ? null
-    : isFinished
-      ? new Date(baseMs - 5000).toISOString()
-      : new Date(baseMs + (urgent ? 90000 : 395000)).toISOString();
 
   return {
     id: "preview-match",
@@ -59,19 +79,11 @@ function buildPreviewMatch(phase, baseMs, urgent, rematch = false) {
     rules: { steal_fail_cooldown_seconds: 20 },
     max_players: 2,
     duration_seconds: PREVIEW_DURATION_SEC,
-    status: isLobby ? "lobby" : isFinished ? "finished" : "live",
-    started_at: startedAt,
-    ends_at: endsAt,
+    status: computePreviewStatus(phase),
+    started_at: computePreviewStartedAt(phase, baseMs),
+    ends_at: computePreviewEndsAt(phase, baseMs, urgent),
     rematch_id: isFinished && rematch ? "preview-rematch-lobby" : null,
-    result: isFinished
-      ? {
-          winner: "me",
-          elo: {
-            me: { delta: 16, after: 1048 },
-            opp: { delta: -16, after: 984 },
-          },
-        }
-      : null,
+    result: computePreviewResult(isFinished),
   };
 }
 
