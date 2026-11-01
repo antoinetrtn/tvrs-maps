@@ -7,15 +7,9 @@ import {
   triggerSubtleHapticTick,
 } from "../../utils/haptics";
 import { perfTracker } from "../../utils/perfTracker";
-import { clientToGlobeCoords, featureContainsLngLat } from "../../utils/utils";
-import {
-  getProjector,
-  loadMicroAdmins,
-  pickNearestByPixels,
-  snapMicroAtScreen,
-  toCanvasPx,
-} from "../microSnap";
-import { pickNearestByDegrees, pickRiverOrRelief } from "../pickFallback";
+import { clientToGlobeCoords } from "../../utils/utils";
+import { getProjector, loadMicroAdmins, pickNearestByPixels, toCanvasPx } from "../microSnap";
+import { pickNearestByDegrees } from "../pickFallback";
 import {
   clampGlobeAltitude,
   getGlobeMinAltitude,
@@ -23,6 +17,12 @@ import {
   syncCameraMapProjection,
   syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
+import {
+  applyFallbackSelection,
+  getDegreeFallbackRadius,
+  pickFeatureOrMicro,
+  pickRiversMountainsCountry,
+} from "./interactionPickers";
 import { useFeatureHover } from "./useFeatureHover";
 import { useMicroMagnetHover } from "./useMicroMagnetHover";
 
@@ -109,50 +109,30 @@ export function useGlobeInteractions({
         perfTracker.recordSelect(t1 - t0);
       };
 
-      if (isRiversMountainsMode) {
-        const riverPick = pickRiverOrRelief(gameDataMap, lng, lat);
-        if (riverPick) {
-          selectCountry(riverPick);
-          recordLatency();
-          return;
-        }
-        if (mode !== "learn") {
-          selectCountry(null);
-          recordLatency();
-          return;
-        }
+      if (
+        isRiversMountainsMode &&
+        pickRiversMountainsCountry(gameDataMap, lng, lat, mode, selectCountry)
+      ) {
+        recordLatency();
+        return;
       }
 
       const isUsStatesMode = mode === "us_states" || mode?.includes("us_states");
-      const match = selectableFeatureIndex.find((entry) => featureContainsLngLat(entry, lng, lat));
       const project = screen && getProjector(globeEl);
-      const micro =
-        project &&
-        !isDepartmentMode &&
-        !isUsStatesMode &&
-        snapMicroAtScreen({
-          globeEl,
-          project,
-          gameDataMap,
-          lng,
-          lat,
-          screen,
-          insideOther: Boolean(match),
-        });
-      if (micro) {
-        selectCountry(micro.admin);
-        recordLatency();
-        return;
-      }
-      if (match) {
-        selectCountry(match.admin);
-        recordLatency();
-        return;
-      }
 
-      // Special polar region handling: everything south of 60°S (without a matched island) is Antarctica
-      if (lat <= -60.0 && gameDataMap["Antarctica"]) {
-        selectCountry("Antarctica");
+      const directPick = pickFeatureOrMicro({
+        lng,
+        lat,
+        screen,
+        globeEl,
+        gameDataMap,
+        selectableFeatureIndex,
+        isDepartmentMode,
+        isUsStatesMode,
+        project,
+      });
+      if (directPick) {
+        selectCountry(directPick);
         recordLatency();
         return;
       }
@@ -166,8 +146,7 @@ export function useGlobeInteractions({
           lat,
           radiusPx: FALLBACK_RADIUS_PX,
         });
-        if (near) selectCountry(near.admin);
-        else if (mode !== "learn") selectCountry(null);
+        applyFallbackSelection(near ? near.admin : null, mode, selectCountry);
         recordLatency();
         return;
       }
@@ -176,13 +155,9 @@ export function useGlobeInteractions({
         gameDataMap,
         lng,
         lat,
-        isDepartmentMode ? 2.5 : isUsStatesMode ? 4.5 : 6.0
+        getDegreeFallbackRadius(isDepartmentMode, isUsStatesMode)
       );
-      if (fallback) {
-        selectCountry(fallback);
-      } else if (mode !== "learn") {
-        selectCountry(null);
-      }
+      applyFallbackSelection(fallback, mode, selectCountry);
       recordLatency();
     },
     [

@@ -386,9 +386,12 @@ const PixelIcon = ({ iconId, className = "" }) => {
   const family = resolveIconFamily(iconId);
   const runs = useMemo(() => buildRuns(FAMILY_GRIDS[family] || FAMILY_GRIDS.symbol), [family]);
 
+  const extraClass = className ? ` ${className}` : "";
+  const rootClass = `cq-pixel-icon cq-pixel-icon--${family}${extraClass}`;
+
   return (
     <span
-      className={`cq-pixel-icon cq-pixel-icon--${family}${className ? ` ${className}` : ""}`}
+      className={rootClass}
       data-family={family}
       data-icon={iconId || "symbol"}
       aria-hidden="true"

@@ -44,7 +44,7 @@ function useGlobeHorizonCulling(globeEl) {
     let scene = null;
     let previous = null;
     let waitId = null;
-    const last = { x: NaN, y: NaN, z: NaN, at: 0 };
+    const last = { x: Number.NaN, y: Number.NaN, z: Number.NaN, at: 0 };
     const install = () => {
       waitId = null;
       const globe = globeEl.current;

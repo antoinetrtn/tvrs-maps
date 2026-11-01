@@ -115,7 +115,7 @@ export const Toast = ({
 export const ToastViewport = () => {
   const toast = useSyncExternalStore(subscribe, getCurrent, getCurrent);
   useEffect(() => {
-    if (!toast || !toast.duration) return undefined;
+    if (!toast?.duration) return undefined;
     const timer = setTimeout(() => dismissToast(toast.id), toast.duration);
     return () => clearTimeout(timer);
   }, [toast]);

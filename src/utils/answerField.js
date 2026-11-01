@@ -11,15 +11,15 @@ const sessionFieldId = `answer-${Math.random().toString(36).slice(2, 10)}${Date.
 
 const AUTOFILL_TRIGGER_REGEX = new RegExp(
   [
-    "\\b(p)(ays|lace)",
-    "\\b(c)(ountr(?:y|ies)|apitale?|ard|arte|ode|ity)",
-    "\\b(n)(om|ame)",
-    "\\b(a)(dresse|ddress)",
-    "\\b(v)(ille)",
-    "\\b(é|e)(tat|tats)",
-    "\\b(s)(tate)",
-    "\\b(d)(épartement|epartement|epartment)",
-    "\\b(r)(égion|egion)",
+    String.raw`\b(p)(ays|lace)`,
+    String.raw`\b(c)(ountr(?:y|ies)|apitale?|ard|arte|ode|ity)`,
+    String.raw`\b(n)(om|ame)`,
+    String.raw`\b(a)(dresse|ddress)`,
+    String.raw`\b(v)(ille)`,
+    String.raw`\b(é|e)(tat|tats)`,
+    String.raw`\b(s)(tate)`,
+    String.raw`\b(d)(épartement|epartement|epartment)`,
+    String.raw`\b(r)(égion|egion)`,
   ].join("|"),
   "gi"
 );

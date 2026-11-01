@@ -25,6 +25,132 @@ function createGlowMaterial() {
   });
 }
 
+function teardownGlobeLighting(globeLightingRef, camera) {
+  if (!globeLightingRef.current) return;
+  const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, group, innerGlow } =
+    globeLightingRef.current;
+  if (camera) {
+    camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
+  }
+  if (group?.parent) {
+    group.parent.remove(group);
+  }
+  innerGlow?.geometry?.dispose();
+  innerGlow?.material?.dispose();
+  globeLightingRef.current = null;
+}
+
+function createGlobeLightingRig(scene, camera, isMobile) {
+  scene.add(camera);
+
+  const group = new THREE.Group();
+  group.name = "globe-accent-lighting";
+
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1);
+  keyLight.name = "globe-key-light";
+  keyLight.position.set(-3.5, 2.4, 4.2);
+
+  const rimLight = new THREE.DirectionalLight(0x78a8ff, 1);
+  rimLight.name = "globe-rim-light";
+  rimLight.position.set(3.8, 1.3, -3.6);
+
+  const fillLight = new THREE.HemisphereLight(0x9cc4ff, 0x020617, 1);
+  fillLight.name = "globe-fill-light";
+  fillLight.position.set(0, 2.2, 0);
+
+  const studioLight = new THREE.AmbientLight(0xbfdcff, 1);
+  studioLight.name = "globe-studio-ambient";
+
+  const studioLeft = new THREE.DirectionalLight(0xffffff, 1);
+  studioLeft.name = "globe-studio-left";
+  studioLeft.position.set(-4.5, 2.5, 3.5);
+
+  const studioRight = new THREE.DirectionalLight(0x9fd2ff, 1);
+  studioRight.name = "globe-studio-right";
+  studioRight.position.set(4.5, -1.2, 2.8);
+
+  const glowSegments = isMobile
+    ? PERFORMANCE.innerGlowSegments.mobile
+    : PERFORMANCE.innerGlowSegments.desktop;
+  const innerGlow = new THREE.Mesh(
+    new THREE.SphereGeometry(114.0, glowSegments, glowSegments),
+    createGlowMaterial()
+  );
+  innerGlow.name = "globe-inner-glow";
+  innerGlow.position.set(0, 0, 0);
+  innerGlow.renderOrder = -1;
+
+  group.add(innerGlow);
+  scene.add(group);
+
+  camera.add(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
+
+  return {
+    group,
+    keyLight,
+    rimLight,
+    fillLight,
+    studioLight,
+    studioLeft,
+    studioRight,
+    innerGlow,
+  };
+}
+
+function applyGlobeLightParameters(lighting, UI_COLORS, isMobile, safeColor) {
+  const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, innerGlow } =
+    lighting;
+  const lightScale = isMobile ? PERFORMANCE.mobileLightScale : 1;
+
+  rimLight.visible = false;
+  studioLight.visible = true;
+  studioLeft.visible = false;
+  studioRight.visible = false;
+  innerGlow.visible = true;
+
+  keyLight.intensity = 0.28 * lightScale;
+  keyLight.position.set(-3.5, 2.4, 4.2);
+  rimLight.intensity = 0.28 * lightScale;
+  rimLight.position.set(3.8, 1.3, -3.6);
+  fillLight.intensity = 0.92 * lightScale;
+  studioLight.intensity = 0.62 * lightScale;
+  studioLeft.intensity = 0.15 * lightScale;
+  studioLeft.position.set(-4.5, 2.5, 3.5);
+  studioRight.intensity = 0.15 * lightScale;
+  studioRight.position.set(4.5, -1.2, 2.8);
+
+  rimLight.color.set(safeColor(UI_COLORS.lightingRim));
+  fillLight.color.set(safeColor(UI_COLORS.lightingFill));
+  fillLight.groundColor.set(safeColor(UI_COLORS.lightingGround));
+  studioLight.color.set(safeColor(UI_COLORS.lightingStudio));
+  studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
+  studioRight.color.set(safeColor(UI_COLORS.lightingRight));
+}
+
+function syncGlowTargets(
+  UI_COLORS,
+  targetGlowColorRef,
+  targetGlowPowerRef,
+  targetGlowCoefRef,
+  innerGlow,
+  justCreatedLighting
+) {
+  const glowColorHex = Number(UI_COLORS.glowColorHex) || 0x3a76f0;
+  const glowPower = Number(UI_COLORS.glowPower) || 1.2;
+  const glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
+
+  targetGlowColorRef.current.setHex(glowColorHex);
+  targetGlowPowerRef.current = glowPower;
+  targetGlowCoefRef.current = glowCoef;
+
+  if (justCreatedLighting && innerGlow.material?.uniforms) {
+    const u = innerGlow.material.uniforms;
+    u.glowColor.value.copy(targetGlowColorRef.current);
+    u.power.value = glowPower;
+    u.coef.value = glowCoef;
+  }
+}
+
 export function useGlobeLighting({
   globeEl,
   globeLightingEnabled,
@@ -44,136 +170,34 @@ export function useGlobeLighting({
     if (!scene) return false;
 
     if (!globeLightingEnabled) {
-      if (globeLightingRef.current) {
-        const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, group } =
-          globeLightingRef.current;
-        const camera = globeEl.current?.camera?.();
-        if (camera) {
-          camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
-        }
-        if (group && group.parent) {
-          group.parent.remove(group);
-        }
-        globeLightingRef.current?.innerGlow?.geometry?.dispose();
-        globeLightingRef.current?.innerGlow?.material?.dispose();
-        globeLightingRef.current = null;
-      }
+      teardownGlobeLighting(globeLightingRef, globeEl.current?.camera?.());
       return true;
     }
 
     let justCreatedLighting = false;
 
     if (!globeLightingRef.current) {
-      justCreatedLighting = true;
       const camera = globeEl.current?.camera?.();
       if (!camera) return false;
-      scene.add(camera);
-
-      const group = new THREE.Group();
-      group.name = "globe-accent-lighting";
-
-      const keyLight = new THREE.DirectionalLight(0xffffff, 1);
-      keyLight.name = "globe-key-light";
-      keyLight.position.set(-3.5, 2.4, 4.2);
-
-      const rimLight = new THREE.DirectionalLight(0x78a8ff, 1);
-      rimLight.name = "globe-rim-light";
-      rimLight.position.set(3.8, 1.3, -3.6);
-
-      const fillLight = new THREE.HemisphereLight(0x9cc4ff, 0x020617, 1);
-      fillLight.name = "globe-fill-light";
-      fillLight.position.set(0, 2.2, 0);
-
-      const studioLight = new THREE.AmbientLight(0xbfdcff, 1);
-      studioLight.name = "globe-studio-ambient";
-
-      const studioLeft = new THREE.DirectionalLight(0xffffff, 1);
-      studioLeft.name = "globe-studio-left";
-      studioLeft.position.set(-4.5, 2.5, 3.5);
-
-      const studioRight = new THREE.DirectionalLight(0x9fd2ff, 1);
-      studioRight.name = "globe-studio-right";
-      studioRight.position.set(4.5, -1.2, 2.8);
-
-      const glowSegments = perfProfile?.isMobile
-        ? PERFORMANCE.innerGlowSegments.mobile
-        : PERFORMANCE.innerGlowSegments.desktop;
-      const innerGlow = new THREE.Mesh(
-        new THREE.SphereGeometry(114.0, glowSegments, glowSegments),
-        createGlowMaterial()
-      );
-      innerGlow.name = "globe-inner-glow";
-      innerGlow.position.set(0, 0, 0);
-      innerGlow.renderOrder = -1;
-
-      group.add(innerGlow);
-      scene.add(group);
-
-      camera.add(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
-
-      globeLightingRef.current = {
-        group,
-        keyLight,
-        rimLight,
-        fillLight,
-        studioLight,
-        studioLeft,
-        studioRight,
-        innerGlow,
-      };
+      globeLightingRef.current = createGlobeLightingRig(scene, camera, perfProfile?.isMobile);
+      justCreatedLighting = true;
     }
 
-    const { keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight, innerGlow } =
-      globeLightingRef.current;
+    applyGlobeLightParameters(
+      globeLightingRef.current,
+      UI_COLORS,
+      perfProfile?.isMobile,
+      safeColor
+    );
 
-    const isMobile = perfProfile?.isMobile;
-    const lightScale = isMobile ? PERFORMANCE.mobileLightScale : 1;
-
-    // Flat nocturnal globe: only key, fill, studio and inner glow light the polygons.
-    rimLight.visible = false;
-    studioLight.visible = true;
-    studioLeft.visible = false;
-    studioRight.visible = false;
-    innerGlow.visible = true;
-
-    // globe.gl's own ambient + directional lights stay as they are. They used
-    // to be zeroed here, but only when the rig was rebuilt *after* globe.gl had
-    // added them, i.e. on a live rebuild and never on a fresh load: the
-    // globe then looked darker than after a refresh.
-
-    // Brighter uniform ambient so country polygons read on the flat dark globe.
-    keyLight.intensity = 0.28 * lightScale;
-    keyLight.position.set(-3.5, 2.4, 4.2);
-    rimLight.intensity = 0.28 * lightScale;
-    rimLight.position.set(3.8, 1.3, -3.6);
-    fillLight.intensity = 0.92 * lightScale;
-    studioLight.intensity = 0.62 * lightScale;
-    studioLeft.intensity = 0.15 * lightScale;
-    studioLeft.position.set(-4.5, 2.5, 3.5);
-    studioRight.intensity = 0.15 * lightScale;
-    studioRight.position.set(4.5, -1.2, 2.8);
-
-    rimLight.color.set(safeColor(UI_COLORS.lightingRim));
-    fillLight.color.set(safeColor(UI_COLORS.lightingFill));
-    fillLight.groundColor.set(safeColor(UI_COLORS.lightingGround));
-    studioLight.color.set(safeColor(UI_COLORS.lightingStudio));
-    studioLeft.color.set(safeColor(UI_COLORS.lightingLeft));
-    studioRight.color.set(safeColor(UI_COLORS.lightingRight));
-
-    const glowColorHex = Number(UI_COLORS.glowColorHex) || 0x3a76f0;
-    const glowPower = Number(UI_COLORS.glowPower) || 1.2;
-    const glowCoef = Number(UI_COLORS.glowCoef) || 0.08;
-
-    targetGlowColorRef.current.setHex(glowColorHex);
-    targetGlowPowerRef.current = glowPower;
-    targetGlowCoefRef.current = glowCoef;
-
-    if (justCreatedLighting && innerGlow.material?.uniforms) {
-      const u = innerGlow.material.uniforms;
-      u.glowColor.value.copy(targetGlowColorRef.current);
-      u.power.value = glowPower;
-      u.coef.value = glowCoef;
-    }
+    syncGlowTargets(
+      UI_COLORS,
+      targetGlowColorRef,
+      targetGlowPowerRef,
+      targetGlowCoefRef,
+      globeLightingRef.current.innerGlow,
+      justCreatedLighting
+    );
 
     return true;
   }, [globeLightingEnabled, UI_COLORS, perfProfile?.isMobile, safeColor, globeEl]);
@@ -227,7 +251,7 @@ export function useGlobeLighting({
         if (camera) {
           camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
         }
-        if (group && group.parent) {
+        if (group?.parent) {
           group.parent.remove(group);
         }
         globeLightingRef.current?.innerGlow?.geometry?.dispose();

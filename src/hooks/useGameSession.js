@@ -8,6 +8,130 @@ import { nextTrainingTarget } from "../services/countryStats";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 import { normalizeString } from "../utils/utils";
 
+function resolveTrailCountry({
+  direction,
+  selectedCountry,
+  navigationTrailRef,
+  navigationTrailIndexRef,
+  foundList,
+  getClosestUnfound,
+}) {
+  let trail = navigationTrailRef.current;
+  let trailIndex = navigationTrailIndexRef.current;
+
+  if (trail[trailIndex] !== selectedCountry) {
+    trail = [selectedCountry];
+    trailIndex = 0;
+    navigationTrailRef.current = trail;
+    navigationTrailIndexRef.current = trailIndex;
+  }
+
+  if (direction === "prev" && trailIndex > 0) {
+    navigationTrailIndexRef.current = trailIndex - 1;
+    return trail[trailIndex - 1];
+  }
+
+  if (direction === "next" && trailIndex < trail.length - 1) {
+    navigationTrailIndexRef.current = trailIndex + 1;
+    return trail[trailIndex + 1];
+  }
+
+  const excluded = Array.from(new Set([...foundList, ...trail, selectedCountry]));
+  const nextCountry = getClosestUnfound(selectedCountry, excluded);
+
+  if (nextCountry) {
+    if (direction === "prev") {
+      navigationTrailRef.current = [nextCountry, ...trail];
+      navigationTrailIndexRef.current = 0;
+    } else {
+      navigationTrailRef.current = [...trail.slice(0, trailIndex + 1), nextCountry];
+      navigationTrailIndexRef.current = trailIndex + 1;
+    }
+  }
+
+  return nextCountry;
+}
+
+function focusExternalInput(extInputRef) {
+  if (extInputRef?.current && document.activeElement !== extInputRef.current) {
+    setTimeout(() => extInputRef.current?.focus(), FEEDBACK_TIMING.focusKeyboardMs);
+  }
+}
+
+function handleDebugInput(inputVal, activeDataMap, setFoundList, setIsGameOver) {
+  if (!import.meta.env.DEV) return false;
+  if (inputVal === "WIN100") return (setFoundList(Object.keys(activeDataMap)), true);
+  if (inputVal === "LOSE100") return (setIsGameOver(true), true);
+  return false;
+}
+
+function resolveCapitalString(mapped, lang) {
+  if (!mapped) return null;
+  const val = lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital;
+  return val ? normalizeString(val) : null;
+}
+
+function resolveCountryNameString(mapped, adminKey, lang) {
+  if (!mapped) return normalizeString(adminKey);
+  const val =
+    lang === "fr" ? mapped.name_fr || mapped.name_en || adminKey : mapped.name_en || adminKey;
+  return normalizeString(val);
+}
+
+function isInputMatchingCountry({ adminKey, mapped, lang, mode, normalizedInput }) {
+  const config = getActiveModeConfig(mode);
+  if (config.targetCheck === "capital") {
+    const matchCapital = resolveCapitalString(mapped, lang);
+    return Boolean(matchCapital && matchCapital === normalizedInput);
+  }
+  const matchName = resolveCountryNameString(mapped, adminKey, lang);
+  const aliases = mapped?.aliases || [];
+  return (
+    matchName === normalizedInput ||
+    aliases.some((alias) => normalizeString(alias) === normalizedInput)
+  );
+}
+
+function findMatchingCountryKey({ keys, activeDataMap, lang, mode, normalizedInput }) {
+  for (const adminKey of keys) {
+    const mapped = Object.hasOwn(activeDataMap, adminKey) ? activeDataMap[adminKey] : null;
+    if (isInputMatchingCountry({ adminKey, mapped, lang, mode, normalizedInput })) {
+      return adminKey;
+    }
+  }
+  return null;
+}
+
+function checkSpecificCountryMatch({ mapped, lang, mode, normalizedInput }) {
+  const config = getActiveModeConfig(mode);
+  if (config.targetCheck === "capital") {
+    const matchCapital = resolveCapitalString(mapped, lang);
+    return Boolean(matchCapital && matchCapital === normalizedInput);
+  }
+  const matchName =
+    lang === "fr" ? normalizeString(mapped.name_fr) : normalizeString(mapped.name_en);
+  const aliases = mapped.aliases || [];
+  return (
+    matchName === normalizedInput ||
+    aliases.some((alias) => normalizeString(alias) === normalizedInput)
+  );
+}
+
+function handleGuessErrorFeedback({
+  selectedCountry,
+  registerMistake,
+  triggerGlobeFeedback,
+  setPopupError,
+}) {
+  registerMistake();
+  triggerGlobeFeedback(selectedCountry, { isError: true, isSuccess: false });
+  setPopupError(true);
+  setTimeout(() => {
+    triggerGlobeFeedback(selectedCountry, { isError: false, isSuccess: false });
+    setPopupError(false);
+  }, FEEDBACK_TIMING.flashMs);
+}
+
 export function useGameSession({
   mode,
   allCountryKeys,
@@ -99,7 +223,7 @@ export function useGameSession({
       // Entraînement ciblé : on suit l'ordre du pool (moins maîtrisés d'abord), pas la proximité.
       if (trainingPool) return nextTrainingTarget(trainingPool, currentFound);
       const c1 = activeDataMap[fromAdmin];
-      if (!c1 || c1.lat === undefined) return null;
+      if (c1?.lat === undefined) return null;
 
       const sameRegionList = [];
       const otherRegionList = [];
@@ -145,7 +269,10 @@ export function useGameSession({
   const navigateFocus = useCallback(
     (direction) => {
       const unfoundKeys = allCountryKeys.filter(
-        (k) => !foundList.includes(k) && activeDataMap[k]?.lat !== undefined
+        (k) =>
+          !foundList.includes(k) &&
+          Object.hasOwn(activeDataMap, k) &&
+          activeDataMap[k]?.lat !== undefined
       );
       if (unfoundKeys.length === 0) return;
 
@@ -156,38 +283,14 @@ export function useGameSession({
         nextCountry = direction === "prev" ? unfoundKeys[unfoundKeys.length - 1] : unfoundKeys[0];
         resetNavigationTrail(nextCountry);
       } else {
-        let trail = navigationTrailRef.current;
-        let trailIndex = navigationTrailIndexRef.current;
-
-        if (trail[trailIndex] !== selectedCountry) {
-          trail = [selectedCountry];
-          trailIndex = 0;
-          navigationTrailRef.current = trail;
-          navigationTrailIndexRef.current = trailIndex;
-        }
-
-        if (direction === "prev" && trailIndex > 0) {
-          nextCountry = trail[trailIndex - 1];
-          navigationTrailIndexRef.current = trailIndex - 1;
-        } else if (direction === "next" && trailIndex < trail.length - 1) {
-          nextCountry = trail[trailIndex + 1];
-          navigationTrailIndexRef.current = trailIndex + 1;
-        } else {
-          const excludedForNavigation = Array.from(
-            new Set([...foundList, ...trail, selectedCountry])
-          );
-          nextCountry = getClosestUnfound(selectedCountry, excludedForNavigation);
-
-          if (nextCountry) {
-            if (direction === "prev") {
-              navigationTrailRef.current = [nextCountry, ...trail];
-              navigationTrailIndexRef.current = 0;
-            } else {
-              navigationTrailRef.current = [...trail.slice(0, trailIndex + 1), nextCountry];
-              navigationTrailIndexRef.current = trailIndex + 1;
-            }
-          }
-        }
+        nextCountry = resolveTrailCountry({
+          direction,
+          selectedCountry,
+          navigationTrailRef,
+          navigationTrailIndexRef,
+          foundList,
+          getClosestUnfound,
+        });
       }
 
       if (!nextCountry) return;
@@ -195,12 +298,7 @@ export function useGameSession({
       setSelectedCountry(nextCountry);
       setPopupError(false);
       setPopupWarning(false);
-
-      if (extInputRef && extInputRef.current && document.activeElement !== extInputRef.current) {
-        setTimeout(() => {
-          if (extInputRef.current) extInputRef.current.focus();
-        }, FEEDBACK_TIMING.focusKeyboardMs);
-      }
+      focusExternalInput(extInputRef);
     },
     [
       selectedCountry,
@@ -243,7 +341,7 @@ export function useGameSession({
       );
       setXpResult(res);
 
-      if (res && res.newlyUnlockedBadges && res.newlyUnlockedBadges.length > 0) {
+      if (res?.newlyUnlockedBadges?.length > 0) {
         res.newlyUnlockedBadges.forEach((chId) => {
           const chObj = CHALLENGES.find((c) => c.id === chId);
           if (chObj) {
@@ -378,8 +476,7 @@ export function useGameSession({
             navigationTrailRef.current = nextCountry ? [guessedKey, nextCountry] : [guessedKey];
             navigationTrailIndexRef.current = nextCountry ? 1 : 0;
             if (
-              extInputRef &&
-              extInputRef.current &&
+              extInputRef?.current &&
               effectiveKeyboardMode &&
               document.activeElement !== extInputRef.current
             ) {
@@ -416,16 +513,8 @@ export function useGameSession({
 
   const handleInput = useCallback(
     (inputVal) => {
-      const isDebug = import.meta.env.DEV;
-      if (isDebug) {
-        if (inputVal === "WIN100") {
-          setFoundList(Object.keys(activeDataMap));
-          return true;
-        }
-        if (inputVal === "LOSE100") {
-          setIsGameOver(true);
-          return true;
-        }
+      if (handleDebugInput(inputVal, activeDataMap, setFoundList, setIsGameOver)) {
+        return true;
       }
 
       if (!isPlaying && mode !== "learn") setIsPlaying(true);
@@ -433,55 +522,26 @@ export function useGameSession({
 
       const normalizedInput = normalizeString(inputVal);
       if (!normalizedInput) return false;
-      let matchFound = null;
 
-      for (const adminKey of trainingPool ?? Object.keys(activeDataMap)) {
-        const mapped = activeDataMap[adminKey];
-        let matchName;
-        let matchCapital = null;
-        const aliases = mapped?.aliases || [];
+      const candidateKeys = trainingPool ?? Object.keys(activeDataMap);
+      const matchFound = findMatchingCountryKey({
+        keys: candidateKeys,
+        activeDataMap,
+        lang,
+        mode,
+        normalizedInput,
+      });
 
-        if (mapped) {
-          matchName =
-            lang === "fr"
-              ? normalizeString(mapped.name_fr || mapped.name_en || adminKey)
-              : normalizeString(mapped.name_en || adminKey);
-          matchCapital =
-            lang === "fr" && mapped.capital_fr
-              ? normalizeString(mapped.capital_fr)
-              : mapped.capital
-                ? normalizeString(mapped.capital)
-                : null;
-        } else {
-          matchName = normalizeString(adminKey);
-        }
-
-        const config = getActiveModeConfig(mode);
-        if (config.targetCheck === "capital") {
-          if (matchCapital && matchCapital === normalizedInput) {
-            matchFound = adminKey;
-            break;
-          }
-        } else {
-          if (
-            matchName === normalizedInput ||
-            aliases.some((alias) => normalizeString(alias) === normalizedInput)
-          ) {
-            matchFound = adminKey;
-            break;
-          }
-        }
+      if (!matchFound) {
+        registerMistake();
+        return "ERROR";
       }
 
-      if (matchFound) {
-        if (foundList.includes(matchFound) || successPendingRef.current.has(matchFound)) {
-          return "ALREADY_FOUND";
-        }
-        handleSuccessfulGuess(matchFound);
-        return "SUCCESS";
+      if (foundList.includes(matchFound) || successPendingRef.current.has(matchFound)) {
+        return "ALREADY_FOUND";
       }
-      registerMistake();
-      return "ERROR";
+      handleSuccessfulGuess(matchFound);
+      return "SUCCESS";
     },
     [
       activeDataMap,
@@ -499,56 +559,39 @@ export function useGameSession({
   const specificCountryGuess = useCallback(
     (inputVal) => {
       if (!selectedCountry) return false;
-      const mapped = activeDataMap[selectedCountry];
+      const mapped = Object.hasOwn(activeDataMap, selectedCountry)
+        ? activeDataMap[selectedCountry]
+        : null;
       if (!mapped) return false;
 
       if (!isPlaying && mode !== "learn") setIsPlaying(true);
 
       const normalizedInput = normalizeString(inputVal);
-      const matchName =
-        lang === "fr" ? normalizeString(mapped.name_fr) : normalizeString(mapped.name_en);
-      const matchCapital =
-        lang === "fr" && mapped.capital_fr
-          ? normalizeString(mapped.capital_fr)
-          : mapped.capital
-            ? normalizeString(mapped.capital)
-            : null;
-      const aliases = mapped.aliases || [];
-
-      const config = getActiveModeConfig(mode);
-      let isSuccessVal;
-      if (config.targetCheck === "capital") {
-        isSuccessVal = matchCapital && matchCapital === normalizedInput;
-      } else {
-        isSuccessVal =
-          matchName === normalizedInput ||
-          aliases.some((alias) => normalizeString(alias) === normalizedInput);
-      }
+      const isSuccessVal = checkSpecificCountryMatch({ mapped, lang, mode, normalizedInput });
 
       if (!isSuccessVal && successPendingRef.current.has(selectedCountry)) {
         queuedGuessRef.current = { from: selectedCountry, value: inputVal };
         return "QUEUED";
       }
 
-      if (isSuccessVal) {
-        if (foundList.includes(selectedCountry) || successPendingRef.current.has(selectedCountry)) {
-          setPopupWarning(true);
-          setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
-          return "ALREADY_FOUND";
-        }
-
-        handleSuccessfulGuess(selectedCountry);
-        return "SUCCESS";
-      } else {
-        registerMistake();
-        triggerGlobeFeedback(selectedCountry, { isError: true, isSuccess: false });
-        setPopupError(true);
-        setTimeout(() => {
-          triggerGlobeFeedback(selectedCountry, { isError: false, isSuccess: false });
-          setPopupError(false);
-        }, FEEDBACK_TIMING.flashMs);
+      if (!isSuccessVal) {
+        handleGuessErrorFeedback({
+          selectedCountry,
+          registerMistake,
+          triggerGlobeFeedback,
+          setPopupError,
+        });
         return "ERROR";
       }
+
+      if (foundList.includes(selectedCountry) || successPendingRef.current.has(selectedCountry)) {
+        setPopupWarning(true);
+        setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
+        return "ALREADY_FOUND";
+      }
+
+      handleSuccessfulGuess(selectedCountry);
+      return "SUCCESS";
     },
     [
       activeDataMap,
@@ -585,12 +628,8 @@ export function useGameSession({
           lang === "fr"
             ? normalizeString(mapped.name_fr || mapped.name_en || adminKey)
             : normalizeString(mapped.name_en || adminKey);
-        const matchCapital =
-          lang === "fr" && mapped.capital_fr
-            ? normalizeString(mapped.capital_fr)
-            : mapped.capital
-              ? normalizeString(mapped.capital)
-              : null;
+        const capitalRaw = lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital;
+        const matchCapital = capitalRaw ? normalizeString(capitalRaw) : null;
         const aliases = mapped.aliases || [];
 
         if (

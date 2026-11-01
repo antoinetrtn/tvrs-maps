@@ -5,8 +5,9 @@
  */
 
 class PerfTracker {
+  maxSamples = 2000;
+
   constructor() {
-    this.maxSamples = 2000;
     this.reset();
   }
 
@@ -21,7 +22,7 @@ class PerfTracker {
   }
 
   getHeapBytes() {
-    if (typeof window !== "undefined" && window.performance && window.performance.memory) {
+    if (typeof window !== "undefined" && window.performance?.memory) {
       return window.performance.memory.usedJSHeapSize || 0;
     }
     return 0;
@@ -87,7 +88,7 @@ class PerfTracker {
     const sum = sorted.reduce((acc, val) => acc + val, 0);
     const mean = sum / sorted.length;
     const min = sorted[0];
-    const max = sorted[sorted.length - 1];
+    const max = sorted.at(-1);
     const p95Idx = Math.min(Math.floor(sorted.length * 0.95), sorted.length - 1);
     const p95 = sorted[p95Idx];
     return {

@@ -18,10 +18,10 @@ const isFeatureArea = (item) => item?.type === "mountain_range" || item?.type ==
 let maskData = null;
 let maskTexture = null;
 
-let lastSelectedKey = undefined;
-let lastFoundKeysHash = undefined;
-let lastDataMap = undefined;
-let memberMap = undefined;
+let lastSelectedKey;
+let lastFoundKeysHash;
+let lastDataMap;
+let memberMap;
 let memberBase = null;
 let hoverKey = null;
 let hoverSaved = null; // [idx, previousValue] pairs restored when the hover moves
@@ -106,6 +106,53 @@ export function getFeatureCells(key, item) {
   return cells;
 }
 
+function toFoundKeysArray(foundKeys) {
+  if (Array.isArray(foundKeys)) {
+    return foundKeys;
+  }
+  if (foundKeys instanceof Set) {
+    return Array.from(foundKeys);
+  }
+  return [];
+}
+
+function hashFoundKeys(foundArray) {
+  return foundArray
+    .slice()
+    .sort((a, b) => a.localeCompare(b))
+    .join("|");
+}
+
+function writeFoundFeatureCells(fKey, selectedKey, activeDataMap) {
+  if (fKey === selectedKey) {
+    return;
+  }
+  const item = activeDataMap[fKey] || riversMountainsDataMap[fKey];
+  if (!item) {
+    return;
+  }
+  const cells = getFeatureCells(fKey, item);
+  for (const cell of cells) {
+    maskData[cell] = FEATURE_FOUND_VALUE;
+  }
+}
+
+function writeSelectedFeatureCells(selectedKey, activeDataMap) {
+  if (!selectedKey) {
+    return;
+  }
+  const item = activeDataMap[selectedKey] || riversMountainsDataMap[selectedKey];
+  if (!item) {
+    return;
+  }
+  const cells = getFeatureCells(selectedKey, item);
+  if (isFeatureArea(item)) {
+    writeAreaOutline(cells);
+  } else {
+    writeLineHalo(cells);
+  }
+}
+
 /**
  * Rebuilds the feature highlight mask only when inputs change.
  * - Value 40 for FOUND features
@@ -117,15 +164,8 @@ export function setFeatureMask({
   foundKeys = null,
   dataMap = riversMountainsDataMap,
 } = {}) {
-  const foundArray = Array.isArray(foundKeys)
-    ? foundKeys
-    : foundKeys instanceof Set
-      ? Array.from(foundKeys)
-      : [];
-  const foundHash = foundArray
-    .slice()
-    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-    .join("|");
+  const foundArray = toFoundKeysArray(foundKeys);
+  const foundHash = hashFoundKeys(foundArray);
 
   if (
     selectedKey === lastSelectedKey &&
@@ -145,28 +185,18 @@ export function setFeatureMask({
   maskData.set(getMemberBase(activeDataMap));
 
   // 1. Write FOUND features (value 40)
-  for (let f = 0; f < foundArray.length; f++) {
-    const fKey = foundArray[f];
-    if (fKey === selectedKey) continue;
-    const item = activeDataMap[fKey] || riversMountainsDataMap[fKey];
-    if (!item) continue;
-    const cells = getFeatureCells(fKey, item);
-    for (let c = 0; c < cells.length; c++) {
-      maskData[cells[c]] = FEATURE_FOUND_VALUE;
-    }
+  for (const found of foundArray) {
+    writeFoundFeatureCells(found, selectedKey, activeDataMap);
   }
 
   // 2. Write SELECTED feature: river = amber line + outward halo; massif = outline + inner halo.
-  const item = selectedKey && (activeDataMap[selectedKey] || riversMountainsDataMap[selectedKey]);
-  if (item) {
-    const cells = getFeatureCells(selectedKey, item);
-    if (isFeatureArea(item)) writeAreaOutline(cells);
-    else writeLineHalo(cells);
-  }
+  writeSelectedFeatureCells(selectedKey, activeDataMap);
 
   const pendingHover = hoverKey;
   hoverKey = null;
-  if (pendingHover) setFeatureHover(pendingHover, activeDataMap);
+  if (pendingHover) {
+    setFeatureHover(pendingHover, activeDataMap);
+  }
   maskTexture.needsUpdate = true;
 }
 
@@ -176,22 +206,38 @@ function gameFeatureEntries(dataMap) {
   return own.length ? own : Object.entries(riversMountainsDataMap);
 }
 
+function dilateCellToMemberBase(base, idx, W, H) {
+  const y = Math.floor(idx / W);
+  const x = idx % W;
+  for (let dy = -1; dy <= 1; dy++) {
+    const ny = y + dy;
+    if (ny < 0 || ny >= H) {
+      continue;
+    }
+    const rowOffset = ny * W;
+    for (let dx = -1; dx <= 1; dx++) {
+      base[rowOffset + ((x + dx + W) % W)] = FEATURE_MEMBER_VALUE;
+    }
+  }
+}
+
+function stampFeatureMemberBase(base, key, item, W, H) {
+  const cells = getFeatureCells(key, item);
+  for (const cell of cells) {
+    dilateCellToMemberBase(base, cell, W, H);
+  }
+}
+
 /** Membership layer (value 20), dilated by one cell to cover the stamped river banks. */
 function getMemberBase(dataMap) {
-  if (memberBase && memberMap === dataMap) return memberBase;
+  if (memberBase && memberMap === dataMap) {
+    return memberBase;
+  }
   const W = FEATURE_MASK_WIDTH;
   const H = FEATURE_MASK_HEIGHT;
   const base = new Uint8Array(W * H);
   for (const [key, item] of gameFeatureEntries(dataMap)) {
-    for (const idx of getFeatureCells(key, item)) {
-      const y = Math.floor(idx / W);
-      const x = idx % W;
-      for (let dy = -1; dy <= 1; dy++) {
-        const ny = y + dy;
-        if (ny < 0 || ny >= H) continue;
-        for (let dx = -1; dx <= 1; dx++) base[ny * W + ((x + dx + W) % W)] = FEATURE_MEMBER_VALUE;
-      }
-    }
+    stampFeatureMemberBase(base, key, item, W, H);
   }
   memberBase = base;
   memberMap = dataMap;
@@ -205,7 +251,7 @@ export function setFeatureHover(key, dataMap = lastDataMap) {
   if (hoverSaved) for (const [idx, v] of hoverSaved) maskData[idx] = v;
   hoverSaved = null;
   hoverKey = next;
-  const item = next && ((dataMap || {})[next] || riversMountainsDataMap[next]);
+  const item = next && (dataMap?.[next] || riversMountainsDataMap[next]);
   if (item && next !== lastSelectedKey) {
     const cells = getFeatureCells(next, item);
     const line = isFeatureArea(item) ? areaShape(cells).edge : cells;
@@ -253,49 +299,91 @@ function writeLineHalo(cells) {
   }
 }
 
+function getRing8Neighbours(idx) {
+  const W = FEATURE_MASK_WIDTH;
+  const y = Math.floor(idx / W);
+  const x = idx % W;
+  const out = [];
+  for (let dy = -1; dy <= 1; dy++) {
+    const ny = y + dy;
+    if (ny < 0 || ny >= FEATURE_MASK_HEIGHT) {
+      continue;
+    }
+    const rowOffset = ny * W;
+    for (let dx = -1; dx <= 1; dx++) {
+      out.push(rowOffset + ((x + dx + W) % W));
+    }
+  }
+  return out;
+}
+
+function getArea4Neighbours(idx) {
+  const W = FEATURE_MASK_WIDTH;
+  const y = Math.floor(idx / W);
+  const x = idx % W;
+  const out = [];
+  if (y > 0) {
+    out.push(idx - W);
+  }
+  if (y < FEATURE_MASK_HEIGHT - 1) {
+    out.push(idx + W);
+  }
+  out.push(y * W + ((x + W - 1) % W), y * W + ((x + 1) % W));
+  return out;
+}
+
+function dilateCellSet(set) {
+  const grown = new Set(set);
+  for (const idx of set) {
+    for (const n of getRing8Neighbours(idx)) {
+      grown.add(n);
+    }
+  }
+  return grown;
+}
+
+function erodeCellSet(set) {
+  const kept = new Set();
+  for (const idx of set) {
+    if (getRing8Neighbours(idx).every((n) => set.has(n))) {
+      kept.add(idx);
+    }
+  }
+  return kept;
+}
+
+function morphCloseCells(cells) {
+  let inside = new Set(cells);
+  for (let k = 0; k < 2; k++) {
+    inside = dilateCellSet(inside);
+  }
+  for (let k = 0; k < 2; k++) {
+    inside = erodeCellSet(inside);
+  }
+  for (const c of cells) {
+    inside.add(c);
+  }
+  return inside;
+}
+
+function findAreaEdges(inside) {
+  const edge = [];
+  for (const idx of inside) {
+    if (getArea4Neighbours(idx).some((n) => !inside.has(n))) {
+      edge.push(idx);
+    }
+  }
+  return edge;
+}
+
 /**
  * Mountain band: like the country selection, a thin 1-cell amber border (255) on
  * the band's edge and the halo rings walked INWARD, so the relief stays readable.
  */
 function areaShape(cells) {
-  const W = FEATURE_MASK_WIDTH;
-  // Morphological closing (8-neighbour dilate x2, erode x2): the stamped spurs are
-  // ragged, the outline follows the massif's silhouette instead of every speckle.
-  const ring8 = (idx) => {
-    const y = Math.floor(idx / W);
-    const x = idx % W;
-    const out = [];
-    for (let dy = -1; dy <= 1; dy++) {
-      const ny = y + dy;
-      if (ny < 0 || ny >= FEATURE_MASK_HEIGHT) continue;
-      for (let dx = -1; dx <= 1; dx++) out.push(ny * W + ((x + dx + W) % W));
-    }
-    return out;
-  };
-  let inside = new Set(cells);
-  for (let k = 0; k < 2; k++) {
-    const grown = new Set(inside);
-    for (const idx of inside) for (const n of ring8(idx)) grown.add(n);
-    inside = grown;
-  }
-  for (let k = 0; k < 2; k++) {
-    const kept = new Set();
-    for (const idx of inside) if (ring8(idx).every((n) => inside.has(n))) kept.add(idx);
-    inside = kept;
-  }
-  for (const c of cells) inside.add(c);
-  const nb = (idx) => {
-    const y = Math.floor(idx / W);
-    const x = idx % W;
-    const out = [];
-    if (y > 0) out.push(idx - W);
-    if (y < FEATURE_MASK_HEIGHT - 1) out.push(idx + W);
-    out.push(y * W + ((x + W - 1) % W), y * W + ((x + 1) % W));
-    return out;
-  };
-  const edge = [];
-  for (const idx of inside) if (nb(idx).some((n) => !inside.has(n))) edge.push(idx);
-  return { inside, edge, nb };
+  const inside = morphCloseCells(cells);
+  const edge = findAreaEdges(inside);
+  return { inside, edge, nb: getArea4Neighbours };
 }
 
 function writeAreaOutline(cells) {

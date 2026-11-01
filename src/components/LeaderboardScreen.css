@@ -13,6 +13,9 @@
 }
 
 .leaderboard-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: var(--spacing-xs) !important;
   padding-bottom: var(--spacing-xs) !important;
 }
@@ -239,13 +242,6 @@
 
 .evo-equal {
   color: var(--text-muted);
-}
-
-/* Make sure header styling fits tabs nicely */
-.leaderboard-panel .panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 @media (max-width: 768px) {

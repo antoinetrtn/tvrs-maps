@@ -55,7 +55,7 @@ export function pickRiverOrRelief(gameDataMap, lng, lat) {
 export function pickNearestByDegrees(gameDataMap, lng, lat, maxDist) {
   let best = null;
   Object.entries(gameDataMap).forEach(([admin, data]) => {
-    if (!data || data.lat === undefined || data.lng === undefined) return;
+    if (data?.lat === undefined || data.lng === undefined) return;
     const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
     if (!best || dist < best.dist) best = { admin, dist };
   });

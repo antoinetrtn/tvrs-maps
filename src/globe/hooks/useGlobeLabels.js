@@ -33,6 +33,183 @@ function getLabelRadius({ isDepartmentMode, isLearnMode, zoomLevel, isMobile }) 
   return getLabelRenderRadius(zoomLevel, isMobile);
 }
 
+const LEARN_SUBMODE_NAMES = {
+  capitals: "capitals",
+  us_states: "us_states",
+  departments: "departments",
+};
+
+function getLearnModeName(learnSubMode) {
+  if (learnSubMode && Object.hasOwn(LEARN_SUBMODE_NAMES, learnSubMode)) {
+    return LEARN_SUBMODE_NAMES[learnSubMode];
+  }
+  return "countries";
+}
+
+function getLabelCoords(data, key, ctxCanonical) {
+  const canonical = ctxCanonical[key] || getCanonicalPosition(data, null);
+  const lat = data.lat ?? canonical?.lat ?? 0;
+  const lng = data.lng ?? canonical?.lng ?? 0;
+  return { lat, lng };
+}
+
+function getCenterDistance(lat, lng, pov) {
+  let dLng = Math.abs(lng - pov.lng);
+  if (dLng > 180) dLng = 360 - dLng;
+  return Math.hypot(dLng, lat - pov.lat);
+}
+
+function isCachedLabelMatch(cached, opts) {
+  if (!cached) return false;
+  return (
+    cached.isSelected === opts.isSelected &&
+    cached.lang === opts.lang &&
+    cached.isFound === opts.isFound &&
+    cached.globalMode === opts.mode &&
+    cached.mode === opts.modeName &&
+    cached.learnShowCapitals === opts.learnShowCapitals &&
+    cached.hideCountryLine === opts.hideCountryLine &&
+    cached.isError === (opts.isSelected && opts.isError) &&
+    cached.isPanelOpen === opts.isPanelOpen
+  );
+}
+
+function buildNewLabel({
+  key,
+  data,
+  useLat,
+  useLng,
+  lang,
+  size,
+  distToCenter,
+  isSelected,
+  isFound,
+  isError,
+  mode,
+  modeName,
+  learnShowCapitals,
+  hideCountryLine,
+  isPanelOpen,
+}) {
+  return {
+    admin: key,
+    lat: useLat,
+    lng: useLng,
+    country: lang === "fr" ? data.name_fr || key : data.name_en || key,
+    capital: lang === "fr" ? data.capital_fr || data.capital : data.capital,
+    region: data.region,
+    flag: getFlagEmoji(data.iso2),
+    iso2: data.iso2,
+    code: data.code,
+    size,
+    distToCenter,
+    isSelected,
+    isFound,
+    isError: isSelected && isError,
+    globalMode: mode,
+    mode: modeName,
+    learnShowCapitals,
+    hideCountryLine,
+    lang,
+    isPanelOpen,
+  };
+}
+
+function collectHomeScreenLabels(selectedCountry, gameDataMap, mode) {
+  if (!selectedCountry) return [];
+  return [
+    {
+      key: selectedCountry,
+      data: gameDataMap[selectedCountry] || countryDataMap[selectedCountry],
+      modeName: mode,
+    },
+  ];
+}
+
+function collectDepartmentLabels(getLabelSourceKeys, gameDataMap, mode, learnSubMode) {
+  const modeName =
+    mode === "us_states" || learnSubMode === "us_states" ? "us_states" : "departments";
+  return getLabelSourceKeys().map((k) => ({
+    key: k,
+    data: gameDataMap[k],
+    modeName,
+  }));
+}
+
+function collectRiverMountainLabels(getLabelSourceKeys, gameDataMap) {
+  return getLabelSourceKeys().map((k) => ({
+    key: k,
+    data: gameDataMap[k],
+    modeName: "rivers_mountains",
+  }));
+}
+
+function collectLearnLabels(getLabelSourceKeys, gameDataMap, learnSubMode) {
+  const modeName = getLearnModeName(learnSubMode);
+  const hideCountryLine = learnSubMode === "capitals";
+  return getLabelSourceKeys().map((k) => ({
+    key: k,
+    data: gameDataMap[k],
+    modeName,
+    hideCountryLine,
+  }));
+}
+
+function collectStandardPlayLabels(isEndScreen, selectedCountry, foundList, mode) {
+  const keys = isEndScreen
+    ? Object.keys(countryDataMap)
+    : getPlayVisibleCountryKeys(selectedCountry, foundList);
+  return keys.map((k) => ({
+    key: k,
+    data: countryDataMap[k],
+    modeName: mode,
+  }));
+}
+
+function collectLabelsToProcess({
+  isHomeScreen,
+  isDepartmentMode,
+  isRiversMountainsMode,
+  mode,
+  learnSubMode,
+  selectedCountry,
+  gameDataMap,
+  getLabelSourceKeys,
+  isEndScreen,
+  foundList,
+}) {
+  if (isHomeScreen) {
+    return collectHomeScreenLabels(selectedCountry, gameDataMap, mode);
+  }
+  if (isDepartmentMode) {
+    return collectDepartmentLabels(getLabelSourceKeys, gameDataMap, mode, learnSubMode);
+  }
+  if (isRiversMountainsMode) {
+    return collectRiverMountainLabels(getLabelSourceKeys, gameDataMap);
+  }
+  if (mode === "learn") {
+    return collectLearnLabels(getLabelSourceKeys, gameDataMap, learnSubMode);
+  }
+  return collectStandardPlayLabels(isEndScreen, selectedCountry, foundList, mode);
+}
+
+function sliceLabelsToLimit(filtered, mode, isDepartmentMode, perfProfile) {
+  if (mode === "learn") {
+    return filtered.slice(0, getLearnLabelLimit(perfProfile));
+  }
+  if (isDepartmentMode) {
+    const limit = perfProfile?.isMobile ? 28 : 56;
+    return filtered.slice(0, limit);
+  }
+  return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
+}
+
+function sortLabels(a, b) {
+  if (a.isSelected) return -1;
+  if (b.isSelected) return 1;
+  return a.distToCenter - b.distToCenter;
+}
+
 function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx) {
   if (!data) return null;
 
@@ -72,19 +249,8 @@ function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx
   });
   if (zoomLevel > visibilityThreshold) return null;
 
-  // GLOBAL SHAPE RULE — resolve once for distance + label position.
-  // Prioritize data.lat/lng (exact capital/city coordinate defined in data map),
-  // falling back to canonical polygon centroid if data.lat is missing.
-  const fromMap = ctxCanonical[key];
-  const canonical = fromMap || getCanonicalPosition(data, null);
-  const useLat =
-    data.lat !== undefined && data.lat !== null ? data.lat : canonical ? canonical.lat : 0;
-  const useLng =
-    data.lng !== undefined && data.lng !== null ? data.lng : canonical ? canonical.lng : 0;
-
-  let dLng = Math.abs(useLng - pov.lng);
-  if (dLng > 180) dLng = 360 - dLng;
-  const distToCenter = Math.hypot(dLng, useLat - pov.lat);
+  const { lat: useLat, lng: useLng } = getLabelCoords(data, key, ctxCanonical);
+  const distToCenter = getCenterDistance(useLat, useLng, pov);
 
   const labelRadius = getLabelRadius({
     isDepartmentMode,
@@ -98,43 +264,39 @@ function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx
   const cacheKey = `${key}_${modeName}`;
   const cached = labelsCacheRef.current[cacheKey];
   if (
-    cached &&
-    cached.isSelected === isSelected &&
-    cached.lang === lang &&
-    cached.isFound === isFound &&
-    cached.globalMode === mode &&
-    cached.mode === modeName &&
-    cached.learnShowCapitals === learnShowCapitals &&
-    cached.hideCountryLine === hideCountryLine &&
-    cached.isError === (isSelected && isError) &&
-    cached.isPanelOpen === isPanelOpen
+    isCachedLabelMatch(cached, {
+      isSelected,
+      lang,
+      isFound,
+      mode,
+      modeName,
+      learnShowCapitals,
+      hideCountryLine,
+      isError,
+      isPanelOpen,
+    })
   ) {
     cached.distToCenter = distToCenter;
     return cached;
   }
 
-  const newLabel = {
-    admin: key,
-    lat: useLat,
-    lng: useLng,
-    country: lang === "fr" ? data.name_fr || key : data.name_en || key,
-    capital: lang === "fr" ? data.capital_fr || data.capital : data.capital,
-    region: data.region,
-    flag: getFlagEmoji(data.iso2),
-    iso2: data.iso2,
-    code: data.code,
+  const newLabel = buildNewLabel({
+    key,
+    data,
+    useLat,
+    useLng,
+    lang,
     size,
     distToCenter,
     isSelected,
     isFound,
-    isError: isSelected && isError,
-    globalMode: mode,
-    mode: modeName,
+    isError,
+    mode,
+    modeName,
     learnShowCapitals,
     hideCountryLine,
-    lang,
     isPanelOpen,
-  };
+  });
   labelsCacheRef.current[cacheKey] = newLabel;
   return newLabel;
 }
@@ -178,63 +340,18 @@ export function useGlobeLabels({
   const labelsData = useMemo(() => {
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
 
-    const labelsToProcess = [];
-
-    if (isHomeScreen) {
-      if (selectedCountry) {
-        labelsToProcess.push({
-          key: selectedCountry,
-          data: gameDataMap[selectedCountry] || countryDataMap[selectedCountry],
-          modeName: mode,
-        });
-      }
-    } else if (isDepartmentMode) {
-      const modeName =
-        mode === "us_states" || learnSubMode === "us_states" ? "us_states" : "departments";
-      getLabelSourceKeys().forEach((k) => {
-        labelsToProcess.push({
-          key: k,
-          data: gameDataMap[k],
-          modeName,
-        });
-      });
-    } else if (isRiversMountainsMode) {
-      getLabelSourceKeys().forEach((k) => {
-        labelsToProcess.push({
-          key: k,
-          data: gameDataMap[k],
-          modeName: "rivers_mountains",
-        });
-      });
-    } else if (mode === "learn") {
-      const modeName =
-        learnSubMode === "capitals"
-          ? "capitals"
-          : learnSubMode === "us_states"
-            ? "us_states"
-            : learnSubMode === "departments"
-              ? "departments"
-              : "countries";
-      getLabelSourceKeys().forEach((k) => {
-        labelsToProcess.push({
-          key: k,
-          data: gameDataMap[k],
-          modeName,
-          hideCountryLine: learnSubMode === "capitals",
-        });
-      });
-    } else {
-      const keys = isEndScreen
-        ? Object.keys(countryDataMap)
-        : getPlayVisibleCountryKeys(selectedCountry, foundList);
-      keys.forEach((k) => {
-        labelsToProcess.push({
-          key: k,
-          data: countryDataMap[k],
-          modeName: mode,
-        });
-      });
-    }
+    const labelsToProcess = collectLabelsToProcess({
+      isHomeScreen,
+      isDepartmentMode,
+      isRiversMountainsMode,
+      mode,
+      learnSubMode,
+      selectedCountry,
+      gameDataMap,
+      getLabelSourceKeys,
+      isEndScreen,
+      foundList,
+    });
 
     const labelCtx = {
       mode,
@@ -257,22 +374,9 @@ export function useGlobeLabels({
     const filtered = labelsToProcess
       .map((entry) => resolveLabelEntry(entry, labelCtx))
       .filter((d) => d !== null)
-      .sort((a, b) => {
-        if (a.isSelected) return -1;
-        if (b.isSelected) return 1;
-        return a.distToCenter - b.distToCenter;
-      });
+      .sort(sortLabels);
 
-    if (mode === "learn") {
-      const limit = getLearnLabelLimit(perfProfile);
-      return filtered.slice(0, limit);
-    }
-
-    if (isDepartmentMode) {
-      const limit = perfProfile?.isMobile ? 28 : 56;
-      return filtered.slice(0, limit);
-    }
-    return perfProfile?.maxLabels ? filtered.slice(0, perfProfile.maxLabels) : filtered;
+    return sliceLabelsToLimit(filtered, mode, isDepartmentMode, perfProfile);
   }, [
     foundList,
     countrySizes,

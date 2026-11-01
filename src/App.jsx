@@ -43,6 +43,48 @@ import { secureRandomInt } from "./utils/secureRandom";
 const AuthModal = React.lazy(() => import("./components/AuthModal.jsx"));
 const ConfirmationModal = React.lazy(() => import("./components/ConfirmationModal.jsx"));
 
+function readInitialPeacefulMode() {
+  try {
+    const p = localStorage.getItem(STORAGE_KEYS.peacefulMode);
+    if (p !== null) return p === "true";
+    const h = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
+    if (h !== null) return h === "false";
+  } catch {}
+  return false;
+}
+
+function tryFocusGameInput(input) {
+  if (!input || document.activeElement === input) return;
+  try {
+    input.focus({ preventScroll: true });
+  } catch {
+    input.focus();
+  }
+}
+
+function pickRandomHomeKey(activeDataMap) {
+  if (!activeDataMap) return null;
+  const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
+  if (keys.length === 0) return null;
+  const index = secureRandomInt(0, keys.length);
+  return keys[index];
+}
+
+function pickNextAutorotateKey(activeDataMap) {
+  if (!activeDataMap) return null;
+  const freshKeys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
+  if (freshKeys.length === 0) return null;
+  const nextIndex = secureRandomInt(0, freshKeys.length);
+  return freshKeys[nextIndex];
+}
+
+function shouldShowInitialAuthModal(session) {
+  if (isSupabaseConfigured && session === null) {
+    return !isGuestLaunch();
+  }
+  return false;
+}
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home");
   const { showHome, homeExiting } = useScreenExit(currentScreen, EXIT_MS);
@@ -69,18 +111,10 @@ function App() {
   const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
   const prevHomeModeRef = useRef(globeHomeMode);
 
-  const [peacefulMode, setPeacefulModeRaw] = useState(() => {
-    try {
-      const p = localStorage.getItem(STORAGE_KEYS.peacefulMode);
-      if (p !== null) return p === "true";
-      const h = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
-      if (h !== null) return h === "false";
-    } catch {}
-    return false;
-  });
+  const [peacefulMode, setPeacefulMode] = useState(readInitialPeacefulMode);
 
-  const setPeacefulMode = useCallback((value) => {
-    setPeacefulModeRaw(value);
+  const persistPeacefulMode = useCallback((value) => {
+    setPeacefulMode(value);
     try {
       localStorage.setItem(STORAGE_KEYS.peacefulMode, String(value));
       localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(!value));
@@ -88,7 +122,10 @@ function App() {
   }, []);
 
   const hardcoreMode = !peacefulMode;
-  const setHardcoreMode = useCallback((value) => setPeacefulMode(!value), [setPeacefulMode]);
+  const setHardcoreMode = useCallback(
+    (value) => persistPeacefulMode(!value),
+    [persistPeacefulMode]
+  );
 
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -119,10 +156,10 @@ function App() {
   const globeFeedbackApplierRef = useRef(null);
 
   useEffect(() => {
-    if (isSupabaseConfigured && session === null) {
-      if (!isGuestLaunch()) setShowAuthModal(true); // guest mode or Conquête invite link
-    } else if (session) {
+    if (session) {
       setShowAuthModal(false);
+    } else if (shouldShowInitialAuthModal(session)) {
+      setShowAuthModal(true);
     }
   }, [session]);
 
@@ -151,12 +188,9 @@ function App() {
   ) {
     prevActiveDataMapRef.current = activeDataMap;
     prevHomeModeRef.current = globeHomeMode;
-    if (activeDataMap) {
-      const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
-      if (keys.length > 0) {
-        const index = secureRandomInt(0, keys.length);
-        setSelectedCountry(keys[index]);
-      }
+    const randomKey = pickRandomHomeKey(activeDataMap);
+    if (randomKey) {
+      setSelectedCountry(randomKey);
     }
   }
 
@@ -233,15 +267,7 @@ function App() {
 
   const preserveInputFocus = useCallback(() => {
     if (mode === "learn") return;
-    const input = extInputRef.current;
-    if (!input) return;
-    if (document.activeElement !== input) {
-      try {
-        input.focus({ preventScroll: true });
-      } catch {
-        input.focus();
-      }
-    }
+    tryFocusGameInput(extInputRef.current);
   }, [mode]);
 
   const startGame = useCallback(
@@ -259,16 +285,7 @@ function App() {
       setShowResultsTable(false);
       setCurrentScreen("game");
 
-      const refocus = () => {
-        const input = extInputRef.current;
-        if (input && document.activeElement !== input) {
-          try {
-            input.focus({ preventScroll: true });
-          } catch {
-            input.focus();
-          }
-        }
-      };
+      const refocus = () => tryFocusGameInput(extInputRef.current);
       refocus();
       [50, 150, 300].forEach((ms) => setTimeout(refocus, ms));
     },
@@ -306,12 +323,8 @@ function App() {
     }
 
     const interval = setInterval(() => {
-      const freshKeys = Object.keys(activeDataMap).filter(
-        (k) => activeDataMap[k]?.lat !== undefined
-      );
-      if (freshKeys.length === 0) return;
-      const nextIndex = Math.floor(Math.random() * freshKeys.length);
-      setSelectedCountry(freshKeys[nextIndex]);
+      const nextKey = pickNextAutorotateKey(activeDataMap);
+      if (nextKey) setSelectedCountry(nextKey);
     }, HOME_AUTOROTATE_INTERVAL_MS);
 
     return () => {
@@ -463,7 +476,7 @@ function App() {
           hardcoreMode={hardcoreMode}
           setHardcoreMode={setHardcoreMode}
           peacefulMode={peacefulMode}
-          setPeacefulMode={setPeacefulMode}
+          setPeacefulMode={persistPeacefulMode}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}

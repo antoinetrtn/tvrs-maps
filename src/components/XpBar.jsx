@@ -7,7 +7,8 @@ const XpBar = ({ percent = 0, variant = "bar", cells, label, className = "", sty
   const clampedPercent = Number.isFinite(numeric) ? Math.min(100, Math.max(0, numeric)) : 0;
   const roundedPercent = Math.round(clampedPercent);
 
-  const totalCells = Number.isInteger(cells) && cells > 0 ? cells : variant === "mini" ? 8 : 20;
+  const defaultCells = variant === "mini" ? 8 : 20;
+  const totalCells = Number.isInteger(cells) && cells > 0 ? cells : defaultCells;
 
   const filledCells =
     clampedPercent <= 0

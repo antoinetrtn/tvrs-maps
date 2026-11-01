@@ -7,6 +7,8 @@ const Logo = React.memo(({ size = "medium", className = "", variant = "vector" }
     <div className={`logo-container ${size} ${className} variant-${variant}`}>
       <div className="logo-wrapper">
         <svg
+          aria-hidden="true"
+          role="presentation"
           width="100%"
           height="100%"
           viewBox="0 0 5000 3730"

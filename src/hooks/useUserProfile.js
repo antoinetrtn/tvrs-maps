@@ -6,13 +6,20 @@ import {
   getSupabase,
   getUserRecords,
   isSupabaseConfigured,
-  submitLeaderboardScore,
-  upsertProfile,
-  upsertUserRecord,
 } from "../services/supabaseClient";
 import { evaluateGameRewardsAndBadges, getLevelAndProgress } from "../utils/gamification";
 import { secureRandomInt } from "../utils/secureRandom";
 import { generateUUID } from "../utils/utils";
+import {
+  calculateUpdatedRecord,
+  DEFAULT_RECORD,
+  readCachedLocalProfile,
+  syncGameRecordToSupabase,
+  syncLocalProfileToDb,
+  syncRecordsStep,
+  syncRemoteProfileWithLocal,
+  updateLocalScoresAndHistory,
+} from "./userProfileSync";
 
 /**
  * Session that owns the profile. The anonymous account created for Conquête
@@ -34,7 +41,7 @@ export function useUserProfile() {
       const cached = localStorage.getItem("tvrs-user-profile");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed && parsed.id && isUUID(parsed.id)) {
+        if (parsed?.id && isUUID(parsed.id)) {
           return {
             xp: 0,
             level: 1,
@@ -166,125 +173,28 @@ export function useUserProfile() {
         const { data: dbProfile, error: profileErr } = await getProfile(activeUserId);
         if (!isMounted) return;
 
-        let localProfile = {};
-        try {
-          const cached = localStorage.getItem("tvrs-user-profile");
-          if (cached) localProfile = JSON.parse(cached);
-        } catch {}
-
+        const localProfile = readCachedLocalProfile();
         if (profileErr || !dbProfile) {
-          const uploadId = session?.user?.id || userProfile.id;
-          const merged = {
-            ...userProfile,
-            id: uploadId,
-          };
-          await upsertProfile(
-            uploadId,
-            merged.username,
-            merged.avatarId,
-            merged.avatarColor,
-            merged.xp || 0,
-            merged.level || 1,
-            merged.unlockedBadges || []
-          );
-          if (session?.user?.id) {
-            setUserProfile(merged);
-            localStorage.setItem("tvrs-user-profile", JSON.stringify(merged));
-          }
+          await syncLocalProfileToDb({ session, userProfile, setUserProfile });
         } else {
-          const mergedXp = Math.max(dbProfile.xp || 0, localProfile.xp || 0);
-          const computedLevel = getLevelAndProgress(mergedXp).level;
-          const mergedLevel = Math.max(dbProfile.level || 1, computedLevel);
-          const mergedBadges = Array.from(
-            new Set([...(dbProfile.unlocked_badges || []), ...(localProfile.unlockedBadges || [])])
-          );
-
-          const syncedProfile = {
-            id: dbProfile.id,
-            username: dbProfile.username || localProfile.username || userProfile.username,
-            avatarId: dbProfile.avatar_id || localProfile.avatarId || userProfile.avatarId,
-            avatarColor:
-              dbProfile.avatar_color || localProfile.avatarColor || userProfile.avatarColor,
-            xp: mergedXp,
-            level: mergedLevel,
-            unlockedBadges: mergedBadges,
-          };
-
-          await upsertProfile(
-            dbProfile.id,
-            syncedProfile.username,
-            syncedProfile.avatarId,
-            syncedProfile.avatarColor,
-            syncedProfile.xp,
-            syncedProfile.level,
-            syncedProfile.unlockedBadges
-          );
-
-          setUserProfile(syncedProfile);
-          localStorage.setItem("tvrs-user-profile", JSON.stringify(syncedProfile));
+          await syncRemoteProfileWithLocal({
+            dbProfile,
+            localProfile,
+            userProfile,
+            setUserProfile,
+          });
         }
 
         const { data: dbRecords, error: recordsErr } = await getUserRecords(activeUserId);
         if (!isMounted) return;
 
-        const mergedRecords = { ...localRecords };
-
-        if (!recordsErr && dbRecords && dbRecords.length > 0) {
-          dbRecords.forEach((rec) => {
-            const modeKey = rec.game_mode;
-            if (mergedRecords[modeKey]) {
-              const localRec = mergedRecords[modeKey];
-              const dbMaxScore = rec.max_score;
-              const dbBestTime = rec.best_time_seconds;
-              const dbGamesPlayed = rec.games_played || 0;
-
-              let useDb = false;
-              if (dbMaxScore > localRec.maxScore) {
-                useDb = true;
-              } else if (dbMaxScore === localRec.maxScore) {
-                if (
-                  localRec.bestTime === null ||
-                  (dbBestTime !== null && dbBestTime < localRec.bestTime)
-                ) {
-                  useDb = true;
-                }
-              }
-
-              mergedRecords[modeKey] = {
-                maxScore: useDb ? dbMaxScore : localRec.maxScore,
-                bestTime: useDb ? dbBestTime : localRec.bestTime,
-                gamesPlayed: Math.max(localRec.gamesPlayed, dbGamesPlayed),
-              };
-            }
-          });
-
-          for (const [modeKey, record] of Object.entries(mergedRecords)) {
-            if (record.gamesPlayed > 0) {
-              await upsertUserRecord(
-                activeUserId,
-                modeKey,
-                record.maxScore,
-                record.bestTime,
-                record.gamesPlayed
-              );
-            }
-          }
-
-          setLocalRecords(mergedRecords);
-          localStorage.setItem("tvrs-local-records", JSON.stringify(mergedRecords));
-        } else {
-          for (const [modeKey, record] of Object.entries(localRecords)) {
-            if (record.gamesPlayed > 0) {
-              await upsertUserRecord(
-                activeUserId,
-                modeKey,
-                record.maxScore,
-                record.bestTime,
-                record.gamesPlayed
-              );
-            }
-          }
-        }
+        await syncRecordsStep({
+          activeUserId,
+          localRecords,
+          dbRecords,
+          recordsErr,
+          setLocalRecords,
+        });
       } catch (err) {
         console.error("Erreur lors de la synchronisation Supabase :", err);
       }
@@ -322,34 +232,11 @@ export function useUserProfile() {
           continentsConquered,
         });
 
-      const currentRecord = localRecords[gameMode] || {
-        maxScore: 0,
-        bestTime: null,
-        gamesPlayed: 0,
-      };
-      const nextGamesPlayed = currentRecord.gamesPlayed + 1;
+      const currentRecord =
+        (Object.hasOwn(localRecords, gameMode) && localRecords[gameMode]) || DEFAULT_RECORD;
 
-      let nextMaxScore = currentRecord.maxScore;
-      let nextBestTime = currentRecord.bestTime;
-      let isNewBestRun = false;
-
-      if (finalScore > currentRecord.maxScore) {
-        nextMaxScore = finalScore;
-        nextBestTime = timeSpent;
-        isNewBestRun = true;
-      } else if (finalScore === currentRecord.maxScore) {
-        if (currentRecord.bestTime === null || timeSpent < currentRecord.bestTime) {
-          nextBestTime = timeSpent;
-          isNewBestRun = true;
-        }
-      }
-
-      const updatedRecord = {
-        maxScore: nextMaxScore,
-        bestTime: nextBestTime,
-        gamesPlayed: nextGamesPlayed,
-        hardcore: isNewBestRun ? hardcore : Boolean(currentRecord.hardcore),
-      };
+      const { updatedRecord, nextMaxScore, nextBestTime, nextGamesPlayed, isNewBestRun } =
+        calculateUpdatedRecord({ currentRecord, finalScore, timeSpent, hardcore });
 
       const updatedRecords = {
         ...localRecords,
@@ -374,70 +261,33 @@ export function useUserProfile() {
       setLocalRecords(updatedRecords);
       localStorage.setItem("tvrs-local-records", JSON.stringify(updatedRecords));
 
-      const modeHistory = lastScores[gameMode] || [];
-      const nextHistory = [...modeHistory, finalScore].slice(-3);
-      const nextScores = { ...lastScores, [gameMode]: nextHistory };
-      setLastScores(nextScores);
-      localStorage.setItem("tvrs-last-scores", JSON.stringify(nextScores));
-
-      const newHistoryItem = {
-        id: generateUUID(),
-        profile_id: activeUserId,
-        game_mode: gameMode,
-        score: finalScore,
-        time_spent_seconds: timeSpent,
-        created_at: new Date().toISOString(),
-        hardcore: Boolean(hardcore),
-      };
-      const updatedGameHistory = [newHistoryItem, ...localGameHistory].slice(0, 100);
-      setLocalGameHistory(updatedGameHistory);
-      localStorage.setItem("tvrs-local-game-history", JSON.stringify(updatedGameHistory));
+      updateLocalScoresAndHistory({
+        activeUserId,
+        gameMode,
+        finalScore,
+        timeSpent,
+        hardcore,
+        lastScores,
+        setLastScores,
+        localGameHistory,
+        setLocalGameHistory,
+      });
 
       if (isSupabaseConfigured) {
-        const { data: upsertedProfileData, error: profileErr } = await upsertProfile(
-          activeUserId,
-          updatedProfile.username,
-          updatedProfile.avatarId,
-          updatedProfile.avatarColor,
-          updatedProfile.xp,
-          updatedProfile.level,
-          updatedProfile.unlockedBadges
-        );
-        if (profileErr) {
-          console.error("Error syncing profile update to Supabase:", profileErr);
-        } else if (
-          upsertedProfileData &&
-          upsertedProfileData.username !== updatedProfile.username
-        ) {
-          updatedProfile.username = upsertedProfileData.username;
-          setUserProfile(updatedProfile);
-          localStorage.setItem("tvrs-user-profile", JSON.stringify(updatedProfile));
-        }
-
-        const { error: recordErr } = await upsertUserRecord(
+        await syncGameRecordToSupabase({
           activeUserId,
           gameMode,
+          finalScore,
+          timeSpent,
+          hardcore,
+          updatedProfile,
+          setUserProfile,
           nextMaxScore,
           nextBestTime,
           nextGamesPlayed,
-          isNewBestRun ? hardcore : null
-        );
-        if (recordErr) console.error("Error syncing user record to Supabase:", recordErr);
-
-        if (finalScore > 0) {
-          const { error: scoreErr } = await submitLeaderboardScore(
-            activeUserId,
-            gameMode,
-            finalScore,
-            timeSpent,
-            hardcore
-          );
-          if (scoreErr) {
-            console.error("Error submitting score to Supabase:", scoreErr);
-          } else {
-            fetchTopExplorers();
-          }
-        }
+          isNewBestRun,
+          fetchTopExplorers,
+        });
       }
 
       return {
