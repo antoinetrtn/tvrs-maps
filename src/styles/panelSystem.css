@@ -120,6 +120,8 @@
 .sheet-panel,
 .sheet-panel.glass-panel {
   position: fixed;
+  margin: 0;
+  color: inherit;
   isolation: isolate;
   bottom: calc(var(--spacing-lg) + var(--control-lg) + var(--spacing-md));
   right: var(--spacing-lg);
