@@ -239,7 +239,8 @@ export function useGlobeCamera(props) {
   const maxWindowWidthRef = useRef(window.innerWidth),
     maxWindowHeightRef = useRef(window.innerHeight);
   const previousSelectedCountryRef = useRef(null),
-    previousModeKeyRef = useRef(null);
+    previousModeKeyRef = useRef(null),
+    wasRegionalMapRef = useRef(false);
   const isRegionalMap = Boolean(getActiveModeConfig(mode, learnSubMode)?.bounds);
   isRegionalMapRef.current = isRegionalMap;
   const isMobileRef = useRef(false);
@@ -355,6 +356,12 @@ export function useGlobeCamera(props) {
     const modeChanged = previousModeKeyRef.current !== modeKey;
     previousModeKeyRef.current = modeKey;
     const isEnteringHomeFromGame = isHomeScreen && !wasHomeScreenRef.current;
+    // Home card switch into/out of a regional map: cut straight to the new view; a world→France
+    // tween showed the blacked-out world zoomed out for its first frames.
+    const cutToRegional =
+      isHomeScreen && modeChanged && isRegionalMap !== wasRegionalMapRef.current;
+    wasRegionalMapRef.current = isRegionalMap;
+    const camMs = (ms) => (cutToRegional ? 0 : cameraDuration(ms, prefersReducedMotion()));
 
     if (isEnteringHomeFromGame && globeEl.current) {
       applyIdleCameraPointOfView({
@@ -401,19 +408,11 @@ export function useGlobeCamera(props) {
             onlyViewportNudge,
             isMobile: Boolean(perfProfile?.isMobile),
           });
-          animateGlobePov(
-            globeEl.current,
-            target,
-            cameraDuration(duration, prefersReducedMotion())
-          );
+          animateGlobePov(globeEl.current, target, camMs(duration));
           lastTargetRef.current = target;
         }
       } else if (customPOV) {
-        animateGlobePov(
-          globeEl.current,
-          customPOV,
-          cameraDuration(CAMERA_MS.customPov, prefersReducedMotion())
-        );
+        animateGlobePov(globeEl.current, customPOV, camMs(CAMERA_MS.customPov));
         lastTargetRef.current = customPOV;
       }
     } else if (
