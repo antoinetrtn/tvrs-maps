@@ -2,21 +2,21 @@
    Desktop-only dimensions — below 1025px the shared .sheet-panel fullscreen
    rules (panelSystem.css) take over. */
 @media (min-width: 1025px) {
-  .profile-panel {
-    width: clamp(320px, 42vw, 460px) !important;
-    height: min(82dvh, 780px) !important;
-    max-height: calc(100vh - 140px) !important;
-    max-height: calc(100dvh - 140px) !important;
-    overflow: hidden !important;
+  .profile-panel.sheet-panel {
+    width: clamp(320px, 42vw, 460px);
+    height: min(82dvh, 780px);
+    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
+    overflow: hidden;
   }
 }
 
-.profile-panel .panel-body {
+.profile-panel.sheet-panel .panel-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden !important;
-  padding-bottom: 0 !important;
+  overflow: hidden;
+  padding-bottom: 0;
   min-height: 0;
 }
 
@@ -135,13 +135,6 @@
 }
 
 /* XP progress card */
-.xp-progression-card {
-  padding: var(--spacing-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 0;
-  box-shadow: none;
-}
 
 .xp-card-header {
   display: flex;
@@ -183,17 +176,11 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
 }
 
-.quick-stat-card {
-  padding: var(--spacing-sm);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xxs);
+.profile-xp {
+  margin-bottom: var(--spacing-md);
 }
 
 .stat-label {
@@ -235,7 +222,7 @@
   box-sizing: border-box;
 }
 
-.badge-item-btn {
+.badge-tile {
   aspect-ratio: 1;
   padding: 0;
   background: var(--glass-bg);
@@ -252,17 +239,17 @@
     color var(--transition-fast);
 }
 
-.badge-item-btn:hover {
+.badge-tile:hover {
   background: var(--glass-hover);
   border-color: var(--text-main);
 }
 
-.badge-item-btn.unlocked {
+.badge-tile.unlocked {
   background: color-mix(in srgb, var(--badge-color-border) 14%, var(--glass-bg));
   box-shadow: none;
 }
 
-.badge-item-btn.selected {
+.badge-tile.selected {
   border-color: var(--text-main);
   box-shadow: inset 0 0 0 2px var(--text-main);
 }
@@ -282,21 +269,6 @@
 }
 
 /* Selected badge detail */
-.badge-detail-card {
-  flex-shrink: 0;
-  padding: var(--spacing-sm);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur-compact);
-  -webkit-backdrop-filter: var(--glass-blur-compact);
-  border: 1px solid var(--glass-border);
-  border-radius: 0;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-md);
-  z-index: 10;
-}
 
 .badge-detail-header {
   display: flex;
@@ -351,24 +323,6 @@
 }
 
 /* Form Actions */
-.form-submit-btn {
-  width: 100%;
-  font-weight: 600;
-  padding: var(--spacing-ms) var(--spacing-lg);
-  border: none;
-  background: var(--text-main);
-  color: var(--bg-color);
-  transition:
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast),
-    transform var(--transition-fast);
-}
-
-.form-submit-btn:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
 
 .form-feedback {
   padding: var(--spacing-xs);
@@ -410,7 +364,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: var(--z-floating-2);
   /* TODO(design): pointed at --xp-shadow-trans, a token that never existed — the
      overlay has always rendered without a dimming backdrop. Kept identical;
      likely intended: a translucent scrim such as var(--overlay-bg). */
@@ -419,33 +373,12 @@
   box-sizing: border-box;
 }
 
-.profile-blur-card {
-  padding: var(--spacing-lg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
-  text-align: center;
-  max-width: 280px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--glass-shadow-strong);
-  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
-}
-
 .profile-blur-text {
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--text-main);
   margin: 0;
   line-height: 1.4;
-}
-
-.profile-blur-btn {
-  font-weight: 600;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-sm);
 }
 
 .profile-customization-container.blurred {
@@ -478,31 +411,31 @@
 /* Mobile profile layout — fullscreen positioning comes from the shared
    .sheet-panel rules in panelSystem.css; only profile-specific tweaks here. */
 @media (max-width: 1024px) {
-  .profile-panel {
-    display: flex !important;
-    flex-direction: column !important;
+  .profile-panel.sheet-panel {
+    display: flex;
+    flex-direction: column;
   }
 
-  .profile-panel .panel-body {
-    padding-bottom: 0 !important;
-    flex: 1 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+  .profile-panel.sheet-panel .panel-body {
+    padding-bottom: 0;
+    flex: 1;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .profile-panel .profile-tab-content,
   .profile-panel .profile-customization-container,
   .profile-panel form.profile-form,
   .profile-panel .stats-tab-content {
-    flex: 1 !important;
-    min-height: 0 !important;
-    height: auto !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Remove nested scrolling inside the avatar selector on mobile */
@@ -541,11 +474,7 @@
 /* Header above internal overlays so close button is always reachable */
 .profile-panel .panel-header {
   position: relative;
-  z-index: 300;
-}
-.profile-panel .panel-close-btn {
-  position: relative;
-  z-index: 301;
+  z-index: var(--z-panel-menu);
 }
 
 form.profile-form {
@@ -560,7 +489,7 @@ form.profile-form {
 .profile-form-header {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--z-floating);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -594,7 +523,7 @@ form.profile-form {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
-  z-index: 100;
+  z-index: var(--z-floating-3);
   border-top: 1px solid var(--glass-border);
   margin-top: auto;
   width: 100%;
@@ -602,8 +531,3 @@ form.profile-form {
 }
 
 /* Success state on Save (crisp fill, no glow) */
-.form-submit-btn.save-success-glow {
-  background: var(--success) !important;
-  color: var(--bg-color) !important;
-  border-color: var(--success) !important;
-}

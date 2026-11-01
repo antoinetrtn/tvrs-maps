@@ -44,8 +44,10 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
 
     expect(prevButton.tagName).toBe("BUTTON");
     expect(prevButton.getAttribute("type")).toBe("button");
+    expect(prevButton.className).toContain("ui-icon-btn--ghost");
     expect(nextButton.tagName).toBe("BUTTON");
     expect(nextButton.getAttribute("type")).toBe("button");
+    expect(nextButton.className).toContain("ui-icon-btn--ghost");
 
     fireEvent.click(nextButton);
     expect(setHomeMode).toHaveBeenCalled();
@@ -137,6 +139,9 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
     const learnLabel = screen.getByText("Apprendre");
     expect(learnLabel.className).toContain("card-btn-label");
     expect(learnLabel.className).toContain("desktop-reveal");
+
+    expect(document.querySelector(".card-pixel-ornaments")).toBeNull();
+    expect(document.querySelector(".card-plate-pattern")).not.toBeNull();
   });
 
   it("ModeCard in conquest mode renders rules button with desktop-reveal label", () => {
@@ -190,7 +195,7 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
 
     // ArrowRight advances to next mode (capitals)
     fireEvent.keyDown(window, { key: "ArrowRight" });
-    const topCardNext = document.querySelector(".deck-mode-card.is-top-card");
+    const topCardNext = document.querySelector(".ui-card--mode-deck.is-top-card");
     expect(topCardNext.getAttribute("data-mode")).toBe("capitals");
 
     // The carousel ignores input while its 200 ms change animation runs
@@ -200,7 +205,7 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
 
     // ArrowLeft goes back to previous mode (countries)
     fireEvent.keyDown(window, { key: "ArrowLeft" });
-    const topCardPrev = document.querySelector(".deck-mode-card.is-top-card");
+    const topCardPrev = document.querySelector(".ui-card--mode-deck.is-top-card");
     expect(topCardPrev.getAttribute("data-mode")).toBe("countries");
     vi.useRealTimers();
   });

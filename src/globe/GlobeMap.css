@@ -5,25 +5,54 @@
   overscroll-behavior: none;
 }
 
+/* Stage + decorative backdrop (were inline styles in GlobeMap.jsx) */
+.globe-container.globe-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.globe-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+.globe-backdrop-grid,
+.globe-backdrop-vignette {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.globe-backdrop-grid {
+  background-image: radial-gradient(var(--grid-dot) 1.1px, transparent 0);
+  background-size: 20px 20px;
+  opacity: 1;
+}
+
+.globe-backdrop-vignette {
+  /* Centred on the globe (vars set by SpaceBackground), not on the viewport. */
+  background: radial-gradient(
+    circle farthest-corner at var(--globe-cx, 50%) var(--globe-cy, 50%),
+    transparent 0%,
+    var(--bg-color) 100%
+  );
+  opacity: 0.6;
+}
+
 .globe-map-shell {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  z-index: 0;
+  z-index: var(--z-base);
   pointer-events: auto;
-}
-
-@keyframes label-appear {
-  from {
-    opacity: 0;
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-  }
 }
 
 .globe-label-element {
@@ -39,7 +68,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: var(--z-raised);
   transform: translate3d(
     calc(var(--globe-layout-x) + var(--globe-panel-shift) + var(--globe-nudge-x)),
     calc(var(--globe-keyboard-shift) + var(--globe-nudge-y)),
@@ -51,7 +80,7 @@
 .globe-studio-overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: var(--z-raised-2);
   pointer-events: none;
   mix-blend-mode: screen;
   background:
@@ -71,25 +100,6 @@
   opacity: 0.68;
 }
 
-.globe-studio-overlay.light {
-  mix-blend-mode: multiply;
-  background:
-    radial-gradient(
-      circle at 50% 50%,
-      var(--highlight) 0%,
-      var(--highlight-soft) 32%,
-      color-mix(in srgb, var(--accent-glow) 8%, transparent) 54%,
-      transparent 74%
-    ),
-    radial-gradient(
-      circle at 50% 50%,
-      color-mix(in srgb, var(--accent) 5%, transparent) 0%,
-      color-mix(in srgb, var(--accent) 2%, transparent) 44%,
-      transparent 68%
-    );
-  opacity: 0.48;
-}
-
 @media (min-width: 769px) {
   .globe-map-shell.home-layout .globe-content-wrapper {
     /* Shift globe into the right pane between the home card and screen edge */
@@ -105,11 +115,11 @@
    composited layer above the canvas (no canvas filter, no animation, so it
    is cheap and already reduced-motion safe). The accent halo itself lives in
    the renderer (atmosphere glow + ocean rim). */
-.globe-map-shell.crt::after {
+.globe-map-shell::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: var(--z-raised);
   pointer-events: none;
   /* Fine, faint phosphor lines (1px every 2px). They fade out toward the
      centre so the play area stays clean and only the rim reads as "CRT". */
@@ -123,31 +133,17 @@
 }
 
 /* Soft curved-glass vignette, kept separate from the masked scanlines. */
-.globe-map-shell.crt::before {
+.globe-map-shell::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: var(--z-raised);
   pointer-events: none;
   background: radial-gradient(
     ellipse at center,
     transparent 64%,
     color-mix(in srgb, var(--bg-color) 32%, transparent) 100%
   );
-}
-
-/* NASA GIBS acknowledgement for the progressive satellite tiles. */
-.globe-imagery-credit {
-  position: absolute;
-  left: 8px;
-  bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-  z-index: 2;
-  font-size: 9px;
-  line-height: 1.2;
-  color: var(--text-muted);
-  opacity: 0.55;
-  text-decoration: none;
-  pointer-events: auto;
 }
 
 /* Home on mobile: the action bar owns the bottom edge, so the credit sits

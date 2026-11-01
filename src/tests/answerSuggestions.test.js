@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildSuggestionIndex,
+  damerauLevenshtein,
   getAnswerSuggestions,
   getLearnSuggestions,
   MIN_SUGGEST_CHARS,
@@ -107,16 +108,42 @@ describe("answerSuggestions", () => {
     expect(res2[0].display).toBe("États-Unis");
   });
 
-  it("enforces 3 character minimum threshold for partial matching", () => {
+  it("a prefix no longer reveals the answer: the list needs ~80% of the full name", () => {
     const index = buildSuggestionIndex(mockCountryDataMap, { lang: "fr", mode: "countries" });
 
-    // Under 3 chars without exact match => no suggestions
     expect(getAnswerSuggestions("fr", index)).toEqual([]);
     expect(getAnswerSuggestions("ma", index)).toEqual([]);
+    // 3-4 lettres de « France » : plus rien (avant : la liste donnait la réponse).
+    expect(getAnswerSuggestions("fra", index)).toEqual([]);
+    expect(getAnswerSuggestions("fran", index)).toEqual([]);
+    expect(getAnswerSuggestions("madag", index)).toEqual([]);
+    // Près du mot complet => la liste apparaît.
+    expect(getAnswerSuggestions("franc", index).map((s) => s.display)).toEqual(["France"]);
+    expect(getAnswerSuggestions("madagasc", index).map((s) => s.display)).toEqual(["Madagascar"]);
+  });
 
-    // 3 chars => suggestions displayed
-    const res = getAnswerSuggestions("fra", index);
-    expect(res.map((s) => s.display)).toContain("France");
+  it("tolerates approximate spelling close to the full name", () => {
+    const index = buildSuggestionIndex(mockCountryDataMap, { lang: "fr", mode: "countries" });
+    const first = (q) => getAnswerSuggestions(q, index)[0]?.display;
+    expect(first("allemange")).toBe("Allemagne"); // transposition
+    expect(first("alemagne")).toBe("Allemagne"); // lettre manquante
+    expect(first("madagaskar")).toBe("Madagascar"); // substitution
+    expect(first("madagasakr")).toBe("Madagascar"); // 2 fautes sur 10 lettres
+    expect(first("royaume uni")).toBe("Royaume-Uni");
+    expect(first("etats uni")).toBe("États-Unis");
+    expect(first("hexagon")).toBe("France"); // alias
+    expect(first("frnace")).toBe("France");
+  });
+
+  it("short names (<= 5 letters) need full length; 1 typo is then accepted", () => {
+    const index = buildSuggestionIndex(mockCountryDataMap, { lang: "fr", mode: "countries" });
+    const displays = (q) => getAnswerSuggestions(q, index).map((s) => s.display);
+    expect(displays("mal")).toEqual([]);
+    expect(displays("mar")).toEqual([]);
+    expect(displays("mali")).toEqual(["Mali"]);
+    expect(displays("malt")).toEqual(["Mali", "Malte"]); // 1 lettre de chaque
+    expect(displays("mlai")).toEqual(["Mali"]);
+    expect(displays("maroq")).toEqual(["Maroc"]);
   });
 
   it("allows exact match under threshold for short names or aliases ('UK', 'US')", () => {
@@ -131,26 +158,16 @@ describe("answerSuggestions", () => {
     expect(usRes[0].display).toBe("États-Unis");
   });
 
-  it("ranks exact match first, then name prefix, then word/alias prefix, then alphabetical", () => {
+  it("ranks exact match first, then smallest edit distance, then alphabetical", () => {
     const testMap = {
-      C1: { name_fr: "South Georgia", aliases: [] },
+      C1: { name_fr: "Georgie", aliases: [] },
       C2: { name_fr: "Georgia", aliases: [] },
-      C3: { name_fr: "Geo", aliases: [] },
-      C4: { name_fr: "Geodesy", aliases: [] },
-      C5: { name_fr: "Republic of Whatever", aliases: ["Geo-Zone"] },
+      C3: { name_fr: "Georgi", aliases: [] },
+      C4: { name_fr: "Gorgiaa", aliases: [] },
     };
     const index = buildSuggestionIndex(testMap, { lang: "fr", mode: "countries" });
-
-    const res = getAnswerSuggestions("geo", index, { lang: "fr" });
-    // Exact match "Geo" first
-    expect(res[0].display).toBe("Geo");
-    // Prefix matches next (alphabetical: Geodesy before Georgia)
-    expect(res[1].display).toBe("Geodesy");
-    expect(res[2].display).toBe("Georgia");
-    // Word prefix ("South Georgia") and alias prefix ("Republic of Whatever") next
-    const remainingDisplays = res.slice(3).map((s) => s.display);
-    expect(remainingDisplays).toContain("South Georgia");
-    expect(remainingDisplays).toContain("Republic of Whatever");
+    const res = getAnswerSuggestions("georgi", index, { lang: "fr" });
+    expect(res.map((s) => s.display)).toEqual(["Georgi", "Georgia", "Georgie"]);
   });
 
   it("deduplicates suggestions by normalized display and marks found=false if at least one duplicate is unfound", () => {
@@ -177,7 +194,7 @@ describe("answerSuggestions", () => {
     const res = getAnswerSuggestions("ma", index); // 'ma' is short, so no partial
     expect(res.length).toBe(0);
 
-    const res2 = getAnswerSuggestions("mal", index); // Malaisie, Mali, Malte
+    const res2 = getAnswerSuggestions("malt", index); // Malte, Mali
     expect(res2.length).toBeLessThanOrEqual(5);
 
     const res3 = getAnswerSuggestions("m", index);
@@ -189,18 +206,18 @@ describe("answerSuggestions", () => {
       broadMap[`K${i}`] = { name_fr: `Testland ${i}`, aliases: [] };
     }
     const broadIndex = buildSuggestionIndex(broadMap, { lang: "fr", mode: "countries" });
-    const broadRes = getAnswerSuggestions("tes", broadIndex);
+    const broadRes = getAnswerSuggestions("testland", broadIndex);
     expect(broadRes.length).toBe(5);
   });
 
   it("marks already found items with found flag", () => {
     const index = buildSuggestionIndex(mockCountryDataMap, { lang: "fr", mode: "countries" });
-    const res = getAnswerSuggestions("fra", index, { foundSet: new Set(["FRA"]) });
+    const res = getAnswerSuggestions("franc", index, { foundSet: new Set(["FRA"]) });
     expect(res.length).toBe(1);
     expect(res[0].display).toBe("France");
     expect(res[0].found).toBe(true);
 
-    const resUnfound = getAnswerSuggestions("fra", index, { foundSet: new Set([]) });
+    const resUnfound = getAnswerSuggestions("franc", index, { foundSet: new Set([]) });
     expect(resUnfound[0].found).toBe(false);
   });
 
@@ -221,21 +238,21 @@ describe("answerSuggestions", () => {
 
     // Capitals mode: targets capital
     const capitalsIndex = buildSuggestionIndex(dataMap, { lang: "fr", mode: "capitals" });
-    const capRes = getAnswerSuggestions("par", capitalsIndex);
+    const capRes = getAnswerSuggestions("pari", capitalsIndex);
     expect(capRes.length).toBe(1);
     expect(capRes[0].display).toBe("Paris");
     expect(capRes[0].subtext).toBeNull();
 
     // Countries mode: targets name
     const countriesIndex = buildSuggestionIndex(dataMap, { lang: "fr", mode: "countries" });
-    const countryRes = getAnswerSuggestions("fra", countriesIndex);
+    const countryRes = getAnswerSuggestions("franc", countriesIndex);
     expect(countryRes.length).toBe(1);
     expect(countryRes[0].display).toBe("France");
     expect(countryRes[0].subtext).toBe("Paris");
 
     // us_states mode: targetCheck is "name", not "capital"
     const usStatesIndex = buildSuggestionIndex(dataMap, { lang: "fr", mode: "us_states" });
-    const stateRes = getAnswerSuggestions("cal", usStatesIndex);
+    const stateRes = getAnswerSuggestions("californ", usStatesIndex);
     expect(stateRes.length).toBe(1);
     expect(stateRes[0].display).toBe("Californie");
   });
@@ -258,5 +275,13 @@ describe("answerSuggestions", () => {
     const learnCompound = getLearnSuggestions("etat", mockCountryDataMap, { lang: "fr" });
     expect(learnCompound.length).toBeGreaterThan(0);
     expect(learnCompound[0].display).toBe("États-Unis");
+  });
+
+  it("damerauLevenshtein counts adjacent transpositions as one edit and stops past max", () => {
+    expect(damerauLevenshtein("france", "france")).toBe(0);
+    expect(damerauLevenshtein("frnace", "france")).toBe(1);
+    expect(damerauLevenshtein("iran", "irak")).toBe(1);
+    expect(damerauLevenshtein("", "oman")).toBe(4);
+    expect(damerauLevenshtein("a", "madagascar", 2)).toBe(3);
   });
 });

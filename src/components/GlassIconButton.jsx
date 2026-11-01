@@ -5,13 +5,12 @@ import IconButton from "./ui/IconButton";
 /**
  * GlassIconButton — common primitive for header/bottom actions (settings, profile, leaderboard).
  * Thin wrapper around the shared kit IconButton (variant "glass", size "lg").
- * `label` (optional) renders a visible text label (home dock). Keeps .glass-icon-btn class so existing CSS selectors continue to match.
+ * `label` (optional) renders a visible text label (home dock). Its skin is the "glass-chrome" icon-button look (ButtonLooks.css / index.css).
  */
 const GlassIconButton = React.forwardRef(function GlassIconButton(
-  { children, className = "", onClick, onPointerDown, title, label, style, ...rest },
+  { children, className = "", look, onClick, onPointerDown, title, label, style, ...rest },
   ref
 ) {
-  const classes = ["glass-icon-btn", className].filter(Boolean).join(" ");
   const accessibleLabel = rest["aria-label"] ?? title ?? label;
 
   return (
@@ -21,7 +20,8 @@ const GlassIconButton = React.forwardRef(function GlassIconButton(
       size="lg"
       label={accessibleLabel}
       title={title ?? (rest["data-tooltip"] ? null : undefined)}
-      className={classes}
+      look={["glass-chrome", ...[look].flat().filter(Boolean)]}
+      className={className || undefined}
       onClick={onClick}
       onPointerDown={onPointerDown}
       style={style}

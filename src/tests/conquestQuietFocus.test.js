@@ -54,9 +54,6 @@ describe("withQuietFocus", () => {
 describe("useGlobePolygons with quiet focus", () => {
   const createProps = (overrides = {}) => ({
     mode: "countries",
-    theme: "default",
-    globeTheme: "blackout",
-    isLight: false,
     globeLightingEnabled: false,
     perfProfile: {},
     selectedCountry: null,

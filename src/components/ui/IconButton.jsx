@@ -1,11 +1,13 @@
 import "./Button.css";
+import "./IconButtonLooks.css";
 
 import React from "react";
 
 import { primeHapticsOnUserGesture, triggerSubtleHapticTick } from "../../utils/haptics";
+import { ICON_LOOKS } from "./buttonLooks";
 
-const VARIANTS = ["glass", "outline", "ghost", "danger"];
-const SIZES = ["sm", "md", "lg"];
+const VARIANTS = new Set(["glass", "outline", "ghost", "danger"]);
+const SIZES = new Set(["sm", "md", "lg"]);
 
 /**
  * IconButton — square icon-only button of the kit.
@@ -16,6 +18,7 @@ const SIZES = ["sm", "md", "lg"];
  * - `variant`: glass (solid glass surface, default) · outline (bordered, transparent) ·
  *   ghost (no chrome, e.g. close / back) · danger.
  * - `size`: sm = --control-sm · md = --control-md · lg = --control-lg (default).
+ * - `look`: one or several named skins from ICON_LOOKS (IconButtonLooks.css).
  * - `type` defaults to "button".
  */
 const IconButton = React.forwardRef(function IconButton(
@@ -23,6 +26,7 @@ const IconButton = React.forwardRef(function IconButton(
     label,
     variant = "glass",
     size = "lg",
+    look,
     type = "button",
     className = "",
     title,
@@ -35,12 +39,20 @@ const IconButton = React.forwardRef(function IconButton(
   if (!label && import.meta.env?.DEV) {
     console.error("IconButton: the `label` prop is required (accessible name).");
   }
-  const safeVariant = VARIANTS.includes(variant) ? variant : "glass";
-  const safeSize = SIZES.includes(size) ? size : "lg";
+  const safeVariant = VARIANTS.has(variant) ? variant : "glass";
+  const safeSize = SIZES.has(size) ? size : "lg";
   const classes = [
     "ui-icon-btn",
     `ui-icon-btn--${safeVariant}`,
     `ui-icon-btn--${safeSize}`,
+    ...[look]
+      .flat()
+      .filter(Boolean)
+      .map((l) => {
+        if (!ICON_LOOKS.includes(l) && import.meta.env?.DEV)
+          console.error(`IconButton: unknown look "${l}"`);
+        return ICON_LOOKS.includes(l) && `ui-icon-btn--${l}`;
+      }),
     className,
   ]
     .filter(Boolean)

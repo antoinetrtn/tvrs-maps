@@ -1,3 +1,41 @@
+const VALID_STATUSES = ["pending", "in_progress", "completed"];
+const VALID_PRIORITIES = ["low", "medium", "high"];
+
+function isValidTitle(title) {
+  return typeof title === "string" && title.trim() !== "";
+}
+
+function validateTitle(data, isUpdate) {
+  if (isUpdate) {
+    if ("title" in data && !isValidTitle(data.title)) {
+      throw new Error("Title must be a non-empty string");
+    }
+    return;
+  }
+  if (!isValidTitle(data.title)) {
+    throw new Error("Title is required and must be a non-empty string");
+  }
+}
+
+function validateStatus(status) {
+  if (!VALID_STATUSES.includes(status)) {
+    throw new Error(`Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`);
+  }
+}
+
+function validatePriority(priority) {
+  if (!VALID_PRIORITIES.includes(priority)) {
+    throw new Error(`Invalid priority. Must be one of: ${VALID_PRIORITIES.join(", ")}`);
+  }
+}
+
+function validateDueDate(dueDate) {
+  const date = new Date(dueDate);
+  if (Number.isNaN(date.getTime())) {
+    throw new TypeError("Invalid dueDate. Must be a valid Date object or ISO string");
+  }
+}
+
 /**
  * TaskService manages a collection of tasks with validation, filtering, and summary statistics.
  */
@@ -13,7 +51,8 @@ export class TaskService {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
       return crypto.randomUUID();
     }
-    return `task-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
+    const rand = globalThis.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000;
+    return `task-${rand.toString(36).slice(2, 11)}-${Date.now()}`;
   }
 
   /**
@@ -24,35 +63,18 @@ export class TaskService {
       throw new Error("Task data must be an object");
     }
 
-    // Title validation
-    if (isUpdate) {
-      if ("title" in data && (typeof data.title !== "string" || data.title.trim() === "")) {
-        throw new Error("Title must be a non-empty string");
-      }
-    } else {
-      if (!data.title || typeof data.title !== "string" || data.title.trim() === "") {
-        throw new Error("Title is required and must be a non-empty string");
-      }
+    validateTitle(data, isUpdate);
+
+    if ("status" in data) {
+      validateStatus(data.status);
     }
 
-    // Status validation
-    const validStatuses = ["pending", "in_progress", "completed"];
-    if ("status" in data && !validStatuses.includes(data.status)) {
-      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(", ")}`);
+    if ("priority" in data) {
+      validatePriority(data.priority);
     }
 
-    // Priority validation
-    const validPriorities = ["low", "medium", "high"];
-    if ("priority" in data && !validPriorities.includes(data.priority)) {
-      throw new Error(`Invalid priority. Must be one of: ${validPriorities.join(", ")}`);
-    }
-
-    // Due date validation
     if ("dueDate" in data && data.dueDate !== null) {
-      const date = new Date(data.dueDate);
-      if (isNaN(date.getTime())) {
-        throw new Error("Invalid dueDate. Must be a valid Date object or ISO string");
-      }
+      validateDueDate(data.dueDate);
     }
   }
 
@@ -224,7 +246,7 @@ export class TaskService {
       }
     });
 
-    const completionRate = parseFloat(((completed / total) * 100).toFixed(2));
+    const completionRate = Number.parseFloat(((completed / total) * 100).toFixed(2));
 
     return {
       total,

@@ -2,13 +2,14 @@ import "./TextField.css";
 
 import React, { useId } from "react";
 
-const VARIANTS = ["glass", "outline", "search"];
+const VARIANTS = new Set(["glass", "outline", "search", "bare"]);
 
 /**
  * TextField — the kit's single text-input primitive.
  *
  * Props:
- * - `variant`: "glass" (default) | "outline" | "search"
+ * - `variant`: "glass" (default) | "outline" | "search" | "bare" (no kit chrome: only `className`,
+ *   for inputs whose look belongs to their container, e.g. the in-game answer island)
  * - `label`: optional visible <label> rendered above, linked via htmlFor/id (auto-generated via useId when none given)
  * - `hint`: optional helper text rendered below, linked via aria-describedby
  * - `error`: optional string; sets aria-invalid, renders message below with role="alert"
@@ -36,7 +37,7 @@ const TextField = React.forwardRef(function TextField(
 ) {
   const generatedId = useId();
   const hasWrapper = Boolean(label || hint || error);
-  const inputId = id || (hasWrapper ? `textfield-${generatedId.replace(/:/g, "")}` : undefined);
+  const inputId = id || (hasWrapper ? `textfield-${generatedId.replaceAll(":", "")}` : undefined);
   const hintId = hint ? `${inputId}-hint` : undefined;
   const errorId = error ? `${inputId}-error` : undefined;
 
@@ -44,8 +45,12 @@ const TextField = React.forwardRef(function TextField(
     .filter(Boolean)
     .join(" ");
 
-  const safeVariant = VARIANTS.includes(variant) ? variant : "glass";
-  const inputClasses = ["ui-textfield", `ui-textfield--${safeVariant}`, className]
+  const safeVariant = VARIANTS.has(variant) ? variant : "glass";
+  const inputClasses = (
+    safeVariant === "bare"
+      ? [className]
+      : ["ui-textfield", `ui-textfield--${safeVariant}`, className]
+  )
     .filter(Boolean)
     .join(" ");
 

@@ -4,6 +4,8 @@ import "./ConquestLockouts.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import Button from "../components/ui/Button.jsx";
+import PanelCloseButton from "../components/ui/PanelCloseButton.jsx";
+import TextField from "../components/ui/TextField";
 import { showToast } from "../components/ui/Toast.jsx";
 import {
   ANSWER_INPUT_PROPS,
@@ -19,6 +21,9 @@ import {
   resolveCountryClick,
 } from "./conquestLogic";
 import ConquestStealPanel from "./ConquestStealPanel.jsx";
+
+// Per-country history panel, loaded on first open.
+const LazyCountryTimeline = React.lazy(() => import("./ConquestCountryTimeline.jsx"));
 import { conquestText } from "./conquestText";
 
 const FEED_SIZE = 3;
@@ -106,24 +111,37 @@ function useConquestActions({
     });
   };
 
+  // Answer result: the question's Wikipedia source is offered only now, never before.
+  const resultToast = (res, message) => {
+    const lock = res.ok && res.locked ? ` · ${t.lockedNow}` : "";
+    const source = res.source_url;
+    showToast({
+      message: `${message}${lock}`,
+      tone: res.ok ? "success" : "error",
+      duration: source ? 8000 : 4000,
+      actionLabel: source ? `ⓘ ${t.questionSource}` : undefined,
+      onAction: source ? () => window.open(source, "_blank", "noopener,noreferrer") : undefined,
+    });
+  };
+
   const answerSteal = (val) =>
     guarded(async () => {
       if (challenge?.mode === "fortify") {
         const res = await conquest.fortify(val);
         setChallenge(null);
-        if (res?.ok) {
-          const message = `${countryName(res.country_id)} ${t.fortified} +${res.bonus_seconds} s`;
-          showToast({ message, tone: "success" });
-        } else if (res) showToast({ message: refusal({ ...res, mode: "fortify" }), tone: "error" });
+        if (!res) return;
+        resultToast(
+          res,
+          res.ok
+            ? `${countryName(res.country_id)} ${t.fortified} +${res.bonus_seconds} s`
+            : refusal({ ...res, mode: "fortify" })
+        );
         return;
       }
       const res = await conquest.steal(val);
       setChallenge(null);
-      if (res?.ok) {
-        showToast({ message: `${countryName(res.country_id)} ${t.stole}`, tone: "success" });
-      } else if (res) {
-        showToast({ message: refusal(res), tone: "error" });
-      }
+      if (res)
+        resultToast(res, res.ok ? `${countryName(res.country_id)} ${t.stole}` : refusal(res));
     });
 
   const cancelSteal = () =>
@@ -156,6 +174,7 @@ function useCountryClickHandler({
   players,
   t,
   inputRef,
+  openTimeline,
 }) {
   const refusal = (res) => describeClaimRefusal(res, { players, countryName, lang });
 
@@ -170,9 +189,15 @@ function useCountryClickHandler({
       focusAnswerInputSafely(inputRef);
     } else if (action === "mine") {
       void openFortify(countryId);
+    } else if (action === "locked") {
+      openTimeline(countryId);
     } else {
-      const reason = "shielded";
-      showToast({ message: refusal({ reason, country_id: countryId }), tone: "error" });
+      showToast({
+        message: refusal({ reason: "shielded", country_id: countryId }),
+        tone: "error",
+        actionLabel: t.timelineTitle,
+        onAction: () => openTimeline(countryId),
+      });
     }
   };
 
@@ -200,6 +225,8 @@ const HudAnswer = ({
   phase,
   onFocusCountry,
   myColor,
+  lang,
+  timeline,
 }) => (
   <div className={`conquest-answer ${challenge ? "conquest-surface has-challenge" : ""}`}>
     {lockouts.length > 0 && (
@@ -225,10 +252,16 @@ const HudAnswer = ({
         {t.stealOffer} {countryName(stealTarget)}
       </Button>
     )}
+    {timeline && !challenge ? (
+      <React.Suspense fallback={null}>
+        <LazyCountryTimeline t={t} lang={lang} {...timeline} />
+      </React.Suspense>
+    ) : null}
     {challenge ? (
       <ConquestStealPanel
         key={`${challenge.country_id}-${challenge.expires_at}`}
         t={t}
+        lang={lang}
         challenge={challenge}
         countryName={countryName}
         onAnswer={answerSteal}
@@ -237,7 +270,8 @@ const HudAnswer = ({
       />
     ) : (
       <form onSubmit={submit} autoComplete="off">
-        <input
+        <TextField
+          variant="bare"
           ref={inputRef}
           {...ANSWER_INPUT_PROPS}
           className="conquest-input"
@@ -267,6 +301,7 @@ const ConquestHud = ({
   const { players, claims, events, bonuses, userId, clockOffset } = conquest;
   const [answer, setAnswer] = useState("");
   const inputRef = useRef(null);
+  const [timelineCountry, setTimelineCountry] = useState(null);
 
   const standings = useMemo(
     () => computeStandings(players, claims, bonuses),
@@ -300,6 +335,7 @@ const ConquestHud = ({
     players,
     t,
     inputRef,
+    openTimeline: conquest.countryTimeline ? setTimelineCountry : () => {},
   });
 
   const myPlayer = players?.find((p) => p.user_id === userId);
@@ -313,6 +349,7 @@ const ConquestHud = ({
         challenge={challenge}
         lockouts={lockouts}
         stealTarget={stealTarget}
+        lang={lang}
         countryName={countryName}
         t={t}
         openSteal={openSteal}
@@ -325,6 +362,21 @@ const ConquestHud = ({
         phase={phase}
         onFocusCountry={onFocusCountry}
         myColor={myColor}
+        timeline={
+          timelineCountry && {
+            countryId: timelineCountry,
+            title: countryName(timelineCountry),
+            load: conquest.countryTimeline,
+            describe: (event) =>
+              event.kind === "fortify"
+                ? `${players.find((p) => p.user_id === event.actor_id)?.display_name || "?"} ${t.timelineFortified}`
+                : formatFeedEvent(event, { players, countryName, lang }),
+            colorOf: (id) => getPaletteEntry(players.find((p) => p.user_id === id)?.color)?.hex,
+            close: (
+              <PanelCloseButton label={t.stealCancel} onClick={() => setTimelineCountry(null)} />
+            ),
+          }
+        }
       />
     </div>
   );

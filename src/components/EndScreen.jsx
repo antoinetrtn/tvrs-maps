@@ -13,6 +13,7 @@ import EndScreenContinents from "./EndScreenContinents";
 import EndScreenTraining from "./EndScreenTraining";
 import PixelFireworks from "./PixelFireworks";
 import Button from "./ui/Button";
+import Card from "./ui/Card";
 import XpBar from "./XpBar";
 import XpOrbsAnimation from "./XpOrbsAnimation";
 
@@ -23,9 +24,7 @@ const EndScreen = ({
   activeDataMap,
   onRestart,
   onViewTable,
-  theme = "dark",
   lang = "fr",
-  globeTheme = "satellite",
   lastScores = [],
   maxScore = 0,
   isNewPB = false,
@@ -55,10 +54,10 @@ const EndScreen = ({
   const colors = useMemo(() => {
     const res = {};
     GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
+      res[r] = getThemeRegionColorLabel(r);
     });
     return res;
-  }, [globeTheme, theme]);
+  }, []);
 
   const isPerfectScore = foundList.length === totalCountries;
 
@@ -76,7 +75,6 @@ const EndScreen = ({
 
   const [animatedTotalGained, setAnimatedTotalGained] = useState(0);
   const [showLevelUp, setShowLevelUp] = useState(false);
-  const [, setAnimatingOrbs] = useState(true);
 
   // Compute animated progression
   const currentAnimatedXp = oldXp + animatedTotalGained;
@@ -98,12 +96,11 @@ const EndScreen = ({
 
   const handleAnimationComplete = () => {
     setAnimatedTotalGained(gainedXp);
-    setAnimatingOrbs(false);
   };
 
   if (minimized) {
     return (
-      <div className={`end-screen-overlay minimized ${theme}`}>
+      <div className={"end-screen-overlay minimized"}>
         <Button
           variant="secondary"
           size="sm"
@@ -122,7 +119,7 @@ const EndScreen = ({
   }
 
   return (
-    <div className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""} ${theme}`}>
+    <div className={`end-screen-overlay ${isPerfectScore ? "perfect-game" : ""}`}>
       {/* XP Orbs Particle Component */}
       {xpResult && gainedXp > 0 && (
         <XpOrbsAnimation
@@ -195,8 +192,10 @@ const EndScreen = ({
 
         {/* Gamification Progress Display */}
         {!isTraining && xpResult && (
-          <div
-            className={`end-screen-xp-card glass-panel ${showLevelUp ? "level-up-shake" : ""}`}
+          <Card
+            look="xp-end"
+            glass
+            className={`${showLevelUp ? "level-up-shake" : ""}`}
             ref={orbsTargetRef}
           >
             <div className="xp-card-header">
@@ -207,7 +206,7 @@ const EndScreen = ({
             {showLevelUp && (
               <div className="end-screen-level-up-banner text-natural-case">{t("level_up")}</div>
             )}
-          </div>
+          </Card>
         )}
 
         {!isTraining && lastScores && lastScores.length > 0 && (
@@ -225,7 +224,6 @@ const EndScreen = ({
                     trophyColor = "var(--text-main)";
                     trophyClass = "trophy-silver";
                   } else if (hScore >= maxScore * 0.4) {
-                    trophyColor = "var(--text-muted)";
                     trophyClass = "trophy-bronze";
                   }
                 } else if (hScore > 0) {
@@ -234,7 +232,7 @@ const EndScreen = ({
                 }
 
                 return (
-                  <div key={idx} className="history-score-item">
+                  <div key={`score-${idx}-${hScore}`} className="history-score-item">
                     <Trophy
                       width={18}
                       height={18}
@@ -250,11 +248,15 @@ const EndScreen = ({
         )}
 
         <div className="end-screen-actions">
-          <Button variant="secondary" onClick={() => setMinimized(true)}>
+          <Button
+            variant="secondary"
+            className="end-screen-action"
+            onClick={() => setMinimized(true)}
+          >
             <ChevronDown width={16} height={16} />
             {t("explore_globe")}
           </Button>
-          <Button variant="primary" onClick={onRestart}>
+          <Button variant="primary" className="end-screen-action" onClick={onRestart}>
             {t("home")}
           </Button>
         </div>

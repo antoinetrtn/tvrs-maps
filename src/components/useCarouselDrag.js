@@ -11,7 +11,12 @@ const applyDragStyles = (stage, dx, reducedMotion) => {
   if (!stage) return;
   const absDx = Math.abs(dx);
   const progress = Math.min(1.0, absDx / 120);
-  const dir = dx < 0 ? "next" : dx > 0 ? "prev" : "none";
+  let dir = "none";
+  if (dx < 0) {
+    dir = "next";
+  } else if (dx > 0) {
+    dir = "prev";
+  }
 
   stage.style.setProperty("--drag-x", `${dx}px`);
   stage.style.setProperty("--drag-abs-x", `${absDx}px`);

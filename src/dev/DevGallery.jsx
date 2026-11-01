@@ -5,7 +5,7 @@ import "../components/PassportStamp.css";
 import "../multiplayer/ConquestScreen.css";
 import "./DevGallery.css";
 
-import { Close, Settings2, User } from "pixelarticons/react";
+import { Settings2, User } from "pixelarticons/react";
 import React, { useState } from "react";
 
 import GlassIconButton from "../components/GlassIconButton";
@@ -14,24 +14,15 @@ import LeaderboardRow, { LeaderboardList, LeaderboardNotice } from "../component
 import Button from "../components/ui/Button";
 import EmptyState from "../components/ui/EmptyState";
 import ErrorState from "../components/ui/ErrorState";
-import IconButton from "../components/ui/IconButton";
 import LoadingState from "../components/ui/LoadingState";
 import OptionGroup from "../components/ui/OptionGroup";
+import PanelCloseButton from "../components/ui/PanelCloseButton";
 import { SettingsRow, SettingsSection } from "../components/ui/Settings";
 import Slider from "../components/ui/Slider";
 import Switch from "../components/ui/Switch";
 import TabBar from "../components/ui/TabBar";
 import TextField from "../components/ui/TextField";
-import { ACCENT_PRESETS, getAccentOverrides } from "../config/accentPresets";
 import { getThemeCssVariables } from "../config/designSystem";
-
-const kebab = (key) => key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
-
-/** Accent tokens as scoped CSS variables, so 6 accents render side by side. */
-const accentVars = (id) =>
-  Object.fromEntries(
-    Object.entries(getAccentOverrides(id)).map(([key, value]) => [`--${kebab(key)}`, value])
-  );
 
 const Block = ({ title, children }) => (
   <div className="dg-block">
@@ -40,7 +31,7 @@ const Block = ({ title, children }) => (
   </div>
 );
 
-const AccentColumn = ({ id }) => {
+const GalleryColumn = () => {
   const [on, setOn] = useState(true);
   const [minutes, setMinutes] = useState(10);
   const [lang, setLang] = useState("fr");
@@ -48,8 +39,8 @@ const AccentColumn = ({ id }) => {
   const [tab2, setTab2] = useState("opt1");
   const [text, setText] = useState("");
   return (
-    <section className="dg-column" style={accentVars(id)} aria-label={id}>
-      <h2 className="dg-column-title">{ACCENT_PRESETS[id].label.fr}</h2>
+    <section className="dg-column" aria-label="Thème nocturne">
+      <h2 className="dg-column-title">Thème nocturne</h2>
       <Block title="Button">
         <Button variant="primary">Jouer</Button>
         <Button variant="secondary">Secondaire</Button>
@@ -86,9 +77,7 @@ const AccentColumn = ({ id }) => {
         <GlassIconButton title="Profil">
           <User width={20} height={20} />
         </GlassIconButton>
-        <IconButton variant="ghost" size="sm" label="Fermer" className="panel-close-btn">
-          <Close width={20} height={20} />
-        </IconButton>
+        <PanelCloseButton label="Fermer" />
       </Block>
       <Block title="Switch">
         <Switch checked={on} onChange={setOn} label="Démo" />
@@ -128,7 +117,7 @@ const AccentColumn = ({ id }) => {
             { value: "c", label: "Onglet 3" },
           ]}
         />
-        <div style={{ marginTop: "var(--spacing-sm)" }}>
+        <div className="dg-stack-gap">
           <TabBar
             level={2}
             label="Sous-menu démo"
@@ -189,17 +178,15 @@ const AccentColumn = ({ id }) => {
   );
 };
 
-/** Every UI primitive under the 6 accents, in the real dark theme tokens. */
+/** Every UI primitive in the unified nocturnal theme tokens. */
 const DevGallery = () => (
-  <main className="dg-root" style={getThemeCssVariables("dark", "monochrome")}>
+  <main className="dg-root" style={getThemeCssVariables()}>
     <header className="dg-header">
       <h1>Galerie de composants</h1>
       <p>Page de développement uniquement — absente des builds de production.</p>
     </header>
     <div className="dg-grid">
-      {Object.keys(ACCENT_PRESETS).map((id) => (
-        <AccentColumn key={id} id={id} />
-      ))}
+      <GalleryColumn />
     </div>
   </main>
 );

@@ -4,8 +4,9 @@
  * RÈGLES & DÉCISIONS DE CONCEPTION :
  * Dans tous les modes de jeu non-learn (countries, capitals, departments, us_states,
  * rivers_mountains) :
- * 1. Les suggestions sont TOUJOURS calculées et affichées dès 3 caractères saisis,
- *    qu'un pays soit sélectionné sur le globe ou non.
+ * 1. Les suggestions n'apparaissent que si la saisie est proche du nom COMPLET
+ *    (similarité Damerau-Levenshtein ≥ 0.8, cf. answerSuggestions.js), qu'un pays
+ *    soit sélectionné sur le globe ou non : taper 3 lettres ne révèle plus la réponse.
  * 2. Aucune suggestion n'est pré-surlignée par défaut (activeIndex = -1) :
  *    Entrée n'auto-valide jamais la première suggestion par accident.
  * 3. La validation d'une réponse passe toujours par une entrée de la liste :
@@ -294,6 +295,9 @@ export default function useAnswerCombobox({
       }
 
       if (e.key === "Enter") {
+        // Entrée qui valide une composition IME / touche morte : la valeur n'est
+        // pas encore finale, on laisse le navigateur la terminer.
+        if (e.nativeEvent?.isComposing || e.isComposing || e.keyCode === 229) return;
         handleEnterKey({
           e,
           currentValue,

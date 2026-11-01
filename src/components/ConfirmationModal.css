@@ -1,6 +1,7 @@
 /* Custom Confirmation Modal styles (dialog body rendered inside panelSystem's
-   .dialog-panel / .dialog-card primitives) */
-.dialog-card .confirmation-message {
+   .dialog-panel / .dialog-card primitives). Content only: the dialog surface itself
+   is styled by ui/Dialog.css. */
+.ui-dialog .confirmation-message {
   font-family: var(--font-display);
   font-size: var(--font-size-lg);
   font-weight: 500;
@@ -13,10 +14,4 @@
 .modal-actions {
   display: flex;
   gap: var(--spacing-md);
-}
-
-.modal-btn {
-  flex: 1;
-  padding: var(--spacing-ms) var(--spacing-lg);
-  font-weight: 600;
 }

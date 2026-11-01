@@ -32,18 +32,8 @@
 // padding so the rule  inner + padding ≈ outer  holds.
 // ==========================================
 
-import { getAccentOverrides } from "./accentPresets.js";
-import { buildMonochromePalette } from "./monochromeGlobe.js";
-
-/**
- * NASA Blue Marble (topo + bathy, public domain), self-hosted as WebP with
- * mipmaps generated on upload. 4096×2048 by default, 2048×1024 on
- * low-memory devices.
- */
-const SATELLITE_TEXTURE_URL =
-  typeof navigator !== "undefined" && navigator.deviceMemory && navigator.deviceMemory <= 2
-    ? "/textures/earth-2048.webp"
-    : "/textures/earth-4096.webp";
+import { ACCENT_OVERRIDES } from "./accentPresets.js";
+import { GLOBE_PALETTE } from "./globePalette.js";
 
 const STYLE_TOKENS = {
   radius: {
@@ -96,26 +86,7 @@ const STYLE_TOKENS = {
 // 2. CORE THEMES
 // ==========================================
 
-const THEMES_LIST = [{ id: "satellite" }, { id: "monochrome" }];
-const _GLOBE_THEME_IDS = THEMES_LIST.map((entry) => entry.id);
-export function isValidGlobeTheme(id) {
-  return THEMES_LIST.some((entry) => entry.id === id);
-}
-
-// The theme used on a fresh install (before any localStorage preference exists).
-// Monochrome (accent-derived CRT) is the dark, high-contrast default.
-export const DEFAULT_GLOBE_THEME = "monochrome";
-
-/** "blackout" was renamed "monochrome": map saved settings onto the new id. */
-export const migrateGlobeTheme = (id) => (id === "blackout" ? "monochrome" : id);
-
-/** Render key "monochrome@acid" → "monochrome" (the accent rides along so the globe re-derives live). */
-const globeBaseTheme = (key) => String(key || "").split("@")[0];
-
-// LIGHT PALETTE — soft near-black ink on warm paper. No pure #000 in the UI:
-// pure black reads harsh/dated on light surfaces ("noir trop noir"). Shadows are
-// ink-tinted, low-opacity and multi-layered instead of heavy black blurs.
-// KEEP IN SYNC with [data-theme="light"] in src/index.css (first-paint mirror).
+// Unified nocturnal palette. KEEP IN SYNC with :root in src/index.css (first-paint mirror).
 const THEME = {
   dark: {
     bg: "#0e1116",
@@ -181,215 +152,54 @@ const THEME = {
 // 3. GEOGRAPHIC PALETTES & THEMES CONFIG (Continents & Regions)
 // ==========================================
 
-const DEFAULT_CONTINENT_COLORS = {
-  surface: {
-    dark: {
-      Europe: "#38526c",
-      Americas: "#854d45",
-      Asia: "#857045",
-      Africa: "#458557",
-      Oceania: "#704585",
-      Antarctic: "#394a59",
-      Unknown: "#64748b",
-    },
-  },
-  label: {
-    dark: {
-      Europe: "#bcd0e8",
-      Americas: "#e8beb7",
-      Asia: "#e8d6be",
-      Africa: "#bee8cb",
-      Oceania: "#d6bee8",
-      Antarctic: "#cbd9e5",
-      Unknown: "#94a3b8",
-    },
-  },
-  attenuated: {
-    dark: {
-      Europe: "#141414",
-      Americas: "#1a1a1a",
-      Asia: "#202020",
-      Africa: "#262626",
-      Oceania: "#2c2c2c",
-      Antarctic: "#303030",
-      Unknown: "#1a1a1a",
-    },
-  },
+// One unified nocturnal theme. The UI chrome (CSS variables) reads the base
+// globe settings; the globe itself also pins its colours to GLOBE_PALETTE.
+const GLOBE_SETTINGS = {
+  globeMaterialColor: "#0f2a33",
+  polyMatMatte: true,
+  glowColorHex: 0x4f8a96,
+  glowPower: 0.8,
+  glowCoef: 0.45,
+  graticuleOpacity: 0.12,
+  labelColorType: "paper",
+  strokeWidthMobile: 1.1,
+  strokeWidthDesktop: 1.6,
+  selectionRingColor: "#52b5aa",
+};
+
+const p = GLOBE_PALETTE;
+const GLOBE_ONLY_SETTINGS = {
+  ...GLOBE_SETTINGS,
+  globeMaterialColor: p.ocean,
+  glowColorHex: p.glow,
+  glowPower: 1.6,
+  glowCoef: 0.5,
+  graticuleOpacity: 0.32,
+  oceanRimColor: p.rim,
+  oceanRimStrength: 0.12,
+};
+const GLOBE_LOCKED_COLORS = {
+  graticule: p.graticule,
+  accentGrid: p.graticule,
+  borderUnfound: p.border,
+  mapBorder: p.border,
+  glitchTintA: p.glitchTintA,
+  glitchTintB: p.glitchTintB,
 };
 
 export const GLOBE_TRANSPARENT_BACKGROUND = "rgba(0, 0, 0, 0)";
 
-const DEFAULT_DEPARTMENT_COLORS = {
-  11: "#e11d48", // Île-de-France (Rose/Red)
-  24: "#f59e0b", // Centre-Val de Loire (Orange)
-  27: "#d97706", // Bourgogne-Franche-Comté (Dark Orange)
-  28: "#059669", // Normandie (Green)
-  32: "#0284c7", // Hauts-de-France (Blue)
-  44: "#7c3aed", // Grand Est (Purple)
-  52: "#10b981", // Pays de la Loire (Teal)
-  53: "#2563eb", // Bretagne (Royal Blue)
-  75: "#0d9488", // Nouvelle-Aquitaine (Teal/Green)
-  76: "#ea580c", // Occitanie (Red-Orange)
-  84: "#4f46e5", // Auvergne-Rhône-Alpes (Indigo)
-  93: "#db2777", // Provence-Alpes-Côte d'Azur (Pink)
-  94: "#4b5563", // Corse (Grey)
-  "01": "#06b6d4", // Guadeloupe
-  "02": "#0891b2", // Martinique
-  "03": "#0ea5e9", // Guyane
-  "04": "#3b82f6", // La Réunion
-  "06": "#6366f1", // Mayotte
-};
-
-const GLOBE_THEMES = {
-  satellite: {
-    globeSettings: {
-      globeTextureUrl: SATELLITE_TEXTURE_URL,
-      globeMaterialType: "phong",
-      globeMaterialColor: "#ffffff",
-      globeSpecular: "#333333",
-      globeShininess: 15,
-      glowColorHex: 0x3a76f0,
-      glowColorHexLight: 0x3a76f0,
-      glowColorHexDark: 0x2563eb,
-      glowPower: 3.2,
-      glowCoef: 0.22,
-      graticuleOpacity: 0.25,
-      useRegionalBorders: true,
-      labelColorType: "paper",
-      strokeWidthMobile: 0.55,
-      strokeWidthDesktop: 0.75,
-      isBlackoutTheme: false,
-      borderFound: "#ffffff",
-      borderUnfound: "#555555",
-      mapBorder: "#777777",
-      mapBorderMuted: "#555555",
-    },
-    continents: DEFAULT_CONTINENT_COLORS,
-    departments: {
-      type: "colorful",
-      colors: DEFAULT_DEPARTMENT_COLORS,
-    },
-  },
-  monochrome: {
-    globeSettings: {
-      globeMaterialType: "basic",
-      globeMaterialColor: "#0f2a33",
-      isBlackoutTheme: true,
-      polyMatMatte: true,
-      polyMatEmissiveIntensityFoundLight: 0.22,
-      polyMatEmissiveIntensityFoundDark: 0.52,
-      glowColorHexLight: 0xbbbbbb,
-      glowColorHexDark: 0x4f8a96,
-      glowPower: 0.8,
-      glowCoef: 0.45,
-      graticuleOpacity: 0.12,
-      labelColorType: "paper",
-      strokeWidthMobile: 1.1,
-      strokeWidthDesktop: 1.6,
-      selectionRingColor: "#52b5aa",
-    },
-    continents: {
-      surface: {
-        dark: {
-          Europe: "#34423d",
-          Americas: "#34423d",
-          Africa: "#34423d",
-          Oceania: "#34423d",
-          Asia: "#34423d",
-          Antarctic: "#34423d",
-          France: "#34423d",
-          Unknown: "#34423d",
-        },
-      },
-      label: {
-        dark: buildMonochromePalette("bone").label,
-      },
-    },
-    departments: {
-      type: "monochrome",
-    },
-  },
-};
-
-/** Default (non-Monochrome) glitch tear colours and ocean rim tint. */
-export const GLOBE_FX_DEFAULTS = {
-  glitchTintA: "#00ccff",
-  glitchTintB: "#ff00cc",
-  oceanRimColor: "#d9e0eb",
-};
-
-const monochromeCache = new Map();
-const buildMonochromeTheme = (accentId) => {
-  const p = buildMonochromePalette(accentId);
-  const base = GLOBE_THEMES.monochrome;
-  return {
-    ...base,
-    globeSettings: {
-      ...base.globeSettings,
-      globeMaterialColor: p.ocean,
-      glowColorHexDark: p.glow,
-      glowColorHexLight: p.glow,
-      glowPower: 1.6,
-      glowCoef: p.paper ? 0.5 : 0.6,
-      graticuleOpacity: 0.32,
-      oceanRimColor: p.rim,
-      oceanRimStrength: p.paper ? 0.12 : 0.2,
-    },
-    lockedColors: {
-      graticule: p.graticule,
-      accentGrid: p.graticule,
-      borderUnfound: p.border,
-      mapBorder: p.border,
-      glitchTintA: p.glitchTintA,
-      glitchTintB: p.glitchTintB,
-    },
-    continents: { surface: { dark: p.land }, label: { dark: p.label } },
-  };
-};
-
-/** Theme config for a globe render key ("satellite", "monochrome@<accent>"). */
-const getGlobeThemeCfg = (globeTheme) => {
-  const [base, accentId] = String(globeTheme).split("@");
-  if (base === "monochrome" && accentId) {
-    if (!monochromeCache.has(accentId))
-      monochromeCache.set(accentId, buildMonochromeTheme(accentId));
-    return monochromeCache.get(accentId);
-  }
-  return GLOBE_THEMES[migrateGlobeTheme(base)] || GLOBE_THEMES.satellite;
-};
-
 export const GLOBE_STYLE = {
   lighting: {
-    sideOpacity: { light: 0.8, dark: 0.55 },
-    capOpacity: { light: 0.9, dark: 0.6 },
-    selectedSideOpacity: { light: 0.9, dark: 0.7 },
-    sideDarken: {
-      selectedLight: 0.08,
-      selectedDark: 0.12,
-      foundLight: 0.06,
-      foundDark: 0.08,
-      baseLight: 0.04,
-      baseDark: 0.06,
-    },
-    capPulseToPaper: { light: 0.16, dark: 0.28 },
-    selectedStrokeGlow: { light: 0.42, dark: 0.5 },
-    selectedEmissiveBoost: { light: 0.08, dark: 0.1 },
-    strokeDarken: { light: 0.28, dark: 0.2 },
-    graticuleOpacity: { light: 0.24, dark: 0.18 },
+    sideDarken: { selected: 0.12, found: 0.08, base: 0.06 },
+    capPulseToPaper: 0.28,
+    graticuleOpacity: 0.18,
     material: {
-      capEmissiveLight: 0.18,
-      capEmissiveDark: 0.24,
-      sideEmissiveLight: 0.05,
-      sideEmissiveDark: 0.08,
-      capShininessLight: 7,
-      capShininessDark: 8,
-      sideShininessLight: 2,
-      sideShininessDark: 3,
+      capEmissive: 0.24,
+      sideEmissive: 0.08,
+      capShininess: 8,
+      sideShininess: 3,
     },
-  },
-  overlay: {
-    darkOpacity: 0.68,
-    lightOpacity: 0.48,
   },
 };
 
@@ -402,7 +212,7 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
   const normalized = color.trim();
   if (!normalized || normalized === "transparent") return fallback;
 
-  const rgbaMatch = normalized.match(/^rgba\((.+)\)$/i);
+  const rgbaMatch = /^rgba\((.+)\)$/i.exec(normalized);
   if (rgbaMatch) {
     const channels = rgbaMatch[1].split(",").map((channel) => channel.trim());
     if (channels.length >= 3) {
@@ -423,43 +233,18 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
   return fallback;
 };
 
-export const getThemeColors = (globeTheme = "satellite", systemTheme = "dark") => {
-  const baseTheme = THEME[systemTheme] || THEME.dark;
-  const themeCfg = getGlobeThemeCfg(globeTheme);
-  const globeOverrides = { ...themeCfg.globeSettings };
+const buildColors = (settings, locked = null) => ({
+  ...THEME.dark,
+  ...settings,
+  ...ACCENT_OVERRIDES,
+  ...locked,
+});
 
-  if (globeTheme === "satellite") {
-    globeOverrides.globeTextureUrl = SATELLITE_TEXTURE_URL;
-    globeOverrides.lightingRim = "#ffffff";
-    globeOverrides.lightingFill = "#ffffff";
-    globeOverrides.lightingGround = "#eeeeee";
-    globeOverrides.lightingStudio = "#ffffff";
-    globeOverrides.lightingLeft = "#cccccc";
-    globeOverrides.lightingRight = "#cccccc";
-    globeOverrides.glowColorHexDark = 0x3a76f0;
-    globeOverrides.glowColorHexLight = 0x3a76f0;
-  }
+/** Globe colours (polygons, ocean, glow, graticule) for the unified theme. */
+export const getThemeColors = () => buildColors(GLOBE_ONLY_SETTINGS, GLOBE_LOCKED_COLORS);
 
-  if (globeBaseTheme(globeTheme) === "monochrome" && systemTheme === "light") {
-    globeOverrides.globeMaterialColor = "#ffffff";
-  }
-
-  return {
-    ...baseTheme,
-    ...globeOverrides,
-    // User-selected accent (Settings) wins over the theme's default accent.
-    ...getAccentOverrides(),
-    // Monochrome pins its globe-only colours to the accent-derived palette.
-    ...(themeCfg.lockedColors || {}),
-  };
-};
-
-export const getThemeCssVariables = (
-  systemTheme = "dark",
-  globeTheme = "satellite",
-  { uiScale = 1 } = {}
-) => {
-  const theme = getThemeColors(globeTheme, systemTheme);
+export const getThemeCssVariables = ({ uiScale = 1 } = {}) => {
+  const theme = buildColors(GLOBE_SETTINGS);
 
   const scale = Math.max(0.72, Math.min(1.05, uiScale || 1));
   const s = (px) => `${Math.round(px * scale)}px`;
@@ -523,10 +308,10 @@ export const getThemeCssVariables = (
     "--transition-spring": STYLE_TOKENS.transition.spring,
     "--transition-instant": STYLE_TOKENS.transition.instant,
     // Scaled control / layout sizes (root cause of "UI ENORME on 1080p")
-    "--control-sm": s(parseInt(STYLE_TOKENS.size.controlSm)),
-    "--control-md": s(parseInt(STYLE_TOKENS.size.controlMd)),
-    "--control-lg": s(parseInt(STYLE_TOKENS.size.controlLg)),
-    "--island-width": s(parseInt(STYLE_TOKENS.size.islandWidth)),
+    "--control-sm": s(Number.parseInt(STYLE_TOKENS.size.controlSm, 10)),
+    "--control-md": s(Number.parseInt(STYLE_TOKENS.size.controlMd, 10)),
+    "--control-lg": s(Number.parseInt(STYLE_TOKENS.size.controlLg, 10)),
+    "--island-width": s(Number.parseInt(STYLE_TOKENS.size.islandWidth, 10)),
     "--ui-scale": scale, // fluid calc(var(--base-foo) * var(--ui-scale))
     "--globe-flag-scale": Math.max(scale, 1.12),
   };
@@ -541,98 +326,46 @@ const normalizeRegion = (region) => {
   return region || "Unknown";
 };
 
-const resolveThemePalette = (globeTheme) => {
-  const themeCfg = getGlobeThemeCfg(globeTheme);
-  const palette = themeCfg.continents || GLOBE_THEMES.satellite.continents;
-  return { themeCfg, palette };
+const LAND_COLOR = p.land.Unknown;
+
+/** Land colour of a region (uniform across regions in the unified theme). */
+export const getThemeRegionColor = (region) => p.land[normalizeRegion(region)] || LAND_COLOR;
+
+/** Dimmed land colour (unfound countries, markers fading in). */
+export const getThemeRegionColorAttenuated = (region) => {
+  const baseColor = getThemeRegionColor(region);
+  const factor = 0.72;
+  const mix = (i) =>
+    Math.round(Number.parseInt(baseColor.substring(i, i + 2), 16) * factor)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${mix(1)}${mix(3)}${mix(5)}`;
 };
 
-export const getThemeRegionColor = (globeTheme, _systemTheme, region) => {
-  const normRegion = normalizeRegion(region);
-  const { palette } = resolveThemePalette(globeTheme);
-  const colors = palette.surface.dark;
-  return colors[normRegion] || colors.Unknown || "#888888";
-};
+/** High-contrast label / gauge tone of a region. */
+export const getThemeRegionColorLabel = (region) =>
+  p.label[normalizeRegion(region)] || p.label.Unknown;
 
-export const getThemeRegionColorAttenuated = (globeTheme, _systemTheme, region) => {
-  const normRegion = normalizeRegion(region);
-  const { palette } = resolveThemePalette(globeTheme);
-
-  if (palette.attenuated) {
-    const colors = palette.attenuated.dark;
-    return colors[normRegion] || colors.Unknown;
-  }
-
-  // Blackout fallbacks: programmatically blend colors to avoid browser-only CSS color-mix in ThreeJS
-  const baseColor = getThemeRegionColor(globeTheme, "dark", normRegion);
-  if (baseColor.startsWith("#")) {
-    const r = parseInt(baseColor.substring(1, 3), 16);
-    const g = parseInt(baseColor.substring(3, 5), 16);
-    const b = parseInt(baseColor.substring(5, 7), 16);
-    const factor = 0.72;
-    const mr = Math.round(r * factor);
-    const mg = Math.round(g * factor);
-    const mb = Math.round(b * factor);
-    return `#${mr.toString(16).padStart(2, "0")}${mg.toString(16).padStart(2, "0")}${mb.toString(16).padStart(2, "0")}`;
-  }
-  return baseColor;
-};
-
-export const getThemeRegionColorLabel = (globeTheme, _systemTheme, region) => {
-  const normRegion = normalizeRegion(region);
-  const { palette } = resolveThemePalette(globeTheme);
-
-  if (palette.label) {
-    const colors = palette.label.dark;
-    return colors[normRegion] || colors.Unknown;
-  }
-
-  // Blackout fallback: use base surface color shade directly
-  return getThemeRegionColor(globeTheme, "dark", normRegion);
-};
-
-export const getThemeDepartmentColor = (globeTheme, systemTheme, regionCode, fallbackColor) => {
-  const themeCfg = getGlobeThemeCfg(globeTheme);
-  const deptCfg = themeCfg.departments || { type: "colorful" };
-
-  if (deptCfg.type === "monochrome") {
-    const uiColors = getThemeColors(globeTheme, systemTheme);
-    return uiColors.mapSurfaceSelected || uiColors.mapBase;
-  }
-
-  const colors = deptCfg.colors || DEFAULT_DEPARTMENT_COLORS;
-  return colors[regionCode] || fallbackColor;
+/** Department tint in the regional modes: the selected-surface accent. */
+export const getThemeDepartmentColor = () => {
+  const uiColors = getThemeColors();
+  return uiColors.mapSurfaceSelected || uiColors.mapBase;
 };
 
 // SpaceBackground canvas: strictly monochrome (bone / slate / muted teal). The legacy
 // keys (cyan, magenta, glitch*) are kept as aliases so any older lookup stays valid.
 export const SPACE_RGB_COMPONENTS = {
-  light: {
-    normal: [44, 50, 58],
-    cyan: [46, 104, 98],
-    magenta: [58, 54, 48],
-    glitchRed: [72, 66, 58],
-    glitchCyan: [86, 98, 104],
-    dust: [112, 120, 126],
-    ivory: [36, 34, 30],
-    accent: [46, 104, 98],
-    reticle: [118, 128, 132],
-    dither: [96, 120, 118],
-    vignette: [62, 66, 72],
-  },
-  dark: {
-    normal: [237, 230, 214],
-    cyan: [124, 186, 178],
-    magenta: [246, 240, 226],
-    glitchRed: [214, 204, 186],
-    glitchCyan: [104, 142, 140],
-    dust: [110, 120, 124],
-    ivory: [246, 240, 226],
-    accent: [124, 186, 178],
-    reticle: [70, 84, 86],
-    dither: [52, 82, 82],
-    vignette: [6, 8, 11],
-  },
+  normal: [237, 230, 214],
+  cyan: [124, 186, 178],
+  magenta: [246, 240, 226],
+  glitchRed: [214, 204, 186],
+  glitchCyan: [104, 142, 140],
+  dust: [110, 120, 124],
+  ivory: [246, 240, 226],
+  accent: [124, 186, 178],
+  reticle: [70, 84, 86],
+  dither: [52, 82, 82],
+  vignette: [6, 8, 11],
 };
 // Canvas FX (fireworks, XP orbs) and Learn selection read the live CSS tokens so they
 // follow the theme; the hex values are first-paint / test fallbacks only.
@@ -641,7 +374,7 @@ const resolveTokenColor = (name, fallback) => {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 };
 
-const resolveActiveAccentColor = () => resolveTokenColor("--accent", getAccentOverrides().accent);
+const resolveActiveAccentColor = () => resolveTokenColor("--accent", ACCENT_OVERRIDES.accent);
 
 // Standardized retro TV glitch shader effect parameters and state rules
 export const GLITCH_EFFECT_SETTINGS = {
@@ -663,9 +396,10 @@ export const GLITCH_EFFECT_SETTINGS = {
   // ratios (mobile cap 1.25) are compensated in-shader via uPixelScale.
   referencePixelRatio: 2.0,
   noiseRangeDark: { min: 0.12, max: 0.68 },
-  noiseRangeLight: { min: 0.65, max: 0.98 },
   asciiScramble: {
-    glyphs: "░▒▓█▲▼◆◇@#$%&?*¢¤§[]{}<>/=+_~^0123456789XØÆßΔΩΨΞ",
+    // ASCII only and HTML-safe (no < > &): every glyph exists in the pixel display font
+    // and the labels are built as HTML strings (no tofu, no stray entities like "#x21").
+    glyphs: "@#$%?*[]{}/=+_~^0123456789X",
     idleProbability: 0.015,
     hoverProbability: 0.08,
     updateIntervalMs: 80,
@@ -717,7 +451,8 @@ export const getXpOrbColors = () => ({
 /** « Conquête » player colours (atlas tones), paired with patterns in conquestLogic. */
 export const CONQUEST_PLAYER_COLORS = {
   teal: THEME.dark.accent,
-  amber: THEME.dark.warning,
+  /** Cooler coral-orange so the golden city lights stand out on player 2. */
+  amber: "#e0664a",
   red: THEME.dark.error,
   green: THEME.dark.success,
   /** Globe outline marking patterned (non-solid) players for colour-blind play. */

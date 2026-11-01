@@ -18,26 +18,31 @@ const LeaderboardRow = ({
   trend = null,
   isMe = false,
   youLabel = "",
-}) => (
-  <li className={`lb-row ${isMe ? "is-me" : ""}`}>
-    <span className={`lb-rank ${podium ? `is-podium rank-${rank}` : ""}`}>{rank}</span>
-    <span className="lb-who">
-      {avatar}
-      <span className="lb-name-block">
-        <span className="lb-name">
-          <span className="lb-name-text">{name}</span>
-          {isMe && youLabel ? <span className="lb-you">{youLabel}</span> : null}
+}) => {
+  const rankClass = podium ? `lb-rank is-podium rank-${rank}` : "lb-rank";
+  const rowClass = isMe ? "lb-row is-me" : "lb-row";
+
+  return (
+    <li className={rowClass}>
+      <span className={rankClass}>{rank}</span>
+      <span className="lb-who">
+        {avatar}
+        <span className="lb-name-block">
+          <span className="lb-name">
+            <span className="lb-name-text">{name}</span>
+            {isMe && youLabel ? <span className="lb-you">{youLabel}</span> : null}
+          </span>
+          {sub ? <span className="lb-sub">{sub}</span> : null}
         </span>
-        {sub ? <span className="lb-sub">{sub}</span> : null}
       </span>
-    </span>
-    <span className="lb-stats">
-      <span className="lb-stat">{stat}</span>
-      {meta ? <span className="lb-meta">{meta}</span> : null}
-    </span>
-    {trend}
-  </li>
-);
+      <span className="lb-stats">
+        <span className="lb-stat">{stat}</span>
+        {meta ? <span className="lb-meta">{meta}</span> : null}
+      </span>
+      {trend}
+    </li>
+  );
+};
 
 /** Wrapper list so all tabs share spacing and scrolling. */
 export const LeaderboardList = ({ children, label }) => (

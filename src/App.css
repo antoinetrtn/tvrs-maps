@@ -9,28 +9,8 @@
   font-family: var(--font-main);
 }
 
-@keyframes float {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(100px);
-  }
-}
-
 .animation-fade-in {
   animation: animation-fade-in var(--transition-normal) forwards;
-}
-
-@keyframes animation-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Screen transition (applies only to UI elements to keep the globe slide
@@ -64,29 +44,6 @@
     both;
 }
 
-@keyframes game-ui-step-in {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scanline-step-pass {
-  0% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 0.12;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
 /* Pulsing red panic frame when time is running out (<= 30s) */
 .panic-vignette-overlay {
   position: fixed;
@@ -97,30 +54,9 @@
   animation: panic-pulse var(--dur-reveal) ease-in-out infinite alternate;
 }
 
-@keyframes panic-pulse {
-  0% {
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--error) 35%, transparent);
-  }
-  100% {
-    box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--error) 75%, transparent);
-  }
-}
-
 /* One-shot red flash when a life is lost (wrong answer) */
 .panic-vignette-overlay.life-lost {
   animation: life-lost-flash var(--dur-count) ease-out 1 forwards;
-}
-
-@keyframes life-lost-flash {
-  0% {
-    box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--error) 85%, transparent);
-  }
-  60% {
-    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--error) 45%, transparent);
-  }
-  100% {
-    box-shadow: inset 0 0 0 0 color-mix(in srgb, var(--error) 0%, transparent);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -128,14 +64,14 @@
   .app-container.glitch-active .hud-bottom-right,
   .app-container.glitch-active .bottom-hud-container,
   .app-container.glitch-active .end-screen-overlay {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 
   .app-container.glitch-active::after {
-    animation: none !important;
-    opacity: 0 !important;
+    animation: none;
+    opacity: 0;
   }
 
   .panic-vignette-overlay.life-lost {

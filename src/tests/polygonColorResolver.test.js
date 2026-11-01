@@ -15,7 +15,7 @@ import {
 } from "../globe/render/polygonColorResolver";
 
 const lerpColor = (a, _b, _amount) => a;
-const UI_COLORS = getThemeColors("satellite", "dark");
+const UI_COLORS = getThemeColors();
 
 describe("polygonColorResolver", () => {
   const baseCtx = {
@@ -54,7 +54,6 @@ describe("polygonColorResolver", () => {
     ).toBe(true);
     expect(
       resolveRegionalLandColor("Europe", {
-        globeTheme: "satellite",
         regionColorsLabels: { Europe: UI_COLORS.accent },
         regionColorsAttenuated: { Europe: UI_COLORS.mapBorder },
         fallbackAccent: UI_COLORS.accent,
@@ -63,15 +62,15 @@ describe("polygonColorResolver", () => {
     ).toBe(UI_COLORS.mapBase);
   });
 
-  it("returns green for learn selection", () => {
-    expect(
-      resolveCountryCapColor({
-        ...baseCtx,
-        mode: "learn",
-        isLearn: true,
-        selectedCountry: "FRA",
-      })
-    ).toBe(FOUND_HIGHLIGHT);
+  it("learn selection keeps the home land colour (no white highlight fill)", () => {
+    const color = resolveCountryCapColor({
+      ...baseCtx,
+      mode: "learn",
+      isLearn: true,
+      selectedCountry: "FRA",
+    });
+    expect(color).not.toBe(FOUND_HIGHLIGHT);
+    expect(color).toBe(baseCtx.mapBase);
   });
 
   it("uses darker green stroke when found country is selected", () => {
@@ -88,13 +87,11 @@ describe("polygonColorResolver", () => {
       return toHex(mix(r1, r2), mix(g1, g2), mix(b1, b2));
     };
     const selected = resolveFoundCountryStroke({
-      isLight: false,
       isSelected: true,
       UI_COLORS,
       lerpColor: blend,
     });
     const normal = resolveFoundCountryStroke({
-      isLight: false,
       isSelected: false,
       UI_COLORS,
       lerpColor: blend,
@@ -118,7 +115,6 @@ describe("polygonColorResolver", () => {
       return toHex(mix(r1, r2), mix(g1, g2), mix(b1, b2));
     };
     const stroke = resolveFoundCountryStroke({
-      isLight: false,
       UI_COLORS,
       lerpColor: blend,
     });
@@ -176,7 +172,7 @@ describe("polygonColorResolver", () => {
         isHomeScreen: false,
         isSuccess: true,
       }).useShader
-    ).toBe(true);
+    ).toBe(false); // discovery reveal runs in the grain shader (non-regional)
 
     expect(
       resolvePolygonShaderMode({
@@ -242,7 +238,6 @@ describe("polygonColorResolver", () => {
       transState,
       countryDataMap: { Spain: { region: "Europe" } },
       gameDataMap: {},
-      globeTheme: "satellite",
       UI_COLORS,
       getRegionSurfaceColor,
       getRegionSurfaceColorDimmed,

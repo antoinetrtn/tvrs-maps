@@ -3,7 +3,7 @@ import "./ConquestScreen.css";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { countryDataMap } from "../data/gameData";
-import ConquestEnd from "./ConquestEnd.jsx";
+import useMountedOnce from "../hooks/useMountedOnce";
 import ConquestHud from "./ConquestHud.jsx";
 import ConquestLobby from "./ConquestLobby.jsx";
 import {
@@ -13,8 +13,10 @@ import {
   shieldedCountryIds,
   stealLockouts,
 } from "./conquestLogic";
-import ConquestRulesSheet from "./ConquestRulesSheet.jsx";
 import { useConquestRulesAutoOpen } from "./useConquestRulesAutoOpen";
+
+const ConquestEnd = React.lazy(() => import("./ConquestEnd.jsx"));
+const ConquestRulesSheet = React.lazy(() => import("./ConquestRulesSheet.jsx"));
 
 const TICK_MS = 250;
 
@@ -82,6 +84,7 @@ const ConquestScreen = ({
 
   // Rules sheet: opens by itself the first time, then from the « Règles » buttons.
   const [rulesOpen, setRulesOpen] = useConquestRulesAutoOpen();
+  const rulesMounted = useMountedOnce(rulesOpen);
   const openRules = useCallback(() => setRulesOpen(true), [setRulesOpen]);
 
   const target = phase === "countdown" ? match?.started_at : match?.ends_at;
@@ -105,8 +108,16 @@ const ConquestScreen = ({
           countryClickRef={countryClickRef}
         />
       )}
-      {phase === "finished" && <ConquestEnd lang={lang} conquest={conquest} onExit={exit} />}
-      <ConquestRulesSheet open={rulesOpen} onClose={() => setRulesOpen(false)} lang={lang} />
+      {phase === "finished" && (
+        <React.Suspense fallback={null}>
+          <ConquestEnd lang={lang} conquest={conquest} onExit={exit} />
+        </React.Suspense>
+      )}
+      {rulesMounted && (
+        <React.Suspense fallback={null}>
+          <ConquestRulesSheet open={rulesOpen} onClose={() => setRulesOpen(false)} lang={lang} />
+        </React.Suspense>
+      )}
     </div>
   );
 };

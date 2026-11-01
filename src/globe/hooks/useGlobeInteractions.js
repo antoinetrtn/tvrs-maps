@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { BREAKPOINTS } from "../../config/gameConstants";
 import {
@@ -7,7 +7,9 @@ import {
   triggerSubtleHapticTick,
 } from "../../utils/haptics";
 import { perfTracker } from "../../utils/perfTracker";
-import { clientToGlobeCoords, featureContainsLngLat, getLngLatDistance } from "../../utils/utils";
+import { clientToGlobeCoords } from "../../utils/utils";
+import { getProjector, loadMicroAdmins, pickNearestByPixels, toCanvasPx } from "../microSnap";
+import { pickNearestByDegrees } from "../pickFallback";
 import {
   clampGlobeAltitude,
   getGlobeMinAltitude,
@@ -15,6 +17,17 @@ import {
   syncCameraMapProjection,
   syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
+import {
+  applyFallbackSelection,
+  getDegreeFallbackRadius,
+  pickFeatureOrMicro,
+  pickRiversMountainsCountry,
+} from "./interactionPickers";
+import { useFeatureHover } from "./useFeatureHover";
+import { useMicroMagnetHover } from "./useMicroMagnetHover";
+
+// Fallback "nearest centroid" radius when the click misses every polygon.
+const FALLBACK_RADIUS_PX = 48;
 
 // Double-tap-and-drag zoom: the second tap must land quickly and close to the first.
 const DOUBLE_TAP_MS = 280;
@@ -84,81 +97,72 @@ export function useGlobeInteractions({
     [gameDataMap, onCountrySelect]
   );
 
+  useEffect(() => {
+    if (!isHomeScreen) loadMicroAdmins();
+  }, [isHomeScreen]);
+
   const selectCountryAtLngLat = useCallback(
-    (lng, lat) => {
+    (lng, lat, screen) => {
       const t0 = performance.now();
       const recordLatency = () => {
         const t1 = performance.now();
         perfTracker.recordSelect(t1 - t0);
       };
 
-      if (isRiversMountainsMode) {
-        let best = null;
-        Object.entries(gameDataMap).forEach(([admin, data]) => {
-          if (!data) return;
-
-          let dist;
-          if (data.type === "river" && Array.isArray(data.path) && data.path.length > 0) {
-            dist = data.path.reduce((min, [pLat, pLng]) => {
-              const d = getLngLatDistance(lng, lat, pLng, pLat);
-              return d < min ? d : min;
-            }, Infinity);
-          } else if (data.lat !== undefined && data.lng !== undefined) {
-            dist = getLngLatDistance(lng, lat, data.lng, data.lat);
-          } else {
-            return;
-          }
-          if (!best || dist < best.dist) best = { admin, dist };
-        });
-
-        const bestData = best ? gameDataMap[best.admin] : null;
-        if (bestData) {
-          const threshold = bestData.type === "river" ? 5.5 : 6.0;
-          if (best.dist < threshold) {
-            selectCountry(best.admin);
-            recordLatency();
-            return;
-          }
-        }
-        if (mode !== "learn") {
-          selectCountry(null);
-          recordLatency();
-          return;
-        }
+      if (
+        isRiversMountainsMode &&
+        pickRiversMountainsCountry(gameDataMap, lng, lat, mode, selectCountry)
+      ) {
+        recordLatency();
+        return;
       }
 
       const isUsStatesMode = mode === "us_states" || mode?.includes("us_states");
-      const match = selectableFeatureIndex.find((entry) => featureContainsLngLat(entry, lng, lat));
-      if (match) {
-        selectCountry(match.admin);
-        recordLatency();
-        return;
-      }
+      const project = screen && getProjector(globeEl);
 
-      // Special polar region handling: everything south of 60°S (without a matched island) is Antarctica
-      if (lat <= -60.0 && gameDataMap["Antarctica"]) {
-        selectCountry("Antarctica");
-        recordLatency();
-        return;
-      }
-
-      let best = null;
-      Object.entries(gameDataMap).forEach(([admin, data]) => {
-        if (!data || data.lat === undefined || data.lng === undefined) return;
-        const dist = getLngLatDistance(lng, lat, data.lng, data.lat);
-        if (!best || dist < best.dist) best = { admin, dist };
+      const directPick = pickFeatureOrMicro({
+        lng,
+        lat,
+        screen,
+        globeEl,
+        gameDataMap,
+        selectableFeatureIndex,
+        isDepartmentMode,
+        isUsStatesMode,
+        project,
       });
-
-      const maxDist = isDepartmentMode ? 2.5 : isUsStatesMode ? 4.5 : 6.0;
-      if (best && best.dist < maxDist) {
-        selectCountry(best.admin);
-      } else if (mode !== "learn") {
-        selectCountry(null);
+      if (directPick) {
+        selectCountry(directPick);
+        recordLatency();
+        return;
       }
+
+      if (project) {
+        const near = pickNearestByPixels({
+          gameDataMap,
+          project,
+          click: screen,
+          lng,
+          lat,
+          radiusPx: FALLBACK_RADIUS_PX,
+        });
+        applyFallbackSelection(near ? near.admin : null, mode, selectCountry);
+        recordLatency();
+        return;
+      }
+
+      const fallback = pickNearestByDegrees(
+        gameDataMap,
+        lng,
+        lat,
+        getDegreeFallbackRadius(isDepartmentMode, isUsStatesMode)
+      );
+      applyFallbackSelection(fallback, mode, selectCountry);
       recordLatency();
     },
     [
       gameDataMap,
+      globeEl,
       isDepartmentMode,
       isRiversMountainsMode,
       selectableFeatureIndex,
@@ -305,12 +309,23 @@ export function useGlobeInteractions({
     [isHomeScreen, isKeyboardMode, onPreserveInputFocus, viewport.width, globeContentWrapperRef]
   );
 
+  const updateMagnetHover = useMicroMagnetHover(globeEl, gameDataMap);
+  const featureHover = useFeatureHover(
+    globeEl,
+    gameDataMap,
+    Boolean(isRiversMountainsMode) && !isHomeScreen
+  );
+
   const handlePointerMove = useCallback(
     (event) => {
       // No per-move globe hit-test: its result was never used (selection is
       // resolved on pointerup), and it cost a raycast + point-in-polygon scan
       // on every move event during drags.
       const tap = tapRef.current;
+      if (!tap && event.pointerType === "mouse" && !isHomeScreen) {
+        if (isRiversMountainsMode) featureHover.update(event);
+        else updateMagnetHover(event);
+      }
       const wrapper = globeContentWrapperRef.current;
       if (!tap || tap.pointerId !== event.pointerId || !wrapper || isHomeScreen) return;
       // Touch: no wrapper translation — OrbitControls already moves the globe
@@ -336,7 +351,14 @@ export function useGlobeInteractions({
         });
       }
     },
-    [isHomeScreen, perfProfile?.isMobile, globeContentWrapperRef]
+    [
+      isHomeScreen,
+      isRiversMountainsMode,
+      perfProfile?.isMobile,
+      globeContentWrapperRef,
+      updateMagnetHover,
+      featureHover,
+    ]
   );
 
   const handlePointerUp = useCallback(
@@ -375,7 +397,10 @@ export function useGlobeInteractions({
 
       const coords = clientToGlobeCoords(globeEl, clientX, clientY);
       if (coords) {
-        selectCountryAtLngLat(coords.lng, coords.lat);
+        selectCountryAtLngLat(coords.lng, coords.lat, {
+          ...toCanvasPx(globeEl, clientX, clientY),
+          pointerType: event.pointerType,
+        });
       } else {
         selectCountry(null);
       }
@@ -414,6 +439,7 @@ export function useGlobeInteractions({
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handlePointerLeave: featureHover.clear,
     handleBackgroundClick,
     handleGlobeClick,
     selectCountry,

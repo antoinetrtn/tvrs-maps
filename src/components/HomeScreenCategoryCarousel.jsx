@@ -2,16 +2,7 @@ import "./HomeScreenCategoryCarousel.css";
 import "./HomeScreenCarouselMotion.css";
 import "./HomeScreenDesktop.css";
 
-import {
-  Chess,
-  ChevronLeft,
-  ChevronRight,
-  Earth,
-  Globe,
-  Hash,
-  MapPin,
-  Waves,
-} from "pixelarticons/react";
+import { ChevronLeft, ChevronRight } from "pixelarticons/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTranslation } from "../config/i18n";
@@ -20,19 +11,22 @@ import { countryDataMap } from "../data/gameData";
 import { riversMountainsDataMap } from "../data/riversMountainsData";
 import { usStatesDataMap } from "../data/usStatesData";
 import usePrefersReducedMotion from "../hooks/usePrefersReducedMotion";
+import { triggerSelectionHaptic } from "../utils/haptics";
 import { getGameModesMetadata } from "./homeHeroText";
 import ModeCard from "./HomeModeCard";
+import { HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 import IconButton from "./ui/IconButton";
+import Pressable from "./ui/Pressable";
 import useCarouselDrag from "./useCarouselDrag";
 
 const MODE_ICONS = {
-  [HOME_CONQUEST_KEY]: <Chess width={48} height={48} />,
-  countries: <Globe width={48} height={48} />,
-  capitals: <MapPin width={48} height={48} />,
-  departments: <Hash width={48} height={48} />,
-  us_states: <Earth width={48} height={48} />,
-  rivers_mountains: <Waves width={48} height={48} />,
+  [HOME_CONQUEST_KEY]: <HomeModePixelArt modeKey={HOME_CONQUEST_KEY} />,
+  countries: <HomeModePixelArt modeKey="countries" />,
+  capitals: <HomeModePixelArt modeKey="capitals" />,
+  departments: <HomeModePixelArt modeKey="departments" />,
+  us_states: <HomeModePixelArt modeKey="us_states" />,
+  rivers_mountains: <HomeModePixelArt modeKey="rivers_mountains" />,
 };
 
 const buildCarouselItems = (metadata) =>
@@ -45,9 +39,9 @@ const DeckArrow = ({ side, onClick, label, icon }) => (
   <div className={`deck-click-zone ${side}`}>
     <IconButton
       size="sm"
-      variant="outline"
+      variant="ghost"
       label={label}
-      className="deck-arrow"
+      look="deck-arrow"
       onClick={(e) => {
         if (e.detail > 0) {
           e.currentTarget.blur();
@@ -69,8 +63,8 @@ const DeckDots = ({ items, activeIndex, lang, onDotClick }) => {
       {items.map((item, idx) => {
         const itemTitle = lang === "fr" ? item.titleFr : item.titleEn;
         return (
-          // pagination dot: intentionally not a kit Button (6px visual, 24px hit area via ::after)
-          <button
+          // pagination dot: kit Pressable, not Button (6px visual, 24px hit area via ::after)
+          <Pressable
             type="button"
             key={item.key}
             className={`deck-dot ${idx === activeIndex ? "active" : ""}`}
@@ -111,6 +105,16 @@ function useGameModesList(onOpenConquest, homeMode) {
   return { gameModesCarousel, activeIndex, totalModes: gameModesCarousel.length };
 }
 
+// Haptic tick each time the active card changes after mount (not on first render).
+function useCardChangeHaptic(activeIndex) {
+  const prevRef = useRef(activeIndex);
+  useEffect(() => {
+    if (prevRef.current === activeIndex) return;
+    prevRef.current = activeIndex;
+    triggerSelectionHaptic();
+  }, [activeIndex]);
+}
+
 function useCarouselKeyboardNav(goToNext, goToPrev, exiting) {
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -137,6 +141,9 @@ function useCarouselNavigation({
 }) {
   const [animatingDirection, setAnimatingDirection] = useState(null);
   const isAnimatingRef = useRef(false);
+  const animTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(animTimerRef.current), []);
 
   const triggerAnimatedChange = useCallback(
     (direction, targetIdxOverride = null) => {
@@ -144,15 +151,15 @@ function useCarouselNavigation({
       isAnimatingRef.current = true;
       setAnimatingDirection(direction);
 
-      const nextIdx =
-        targetIdxOverride !== null
-          ? targetIdxOverride
-          : direction === "leftSwipe"
-            ? (activeIndex + 1) % totalModes
-            : (activeIndex - 1 + totalModes) % totalModes;
+      let nextIdx = (activeIndex - 1 + totalModes) % totalModes;
+      if (targetIdxOverride !== null) {
+        nextIdx = targetIdxOverride;
+      } else if (direction === "leftSwipe") {
+        nextIdx = (activeIndex + 1) % totalModes;
+      }
       setHomeMode(gameModesCarousel[nextIdx].key);
 
-      setTimeout(() => {
+      animTimerRef.current = setTimeout(() => {
         setAnimatingDirection(null);
         isAnimatingRef.current = false;
       }, 200);
@@ -233,6 +240,7 @@ const HomeScreenCategoryCarousel = ({
   });
 
   useCarouselKeyboardNav(goToNext, goToPrev, exiting);
+  useCardChangeHaptic(activeIndex);
 
   return (
     <div

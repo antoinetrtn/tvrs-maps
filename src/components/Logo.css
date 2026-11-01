@@ -103,15 +103,3 @@
 .star-12 {
   animation-delay: 1.4s;
 }
-
-@keyframes twinkle-goat {
-  0%,
-  100% {
-    opacity: 0.15;
-    transform: scale(0.5);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-  }
-}

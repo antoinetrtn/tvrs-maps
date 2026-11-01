@@ -21,6 +21,7 @@ const Slider = ({
   decrementLabel = "−",
   incrementLabel = "+",
   showSteppers = true,
+  hideLabel = false,
   className = "",
 }) => {
   const id = useId();
@@ -31,7 +32,7 @@ const Slider = ({
     <div className={`ui-slider ${className}`} style={{ "--fill": `${pct}%` }}>
       <div className="ui-slider-head">
         {label && (
-          <label className="ui-slider-label" htmlFor={id}>
+          <label className={`ui-slider-label${hideLabel ? " sr-only" : ""}`} htmlFor={id}>
             {label}
           </label>
         )}

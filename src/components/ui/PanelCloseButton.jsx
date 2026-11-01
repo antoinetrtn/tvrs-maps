@@ -20,7 +20,7 @@ export default function PanelCloseButton({
       variant="ghost"
       size="sm"
       label={label}
-      className="panel-close-btn"
+      look="panel-close"
       onClick={(e) => {
         if (stopPropagation) e.stopPropagation();
         onClick?.(e);

@@ -1,0 +1,69 @@
+.conquest-knowledge-options.ui-options {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.conquest-knowledge-options .ui-option {
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  text-align: left;
+}
+.conquest-knowledge-options .ui-option-mark {
+  display: none;
+}
+.conquest-knowledge-order {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.conquest-knowledge-order-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+.conquest-knowledge-order-label {
+  flex: 1;
+}
+.cq-pixel-icon {
+  display: inline-grid;
+  grid-template-columns: repeat(12, 3px);
+  grid-template-rows: repeat(12, 3px);
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.cq-pixel-icon--plant,
+.cq-pixel-icon--animal,
+.cq-pixel-icon--bird,
+.cq-pixel-icon--sea,
+.cq-pixel-icon--fruit {
+  color: var(--success);
+}
+
+.cq-pixel-icon--instrument,
+.cq-pixel-icon--music,
+.cq-pixel-icon--dish,
+.cq-pixel-icon--drink,
+.cq-pixel-icon--sport {
+  color: var(--warning);
+}
+
+.cq-pixel-px {
+  background-color: currentColor;
+  box-shadow: 1px 1px 0 var(--black);
+}
+
+/* Choice grid: smaller visuals so the label stays the focus (12 × 2 px cells). */
+.conquest-knowledge-options .cq-pixel-icon {
+  grid-template-columns: repeat(12, 2px);
+  grid-template-rows: repeat(12, 2px);
+  width: 24px;
+  height: 24px;
+}

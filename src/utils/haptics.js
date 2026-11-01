@@ -7,9 +7,11 @@ export const ZOOM_HAPTIC_DETENTS = 64;
 // feather-light mechanical detent ("watch crown" feel) instead of a full-scale buzz,
 // and lets Blink VibrationController finish timer_do_vibrate_ in 4ms so closely-spaced
 // detents (26ms cooldown, 6px pinch step, 64 log detents) never self-cancel.
-const ZOOM_HAPTIC_COOLDOWN_MS = 26;
 export const ZOOM_HAPTIC_TICK_MS = 1;
-export const ZOOM_HAPTIC_BOUNDARY_MS = 3;
+const ZOOM_HAPTIC_BOUNDARY_MS = 3;
+// Zoom limit "end stop": 28ms buzz, short gap, 14ms echo (~double knock).
+export const ZOOM_LIMIT_HAPTIC_PATTERN = [28, 40, 14];
+const ZOOM_HAPTIC_COOLDOWN_MS = 26;
 const ZOOM_HAPTIC_ACTIVE_WINDOW_MS = 280;
 const ZOOM_PINCH_STEP_PX = 6;
 const ZOOM_WHEEL_STEP_DELTA = 16;
@@ -20,10 +22,13 @@ const BOUNDARY_EPS = 0.004;
 let sharedAudioCtx = null;
 let iosHapticLabel = null;
 let lastNativeVibrateAt = -Infinity;
+let lastSelectionAt = -Infinity;
+
+const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
 
 function ensureIosHapticSwitch() {
   if (typeof document === "undefined" || !document.body) return null;
-  if (iosHapticLabel && iosHapticLabel.isConnected) return iosHapticLabel;
+  if (iosHapticLabel?.isConnected) return iosHapticLabel;
   try {
     const label = document.createElement("label");
     label.setAttribute("aria-hidden", "true");
@@ -120,7 +125,7 @@ export function computeZoomDetentIndex(
  * Triggers a subtle haptic pulse via navigator.vibrate (Android), iOS 17.4+ switch
  * Taptic Engine fallback (iPhone Safari), or WebAudio tactile micro-click fallback.
  */
-function tryNativeVibrate(nav, durationMs) {
+function tryNativeVibrate(nav, durationMs, { force = false } = {}) {
   if (!nav || typeof nav.vibrate !== "function") return triggerIosSwitchHaptic();
   if (
     typeof nav.userActivation === "object" &&
@@ -131,7 +136,7 @@ function tryNativeVibrate(nav, durationMs) {
   }
   const isGlobalNavigator = typeof navigator !== "undefined" && nav === navigator;
   const now = typeof performance !== "undefined" ? performance.now() : Date.now();
-  if (isGlobalNavigator && now - lastNativeVibrateAt < MIN_NATIVE_VIBRATE_INTERVAL_MS) {
+  if (!force && isGlobalNavigator && now - lastNativeVibrateAt < MIN_NATIVE_VIBRATE_INTERVAL_MS) {
     return true;
   }
   try {
@@ -147,15 +152,24 @@ function tryNativeVibrate(nav, durationMs) {
 
 export function triggerSubtleHapticTick(
   durationMs = ZOOM_HAPTIC_TICK_MS,
-  nav = typeof navigator !== "undefined" ? navigator : null
+  nav = typeof navigator !== "undefined" ? navigator : null,
+  { force = false } = {}
 ) {
   if (prefersReducedMotion()) return false;
-  const vibrated = tryNativeVibrate(nav, durationMs);
+  const vibrated = tryNativeVibrate(nav, durationMs, { force });
   // Always run the ultra-short 8ms low-frequency tactile audio tick alongside native vibrate:
   // on Android devices where OS Touch feedback / Ringer / Battery Saver silences the physical
   // vibrator despite navigator.vibrate() returning true, the tactile click still gives feedback.
   const audioClicked = playTactileAudioTick(durationMs >= ZOOM_HAPTIC_BOUNDARY_MS);
   return Boolean(vibrated || audioClicked);
+}
+
+function getZoomBoundary(altitude, minAltitude, maxAltitude) {
+  const safeMin = Math.max(0.01, minAltitude);
+  const safeMax = Math.max(safeMin + 0.01, maxAltitude);
+  if (altitude <= safeMin + BOUNDARY_EPS) return "min";
+  if (altitude >= safeMax - BOUNDARY_EPS) return "max";
+  return null;
 }
 
 /**
@@ -166,6 +180,7 @@ export function createZoomHapticTracker({
   cooldownMs = ZOOM_HAPTIC_COOLDOWN_MS,
   activeWindowMs = ZOOM_HAPTIC_ACTIVE_WINDOW_MS,
   vibrate = triggerSubtleHapticTick,
+  limitVibrate = triggerZoomLimitHaptic,
 } = {}) {
   let lastDetent = null;
   let lastBoundary = null;
@@ -179,9 +194,9 @@ export function createZoomHapticTracker({
       activeUntil = Math.max(activeUntil, now + activeWindowMs);
     },
     clearZoomGesture() {
+      // lastBoundary is kept: lifting fingers at a limit must not re-arm the jolt.
       activeUntil = -Infinity;
       lastDetent = null;
-      lastBoundary = null;
       lastPinchBucket = null;
       wheelAccum = 0;
     },
@@ -199,6 +214,9 @@ export function createZoomHapticTracker({
         return { pulsed: false, reason: "same-bucket", bucket };
       }
       lastPinchBucket = bucket;
+      if (lastBoundary) {
+        return { pulsed: false, reason: "at-limit", bucket };
+      }
       if (now - lastPulseAt < cooldownMs) {
         return { pulsed: false, reason: "cooldown", bucket };
       }
@@ -216,6 +234,9 @@ export function createZoomHapticTracker({
         return { pulsed: false, reason: "accumulating" };
       }
       wheelAccum %= stepDelta;
+      if (lastBoundary) {
+        return { pulsed: false, reason: "at-limit" };
+      }
       if (now - lastPulseAt < cooldownMs) {
         return { pulsed: false, reason: "cooldown" };
       }
@@ -238,9 +259,11 @@ export function createZoomHapticTracker({
       const detent = computeZoomDetentIndex(altitude, { minAltitude, maxAltitude, detents });
       if (detent === null) return { pulsed: false, detent: null };
 
+      const boundary = getZoomBoundary(altitude, minAltitude, maxAltitude);
+
       if (now > activeUntil) {
         lastDetent = detent;
-        lastBoundary = null;
+        lastBoundary = boundary;
         return { pulsed: false, detent, reason: "inactive" };
       }
 
@@ -249,28 +272,22 @@ export function createZoomHapticTracker({
         return { pulsed: false, detent, reason: "seeded" };
       }
 
-      const safeMin = Math.max(0.01, minAltitude);
-      const safeMax = Math.max(safeMin + 0.01, maxAltitude);
-      const atMin = altitude <= safeMin + BOUNDARY_EPS;
-      const atMax = altitude >= safeMax - BOUNDARY_EPS;
-      const boundary = atMin ? "min" : atMax ? "max" : null;
-
       const isNewBoundary = Boolean(boundary && boundary !== lastBoundary);
       if (isNewBoundary) {
         lastBoundary = boundary;
         lastDetent = detent;
       }
-      if (isNewBoundary && now - lastPulseAt < cooldownMs * 0.75) {
-        return { pulsed: false, detent, boundary, reason: "cooldown" };
-      }
       if (isNewBoundary) {
+        // Arrival at a limit: one sharp jolt, never throttled by the tick cooldown.
         lastPulseAt = now;
-        const ok = vibrate(ZOOM_HAPTIC_BOUNDARY_MS);
-        return { pulsed: Boolean(ok), detent, boundary, duration: ZOOM_HAPTIC_BOUNDARY_MS };
+        const ok = limitVibrate();
+        return { pulsed: Boolean(ok), detent, boundary, pattern: ZOOM_LIMIT_HAPTIC_PATTERN };
       }
-      if (!boundary) {
-        lastBoundary = null;
+      if (boundary) {
+        // Pushing beyond the limit in the same direction: total silence.
+        return { pulsed: false, detent, boundary, reason: "at-limit" };
       }
+      lastBoundary = null; // back inside the range: ticks resume, jolt re-armed
 
       if (detent === lastDetent) {
         return { pulsed: false, detent, reason: "same-detent" };
@@ -286,4 +303,41 @@ export function createZoomHapticTracker({
       return { pulsed: Boolean(ok), detent, duration: ZOOM_HAPTIC_TICK_MS };
     },
   };
+}
+
+/**
+ * Firm "end stop" pulse when the zoom hits its min/max limit: clearly stronger
+ * than the 1-10ms ticks used elsewhere. Bypasses the native throttle.
+ */
+export function triggerZoomLimitHaptic(nav = typeof navigator !== "undefined" ? navigator : null) {
+  if (prefersReducedMotion()) return false;
+  const vibrated = tryNativeVibrate(nav, ZOOM_LIMIT_HAPTIC_PATTERN, { force: true });
+  const audioClicked = playTactileAudioTick(true);
+  return Boolean(vibrated || audioClicked);
+}
+
+// Selection tick when the homepage deck lands on another mode card (swipe, keys, dots).
+export const SELECTION_HAPTIC_TICK_MS = 10;
+export const SELECTION_HAPTIC_COOLDOWN_MS = 90;
+
+/**
+ * Light 10ms tick, throttled only against previous card changes (fast swipes).
+ * It must NOT be swallowed by the 1ms button tick that precedes it when the
+ * change comes from a deck arrow: that tick is imperceptible on most Android
+ * motors, so the 10ms selection tick overrides it (vibrate() replaces the
+ * running pattern).
+ */
+export function triggerSelectionHaptic(
+  nav = typeof navigator !== "undefined" ? navigator : null,
+  now = nowMs()
+) {
+  if (now - lastSelectionAt < SELECTION_HAPTIC_COOLDOWN_MS) return false;
+  const ok = triggerSubtleHapticTick(SELECTION_HAPTIC_TICK_MS, nav, { force: true });
+  if (ok) lastSelectionAt = now;
+  return ok;
+}
+
+export function resetHapticsThrottleForTests() {
+  lastSelectionAt = -Infinity;
+  lastNativeVibrateAt = -Infinity;
 }

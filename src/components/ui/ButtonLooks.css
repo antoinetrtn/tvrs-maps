@@ -1,0 +1,424 @@
+/*
+ * Button looks: named skins of the kit Button, defined ONCE here and selected with
+ * <Button look="…">. Screens must not restyle .ui-btn themselves (lint: adhoc-atom-class).
+ * Rules were moved verbatim from the screen stylesheets (same selectors order and media).
+ */
+/* — moved from src/components/HomeScreenCategoryCarousel.css — */
+
+.ui-btn--cta {
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  height: var(--control-lg);
+  min-height: var(--control-lg);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: 1px solid var(--accent);
+  box-shadow: none;
+}
+
+.ui-btn--cta span {
+  font-family: var(--font-display);
+}
+
+.ui-btn--cta:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0 var(--text-main);
+}
+
+.ui-btn--cta:active {
+  transform: var(--press-offset);
+  box-shadow: 1px 1px 0 var(--text-main);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
+}
+
+.ui-btn--tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-lg);
+  height: var(--control-lg);
+  min-width: var(--control-lg);
+  min-height: var(--control-lg);
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--text-main) 14%, transparent);
+  background: color-mix(in srgb, var(--text-main) 4%, transparent);
+  color: var(--text-muted);
+}
+
+.ui-btn--tile:hover,
+.ui-btn.ui-btn--tile:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--text-main) 10%, transparent);
+  transform: none;
+}
+
+.ui-btn--tile:active {
+  transform: var(--press-offset);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
+}
+.ui-btn--tile-rules,
+.ui-btn--tile-train {
+  width: var(--control-lg);
+  height: var(--control-lg);
+  min-width: var(--control-lg);
+  min-height: var(--control-lg);
+  padding: 0;
+}
+
+.ui-btn--tile-train svg {
+  transition: transform var(--dur-micro) var(--steps-press);
+}
+
+.ui-btn--tile-train:hover svg {
+  transform: translate(1px, 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn--tile-train:hover svg {
+    transform: none;
+  }
+}
+
+/* — moved from src/components/HomeScreenDesktop.css — */
+
+@media (min-width: 769px) {
+  .ui-btn--cta {
+    height: var(--control-lg);
+    min-height: var(--control-lg);
+    flex: 1;
+    padding: 0 var(--spacing-md);
+    font-size: var(--font-size-md);
+    font-weight: 500;
+  }
+  .ui-btn--cta span {
+    font-weight: 500;
+  }
+  .ui-btn--tile,
+  .ui-btn--tile-train,
+  .ui-btn--tile-rules {
+    width: auto;
+    min-width: var(--control-lg);
+    height: var(--control-lg);
+    min-height: var(--control-lg);
+    padding: 0 var(--spacing-ms);
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--text-main) 14%, transparent);
+    background: color-mix(in srgb, var(--text-main) 4%, transparent);
+    color: var(--text-muted);
+  }
+  .ui-btn--tile:hover,
+  .ui-btn--tile-train:hover,
+  .ui-btn--tile-rules:hover,
+  .ui-btn.ui-btn--tile:hover:not(:disabled),
+  .ui-btn.ui-btn--tile-train:hover:not(:disabled),
+  .ui-btn.ui-btn--tile-rules:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
+    background: color-mix(in srgb, var(--text-main) 10%, transparent);
+    color: var(--text-main);
+  }
+}
+
+/* — moved from src/components/AuthModal.css — */
+
+.ui-btn--row {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+.ui-btn--row.ui-btn--row-tvrs {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+}
+
+.ui-btn--row.ui-btn--row-tvrs:hover {
+  background: var(--glass-hover);
+  border-color: var(--text-main);
+  transform: translateY(-1px);
+}
+.ui-btn--row.ui-btn--row-google {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+}
+
+.ui-btn--row.ui-btn--row-google:hover {
+  background: var(--glass-hover);
+  border-color: var(--text-main);
+  transform: translateY(-1px);
+}
+.ui-btn--row.ui-btn--row-guest {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+}
+
+.ui-btn--row.ui-btn--row-guest:hover {
+  background: var(--glass-hover);
+  border-color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.ui-btn--submit {
+  font-weight: 600;
+  padding: var(--spacing-ms) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+}
+
+/* — moved from src/components/ConfirmationModal.css — */
+
+.ui-btn--dialog-action {
+  flex: 1;
+  padding: var(--spacing-ms) var(--spacing-lg);
+  font-weight: 600;
+}
+
+/* — moved from src/components/TrainingSheet.css — */
+
+.ui-btn--training-start {
+  width: 100%;
+  min-height: var(--control-lg);
+  margin-top: var(--spacing-xs);
+}
+
+.ui-btn--training-reset {
+  text-decoration: underline;
+}
+
+.ui-btn--training-cancel,
+.ui-btn--training-confirm {
+  min-height: var(--control-lg);
+  font-size: var(--font-size-xs);
+}
+
+/* — moved from src/components/ProfilePanel.css — */
+
+.ui-btn--form-submit {
+  width: 100%;
+  font-weight: 600;
+  padding: var(--spacing-ms) var(--spacing-lg);
+  border: none;
+  background: var(--text-main);
+  color: var(--bg-color);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.ui-btn--form-submit:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.ui-btn--profile-unlock {
+  font-weight: 600;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+.ui-btn--form-submit.save-success-glow {
+  background: var(--success);
+  color: var(--bg-color);
+  border-color: var(--success);
+}
+
+/* — moved from src/components/GameHUD.css — */
+
+.ui-btn--hud-island {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 var(--spacing-ms);
+  height: var(--control-lg);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  width: 100%;
+  max-width: var(--island-width);
+  min-width: 300px;
+  transition:
+    background var(--transition-spring),
+    transform var(--transition-spring),
+    border-color var(--transition-spring);
+}
+
+.ui-btn--hud-island:hover {
+  transform: scale(1.015) translateY(-1.5px);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+  color: var(--accent);
+  background: var(--glass-bg);
+}
+
+.ui-btn--hud-island:active,
+.ui-btn.ui-btn--hud-island:active {
+  transform: scale(0.985) translateY(0.5px);
+  background: var(--accent);
+  box-shadow: none;
+  text-shadow: none;
+  transition: transform var(--transition-instant);
+}
+
+.ui-btn--hud-island:hover .island-font {
+  color: inherit;
+  text-shadow: inherit;
+}
+
+.ui-btn--hud-island:active .island-font {
+  color: var(--accent-contrast);
+  text-shadow: none;
+}
+
+@media (max-width: 1024px) {
+  .ui-btn--hud-island {
+    min-width: 0;
+    width: 100%;
+    max-width: var(--island-width);
+    padding: 0 var(--spacing-sm);
+    height: var(--control-lg);
+    justify-content: space-between; /* Ensure elements inside stretch */
+  }
+}
+
+/* — moved from src/multiplayer/ConquestScreen.css — */
+
+.ui-btn--conquest-share {
+  gap: var(--spacing-xs);
+  min-height: var(--control-lg);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* — moved from src/multiplayer/ConquestHud.css — */
+
+.ui-btn--feed-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+  min-width: 0;
+}
+.ui-btn--feed-line:focus-visible {
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+}
+@media (hover: hover) {
+  .ui-btn--feed-line:hover,
+  .ui-btn.ui-btn--feed-line:hover:not(:disabled) {
+    background: none;
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 640px) {
+  .ui-btn--feed-line {
+    width: 100%;
+    min-height: 36px;
+  }
+}
+
+/* — moved from src/multiplayer/ConquestReady.css — */
+
+.ui-btn--ready-cta {
+  position: relative;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+  min-height: 64px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  overflow: hidden;
+  box-shadow: 4px 4px 0 var(--black);
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+}
+
+.ui-btn--ready-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+  background: var(--bg-color);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.ui-btn--ready-cta > * {
+  position: relative;
+  z-index: var(--z-raised);
+}
+
+.ui-btn--ready-cta:active:not(:disabled),
+.ui-btn.ui-btn--ready-cta:active:not(:disabled) {
+  transform: var(--press-offset);
+  box-shadow: 1px 1px 0 var(--black);
+}
+
+.ui-btn--ready-cta.is-ready {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.ui-btn--ready-cta.is-ready::before {
+  transform: scaleX(1);
+  animation: px-ready-fill var(--dur-base) var(--steps-snap);
+}
+.ui-btn--ready-cta.is-quiet {
+  min-height: var(--control-lg);
+  box-shadow: none;
+}
+
+@media (hover: hover) {
+  .ui-btn--ready-cta:hover:not(:disabled),
+  .ui-btn.ui-btn--ready-cta:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 0 var(--black);
+  }
+
+  .ui-btn--ready-cta.is-ready:hover,
+  .ui-btn.ui-btn--ready-cta.is-ready:hover {
+    border-color: var(--success);
+    color: var(--success);
+  }
+
+  .ui-btn--ready-cta.is-quiet:hover,
+  .ui-btn.ui-btn--ready-cta.is-quiet:hover {
+    min-height: var(--control-lg);
+    box-shadow: none;
+  }
+}
+
+.ui-btn--ready-cta.is-quiet .conquest-ready-cta-main {
+  font-size: var(--font-size-base);
+}
+
+.ui-btn--ready-cta.is-quiet .conquest-ready-cta-sub {
+  display: none;
+}

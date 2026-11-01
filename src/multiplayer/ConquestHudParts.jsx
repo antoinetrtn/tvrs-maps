@@ -118,7 +118,7 @@ export const HudFeed = ({ feed, onFocusCountry, t }) => (
             <Button
               variant="ghost"
               size="sm"
-              className="conquest-feed-line"
+              look="feed-line"
               onClick={() => onFocusCountry(line.countryId)}
             >
               {line.actorColor ? (

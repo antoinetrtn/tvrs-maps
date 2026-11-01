@@ -1,6 +1,6 @@
 /**
  * Globe display preferences that live outside React props: the renderer
- * (WebGPU by default / WebGL) and the found-country style. A tiny external
+ * (WebGPU by default / WebGL). A tiny external
  * store so the settings sheet, the globe host and the polygon hook share them
  * without threading props through App.
  */
@@ -8,14 +8,12 @@ import { useSyncExternalStore } from "react";
 
 export const GLOBE_PREF_KEYS = {
   renderer: "tvrs-globe-renderer",
-  foundStyle: "tvrs-found-style",
 };
 const ALLOWED = {
   renderer: ["webgl", "webgpu"],
-  foundStyle: ["surface", "mesh"],
 };
 // renderer: null = no choice yet (VITE_GLOBE_RENDERER, then WebGPU when usable).
-const DEFAULTS = { renderer: null, foundStyle: "surface" };
+const DEFAULTS = { renderer: null };
 
 function readStored(name) {
   try {
@@ -30,7 +28,7 @@ function readStored(name) {
 // inside the globe.gl deps (via the three-render-objects shim) and both copies
 // must see the same choice.
 const holder = (globalThis.__TVRS_GLOBE_PREFS__ ||= {
-  state: { renderer: readStored("renderer"), foundStyle: readStored("foundStyle") },
+  state: { renderer: readStored("renderer") },
 });
 const listeners = new Set();
 

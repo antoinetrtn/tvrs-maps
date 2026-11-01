@@ -1,14 +1,3 @@
-@keyframes atlasDeckIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 .cards-deck-wrapper {
   position: relative;
   display: flex;
@@ -23,17 +12,13 @@
   animation: atlasDeckIn var(--dur-slow) var(--ease-out) both;
 }
 
-.cards-deck-wrapper.is-user-dragging .deck-arrow {
-  pointer-events: none;
-}
-
 .deck-click-zone {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   width: 75px;
   height: 250px;
-  z-index: 180;
+  z-index: var(--z-carousel-controls);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -58,47 +43,6 @@
   }
 }
 
-.deck-arrow:focus-visible,
-.deck-click-zone:focus-visible .deck-arrow,
-.ui-icon-btn.deck-arrow:focus-visible {
-  opacity: 1;
-  color: var(--accent);
-  border-color: var(--accent);
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.deck-click-zone:active .deck-arrow {
-  transform: var(--press-offset);
-}
-
-.deck-arrow {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 0;
-  border: 1px solid var(--glass-border-strong);
-  background: color-mix(in srgb, var(--bg-color) 85%, var(--text-main));
-  color: var(--text-main);
-  opacity: 0.55;
-  box-shadow: none;
-  pointer-events: auto;
-  transition:
-    color var(--dur-fast) linear,
-    border-color var(--dur-fast) linear,
-    opacity var(--dur-fast) linear,
-    transform var(--dur-micro) var(--steps-press);
-}
-
-.deck-arrow::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
-}
-
 .deck-stage {
   position: relative;
   width: 320px;
@@ -114,87 +58,39 @@
   cursor: grabbing;
 }
 
-/* Individual Stacked Card Base - 100% SOLID PURE OPAQUE BACKGROUND (ALPHA = 1.0) */
-/* Individual Stacked Card Base - Mysterious Dark Technical Card */
-.deck-mode-card {
-  position: absolute;
-  top: 18px;
-  width: 320px;
-  height: 216px;
-  padding: 1.25rem;
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) !important;
-  background-color: var(--bg-color) !important;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
-  box-shadow: var(--shadow-card);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.deck-mode-card.is-top-card {
-  height: 216px;
-  border-color: color-mix(in srgb, var(--text-main) 22%, transparent);
-  box-shadow: var(--shadow-card);
-}
-
-.deck-mode-card.is-stacked-card {
-  cursor: pointer;
-  height: 216px;
-  border-color: color-mix(in srgb, var(--text-main) 14%, transparent);
-  box-shadow: var(--glass-shadow);
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) ease,
-    box-shadow var(--dur-fast) ease,
-    opacity var(--dur-fast) ease-out;
-}
-
-.deck-mode-card.is-stacked-card:hover {
-  border-color: color-mix(in srgb, var(--text-main) 25%, transparent);
-}
-
-.deck-mode-card.is-stacked-card .card-actions {
-  pointer-events: none;
-}
-
-/* Atlas plate: faint orthogonal graticule, framed by a double rule */
+/* Atlas plate: faint orthogonal graticule + mode-tinted radial gradient */
 .card-plate-pattern {
   position: absolute;
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  z-index: 1;
+  z-index: var(--z-raised);
   background:
+    radial-gradient(
+      circle at 86% 24%,
+      color-mix(in srgb, var(--card-mode-accent, var(--accent)) 16%, transparent) 0%,
+      transparent 58%
+    ),
     repeating-linear-gradient(
       90deg,
-      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
       transparent 1px 32px
     ),
     repeating-linear-gradient(
       0deg,
-      color-mix(in srgb, var(--text-main) 4%, transparent) 0 1px,
+      color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 6%, transparent) 0 1px,
       transparent 1px 32px
     );
 }
 
 .card-plate-pattern::after {
-  content: "";
-  position: absolute;
-  inset: var(--spacing-xs);
-  border: 1px solid color-mix(in srgb, var(--text-main) 10%, transparent);
-  border-radius: var(--radius-sm);
+  content: none;
 }
 
 .card-plate-meta {
   font-family: var(--font-display);
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--spacing-sm);
   font-size: var(--font-size-2xs);
@@ -205,12 +101,22 @@
 .card-plate-number {
   font-family: var(--font-display);
   letter-spacing: 0.08em;
-  color: var(--accent);
+  color: color-mix(in srgb, var(--card-mode-accent, var(--accent)) 72%, var(--text-muted));
+}
+
+.card-plate-count {
+  padding: 1px var(--spacing-xs);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text-main) 6%, transparent);
+  color: var(--text-muted);
+  font-size: var(--font-size-2xs);
+  line-height: 1.3;
 }
 
 .card-content {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-raised-2);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -225,15 +131,18 @@
   justify-content: space-between;
   gap: var(--spacing-ms);
   width: 100%;
-  margin-bottom: var(--spacing-xs);
 }
 
 .card-mode-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
-  opacity: 0.9;
+  padding: 2px;
+  border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 24%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 8%, var(--bg-color));
+  color: var(--card-mode-accent, var(--accent));
+  opacity: 1;
   flex-shrink: 0;
 }
 
@@ -244,7 +153,7 @@
   font-weight: 600;
   color: color-mix(in srgb, var(--text-main) 94%, var(--text-muted));
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.25;
   white-space: pre-line;
   letter-spacing: 0.02em;
   display: -webkit-box;
@@ -260,98 +169,11 @@
 
 .card-actions {
   position: relative;
-  z-index: 5;
+  z-index: var(--z-raised-5);
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   margin-top: auto;
-}
-
-.card-play-btn {
-  flex: 1;
-  min-width: 0;
-  padding: 0 var(--spacing-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  height: var(--control-lg);
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-family: var(--font-display);
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  border: 1.5px solid var(--accent);
-  box-shadow: none;
-}
-
-.card-play-btn span {
-  font-family: var(--font-display);
-}
-
-.card-play-btn:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 2px 2px 0 var(--text-main);
-}
-
-.card-play-btn:active {
-  transform: var(--press-offset);
-  box-shadow: 1px 1px 0 var(--text-main);
-  animation: px-press-flash var(--dur-micro) steps(1, end);
-}
-
-.card-learn-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--control-lg);
-  height: var(--control-lg);
-  min-width: var(--control-lg);
-  padding: 0;
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid color-mix(in srgb, var(--text-main) 28%, transparent);
-  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
-  color: var(--text-muted);
-}
-
-.card-learn-btn:hover,
-.ui-btn.card-learn-btn:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--text-main) 38%, transparent);
-  color: var(--text-main);
-  background: color-mix(in srgb, var(--text-main) 12%, var(--bg-color));
-  transform: translateY(-2px);
-}
-
-.card-learn-btn:active {
-  transform: var(--press-offset);
-  animation: px-press-flash var(--dur-micro) steps(1, end);
-}
-
-/* Carte Conquête : « Règles » remplace le bouton Apprendre (bouton icône carré 44px) */
-.card-rules-btn,
-.card-train-btn {
-  width: var(--control-lg);
-  height: var(--control-lg);
-  min-width: var(--control-lg);
-  padding: 0;
-}
-
-.card-train-btn svg {
-  transition: transform var(--dur-micro) var(--steps-press);
-}
-
-.card-train-btn:hover svg {
-  transform: translate(1px, 1px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card-train-btn:hover svg {
-    transform: none;
-  }
 }
 
 /* Dots Row - Pixel Squares */
@@ -360,7 +182,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-md);
-  margin-top: 1.25rem;
+  margin-top: var(--spacing-md);
   width: 100%;
 }
 
@@ -370,7 +192,7 @@
   height: 6px;
   border-radius: 0;
   background: color-mix(in srgb, var(--text-muted) 45%, transparent);
-  opacity: 0.5;
+  opacity: 0.7;
   border: none;
   cursor: pointer;
   padding: 0;
@@ -400,7 +222,7 @@
   width: 16px;
   height: 6px;
   border-radius: 0;
-  background: var(--accent);
+  background: var(--text-main);
   opacity: 1;
   box-shadow: none;
 }
@@ -413,26 +235,12 @@
 
   .deck-stage {
     width: 100%;
-    height: 200px;
+    height: 196px;
   }
 
-  /* Compact mobile card: no dead band between the title and the actions. */
-  .deck-mode-card,
-  .deck-mode-card.is-top-card,
-  .deck-mode-card.is-stacked-card {
-    height: 180px;
-    top: 12px;
-  }
-
-  .card-mode-icon {
-    padding: var(--spacing-xs);
-    border: 1px solid var(--glass-border);
-    border-radius: 0;
-  }
-
-  .deck-mode-card {
-    width: min(100% - 28px, 320px);
-    padding: var(--spacing-md);
+  .card-title {
+    font-size: var(--font-size-xl);
+    line-height: 1.2;
   }
 
   .deck-click-zone.left {
@@ -445,15 +253,7 @@
     width: 60px;
   }
 
-  .deck-click-zone.left .deck-arrow::after {
-    right: 0;
-  }
-
-  .deck-click-zone.right .deck-arrow::after {
-    left: 0;
-  }
-
   .deck-dots-row {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-md);
   }
 }

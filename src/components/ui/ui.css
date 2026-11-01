@@ -176,9 +176,9 @@
   box-shadow: 1px 1px 0 var(--ui-ink);
 }
 
-/* Focus ring moves to the thumb (global :focus-visible uses !important) */
+/* Focus ring moves to the thumb */
 .ui-slider-input:focus-visible {
-  outline-color: transparent !important;
+  outline-color: transparent;
 }
 
 .ui-slider-input:focus-visible::-webkit-slider-thumb {

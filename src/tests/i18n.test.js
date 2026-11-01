@@ -24,7 +24,6 @@ describe("i18n translation system", () => {
       expect(t("mode_countries")).toBe("Pays");
       expect(t("game_duration_short")).toBe("Durée");
       expect(t("peaceful_mode_short")).toBe("Paisible");
-      expect(t("found_style_short")).toBe("Trouvés");
       expect(t("leaderboard_guest_short")).toBe("Connecte-toi");
       expect(t("auth_guest_short")).toBe("Invité");
     });
@@ -38,7 +37,6 @@ describe("i18n translation system", () => {
       expect(t("mode_countries")).toBe("Countries");
       expect(t("game_duration_short")).toBe("Time");
       expect(t("peaceful_mode_short")).toBe("Peaceful");
-      expect(t("found_style_short")).toBe("Found");
       expect(t("leaderboard_guest_short")).toBe("Sign in");
       expect(t("auth_guest_short")).toBe("Guest");
     });

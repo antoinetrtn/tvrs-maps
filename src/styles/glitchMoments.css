@@ -3,60 +3,12 @@
    a level-up and a passport stamp landing. Never on hover, never looping.
    Loaded from main.jsx; doubled selectors win over component sheets. */
 
-@keyframes glitch-burst {
-  0% {
-    text-shadow:
-      -2px 0 var(--glitch-magenta),
-      2px 0 var(--glitch-cyan);
-    transform: translateX(-1px) skewX(-3deg);
-  }
-  33% {
-    text-shadow:
-      2px 0 var(--glitch-magenta),
-      -2px 0 var(--glitch-cyan);
-    transform: translateX(1px) skewX(2deg);
-  }
-  66% {
-    text-shadow:
-      -1px 0 var(--glitch-magenta-soft),
-      1px 0 var(--glitch-cyan-soft);
-    transform: translateX(0) skewX(-1deg);
-  }
-  100% {
-    text-shadow: none;
-    transform: none;
-  }
-}
-
 /* Same burst without transform, for elements whose transform is owned elsewhere
    (rotated stamps, scaled score pill). */
-@keyframes glitch-burst-ink {
-  0%,
-  66% {
-    text-shadow:
-      -2px 0 var(--glitch-magenta),
-      2px 0 var(--glitch-cyan);
-    filter: drop-shadow(-1px 0 var(--glitch-magenta-soft))
-      drop-shadow(1px 0 var(--glitch-cyan-soft));
-  }
-  33% {
-    text-shadow:
-      2px 0 var(--glitch-magenta),
-      -2px 0 var(--glitch-cyan);
-  }
-  100% {
-    text-shadow: none;
-    filter: none;
-  }
-}
 
 /* Title moments */
 .end-screen-header.end-screen-header h1 {
   animation: glitch-burst 0.42s steps(3) 0.15s 1 both;
-}
-
-.deck-mode-card.is-top-card .card-title {
-  animation: glitch-burst 0.36s steps(3) 0.1s 1;
 }
 
 /* Right answer: the score ticks, then a short chromatic snap */
@@ -87,7 +39,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .end-screen-header.end-screen-header h1,
-  .deck-mode-card.is-top-card .card-title,
   .score-increased-flash.score-increased-flash,
   .passport-stamp.passport-stamp,
   .passport-stamp.new-pb-badge,

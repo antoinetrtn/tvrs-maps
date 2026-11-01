@@ -71,8 +71,12 @@
 html:has(.dg-root),
 body:has(.dg-root),
 #root:has(> .dg-root) {
-  position: static !important;
-  width: auto !important;
-  height: auto !important;
-  overflow: auto !important;
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: auto;
+}
+
+.dg-stack-gap {
+  margin-top: var(--spacing-sm);
 }

@@ -33,13 +33,6 @@ export default function usePrefersReducedMotion() {
       };
     }
 
-    if (typeof mediaQuery.addListener === "function") {
-      mediaQuery.addListener(handleChange);
-      return () => {
-        mediaQuery.removeListener(handleChange);
-      };
-    }
-
     return undefined;
   }, []);
 

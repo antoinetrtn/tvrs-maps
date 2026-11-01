@@ -13,7 +13,7 @@ import { useGeoResource } from "./useGeoResource";
 // (and stamps a random one otherwise). Every render-data wrapper spreads the
 // source feature, so the id survives mode switches and the existing meshes,
 // triangulated geometries and strokes are reused instead of rebuilt.
-const REGIONAL_PREFETCH_DELAY_MS = 6000;
+const REGIONAL_PREFETCH_DELAY_MS = 600;
 
 /** True once the page has been idle for `delayMs` after mount. */
 function useIdleAfter(delayMs) {

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { EndScreen, GameDataPanel, GameHUD, HomeScreen } from "./helpers/pageObjects";
+import { showMode } from "./helpers/fixtures";
 
 test.describe("TVRS Maps E2E Game Flow Baseline", () => {
   test.beforeEach(async ({ page }) => {
@@ -15,22 +15,22 @@ test.describe("TVRS Maps E2E Game Flow Baseline", () => {
     await expect(page).toHaveTitle(/tvrs maps/i);
 
     // Check that top mode card is visible
-    const topCard = page.locator(".deck-mode-card.is-top-card");
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
     await expect(topCard).toBeVisible();
 
     // Check Play button on top card
-    const playBtn = topCard.locator(".card-play-btn");
+    const playBtn = topCard.locator(".ui-btn--cta");
     await expect(playBtn).toBeVisible();
   });
 
   test("should start game in countries mode", async ({ page }) => {
-    // La carte Conquête est la première : on choisit « Pays du Monde » via les points du carrousel
-    await page.locator(".deck-dots-row .deck-dot").nth(1).click();
-    const topCard = page.locator(".deck-mode-card.is-top-card");
-    await expect(topCard).toHaveAttribute("data-mode", "countries");
+    // La carte Conquête n'existe que si elle est activée : on cible « Pays du Monde » par son mode.
+    const topCard = page.locator(".ui-card--mode-deck.is-top-card");
+    await expect(topCard).toBeVisible();
+    await showMode(page, "countries");
 
     // Click Play button
-    const playBtn = topCard.locator(".card-play-btn");
+    const playBtn = topCard.locator(".ui-btn--cta");
     await playBtn.click();
 
     // Verify that the answer input field is now visible

@@ -3,18 +3,21 @@
 /* Desktop-only dimensions — below 1025px the shared .sheet-panel fullscreen
    rules (panelSystem.css) take over. */
 @media (min-width: 1025px) {
-  .leaderboard-panel {
-    width: 460px !important;
-    height: 800px !important;
-    max-height: calc(100vh - 140px) !important;
-    max-height: calc(100dvh - 140px) !important;
-    overflow: hidden !important;
+  .leaderboard-panel.sheet-panel {
+    width: 460px;
+    height: 800px;
+    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
+    overflow: hidden;
   }
 }
 
-.leaderboard-panel .panel-header {
-  margin-bottom: var(--spacing-xs) !important;
-  padding-bottom: var(--spacing-xs) !important;
+.leaderboard-panel.sheet-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
 }
 
 .leaderboard-panel .leaderboard-full-layout {
@@ -89,47 +92,6 @@
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   flex-shrink: 0;
-}
-
-.personal-stat-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  min-height: 40px;
-  min-width: 0;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  text-align: center;
-  /* TODO(design): pointed at --glass-bg-subtle, a token that never existed — the
-     invalid var() suppressed .glass-panel's background, so these cards have always
-     rendered transparent. Kept explicit pending a decision on the intended tint. */
-  background: transparent;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-}
-
-.personal-stat-card .stat-icon {
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.personal-stat-card .stat-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-  text-transform: none; /* natural casing */
-}
-
-.personal-stat-card .stat-value {
-  font-family: var(--font-display);
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
 }
 
 .highlight-green {
@@ -240,7 +202,7 @@
   transition:
     opacity 0.15s ease,
     transform 0.15s ease;
-  z-index: 10;
+  z-index: var(--z-floating);
   min-width: 70px;
   box-shadow: var(--glass-shadow-strong);
 }
@@ -282,13 +244,6 @@
   color: var(--text-muted);
 }
 
-/* Make sure header styling fits tabs nicely */
-.leaderboard-panel .panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 @media (max-width: 768px) {
   .leaderboard-controls {
     flex-direction: column;
@@ -304,14 +259,6 @@
     margin-bottom: var(--spacing-sm);
   }
 
-  .personal-stat-card {
-    padding: var(--spacing-xs) var(--spacing-xxs);
-  }
-
-  .personal-stat-card .stat-value {
-    font-size: var(--font-size-base);
-  }
-
   .evolution-chart {
     height: 60px;
   }
@@ -320,14 +267,5 @@
 @media (max-width: 360px) {
   .personal-stats-grid {
     gap: var(--spacing-xxs);
-  }
-
-  .personal-stat-card {
-    padding: var(--spacing-xs) 2px;
-    gap: var(--spacing-xxs);
-  }
-
-  .personal-stat-card .stat-value {
-    font-size: var(--font-size-xs);
   }
 }

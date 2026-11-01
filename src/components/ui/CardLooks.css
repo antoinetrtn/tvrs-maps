@@ -1,0 +1,370 @@
+/*
+ * Card looks: named skins of the kit Card, defined ONCE here and selected with
+ * <Card look="…">. Rules moved verbatim from the screen stylesheets.
+ */
+
+/* — moved from src/styles/glitchMoments.css — */
+
+.ui-card--mode-deck.is-top-card .card-title {
+  animation: glitch-burst 0.36s steps(3) 0.1s 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-card--mode-deck.is-top-card .card-title {
+    animation: none;
+  }
+}
+
+/* — moved from src/components/HomeScreenCategoryCarousel.css — */
+
+.ui-card--mode-deck {
+  position: absolute;
+  top: 18px;
+  width: 320px;
+  height: 216px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 7%, var(--bg-color)) 0%,
+    color-mix(in srgb, var(--bg-color) 96%, var(--text-main)) 100%
+  );
+  background-color: var(--bg-color);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  --card-mode-accent: var(--accent);
+  --card-mode-secondary: var(--text-main);
+  --card-mode-spark: var(--accent);
+  --card-x: 0px;
+  --card-y: 0px;
+  --card-z: 0px;
+  --card-rot: 0deg;
+  --card-scale: 1;
+  --card-scale-eff: 1;
+  transform: translate3d(var(--card-x, 0px), var(--card-y, 0px), 0) rotateZ(var(--card-rot, 0deg))
+    scale(var(--card-scale-eff, 1));
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    opacity var(--dur-fast) ease-out;
+  border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 22%, transparent);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.ui-card--mode-deck.is-top-card {
+  height: 216px;
+  border-color: color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 24%, transparent);
+  box-shadow: var(--shadow-card);
+}
+
+.ui-card--mode-deck.is-stacked-card {
+  cursor: pointer;
+  height: 216px;
+  background: color-mix(in srgb, var(--bg-color) 96%, var(--text-main));
+  border-color: color-mix(in srgb, var(--text-main) 14%, transparent);
+  box-shadow: var(--glass-shadow);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    opacity var(--dur-fast) ease-out;
+}
+
+.ui-card--mode-deck.is-stacked-card:hover {
+  border-color: color-mix(in srgb, var(--text-main) 24%, transparent);
+}
+
+.ui-card--mode-deck.is-stacked-card .card-actions {
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .ui-card--mode-deck,
+  .ui-card--mode-deck.is-top-card,
+  .ui-card--mode-deck.is-stacked-card {
+    height: 172px;
+    top: 14px;
+  }
+
+  .ui-card--mode-deck {
+    width: min(100% - 24px, 328px);
+    padding: var(--spacing-md);
+  }
+}
+
+/* — moved from src/components/HomeScreenCarouselMotion.css — */
+
+.cards-deck-wrapper.is-user-dragging .ui-card--mode-deck,
+.deck-stage[data-release] .ui-card--mode-deck {
+  will-change: transform, opacity;
+}
+.cards-deck-wrapper.is-user-dragging .ui-card--mode-deck.is-top-card {
+  transform: translate3d(var(--drag-x, 0px), calc(var(--drag-abs-x, 0px) * 0.04), 0)
+    rotateZ(var(--drag-rot, 0deg)) scale(calc(1.02 * (1000 / 920)));
+  transition: none;
+}
+.cards-deck-wrapper.is-user-dragging
+  .deck-stage[data-drag-dir="next"]
+  .ui-card--mode-deck[data-stack-pos="1"] {
+  z-index: var(--z-carousel-lift);
+  transform: translate3d(
+      calc(var(--card-x) * (1 - var(--drag-progress, 0))),
+      calc(var(--card-y) * (1 - var(--drag-progress, 0))),
+      0
+    )
+    rotateZ(calc(var(--card-rot) * (1 - var(--drag-progress, 0))))
+    scale(
+      calc(var(--card-scale-eff) + (1.0869565 - var(--card-scale-eff)) * var(--drag-progress, 0))
+    );
+  transition: none;
+}
+.cards-deck-wrapper.is-user-dragging
+  .deck-stage[data-drag-dir="prev"]
+  .ui-card--mode-deck[data-is-prev="true"] {
+  z-index: var(--z-carousel-lift);
+  transform: translate3d(
+      calc(var(--card-x) * (1 - var(--drag-progress, 0))),
+      calc(var(--card-y) * (1 - var(--drag-progress, 0))),
+      0
+    )
+    rotateZ(calc(var(--card-rot) * (1 - var(--drag-progress, 0))))
+    scale(
+      calc(var(--card-scale-eff) + (1.0869565 - var(--card-scale-eff)) * var(--drag-progress, 0))
+    );
+  transition: none;
+}
+.deck-stage[data-release="fling"] .ui-card--mode-deck {
+  transition:
+    transform var(--dur-fling) var(--ease-fling),
+    border-color var(--dur-fling) ease,
+    box-shadow var(--dur-fling) ease;
+}
+
+.deck-stage[data-release="settle"] .ui-card--mode-deck {
+  transition:
+    transform var(--dur-settle) var(--ease-out),
+    border-color var(--dur-settle) ease,
+    box-shadow var(--dur-settle) ease;
+}
+.cards-deck-wrapper.is-reduced-motion .ui-card--mode-deck {
+  transform: none;
+  transition: opacity var(--dur-fast) linear;
+}
+
+.cards-deck-wrapper.is-reduced-motion .ui-card--mode-deck.is-stacked-card {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cards-deck-wrapper.is-reduced-motion .ui-card--mode-deck.is-top-card {
+  opacity: 1;
+}
+
+.cards-deck-wrapper.is-reduced-motion.is-user-dragging .ui-card--mode-deck.is-top-card {
+  transform: translate3d(var(--drag-x, 0px), 0, 0);
+}
+
+/* — moved from src/components/HomeScreenDesktop.css — */
+
+@media (min-width: 769px) {
+  .ui-card--mode-deck,
+  .ui-card--mode-deck.is-top-card,
+  .ui-card--mode-deck.is-stacked-card {
+    /* The JS pose scales cards by 1000/920 (perspective mimic): compensate so the
+       visible top card is exactly --deck-w x --deck-h. */
+    width: calc(var(--deck-w) * 0.92);
+    height: calc(var(--deck-h) * 0.92);
+    top: calc(var(--deck-h) * 0.04);
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+  .ui-card--mode-deck .card-plate-pattern {
+    background:
+      radial-gradient(
+        circle at 86% 26%,
+        color-mix(in srgb, var(--card-mode-accent, var(--accent)) 18%, transparent) 0%,
+        transparent 56%
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
+        transparent 1px 40px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 5%, transparent) 0 1px,
+        transparent 1px 40px
+      );
+  }
+  .ui-card--mode-deck.is-stacked-card .card-desc {
+    visibility: hidden;
+  }
+}
+
+/* — moved from src/components/LeaderboardScreen.css — */
+
+.ui-card--stat-chip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  min-height: 40px;
+  min-width: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  text-align: center;
+  /* TODO(design): pointed at --glass-bg-subtle, a token that never existed — the
+     invalid var() suppressed .glass-panel's background, so these cards have always
+     rendered transparent. Kept explicit pending a decision on the intended tint. */
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.ui-card--stat-chip .stat-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.ui-card--stat-chip .stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+  text-transform: none; /* natural casing */
+}
+
+.ui-card--stat-chip .stat-value {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .ui-card--stat-chip {
+    padding: var(--spacing-xs) var(--spacing-xxs);
+  }
+
+  .ui-card--stat-chip .stat-value {
+    font-size: var(--font-size-base);
+  }
+}
+
+@media (max-width: 360px) {
+  .ui-card--stat-chip {
+    padding: var(--spacing-xs) 2px;
+    gap: var(--spacing-xxs);
+  }
+
+  .ui-card--stat-chip .stat-value {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* — moved from src/components/ProfilePanel.css — */
+
+.ui-card--xp {
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ui-card--stat {
+  padding: var(--spacing-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}
+.ui-card--badge-detail {
+  flex-shrink: 0;
+  padding: var(--spacing-sm);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-compact);
+  -webkit-backdrop-filter: var(--glass-blur-compact);
+  border: 1px solid var(--glass-border);
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-md);
+  z-index: var(--z-floating);
+}
+
+.ui-card--locked {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  text-align: center;
+  max-width: 280px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow-strong);
+  animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
+}
+
+/* — moved from src/components/EndScreen.css — */
+
+/* css-rules-allow: breakpoint-offscale — same breakpoint as EndScreen.css, kept identical to avoid a visual change */
+@media (max-width: 900px), (max-height: 720px) {
+  .ui-card--xp-end {
+    margin-bottom: var(--spacing-md);
+  }
+}
+.ui-card--xp-end {
+  max-width: 600px;
+  width: 90%;
+  margin: 0 auto var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  --i: 2;
+  animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  box-shadow: var(--glass-shadow);
+}
+
+@media (max-width: 640px) {
+  .ui-card--xp-end {
+    width: calc(100% - 40px);
+    padding: var(--spacing-sm);
+  }
+}
+
+/* — moved from src/multiplayer/ConquestRules.css — */
+
+.ui-card--rules {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-ms);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 var(--black);
+}

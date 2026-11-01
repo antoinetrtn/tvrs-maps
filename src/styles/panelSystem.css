@@ -72,8 +72,7 @@
   /* tabs grow via TabBar rule; close button is pushed right */
 }
 
-.sheet-panel .panel-header,
-.dialog-card .panel-header {
+.sheet-panel .panel-header {
   margin-bottom: var(--spacing-sm);
   padding-bottom: var(--spacing-xs);
 }
@@ -88,10 +87,6 @@
 }
 
 /* ──── UNIFIED CLOSE & BACK BUTTONS ──── */
-.panel-close-btn {
-  flex-shrink: 0;
-  margin-left: auto;
-}
 
 /* ──── UNIFIED BODY ──── */
 .panel-body {
@@ -111,7 +106,7 @@
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur-compact);
   -webkit-backdrop-filter: var(--glass-blur-compact);
-  z-index: 10;
+  z-index: var(--z-floating);
 }
 
 /* Leaderboard controls row: no extra side padding so the mode selector
@@ -125,6 +120,8 @@
 .sheet-panel,
 .sheet-panel.glass-panel {
   position: fixed;
+  margin: 0;
+  color: inherit;
   isolation: isolate;
   bottom: calc(var(--spacing-lg) + var(--control-lg) + var(--spacing-md));
   right: var(--spacing-lg);
@@ -157,46 +154,29 @@
   animation: sheet-in var(--dur-sheet-in) var(--steps-sheet-in);
 }
 
-@keyframes sheet-in {
-  from {
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    clip-path: inset(var(--sheet-clip-bleed));
-  }
-}
-
-@keyframes sheet-out {
-  from {
-    clip-path: inset(var(--sheet-clip-bleed));
-  }
-  to {
-    clip-path: inset(0 0 100% 0);
-  }
-}
-
 /* Below the desktop breakpoint (aligned with the HUD's mobile layout switch),
    every sheet panel becomes a fullscreen slide-up sheet. Single source of
    truth — components must NOT duplicate this block. */
 @media (max-width: 1024px) {
-  .sheet-panel {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    max-width: 100vw !important;
-    max-height: 100vh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
+  .sheet-panel,
+  .sheet-panel.glass-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    margin: 0;
     /* Same stepped clip-path reveal as desktop (no slide, no overshoot) */
-    transform: none !important;
-    padding-top: calc(var(--spacing-md) + var(--safe-top)) !important;
-    padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
+    transform: none;
+    padding-top: calc(var(--spacing-md) + var(--safe-top));
+    padding-bottom: calc(var(--spacing-md) + var(--safe-bottom));
   }
 
   .sheet-panel .panel-body {
@@ -204,11 +184,6 @@
   }
 
   /* Expand close and back touch targets to 44px HIG minimum on mobile */
-  .panel-close-btn,
-  .panel-back-btn {
-    width: 44px;
-    height: 44px;
-  }
 }
 
 /* ──── FULLPAGE PANEL (always fullscreen) ──── */
@@ -251,12 +226,3 @@
 }
 
 /* Shared plain fade-in (was duplicated as ui-fade-in / ui-fade-in). */
-@keyframes ui-fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}

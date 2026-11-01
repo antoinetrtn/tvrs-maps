@@ -52,7 +52,7 @@ Keep each concern in its dedicated module — do not re-inline data/constants in
 
 | Concern | File |
 | --- | --- |
-| UI/theme color tokens, globe-theme overrides, color helpers | `src/config/designSystem.js` |
+| UI/theme color tokens, globe palette, color helpers | `src/config/designSystem.js` |
 | Per-mode gameplay rules (scramble, altitude, relief, regions, region abbreviations) | `src/config/gameConfig.js` |
 | Tunable non-visual constants (durations, breakpoints, timeouts, data URLs, storage keys, perf tiers) | `src/config/gameConstants.js` |
 | All user-facing strings (FR/EN) + `useTranslation` | `src/config/i18n.js` |
@@ -69,13 +69,13 @@ Rules:
 - **No duplicated lists** — region keys come from `GAME_REGIONS` (`gameConfig`); region gauge abbreviations from `getRegionAbbr`.
 - **Moving a file?** Update its path keys in `RATCHET_LIMITS`/`LEGACY_BASES` (and any allowlists) in `scripts/quality-check.js`, otherwise the moved file silently falls back to the default 500-line limit.
 
-## Theme model (satellite vs blackout)
+## Theme model (single nocturnal theme)
 
-The UI chrome (panels, text, accents, glass) comes entirely from the base `THEME[light|dark]` and is **shared by every globe theme**. A globe theme may only override globe-scene concerns (globe material, atmosphere glow, graticules, stroke widths, label color mode, continent/department palettes) via `GLOBE_THEMES[theme].globeSettings`. `getThemeColors()` merges those on top of the base theme, so anything not listed automatically stays identical across globe themes. **Switching the globe theme must change the globe, not the interface.**
+There is one unified nocturnal pixel-art theme and no user-facing theme, accent, satellite or found-style option. The UI chrome comes from `THEME.dark` (`getThemeCssVariables`); the globe adds `GLOBE_ONLY_SETTINGS` and colours pinned to `GLOBE_PALETTE` (`getThemeColors`). Retired `localStorage` keys are purged once by `useAppTheme`.
 
 ### Globe atmosphere / load flicker
 
-The custom inner-glow halo (Fresnel shader) is **snapped** to its theme target color on first build (`justCreatedLighting` in `updateGlobeLighting`); only later theme changes lerp smoothly via `animateScene`. This avoids the "globe slowly drifts color on load" flicker. Do not reintroduce a default glow color that gets lerped from on first paint. The inner glow is intentionally hidden in blackout and on mobile.
+The custom inner-glow halo (Fresnel shader) is **snapped** to its theme target color on first build (`justCreatedLighting` in `updateGlobeLighting`); only later target changes lerp smoothly via `animateScene`. This avoids the "globe slowly drifts color on load" flicker. Do not reintroduce a default glow color that gets lerped from on first paint. The inner glow is intentionally hidden.
 
 ## Known tech debt (future work, not yet addressed)
 

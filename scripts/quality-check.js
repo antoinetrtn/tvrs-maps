@@ -28,7 +28,7 @@ const requiredScripts = {
   lint: "node scripts/quality-check.js",
   quality: "node scripts/quality-check.js",
   check:
-    "npm run format:check && npm run lint && npm run check:tokens && npm run check:css-rules && npm run check:a11y && npm run test:run && npm run build",
+    "npm run format:check && npm run lint && npm run check:tokens && npm run check:css-rules && npm run check:a11y && npm run check:ds && npm run test:run && npm run build",
   "check:tokens": "node scripts/check-tokens.mjs",
   "check:css-rules": "node scripts/check-css-rules.mjs",
   "check:a11y": "node scripts/check-a11y-ratchet.mjs",
@@ -51,8 +51,9 @@ Object.entries(requiredScripts).forEach(([name, command]) => {
 const hardcodedColorPattern = /#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/g;
 const colorAllowListFiles = new Set([
   "src/config/designSystem.js",
-  "src/config/accentPresets.js", // curated accent palette = design tokens
-  "src/config/monochromeGlobe.js", // accent-derived globe palette (ink base)
+  "src/config/accentPresets.js", // bone accent + pixel palettes = design tokens
+  "src/config/globePalette.js", // accent-derived globe palette (ink base)
+  "src/config/worldPaletteTokens.js", // real-Earth land-cover palette (Blue Marble sampled)
   "src/index.css",
   "src/components/Logo.jsx",
 ]);
@@ -138,7 +139,7 @@ const RATCHET_LIMITS = {
   "src/components/GameHUD.jsx": 490,
   "src/hooks/useGameSession.js": 750,
   "src/hooks/useUserProfile.js": 490,
-  "src/globe/hooks/useGlobePolygons.js": 730, // +Conquête owner overlay (colours, strokes, satellite tint) +focus transitoire silencieux
+  "src/globe/hooks/useGlobePolygons.js": 730, // +Conquête owner overlay (colours, strokes) +focus transitoire silencieux
   "src/config/designSystem.js": 745, // + typography scale tokens (STYLE_TOKENS.fontSize + getThemeCssVariables)
   "src/components/GameHUD.css": 1000,
   "src/index.css": 560, // + typography scale, ghost-token defaults, glass icon button primitive (moved from HomeScreen.css)

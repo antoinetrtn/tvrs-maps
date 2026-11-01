@@ -16,7 +16,7 @@ Une expérience interactive et immersive pour tester vos connaissances géograph
     *   **Pays :** Identifiez les pays à partir de leur emplacement ou de leur nom.
     *   **Capitales :** Trouvez la capitale associée au pays mis en avant.
 *   **Contrôle Vocal :** Jouez sans les mains grâce à l'intégration de l'API de reconnaissance vocale.
-*   **Design Moderne :** Interface épurée avec effet *Glassmorphism*, support des modes **Sombre/Clair** et vue **Satellite**.
+*   **Design Moderne :** Interface épurée avec effet *Glassmorphism*, thème nocturne pixel-art unique.
 *   **Statistiques en Temps Réel :** Suivez votre progression par continent.
 *   **Optimisé Mobile :** Expérience fluide sur smartphones avec gestion intelligente du clavier et du zoom tactile.
 

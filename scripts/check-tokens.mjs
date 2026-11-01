@@ -124,7 +124,7 @@ for (const file of jsFiles) {
   for (const m of src.matchAll(/setProperty\(\s*["'](--[a-zA-Z][\w-]*)["']/g)) jsDefined.add(m[1]);
 }
 
-const runtimeVars = getThemeCssVariables("dark", "blackout", { uiScale: 1 });
+const runtimeVars = getThemeCssVariables({ uiScale: 1 });
 const runtimeDefined = new Set(Object.keys(runtimeVars));
 
 const indexCss = stripComments(readFileSync(join(SRC_DIR, "index.css"), "utf8"));
@@ -145,7 +145,7 @@ for (const [name, cssValue] of [...rootMap].sort()) {
   if (!(name in runtimeVars)) continue;
   if (normalize(cssValue) !== normalize(runtimeVars[name])) {
     failures.push(
-      `DARK DRIFT ${name} — index.css :root has "${cssValue}" but getThemeCssVariables(dark) emits "${runtimeVars[name]}"`
+      `DARK DRIFT ${name} — index.css :root has "${cssValue}" but getThemeCssVariables() emits "${runtimeVars[name]}"`
     );
   }
 }

@@ -2,22 +2,11 @@ import { useEffect, useRef, useState } from "react";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { getActiveModeConfig } from "../../config/gameConfig";
-import {
-  BREAKPOINTS,
-  GAME_START_VIEW_JITTER_DEG,
-  GAME_START_VIEWPOINTS,
-  getDataPanelLayoutWidth,
-} from "../../config/gameConstants";
-import { countryDataMap } from "../../data/gameData";
-import { riversMountainsDataMap } from "../../data/riversMountainsData";
+import { BREAKPOINTS, getDataPanelLayoutWidth } from "../../config/gameConstants";
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { createZoomHapticTracker, primeHapticsOnUserGesture } from "../../utils/haptics";
-import { getCanonicalPosition } from "../../utils/utils";
 import {
-  animateGlobePov,
   cancelGlobePovTween,
-  clampGlobeAltitude,
-  frameBoundsAltitude,
   getGlobeMinAltitude,
   GLOBE_MAX_ALTITUDE,
   GLOBE_MIN_ALTITUDE,
@@ -30,138 +19,20 @@ import {
   syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
-import { CAMERA_MS, cameraDuration, selectCameraDuration } from "./cameraTiming";
-import { getHomeDesktopPov } from "./homePov";
+import { setSelectionOutlineDpr } from "../render/selectionOutline";
+import {
+  applyIdleCameraPointOfView,
+  getCustomModePointOfView,
+  getKeyboardShift,
+  handleSelectedCountryCamera,
+} from "./cameraTargetBuilder";
+import { cameraDuration } from "./cameraTiming";
+
+export { getKeyboardShift };
 
 const ORBIT_POLE_GUARD_ANGLE = 0.005;
 const MAX_GLOBE_PIXEL_RATIO = 2;
 const TOOLBAR_HEIGHT_TOLERANCE_PX = 140;
-const REGIONAL_PICK_ZOOM = 0.6;
-
-const getRandomGameStartView = () => {
-  const base = GAME_START_VIEWPOINTS[Math.floor(Math.random() * GAME_START_VIEWPOINTS.length)];
-  const jitter = () => (Math.random() * 2 - 1) * GAME_START_VIEW_JITTER_DEG;
-  return { lat: base.lat + jitter(), lng: base.lng + jitter() };
-};
-
-const getCustomModePointOfView = (mode, learnSubMode, viewport, isPanelOpen) => {
-  const config = getActiveModeConfig(mode, learnSubMode);
-  if (!config?.viewPoint) return null;
-  const isMobile = viewport.width < BREAKPOINTS.mobile;
-  if (config.bounds && viewport.width > 0 && viewport.height > 0) {
-    const panelFactor = isPanelOpen && viewport.width >= BREAKPOINTS.desktop ? 0.7 : 1;
-    const aspect = (viewport.width * panelFactor) / viewport.height;
-    const visibleHeight = isMobile ? 0.8 : 1;
-    const { latMin, latMax, lngMin, lngMax } = config.bounds;
-    return {
-      lat: (latMin + latMax) / 2 - (isMobile ? (latMax - latMin) * 0.12 : 0),
-      lng: (lngMin + lngMax) / 2,
-      altitude: frameBoundsAltitude(config.bounds, aspect, visibleHeight),
-    };
-  }
-  return {
-    lat: config.viewPoint.lat,
-    lng: config.viewPoint.lng,
-    altitude: isMobile ? config.viewPoint.altitude.mobile : config.viewPoint.altitude.desktop,
-  };
-};
-
-export const getKeyboardShift = ({ viewport, isKeyboardMode, isHomeScreen, canvasHeight }) => {
-  if (isHomeScreen || !isKeyboardMode || viewport.width >= BREAKPOINTS.mobile) return 0;
-  const visibleCenter = (viewport.top || 0) + viewport.height / 2;
-  return Math.min(0, Math.round(visibleCenter - canvasHeight / 2));
-};
-
-const buildSelectedCountryCameraTarget = (opts) => {
-  const { data, viewport, isHomeScreen, isKeyboardMode, customPOV } = opts;
-  const { hasPreviousSelection, currentPOV, canonicalPositions = {} } = opts;
-  const canonical =
-    (data && canonicalPositions[data.admin || ""]) || getCanonicalPosition(data || {});
-  const useLat = canonical ? canonical.lat : data?.lat;
-  const useLng = canonical ? canonical.lng : data?.lng;
-
-  const isMobile = viewport.width < BREAKPOINTS.mobile;
-  const customModeAltitude = customPOV ? customPOV.altitude : null;
-  const fallbackAltitude = isHomeScreen
-    ? (customModeAltitude ?? (isMobile ? 2.0 : 1.25))
-    : (customModeAltitude ?? (isMobile ? 1.8 : 0.68));
-  const preservedAltitude =
-    currentPOV && Number.isFinite(currentPOV.altitude) ? currentPOV.altitude : fallbackAltitude;
-  const isKeyboardOpen = isMobile && isKeyboardMode;
-  const occlusionRatio = isKeyboardOpen ? 0 : isMobile ? 0.15 : 0;
-  const latOffset = isHomeScreen ? 0 : -36 * preservedAltitude * (occlusionRatio * 0.7);
-
-  const isAntarctica =
-    data?.iso2 === "AQ" || data?.admin === "Antarctica" || (useLat && useLat <= -80);
-  const targetLat = isAntarctica ? -85 : (useLat ?? 0) + latOffset;
-  const targetLng =
-    isAntarctica && currentPOV && Number.isFinite(currentPOV.lng) ? currentPOV.lng : (useLng ?? 0);
-  const antarcticaAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.5) : isMobile ? 1.7 : 1.35;
-
-  if (customPOV && !isHomeScreen && !isAntarctica) {
-    return {
-      lat: targetLat,
-      lng: targetLng,
-      altitude: clampGlobeAltitude(
-        Math.min(
-          preservedAltitude,
-          customPOV.altitude * (hasPreviousSelection ? REGIONAL_PICK_ZOOM : 1)
-        )
-      ),
-    };
-  }
-
-  return {
-    lat: targetLat,
-    lng: targetLng,
-    altitude: isAntarctica
-      ? antarcticaAltitude
-      : hasPreviousSelection
-        ? isHomeScreen
-          ? fallbackAltitude
-          : preservedAltitude
-        : Math.min(preservedAltitude, fallbackAltitude),
-  };
-};
-
-const applyIdleCameraPointOfView = ({
-  globeEl,
-  viewport,
-  isEndScreen,
-  isHomeScreen,
-  customPOV,
-  wasHomeScreen,
-}) => {
-  const reduced = prefersReducedMotion();
-  if (isEndScreen) {
-    animateGlobePov(
-      globeEl.current,
-      customPOV || { lat: 20, lng: 0, altitude: viewport.width < BREAKPOINTS.mobile ? 2.2 : 1.8 },
-      cameraDuration(CAMERA_MS.endScreen, reduced)
-    );
-    return;
-  }
-  if (isHomeScreen) {
-    const isMobile = viewport.width < BREAKPOINTS.mobile;
-    const targetPov = isMobile ? { lat: 18, lng: 20, altitude: 2.2 } : getHomeDesktopPov(viewport);
-    animateGlobePov(globeEl.current, targetPov, cameraDuration(CAMERA_MS.home, reduced));
-    return;
-  }
-  if (customPOV) {
-    const ms = wasHomeScreen ? CAMERA_MS.gameStart : CAMERA_MS.customPov;
-    animateGlobePov(globeEl.current, customPOV, cameraDuration(ms, reduced));
-    return;
-  }
-  if (wasHomeScreen) {
-    const startView = getRandomGameStartView();
-    const alt = viewport.width < BREAKPOINTS.mobile ? 1.8 : 1.35;
-    animateGlobePov(
-      globeEl.current,
-      { ...startView, altitude: alt },
-      cameraDuration(CAMERA_MS.gameStart, reduced)
-    );
-  }
-};
 
 const readGlobeAltitude = (globe) => {
   try {
@@ -232,7 +103,8 @@ export function useGlobeCamera(props) {
   const maxWindowWidthRef = useRef(window.innerWidth),
     maxWindowHeightRef = useRef(window.innerHeight);
   const previousSelectedCountryRef = useRef(null),
-    previousModeKeyRef = useRef(null);
+    previousModeKeyRef = useRef(null),
+    wasRegionalMapRef = useRef(false);
   const isRegionalMap = Boolean(getActiveModeConfig(mode, learnSubMode)?.bounds);
   isRegionalMapRef.current = isRegionalMap;
   const isMobileRef = useRef(false);
@@ -273,6 +145,7 @@ export function useGlobeCamera(props) {
           if (import.meta.env.PROD) renderer.debug.checkShaderErrors = false;
           polygonGlitchUniforms.uPixelScale.value =
             GLITCH_EFFECT_SETTINGS.referencePixelRatio / pixelRatio;
+          setSelectionOutlineDpr(pixelRatio);
         }
         const controls = globeEl.current.controls?.();
         if (controls) {
@@ -348,6 +221,12 @@ export function useGlobeCamera(props) {
     const modeChanged = previousModeKeyRef.current !== modeKey;
     previousModeKeyRef.current = modeKey;
     const isEnteringHomeFromGame = isHomeScreen && !wasHomeScreenRef.current;
+    // Home card switch into/out of a regional map: cut straight to the new view; a world→France
+    // tween showed the blacked-out world zoomed out for its first frames.
+    const cutToRegional =
+      isHomeScreen && modeChanged && isRegionalMap !== wasRegionalMapRef.current;
+    wasRegionalMapRef.current = isRegionalMap;
+    const camMs = (ms) => (cutToRegional ? 0 : cameraDuration(ms, prefersReducedMotion()));
 
     if (isEnteringHomeFromGame && globeEl.current) {
       applyIdleCameraPointOfView({
@@ -360,47 +239,20 @@ export function useGlobeCamera(props) {
       });
       lastTargetRef.current = null;
     } else if (selectedCountry && globeEl.current) {
-      const data =
-        gameDataMap[selectedCountry] ||
-        countryDataMap[selectedCountry] ||
-        riversMountainsDataMap[selectedCountry];
-
-      if (data && data.lat !== undefined) {
-        const hasPreviousSelection = Boolean(previousSelectedCountryRef.current);
-        const currentPOV = globeEl.current.pointOfView();
-        const target = buildSelectedCountryCameraTarget({
-          ...props,
-          data,
-          customPOV,
-          hasPreviousSelection,
-          currentPOV,
-        });
-        const pt = lastTargetRef.current;
-        const targetChanged =
-          !pt ||
-          Math.abs(pt.lat - target.lat) >= 0.001 ||
-          Math.abs(pt.lng - target.lng) >= 0.001 ||
-          Math.abs(pt.altitude - target.altitude) >= 0.001;
-        const onlyViewportNudge =
-          !selectionChanged &&
-          pt &&
-          previousSelectedCountryRef.current === selectedCountry &&
-          targetChanged;
-
-        if (selectionChanged || (onlyViewportNudge && !isInteractingRef.current)) {
-          const duration = selectCameraDuration({
-            isHomeScreen,
-            onlyViewportNudge,
-            isMobile: Boolean(perfProfile?.isMobile),
-          });
-          animateGlobePov(
-            globeEl.current,
-            target,
-            cameraDuration(duration, prefersReducedMotion())
-          );
-          lastTargetRef.current = target;
-        }
-      }
+      handleSelectedCountryCamera({
+        globeEl,
+        selectedCountry,
+        previousSelectedCountry: previousSelectedCountryRef.current,
+        gameDataMap,
+        customPOV,
+        selectionChanged,
+        props,
+        lastTargetRef,
+        isInteractingRef,
+        isHomeScreen,
+        perfProfile,
+        camMs,
+      });
     } else if (
       (selectionChanged || modeChanged || isHomeScreen !== wasHomeScreenRef.current) &&
       globeEl.current
@@ -418,6 +270,7 @@ export function useGlobeCamera(props) {
 
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedCountry,
     viewport.width,

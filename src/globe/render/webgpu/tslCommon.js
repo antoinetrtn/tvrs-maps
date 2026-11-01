@@ -27,9 +27,6 @@ import {
 /** GLSL `fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123)`. */
 export const hash = (p) => fract(sin(dot(p, vec2(127.1, 311.7))).mul(43758.5453123));
 
-/** GLSL `fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)`. */
-export const hashGrain = (p) => fract(sin(dot(p, vec2(12.9898, 78.233))).mul(43758.5453));
-
 /**
  * 4x4 Bayer ordered-dither threshold in [0.0, 0.9375] (exact [0..15]/16 values).
  * Uses pure float/mod/floor math (no integer bitops) for universal WebGPU TSL compilation.
@@ -50,19 +47,22 @@ export const litDisplayColor = () => toDisplay(output.rgb);
 /** vec4 in display space → linear vec4 for the material output. */
 export const displayOutput = (rgb, alpha = output.a) => vec4(fromDisplay(rgb), alpha);
 
+function copyUniformInitial(val) {
+  if (val?.isColor) return new THREE.Color().copy(val);
+  if (val?.isVector2) return new THREE.Vector2().copy(val);
+  if (val?.isVector3) return new THREE.Vector3().copy(val);
+  return val;
+}
+
 /**
  * A TSL uniform that mirrors a plain `{ value }` holder each frame, so the
  * existing JS (shader clock, feedback, transitions) keeps driving both paths.
  */
 export function mirrorUniform(holder) {
-  const initial = holder.value?.isColor
-    ? new THREE.Color().copy(holder.value)
-    : holder.value?.isVector2
-      ? new THREE.Vector2().copy(holder.value)
-      : holder.value;
+  const initial = copyUniformInitial(holder.value);
   const node = uniform(initial);
   node.onRenderUpdate(() => {
-    if (holder.value?.isColor || holder.value?.isVector2) {
+    if (holder.value?.isColor || holder.value?.isVector2 || holder.value?.isVector3) {
       node.value.copy(holder.value);
       return node.value;
     }

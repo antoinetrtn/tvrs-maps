@@ -78,7 +78,7 @@ export const isPlayMode = (mode, { isHomeScreen = false, isEndScreen = false } =
 export function getPlayVisibleCountryKeys(selectedCountry, foundList = []) {
   const keys = [];
   if (selectedCountry) keys.push(selectedCountry);
-  const lastFound = foundList[foundList.length - 1];
+  const lastFound = foundList.at(-1);
   if (lastFound && lastFound !== selectedCountry) keys.push(lastFound);
   return [...new Set(keys)];
 }
@@ -119,13 +119,14 @@ export const shouldScrambleLabel = (
  */
 export const POLYGON_ALTITUDE = {
   base: 0.0012,
-  satelliteBase: 0.001,
-  selected: 0.008,
+  // Selection stays flat: the raised walls glitched and hid the outline face-on; the
+  // outline is now drawn in pixels on the surface (selectionOutline.js).
+  selected: 0.0012,
   // Regional maps are seen from very close: a department is only ~1° wide, so
   // the world-scale lift turned small areas into pillars and made the whole
   // map look embossed. Keep the regional relief flat and subtle.
   departmentBase: 0.0003,
-  departmentSelected: 0.0016,
+  departmentSelected: 0.0003,
   // Ghost countries (dimmed world around a regional map) are tessellated by the
   // original Delaunay: worst cap dip at 1° is 0.044 (Greenland) < 0.0005 × 100.
   ghostCountry: 0.0005,
@@ -164,35 +165,20 @@ export const getFeatureCapResolution = (d, baseResolution) =>
     ),
   });
 
-export const getPolygonAltitudeFor = ({
-  isDepartmentMode,
-  isGhostCountry,
-  isSelected,
-  globeTheme,
-}) => {
+export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSelected }) => {
   if (isDepartmentMode && isGhostCountry) return POLYGON_ALTITUDE.ghostCountry;
   if (isSelected)
     return isDepartmentMode ? POLYGON_ALTITUDE.departmentSelected : POLYGON_ALTITUDE.selected;
-  if (globeTheme === "satellite") return POLYGON_ALTITUDE.satelliteBase;
   return isDepartmentMode ? POLYGON_ALTITUDE.departmentBase : POLYGON_ALTITUDE.base;
-};
-
-/**
- * Rivers & mountains sizing.
- *
- * Every relief feature is rendered so it stays clickable, but its NAME stays hidden
- * (scrambled label, only shown when selected) so the answer isn't given away. Found
- * features are drawn at full representative size, unfound ones at a slightly smaller
- * neutral scale — close enough that finding one no longer makes it pop from a tiny
- * placeholder to full size.
- */
-export const RELIEF = {
-  mountainScale: 0.62, // found: stable, geographically-representative size
-  targetHintScale: 0.5, // unfound: neutral, still clearly visible/clickable
 };
 
 /** Shader dissolve when deselecting a country (ms). Kept in sync with polygon altitude tween. */
 export const GLITCH_SELECTION_TRANSITION_MS = 360;
+/**
+ * First deselect-fade value, just above the shader's transitionActive threshold (0.006):
+ * a fade of 0 reads as "still selected" and showed one flat umber frame on deselect.
+ */
+export const DESELECT_FADE_START = 0.01;
 
 /**
  * Smooth 0→1 dissolve curve (smootherstep). The previous version lingered in a
@@ -219,17 +205,3 @@ export const GAME_REGIONS = [
   "France",
   "Unknown",
 ];
-
-/**
- * Two-letter symbolic codes shown inside the small region gauges (HUD).
- * These are abbreviations of the canonical English region keys, not translated
- * copy — they stay identical across languages. Anything not listed falls back to
- * the first two letters of the region name (see getRegionAbbr).
- */
-const REGION_ABBR = {
-  Americas: "AM",
-  Antarctic: "AN",
-};
-
-export const getRegionAbbr = (region) =>
-  REGION_ABBR[region] || (region || "").substring(0, 2).toUpperCase();

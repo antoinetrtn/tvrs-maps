@@ -1,17 +1,10 @@
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { attribute } from "three/tsl";
 
-import { getThemeColors, GLOBE_FX_DEFAULTS } from "../../config/designSystem";
-import { useAppTheme } from "../../hooks/useAppTheme";
+import { getThemeColors } from "../../config/designSystem";
 import { GLSL_BAYER_4X4_FN } from "../render/globeShaders";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
-import {
-  blackoutOceanOutputNode,
-  createPhongMaterial,
-  createStandardMaterial,
-  satelliteSensorColorNode,
-} from "../render/webgpu/surfaceNodes";
+import { blackoutOceanOutputNode, createStandardMaterial } from "../render/webgpu/surfaceNodes";
 
 const applyBlackoutOceanShader = (shader) => {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
@@ -132,221 +125,34 @@ const applyBlackoutOceanShader = (shader) => {
   `;
 };
 
-const applySatelliteSensorShader = (shader, gridUvExpr = "vMapUv") => {
-  shader.fragmentShader = shader.fragmentShader.replace(
-    "#include <map_fragment>",
-    `
-    #ifdef USE_MAP
-      vec4 sampledDiffuseColor = texture2D( map, vMapUv );
-      
-      // Sensor grid, anti-aliased in screen space. At world zoom a cell is far
-      // smaller than a pixel: the raw grid aliased into moiré stripes. The
-      // grid (and its per-cell noise) now fades in only once cells span a
-      // few pixels, with 1px-wide lines whatever the zoom.
-      vec2 gridUv = ${gridUvExpr} * vec2(16384.0, 8192.0);
-      vec2 cellPx = max(fwidth(gridUv), vec2(1e-4));
-      float gridVis = 1.0 - smoothstep(0.18, 0.4, max(cellPx.x, cellPx.y));
-      vec2 gridFract = abs(fract(gridUv - 0.5) - 0.5) / cellPx;
-      float gridLine = clamp(min(gridFract.x, gridFract.y), 0.0, 1.0);
-
-      vec3 gridColor = vec3(0.0, 0.5, 0.95);
-      float gridMix = (1.0 - gridLine) * 0.1 * gridVis;
-      sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, gridColor, gridMix);
-
-      vec2 blockId = floor(gridUv);
-      float noise = fract(sin(dot(blockId, vec2(12.9898, 78.233))) * 43758.5453);
-
-      float isLand = step(0.18, length(sampledDiffuseColor.rg - sampledDiffuseColor.b));
-      sampledDiffuseColor.rgb += (noise - 0.5) * 0.03 * isLand * gridVis;
-
-      diffuseColor *= sampledDiffuseColor;
-    #endif
-    `
-  );
-};
-
-/**
- * Material for one progressive satellite tile (useSatelliteTileLayer): same
- * PBR params and sensor grid as the globe, the grid driven by the tile's
- * equirectangular `globalUv` so it stays continuous with the base texture.
- */
-export function createSatelliteTileMaterial(texture) {
-  const mat = createStandardMaterial({
-    map: texture,
-    color: 0xffffff,
-    roughness: 0.95,
-    metalness: 0,
-  });
-  if (mat.isNodeMaterial) {
-    mat.colorNode = satelliteSensorColorNode(texture, attribute("globalUv", "vec2"));
-    return mat;
-  }
-  mat.customProgramCacheKey = () => "satellite-tile";
-  mat.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace(
-        "#include <common>",
-        "#include <common>\nattribute vec2 globalUv;\nvarying vec2 vGlobalUv;"
-      )
-      .replace("#include <uv_vertex>", "#include <uv_vertex>\nvGlobalUv = globalUv;");
-    shader.fragmentShader = shader.fragmentShader.replace(
-      "#include <common>",
-      "#include <common>\nvarying vec2 vGlobalUv;"
-    );
-    applySatelliteSensorShader(shader, "vGlobalUv");
-  };
-  return mat;
-}
-
-export function useGlobeMaterial(options = {}) {
-  const { UI_COLORS: themeColors, isLight: isThemeLight } = useAppTheme();
-
-  const isObjectCall =
-    options && typeof options === "object" && !options.isVector3 && !options.isTexture;
-
-  const UI_COLORS =
-    (isObjectCall ? options.UI_COLORS : null) || themeColors || getThemeColors("satellite", "dark");
-  const isLight = isObjectCall && options.isLight !== undefined ? options.isLight : isThemeLight;
-  const globeLightingEnabled =
-    isObjectCall && options.globeLightingEnabled !== undefined
-      ? options.globeLightingEnabled
-      : true;
-
-  const loadedTexture = useMemo(() => {
-    if (!UI_COLORS?.globeTextureUrl) return null;
-
-    const primaryUrl = UI_COLORS.globeTextureUrl;
-    const fallbackUrl = primaryUrl.includes("night")
-      ? "https://unpkg.com/three-globe/example/img/earth-night.jpg"
-      : "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
-
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load(
-      primaryUrl,
-      (loadedTex) => {
-        loadedTex.needsUpdate = true;
-      },
-      undefined,
-      () => {
-        if (primaryUrl !== fallbackUrl) {
-          loader.load(fallbackUrl, (fbTex) => {
-            texture.image = fbTex.image;
-            texture.needsUpdate = true;
-          });
-        }
-      }
-    );
-
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.generateMipmaps = true;
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }, [UI_COLORS?.globeTextureUrl]);
-
-  // Anisotropic filtering keeps the texture sharp near the limb (grazing
-  // angles). The renderer may not exist yet when the texture is created.
-  useEffect(() => {
-    if (!loadedTexture) return undefined;
-    let timer = null;
-    const apply = () => {
-      const renderer =
-        typeof window === "undefined" ? null : window.__TVRS_GLOBE_EL__?.renderer?.();
-      if (!renderer) {
-        timer = setTimeout(apply, 200);
-        return;
-      }
-      const max = renderer.capabilities?.getMaxAnisotropy?.() || renderer.getMaxAnisotropy?.() || 1;
-      loadedTexture.anisotropy = Math.min(8, max);
-      loadedTexture.needsUpdate = true;
-    };
-    apply();
-    return () => clearTimeout(timer);
-  }, [loadedTexture]);
-
-  useEffect(() => {
-    return () => {
-      if (loadedTexture) {
-        loadedTexture.dispose();
-      }
-    };
-  }, [loadedTexture]);
-
-  const customGlobeTexture =
-    (isObjectCall ? options.customGlobeTexture : options?.isTexture ? options : null) ||
-    loadedTexture;
-
+/** Globe ocean material: flat nocturnal sea with a dithered rim and graticule. */
+export function useGlobeMaterial({ UI_COLORS = getThemeColors() } = {}) {
   const globeMaterial = useMemo(() => {
-    const matType = UI_COLORS.globeMaterialType || "phong";
-
-    if (matType === "basic") {
-      const baseColor = UI_COLORS.globeMaterialColor
-        ? UI_COLORS.globeMaterialColor.startsWith("#")
-          ? UI_COLORS.globeMaterialColor
-          : UI_COLORS[UI_COLORS.globeMaterialColor] || UI_COLORS.mapSea
-        : UI_COLORS.mapSea;
-      const mat = createStandardMaterial({
-        color: new THREE.Color(baseColor),
-        roughness: 0.88,
-        metalness: 0.05,
-      });
-      const rimColor = new THREE.Color(UI_COLORS.oceanRimColor || GLOBE_FX_DEFAULTS.oceanRimColor);
-      const rimStrength = Number(UI_COLORS.oceanRimStrength) || 0.07;
-      if (mat.isNodeMaterial)
-        mat.outputNode = blackoutOceanOutputNode(
-          rimColor,
-          rimStrength,
-          polygonGlitchUniforms.uPixelScale
-        );
-      else
-        mat.onBeforeCompile = (shader) => {
-          shader.uniforms.uRimColor = { value: rimColor };
-          shader.uniforms.uRimStrength = { value: rimStrength };
-          shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
-          shader.uniforms.uTime = polygonGlitchUniforms.uTime;
-          mat.userData.shader = shader;
-          applyBlackoutOceanShader(shader);
-        };
-      return mat;
-    }
-
-    if (UI_COLORS.globeTextureUrl) {
-      const mat = createStandardMaterial({
-        map: customGlobeTexture,
-        color: 0xffffff,
-        roughness: 0.95,
-        metalness: 0.0,
-      });
-      if (mat.isNodeMaterial) mat.colorNode = satelliteSensorColorNode(customGlobeTexture);
-      else mat.onBeforeCompile = (shader) => applySatelliteSensorShader(shader);
-      return mat;
-    }
-
-    return createPhongMaterial({
-      color: UI_COLORS.globeMaterialColor || UI_COLORS.mapSea,
-      emissive: globeLightingEnabled
-        ? new THREE.Color(UI_COLORS.globeEmissive)
-        : new THREE.Color(UI_COLORS.black),
-      emissiveIntensity: globeLightingEnabled ? (isLight ? 0.1 : 0.2) : 0,
-      specular: globeLightingEnabled
-        ? new THREE.Color(UI_COLORS.globeSpecular)
-        : new THREE.Color(UI_COLORS.ink),
-      transparent: false,
-      opacity: 1,
-      shininess: globeLightingEnabled ? (isLight ? 4 : 8) : 0.7,
+    const baseColor = UI_COLORS.globeMaterialColor || UI_COLORS.mapSea;
+    const mat = createStandardMaterial({
+      color: new THREE.Color(baseColor),
+      roughness: 0.88,
+      metalness: 0.05,
     });
-  }, [UI_COLORS, isLight, globeLightingEnabled, customGlobeTexture]);
+    const rimColor = new THREE.Color(UI_COLORS.oceanRimColor);
+    const rimStrength = Number(UI_COLORS.oceanRimStrength) || 0.07;
+    if (mat.isNodeMaterial) mat.outputNode = blackoutOceanOutputNode(rimColor, rimStrength);
+    else
+      mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uRimColor = { value: rimColor };
+        shader.uniforms.uRimStrength = { value: rimStrength };
+        shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
+        shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+        mat.userData.shader = shader;
+        applyBlackoutOceanShader(shader);
+      };
+    return mat;
+  }, [UI_COLORS]);
 
-  // Deselection glitch tears follow the theme (accent-derived on Monochrome).
+  // Deselection glitch tears follow the globe palette.
   useEffect(() => {
-    polygonGlitchUniforms.uGlitchTintA.value.set(
-      UI_COLORS.glitchTintA || GLOBE_FX_DEFAULTS.glitchTintA
-    );
-    polygonGlitchUniforms.uGlitchTintB.value.set(
-      UI_COLORS.glitchTintB || GLOBE_FX_DEFAULTS.glitchTintB
-    );
+    polygonGlitchUniforms.uGlitchTintA.value.set(UI_COLORS.glitchTintA);
+    polygonGlitchUniforms.uGlitchTintB.value.set(UI_COLORS.glitchTintB);
   }, [UI_COLORS.glitchTintA, UI_COLORS.glitchTintB]);
 
   useEffect(() => {

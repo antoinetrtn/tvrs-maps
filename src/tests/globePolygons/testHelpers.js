@@ -1,11 +1,9 @@
-import { act, renderHook } from "@testing-library/react";
+import { renderHook } from "@testing-library/react";
 
-import { DEFAULT_ACCENT, setActiveAccent } from "../../config/accentPresets";
 import { CONQUEST_PLAYER_COLORS } from "../../config/designSystem";
 import { departmentsDataMap } from "../../data/departmentsData";
 import { countryDataMap } from "../../data/gameData";
 import { usStatesDataMap } from "../../data/usStatesData";
-import { setGlobePref } from "../../globe/globePrefs";
 import { useGlobePolygons } from "../../globe/hooks/useGlobePolygons";
 import { clearAnimatedPolygonMaterials } from "../../globe/render/polygonGlitchShader";
 import { getFeatureAdmin } from "../../utils/utils";
@@ -110,10 +108,6 @@ export const CONQUEST_OVERLAY_FIXTURE = {
 };
 
 export function resetGlobePolygonTestGlobals() {
-  setActiveAccent(DEFAULT_ACCENT);
-  act(() => {
-    setGlobePref("foundStyle", "surface");
-  });
   clearAnimatedPolygonMaterials();
 }
 
@@ -131,12 +125,8 @@ export function createHookProps(overrides = {}) {
         ? RIVERS_MOUNTAINS_MAP
         : countryDataMap;
 
-  const theme = overrides.theme ?? "dark";
   return {
     mode,
-    theme,
-    globeTheme: "monochrome",
-    isLight: theme === "light",
     globeLightingEnabled: true,
     perfProfile: { isMobile: false, polygonCapCurvatureResolution: 1.5 },
     selectedCountry: null,
@@ -194,11 +184,8 @@ export function summarizeMaterial(material, { compileShader = true } = {}) {
         uIsError: roundNum(u.uIsError?.value),
         uIsSuccess: roundNum(u.uIsSuccess?.value),
         uIsSelection: roundNum(u.uIsSelection?.value),
-        uIsLight: roundNum(u.uIsLight?.value),
-        uTheme: roundNum(u.uTheme?.value),
         uIsSide: roundNum(u.uIsSide?.value),
         uIsFound: roundNum(u.uIsFound?.value),
-        uIsSatellite: roundNum(u.uIsSatellite?.value),
         uSelectInTransition: roundNum(u.uSelectInTransition?.value),
         uSideShade: roundNum(u.uSideShade?.value),
       }

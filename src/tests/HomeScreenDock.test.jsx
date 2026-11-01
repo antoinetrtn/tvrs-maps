@@ -7,7 +7,6 @@ import HomeScreen from "../components/HomeScreen";
 describe("HomeScreen Action Dock", () => {
   const defaultProps = {
     onStartGame: vi.fn(),
-    theme: "blackout",
     lang: "fr",
     setLang: vi.fn(),
     topExplorers: [],

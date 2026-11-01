@@ -1,9 +1,10 @@
 import React from "react";
 
 import GlobeMap from "../globe/GlobeMapHost.jsx";
-import EndScreen from "./EndScreen.jsx";
-import GameDataPanel from "./GameDataPanel.jsx";
 import GameHUD from "./GameHUD.jsx";
+
+const EndScreen = React.lazy(() => import("./EndScreen.jsx"));
+const GameDataPanel = React.lazy(() => import("./GameDataPanel.jsx"));
 
 const GameSessionView = ({
   showEndScreen,
@@ -19,7 +20,11 @@ const GameSessionView = ({
   <>
     {showHud && <GameHUD {...hudProps} />}
     <GlobeMap {...globeProps} globeLightingEnabled isPanelOpen={gamePanelOpen} />
-    {showEndScreen && <EndScreen {...endScreenProps} />}
+    {showEndScreen && (
+      <React.Suspense fallback={null}>
+        <EndScreen {...endScreenProps} />
+      </React.Suspense>
+    )}
     {gamePanelOpen && (
       <>
         {(isMobileViewport || panelProps?.variant === "overlay") && (
@@ -29,7 +34,9 @@ const GameSessionView = ({
             aria-hidden="true"
           />
         )}
-        <GameDataPanel {...panelProps} />
+        <React.Suspense fallback={null}>
+          <GameDataPanel {...panelProps} />
+        </React.Suspense>
       </>
     )}
   </>

@@ -161,11 +161,6 @@
   color: var(--warning);
   animation: conquest-timer-blink var(--dur-count) steps(1, end) infinite;
 }
-@keyframes conquest-timer-blink {
-  50% {
-    color: var(--text-main);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .conquest-timer.is-urgent {
     animation: none;
@@ -219,7 +214,6 @@
   border: 1px solid var(--black);
   background-color: var(--actor-color);
 }
-.conquest-feed-line,
 .conquest-feed-line-text {
   display: inline-flex;
   align-items: center;
@@ -234,19 +228,6 @@
   font-weight: inherit;
   text-align: left;
   min-width: 0;
-}
-.conquest-feed-line:focus-visible {
-  background: none;
-  color: var(--accent);
-  text-decoration: underline;
-}
-@media (hover: hover) {
-  .conquest-feed-line:hover,
-  .ui-btn.conquest-feed-line:hover:not(:disabled) {
-    background: none;
-    color: var(--accent);
-    text-decoration: underline;
-  }
 }
 .conquest-feed-text {
   overflow: hidden;
@@ -383,14 +364,12 @@
   .conquest-feed li:not(:first-child) {
     display: none;
   }
-  .conquest-feed-line,
   .conquest-feed-line-text {
     width: 100%;
     min-height: 36px;
   }
   .conquest-hud .conquest-steal .conquest-input,
   .conquest-hud .conquest-steal button,
-  .conquest-hud .conquest-steal .ui-btn,
   .conquest-hud .conquest-steal .ui-option {
     min-height: 44px;
   }
@@ -400,4 +379,48 @@
   .conquest-feed {
     display: none;
   }
+}
+
+/* Country history (lazy panel in the answer slot) */
+.conquest-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  max-height: 180px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  font-size: var(--font-size-xs);
+}
+.conquest-timeline-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+.conquest-timeline-list li.is-lock {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.conquest-timeline-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Knowledge questions are long: header text proportionate to the close cross. */
+.conquest-steal.is-knowledge .conquest-steal-header .conquest-label {
+  font-size: var(--font-size-2xs);
+  line-height: 1.5;
+}
+
+/* In a conquest match, result toasts sit at the top, under the score bar. */
+body:has(.conquest-hud) .ui-toast-viewport {
+  top: calc(var(--safe-top) + var(--spacing-md) * 2 + var(--control-lg) * 1.5);
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  width: min(92vw, 420px);
+  transform: translateX(-50%);
 }

@@ -74,12 +74,6 @@
   background: var(--glass-border);
 }
 
-@keyframes training-cell-fill {
-  from {
-    opacity: 0;
-  }
-}
-
 .training-bar-cell.filled {
   background: var(--accent);
   animation: training-cell-fill var(--dur-fast) var(--steps-snap) calc(var(--cell-i) * 15ms);
@@ -106,12 +100,6 @@
     backwards;
 }
 
-.training-start-btn {
-  width: 100%;
-  min-height: var(--control-lg);
-  margin-top: var(--spacing-xs);
-}
-
 .training-reset-row {
   display: flex;
   align-items: center;
@@ -125,16 +113,6 @@
   flex-wrap: wrap;
 }
 
-.training-reset-btn {
-  text-decoration: underline;
-}
-
-.training-cancel-btn,
-.training-confirm-btn {
-  min-height: var(--control-lg);
-  font-size: var(--font-size-xs);
-}
-
 .training-reset-status {
   text-align: center;
   padding: var(--spacing-xs);
@@ -143,6 +121,6 @@
 @media (prefers-reduced-motion: reduce) {
   .training-bar-cell.filled,
   .training-chip {
-    animation: none !important;
+    animation: none;
   }
 }

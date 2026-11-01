@@ -1,9 +1,13 @@
 import { BookOpen, Play, ScrollVertical, Target } from "pixelarticons/react";
 import React from "react";
 
+import { MODE_PIXEL_PALETTES } from "../config/accentPresets";
 import { getCardPose } from "./homeCardPose";
+import { getModeClipPath } from "./homeModeFrameData";
+import { HomeModePixelArt } from "./HomeModePixelArt";
 import { HOME_CONQUEST_KEY } from "./homeModes";
 import Button from "./ui/Button";
+import Card from "./ui/Card";
 
 const guardDrag = (wasDraggingRef, fn) => (e) => {
   if (wasDraggingRef.current) {
@@ -15,12 +19,12 @@ const guardDrag = (wasDraggingRef, fn) => (e) => {
   fn?.();
 };
 
-const SecondaryButton = ({ isTopCard, className, onClick, title, label, icon }) => (
+const SecondaryButton = ({ isTopCard, look, onClick, title, label, icon }) => (
   <Button
     variant="secondary"
     size="lg"
     tabIndex={isTopCard ? 0 : -1}
-    className={className}
+    look={look}
     onClick={onClick}
     title={title}
     aria-label={title}
@@ -55,7 +59,8 @@ const CardActions = ({
         variant="primary"
         size="lg"
         tabIndex={isTopCard ? 0 : -1}
-        className={`card-play-btn mode-${modeKey}`}
+        look="cta"
+        className={`mode-${modeKey}`}
         onClick={onPlay}
       >
         <Play width={20} height={20} aria-hidden="true" />
@@ -65,7 +70,7 @@ const CardActions = ({
       {!isConquest && (
         <SecondaryButton
           isTopCard={isTopCard}
-          className="card-learn-btn card-train-btn"
+          look={["tile", "tile-train"]}
           onClick={onTrain}
           title={t("training_card_label")}
           label={t("card_train_short") || t("training_card_label")}
@@ -76,7 +81,7 @@ const CardActions = ({
       {isConquest ? (
         <SecondaryButton
           isTopCard={isTopCard}
-          className="card-learn-btn card-rules-btn"
+          look={["tile", "tile-rules"]}
           onClick={onSecondary}
           title={t("mode_rules")}
           label={t("card_rules_short") || t("mode_rules")}
@@ -85,7 +90,7 @@ const CardActions = ({
       ) : (
         <SecondaryButton
           isTopCard={isTopCard}
-          className="card-learn-btn"
+          look="tile"
           onClick={onSecondary}
           title={t("mode_learn")}
           label={t("card_learn_short") || t("mode_learn")}
@@ -109,7 +114,7 @@ const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badge
     <div className="card-header-row">
       <h2 className="card-title">{lang === "fr" ? modeItem.titleFr : modeItem.titleEn}</h2>
       <span className="card-mode-icon" aria-hidden="true">
-        {modeItem.icon}
+        {modeItem.icon || <HomeModePixelArt modeKey={modeItem.key} />}
       </span>
     </div>
     <p id={`card-desc-${modeItem.key}`} className="card-desc desktop-reveal">
@@ -118,9 +123,18 @@ const CardContent = ({ modeItem, lang, plateNumber, plateLabel, badgeText, badge
   </div>
 );
 
-const getCardStyle = (pose, isTopCard, reducedMotion) => {
+const getCardStyle = (pose, isTopCard, reducedMotion, modeKey) => {
+  const palette = MODE_PIXEL_PALETTES[modeKey] || MODE_PIXEL_PALETTES.countries;
+  const clipPath = getModeClipPath();
+  const modeVars = {
+    "--card-mode-accent": palette.primary,
+    "--card-mode-secondary": palette.secondary,
+    "--card-mode-spark": palette.spark,
+    "--card-clip-path": clipPath,
+  };
   if (reducedMotion) {
     return {
+      ...modeVars,
       "--card-x": "0px",
       "--card-y": "0px",
       "--card-rot": "0deg",
@@ -131,6 +145,7 @@ const getCardStyle = (pose, isTopCard, reducedMotion) => {
     };
   }
   return {
+    ...modeVars,
     "--card-x": `${pose.translateX}px`,
     "--card-y": `${pose.translateY}px`,
     "--card-rot": `${pose.rotateZ}deg`,
@@ -196,7 +211,7 @@ const ModeCard = ({
     animatingDirection: reducedMotion ? null : animatingDirection,
   });
 
-  const cardStyle = getCardStyle(pose, isTopCard, reducedMotion);
+  const cardStyle = getCardStyle(pose, isTopCard, reducedMotion, modeItem.key);
   const selectSideCard = () => onSelectSideCard(stackPos);
 
   const plateNumber = String(idx + 1).padStart(2, "0");
@@ -216,11 +231,12 @@ const ModeCard = ({
   );
 
   return (
-    <div
+    <Card
       data-mode={modeItem.key}
       data-stack-pos={stackPos}
       data-is-prev={stackPos === totalModes - 1 ? "true" : undefined}
-      className={`deck-mode-card ${isTopCard ? "is-top-card" : "is-stacked-card"}`}
+      look="mode-deck"
+      className={`${isTopCard ? "is-top-card" : "is-stacked-card"}`}
       style={cardStyle}
       {...interactiveProps}
     >
@@ -244,7 +260,7 @@ const ModeCard = ({
         onStartGame={onStartGame}
         t={t}
       />
-    </div>
+    </Card>
   );
 };
 

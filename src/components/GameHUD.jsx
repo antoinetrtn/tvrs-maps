@@ -2,10 +2,8 @@ import "./GameHUD.css";
 import "./GameHUDLives.css";
 
 import { ChevronLeft, ChevronRight, Home, InfoBox, Play, Square } from "pixelarticons/react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-import { getThemeRegionColorLabel } from "../config/designSystem";
-import { GAME_REGIONS, getRegionAbbr } from "../config/gameConfig";
 import { BREAKPOINTS, HARDCORE_LIVES } from "../config/gameConstants";
 import { useTranslation } from "../config/i18n";
 import useAnswerCombobox from "../hooks/useAnswerCombobox";
@@ -19,6 +17,298 @@ import Logo from "./Logo";
 import { PixelHeart } from "./PixelHeart";
 import Button from "./ui/Button";
 import IconButton from "./ui/IconButton";
+import TextField from "./ui/TextField";
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function resolvePlaceholderText({ mode, learnSubMode, requireSelection, t }) {
+  if (mode === "learn") {
+    return t(
+      learnSubMode === "rivers_mountains"
+        ? "search_placeholder_rivers_mountains"
+        : "search_placeholder"
+    );
+  }
+  if (requireSelection) return t("answer_placeholder_select");
+  if (mode === "rivers_mountains") return t("search_placeholder_rivers_mountains");
+  return t("answer_placeholder");
+}
+
+function HudHearts({ isHardcoreRun, livesLeft, livesShake, t }) {
+  if (!isHardcoreRun || livesLeft === null) return null;
+  return (
+    <div
+      className={`hud-hearts ${livesShake ? "hearts-shake" : ""}`}
+      title={t("hardcore_lives")}
+      aria-label={`${t("hardcore_lives")}: ${livesLeft}/${HARDCORE_LIVES}`}
+    >
+      {Array.from({ length: HARDCORE_LIVES }, (_, i) => (
+        <PixelHeart
+          key={i}
+          width={14}
+          height={14}
+          className={i < livesLeft ? "heart-full" : "heart-lost"}
+        />
+      ))}
+    </div>
+  );
+}
+
+function HudPlayStopButton({ isRunning, isMobile, t, onStop, onNavigateFocus }) {
+  const iconProps = { width: isMobile ? 16 : 18, height: isMobile ? 16 : 18 };
+  const style = isMobile
+    ? { color: isRunning ? "var(--error)" : "var(--success)", width: "40px", height: "40px" }
+    : { color: isRunning ? "var(--error)" : "var(--success)" };
+
+  return (
+    <IconButton
+      label={t(isRunning ? "stop" : "play")}
+      look="hud"
+      style={style}
+      onClick={isRunning ? onStop : () => onNavigateFocus("next")}
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      {isRunning ? <Square {...iconProps} /> : <Play {...iconProps} />}
+    </IconButton>
+  );
+}
+
+function HudHomeButton({ isMobile, onGoHome, t }) {
+  if (isMobile) {
+    return (
+      <IconButton
+        label={t("home")}
+        look="hud"
+        onClick={onGoHome}
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        <Home width={18} height={18} />
+      </IconButton>
+    );
+  }
+  return (
+    <Button
+      variant="ghost"
+      className="hud-logo-clickable"
+      onClick={onGoHome}
+      onMouseDown={(e) => e.preventDefault()}
+      aria-label={t("return_home")}
+      title={t("return_home")}
+    >
+      <Logo size="small" variant="hud" />
+    </Button>
+  );
+}
+
+function DesktopIsland(p) {
+  return (
+    <Button
+      variant="ghost"
+      look="hud-island"
+      onClick={p.onInfo}
+      onMouseDown={(e) => e.preventDefault()}
+      title={p.t("progress_title")}
+    >
+      <span className={`island-font ${p.isTimerLow ? "timer-low" : ""}`}>
+        {formatTime(p.timeLeft)}
+      </span>
+      <span className="island-divider" />
+      <span className="island-progress-wrap">
+        <span className="progress-linear-container">
+          <span className="progress-linear-fill" style={{ width: `${p.progressPercent}%` }} />
+        </span>
+      </span>
+      <span className="island-divider" />
+      <span className={`island-font ${p.scoreGlow ? "score-increased-flash" : ""}`}>
+        <span className="island-font">
+          {p.score}/{p.totalPossible}
+        </span>
+      </span>
+    </Button>
+  );
+}
+
+function MobileRightControls({ isLearn, learn, playStop, isTimerLow, timeLeft, onInfo, t }) {
+  if (isLearn) {
+    return (
+      <IconButton
+        label={t("data_table")}
+        look="hud"
+        className={learn.show ? "active" : ""}
+        onClick={learn.toggle}
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        <InfoBox width={18} height={18} />
+      </IconButton>
+    );
+  }
+  return (
+    <div className="hud-play-controls">
+      {playStop}
+      <Button
+        variant="secondary"
+        size="sm"
+        className={`hud-mini-pill timer-pill ${isTimerLow ? "timer-low" : ""}`}
+        onClick={onInfo}
+        onMouseDown={(e) => e.preventDefault()}
+        title={t("progress_title")}
+      >
+        <span className="mini-pill-val">{formatTime(timeLeft)}</span>
+      </Button>
+    </div>
+  );
+}
+
+function TopHudBar(p) {
+  const isLearn = p.mode === "learn";
+  return (
+    <div
+      className={`top-hud-bar ${p.isMobile ? "mobile-layout" : "desktop-layout"} ${isLearn ? "learn-mode" : ""}`}
+      style={p.topBarStyle}
+    >
+      <div className="hud-top-left">
+        <HudHomeButton isMobile={p.isMobile} onGoHome={p.onGoHome} t={p.t} />
+        {p.isMobile && !isLearn && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className={`hud-mini-pill score-pill ${p.scoreGlow ? "score-increased-flash" : ""}`}
+            onClick={p.onInfo}
+            onMouseDown={(e) => e.preventDefault()}
+            title={p.t("progress_title")}
+          >
+            <span className="mini-pill-val">{p.score}</span>
+            <span className="mini-pill-sub">/{p.totalPossible}</span>
+          </Button>
+        )}
+      </div>
+
+      <div className="hud-top-center">
+        {p.isMobile ? p.hearts : !isLearn && <DesktopIsland {...p} />}
+      </div>
+
+      <div className="hud-top-right">
+        {p.isMobile ? (
+          <MobileRightControls
+            isLearn={isLearn}
+            learn={p.learn}
+            playStop={p.playStopMobile}
+            isTimerLow={p.isTimerLow}
+            timeLeft={p.timeLeft}
+            onInfo={p.onInfo}
+            t={p.t}
+          />
+        ) : (
+          <>
+            {p.hearts}
+            {!isLearn && p.playStop}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HudNavButton({ direction, isFocusedCountry, mode, t, onNavigateFocus }) {
+  if (!isFocusedCountry || mode === "learn") return null;
+  const isNext = direction === "next";
+  return (
+    <IconButton
+      label={t(isNext ? "next" : "previous")}
+      look="hud"
+      className={isNext ? "next-btn" : "prev-btn"}
+      onClick={() => onNavigateFocus(direction)}
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      {isNext ? <ChevronRight width={18} height={18} /> : <ChevronLeft width={18} height={18} />}
+    </IconButton>
+  );
+}
+
+function getInputIslandClass(error, warning, success, rejected) {
+  let c = "input-island";
+  if (error) c += " error";
+  if (warning) c += " warning";
+  if (success) c += " success";
+  if (rejected) c += " is-rejected";
+  return c;
+}
+
+function BottomHudBar(p) {
+  if (p.hide) return null;
+
+  const isSmall = window.innerWidth < BREAKPOINTS.desktop;
+  const bottomStyle = isSmall
+    ? {
+        position: "absolute",
+        top: 0,
+        left: "50%",
+        transform: `translate3d(-50%, calc(${p.viewport.top + p.viewport.height - 24}px - env(safe-area-inset-bottom, 0px)), 0) translateY(-100%)`,
+        bottom: "auto",
+      }
+    : {};
+
+  return (
+    <div
+      className={`bottom-hud-container ${p.isKeyboardMode ? "keyboard-mode" : ""} ${p.mode === "learn" ? "learn-search-bar" : ""}`}
+      style={bottomStyle}
+    >
+      {p.combobox.suggestions.length > 0 && p.combobox.inputProps["aria-expanded"] && (
+        <AnswerSuggestionList
+          id={p.combobox.inputProps["aria-controls"]}
+          suggestions={p.combobox.suggestions}
+          activeIndex={p.combobox.activeIndex}
+          onSelect={p.combobox.choose}
+          t={p.t}
+        />
+      )}
+
+      <div className="bottom-hud-islands">
+        <HudNavButton
+          direction="prev"
+          isFocusedCountry={p.nav.isFocusedCountry}
+          mode={p.mode}
+          t={p.t}
+          onNavigateFocus={p.nav.onNavigateFocus}
+        />
+
+        <form
+          autoComplete="off"
+          data-form-type="other"
+          onSubmit={(e) => e.preventDefault()}
+          className={p.input.islandClass}
+        >
+          <TextField
+            variant="bare"
+            ref={p.input.ref}
+            {...ANSWER_INPUT_PROPS}
+            {...p.combobox.inputProps}
+            id="q-resp-field"
+            placeholder={shieldAutofillText(p.placeholderText)}
+            className="input-field"
+            aria-label={shieldAutofillText(p.t("quiz_answer"))}
+          />
+        </form>
+
+        <HudNavButton
+          direction="next"
+          isFocusedCountry={p.nav.isFocusedCountry}
+          mode={p.mode}
+          t={p.t}
+          onNavigateFocus={p.nav.onNavigateFocus}
+        />
+      </div>
+
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {p.combobox.statusText}
+      </div>
+    </div>
+  );
+}
 
 const GameHUD = ({
   mode,
@@ -41,11 +331,9 @@ const GameHUD = ({
   extInputRef,
   foundList,
   countryDataMap,
-  theme,
   viewport,
   isKeyboardMode,
   selectedCountry,
-  globeTheme,
   learnSubMode,
   learnSearchQuery = "",
   onLearnSearchChange,
@@ -117,366 +405,82 @@ const GameHUD = ({
       requireSelection,
     });
 
-  const formatTime = (secs) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
-
-  const CONTINENT_ORDER = GAME_REGIONS.filter((r) => r !== "Unknown");
-  const REGION_COLORS = useMemo(() => {
-    return GAME_REGIONS.reduce(
-      (acc, r) => ({ ...acc, [r]: getThemeRegionColorLabel(globeTheme, theme, r) }),
-      {}
-    );
-  }, [globeTheme, theme]);
-  const regionStats = useMemo(() => {
-    if (!countryDataMap) return {};
-    const stats = {};
-    CONTINENT_ORDER.forEach((r) => (stats[r] = { total: 0, found: 0 }));
-    Object.keys(countryDataMap).forEach((k) => {
-      const reg = countryDataMap[k]?.region;
-      if (reg && !stats[reg]) stats[reg] = { total: 0, found: 0 };
-      if (reg && stats[reg]) stats[reg].total++;
-    });
-    if (foundList)
-      foundList.forEach((k) => {
-        const reg = countryDataMap[k]?.region;
-        if (reg && stats[reg]) stats[reg].found++;
-      });
-    return stats;
-  }, [foundList, countryDataMap]);
-
   const progressPercent = totalPossible ? Math.min((score / totalPossible) * 100, 100) : 0;
-  const isDepartmentsMode = mode === "departments";
 
-  const placeholderText = useMemo(() => {
-    if (mode === "learn") {
-      return learnSubMode === "rivers_mountains"
-        ? t("search_placeholder_rivers_mountains")
-        : t("search_placeholder");
-    }
-    if (requireSelection) {
-      return t("answer_placeholder_select");
-    }
-    if (mode === "rivers_mountains") {
-      return t("search_placeholder_rivers_mountains");
-    }
-    return t("answer_placeholder");
-  }, [mode, learnSubMode, requireSelection, t]);
-
-  // Determine which continent to highlight
-  const activeContinent = useMemo(
-    () => (selectedCountry && countryDataMap ? countryDataMap[selectedCountry]?.region : null),
-    [selectedCountry, countryDataMap]
-  );
-
-  const gaugeRegions = isDepartmentsMode
-    ? ["France"]
-    : CONTINENT_ORDER.filter((region) => region !== "France");
-  const getRegionColor = useCallback(
-    (region) => REGION_COLORS[region] || (isDepartmentsMode ? "var(--accent)" : "var(--warning)"),
-    [REGION_COLORS, isDepartmentsMode]
+  const placeholderText = useMemo(
+    () => resolvePlaceholderText({ mode, learnSubMode, requireSelection, t }),
+    [mode, learnSubMode, requireSelection, t]
   );
 
   const isMobile = viewport.width < BREAKPOINTS.desktop;
 
-  const heartsRow =
-    isHardcoreRun && livesLeft !== null ? (
-      <div
-        className={`hud-hearts ${livesShake ? "hearts-shake" : ""}`}
-        title={t("hardcore_lives")}
-        aria-label={`${t("hardcore_lives")}: ${livesLeft}/${HARDCORE_LIVES}`}
-      >
-        {Array.from({ length: HARDCORE_LIVES }, (_, i) => (
-          <PixelHeart
-            key={i}
-            width={14}
-            height={14}
-            className={i < livesLeft ? "heart-full" : "heart-lost"}
-          />
-        ))}
-      </div>
-    ) : null;
+  const hearts = (
+    <HudHearts isHardcoreRun={isHardcoreRun} livesLeft={livesLeft} livesShake={livesShake} t={t} />
+  );
+
+  const topBarStyle = isMobile
+    ? {
+        top: 0,
+        left: "50%",
+        transform: `translate3d(-50%, calc(${viewport.top + 24}px + env(safe-area-inset-top, 0px)), 0)`,
+      }
+    : {};
+
+  const isRunning = isPlaying && !isGameOver;
+  const playStopButton = (
+    <HudPlayStopButton
+      isRunning={isRunning}
+      isMobile={isMobile}
+      t={t}
+      onStop={onStop}
+      onNavigateFocus={onNavigateFocus}
+    />
+  );
+
+  const isTimerLow = timeLeft > 0 && timeLeft <= 30;
+  const islandClass = getInputIslandClass(inputError, inputWarning, inputSuccess, isRejected);
 
   return (
     <>
-      <div
-        className={`top-hud-bar ${isMobile ? "mobile-layout" : "desktop-layout"} ${mode === "learn" ? "learn-mode" : ""}`}
-        style={
-          isMobile
-            ? {
-                top: 0,
-                left: "50%",
-                transform: `translate3d(-50%, calc(${viewport.top + 24}px + env(safe-area-inset-top, 0px)), 0)`,
-              }
-            : {}
-        }
-      >
-        {isMobile ? (
-          // === MOBILE TOP HUD BAR ===
-          <>
-            <div className="hud-top-left">
-              <IconButton
-                label={t("home")}
-                className="hud-btn"
-                onClick={onGoHome}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                <Home width={18} height={18} />
-              </IconButton>
-              {mode !== "learn" && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className={`hud-mini-pill score-pill ${scoreGlow ? "score-increased-flash" : ""}`}
-                  onClick={onInfo}
-                  onMouseDown={(e) => e.preventDefault()}
-                  title={t("progress_title")}
-                >
-                  <span className="mini-pill-val">{score}</span>
-                  <span className="mini-pill-sub">/{totalPossible}</span>
-                </Button>
-              )}
-            </div>
+      <TopHudBar
+        isMobile={isMobile}
+        mode={mode}
+        onGoHome={onGoHome}
+        scoreGlow={scoreGlow}
+        onInfo={onInfo}
+        score={score}
+        totalPossible={totalPossible}
+        hearts={hearts}
+        learn={{ show: showLearnPanel, toggle: onToggleLearnPanel }}
+        playStop={hideHudPlayStop ? null : playStopButton}
+        playStopMobile={playStopButton}
+        isTimerLow={isTimerLow}
+        timeLeft={timeLeft}
+        progressPercent={progressPercent}
+        topBarStyle={topBarStyle}
+        t={t}
+      />
 
-            <div className="hud-top-center">{heartsRow}</div>
-
-            <div className="hud-top-right">
-              {mode === "learn" ? (
-                <IconButton
-                  label={t("data_table")}
-                  className={`hud-btn ${showLearnPanel ? "active" : ""}`}
-                  onClick={onToggleLearnPanel}
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  <InfoBox width={18} height={18} />
-                </IconButton>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "var(--spacing-sm)",
-                    alignItems: "center",
-                    pointerEvents: "auto",
-                  }}
-                >
-                  {isPlaying && !isGameOver ? (
-                    <IconButton
-                      label={t("stop")}
-                      className="hud-btn"
-                      style={{ color: "var(--error)", width: "40px", height: "40px" }}
-                      onClick={onStop}
-                      onMouseDown={(e) => e.preventDefault()}
-                    >
-                      <Square width={16} height={16} />
-                    </IconButton>
-                  ) : (
-                    <IconButton
-                      label={t("play")}
-                      className="hud-btn"
-                      style={{ color: "var(--success)", width: "40px", height: "40px" }}
-                      onClick={() => onNavigateFocus("next")}
-                      onMouseDown={(e) => e.preventDefault()}
-                    >
-                      <Play width={16} height={16} />
-                    </IconButton>
-                  )}
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className={`hud-mini-pill timer-pill ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
-                    onClick={onInfo}
-                    onMouseDown={(e) => e.preventDefault()}
-                    title={t("progress_title")}
-                  >
-                    <span className="mini-pill-val">{formatTime(timeLeft)}</span>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          // === DESKTOP TOP HUD BAR ===
-          <>
-            <div className="hud-top-left">
-              <Button
-                variant="ghost"
-                className="hud-logo-clickable"
-                onClick={onGoHome}
-                onMouseDown={(e) => e.preventDefault()}
-                aria-label={t("return_home")}
-                title={t("return_home")}
-              >
-                <Logo size="small" variant="hud" />
-              </Button>
-            </div>
-
-            <div className="hud-top-center">
-              {mode !== "learn" && (
-                <Button
-                  variant="ghost"
-                  className="central-island-panel"
-                  onClick={onInfo}
-                  onMouseDown={(e) => e.preventDefault()}
-                  title={t("progress_title")}
-                >
-                  <span
-                    className={`island-font ${timeLeft > 0 && timeLeft <= 30 ? "timer-low" : ""}`}
-                  >
-                    {formatTime(timeLeft)}
-                  </span>
-                  <span className="island-divider" />
-                  <span className="island-progress-wrap">
-                    <span className="progress-linear-container">
-                      <span
-                        className="progress-linear-fill"
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    </span>
-                  </span>
-                  <span className="island-divider" />
-                  <span className={`island-font ${scoreGlow ? "score-increased-flash" : ""}`}>
-                    <span className="island-font">
-                      {score}/{totalPossible}
-                    </span>
-                  </span>
-                </Button>
-              )}
-            </div>
-
-            <div className="hud-top-right">
-              {heartsRow}
-              {mode === "learn" ? null : hideHudPlayStop ? null : isPlaying && !isGameOver ? (
-                <IconButton
-                  label={t("stop")}
-                  className="hud-btn"
-                  style={{ color: "var(--error)" }}
-                  onClick={onStop}
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  <Square width={18} height={18} />
-                </IconButton>
-              ) : (
-                <IconButton
-                  label={t("play")}
-                  className="hud-btn"
-                  style={{ color: "var(--success)" }}
-                  onClick={() => onNavigateFocus("next")}
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  <Play width={18} height={18} />
-                </IconButton>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Desktop Only Gauges in Bottom Right */}
+      {/* Desktop Only Info Button in Bottom Right */}
       {!isMobile && mode !== "learn" && (
         <div className="hud-bottom-right">
-          <div className="island-sub-gauges animation-fade-in">
-            {gaugeRegions.map((reg) => {
-              const isActive = activeContinent === reg;
-              const isFaded = activeContinent && activeContinent !== reg;
-
-              return (
-                <div
-                  key={reg}
-                  className={`gauge-item ${isActive ? "highlight" : ""} ${isFaded ? "faded" : ""}`}
-                  title={t(`region_${reg}`)}
-                >
-                  <div
-                    className="circular-gauge"
-                    style={{
-                      "--pct": `${(regionStats[reg]?.found / regionStats[reg]?.total) * 100}%`,
-                      "--color": getRegionColor(reg),
-                    }}
-                  >
-                    <span className="gauge-val">{getRegionAbbr(reg)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <IconButton label={t("information")} className="hud-btn" onClick={onInfo}>
+          <IconButton label={t("information")} look="hud" onClick={onInfo}>
             <InfoBox width={18} height={18} />
           </IconButton>
         </div>
       )}
 
-      {!(hideLearnInput && mode === "learn") && (
-        <div
-          className={`bottom-hud-container ${isKeyboardMode ? "keyboard-mode" : ""} ${mode === "learn" ? "learn-search-bar" : ""}`}
-          style={
-            window.innerWidth < BREAKPOINTS.desktop
-              ? {
-                  position: "absolute",
-                  top: 0,
-                  left: "50%",
-                  transform: `translate3d(-50%, calc(${viewport.top + viewport.height - 24}px - env(safe-area-inset-bottom, 0px)), 0) translateY(-100%)`,
-                  bottom: "auto",
-                }
-              : {}
-          }
-        >
-          {suggestions.length > 0 && inputProps["aria-expanded"] && (
-            <AnswerSuggestionList
-              id={inputProps["aria-controls"]}
-              suggestions={suggestions}
-              activeIndex={activeIndex}
-              onSelect={choose}
-              t={t}
-            />
-          )}
-
-          <div className="bottom-hud-islands">
-            {isFocusedCountry && mode !== "learn" && (
-              <IconButton
-                label={t("previous")}
-                className="hud-btn prev-btn"
-                onClick={() => onNavigateFocus("prev")}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                <ChevronLeft width={18} height={18} />
-              </IconButton>
-            )}
-
-            <form
-              autoComplete="off"
-              data-form-type="other"
-              onSubmit={(e) => e.preventDefault()}
-              className={`input-island ${inputError ? "error" : ""} ${inputWarning ? "warning" : ""} ${inputSuccess ? "success" : ""} ${isRejected ? "is-rejected" : ""}`}
-            >
-              <input
-                ref={extInputRef}
-                {...ANSWER_INPUT_PROPS}
-                {...inputProps}
-                id="q-resp-field"
-                placeholder={shieldAutofillText(placeholderText)}
-                className="input-field"
-                aria-label={shieldAutofillText(t("quiz_answer"))}
-              />
-            </form>
-
-            {isFocusedCountry && mode !== "learn" && (
-              <IconButton
-                label={t("next")}
-                className="hud-btn next-btn"
-                onClick={() => onNavigateFocus("next")}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                <ChevronRight width={18} height={18} />
-              </IconButton>
-            )}
-          </div>
-
-          <div className="sr-only" aria-live="polite" aria-atomic="true">
-            {statusText}
-          </div>
-        </div>
-      )}
+      <BottomHudBar
+        hide={hideLearnInput && mode === "learn"}
+        mode={mode}
+        isKeyboardMode={isKeyboardMode}
+        viewport={viewport}
+        combobox={{ suggestions, inputProps, activeIndex, choose, statusText }}
+        t={t}
+        nav={{ isFocusedCountry, onNavigateFocus }}
+        input={{ ref: extInputRef, islandClass }}
+        placeholderText={placeholderText}
+      />
     </>
   );
 };

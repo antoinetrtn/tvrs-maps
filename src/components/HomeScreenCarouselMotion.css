@@ -8,99 +8,14 @@
   --drag-progress: 0;
 }
 
-.deck-mode-card {
-  --card-x: 0px;
-  --card-y: 0px;
-  --card-z: 0px;
-  --card-rot: 0deg;
-  --card-scale: 1;
-  --card-scale-eff: 1;
-  transform: translate3d(var(--card-x, 0px), var(--card-y, 0px), 0) rotateZ(var(--card-rot, 0deg))
-    scale(var(--card-scale-eff, 1));
-  transition:
-    transform var(--dur-base) var(--ease-out),
-    border-color var(--dur-fast) ease,
-    box-shadow var(--dur-fast) ease,
-    opacity var(--dur-fast) ease-out;
-}
-
 /* will-change only while dragging or animating release, never permanently */
-.cards-deck-wrapper.is-user-dragging .deck-mode-card,
-.deck-stage[data-release] .deck-mode-card {
-  will-change: transform, opacity;
-}
 
 /* Top card follows the user's finger during drag */
-.cards-deck-wrapper.is-user-dragging .deck-mode-card.is-top-card {
-  transform: translate3d(var(--drag-x, 0px), calc(var(--drag-abs-x, 0px) * 0.04), 0)
-    rotateZ(var(--drag-rot, 0deg)) scale(calc(1.02 * (1000 / 920)));
-  transition: none !important;
-}
 
 /* Drag left (data-drag-dir="next") reveals next card (stackPos 1) */
-.cards-deck-wrapper.is-user-dragging
-  .deck-stage[data-drag-dir="next"]
-  .deck-mode-card[data-stack-pos="1"] {
-  z-index: 95 !important;
-  transform: translate3d(
-      calc(var(--card-x) * (1 - var(--drag-progress, 0))),
-      calc(var(--card-y) * (1 - var(--drag-progress, 0))),
-      0
-    )
-    rotateZ(calc(var(--card-rot) * (1 - var(--drag-progress, 0))))
-    scale(
-      calc(var(--card-scale-eff) + (1.0869565 - var(--card-scale-eff)) * var(--drag-progress, 0))
-    );
-  transition: none !important;
-}
 
 /* Drag right (data-drag-dir="prev") reveals previous card (data-is-prev) */
-.cards-deck-wrapper.is-user-dragging
-  .deck-stage[data-drag-dir="prev"]
-  .deck-mode-card[data-is-prev="true"] {
-  z-index: 95 !important;
-  transform: translate3d(
-      calc(var(--card-x) * (1 - var(--drag-progress, 0))),
-      calc(var(--card-y) * (1 - var(--drag-progress, 0))),
-      0
-    )
-    rotateZ(calc(var(--card-rot) * (1 - var(--drag-progress, 0))))
-    scale(
-      calc(var(--card-scale-eff) + (1.0869565 - var(--card-scale-eff)) * var(--drag-progress, 0))
-    );
-  transition: none !important;
-}
 
 /* Release easing dependent on velocity */
-.deck-stage[data-release="fling"] .deck-mode-card {
-  transition:
-    transform var(--dur-fling) var(--ease-fling),
-    border-color var(--dur-fling) ease,
-    box-shadow var(--dur-fling) ease !important;
-}
-
-.deck-stage[data-release="settle"] .deck-mode-card {
-  transition:
-    transform var(--dur-settle) var(--ease-out),
-    border-color var(--dur-settle) ease,
-    box-shadow var(--dur-settle) ease !important;
-}
 
 /* Reduced motion: no rotation / translateZ / fly-away, 120ms opacity fade */
-.cards-deck-wrapper.is-reduced-motion .deck-mode-card {
-  transform: none !important;
-  transition: opacity var(--dur-fast) linear !important;
-}
-
-.cards-deck-wrapper.is-reduced-motion .deck-mode-card.is-stacked-card {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-.cards-deck-wrapper.is-reduced-motion .deck-mode-card.is-top-card {
-  opacity: 1 !important;
-}
-
-.cards-deck-wrapper.is-reduced-motion.is-user-dragging .deck-mode-card.is-top-card {
-  transform: translate3d(var(--drag-x, 0px), 0, 0) !important;
-}

@@ -21,9 +21,7 @@ const GameDataPanel = ({
   onClose,
   onGoHome,
   mode,
-  theme = "dark",
   lang = "fr",
-  globeTheme = "satellite",
   isGameOver = false,
   revealAll = false,
   variant = "side",
@@ -47,10 +45,10 @@ const GameDataPanel = ({
   const colors = useMemo(() => {
     const res = {};
     GAME_REGIONS.forEach((r) => {
-      res[r] = getThemeRegionColorLabel(globeTheme, theme, r);
+      res[r] = getThemeRegionColorLabel(r);
     });
     return res;
-  }, [globeTheme, theme]);
+  }, []);
 
   const { rowsByRegion, CONTINENT_ORDER } = useMemo(
     () =>
@@ -102,14 +100,20 @@ const GameDataPanel = ({
     row?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [selectedCountry]);
 
-  const panelTitle =
-    title || (isGameOver ? t("game_over") : isLearnMode ? t("mode_learn") : t("progress_title"));
+  const resolvePanelTitle = () => {
+    if (title) return title;
+    if (isGameOver) return t("game_over");
+    if (isLearnMode) return t("mode_learn");
+    return t("progress_title");
+  };
+
+  const panelTitle = resolvePanelTitle();
 
   const scoreLabel = score !== undefined && total !== undefined ? `${score}/${total}` : null;
 
   return (
     <aside
-      className={`game-data-panel ${theme} ${variant} ${isLearnMode ? "learn-mode" : ""} ${isGameOver ? "is-game-over" : ""}`}
+      className={`game-data-panel ${variant} ${isLearnMode ? "learn-mode" : ""} ${isGameOver ? "is-game-over" : ""}`}
       aria-label={panelTitle}
     >
       <header className="data-panel-header">
@@ -175,7 +179,7 @@ const GameDataPanel = ({
                   )}
                 </header>
 
-                <div className="data-panel-table" role="table">
+                <div className="data-panel-table">
                   {rows.map((row) => (
                     <GameDataPanelRow
                       key={row.key}
@@ -195,7 +199,7 @@ const GameDataPanel = ({
 
       {isGameOver && onGoHome && (
         <div className="panel-footer data-panel-footer">
-          <Button variant="primary" onClick={onGoHome}>
+          <Button variant="primary" className="data-panel-footer-action" onClick={onGoHome}>
             <Home width={16} height={16} />
             {t("home")}
           </Button>

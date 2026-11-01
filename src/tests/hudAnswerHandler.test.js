@@ -99,4 +99,10 @@ describe("useHudAnswerHandler", () => {
     expect(handleInput).toHaveBeenCalledWith("LOSE100");
     expect(specificCountryGuess).not.toHaveBeenCalled();
   });
+
+  it("réponse mise en file pendant le flash de réussite => true (le champ se vide)", () => {
+    specificCountryGuess.mockReturnValue("QUEUED");
+    const { result } = setupHook({ mode: "countries", selectedCountry: "FRA" });
+    expect(result.current("Belgique")).toBe(true);
+  });
 });

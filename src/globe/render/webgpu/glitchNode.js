@@ -7,47 +7,87 @@
 import * as THREE from "three";
 import {
   abs,
+  acos,
   asin,
   atan,
+  cameraPosition,
   clamp,
   cos,
+  dot,
   float,
   floor,
   Fn,
   fract,
+  fwidth,
   If,
   length,
   materialReference,
+  max,
+  min,
   mix,
+  mod,
   modelViewProjection,
   normalize,
   positionLocal,
   positionWorld,
   select,
   sin,
-  smoothstep,
   step,
+  texture,
   vec2,
   vec3,
   vec4,
 } from "three/tsl";
 
-import { bayer4x4, fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
+import { getBiomeTexture } from "../biomeTexture";
+import { getCapitalLightsTexture } from "../capitalLightsTexture";
+import { DISCOVERY } from "../discoveryTimeline";
+import { getFeatureMaskTexture } from "../featureMask";
+import { SELECT_CITY_ALPHA_VALUE, SELECT_CITY_AMBER_RGB } from "../globeShaders";
+import {
+  getSelectionOutlineTexture,
+  selectionOutlineBox,
+  selectionOutlinePx,
+} from "../selectionOutline";
+import {
+  BLACKOUT_TINT_HOME_RGB,
+  BLACKOUT_TINT_RGB,
+  SELECT_EDGE_RGB_VALUE,
+  SELECT_HALO_ALPHA_VALUE,
+  SELECT_LAND_TINT_RGB,
+  SELECT_PULSE_S_VALUE,
+  SELECT_PULSE_STEPS_VALUE,
+} from "../selectionStyle";
+import { discoveryLandStep } from "./igniteNodes";
+import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 const PI = 3.14159;
+const CITY_AMBER = vec3(...SELECT_CITY_AMBER_RGB);
+const EDGE_RGB = vec3(...SELECT_EDGE_RGB_VALUE);
+const LAND_TINT = vec3(...SELECT_LAND_TINT_RGB);
+const RAD2DEG = 57.29577951;
 
 let sharedNodes = null;
-/** Shared uniforms (time, found green, pixel scale, success timeline). */
+/** Shared uniforms (time, pixel scale, success timeline, tear tints). */
 function getSharedNodes(polygonGlitchUniforms) {
   if (!sharedNodes) {
     sharedNodes = {
       uTime: mirrorUniform(polygonGlitchUniforms.uTime),
       uPixelScale: mirrorUniform(polygonGlitchUniforms.uPixelScale),
       uSuccessStart: mirrorUniform(polygonGlitchUniforms.uSuccessStart),
+      uSelectStart: mirrorUniform(polygonGlitchUniforms.uSelectStart),
+      uShowcaseLights: mirrorUniform(polygonGlitchUniforms.uShowcaseLights),
+      uIsRegionalMode: mirrorUniform(polygonGlitchUniforms.uIsRegionalMode),
+      uFeatureMode: mirrorUniform(polygonGlitchUniforms.uFeatureMode),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
-      uFoundGreen: mirrorUniform(polygonGlitchUniforms.uFoundGreen),
+      uRevealStart: mirrorUniform(polygonGlitchUniforms.uRevealStart),
+      uLandRadius: mirrorUniform(polygonGlitchUniforms.uLandRadius),
+      uIgniteOrigin: mirrorUniform(polygonGlitchUniforms.uIgniteOrigin),
+      uReducedMotion: mirrorUniform(polygonGlitchUniforms.uReducedMotion),
       uGlitchTintA: mirrorUniform(polygonGlitchUniforms.uGlitchTintA),
       uGlitchTintB: mirrorUniform(polygonGlitchUniforms.uGlitchTintB),
+      uSelOutlineBox: mirrorUniform(selectionOutlineBox),
+      uSelOutlinePx: mirrorUniform(selectionOutlinePx),
     };
   }
   return sharedNodes;
@@ -59,13 +99,10 @@ const PER_MATERIAL = [
   "uIsError",
   "uIsSuccess",
   "uIsSelection",
-  "uIsLight",
-  "uTheme",
   "uIsSide",
   "uIsFound",
   "uSelectInTransition",
   "uSideShade",
-  "uIsSatellite",
 ];
 
 let outputNode = null;
@@ -112,7 +149,7 @@ export function attachGlitchNodes(material, polygonGlitchUniforms, initial) {
   return { uniforms };
 }
 
-function errorEffect(finalColor, time, theme, noiseUv, worldPos) {
+function errorEffect(time, noiseUv, worldPos) {
   const pulse = sin(time.mul(24)).mul(0.4).add(0.6);
   const sweep = step(fract(worldPos.y.mul(0.24).sub(time.mul(6))), 0.2).mul(0.5);
   const errorNoise = hash(noiseUv.add(sin(time.mul(60))));
@@ -129,53 +166,40 @@ function errorEffect(finalColor, time, theme, noiseUv, worldPos) {
   }).ElseIf(errorNoise.lessThan(0.15), () => {
     split.assign(mix(split, vec3(1, 0, 1), 0.75));
   });
-  const isBlackout = theme.greaterThan(0.9).and(theme.lessThan(1.1));
-  return select(isBlackout, split, mix(finalColor, split, 0.95));
+  return split;
 }
 
-function successEffect(u, time, blockUv, worldPos) {
-  const p = clamp(time.sub(u.uSuccessStart).div(u.uSuccessDuration), 0, 1);
-  const blockNoise = hash(blockUv.mul(0.5).add(17.0));
-  const resolved = step(blockNoise, smoothstep(0.0, 0.78, p));
-  const flick = mix(0.7, 1.35, hash(blockUv.add(floor(time.mul(60)))));
-  const hot = mix(vec3(1.0), u.uFoundGreen, 0.2).mul(flick);
-  const sweep = step(fract(worldPos.y.mul(0.18).sub(p.mul(2.8))), 0.22)
-    .mul(float(1).sub(smoothstep(0.3, 0.8, p)))
-    .mul(0.7);
-  const baseGreen = mix(hot, u.uFoundGreen, resolved).add(u.uFoundGreen.mul(sweep)).toVar();
-  If(p.lessThan(0.85), () => {
-    const burstChroma = float(1)
-      .sub(p)
-      .mul(0.55)
-      .mul(hash(blockUv.add(time.mul(12))).sub(0.5));
-    baseGreen.assign(
-      vec3(
-        clamp(baseGreen.x.add(burstChroma.mul(0.6)), 0, 1),
-        clamp(baseGreen.y.add(abs(burstChroma).mul(0.3)), 0, 1),
-        clamp(baseGreen.z.sub(burstChroma.mul(0.8)), 0, 1)
-      )
-    );
+/**
+ * Discovery reveal, success window (GLSL computeDiscoveryEffect twin): stepped land front
+ * from the capital towards the found tone, amber outline (walls) ahead of it. No flash.
+ */
+function discoveryEffect(u, staticColor, foundColor, dir, cell, isWall) {
+  const revealT = u.uTime.sub(u.uRevealStart);
+  const dist = acos(clamp(dot(dir, u.uIgniteOrigin), -1.0, 1.0));
+  const landStep = discoveryLandStep({
+    revealT,
+    dist,
+    radius: u.uLandRadius,
+    cell,
+    reduced: u.uReducedMotion,
   });
-  return baseGreen;
+  const color = mix(staticColor, foundColor, landStep);
+  const outlineIn = floor(clamp(revealT.div(DISCOVERY.OUTLINE_S), 0.0, 1.0).mul(2.0)).div(2.0);
+  const outline = isWall
+    .mul(outlineIn)
+    .mul(float(1).sub(landStep))
+    .mul(float(1).sub(u.uReducedMotion));
+  return mix(color, CITY_AMBER.div(u.uSideShade.max(0.001)), outline.mul(DISCOVERY.OUTLINE_ALPHA));
 }
 
-function selectionEffect(finalColor, green, time, theme, worldPos) {
-  const pulse = sin(time.mul(5.5)).mul(0.18).add(0.82);
-  const sweep = step(fract(worldPos.y.mul(0.05).sub(time.mul(0.9))), 0.1).mul(0.18);
-  const isBlackout = theme.greaterThan(0.9).and(theme.lessThan(1.1));
-  return select(
-    isBlackout,
-    green.mul(pulse.mul(0.32).add(sweep.mul(0.15)).add(0.22)),
-    mix(finalColor, green.mul(pulse.mul(0.42).add(sweep).add(0.3)), 0.52)
-  );
+function selectionEffect(time) {
+  const pulse = sin(time.mul(3.2)).mul(0.08).add(0.92);
+  return vec3(0.92, 0.68, 0.24).mul(pulse.mul(0.72).add(0.16));
 }
-
-const edgeGlowAt = (blockUv, time) =>
-  mix(vec3(0.0, 1.0, 0.95), vec3(1.0, 0.0, 0.85), hash(blockUv.add(floor(time.mul(15)))));
 
 const on = (x) => x.greaterThan(0.5);
 
-/** Screen-space static, the transition amplitude and the effect base colour. */
+/** Warm pixel-dithered Atlas Lantern selection base colour. */
 function glitchBase(u, lit) {
   const time = u.uTime;
   const transitionActive = step(0.006, u.uFadeProgress).mul(
@@ -185,151 +209,196 @@ function glitchBase(u, lit) {
   const glitchAmp = transitionActive
     .mul(sin(u.uFadeProgress.mul(PI)).mul(0.6).add(0.4))
     .mul(selectInScale);
-  const t = time.mul(glitchAmp.mul(62).add(28));
 
   const sphereDir = normalize(positionWorld);
   const sphereLat = asin(clamp(sphereDir.y, -1.0, 1.0));
   const sphereLng = atan(sphereDir.z, sphereDir.x);
   const fragPx = vec2(sphereLng.mul(cos(sphereLat.mul(0.65))), sphereLat).mul(520.0);
-  const bayer = bayer4x4(floor(fragPx));
   const blockUv = floor(fragPx.mul(0.85));
-  const noiseUv = fragPx.mul(2.4);
-  const noiseCoarse = hash(blockUv.add(sin(t)));
-  const noiseFine = hash(floor(noiseUv).add(vec2(cos(t.mul(1.6)), sin(t.mul(0.95)))));
-  const noise = mix(noiseFine, noiseCoarse, transitionActive.mul(0.35));
 
-  const light = on(u.uIsLight);
-  const baseMin = select(light, float(0.76), float(0.36));
-  const baseMax = select(light, float(0.94), float(0.54));
-  const scanline = sin(fragPx.y.mul(2.2).add(time.mul(glitchAmp.mul(14).add(5)))).mul(
-    select(light, float(0.018), float(0.026))
+  // Selection (GLSL parity): the country's real city-light pixels (same texture cells
+  // as the found ignition) glow dim amber in stepped order, border in square pixels.
+  const side = step(0.5, u.uIsSide);
+  const selectIn = clamp(time.sub(u.uSelectStart).div(0.5), 0, 1);
+  const lightProg = select(
+    on(transitionActive),
+    float(1).sub(floor(u.uFadeProgress.mul(5.0)).div(5.0)),
+    floor(selectIn.mul(6.0)).div(6.0)
   );
-  const bayerStipple = bayer
-    .sub(0.46875)
-    .mul(select(light, float(0.025), float(0.035)))
-    .mul(transitionActive);
-  const staticVec = vec3(mix(baseMin, baseMax, noise).add(scanline).add(bayerStipple)).toVar();
+  const selUv = vec2(
+    atan(sphereDir.x, sphereDir.z).div(6.2831853).add(0.5),
+    sphereLat.div(3.14159265).add(0.5)
+  );
+  const selCell = floor(selUv.mul(vec2(3600.0, 1800.0)));
+  // Regional scale (GLSL parity): no 0.1° city blocks inside a département/state.
+  const isCityPx = step(0.25, texture(getCapitalLightsTexture(), selUv).r)
+    .mul(float(1).sub(side))
+    .mul(float(1).sub(u.uIsRegionalMode));
+  const cityOn = isCityPx.mul(step(hash(selCell.add(3.7)), lightProg.mul(1.15).sub(0.15)));
+  const wallOn = side.mul(step(hash(floor(fragPx.mul(0.5)).add(7.0)), lightProg.mul(2.0)));
+  const wallTone = vec3(1.0, 0.74, 0.3).div(u.uSideShade.max(0.001));
+  // Flat selection (GLSL parity): the shared outline brick — bilinear coverage mask,
+  // 0.5 contour as a hard line of uSelOutlinePx device pixels (constant screen width).
+  const box = u.uSelOutlineBox;
+  const ocRaw = vec2(atan(sphereDir.x, sphereDir.z).mul(RAD2DEG), sphereLat.mul(RAD2DEG))
+    .sub(box.xy)
+    .div(box.z);
+  const oc = vec2(mod(ocRaw.x, min(float(360).div(box.z), box.w)), ocRaw.y);
+  const ocCell = floor(oc);
+  const inBox = step(0.5, box.w)
+    .mul(step(0.0, oc.x))
+    .mul(step(oc.x, 1024.0))
+    .mul(step(0.0, oc.y))
+    .mul(step(oc.y, 1024.0));
+  const mask = texture(getSelectionOutlineTexture(), oc.div(1024.0)).r;
+  const fw = max(fwidth(mask), 1e-4);
+  const edgeV = step(mask, fw.mul(u.uSelOutlinePx).add(0.5)).mul(inBox).mul(float(1).sub(side));
+  const edgeOn = step(hash(ocCell.add(7.0)), lightProg.mul(2.0));
+  const edgeOuter = edgeV.mul(edgeOn);
+  const selLand = vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(LAND_TINT);
+  const staticVec = mix(
+    mix(mix(lit, selLand, float(1).sub(side)), wallTone, wallOn),
+    CITY_AMBER,
+    cityOn.mul(SELECT_CITY_ALPHA_VALUE)
+  );
+  const foundRestingColor = vec3(0.48, 0.34, 0.15);
 
-  const finalColor = vec3(staticVec).toVar();
+  const finalStatic = mix(staticVec, EDGE_RGB, edgeOuter);
+  const finalColor = vec3(finalStatic).toVar();
   If(on(u.uIsError), () => {
-    finalColor.assign(errorEffect(lit, time, u.uTheme, blockUv, positionWorld));
+    finalColor.assign(errorEffect(time, blockUv, positionWorld));
   })
     .ElseIf(on(u.uIsSuccess), () => {
-      finalColor.assign(successEffect(u, time, blockUv, positionWorld));
+      finalColor.assign(
+        discoveryEffect(u, finalStatic, foundRestingColor, sphereDir, selCell, max(side, edgeV))
+      );
     })
     .ElseIf(on(u.uIsSelection), () => {
-      finalColor.assign(selectionEffect(lit, u.uFoundGreen, time, u.uTheme, positionWorld));
+      finalColor.assign(selectionEffect(time));
     })
     .ElseIf(on(u.uIsFound), () => {
-      finalColor.assign(u.uFoundGreen);
+      finalColor.assign(foundRestingColor);
     });
   const sideShade = mix(1.0, u.uSideShade, step(0.5, u.uIsSide));
   finalColor.mulAssign(sideShade);
-  return { transitionActive, glitchAmp, fragPx, blockUv, staticVec, finalColor, sideShade, bayer };
+  return {
+    selUv,
+    transitionActive,
+    glitchAmp,
+    fragPx,
+    blockUv,
+    staticVec: finalStatic,
+    finalColor,
+    isCityPx,
+    pixelOn: step(0.01, cityOn.add(wallOn).add(edgeOuter)),
+    sideShade,
+    foundRestingColor,
+    unfoundRestColor: unfoundRestColor(u, lit, sphereDir, selUv, side),
+  };
 }
 
-/** Deselection dissolve: threshold noise, tears and the chroma-split colour. */
-function glitchDissolve(u, base) {
-  const time = u.uTime;
-  const { transitionActive, glitchAmp, fragPx, blockUv, finalColor, bayer } = base;
-  const dissolveBlock = floor(fragPx.mul(0.21)).add(
-    vec2(sin(time.mul(58)), cos(time.mul(41)))
-      .mul(glitchAmp)
-      .mul(3.5)
+/** GLSL parity: resting unfound land (surface blackout formula) the deselect settles to. */
+function unfoundRestColor(u, lit, sphereDir, selUv, side) {
+  const showcase = u.uShowcaseLights;
+  const regional = u.uIsRegionalMode;
+  const restBlackout = float(1).sub(showcase).mul(float(1).sub(regional));
+  const restGrey = vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(
+    mix(vec3(...BLACKOUT_TINT_RGB), vec3(...BLACKOUT_TINT_HOME_RGB), showcase)
   );
-  const tn1 = hash(dissolveBlock);
-  const tn2 = hash(dissolveBlock.mul(1.9).add(time.mul(3.7)));
-  const transitionNoise = mix(tn1, tn2, glitchAmp.max(0.35).mul(0.55));
-  const ditherDissolve = mix(transitionNoise, bayer, 0.28);
-  const horizontalTear = step(
-    0.78,
-    sin(fragPx.y.mul(0.038).add(time.mul(glitchAmp.mul(95).add(48))))
+  const baseRest = mix(lit, restGrey, restBlackout.mul(0.88)).mul(
+    mix(float(1.0), mix(float(0.36), float(0.74), regional), float(1).sub(showcase))
   );
-  const verticalGlitch = step(0.86, hash(vec2(floor(fragPx.x.mul(0.07)), floor(time.mul(24)))));
+  const biomeSample = texture(getBiomeTexture(), selUv);
+  const biomeTone = biomeSample.rgb;
+  const viewDir = normalize(cameraPosition.sub(positionWorld));
+  const ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
+  const biomeLand = biomeTone.mul(float(1.0).sub(ndv).mul(0.18).add(0.88));
+  const homeRegional = showcase.mul(regional).mul(biomeSample.a).mul(float(1).sub(side));
+  return mix(baseRest, biomeLand, homeRegional.mul(0.92));
+}
 
-  const glitchThreshold = u.uFadeProgress.toVar();
+/** Smooth crossfade state (no checkerboard). */
+function glitchDissolve(u, base) {
+  const { finalColor } = base;
   const glitchColor = vec3(finalColor).toVar();
-  If(on(transitionActive), () => {
-    glitchThreshold.addAssign(ditherDissolve.sub(0.5).mul(glitchAmp.mul(0.3).add(0.46)));
-    glitchThreshold.assign(
-      clamp(glitchThreshold.sub(horizontalTear.mul(0.16)).add(verticalGlitch.mul(0.12)), 0, 1)
-    );
-  });
-  If(on(transitionActive).and(on(u.uIsFound).not()), () => {
-    const chroma = ditherDissolve.sub(0.5).mul(0.28).mul(glitchAmp);
-    glitchColor.assign(
-      vec3(
-        clamp(finalColor.x.add(chroma), 0, 1),
-        clamp(finalColor.y.mul(float(1).sub(glitchAmp.mul(0.15))), 0, 1),
-        clamp(finalColor.z.sub(chroma), 0, 1)
-      )
-    );
-    const tear = mix(u.uGlitchTintA, u.uGlitchTintB, hash(blockUv.add(floor(time.mul(30)))));
-    glitchColor.assign(mix(glitchColor, tear, glitchAmp.mul(0.42).mul(horizontalTear)));
-    glitchColor.assign(mix(glitchColor, vec3(0), glitchAmp.mul(0.25).mul(verticalGlitch)));
-  });
-  return { glitchThreshold, glitchColor };
+  return { glitchColor };
 }
 
 /** Fragment output node equivalent to GLITCH_FRAGMENT_BODY. */
 function createGlitchOutputNode(u) {
   return Fn(() => {
-    const time = u.uTime;
     const lit = litDisplayColor();
     const base = glitchBase(u, lit);
-    const { transitionActive, blockUv, staticVec, sideShade, bayer } = base;
-    const { glitchThreshold, glitchColor } = glitchDissolve(u, base);
-
-    const settleColor = mix(lit, u.uFoundGreen.mul(sideShade), step(0.5, u.uIsFound)).toVar();
-    // Clean uniform surface without noisy surface blotches
-    const blockValRaw = hash(blockUv.mul(0.38).add(sin(time.mul(8)).mul(0.05)));
-    const blockVal = mix(blockValRaw, bayer, 0.22);
-    const edgeGlow = edgeGlowAt(blockUv, time).mul(1.6);
+    const { transitionActive, staticVec, sideShade, foundRestingColor, isCityPx, pixelOn, selUv } =
+      base;
+    const { unfoundRestColor: restColor } = base;
+    const deselectDone = step(0.994, u.uFadeProgress);
+    const { glitchColor } = glitchDissolve(u, base);
+    const settleColor = mix(
+      restColor.mul(sideShade),
+      foundRestingColor.mul(sideShade),
+      step(0.5, u.uIsFound)
+    ).toVar();
 
     const feedback = on(u.uIsError).or(on(u.uIsSuccess));
     const isFoundSurface = on(u.uIsFound);
     const transiting = on(transitionActive);
-    const satellite = on(u.uIsSatellite);
 
-    // Colour branch (GLSL: error/success → found → transition → resting static).
-    const rgb = vec3(staticVec.mul(sideShade)).toVar();
+    const rgb = vec3(mix(staticVec, restColor, deselectDone).mul(sideShade)).toVar();
     If(feedback, () => {
       rgb.assign(glitchColor);
     })
       .ElseIf(isFoundSurface, () => {
-        rgb.assign(u.uFoundGreen.mul(sideShade));
-      })
-      .ElseIf(transiting.and(satellite), () => {
-        rgb.assign(glitchColor);
-      })
-      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold)), () => {
-        rgb.assign(settleColor);
-      })
-      .ElseIf(transiting.and(blockVal.lessThan(glitchThreshold.add(0.12))), () => {
-        rgb.assign(mix(glitchColor, edgeGlow, 0.65));
+        rgb.assign(foundRestingColor.mul(sideShade));
       })
       .ElseIf(transiting, () => {
-        rgb.assign(glitchColor);
+        rgb.assign(mix(settleColor, staticVec.mul(sideShade), pixelOn));
       });
-    // (The GLSL soft select-in branch is unreachable: it needs transitionActive,
-    // already handled above.)
-    // Clean cartographic finish
-
-    // Alpha branch (satellite dissolve fades the cap out, block by block).
-    const alpha = float(1).toVar();
-    const fade = u.uFadeProgress;
-    const satDissolve = feedback.or(isFoundSurface).not().and(transiting).and(satellite);
-    If(satDissolve.and(blockVal.lessThan(fade)), () => {
-      alpha.assign(0);
-    }).ElseIf(satDissolve, () => {
-      rgb.assign(select(blockVal.lessThan(fade.add(0.12)), mix(rgb, edgeGlow, 0.65), rgb));
-      alpha.assign(float(1).sub(fade.mul(fade)));
-    });
-    If(feedback.or(isFoundSurface).or(transiting).not().and(satellite), () => {
-      alpha.assign(float(1).sub(clamp(fade, 0, 1)));
+    If(on(u.uIsSuccess), () => {
+      rgb.assign(mix(rgb, CITY_AMBER, isCityPx.mul(SELECT_CITY_ALPHA_VALUE)));
     });
 
-    return vec4(fromDisplay(clamp(rgb, 0, 1)), alpha);
+    If(on(u.uFeatureMode), () => {
+      const featSample = texture(getFeatureMaskTexture(), selUv).r;
+      const isFeatCore = step(0.9, featSample);
+      const isFeatHover = step(0.84, featSample).mul(float(1.0).sub(isFeatCore));
+      const isFeatHalo = step(0.2, featSample).mul(float(1.0).sub(step(0.84, featSample)));
+      const isFeatFound = step(0.1, featSample).mul(float(1.0).sub(step(0.2, featSample)));
+      const featPulseWave = sin(u.uTime.mul(6.2831853 / SELECT_PULSE_S_VALUE))
+        .mul(0.5)
+        .add(0.5);
+      const featPulse = mix(
+        floor(featPulseWave.mul(SELECT_PULSE_STEPS_VALUE).add(0.5)).div(SELECT_PULSE_STEPS_VALUE),
+        float(0.6),
+        u.uReducedMotion
+      );
+      const featHaloAmt = isFeatHalo
+        .mul(featSample)
+        .mul(SELECT_HALO_ALPHA_VALUE)
+        .mul(featPulse.mul(0.65).add(0.35));
+
+      const capSample = texture(getCapitalLightsTexture(), selUv);
+      const mRelief = capSample.b;
+      const rVal = capSample.a;
+      const rCore = step(0.65, rVal);
+      const rCrest = step(0.76, mRelief);
+      const rSpur = float(1.0).sub(rCrest).mul(step(0.38, mRelief));
+      const rShimmer = sin(u.uTime.mul(2.2).add(selUv.x.mul(140.0).add(selUv.y.mul(90.0))))
+        .mul(0.22)
+        .add(0.78);
+      const fCrest = vec3(0.92, 0.78, 0.48);
+      const fSpur = vec3(0.68, 0.5, 0.24);
+      const fRiver = mix(vec3(0.22, 0.68, 0.92), vec3(0.45, 0.88, 1.0), rShimmer);
+
+      rgb.assign(mix(rgb, fSpur, isFeatFound.mul(rSpur)));
+      rgb.assign(mix(rgb, fCrest, isFeatFound.mul(rCrest)));
+      rgb.assign(mix(rgb, fRiver, isFeatFound.mul(rCore)));
+      rgb.assign(mix(rgb, EDGE_RGB, featHaloAmt));
+      rgb.assign(mix(rgb, EDGE_RGB, isFeatHover.mul(0.6)));
+      rgb.assign(mix(rgb, EDGE_RGB, isFeatCore));
+    });
+
+    return vec4(fromDisplay(clamp(rgb, 0, 1)), 1.0);
   })();
 }
 

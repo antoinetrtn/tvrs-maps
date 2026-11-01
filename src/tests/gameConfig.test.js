@@ -4,7 +4,6 @@ import {
   getLearnLabelLimit,
   getPlayVisibleCountryKeys,
   getPolygonAltitudeFor,
-  getRegionAbbr,
   isPlayMode,
   POLYGON_ALTITUDE,
   shouldScrambleLabel,
@@ -97,25 +96,6 @@ describe("Game Configuration Utilities", () => {
       // Regional relief stays flatter than the world-scale lift.
       expect(POLYGON_ALTITUDE.departmentBase).toBeLessThan(POLYGON_ALTITUDE.base);
       expect(POLYGON_ALTITUDE.departmentSelected).toBeLessThan(POLYGON_ALTITUDE.selected / 3);
-    });
-  });
-
-  describe("getRegionAbbr", () => {
-    it("should return customized region abbreviations", () => {
-      expect(getRegionAbbr("Americas")).toBe("AM");
-      expect(getRegionAbbr("Antarctic")).toBe("AN");
-    });
-
-    it("should fallback to the first two uppercase letters of the region name", () => {
-      expect(getRegionAbbr("Europe")).toBe("EU");
-      expect(getRegionAbbr("Asia")).toBe("AS");
-      expect(getRegionAbbr("France")).toBe("FR");
-      expect(getRegionAbbr("Unknown")).toBe("UN");
-    });
-
-    it("should handle empty or null regions gracefully", () => {
-      expect(getRegionAbbr("")).toBe("");
-      expect(getRegionAbbr(null)).toBe("");
     });
   });
 });

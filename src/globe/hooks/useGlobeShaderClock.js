@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
-import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
+import { homeWakeState, polygonGlitchUniforms } from "../render/polygonGlitchShader";
 
 const stepGlobeMotionState = (state, cam, dt, reduced) => {
   if (reduced) {
@@ -51,13 +51,19 @@ const stepGlobeMotionState = (state, cam, dt, reduced) => {
  * so shader animation (including the magnetic-field dithered ocean currents and
  * country selection effects) runs at the real render rate and reacts to globe motion.
  */
-export function useGlobeShaderClock({
-  globeEl,
-  globeMaterialRef,
-  needsSharedTimeRef,
-  mountainGlitchActiveRef,
-  mountainGlitchUniforms,
-}) {
+export const HOME_WAKE_SECONDS = 9;
+
+/**
+ * Advance the homepage wake-up (0 = blackout, 1 = awake) by one frame. Driven by the
+ * clamped frame delta so a slow first shader compile doesn't skip the sequence.
+ * Reduced motion is awake immediately.
+ */
+export function stepHomeWake(progress, dt, reduced) {
+  if (reduced) return 1;
+  return Math.min(1, Math.max(0, progress + dt / HOME_WAKE_SECONDS));
+}
+
+export function useGlobeShaderClock({ globeEl, globeMaterialRef, needsSharedTimeRef }) {
   useEffect(() => {
     let restore = null;
     let waitId = null;
@@ -69,6 +75,9 @@ export function useGlobeShaderClock({
       smoothMotion: 0,
       smoothVelLng: 0,
       smoothVelLat: 0,
+      showcaseOn: false,
+      wake: 0,
+      prevWakeSec: null,
     };
 
     const attach = () => {
@@ -89,6 +98,18 @@ export function useGlobeShaderClock({
         motionState.prevTimeSec = timeSec;
 
         const reduced = prefersReducedMotion();
+        // Homepage wake-up: restart from blackout each time showcase lights switch on.
+        // Only once country polygons exist, so the blackout is actually seen.
+        const showcase =
+          polygonGlitchUniforms.uShowcaseLights.value > 0.5 && homeWakeState.polygonsReady;
+        if (showcase && !motionState.showcaseOn) motionState.wake = 0;
+        motionState.showcaseOn = showcase;
+        const wakeDt =
+          motionState.prevWakeSec != null ? Math.min(0.25, timeSec - motionState.prevWakeSec) : 0;
+        motionState.prevWakeSec = timeSec;
+        motionState.wake = stepHomeWake(motionState.wake, wakeDt, reduced);
+        polygonGlitchUniforms.uReducedMotion.value = reduced ? 1 : 0;
+        polygonGlitchUniforms.uHomeWake.value = showcase ? motionState.wake : 0;
         const cam = args[2] || globeEl.current?.camera?.();
         stepGlobeMotionState(motionState, cam, dt, reduced);
 
@@ -105,9 +126,6 @@ export function useGlobeShaderClock({
         if (needsSharedTimeRef.current || !reduced) {
           polygonGlitchUniforms.uTime.value = timeSec;
         }
-        if (mountainGlitchActiveRef.current && mountainGlitchUniforms?.uTime) {
-          mountainGlitchUniforms.uTime.value = timeSec;
-        }
       };
       restore = () => {
         scene.onBeforeRender = prev;
@@ -118,11 +136,5 @@ export function useGlobeShaderClock({
       if (waitId != null) clearTimeout(waitId);
       restore?.();
     };
-  }, [
-    globeEl,
-    globeMaterialRef,
-    needsSharedTimeRef,
-    mountainGlitchActiveRef,
-    mountainGlitchUniforms,
-  ]);
+  }, [globeEl, globeMaterialRef, needsSharedTimeRef]);
 }

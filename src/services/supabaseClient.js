@@ -105,7 +105,7 @@ export async function upsertProfile(
       (error.code === "23505" ||
         /unique constraint|profiles_username_key/i.test(error.message || ""))
     ) {
-      const suffix = Math.random().toString(36).substring(2, 6);
+      const suffix = globalThis.crypto.randomUUID().replaceAll("-", "").slice(0, 4);
       activeUsername = `${username}_${suffix}`;
       payload.username = activeUsername;
       const retryResult = await supabase.from("profiles").upsert(payload).select().single();
@@ -143,7 +143,8 @@ export async function submitLeaderboardScore(
     let { data, error } = await insertRow(row);
     // Graceful fallback while the hardcore migration is not deployed yet.
     if (isMissingHardcoreColumn(error)) {
-      const { hardcore: _hc, ...legacyRow } = row;
+      const legacyRow = { ...row };
+      delete legacyRow.hardcore;
       ({ data, error } = await insertRow(legacyRow));
     }
 
@@ -305,7 +306,8 @@ export async function upsertUserRecord(
     let { data, error } = await upsertRow(payload);
     // Graceful fallback while the hardcore migration is not deployed yet.
     if (isMissingHardcoreColumn(error)) {
-      const { hardcore: _hc, ...legacyPayload } = payload;
+      const legacyPayload = { ...payload };
+      delete legacyPayload.hardcore;
       ({ data, error } = await upsertRow(legacyPayload));
     }
     return { data, error };

@@ -11,7 +11,9 @@ import {
 } from "../config/designSystem";
 import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
-import { useGlobeBiomes } from "./hooks/useGlobeBiomes";
+import { resolveEffectiveMode } from "./effectiveMode";
+import { useFoundProgramWarmup } from "./hooks/useFoundProgramWarmup";
+import { useGlobeBoats } from "./hooks/useGlobeBoats";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
 import { useGlobeInteractions } from "./hooks/useGlobeInteractions";
 import { useGlobeLabels } from "./hooks/useGlobeLabels";
@@ -25,27 +27,17 @@ import { useGlobeMapData } from "./hooks/useGlobeMapData";
 import { useGlobeMarkers } from "./hooks/useGlobeMarkers";
 import { useGlobeMaterial } from "./hooks/useGlobeMaterial";
 import { useGlobePanelShift } from "./hooks/useGlobePanelShift";
-import {
-  pathColorAccessor,
-  pathDashAnimateTimeAccessor,
-  pathDashGapAccessor,
-  pathDashLengthAccessor,
-  pathPointAltAccessor,
-  pathPointLatAccessor,
-  pathPointLngAccessor,
-  pathPointsAccessor,
-  pathWidthAccessor,
-  useGlobePaths,
-} from "./hooks/useGlobePaths";
 import { useGlobePolygons } from "./hooks/useGlobePolygons";
 import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
 import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
-import { mountainGlitchUniforms } from "./render/LowPolyBiomes";
+import { useMicroBeacons } from "./hooks/useMicroBeacons";
+import { usePolygonMaterialEviction } from "./hooks/usePolygonMaterialEviction";
+import { clearFeatureMask, setFeatureMask } from "./render/featureMask";
 import { isGlobeHoverRaycastNeeded } from "./render/pointerRaycast";
-import SatelliteImageryLayer from "./SatelliteImageryLayer.jsx";
+import { polygonGlitchUniforms } from "./render/polygonGlitchShader";
 
 // Module-level for a stable identity (an inline arrow rebuilt the lighting rig each render).
 const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
@@ -61,11 +53,9 @@ const GlobeMap = (props) => {
     onCountrySelect,
     shouldAutoRotate,
     selectedCountry,
-    theme,
     viewport,
     isError,
     isSuccess,
-    _hasActiveFeedback,
     perfProfile,
     isHomeScreen,
     isKeyboardMode,
@@ -74,7 +64,6 @@ const GlobeMap = (props) => {
     onPreserveInputFocus,
     globeLightingEnabled = true,
     activeDataMap,
-    globeTheme = "satellite",
     learnSubMode = DEFAULT_LEARN_SUB_MODE,
     isPanelOpen = false,
   } = props;
@@ -105,17 +94,17 @@ const GlobeMap = (props) => {
 
   const selectionTransition = useGlobeSelectionTransition(selectedCountry, mode, gameDataMap);
 
-  const isLight = theme === "light";
   const {
     selectableFeatureIndex,
     countrySizes,
-    _renderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,
     modeTransitionRef,
     transitionStep,
     transitionLive,
+    effectiveDepartmentMode = isDepartmentMode,
+    effectiveUsStatesMode = isUsStatesMode,
   } = useGlobeRenderPipeline({
     isDepartmentMode,
     isUsStatesMode,
@@ -130,6 +119,12 @@ const GlobeMap = (props) => {
     lastZoomRef,
     perfProfile,
     canonicalRef,
+  });
+  const { effectiveMode, effectiveGameDataMap } = resolveEffectiveMode({
+    mode,
+    gameDataMap,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
   });
   const {
     getPolygonCapMaterial,
@@ -148,10 +143,7 @@ const GlobeMap = (props) => {
     getBaseColorForCountryAndKind,
     lerpColor,
   } = useGlobePolygons({
-    mode,
-    theme,
-    globeTheme,
-    isLight,
+    mode: effectiveMode,
     globeLightingEnabled,
     perfProfile,
     selectedCountry,
@@ -160,13 +152,14 @@ const GlobeMap = (props) => {
     conquestOverlay: props.conquestOverlay,
     isHomeScreen,
     isEndScreen,
-    isDepartmentMode,
-    isUsStatesMode,
+    isDepartmentMode: effectiveDepartmentMode,
+    isUsStatesMode: effectiveUsStatesMode,
+    isRiversMountainsMode,
     isPerfectScore,
     isError,
     isSuccess,
     selectionTransition,
-    gameDataMap,
+    gameDataMap: effectiveGameDataMap,
     modeTransitionRef,
     transitionStep,
   });
@@ -180,11 +173,9 @@ const GlobeMap = (props) => {
     targetGlowCoefRef,
   } = useGlobeLighting({
     globeEl,
-    isLight,
     globeLightingEnabled,
     UI_COLORS,
     perfProfile,
-    globeTheme,
     safeColor: safeOpaqueColor,
   });
 
@@ -220,9 +211,9 @@ const GlobeMap = (props) => {
     handleTouchEnd,
     handlePointerDown,
     handlePointerMove,
+    handlePointerLeave,
     handlePointerUp,
     handleBackgroundClick,
-    selectCountry,
   } = useGlobeInteractions({
     globeEl,
     globeContentWrapperRef,
@@ -241,29 +232,58 @@ const GlobeMap = (props) => {
 
   useGlobeNativeTouch(globeContainerRef, { handleTouchStart, handleTouchMove, handleTouchEnd });
   useGlobeVisibilityPause(globeEl);
+  // Pixel beacons on every micro-territory (lazy layer, world modes only).
+  useMicroBeacons(globeEl, {
+    foundList,
+    enabled: !isHomeScreen && !isDepartmentMode && !isUsStatesMode && !isRiversMountainsMode,
+  });
   useGlobeShaderWarmup(
     globeEl,
-    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}|${globeTheme}|${theme}`
+    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}`
   );
 
-  const { globePathsData } = useGlobePaths({
-    mode,
-    isRiversMountainsMode,
-    gameDataMap,
-    foundSet,
-    isHomeScreen,
-    UI_COLORS,
-    selectedCountry,
-    isError,
+  // Life: pixel boats between found coastal countries (lazy, world modes only).
+  useGlobeBoats(globeEl, {
+    foundList,
+    enabled: !isHomeScreen && !isDepartmentMode && !isUsStatesMode && mode !== "learn",
   });
 
-  const {
-    visibleMarkersData: _visibleMarkersData,
-    markersData,
-    getPointColorWrapped,
-    getPointRadius,
-    getPointAltitude,
-  } = useGlobeMarkers({
+  // First correct answer: link the opaque "success" programs ahead of time.
+  useFoundProgramWarmup(globeEl, {
+    active: !isHomeScreen && !isEndScreen && Boolean(selectedCountry) && foundList.length === 0,
+  });
+
+  // Release per-country ignite/selection materials once no mesh uses them.
+  usePolygonMaterialEviction(
+    globeEl,
+    sharedMaterialsRef,
+    polygonMaterialCacheRef,
+    `${foundList.length}|${selectedCountry}`
+  );
+
+  useEffect(() => {
+    polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
+  }, [isRiversMountainsMode]);
+
+  useEffect(() => {
+    if (isRiversMountainsMode) {
+      setFeatureMask({
+        selectedKey: selectedCountry,
+        foundKeys: foundSet,
+        dataMap: gameDataMap,
+      });
+    } else {
+      clearFeatureMask();
+    }
+  }, [isRiversMountainsMode, selectedCountry, foundSet, gameDataMap]);
+
+  useEffect(() => {
+    return () => {
+      clearFeatureMask();
+    };
+  }, []);
+
+  const { markersData, getPointColorWrapped, getPointRadius, getPointAltitude } = useGlobeMarkers({
     mode,
     isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,
@@ -278,9 +298,6 @@ const GlobeMap = (props) => {
     UI_COLORS,
     isPerfectScore,
     isError,
-    isLight,
-    globeTheme,
-    theme,
     canonicalPositions,
     gameDataMap,
   });
@@ -304,10 +321,8 @@ const GlobeMap = (props) => {
     isError,
     REGION_COLORS_LABELS,
     UI_COLORS,
-    globeTheme,
     t,
     globeEl,
-    isLight,
     isPanelOpen,
     canonicalPositions,
   });
@@ -331,26 +346,10 @@ const GlobeMap = (props) => {
     isHomeScreen,
     REGION_COLORS_LABELS,
     REGION_COLORS,
-    isLight,
     countriesWithGeometry,
   });
 
-  const { getBiomeAssetsData, getBiomeAltitude, createBiomeThreeObject } = useGlobeBiomes({
-    globeEl,
-    mode,
-    gameDataMap,
-    selectedCountry,
-    foundSet,
-    isHomeScreen,
-    globeTheme,
-    isRiversMountainsMode,
-  });
-
-  const globeMaterial = useGlobeMaterial({
-    UI_COLORS,
-    globeLightingEnabled,
-    isLight,
-  });
+  const globeMaterial = useGlobeMaterial({ UI_COLORS });
 
   const lightingGlowConfig = {
     globeLightingRef,
@@ -369,21 +368,17 @@ const GlobeMap = (props) => {
     ...lightingGlowConfig,
     ...stylesAndHelpersConfig,
     globeEl,
-    isLight,
     polygonMaterialCacheRef,
     sharedMaterialsRef,
     selectionTransition,
     foundSet,
     globeMaterial,
-    mountainGlitchUniforms,
-    mountainGlitchActive: isRiversMountainsMode,
     modeTransitionRef,
     gameDataMap,
     styleGlobeGraticules,
     updateGlobeLighting,
   });
 
-  const getObjectRotationWrapped = useCallback(() => [90, 0, 0], []);
   const getLatWrapped = useCallback((d) => d.lat, []);
   const getLngWrapped = useCallback((d) => d.lng, []);
 
@@ -424,50 +419,46 @@ const GlobeMap = (props) => {
     [UI_COLORS.atmosphere]
   );
 
+  // On-screen disc of the globe (viewport px), read by the backdrop so its
+  // limb halo / vignette follow the globe offset and zoom. Pure camera math,
+  // identical for the WebGL and WebGPU renderers.
+  const getGlobeFrame = useCallback(() => {
+    const globe = globeEl.current;
+    const camera = globe?.camera?.();
+    const canvas = globe?.renderer?.()?.domElement;
+    if (!camera || !canvas || !camera.isPerspectiveCamera) return null;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const radius = globe.getGlobeRadius?.() || 100;
+    const dist = camera.position.length();
+    if (dist <= radius) return null;
+    const center = camera.position.clone().set(0, 0, 0).project(camera);
+    const halfFov = (camera.fov * Math.PI) / 360;
+    const angular = Math.asin(radius / dist);
+    return {
+      cx: rect.left + ((center.x + 1) / 2) * rect.width,
+      cy: rect.top + ((1 - center.y) / 2) * rect.height,
+      r: (Math.tan(angular) / Math.tan(halfFov)) * (rect.height / 2),
+    };
+  }, []);
+
   return (
     <div
-      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""} ${String(globeTheme).startsWith("monochrome") ? "crt" : ""}`}
+      className={`globe-map-shell ${isHomeScreen ? "home-layout" : "game-layout"} ${isPanelOpen ? "panel-open" : ""}`}
     >
       <div
-        className={`globe-container ${theme}`}
+        className="globe-container globe-stage"
         ref={globeContainerRef}
-        style={{ width: "100%", height: "100%", position: "relative" }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
         onPointerUp={handlePointerUp}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        >
-          <SpaceBackground theme={theme} isLight={isLight} />
-          <div
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              backgroundImage: `radial-gradient(var(--grid-dot) 1.1px, transparent 0)`,
-              backgroundSize: "20px 20px",
-              opacity: 1,
-            }}
-          />
+        <div className="globe-backdrop">
+          <SpaceBackground getGlobeFrame={getGlobeFrame} />
+          <div className="globe-backdrop-grid" />
 
-          <div
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              background: `radial-gradient(circle at center, transparent 0%, var(--bg-color) 100%)`,
-              opacity: 0.6,
-            }}
-          />
+          <div className="globe-backdrop-vignette" />
           {/* The two 80 px and 100 px blurred decorative gradients were removed:
               their `--decor-glow-*` variables are defined nowhere, so they painted
               nothing (background: none) while still costing a full-screen blur layer. */}
@@ -491,7 +482,7 @@ const GlobeMap = (props) => {
             backgroundImageUrl={null}
             showAtmosphere={false}
             atmosphereColor={activeAtmosphereColor}
-            atmosphereDayQuotient={isLight ? 0.2 : 0.1}
+            atmosphereDayQuotient={0.1}
             onGlobeReady={handleGlobeReady}
             backgroundColor={GLOBE_TRANSPARENT_BACKGROUND}
             lineHoverPrecision={0}
@@ -530,40 +521,9 @@ const GlobeMap = (props) => {
             ringPropagationSpeed={getRingSpeedWrapped}
             ringRepeatPeriod={getRingRepeatWrapped}
             ringAltitude={getSelectionEffectAltitude}
-            objectsData={getBiomeAssetsData}
-            objectLat="lat"
-            objectLng="lng"
-            objectAltitude={getBiomeAltitude}
-            objectFacesSurface={true}
-            objectRotation={getObjectRotationWrapped}
-            objectThreeObject={createBiomeThreeObject}
-            onObjectClick={(obj) => {
-              if (!isHomeScreen) {
-                selectCountry(obj.admin);
-              }
-            }}
-            {...{
-              ["paths" + "Data"]: globePathsData,
-              pathPoints: pathPointsAccessor,
-              pathPointLat: pathPointLatAccessor,
-              pathPointLng: pathPointLngAccessor,
-              pathPointAlt: pathPointAltAccessor,
-              pathColor: pathColorAccessor,
-              ["path" + "Stroke"]: pathWidthAccessor,
-              pathDashLength: pathDashLengthAccessor,
-              pathDashGap: pathDashGapAccessor,
-              pathDashAnimateTime: pathDashAnimateTimeAccessor,
-              pathTransitionDuration: 0,
-              onPathClick: (obj) => {
-                if (!isHomeScreen) {
-                  selectCountry(obj.admin);
-                }
-              },
-            }}
             onBackgroundClick={handleBackgroundClick}
           />
         </div>
-        <SatelliteImageryLayer globeEl={globeEl} globeTheme={globeTheme} />
       </div>
     </div>
   );

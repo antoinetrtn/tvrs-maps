@@ -1,0 +1,345 @@
+/*
+ * Icon button looks: named skins of the kit IconButton, defined ONCE here and selected with
+ * <IconButton look="…">. Rules moved verbatim from the screen stylesheets.
+ */
+
+/* — moved from src/styles/panelSystem.css — */
+
+.ui-icon-btn--panel-close {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+@media (max-width: 1024px) {
+  .ui-icon-btn--panel-close,
+  .ui-icon-btn--panel-back {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* — moved from src/components/HomeDock.css & src/components/HomeScreen.css — */
+
+.ui-icon-btn--dock-segment {
+  position: relative;
+  height: var(--control-lg);
+  min-height: var(--control-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+  border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  color: var(--text-muted);
+  touch-action: manipulation;
+  font: inherit;
+  overflow: visible;
+}
+
+.ui-icon-btn--dock-podium {
+  pointer-events: auto;
+  width: auto;
+  padding: 0;
+}
+
+.ui-icon-btn--dock-podium:active .widget-spot,
+.ui-icon-btn--dock-podium:active .widget-rank-num {
+  color: var(--accent-contrast);
+}
+
+.ui-icon-btn--dock-podium:active .widget-spot.rank-1::after {
+  background: var(--accent-contrast);
+}
+
+.ui-icon-btn--dock-profile {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  width: auto;
+  min-width: var(--control-lg);
+  padding: 0 var(--spacing-sm);
+  overflow: visible;
+}
+
+.ui-icon-btn--dock-profile > .profile-btn-level-tag {
+  position: static;
+  order: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  background: color-mix(in srgb, var(--text-main) 10%, transparent);
+  color: var(--text-main);
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: 0 var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--text-main) 18%, transparent);
+  box-shadow: none;
+  pointer-events: none;
+  z-index: var(--z-raised-2);
+}
+
+.ui-icon-btn--dock-profile .profile-btn-xp-bar {
+  position: absolute;
+  left: var(--spacing-xs);
+  right: var(--spacing-xs);
+  bottom: 2px;
+  width: auto;
+  height: 2px;
+  opacity: 0.65;
+  pointer-events: none;
+  z-index: var(--z-raised);
+}
+
+@media (min-width: 769px) {
+  .ui-icon-btn--dock-segment {
+    position: relative;
+    height: var(--control-lg);
+    min-height: var(--control-lg);
+    width: auto;
+    padding: 0 var(--spacing-ms);
+    gap: var(--spacing-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--text-main) 5%, var(--bg-color));
+    border: 1px solid color-mix(in srgb, var(--text-main) 16%, transparent);
+    border-radius: var(--radius-sm);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    box-shadow: none;
+    color: var(--text-muted);
+    touch-action: manipulation;
+    font: inherit;
+    overflow: visible;
+    transition:
+      background var(--dur-fast) linear,
+      border-color var(--dur-fast) linear,
+      color var(--dur-fast) linear;
+  }
+
+  .ui-icon-btn--dock-podium {
+    padding: 0 var(--spacing-ms) 0 0;
+    gap: var(--spacing-sm);
+  }
+
+  .ui-icon-btn--dock-segment:focus-visible {
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+    z-index: var(--z-hud-top);
+  }
+
+  .ui-icon-btn--dock-segment:active,
+  .ui-icon-btn.ui-icon-btn--dock-segment:active:not(:disabled) {
+    transform: var(--press-offset);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    animation: px-press-flash var(--dur-micro) steps(1, end);
+    box-shadow: none;
+  }
+
+  .ui-icon-btn--dock-segment:active .home-dock-label {
+    color: var(--accent-contrast);
+  }
+}
+
+@media (min-width: 769px) and (hover: hover) {
+  .ui-icon-btn--dock-segment:hover,
+  .ui-icon-btn.ui-icon-btn--dock-segment:hover:not(:disabled) {
+    transform: none;
+    background: color-mix(in srgb, var(--text-main) 10%, var(--bg-color));
+    border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
+    color: var(--text-main);
+    box-shadow: none;
+  }
+
+  .ui-icon-btn--dock-segment:hover .home-dock-label {
+    color: var(--text-main);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-icon-btn--dock-segment {
+    transition: none;
+  }
+
+  .ui-icon-btn--dock-segment:active,
+  .ui-icon-btn.ui-icon-btn--dock-segment:active:not(:disabled) {
+    transform: none;
+    animation: none;
+  }
+}
+
+/* — moved from src/components/HomeScreenCategoryCarousel.css — */
+
+.cards-deck-wrapper.is-user-dragging .ui-icon-btn--deck-arrow {
+  pointer-events: none;
+}
+
+/* — moved from src/components/HomeScreenCategoryCarousel.css — */
+
+.ui-icon-btn--deck-arrow:focus-visible,
+.deck-click-zone:focus-visible .ui-icon-btn--deck-arrow,
+.ui-icon-btn.ui-icon-btn--deck-arrow:focus-visible {
+  opacity: 1;
+  color: var(--text-main);
+  border-color: transparent;
+  outline: 2px solid var(--text-main);
+  outline-offset: 2px;
+}
+
+/* — moved from src/components/HomeScreenCategoryCarousel.css — */
+
+.deck-click-zone:active .ui-icon-btn--deck-arrow {
+  transform: var(--press-offset);
+}
+
+/* — moved from src/components/HomeScreenCategoryCarousel.css — */
+
+.ui-icon-btn--deck-arrow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 0.75;
+  box-shadow: none;
+  pointer-events: auto;
+  transition:
+    color var(--dur-fast) linear,
+    background var(--dur-fast) linear,
+    border-color var(--dur-fast) linear,
+    opacity var(--dur-fast) linear,
+    transform var(--dur-micro) var(--steps-press);
+}
+
+/* — moved from src/components/HomeScreenCategoryCarousel.css — */
+
+.ui-icon-btn--deck-arrow::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+@media (max-width: 768px) {
+  .deck-click-zone.left .ui-icon-btn--deck-arrow::after {
+    right: 0;
+  }
+
+  .deck-click-zone.right .ui-icon-btn--deck-arrow::after {
+    left: 0;
+  }
+}
+
+@media (min-width: 769px) {
+  .ui-icon-btn--deck-arrow {
+    width: var(--control-sm);
+    height: var(--control-sm);
+    min-width: var(--control-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    opacity: 1;
+    border-radius: var(--radius-sm);
+    box-shadow: none;
+    transition:
+      color var(--dur-fast) linear,
+      background var(--dur-fast) linear,
+      border-color var(--dur-fast) linear,
+      transform var(--dur-micro) var(--steps-press);
+  }
+
+  .ui-icon-btn--deck-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ui-icon-btn--deck-arrow:hover,
+  .deck-click-zone:hover .ui-icon-btn--deck-arrow,
+  .ui-icon-btn.ui-icon-btn--deck-arrow:hover:not(:disabled) {
+    color: var(--text-main);
+    background: color-mix(in srgb, var(--text-main) 8%, transparent);
+    border-color: transparent;
+  }
+
+  .deck-click-zone.left:hover .ui-icon-btn--deck-arrow,
+  .deck-click-zone.left .ui-icon-btn--deck-arrow:hover {
+    transform: translateX(-2px);
+  }
+
+  .deck-click-zone.right:hover .ui-icon-btn--deck-arrow,
+  .deck-click-zone.right .ui-icon-btn--deck-arrow:hover {
+    transform: translateX(2px);
+  }
+
+  .ui-icon-btn--deck-arrow:focus-visible,
+  .deck-click-zone:focus-visible .ui-icon-btn--deck-arrow,
+  .ui-icon-btn.ui-icon-btn--deck-arrow:focus-visible {
+    color: var(--text-main);
+    border-color: transparent;
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
+  }
+
+  .deck-click-zone:active .ui-icon-btn--deck-arrow {
+    transform: var(--press-offset);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-click-zone.left:hover .ui-icon-btn--deck-arrow,
+  .deck-click-zone.right:hover .ui-icon-btn--deck-arrow,
+  .deck-click-zone.left .ui-icon-btn--deck-arrow:hover,
+  .deck-click-zone.right .ui-icon-btn--deck-arrow:hover {
+    transform: none;
+  }
+}
+
+/* — moved from src/components/GameHUD.css — */
+
+.ui-icon-btn--hud {
+  pointer-events: auto;
+}
+
+/* — moved from src/components/GameHUD.css — */
+
+.top-hud-bar.mobile-layout .ui-icon-btn--hud {
+  width: 40px;
+  height: 40px;
+}
+
+/* — moved from src/components/GameHUD.css — */
+
+.top-hud-bar.mobile-layout .ui-icon-btn--hud svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* — moved from src/components/ProfilePanel.css — */
+
+.profile-panel .ui-icon-btn--panel-close {
+  position: relative;
+  z-index: var(--z-panel-menu-top);
+}
+
+/* — moved from src/multiplayer/ConquestScreen.css — */
+
+.ui-icon-btn--conquest-copy {
+  border-color: var(--glass-border-strong);
+  color: var(--accent);
+  box-shadow: none;
+}

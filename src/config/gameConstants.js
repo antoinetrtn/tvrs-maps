@@ -38,7 +38,8 @@ export const SCREEN_TRANSITION_MS = 420;
  * in one place.
  */
 export const FEEDBACK_TIMING = {
-  successFlashMs: 380, // success pixel-resolve flash before auto-advancing (drives uSuccessDuration)
+  successFlashMs: 380, // gameplay only: delay before auto-advancing after a correct guess
+  discoveryRevealMs: 2000, // visual only: progressive discovery reveal (outline -> land -> cities -> halo)
   flashMs: 500, // error / "already found" warning flash
   focusGlobeClickMs: 80, // delay before re-focusing input after a globe click
   focusKeyboardMs: 50, // delay before re-focusing input during navigation
@@ -80,12 +81,17 @@ export function getDataPanelLayoutWidth(viewportWidth) {
 
 // --- Persistence -------------------------------------------------------------
 export const STORAGE_KEYS = {
-  globeTheme: "tvrs-globe-theme",
-  uiTheme: "tvrs-ui-theme",
   hardcoreMode: "tvrs-hardcore-mode",
   peacefulMode: "tvrs-peaceful-mode",
-  accent: "tvrs-accent",
 };
+// Settings removed with the unified theme (globe theme, UI theme, accent,
+// found-country style): dropped from localStorage once on startup.
+export const RETIRED_STORAGE_KEYS = [
+  "tvrs-globe-theme",
+  "tvrs-ui-theme",
+  "tvrs-accent",
+  "tvrs-found-style",
+];
 
 // --- Hardcore mode -----------------------------------------------------------
 // Optional difficulty: the run ends after this many wrong answers.

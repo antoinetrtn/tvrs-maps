@@ -28,7 +28,6 @@ export function useGlobeRings({
   isHomeScreen,
   REGION_COLORS_LABELS,
   REGION_COLORS,
-  isLight,
   countriesWithGeometry,
 }) {
   const lerpColor = useCallback((a, b, amount) => {
@@ -53,23 +52,25 @@ export function useGlobeRings({
     if (countriesWithGeometry?.has(selectedCountry)) return [];
 
     const mapped = countryDataMap[selectedCountry];
-    if (!mapped || mapped.lat === undefined || mapped.lng === undefined) {
+    if (mapped?.lat === undefined || mapped?.lng === undefined) {
       return [];
     }
 
     const region = mapped.region || "Unknown";
     const isFound = foundSet.has(selectedCountry) || mode === "learn" || isHomeScreen;
 
-    const baseColor = isError
-      ? UI_COLORS.error
-      : !isFound
-        ? UI_COLORS.textMuted
-        : UI_COLORS.selectionRingColor ||
-          REGION_COLORS_LABELS[region] ||
-          REGION_COLORS[region] ||
-          UI_COLORS.accent;
+    let baseColor =
+      UI_COLORS.selectionRingColor ||
+      REGION_COLORS_LABELS[region] ||
+      REGION_COLORS[region] ||
+      UI_COLORS.accent;
+    if (isError) {
+      baseColor = UI_COLORS.error;
+    } else if (!isFound) {
+      baseColor = UI_COLORS.textMuted;
+    }
 
-    const softColor = lerpColor(baseColor, UI_COLORS.paper, isLight ? 0.35 : 0.2);
+    const softColor = lerpColor(baseColor, UI_COLORS.paper, 0.2);
 
     // Marker-only target: same coordinates as the pin (data lat/lng is the
     // canonical position fallback for geometry-less entries), snappy ping.
@@ -103,7 +104,6 @@ export function useGlobeRings({
     UI_COLORS,
     REGION_COLORS_LABELS,
     REGION_COLORS,
-    isLight,
     lerpColor,
   ]);
 

@@ -92,6 +92,69 @@ export function buildSuggestionIndex(
   return index;
 }
 
+/**
+ * Seuil de similarité (Damerau-Levenshtein normalisée) entre la saisie et le
+ * nom complet (ou un alias) pour qu'une entrée apparaisse dans la liste.
+ * 0.8 ≈ « 80 % du mot juste » : la liste n'apparaît qu'en fin de mot (médiane
+ * 83 % du nom tapé, jamais avant 75 %), mais tolère 1 faute (≤ 9 lettres) puis
+ * 2 fautes (≥ 10 lettres). Étude chiffrée dans la PR « suggestions par similarité ».
+ */
+const SUGGEST_SIMILARITY = 0.8;
+/** Noms très courts (Iran, Oman, Cuba, Mali…) : 1 faute tolérée, mais seulement à longueur complète. */
+const SHORT_TARGET_MAX = 5;
+
+function isTransposition(a, b, i, j) {
+  return i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1];
+}
+
+function computeDamerauRow(a, b, i, m, prev, prev2) {
+  const cur = new Array(m + 1);
+  cur[0] = i;
+  let rowMin = cur[0];
+  for (let j = 1; j <= m; j++) {
+    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+    let v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+    if (prev2 && isTransposition(a, b, i, j)) {
+      v = Math.min(v, prev2[j - 2] + 1);
+    }
+    cur[j] = v;
+    if (v < rowMin) rowMin = v;
+  }
+  return { cur, rowMin };
+}
+
+/** Distance de Damerau-Levenshtein (transpositions adjacentes), coupée au-delà de `max`. */
+export function damerauLevenshtein(a, b, max = Infinity) {
+  const n = a.length;
+  const m = b.length;
+  if (Math.abs(n - m) > max) return max + 1;
+  if (n === 0) return m;
+  if (m === 0) return n;
+  let prev2 = null;
+  let prev = Array.from({ length: m + 1 }, (_, j) => j);
+  for (let i = 1; i <= n; i++) {
+    const { cur, rowMin } = computeDamerauRow(a, b, i, m, prev, prev2);
+    if (rowMin > max) return max + 1;
+    prev2 = prev;
+    prev = cur;
+  }
+  return prev[m];
+}
+
+/** Plus grande distance tolérée pour garder une similarité ≥ SUGGEST_SIMILARITY. */
+function maxEdits(input, target) {
+  return Math.floor((1 - SUGGEST_SIMILARITY) * Math.max(input.length, target.length) + 1e-9);
+}
+
+/** Distance si `target` est « assez proche » de `input`, sinon -1. */
+function closeEnough(input, target) {
+  if (!target) return -1;
+  const short = target.length <= SHORT_TARGET_MAX && input.length >= target.length;
+  const limit = Math.max(maxEdits(input, target), short ? 1 : 0);
+  const d = damerauLevenshtein(input, target, limit);
+  return d <= limit ? d : -1;
+}
+
 function getMatchTier(item, normalizedInput, isShort) {
   if (item.normalizedTarget === normalizedInput) {
     return 0;
@@ -102,16 +165,13 @@ function getMatchTier(item, normalizedInput, isShort) {
   if (isShort) {
     return -1;
   }
-  if (item.normalizedTarget.startsWith(normalizedInput)) {
-    return 2;
+  let best = -1;
+  for (const target of [item.normalizedTarget, ...item.normalizedAliases]) {
+    const d = closeEnough(normalizedInput, target);
+    if (d >= 0 && (best === -1 || d < best)) best = d;
   }
-  if (item.targetWords.some((w) => w.startsWith(normalizedInput))) {
-    return 3;
-  }
-  if (item.normalizedAliases.some((a) => a.startsWith(normalizedInput))) {
-    return 4;
-  }
-  return -1;
+  // tier 2 + distance : les fautes les plus légères d'abord.
+  return best === -1 ? -1 : 2 + best;
 }
 
 function collectMatches(index, normalizedInput) {
@@ -163,10 +223,12 @@ function dedupeMatches(matches, foundSet) {
  * Returns matching suggestions for quiz play modes.
  *
  * Rules:
- * - Minimum threshold: >= 3 normalized chars, OR exact match with name/alias (e.g. "UK", "Ain").
- * - Match conditions: target starts with input, a target word starts with input,
- *   or an alias starts with input (for name modes).
- * - Sorting: exact match first, then target prefix, then word/alias prefix, then alphabetical.
+ * - Exact match with name/alias always shows (e.g. "UK", "Ain").
+ * - Otherwise (>= 3 normalized chars) the input must be close to the FULL name or an
+ *   alias: normalized Damerau-Levenshtein similarity >= SUGGEST_SIMILARITY (0.8).
+ *   Short targets (<= 5 letters) also accept 1 edit once the input is full length.
+ *   Typing a prefix no longer reveals the answer early (anti-triche).
+ * - Sorting: exact match first, then smallest edit distance, then alphabetical.
  * - Deduplication: by normalized display string. If any duplicated key is not found, found = false.
  * - Limit: 5 items by default.
  *

@@ -17,6 +17,8 @@ export const globeAliases = [
       "./node_modules/three-conic-polygon-geometry/dist/three-conic-polygon-geometry.mjs"
     ),
   },
+  // three-globe hex layers are unused: drop the ~550 kB h3-js blob.
+  { find: /^h3-js$/, replacement: fromRoot("./src/globe/render/h3Stub.js") },
   // Experimental WebGPU renderer flag (src/globe/render/globeRendererFlag.js).
   {
     find: /^three-render-objects$/,

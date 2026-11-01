@@ -56,6 +56,9 @@ export const cancelStealChallenge = (matchId) =>
 export const requestFortifyChallenge = (matchId, countryId) =>
   rpc("conquest_fortify_challenge", { p_match_id: matchId, p_country_id: countryId });
 
+export const getConquestCountryTimeline = (matchId, countryId) =>
+  rpc("conquest_country_timeline", { p_match_id: matchId, p_country_id: countryId });
+
 export const fortifyConquestCountry = (matchId, answer) =>
   rpc("conquest_fortify", { p_match_id: matchId, p_answer: answer });
 

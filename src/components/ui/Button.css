@@ -86,7 +86,7 @@
   text-shadow: none;
 }
 
-/* secondary — solid glass surface, readable over the satellite globe */
+/* secondary — solid glass surface, readable over the globe */
 .ui-btn--secondary {
   background: var(--glass-bg);
   color: var(--text-main);
@@ -209,7 +209,7 @@
 }
 
 @media (hover: hover) {
-  .ui-icon-btn--glass:hover:not(:disabled):not(.home-dock-segment) {
+  .ui-icon-btn--glass:hover:not(:disabled):not(.ui-icon-btn--dock-segment) {
     transform: translateY(-1px);
     color: var(--accent);
     background: var(--glass-hover);

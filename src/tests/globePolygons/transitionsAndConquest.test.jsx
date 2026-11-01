@@ -28,11 +28,10 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
   });
 
   describe("Conquest mode matrix (owned by me, owned by opponent, locked, neutral, quiet focus, sticky focus)", () => {
-    it("characterizes unselected conquest states in monochrome and satellite themes", () => {
+    it("characterizes unselected conquest states", () => {
       const { result: monoRes } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             conquestOverlay: CONQUEST_OVERLAY_FIXTURE,
           })
         )
@@ -61,27 +60,6 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       // returns its regional surface color instead of darkened neutral.
       expect(franceMine.baseCapColor).not.toBe(monoRes.current.REGION_COLORS.Europe);
       expect(japanNeutral.baseCapColor).toBe(monoRes.current.REGION_COLORS.Asia);
-
-      // Satellite theme: owned/locked countries get ownerTint (opacity 0.62, visible: true),
-      // while neutral unclaimed countries remain hidden (visible: false) over satellite texture.
-      const { result: satRes } = renderHook(() =>
-        useGlobePolygons(
-          createHookProps({
-            globeTheme: "satellite",
-            conquestOverlay: CONQUEST_OVERLAY_FIXTURE,
-          })
-        )
-      );
-      const franceSat = summarizeFeatureOutput(satRes.current, FEATURE_FRANCE);
-      const spainSat = summarizeFeatureOutput(satRes.current, FEATURE_SPAIN);
-      const japanSat = summarizeFeatureOutput(satRes.current, FEATURE_JAPAN);
-
-      expect(franceSat.capMaterial.visible).toBe(true);
-      expect(franceSat.capMaterial.transparent).toBe(true);
-      expect(franceSat.capMaterial.opacity).toBe(0.62);
-      expect(spainSat.capMaterial.visible).toBe(true);
-      expect(spainSat.capMaterial.opacity).toBe(0.62);
-      expect(japanSat.capMaterial.visible).toBe(false);
     });
 
     it("characterizes just-captured transient focus (quietFocusId) vs sticky selection on owned and neutral countries", () => {
@@ -93,7 +71,6 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       const { result: quietRes } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             selectedCountry: "France",
             conquestOverlay: quietOverlay,
           })
@@ -111,13 +88,12 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       // still gets selected altitude (0.008), selected strokeWidth (7.5), and visible side walls!
       expect(franceQuiet.altitude).toBe(POLYGON_ALTITUDE.selected);
       expect(franceQuiet.strokeWidth).toBe(7.5);
-      expect(franceQuiet.sideMaterial.visible).toBe(true);
+      expect(franceQuiet.sideMaterial.visible).toBe(false);
 
       // 2. Sticky selection on solid-owner country (France) with error flash
       const { result: stickySolidErrorRes } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             selectedCountry: "France",
             isError: true,
             conquestOverlay: CONQUEST_OVERLAY_FIXTURE,
@@ -142,7 +118,6 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       const { result: stickyPatternedRes } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             selectedCountry: "Spain",
             isError: true,
             conquestOverlay: CONQUEST_OVERLAY_FIXTURE,
@@ -159,7 +134,6 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       const { result: ownedDeselectRes } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             selectedCountry: null,
             conquestOverlay: CONQUEST_OVERLAY_FIXTURE,
             selectionTransition: {
@@ -176,7 +150,7 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       // CHARACTERIZATION: current behavior — getPolygonSideMaterial and getPolygonAltitude do not
       // suppress transitioningPreviousCountryState for owned countries.
       expect(franceOwnedDeselect.altitude).toBe(POLYGON_ALTITUDE.selected);
-      expect(franceOwnedDeselect.sideMaterial.visible).toBe(true);
+      expect(franceOwnedDeselect.sideMaterial.visible).toBe(false);
     });
   });
 
@@ -199,17 +173,16 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       const parentFrance = { ...FEATURE_FRANCE, isParentCountryFeature: true };
 
       const { result, rerender } = renderHook(
-        ({ step, globeTheme }) =>
+        ({ step }) =>
           useGlobePolygons(
             createHookProps({
               mode: "departments",
               isDepartmentMode: true,
-              globeTheme,
               modeTransitionRef,
               transitionStep: step,
             })
           ),
-        { initialProps: { step: 0, globeTheme: "satellite" } }
+        { initialProps: { step: 0 } }
       );
 
       // Step 0 (elapsed = 0, progress = 0)
@@ -221,14 +194,14 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       expect(ainStep0.stroke).toBe(result.current.UI_COLORS.mapSea); // starts at mapSea
       expect(ainStep0.strokeWidth).toBe(0);
       expect(ghostStep0.color).toBe(result.current.REGION_COLORS.Europe); // starts at world color
-      expect(ghostStep0.capMaterial.visible).toBe(false); // ghostVeil = 0 at progress 0
+      expect(ghostStep0.capMaterial.visible).toBe(true);
       expect(parentStep0.color).toBe(result.current.REGION_COLORS.Europe);
       expect(parentStep0.altitude).toBe(POLYGON_ALTITUDE.parentBackdrop);
-      expect(parentStep0.strokeWidth).toBe(0.75);
+      expect(parentStep0.strokeWidth).toBe(1.6);
 
       // Mid transition (elapsed = 50% of duration -> quantized stepProgress(0.5) = 0.4)
       nowSpy.mockReturnValue(1000 + MODE_TRANSITION_MS * 0.5);
-      rerender({ step: 2, globeTheme: "satellite" });
+      rerender({ step: 2 });
 
       const ainMid = summarizeFeatureOutput(result.current, FEATURE_DEPT_AIN);
       const ghostMid = summarizeFeatureOutput(result.current, ghostSpain);
@@ -237,12 +210,12 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       expect(ainMid.color).not.toBe(ainStep0.color);
       expect(ainMid.strokeWidth).toBe(0.44); // 1.1 * 0.4
       expect(ghostMid.capMaterial.visible).toBe(true);
-      expect(ghostMid.capMaterial.opacity).toBe(0.23); // Math.round(0.58 * 0.4 * 100) / 100
-      expect(parentMid.strokeWidth).toBe(0.45); // 0.75 * (1 - 0.4)
+      expect(ghostMid.capMaterial.opacity).toBe(1);
+      expect(parentMid.strokeWidth).toBeCloseTo(0.96); // 1.6 * (1 - 0.4)
 
       // End of transition (elapsed >= duration -> getTransitionState sets active = false)
       nowSpy.mockReturnValue(1000 + MODE_TRANSITION_MS + 10);
-      rerender({ step: 5, globeTheme: "satellite" });
+      rerender({ step: 5 });
 
       const ainEnd = summarizeFeatureOutput(result.current, FEATURE_DEPT_AIN);
       const ghostEnd = summarizeFeatureOutput(result.current, ghostSpain);
@@ -250,7 +223,7 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       expect(modeTransitionRef.current.active).toBe(false);
       expect(ainEnd.strokeWidth).toBe(1.1);
       expect(ghostEnd.capMaterial.visible).toBe(true);
-      expect(ghostEnd.capMaterial.opacity).toBe(0.58);
+      expect(ghostEnd.capMaterial.opacity).toBe(1);
     });
 
     it("characterizes exiting regional mode (departments -> countries) and regional-to-regional transitions", () => {
@@ -279,7 +252,6 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
           createHookProps({
             mode: "countries",
             isDepartmentMode: false,
-            globeTheme: "satellite",
             modeTransitionRef,
             transitionStep: 2,
           })
@@ -295,13 +267,13 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
 
       // CHARACTERIZATION: current behavior — in getPolygonAltitude, `d.isParentCountryFeature` only
       // gets POLYGON_ALTITUDE.parentBackdrop (0.0001) when `isRegionalMode` is true; when exiting
-      // regional (isRegionalMode=false), it gets regular world altitude (0.001 in satellite).
-      expect(parentFranceOut.altitude).toBe(POLYGON_ALTITUDE.satelliteBase);
-      expect(parentFranceOut.strokeWidth).toBe(0.3); // 0.75 * 0.4
+      // regional (isRegionalMode=false), it gets regular world altitude.
+      expect(parentFranceOut.altitude).toBe(POLYGON_ALTITUDE.base);
+      expect(parentFranceOut.strokeWidth).toBeCloseTo(0.64); // 1.6 * 0.4
 
-      // World Spain steps its former ghost veil out: Math.round(0.58 * (1 - 0.4) * 100) / 100 = 0.35
+      // World Spain is back to an opaque land cap.
       expect(worldSpainOut.capMaterial.visible).toBe(true);
-      expect(worldSpainOut.capMaterial.opacity).toBe(0.35);
+      expect(worldSpainOut.capMaterial.opacity).toBe(1);
 
       // Regional-to-regional (departments -> us_states): ghost countries keep constant ghostColor
       nowSpy.mockReturnValue(3000 + MODE_TRANSITION_MS * 0.5);
@@ -321,7 +293,6 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
           createHookProps({
             mode: "us_states",
             isUsStatesMode: true,
-            globeTheme: "monochrome",
             modeTransitionRef: regToRegRef,
             transitionStep: 2,
           })
@@ -336,12 +307,12 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
   });
 
   describe("Selection transitions (transitioningPreviousCountryState and transitioningIncomingCountryState)", () => {
-    it("characterizes deselection glitch transition in monochrome vs satellite, and incoming transition", () => {
-      // 1. Monochrome deselection of unfound country: opaque glitch shader cap + visible side + selected altitude
+    it("characterizes deselection glitch transition and incoming transition", () => {
+      // 1. Deselection of unfound country in play: straight back to the grain material (the
+      //    glitch fade could not match the night surface: grey then black dip), flat altitude
       const { result: monoDeselect } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             selectedCountry: null,
             selectionTransition: {
               state: {
@@ -354,37 +325,13 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       );
       const franceMonoDeselect = summarizeFeatureOutput(monoDeselect.current, FEATURE_FRANCE);
       expect(franceMonoDeselect.altitude).toBe(POLYGON_ALTITUDE.selected);
-      expect(franceMonoDeselect.capMaterial.userData.isGlitchShaderCap).toBe(true);
-      expect(franceMonoDeselect.capMaterial.transparent).toBe(false);
-      expect(franceMonoDeselect.capMaterial.opacity).toBe(1);
-      expect(franceMonoDeselect.sideMaterial.visible).toBe(true);
-
-      // 2. Satellite deselection of unfound country: transparent=true so uFadeProgress fades alpha out
-      const { result: satDeselect } = renderHook(() =>
-        useGlobePolygons(
-          createHookProps({
-            globeTheme: "satellite",
-            selectedCountry: null,
-            selectionTransition: {
-              state: {
-                transitioningPreviousCountryState: "France",
-                transitioningIncomingCountryState: null,
-              },
-            },
-          })
-        )
-      );
-      const franceSatDeselect = summarizeFeatureOutput(satDeselect.current, FEATURE_FRANCE);
-      expect(franceSatDeselect.capMaterial.userData.isGlitchShaderCap).toBe(true);
-      expect(franceSatDeselect.capMaterial.visible).toBe(true);
-      expect(franceSatDeselect.capMaterial.transparent).toBe(true);
-      expect(franceSatDeselect.capMaterial.opacity).toBe(1);
+      expect(franceMonoDeselect.capMaterial.userData.isGlitchShaderCap).toBe(false);
+      expect(franceMonoDeselect.sideMaterial.visible).toBe(false);
 
       // 3. Deselecting an already-found country: no glitch shader on cap, but altitude & side stay elevated
       const { result: foundDeselect } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             selectedCountry: null,
             foundSet: new Set(["Spain"]),
             selectionTransition: {
@@ -400,13 +347,12 @@ describe("useGlobePolygons characterization — Conquest, Mode Transitions, and 
       expect(spainFoundDeselect.capMaterial.userData.isGlitchShaderCap).toBe(false);
       expect(spainFoundDeselect.capMaterial.userData.isFoundCap).toBe(true);
       expect(spainFoundDeselect.altitude).toBe(POLYGON_ALTITUDE.selected);
-      expect(spainFoundDeselect.sideMaterial.visible).toBe(true);
+      expect(spainFoundDeselect.sideMaterial.visible).toBe(false);
 
       // 4. Incoming selection transition sets uSelectInTransition = 1
       const { result: incomingRes } = renderHook(() =>
         useGlobePolygons(
           createHookProps({
-            globeTheme: "monochrome",
             selectedCountry: "France",
             selectionTransition: {
               state: {

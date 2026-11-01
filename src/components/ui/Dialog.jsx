@@ -1,6 +1,6 @@
 import "./Dialog.css";
 
-import React, { createContext, useContext, useId, useRef } from "react";
+import React, { createContext, useContext, useId, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { useDialogBehavior } from "../../hooks/useDialogBehavior";
@@ -46,7 +46,6 @@ export default function Dialog({
   labelledBy,
   closeOnBackdrop = true,
   closeOnEscape = true,
-  theme = "",
   className = "",
   backdropClassName = "",
   backdropTestId,
@@ -66,27 +65,28 @@ export default function Dialog({
   });
 
   const ariaName = label ? { "aria-label": label } : { "aria-labelledby": titleId };
+  const contextValue = useMemo(() => ({ titleId }), [titleId]);
 
   if (isPanel) {
     return (
-      <DialogContext.Provider value={{ titleId }}>
+      <DialogContext.Provider value={contextValue}>
         {/* The panel only isolates pointer events from the globe layer behind it; it is a dialog
             surface, not a control. */}
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
-        <div
+        <dialog
           ref={surfaceRef}
-          role="dialog"
+          open
           aria-modal="true"
           {...ariaName}
           inert={!open}
           aria-hidden={open ? undefined : true}
-          className={["sheet-panel", className, open && "open", theme].filter(Boolean).join(" ")}
+          className={["sheet-panel", className, open && "open"].filter(Boolean).join(" ")}
           onClick={stop}
           onPointerDown={stop}
           {...rest}
         >
           {children}
-        </div>
+        </dialog>
       </DialogContext.Provider>
     );
   }
@@ -98,7 +98,6 @@ export default function Dialog({
     "ui-dialog-backdrop",
     isSheet ? "ui-dialog-backdrop--sheet" : "dialog-panel",
     backdropClassName,
-    theme,
   ]
     .filter(Boolean)
     .join(" ");
@@ -115,7 +114,7 @@ export default function Dialog({
   };
 
   return createPortal(
-    <DialogContext.Provider value={{ titleId }}>
+    <DialogContext.Provider value={contextValue}>
       <div className={backdropClasses}>
         <button
           type="button"
@@ -126,15 +125,9 @@ export default function Dialog({
           onClick={onClose}
           data-testid={backdropTestId}
         />
-        {isSheet ? (
-          <dialog open {...surfaceProps}>
-            {children}
-          </dialog>
-        ) : (
-          <div role="dialog" {...surfaceProps}>
-            {children}
-          </div>
-        )}
+        <dialog open {...surfaceProps}>
+          {children}
+        </dialog>
       </div>
     </DialogContext.Provider>,
     document.body

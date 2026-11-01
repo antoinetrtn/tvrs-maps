@@ -12,7 +12,7 @@ import TextField from "../components/ui/TextField.jsx";
 import { showToast } from "../components/ui/Toast.jsx";
 import { buildConquestLink } from "./conquestLink";
 import ConquestPlayerChip from "./ConquestPlayerChip.jsx";
-import { ConquestRulesButton } from "./ConquestRulesSheet.jsx";
+import { ConquestRulesButton } from "./ConquestRulesButton.jsx";
 import { conquestText } from "./conquestText";
 
 const LobbyEntry = ({ t, busy, onCreate, onJoin }) => {
@@ -112,7 +112,7 @@ const RoomShare = ({ t, code }) => {
           variant="outline"
           size="md"
           label={t.copyCode}
-          className="conquest-icon-btn"
+          look="conquest-copy"
           onClick={onCopy}
         >
           <Copy width={18} height={18} aria-hidden="true" />
@@ -120,7 +120,7 @@ const RoomShare = ({ t, code }) => {
         <Button
           variant="secondary"
           size="md"
-          className="conquest-share-btn"
+          look="conquest-share"
           icon={<ExternalLink width={16} height={16} aria-hidden="true" />}
           onClick={onShare}
           aria-label={t.share}
@@ -182,14 +182,10 @@ const PlayerList = ({ t, players, match, userId, online }) => (
     ))}
     {players.length < 2 && (
       <SettingsRow>
-        <div
-          className="conquest-player-chip conquest-player-chip--empty"
-          role="status"
-          aria-label={t.waiting}
-        >
+        <output className="conquest-player-chip conquest-player-chip--empty" aria-label={t.waiting}>
           <span className="conquest-swatch conquest-swatch--empty" aria-hidden="true" />
           <span className="conquest-player-waiting">{t.waiting}</span>
-        </div>
+        </output>
       </SettingsRow>
     )}
   </SettingsSection>
@@ -226,7 +222,8 @@ export const ReadyButton = ({ t, ready, busy, onToggle, emphasized = true }) => 
     variant="primary"
     size="lg"
     block
-    className={`conquest-ready-cta ${ready ? "is-ready" : ""} ${emphasized ? "" : "is-quiet"}`}
+    look="ready-cta"
+    className={`${ready ? "is-ready" : ""} ${emphasized ? "" : "is-quiet"}`}
     aria-pressed={ready}
     disabled={busy}
     onClick={onToggle}

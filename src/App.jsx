@@ -1,10 +1,8 @@
 import "./App.css";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import AchievementStack from "./components/AchievementStack.jsx";
-import AuthModal from "./components/AuthModal.jsx";
-import ConfirmationModal from "./components/ConfirmationModal.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import GeoDataStatus from "./components/GeoDataStatus.jsx";
 import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
@@ -29,6 +27,7 @@ import { useGameSession } from "./hooks/useGameSession";
 import { useGameSessionProps } from "./hooks/useGameSessionProps";
 import { useGeoData } from "./hooks/useGeoData";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
+import useMountedOnce from "./hooks/useMountedOnce";
 import { usePerfProfile } from "./hooks/usePerfProfile";
 import useScreenExit, { EXIT_MS } from "./hooks/useScreenExit";
 import useScreenGlitch from "./hooks/useScreenGlitch";
@@ -39,6 +38,52 @@ import { useViewport } from "./hooks/useViewport";
 import { isGuestLaunch } from "./multiplayer/conquestLink";
 import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import { isSupabaseConfigured } from "./services/supabaseClient";
+import { secureRandomInt } from "./utils/secureRandom";
+
+const AuthModal = React.lazy(() => import("./components/AuthModal.jsx"));
+const ConfirmationModal = React.lazy(() => import("./components/ConfirmationModal.jsx"));
+
+function readInitialPeacefulMode() {
+  try {
+    const p = localStorage.getItem(STORAGE_KEYS.peacefulMode);
+    if (p !== null) return p === "true";
+    const h = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
+    if (h !== null) return h === "false";
+  } catch {}
+  return false;
+}
+
+function tryFocusGameInput(input) {
+  if (!input || document.activeElement === input) return;
+  try {
+    input.focus({ preventScroll: true });
+  } catch {
+    input.focus();
+  }
+}
+
+function pickRandomHomeKey(activeDataMap) {
+  if (!activeDataMap) return null;
+  const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
+  if (keys.length === 0) return null;
+  const index = secureRandomInt(0, keys.length);
+  return keys[index];
+}
+
+function pickNextAutorotateKey(activeDataMap) {
+  if (!activeDataMap) return null;
+  const freshKeys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
+  if (freshKeys.length === 0) return null;
+  const nextIndex = secureRandomInt(0, freshKeys.length);
+  return freshKeys[nextIndex];
+}
+
+function shouldShowInitialAuthModal(session) {
+  if (isSupabaseConfigured && session === null) {
+    return !isGuestLaunch();
+  }
+  return false;
+}
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home");
@@ -66,18 +111,10 @@ function App() {
   const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
   const prevHomeModeRef = useRef(globeHomeMode);
 
-  const [peacefulMode, setPeacefulModeRaw] = useState(() => {
-    try {
-      const p = localStorage.getItem(STORAGE_KEYS.peacefulMode);
-      if (p !== null) return p === "true";
-      const h = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
-      if (h !== null) return h === "false";
-    } catch {}
-    return false;
-  });
+  const [peacefulMode, setPeacefulMode] = useState(readInitialPeacefulMode);
 
-  const setPeacefulMode = useCallback((value) => {
-    setPeacefulModeRaw(value);
+  const persistPeacefulMode = useCallback((value) => {
+    setPeacefulMode(value);
     try {
       localStorage.setItem(STORAGE_KEYS.peacefulMode, String(value));
       localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(!value));
@@ -85,13 +122,17 @@ function App() {
   }, []);
 
   const hardcoreMode = !peacefulMode;
-  const setHardcoreMode = useCallback((value) => setPeacefulMode(!value), [setPeacefulMode]);
+  const setHardcoreMode = useCallback(
+    (value) => persistPeacefulMode(!value),
+    [persistPeacefulMode]
+  );
 
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
   const isScreenGlitching = useScreenGlitch(currentScreen);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const authMounted = useMountedOnce(showAuthModal);
 
   const { addAchievementToQueue, achievements, dismissAchievement } = useAchievementToasts();
   if (import.meta.env.DEV) globalThis.__TVRS_PUSH_ACHIEVEMENT__ = addAchievementToQueue;
@@ -115,10 +156,10 @@ function App() {
   const globeFeedbackApplierRef = useRef(null);
 
   useEffect(() => {
-    if (isSupabaseConfigured && session === null) {
-      if (!isGuestLaunch()) setShowAuthModal(true); // guest mode or Conquête invite link
-    } else if (session) {
+    if (session) {
       setShowAuthModal(false);
+    } else if (shouldShowInitialAuthModal(session)) {
+      setShowAuthModal(true);
     }
   }, [session]);
 
@@ -127,8 +168,7 @@ function App() {
     setShowAuthModal(false);
   }, []);
   const { viewport, isKeyboardMode } = useViewport();
-  const appTheme = useAppTheme(viewport?.width); // theme + accent + document CSS vars
-  const { theme, setTheme, globeTheme, setGlobeTheme, appStyle } = appTheme;
+  const { appStyle } = useAppTheme(viewport?.width); // unified theme + document CSS vars
   const {
     countriesData,
     departmentsData,
@@ -148,12 +188,9 @@ function App() {
   ) {
     prevActiveDataMapRef.current = activeDataMap;
     prevHomeModeRef.current = globeHomeMode;
-    if (activeDataMap) {
-      const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
-      if (keys.length > 0) {
-        const index = Math.floor(Math.random() * keys.length);
-        setSelectedCountry(keys[index]);
-      }
+    const randomKey = pickRandomHomeKey(activeDataMap);
+    if (randomKey) {
+      setSelectedCountry(randomKey);
     }
   }
 
@@ -199,8 +236,6 @@ function App() {
     updateGameRecord,
     addAchievementToQueue,
     t,
-    globeTheme,
-    theme,
     selectedCountry,
     setSelectedCountry,
     activeDataMap,
@@ -232,15 +267,7 @@ function App() {
 
   const preserveInputFocus = useCallback(() => {
     if (mode === "learn") return;
-    const input = extInputRef.current;
-    if (!input) return;
-    if (document.activeElement !== input) {
-      try {
-        input.focus({ preventScroll: true });
-      } catch {
-        input.focus();
-      }
-    }
+    tryFocusGameInput(extInputRef.current);
   }, [mode]);
 
   const startGame = useCallback(
@@ -258,16 +285,7 @@ function App() {
       setShowResultsTable(false);
       setCurrentScreen("game");
 
-      const refocus = () => {
-        const input = extInputRef.current;
-        if (input && document.activeElement !== input) {
-          try {
-            input.focus({ preventScroll: true });
-          } catch {
-            input.focus();
-          }
-        }
-      };
+      const refocus = () => tryFocusGameInput(extInputRef.current);
       refocus();
       [50, 150, 300].forEach((ms) => setTimeout(refocus, ms));
     },
@@ -305,12 +323,8 @@ function App() {
     }
 
     const interval = setInterval(() => {
-      const freshKeys = Object.keys(activeDataMap).filter(
-        (k) => activeDataMap[k]?.lat !== undefined
-      );
-      if (freshKeys.length === 0) return;
-      const nextIndex = Math.floor(Math.random() * freshKeys.length);
-      setSelectedCountry(freshKeys[nextIndex]);
+      const nextKey = pickNextAutorotateKey(activeDataMap);
+      if (nextKey) setSelectedCountry(nextKey);
     }, HOME_AUTOROTATE_INTERVAL_MS);
 
     return () => {
@@ -403,10 +417,8 @@ function App() {
     extInputRef,
     foundList,
     activeDataMap,
-    theme,
     viewport,
     isKeyboardMode,
-    globeTheme: appTheme.globeRenderTheme,
     learnSubMode,
     onLearnSubModeChange,
     learnSearchQuery,
@@ -447,8 +459,7 @@ function App() {
 
   return (
     <div
-      className={`app-container ${theme} ${isScreenGlitching ? "glitch-active" : ""} ${isPanelOpen ? "data-panel-open" : ""}`}
-      data-theme={theme}
+      className={`app-container ${isScreenGlitching ? "glitch-active" : ""} ${isPanelOpen ? "data-panel-open" : ""}`}
       style={appStyle}
     >
       {(panicActive || lifeLostFlash) && (
@@ -457,8 +468,7 @@ function App() {
       {showHome ? (
         <HomeScreen
           onStartGame={startGame}
-          theme={theme}
-          setTheme={setTheme}
+
           lang={lang}
           setLang={setLang}
           gameDuration={gameDuration}
@@ -466,10 +476,7 @@ function App() {
           hardcoreMode={hardcoreMode}
           setHardcoreMode={setHardcoreMode}
           peacefulMode={peacefulMode}
-          setPeacefulMode={setPeacefulMode}
-          globeTheme={globeTheme}
-          setGlobeTheme={setGlobeTheme}
-          {...appTheme.accentProps}
+          setPeacefulMode={persistPeacefulMode}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}
@@ -490,25 +497,30 @@ function App() {
       />
       {cq.screen}
       {confirmState && (
-        <ConfirmationModal
-          message={confirmState.message}
-          onConfirm={confirmState.onConfirm}
-          onCancel={() => setConfirmState(null)}
-          theme={theme}
-          lang={lang}
-        />
+        <React.Suspense fallback={null}>
+          <ConfirmationModal
+            message={confirmState.message}
+            onConfirm={confirmState.onConfirm}
+            onCancel={() => setConfirmState(null)}
+
+            lang={lang}
+          />
+        </React.Suspense>
       )}
 
       <ToastViewport />
       <AchievementStack achievements={achievements} onDismiss={dismissAchievement} />
       <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onGuest={handleGuest}
-        lang={lang}
-        theme={theme}
-      />
+      {authMounted && (
+        <React.Suspense fallback={null}>
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            onGuest={handleGuest}
+            lang={lang}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 }

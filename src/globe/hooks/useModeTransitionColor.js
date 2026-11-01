@@ -20,8 +20,6 @@ export function useModeTransitionColor({
   modeTransitionRef,
   transitionStep,
   gameDataMap,
-  globeTheme,
-  theme,
   REGION_COLORS_LABELS,
   REGION_COLORS_ATTENUATED,
   UI_COLORS,
@@ -36,8 +34,6 @@ export function useModeTransitionColor({
         transState,
         countryDataMap,
         gameDataMap,
-        globeTheme,
-        theme,
         REGION_COLORS_LABELS,
         REGION_COLORS_ATTENUATED,
         UI_COLORS,
@@ -60,8 +56,6 @@ export function useModeTransitionColor({
       modeTransitionRef,
       transitionStep,
       gameDataMap,
-      globeTheme,
-      theme,
       REGION_COLORS_LABELS,
       REGION_COLORS_ATTENUATED,
       UI_COLORS,
@@ -74,23 +68,16 @@ export function useModeTransitionColor({
   );
 }
 
-/** Rest of the world in regional modes: dimmed toward the sea (dark veil on satellite). */
-export function useGhostWorldColor({
-  getRegionSurfaceColorDimmed,
-  lerpColor,
-  UI_COLORS,
-  globeTheme,
-}) {
+/** Rest of the world in regional modes: dimmed toward the sea. */
+export function useGhostWorldColor({ getRegionSurfaceColorDimmed, lerpColor, UI_COLORS }) {
   return useCallback(
     (region) =>
       resolveGhostCountryColor(null, countryDataMap, {
         fallbackRegionColor: getRegionSurfaceColorDimmed(region),
         lerpColor,
         mapSea: UI_COLORS.mapSea,
-        isSatellite: globeTheme === "satellite",
-        veilColor: UI_COLORS.black,
       }),
-    [getRegionSurfaceColorDimmed, lerpColor, UI_COLORS, globeTheme]
+    [getRegionSurfaceColorDimmed, lerpColor, UI_COLORS]
   );
 }
 
@@ -101,7 +88,6 @@ export function useModeTransitionStrokeWidth({
   isRegionalMode,
   foundSet,
   mode,
-  isLight,
   globeLightingEnabled,
   perfProfile,
   UI_COLORS,
@@ -125,7 +111,6 @@ export function useModeTransitionStrokeWidth({
         isRegionalMode,
         foundSet,
         mode,
-        isLight,
         globeLightingEnabled,
         perfProfile,
         UI_COLORS,
@@ -138,7 +123,6 @@ export function useModeTransitionStrokeWidth({
       isRegionalMode,
       foundSet,
       mode,
-      isLight,
       globeLightingEnabled,
       perfProfile,
       UI_COLORS,

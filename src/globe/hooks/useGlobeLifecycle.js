@@ -44,7 +44,7 @@ function useGlobeHorizonCulling(globeEl) {
     let scene = null;
     let previous = null;
     let waitId = null;
-    const last = { x: NaN, y: NaN, z: NaN, at: 0 };
+    const last = { x: Number.NaN, y: Number.NaN, z: Number.NaN, at: 0 };
     const install = () => {
       waitId = null;
       const globe = globeEl.current;
@@ -56,8 +56,8 @@ function useGlobeHorizonCulling(globeEl) {
       }
       previous = scene.onBeforeRender;
       scene.onBeforeRender = function cullBeforeRender(renderer, sc, camera, ...rest) {
-        // WebGPU flag: rivers' GLSL LineMaterial → Line2NodeMaterial, every
-        // frame so a new path never reaches the GPU with the GLSL material.
+        // WebGPU flag: polygon stroke LineBasicMaterial → LineBasicNodeMaterial,
+        // every frame so a new stroke never reaches the GPU with the GLSL material.
         if (renderer?.isWebGPURenderer) swapLineMaterialsForWebGPU(sc);
         const p = camera.position;
         const now = performance.now();

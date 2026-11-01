@@ -6,18 +6,18 @@ import { useTranslation } from "../config/i18n";
 import Button from "./ui/Button";
 import Dialog, { DialogTitle } from "./ui/Dialog";
 
-const ConfirmationModal = ({ message, onConfirm, onCancel, theme, lang }) => {
+const ConfirmationModal = ({ message, onConfirm, onCancel, lang }) => {
   const t = useTranslation(lang);
   return (
-    <Dialog onClose={onCancel} theme={theme} closeOnBackdrop={false}>
+    <Dialog onClose={onCancel} closeOnBackdrop={false}>
       <DialogTitle as="p" className="panel-title confirmation-message">
         {message}
       </DialogTitle>
       <div className="modal-actions">
-        <Button variant="secondary" className="modal-btn cancel" onClick={onCancel}>
+        <Button variant="secondary" look="dialog-action" className="cancel" onClick={onCancel}>
           {t("cancel")}
         </Button>
-        <Button variant="primary" className="modal-btn confirm" onClick={onConfirm}>
+        <Button variant="primary" look="dialog-action" className="confirm" onClick={onConfirm}>
           {t("confirm")}
         </Button>
       </div>
