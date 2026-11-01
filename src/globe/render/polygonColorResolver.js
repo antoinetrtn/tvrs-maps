@@ -253,6 +253,35 @@ function resolveGhostTransitionColor({
   return lerpColor(worldColor, ghostColor, lerpFactor);
 }
 
+function resolveDepartmentFeatureTransitionColor({
+  d,
+  admin,
+  transState,
+  regionOf,
+  ghostColorOf,
+  worldColorOf,
+  getRegionSurfaceColor,
+  getRegionSurfaceColorDimmed,
+  getFeatureMonochromeShade,
+  lerpColor,
+  UI_COLORS,
+}) {
+  const { progress, fromDept, fromUs, toDept, toUs } = transState;
+  const isEntering = d.isEnteringDepartmentFeature || d.isDepartmentFeature;
+  const fallbackRegion =
+    (isEntering && (toUs || fromUs)) || (!isEntering && fromUs) ? "Americas" : "Europe";
+  const regionCode = regionOf(fallbackRegion);
+  const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
+  const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
+
+  if (isEntering) {
+    const from = fromDept || fromUs ? ghostColorOf(regionCode) : worldColorOf(regionCode);
+    return lerpColor(from, deptColor, progress);
+  }
+  const to = toDept || toUs ? ghostColorOf(regionCode) : worldColorOf(regionCode);
+  return lerpColor(deptColor, to, progress);
+}
+
 export function resolveModeTransitionColor({
   d,
   transState,
@@ -267,7 +296,7 @@ export function resolveModeTransitionColor({
   getFeatureMonochromeShade,
   lerpColor,
 }) {
-  const { progress, isExitingRegional, fromDept, fromUs, toDept, toUs } = transState;
+  const { isExitingRegional, fromDept, fromUs } = transState;
   const admin = getFeatureAdmin(d);
 
   if (d.isGhostCountry) {
@@ -304,24 +333,20 @@ export function resolveModeTransitionColor({
     return isExitingRegional ? null : baseColor;
   }
 
-  if (d.isEnteringDepartmentFeature || d.isDepartmentFeature) {
-    const fallbackRegion = toUs || fromUs ? "Americas" : "Europe";
-    const regionCode = regionOf(fallbackRegion);
-    const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
-    const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
-    // Regional → regional: the area was dimmed ghost land; from the world it was the world colour.
-    const from = fromDept || fromUs ? ghostColorOf(regionCode) : worldColorOf(regionCode);
-    return lerpColor(from, deptColor, progress);
-  }
-
-  if (d.isExitingDepartmentFeature) {
-    const fallbackRegion = fromUs ? "Americas" : "Europe";
-    const regionCode = regionOf(fallbackRegion);
-    const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
-    const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
-    // Dissolves into what takes its place: the world colour, or the dimmed ghost land.
-    const to = toDept || toUs ? ghostColorOf(regionCode) : worldColorOf(regionCode);
-    return lerpColor(deptColor, to, progress);
+  if (d.isEnteringDepartmentFeature || d.isDepartmentFeature || d.isExitingDepartmentFeature) {
+    return resolveDepartmentFeatureTransitionColor({
+      d,
+      admin,
+      transState,
+      regionOf,
+      ghostColorOf,
+      worldColorOf,
+      getRegionSurfaceColor,
+      getRegionSurfaceColorDimmed,
+      getFeatureMonochromeShade,
+      lerpColor,
+      UI_COLORS,
+    });
   }
 
   return null;
