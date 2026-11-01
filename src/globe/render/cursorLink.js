@@ -40,19 +40,6 @@ export function createCursorLink({ color }) {
   marker.renderOrder = 9;
   group.add(line, marker);
 
-  const point = (a, b, ang, s0, t, rA, rB, bump, out, o) => {
-    const ka = Math.sin((1 - t) * ang) / s0;
-    const kb = Math.sin(t * ang) / s0;
-    const x = ka * a[0] + kb * b[0];
-    const y = ka * a[1] + kb * b[1];
-    const z = ka * a[2] + kb * b[2];
-    const n = Math.hypot(x, y, z) || 1;
-    const r = rA + (rB - rA) * t + Math.sin(Math.PI * t) * bump;
-    out[o] = (x / n) * r;
-    out[o + 1] = (y / n) * r;
-    out[o + 2] = (z / n) * r;
-  };
-
   return {
     group,
     hide() {
@@ -76,10 +63,22 @@ export function createCursorLink({ color }) {
       const s0 = Math.sin(ang);
       const bump = ang * rA * ARCH;
       const pos = geo.attributes.position.array;
+      const writePoint = (t, o) => {
+        const ka = Math.sin((1 - t) * ang) / s0;
+        const kb = Math.sin(t * ang) / s0;
+        const x = ka * a[0] + kb * b[0];
+        const y = ka * a[1] + kb * b[1];
+        const z = ka * a[2] + kb * b[2];
+        const n = Math.hypot(x, y, z) || 1;
+        const r = rA + (rB - rA) * t + Math.sin(Math.PI * t) * bump;
+        pos[o] = (x / n) * r;
+        pos[o + 1] = (y / n) * r;
+        pos[o + 2] = (z / n) * r;
+      };
       for (let i = 0; i < DASHES; i++) {
         // Dashes: every other sub-segment of the sampled arc.
-        point(a, b, ang, s0, (i * 2) / (DASHES * 2), rA, rB, bump, pos, i * 6);
-        point(a, b, ang, s0, (i * 2 + 1) / (DASHES * 2), rA, rB, bump, pos, i * 6 + 3);
+        writePoint((i * 2) / (DASHES * 2), i * 6);
+        writePoint((i * 2 + 1) / (DASHES * 2), i * 6 + 3);
       }
       geo.attributes.position.needsUpdate = true;
       marker.position.set(a[0] * rA, a[1] * rA, a[2] * rA);

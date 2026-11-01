@@ -628,12 +628,8 @@ export function useGameSession({
           lang === "fr"
             ? normalizeString(mapped.name_fr || mapped.name_en || adminKey)
             : normalizeString(mapped.name_en || adminKey);
-        const matchCapital =
-          lang === "fr" && mapped.capital_fr
-            ? normalizeString(mapped.capital_fr)
-            : mapped.capital
-              ? normalizeString(mapped.capital)
-              : null;
+        const capitalRaw = lang === "fr" && mapped.capital_fr ? mapped.capital_fr : mapped.capital;
+        const matchCapital = capitalRaw ? normalizeString(capitalRaw) : null;
         const aliases = mapped.aliases || [];
 
         if (

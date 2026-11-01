@@ -4,10 +4,23 @@ import React from "react";
 import { scrambleText } from "../utils/utils";
 import Pressable from "./ui/Pressable";
 
+function renderRowStatus(mode, found) {
+  if (mode === "learn") {
+    return <span className="status-dot" />;
+  }
+  if (found) {
+    return <Check width={14} height={14} />;
+  }
+  return <Minus width={14} height={14} />;
+}
+
 const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) => {
   const isRevealed = mode === "learn" || row.revealed;
   const displayName = isRevealed ? row.name : scrambleText(row.name || "");
-  const displaySub = isRevealed ? row.sublabel : row.sublabel ? scrambleText(row.sublabel) : "";
+  let displaySub = "";
+  if (row.sublabel) {
+    displaySub = isRevealed ? row.sublabel : scrambleText(row.sublabel);
+  }
   // The flag is always visible (it already shows on the globe labels);
   // only the name stays scrambled until the country is found.
   const showFlag = Boolean(row.iso2);
@@ -23,13 +36,7 @@ const GameDataPanelRow = ({ row, isSelected, mode, onSelect, unrevealedLabel }) 
       title={isRevealed ? row.name : unrevealedLabel}
     >
       <span className="data-panel-row-status" aria-hidden="true">
-        {mode === "learn" ? (
-          <span className="status-dot" />
-        ) : row.found ? (
-          <Check width={14} height={14} />
-        ) : (
-          <Minus width={14} height={14} />
-        )}
+        {renderRowStatus(mode, row.found)}
       </span>
       {showFlag && (
         <img

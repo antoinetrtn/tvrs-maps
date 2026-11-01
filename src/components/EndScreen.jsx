@@ -75,7 +75,6 @@ const EndScreen = ({
 
   const [animatedTotalGained, setAnimatedTotalGained] = useState(0);
   const [showLevelUp, setShowLevelUp] = useState(false);
-  const [_animatingOrbs, setAnimatingOrbs] = useState(true);
 
   // Compute animated progression
   const currentAnimatedXp = oldXp + animatedTotalGained;
@@ -97,7 +96,6 @@ const EndScreen = ({
 
   const handleAnimationComplete = () => {
     setAnimatedTotalGained(gainedXp);
-    setAnimatingOrbs(false);
   };
 
   if (minimized) {

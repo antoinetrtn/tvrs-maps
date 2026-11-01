@@ -210,7 +210,7 @@ export function useGlobeAnimationLoop({
         foundSet
       );
 
-      handleTransitioningPreviousCountry(
+      handleTransitioningPreviousCountry({
         time,
         mode,
         selectionTransitionStartRef,
@@ -220,8 +220,8 @@ export function useGlobeAnimationLoop({
         gameDataMap,
         transitionColorsPrimedRef,
         getBaseColorForCountryAndKind,
-        foundSet
-      );
+        foundSet,
+      });
 
       const hasWork = loopHasWork({
         needsSharedTime,

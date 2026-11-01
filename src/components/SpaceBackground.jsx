@@ -22,19 +22,12 @@ const getTargetStarCount = (w, h) => {
 };
 
 function getLimbFalloff(dist, rInner, rOuter, peak) {
-  if (dist < peak) {
-    return (dist - rInner) / (peak - rInner);
-  }
-  return (rOuter - dist) / (rOuter - peak);
+  return dist < peak ? (dist - rInner) / (peak - rInner) : (rOuter - dist) / (rOuter - peak);
 }
 
 function getLimbPixelStyle(dist, limbRadius, styleDither, styleReticle, styleVignette) {
-  if (dist < limbRadius * 1.04) {
-    return styleDither;
-  }
-  if (dist < limbRadius * 1.18) {
-    return styleReticle;
-  }
+  if (dist < limbRadius * 1.04) return styleDither;
+  if (dist < limbRadius * 1.18) return styleReticle;
   return styleVignette;
 }
 
@@ -85,7 +78,7 @@ function renderVignetteDither(ctx, cx, cy, width, height, rOuter, colors) {
   }
 }
 
-function renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, colors) {
+function renderReticleDetails(ctx, { cx, cy, minDim, limbRadius, width, height, colors }) {
   const rTicks = Math.round(limbRadius * 1.12);
   const tickAlpha = 0.32;
   ctx.fillStyle = toRgba(colors.reticle, tickAlpha);
@@ -94,7 +87,9 @@ function renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, co
     const theta = (step * Math.PI) / 36;
     const isMajor = step % 6 === 0;
     const isMedium = step % 2 === 0;
-    const len = isMajor ? 5 : isMedium ? 3 : 2;
+    let len = 2;
+    if (isMajor) len = 5;
+    else if (isMedium) len = 3;
     const cos = Math.cos(theta);
     const sin = Math.sin(theta);
     const x1 = Math.round(cx + cos * rTicks);
@@ -164,7 +159,7 @@ function renderStaticOffscreen(offscreenCanvas, width, height, colors, frame) {
 
   renderLimbDither(ctx, cx, cy, limbRadius, colors);
   renderVignetteDither(ctx, cx, cy, width, height, rOuter, colors);
-  renderReticleDetails(ctx, cx, cy, minDim, limbRadius, width, height, colors);
+  renderReticleDetails(ctx, { cx, cy, minDim, limbRadius, width, height, colors });
 }
 
 function spawnStarfield(stars, width, height) {
@@ -226,20 +221,14 @@ function drawSingleStar(ctx, star, drawX, drawY, opacity, colors) {
   }
 }
 
-function drawStarfield(ctx, stars, mouseX, mouseY, width, height, frameScale, colors, reduced) {
+function drawStarfield({ ctx, stars, mouseX, mouseY, width, height, frameScale, colors, reduced }) {
   stars.forEach((star) => {
     if (star.x > width) star.x = Math.random() * width;
     if (star.y > height) star.y = Math.random() * height;
 
-    let stepped;
-    if (!reduced) {
-      star.phase += star.speed * frameScale;
-      const raw = Math.sin(star.phase) * 0.5 + 0.5;
-      stepped = Math.floor(raw * 4) / 4;
-    } else {
-      const raw = Math.sin(star.seedPhase) * 0.5 + 0.5;
-      stepped = Math.floor(raw * 4) / 4;
-    }
+    if (!reduced) star.phase += star.speed * frameScale;
+    const raw = Math.sin(reduced ? star.seedPhase : star.phase) * 0.5 + 0.5;
+    const stepped = Math.floor(raw * 4) / 4;
     const opacity = star.baseAlpha * (0.35 + stepped * 0.65);
 
     let drawX = star.x + (reduced ? 0 : mouseX * star.parallax);
@@ -395,7 +384,17 @@ const SpaceBackground = React.memo(({ getGlobeFrame }) => {
         mouseY += (targetMouseY - mouseY) * Math.min(1, 0.05 * frameScale);
       }
 
-      drawStarfield(ctx, stars, mouseX, mouseY, width, height, frameScale, colors, reduced);
+      drawStarfield({
+        ctx,
+        stars,
+        mouseX,
+        mouseY,
+        width,
+        height,
+        frameScale,
+        colors,
+        reduced,
+      });
 
       if (!reduced) {
         shootingStars = stepShootingStars(ctx, shootingStars, width, height, frameScale, colors);
@@ -476,6 +475,7 @@ const SpaceBackground = React.memo(({ getGlobeFrame }) => {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
+      tabIndex={-1}
       style={{
         position: "absolute",
         top: 0,

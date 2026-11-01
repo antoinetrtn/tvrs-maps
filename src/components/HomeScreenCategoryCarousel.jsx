@@ -151,12 +151,12 @@ function useCarouselNavigation({
       isAnimatingRef.current = true;
       setAnimatingDirection(direction);
 
-      const nextIdx =
-        targetIdxOverride !== null
-          ? targetIdxOverride
-          : direction === "leftSwipe"
-            ? (activeIndex + 1) % totalModes
-            : (activeIndex - 1 + totalModes) % totalModes;
+      let nextIdx = (activeIndex - 1 + totalModes) % totalModes;
+      if (targetIdxOverride !== null) {
+        nextIdx = targetIdxOverride;
+      } else if (direction === "leftSwipe") {
+        nextIdx = (activeIndex + 1) % totalModes;
+      }
       setHomeMode(gameModesCarousel[nextIdx].key);
 
       animTimerRef.current = setTimeout(() => {

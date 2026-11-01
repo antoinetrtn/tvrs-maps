@@ -57,7 +57,10 @@ function makeGlobals() {
  * absent the global uniforms are used.
  */
 export function buildIgnition({ cartUv, sphereNormal, uTimeNode, uRegionalNode, uSelfNode, refs }) {
-  const ig = { ...(igniteNodes ||= makeGlobals()), ...(refs || {}) };
+  if (!igniteNodes) {
+    igniteNodes = makeGlobals();
+  }
+  const ig = { ...igniteNodes, ...refs };
   const cell = floor(cartUv.mul(vec2(3600.0, 1800.0)));
   const dist = acos(clamp(dot(sphereNormal, ig.origin), -1.0, 1.0));
   const t = uTimeNode.sub(ig.start).div(max(ig.duration, 0.001));

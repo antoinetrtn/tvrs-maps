@@ -53,8 +53,11 @@ export function pruneStats(data) {
   const modes = {};
   Object.entries(data.modes).forEach(([mode, entries]) => {
     const list = Object.entries(entries);
-    const kept =
-      list.length > MAX_ENTRIES_PER_MODE ? list.sort(byOldest).slice(-MAX_ENTRIES_PER_MODE) : list;
+    let kept = list;
+    if (list.length > MAX_ENTRIES_PER_MODE) {
+      list.sort(byOldest);
+      kept = list.slice(-MAX_ENTRIES_PER_MODE);
+    }
     modes[mode] = Object.fromEntries(kept);
   });
   let next = { version: data.version, modes };
@@ -64,10 +67,8 @@ export function pruneStats(data) {
     );
     if (all.length === 0) break;
     const drop = Math.max(1, Math.ceil(all.length * 0.1));
-    all
-      .sort((a, b) => a[2].t - b[2].t)
-      .slice(0, drop)
-      .forEach(([mode, key]) => delete next.modes[mode][key]);
+    all.sort((a, b) => a[2].t - b[2].t);
+    all.slice(0, drop).forEach(([mode, key]) => delete next.modes[mode][key]);
     next = { version: next.version, modes: next.modes };
   }
   return next;

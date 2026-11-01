@@ -7,7 +7,12 @@ export function usePerfProfile(viewportWidth) {
   return useMemo(() => {
     const isMobile = viewportWidth < BREAKPOINTS.mobile;
     const isTablet = viewportWidth >= BREAKPOINTS.mobile && viewportWidth < BREAKPOINTS.desktop;
-    const tier = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
+    let tier = "desktop";
+    if (isMobile) {
+      tier = "mobile";
+    } else if (isTablet) {
+      tier = "tablet";
+    }
     const devicePixelRatio = window.devicePixelRatio || 1;
     const pixelRatio = Math.min(devicePixelRatio, PERFORMANCE.maxPixelRatio[tier]);
     return {

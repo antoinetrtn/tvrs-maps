@@ -17,27 +17,29 @@ export default function ErrorState({
   className = "",
   ...rest
 }) {
-  const visual =
-    icon !== undefined ? (
-      icon ? (
-        <span className="ui-state-glyph" aria-hidden="true">
-          {icon}
-        </span>
-      ) : null
-    ) : (
+  let visual = (
+    <span className="ui-state-glyph" aria-hidden="true">
+      <SquareAlert width={24} height={24} />
+    </span>
+  );
+  if (icon !== undefined) {
+    visual = icon ? (
       <span className="ui-state-glyph" aria-hidden="true">
-        <SquareAlert width={24} height={24} />
+        {icon}
       </span>
-    );
+    ) : null;
+  }
 
-  const actionNode =
-    action !== undefined ? (
-      action
-    ) : onRetry ? (
+  let actionNode = null;
+  if (action !== undefined) {
+    actionNode = action;
+  } else if (onRetry) {
+    actionNode = (
       <Button variant="secondary" onClick={onRetry}>
         {retryLabel}
       </Button>
-    ) : null;
+    );
+  }
 
   return (
     <StateBlock

@@ -92,7 +92,8 @@ function interpolateRing(ring, step) {
         }
       }
     }
-    out.push((prev = pnt));
+    prev = pnt;
+    out.push(pnt);
   });
   return out;
 }
@@ -153,8 +154,8 @@ export function isRefinable(polygon) {
   );
 }
 
-/** Splits triangle (a, b, c) given the midpoint vertex of each edge (-1 = unsplit). */
-function splitTriangle(a, b, c, mab, mbc, mca, dist, out) {
+/** Splits triangle [a, b, c] given the midpoint vertex of each edge (-1 = unsplit). */
+function splitTriangle([a, b, c], [mab, mbc, mca], dist, out) {
   const count = (mab >= 0) + (mbc >= 0) + (mca >= 0);
   if (count === 0) {
     out.push(a, b, c);
@@ -162,13 +163,13 @@ function splitTriangle(a, b, c, mab, mbc, mca, dist, out) {
     out.push(a, mab, mca, mab, b, mbc, mca, mbc, c, mab, mbc, mca);
   } else if (count === 1) {
     // rotate so the split edge is a→b
-    if (mbc >= 0) return splitTriangle(b, c, a, mbc, mca, mab, dist, out);
-    if (mca >= 0) return splitTriangle(c, a, b, mca, mab, mbc, dist, out);
+    if (mbc >= 0) return splitTriangle([b, c, a], [mbc, mca, mab], dist, out);
+    if (mca >= 0) return splitTriangle([c, a, b], [mca, mab, mbc], dist, out);
     out.push(a, mab, c, mab, b, c);
   } else {
     // two splits: rotate so the unsplit edge is c→a (edges a→b and b→c split)
-    if (mab < 0) return splitTriangle(b, c, a, mbc, mca, mab, dist, out);
-    if (mbc < 0) return splitTriangle(c, a, b, mca, mab, mbc, dist, out);
+    if (mab < 0) return splitTriangle([b, c, a], [mbc, mca, mab], dist, out);
+    if (mbc < 0) return splitTriangle([c, a, b], [mca, mab, mbc], dist, out);
     out.push(mab, b, mbc);
     // remaining quad a, mab, mbc, c: cut along its shorter diagonal
     if (dist(a, mbc) <= dist(mab, c)) out.push(a, mab, mbc, a, mbc, c);
@@ -227,7 +228,7 @@ function refineCapPass(indices, units, lngs, lats, cosStep, dist) {
     if (mab >= 0 || mbc >= 0 || mca >= 0) {
       changed = true;
     }
-    splitTriangle(a, b, c, mab, mbc, mca, dist, next);
+    splitTriangle([a, b, c], [mab, mbc, mca], dist, next);
   }
   return { next, changed };
 }
