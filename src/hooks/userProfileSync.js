@@ -97,17 +97,21 @@ export async function syncRecordsStep({
       ? mergeRecordEntries(localRecords, dbRecords)
       : null;
   const target = merged || localRecords;
+  const upsertPromises = [];
   for (const [modeKey, record] of Object.entries(target)) {
     if (record.gamesPlayed > 0) {
-      await upsertUserRecord(
-        activeUserId,
-        modeKey,
-        record.maxScore,
-        record.bestTime,
-        record.gamesPlayed
+      upsertPromises.push(
+        upsertUserRecord(
+          activeUserId,
+          modeKey,
+          record.maxScore,
+          record.bestTime,
+          record.gamesPlayed
+        )
       );
     }
   }
+  await Promise.all(upsertPromises);
   if (merged) {
     setLocalRecords(merged);
     localStorage.setItem("tvrs-local-records", JSON.stringify(merged));

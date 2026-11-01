@@ -58,58 +58,62 @@ const EndHeader = ({ winner, userId, t, result, elo, onExit }) => {
   );
 };
 
+function formatPlayerScoreSummary(player, t) {
+  const bonus = player.bonus ? ` · +${player.bonus} ${t.bonus}` : "";
+  return `${player.countries} ${t.countries} · ${player.steals || 0} ${t.steals}${bonus}`;
+}
+
 const EndBoard = ({ standings, userId, t }) => {
   if (standings.length === 0) {
     return <EmptyState title={t.boardEmpty} />;
   }
   return (
     <SettingsSection title={t.finalBoard} hideTitle>
-      {standings.map((player, index) => (
-        <SettingsRow key={player.user_id}>
-          <div className="conquest-end-row">
-            <span className="conquest-rank">{index + 1}</span>
-            <ConquestPlayerChip
-              player={player}
-              tag={
-                player.user_id === userId ? (
-                  <span className="conquest-tag-me" title={t.you} aria-label={t.you}>
-                    <span aria-hidden="true">▸</span>
-                    <span className="sr-only">({t.you})</span>
-                  </span>
-                ) : null
-              }
-            >
-              <span
-                className="conquest-score"
-                title={`${player.countries} ${t.countries} · ${player.steals || 0} ${t.steals}${player.bonus ? ` · +${player.bonus} ${t.bonus}` : ""}`}
-                aria-label={`${player.countries} ${t.countries} · ${player.steals || 0} ${t.steals}${player.bonus ? ` · +${player.bonus}` : ""}`}
+      {standings.map((player, index) => {
+        const scoreSummary = formatPlayerScoreSummary(player, t);
+        return (
+          <SettingsRow key={player.user_id}>
+            <div className="conquest-end-row">
+              <span className="conquest-rank">{index + 1}</span>
+              <ConquestPlayerChip
+                player={player}
+                tag={
+                  player.user_id === userId ? (
+                    <span className="conquest-tag-me" title={t.you} aria-label={t.you}>
+                      <span aria-hidden="true">▸</span>
+                      <span className="sr-only">({t.you})</span>
+                    </span>
+                  ) : null
+                }
               >
-                <span className="conquest-stat">
-                  <Flag width={12} height={12} aria-hidden="true" />
-                  <span>{player.countries}</span>
-                </span>
-                <span className="conquest-stat">
-                  <Sword width={12} height={12} aria-hidden="true" />
-                  <span>{player.steals || 0}</span>
-                </span>
-                {player.bonus ? (
+                <span className="conquest-score" title={scoreSummary} aria-label={scoreSummary}>
                   <span className="conquest-stat">
-                    <Gift width={12} height={12} aria-hidden="true" />
-                    <span>+{player.bonus}</span>
+                    <Flag width={12} height={12} aria-hidden="true" />
+                    <span>{player.countries}</span>
                   </span>
-                ) : null}
+                  <span className="conquest-stat">
+                    <Sword width={12} height={12} aria-hidden="true" />
+                    <span>{player.steals || 0}</span>
+                  </span>
+                  {player.bonus ? (
+                    <span className="conquest-stat">
+                      <Gift width={12} height={12} aria-hidden="true" />
+                      <span>+{player.bonus}</span>
+                    </span>
+                  ) : null}
+                </span>
+              </ConquestPlayerChip>
+              <span
+                className="conquest-total"
+                title={`${player.total} ${t.pts}`}
+                aria-label={`${player.total} ${t.pts}`}
+              >
+                {player.total}
               </span>
-            </ConquestPlayerChip>
-            <span
-              className="conquest-total"
-              title={`${player.total} ${t.pts}`}
-              aria-label={`${player.total} ${t.pts}`}
-            >
-              {player.total}
-            </span>
-          </div>
-        </SettingsRow>
-      ))}
+            </div>
+          </SettingsRow>
+        );
+      })}
     </SettingsSection>
   );
 };

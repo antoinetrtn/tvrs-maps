@@ -18,10 +18,10 @@ const isFeatureArea = (item) => item?.type === "mountain_range" || item?.type ==
 let maskData = null;
 let maskTexture = null;
 
-let lastSelectedKey = undefined;
-let lastFoundKeysHash = undefined;
-let lastDataMap = undefined;
-let memberMap = undefined;
+let lastSelectedKey;
+let lastFoundKeysHash;
+let lastDataMap;
+let memberMap;
 let memberBase = null;
 let hoverKey = null;
 let hoverSaved = null; // [idx, previousValue] pairs restored when the hover moves
@@ -132,8 +132,8 @@ function writeFoundFeatureCells(fKey, selectedKey, activeDataMap) {
     return;
   }
   const cells = getFeatureCells(fKey, item);
-  for (let c = 0; c < cells.length; c++) {
-    maskData[cells[c]] = FEATURE_FOUND_VALUE;
+  for (const cell of cells) {
+    maskData[cell] = FEATURE_FOUND_VALUE;
   }
 }
 
@@ -185,8 +185,8 @@ export function setFeatureMask({
   maskData.set(getMemberBase(activeDataMap));
 
   // 1. Write FOUND features (value 40)
-  for (let f = 0; f < foundArray.length; f++) {
-    writeFoundFeatureCells(foundArray[f], selectedKey, activeDataMap);
+  for (const found of foundArray) {
+    writeFoundFeatureCells(found, selectedKey, activeDataMap);
   }
 
   // 2. Write SELECTED feature: river = amber line + outward halo; massif = outline + inner halo.
@@ -223,8 +223,8 @@ function dilateCellToMemberBase(base, idx, W, H) {
 
 function stampFeatureMemberBase(base, key, item, W, H) {
   const cells = getFeatureCells(key, item);
-  for (let i = 0; i < cells.length; i++) {
-    dilateCellToMemberBase(base, cells[i], W, H);
+  for (const cell of cells) {
+    dilateCellToMemberBase(base, cell, W, H);
   }
 }
 
@@ -251,7 +251,7 @@ export function setFeatureHover(key, dataMap = lastDataMap) {
   if (hoverSaved) for (const [idx, v] of hoverSaved) maskData[idx] = v;
   hoverSaved = null;
   hoverKey = next;
-  const item = next && ((dataMap || {})[next] || riversMountainsDataMap[next]);
+  const item = next && (dataMap?.[next] || riversMountainsDataMap[next]);
   if (item && next !== lastSelectedKey) {
     const cells = getFeatureCells(next, item);
     const line = isFeatureArea(item) ? areaShape(cells).edge : cells;

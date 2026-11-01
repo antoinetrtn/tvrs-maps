@@ -41,7 +41,7 @@ export function useUserProfile() {
       const cached = localStorage.getItem("tvrs-user-profile");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed && parsed.id && isUUID(parsed.id)) {
+        if (parsed?.id && isUUID(parsed.id)) {
           return {
             xp: 0,
             level: 1,

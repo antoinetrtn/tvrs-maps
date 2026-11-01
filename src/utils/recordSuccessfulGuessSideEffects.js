@@ -57,7 +57,7 @@ function checkContinentConquest({
 
   conqueredRegionsThisGameRef.current.push(region);
   const labelColor = getThemeRegionColorLabel(region);
-  const regionHash = region.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const regionHash = region.split("").reduce((acc, char) => acc + char.codePointAt(0), 0);
 
   addAchievementToQueue({
     title: t("achievement_continent_conquered"),

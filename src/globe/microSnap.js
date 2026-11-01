@@ -53,7 +53,7 @@ export function pickMicroTerritory({
   let count = 0;
   for (const admin of admins) {
     const d = gameDataMap[admin];
-    if (!d || d.lat === undefined || !isFacing(lng, lat, d.lng, d.lat)) continue;
+    if (d?.lat === undefined || !isFacing(lng, lat, d.lng, d.lat)) continue;
     const p = project(d.lat, d.lng);
     if (!p) continue;
     const dist = Math.hypot(p.x - click.x, p.y - click.y);
@@ -68,7 +68,7 @@ export function pickMicroTerritory({
 export function pickNearestByPixels({ gameDataMap, project, click, lng, lat, radiusPx }) {
   let best = null;
   for (const [admin, d] of Object.entries(gameDataMap)) {
-    if (!d || d.lat === undefined || !isFacing(lng, lat, d.lng, d.lat)) continue;
+    if (d?.lat === undefined || !isFacing(lng, lat, d.lng, d.lat)) continue;
     const p = project(d.lat, d.lng);
     if (!p) continue;
     const dist = Math.hypot(p.x - click.x, p.y - click.y);

@@ -6,8 +6,8 @@ import React from "react";
 import { primeHapticsOnUserGesture, triggerSubtleHapticTick } from "../../utils/haptics";
 import { LOOKS } from "./buttonLooks";
 
-const VARIANTS = ["primary", "secondary", "ghost", "danger"];
-const SIZES = ["sm", "md", "lg"];
+const VARIANTS = new Set(["primary", "secondary", "ghost", "danger"]);
+const SIZES = new Set(["sm", "md", "lg"]);
 
 /**
  * Button — the single text-button primitive of the kit.
@@ -41,17 +41,21 @@ const Button = React.forwardRef(function Button(
   },
   ref
 ) {
-  const safeVariant = VARIANTS.includes(variant) ? variant : "secondary";
-  const safeSize = SIZES.includes(size) ? size : "md";
+  const safeVariant = VARIANTS.has(variant) ? variant : "secondary";
+  const safeSize = SIZES.has(size) ? size : "md";
   const classes = [
     "ui-btn",
     `ui-btn--${safeVariant}`,
     `ui-btn--${safeSize}`,
     block && "ui-btn--block",
-    ...[].concat(look || []).map((l) => {
-      if (!LOOKS.includes(l) && import.meta.env?.DEV) console.error(`Button: unknown look "${l}"`);
-      return LOOKS.includes(l) && `ui-btn--${l}`;
-    }),
+    ...[look]
+      .flat()
+      .filter(Boolean)
+      .map((l) => {
+        if (!LOOKS.includes(l) && import.meta.env?.DEV)
+          console.error(`Button: unknown look "${l}"`);
+        return LOOKS.includes(l) && `ui-btn--${l}`;
+      }),
     loading && "is-loading",
     className,
   ]

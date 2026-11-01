@@ -6,8 +6,8 @@ import React from "react";
 import { primeHapticsOnUserGesture, triggerSubtleHapticTick } from "../../utils/haptics";
 import { ICON_LOOKS } from "./buttonLooks";
 
-const VARIANTS = ["glass", "outline", "ghost", "danger"];
-const SIZES = ["sm", "md", "lg"];
+const VARIANTS = new Set(["glass", "outline", "ghost", "danger"]);
+const SIZES = new Set(["sm", "md", "lg"]);
 
 /**
  * IconButton — square icon-only button of the kit.
@@ -39,17 +39,20 @@ const IconButton = React.forwardRef(function IconButton(
   if (!label && import.meta.env?.DEV) {
     console.error("IconButton: the `label` prop is required (accessible name).");
   }
-  const safeVariant = VARIANTS.includes(variant) ? variant : "glass";
-  const safeSize = SIZES.includes(size) ? size : "lg";
+  const safeVariant = VARIANTS.has(variant) ? variant : "glass";
+  const safeSize = SIZES.has(size) ? size : "lg";
   const classes = [
     "ui-icon-btn",
     `ui-icon-btn--${safeVariant}`,
     `ui-icon-btn--${safeSize}`,
-    ...[].concat(look || []).map((l) => {
-      if (!ICON_LOOKS.includes(l) && import.meta.env?.DEV)
-        console.error(`IconButton: unknown look "${l}"`);
-      return ICON_LOOKS.includes(l) && `ui-icon-btn--${l}`;
-    }),
+    ...[look]
+      .flat()
+      .filter(Boolean)
+      .map((l) => {
+        if (!ICON_LOOKS.includes(l) && import.meta.env?.DEV)
+          console.error(`IconButton: unknown look "${l}"`);
+        return ICON_LOOKS.includes(l) && `ui-icon-btn--${l}`;
+      }),
     className,
   ]
     .filter(Boolean)

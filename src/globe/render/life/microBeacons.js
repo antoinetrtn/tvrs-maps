@@ -16,7 +16,7 @@ const POP_S = 0.6; // discovery pop: 6 → 12 → 10 px, gain 1.4 → 1.0
 
 /** Discovery pop at age `a` seconds: { scale, gain } (1,1 once settled). */
 export function beaconPop(a) {
-  if (!(a >= 0) || a >= POP_S) return { scale: 1, gain: 1 };
+  if (!Number.isFinite(a) || a < 0 || a >= POP_S) return { scale: 1, gain: 1 };
   const k = a / POP_S;
   // Integer texel steps keep pixels square: 12 px for the first half, then 10.
   return { scale: k < 0.5 ? 1.2 : 1, gain: 1.4 - 0.4 * k };

@@ -87,7 +87,7 @@ const SPEED_CHALLENGE_RULES = {
 
 function evaluateSpeed(id, sessionData, addBadge) {
   const rule = SPEED_CHALLENGE_RULES[id];
-  if (rule && rule(sessionData)) {
+  if (rule?.(sessionData)) {
     addBadge(id);
   }
 }
@@ -106,7 +106,7 @@ const SPECIAL_CHALLENGE_RULES = {
 
 function evaluateUsStatesAndSpecial(id, gameMode, sessionData, addBadge) {
   const rule = SPECIAL_CHALLENGE_RULES[id];
-  if (rule && rule(gameMode, sessionData)) {
+  if (rule?.(gameMode, sessionData)) {
     addBadge(id);
   }
 }

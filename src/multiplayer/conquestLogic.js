@@ -338,7 +338,12 @@ function describeFortifyRefusal(reason, name, fr) {
  * Running shields for the globe countdown: [{ id, ms, level, mine, ownerId }],
  * soonest first. `level` = fortify steps done (0 after a capture).
  */
-export function shieldCountdowns(claims = [], userId, clientNowMs = Date.now(), offsetMs = 0) {
+export function shieldCountdowns(
+  claims = [],
+  userId = null,
+  clientNowMs = Date.now(),
+  offsetMs = 0
+) {
   return claims
     .map((claim) => ({
       id: claim.country_id,
@@ -363,7 +368,7 @@ export function formatShieldSeconds(ms) {
  * already opened one — joining makes me ready), or null when not finished.
  */
 export function rematchState(match) {
-  if (!match || match.status !== "finished") return null;
+  if (match?.status !== "finished") return null;
   return match.rematch_id ? "join" : "offer";
 }
 

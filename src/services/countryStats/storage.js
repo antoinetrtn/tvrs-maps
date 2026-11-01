@@ -27,7 +27,7 @@ export function parseStats(serialized) {
   if (!serialized) return emptyData();
   try {
     const parsed = JSON.parse(serialized);
-    if (!parsed || parsed.version !== COUNTRY_STATS_VERSION || typeof parsed.modes !== "object") {
+    if (parsed?.version !== COUNTRY_STATS_VERSION || typeof parsed?.modes !== "object") {
       return emptyData();
     }
     const modes = {};

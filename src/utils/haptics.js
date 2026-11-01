@@ -28,7 +28,7 @@ const nowMs = () => (typeof performance !== "undefined" ? performance.now() : Da
 
 function ensureIosHapticSwitch() {
   if (typeof document === "undefined" || !document.body) return null;
-  if (iosHapticLabel && iosHapticLabel.isConnected) return iosHapticLabel;
+  if (iosHapticLabel?.isConnected) return iosHapticLabel;
   try {
     const label = document.createElement("label");
     label.setAttribute("aria-hidden", "true");

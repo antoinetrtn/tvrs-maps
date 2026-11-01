@@ -55,12 +55,14 @@ export function edgeHintPlacement(dx, dy, rect, inset = {}) {
   return { x: cx + ux * s, y: cy + uy * s, dir: snapDir8(ux, -uy) };
 }
 
+const DEFAULT_LABEL_PLACEMENT = Object.freeze({ left: false, below: false });
+
 /**
  * Label placement for a cursor at screen position (x, y) in a viewport:
  * right of the block by default, flips left near the right edge and drops
  * below near the top edge. `prev` adds hysteresis so it never flickers.
  */
-export function labelPlacement(x, y, labelW, rect, prev = { left: false, below: false }) {
+export function labelPlacement(x, y, labelW, rect, prev = DEFAULT_LABEL_PLACEMENT) {
   const M = 8; // keep this far from the edge
   const need = labelW + 14;
   const hyst = 28;

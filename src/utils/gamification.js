@@ -29,7 +29,7 @@ export function getLevelAndProgress(totalXp = 0) {
 export function getAvatarUnlockLevel(avatarId) {
   const match = avatarId.match(/^invader_(\d+)$/);
   if (match) {
-    const num = parseInt(match[1], 10);
+    const num = Number.parseInt(match[1], 10);
     if (num <= 3) return 1;
     return num - 2; // invader_4 -> lvl 2, etc.
   }

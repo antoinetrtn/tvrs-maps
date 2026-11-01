@@ -61,8 +61,10 @@ export function watchWebGPURenderer(renderer) {
   });
 }
 
+const DEFAULT_RESET_STATE = Object.freeze({ adapter: "unknown", failed: false });
+
 /** Test helper. */
-export function resetWebGPUHealth(state = { adapter: "unknown", failed: false }) {
+export function resetWebGPUHealth(state = DEFAULT_RESET_STATE) {
   holder.state = { ...state };
   holder.probe = null;
 }

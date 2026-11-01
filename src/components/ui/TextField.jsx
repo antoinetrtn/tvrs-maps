@@ -2,7 +2,7 @@ import "./TextField.css";
 
 import React, { useId } from "react";
 
-const VARIANTS = ["glass", "outline", "search", "bare"];
+const VARIANTS = new Set(["glass", "outline", "search", "bare"]);
 
 /**
  * TextField — the kit's single text-input primitive.
@@ -37,7 +37,7 @@ const TextField = React.forwardRef(function TextField(
 ) {
   const generatedId = useId();
   const hasWrapper = Boolean(label || hint || error);
-  const inputId = id || (hasWrapper ? `textfield-${generatedId.replace(/:/g, "")}` : undefined);
+  const inputId = id || (hasWrapper ? `textfield-${generatedId.replaceAll(":", "")}` : undefined);
   const hintId = hint ? `${inputId}-hint` : undefined;
   const errorId = error ? `${inputId}-error` : undefined;
 
@@ -45,7 +45,7 @@ const TextField = React.forwardRef(function TextField(
     .filter(Boolean)
     .join(" ");
 
-  const safeVariant = VARIANTS.includes(variant) ? variant : "glass";
+  const safeVariant = VARIANTS.has(variant) ? variant : "glass";
   const inputClasses = (
     safeVariant === "bare"
       ? [className]

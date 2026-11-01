@@ -223,7 +223,7 @@ export function useGameSession({
       // Entraînement ciblé : on suit l'ordre du pool (moins maîtrisés d'abord), pas la proximité.
       if (trainingPool) return nextTrainingTarget(trainingPool, currentFound);
       const c1 = activeDataMap[fromAdmin];
-      if (!c1 || c1.lat === undefined) return null;
+      if (c1?.lat === undefined) return null;
 
       const sameRegionList = [];
       const otherRegionList = [];
@@ -341,7 +341,7 @@ export function useGameSession({
       );
       setXpResult(res);
 
-      if (res && res.newlyUnlockedBadges && res.newlyUnlockedBadges.length > 0) {
+      if (res?.newlyUnlockedBadges?.length > 0) {
         res.newlyUnlockedBadges.forEach((chId) => {
           const chObj = CHALLENGES.find((c) => c.id === chId);
           if (chObj) {
@@ -476,8 +476,7 @@ export function useGameSession({
             navigationTrailRef.current = nextCountry ? [guessedKey, nextCountry] : [guessedKey];
             navigationTrailIndexRef.current = nextCountry ? 1 : 0;
             if (
-              extInputRef &&
-              extInputRef.current &&
+              extInputRef?.current &&
               effectiveKeyboardMode &&
               document.activeElement !== extInputRef.current
             ) {

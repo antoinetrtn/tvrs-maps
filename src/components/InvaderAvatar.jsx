@@ -139,7 +139,7 @@ const FALLBACK_PROCEDURAL_INVADER = [
 function hashStringId(id) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    hash = id.codePointAt(i) + ((hash << 5) - hash);
   }
   return hash;
 }
@@ -178,10 +178,9 @@ function generateProceduralRow(hash, r) {
 
 function countActivePixels(design) {
   let totalPixels = 0;
-  for (let r = 0; r < design.length; r++) {
-    const row = design[r];
-    for (let i = 0; i < row.length; i++) {
-      if (row[i] === "1") totalPixels++;
+  for (const row of design) {
+    for (const char of row) {
+      if (char === "1") totalPixels++;
     }
   }
   return totalPixels;
@@ -225,6 +224,8 @@ const InvaderAvatar = ({ invaderId = "invader_1", color = "cyan", size = 48, cla
 
   return (
     <svg
+      aria-hidden="true"
+      role="presentation"
       viewBox="0 0 11 8"
       width={size}
       height={Math.round((size * 8) / 11)}

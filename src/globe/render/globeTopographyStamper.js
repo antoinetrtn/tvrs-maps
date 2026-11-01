@@ -186,7 +186,7 @@ export function walkMountainChain(
   seed = 1,
   texWidth = 3600,
   texHeight = 1800,
-  onIsoPoint
+  onIsoPoint = () => {}
 ) {
   if (!Array.isArray(path) || path.length < 2) return;
   const elevBoost = Math.min(1.18, Math.max(0.78, height / 3800));
@@ -255,7 +255,13 @@ function stampMountainChain(
   });
 }
 
-export function walkRiverPolyline(path, seed = 1.0, texWidth = 3600, texHeight = 1800, onPoint) {
+export function walkRiverPolyline(
+  path,
+  seed = 1.0,
+  texWidth = 3600,
+  texHeight = 1800,
+  onPoint = () => {}
+) {
   if (!Array.isArray(path) || path.length < 2) return;
   for (let seg = 0; seg < path.length - 1; seg++) {
     const [lat1, lng1] = path[seg];
