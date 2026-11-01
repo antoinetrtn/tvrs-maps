@@ -47,18 +47,19 @@ export const litDisplayColor = () => toDisplay(output.rgb);
 /** vec4 in display space → linear vec4 for the material output. */
 export const displayOutput = (rgb, alpha = output.a) => vec4(fromDisplay(rgb), alpha);
 
+function copyUniformInitial(val) {
+  if (val?.isColor) return new THREE.Color().copy(val);
+  if (val?.isVector2) return new THREE.Vector2().copy(val);
+  if (val?.isVector3) return new THREE.Vector3().copy(val);
+  return val;
+}
+
 /**
  * A TSL uniform that mirrors a plain `{ value }` holder each frame, so the
  * existing JS (shader clock, feedback, transitions) keeps driving both paths.
  */
 export function mirrorUniform(holder) {
-  const initial = holder.value?.isColor
-    ? new THREE.Color().copy(holder.value)
-    : holder.value?.isVector2
-      ? new THREE.Vector2().copy(holder.value)
-      : holder.value?.isVector3
-        ? new THREE.Vector3().copy(holder.value)
-        : holder.value;
+  const initial = copyUniformInitial(holder.value);
   const node = uniform(initial);
   node.onRenderUpdate(() => {
     if (holder.value?.isColor || holder.value?.isVector2 || holder.value?.isVector3) {

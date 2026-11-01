@@ -1,4 +1,5 @@
 import { GLITCH_EFFECT_SETTINGS, GLOBE_STYLE } from "../../config/designSystem";
+import { WORLD_PALETTE } from "../../config/worldPaletteTokens";
 import { countryDataMap } from "../../data/gameData";
 import { getFeatureAdmin } from "../../utils/utils";
 import { FOUND_SURFACE_GREEN } from "./foundGreenPalette";
@@ -6,6 +7,7 @@ import { stepProgress } from "./modeTransition";
 
 export { FOUND_SURFACE_GREEN };
 export const FOUND_HIGHLIGHT = GLITCH_EFFECT_SETTINGS.selectionHighlight;
+export const REGIONAL_HOME_RESTING_LAND = WORLD_PALETTE.temperate[1];
 
 export const isSameAdmin = (a, b, dataMap = countryDataMap) => {
   if (!a || !b) return false;
@@ -277,11 +279,14 @@ export function resolveModeTransitionColor({
   // World France / USA while a regional layer takes over: they stay as the backdrop
   // of the incoming departments / states (which start from this very colour).
   if (d.isParentCountryFeature) {
-    return isExitingRegional ? null : worldColorOf(regionOf("Europe"));
+    const parentRegion = admin === "United States of America" ? "Americas" : "Europe";
+    const baseColor = fromDept || fromUs ? ghostColorOf(parentRegion) : worldColorOf(parentRegion);
+    return isExitingRegional ? null : baseColor;
   }
 
   if (d.isEnteringDepartmentFeature || d.isDepartmentFeature) {
-    const regionCode = regionOf("Americas");
+    const fallbackRegion = toUs || fromUs ? "Americas" : "Europe";
+    const regionCode = regionOf(fallbackRegion);
     const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
     const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
     // Regional → regional: the area was dimmed ghost land; from the world it was the world colour.
@@ -290,7 +295,8 @@ export function resolveModeTransitionColor({
   }
 
   if (d.isExitingDepartmentFeature) {
-    const regionCode = regionOf("Americas");
+    const fallbackRegion = fromUs ? "Americas" : "Europe";
+    const regionCode = regionOf(fallbackRegion);
     const getDimmed = getRegionSurfaceColorDimmed || getRegionSurfaceColor;
     const deptColor = getFeatureMonochromeShade(admin, getDimmed(regionCode), lerpColor, UI_COLORS);
     // Dissolves into what takes its place: the world colour, or the dimmed ghost land.
@@ -362,6 +368,7 @@ export function resolveRestingColorForFeature({
   admin: _admin,
   isFound,
   isEndScreen,
+  isHomeScreen = false,
   isPerfectScore,
   isRegionalMode: _isRegionalMode,
   UI_COLORS,
@@ -392,11 +399,15 @@ export function resolveRestingColorForFeature({
   }
 
   let base = isFound ? resolveFoundCountryColor() : UI_COLORS.mapBase;
-  if (_isRegionalMode && !isFound && _grlc) {
-    const regionCode =
-      _cdm?.[_admin]?.region || _gdm?.[_admin]?.region || _d?.properties?.region || "Americas";
-    const regColor = _grlc(regionCode);
-    base = _gfms(_admin, regColor, lerpColor, UI_COLORS);
+  if (!isFound && (isHomeScreen || _isRegionalMode)) {
+    if (isHomeScreen && _isRegionalMode) {
+      base = REGIONAL_HOME_RESTING_LAND;
+    } else if (_grlc) {
+      const regionCode =
+        _cdm?.[_admin]?.region || _gdm?.[_admin]?.region || _d?.properties?.region || "Americas";
+      const regColor = _grlc(regionCode);
+      base = _isRegionalMode ? _gfms(_admin, regColor, lerpColor, UI_COLORS) : regColor;
+    }
   }
 
   if (kind === "cap") {

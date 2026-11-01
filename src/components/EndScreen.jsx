@@ -75,7 +75,6 @@ const EndScreen = ({
 
   const [animatedTotalGained, setAnimatedTotalGained] = useState(0);
   const [showLevelUp, setShowLevelUp] = useState(false);
-  const [, setAnimatingOrbs] = useState(true);
 
   // Compute animated progression
   const currentAnimatedXp = oldXp + animatedTotalGained;
@@ -97,7 +96,6 @@ const EndScreen = ({
 
   const handleAnimationComplete = () => {
     setAnimatedTotalGained(gainedXp);
-    setAnimatingOrbs(false);
   };
 
   if (minimized) {
@@ -226,7 +224,6 @@ const EndScreen = ({
                     trophyColor = "var(--text-main)";
                     trophyClass = "trophy-silver";
                   } else if (hScore >= maxScore * 0.4) {
-                    trophyColor = "var(--text-muted)";
                     trophyClass = "trophy-bronze";
                   }
                 } else if (hScore > 0) {
@@ -235,7 +232,7 @@ const EndScreen = ({
                 }
 
                 return (
-                  <div key={idx} className="history-score-item">
+                  <div key={`score-${idx}-${hScore}`} className="history-score-item">
                     <Trophy
                       width={18}
                       height={18}

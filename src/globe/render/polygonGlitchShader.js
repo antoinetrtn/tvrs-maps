@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { FEEDBACK_TIMING } from "../../config/gameConstants";
+import { getBiomeTexture } from "./biomeTexture";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { DISCOVERY } from "./discoveryTimeline";
 import { getFeatureMaskTexture } from "./featureMask";
@@ -220,6 +221,7 @@ export function attachPolygonGlitchShader(
     shader.uniforms.uFeatureMode = polygonGlitchUniforms.uFeatureMode;
     shader.uniforms.uFeatureMap = { value: getFeatureMaskTexture() };
     shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
+    shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
     shader.uniforms.uSelOutlineMap = { value: getSelectionOutlineTexture() };
     shader.uniforms.uSelOutlineBox = selectionOutlineBox;
     shader.uniforms.uSelOutlinePx = selectionOutlinePx;

@@ -323,8 +323,17 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     const baseLand = mix(unfoundLand, conquestAwakenedLand, isConquestOwned);
     const paletteLand = applyBiomePalette({
       landSurface: mix(baseLand, soloAwakenedLand, isSoloFound),
-      ...{ cartUv, ndv, ghostMask, isSoloFound, isConquestOwned, lit, maxC, isUnfoundDarkCap },
-      ...{ isAwakenedCap, uShowcaseNode: showcaseLand, uRegionalNode },
+      cartUv,
+      ndv,
+      ghostMask,
+      isSoloFound,
+      isConquestOwned,
+      lit,
+      maxC,
+      isUnfoundDarkCap,
+      isAwakenedCap,
+      uShowcaseNode: showcaseLand,
+      uRegionalNode,
     });
     const { landSurface, baseLit } = revealLand(paletteLand, ign.landMask, isAwakenedCap, {
       parallelLine,

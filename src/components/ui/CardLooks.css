@@ -35,6 +35,19 @@
   --card-mode-accent: var(--accent);
   --card-mode-secondary: var(--text-main);
   --card-mode-spark: var(--accent);
+  --card-x: 0px;
+  --card-y: 0px;
+  --card-z: 0px;
+  --card-rot: 0deg;
+  --card-scale: 1;
+  --card-scale-eff: 1;
+  transform: translate3d(var(--card-x, 0px), var(--card-y, 0px), 0) rotateZ(var(--card-rot, 0deg))
+    scale(var(--card-scale-eff, 1));
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    opacity var(--dur-fast) ease-out;
   border: 1px solid color-mix(in srgb, var(--card-mode-accent, var(--text-main)) 22%, transparent);
   box-shadow: var(--shadow-card);
   display: flex;
@@ -88,21 +101,6 @@
 
 /* — moved from src/components/HomeScreenCarouselMotion.css — */
 
-.ui-card--mode-deck {
-  --card-x: 0px;
-  --card-y: 0px;
-  --card-z: 0px;
-  --card-rot: 0deg;
-  --card-scale: 1;
-  --card-scale-eff: 1;
-  transform: translate3d(var(--card-x, 0px), var(--card-y, 0px), 0) rotateZ(var(--card-rot, 0deg))
-    scale(var(--card-scale-eff, 1));
-  transition:
-    transform var(--dur-base) var(--ease-out),
-    border-color var(--dur-fast) ease,
-    box-shadow var(--dur-fast) ease,
-    opacity var(--dur-fast) ease-out;
-}
 .cards-deck-wrapper.is-user-dragging .ui-card--mode-deck,
 .deck-stage[data-release] .ui-card--mode-deck {
   will-change: transform, opacity;

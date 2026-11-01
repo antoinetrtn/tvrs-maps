@@ -152,7 +152,7 @@ export function planBoatRoutes(graph, foundList, dataMap) {
   const routes = [];
   foundList.forEach((admin) => {
     const c = dataMap[admin];
-    if (!c || c.lat == null || LANDLOCKED.has(c.iso2)) return;
+    if (c?.lat == null || LANDLOCKED.has(c.iso2)) return;
     const port = graph.portOf(c.lat, c.lng);
     if (port < 0) return;
     let target = -1;

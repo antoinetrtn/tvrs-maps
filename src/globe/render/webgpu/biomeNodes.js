@@ -38,7 +38,7 @@ export function applyBiomePalette(p) {
   const biomeAllowed = biomeSample.a.mul(ghostMask);
   const biomeReveal = max(
     max(isSoloFound, isConquestOwned),
-    uShowcaseNode.mul(isUnfoundDarkCap)
+    max(uShowcaseNode, uRegionalNode).mul(isUnfoundDarkCap)
   ).mul(biomeAllowed);
   const biomeHint = float(1.0)
     .sub(uShowcaseNode)

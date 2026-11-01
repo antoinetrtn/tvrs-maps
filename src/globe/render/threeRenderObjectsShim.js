@@ -26,14 +26,13 @@ function patchComposerForWebGPU() {
     // fallback) before the first frame; keep the previous frame meanwhile.
     if (!renderer.hasInitialized()) {
       if (!initPromises.has(renderer)) {
-        const composer = this;
         initPromises.set(
           renderer,
           renderer
             .init()
             .then(() => {
               watchWebGPURenderer(renderer);
-              composer.render();
+              this.render();
             })
             .catch(markWebGPUFailed)
         );

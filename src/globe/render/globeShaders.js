@@ -39,8 +39,7 @@ export const GLSL_BAYER_4X4_FN = `
   }
 `;
 
-// Pass the view-space normal and position through to the fragment stage so the
-// fragment shader can compute a true perspective Fresnel term per pixel.
+// View-space normal/position to the fragment stage (per-pixel perspective Fresnel).
 export const FRESNEL_VERTEX_SHADER = `
   varying vec3 vAtmosphereNormal;
   varying vec3 vAtmosphereViewPos;
@@ -65,17 +64,12 @@ export const FRESNEL_FRAGMENT_SHADER = `
     vec3 normal = normalize(vAtmosphereNormal);
     vec3 viewDir = normalize(vAtmosphereViewPos);
 
-    // True perspective dot product between view direction and surface normal.
-    // For BackSide rendering, normal points outwards, and viewDir points from camera
-    // to the vertex (which is also generally away from the camera).
-    // Thus, the dot product is positive on the back hemisphere.
+    // View/normal dot on the BackSide sphere: positive on the back hemisphere.
     float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
-    // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.62)
-    // to 0.0 at the outer limit of space (x = 0.0).
+    // Soft gradient: max at the horizon (x = 0.62), 0 in space (x = 0).
     float edgeFade = smoothstep(0.0, 0.62, x);
 
-    // Higher exponent creates a more gentle, soft, and diffuse gradient transition
     float exponent = max(1.8, power * 2.0);
     float rawIntensity = pow(edgeFade, exponent) * coef;
 
@@ -130,6 +124,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsRegionalMode;
 ${FEAT.FEATURE_DECLARATIONS}
   uniform sampler2D uCapitalLightsMap;
+  uniform sampler2D uBiomeMap;
   uniform sampler2D uSelOutlineMap;
   uniform vec4 uSelOutlineBox;
   uniform float uSelOutlinePx;
@@ -220,12 +215,11 @@ export const GLITCH_FRAGMENT_BODY = `
   float lightProg = (transitionActive > 0.5) ? 1.0 - floor(uFadeProgress * 5.0) / 5.0 : floor(selectIn * 6.0) / 6.0;
   vec2 selUv = vec2(atan(sphereDir.x, sphereDir.z) / 6.2831853 + 0.5, sphereLat / 3.14159265 + 0.5);
   vec2 selCell = floor(selUv * vec2(3600.0, 1800.0));
-  // Regional scale: the 0.1° city cells would be big blocks inside a département/state.
   float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall)
-    * (1.0 - uIsRegionalMode);
+    * (1.0 - uIsRegionalMode); // no 0.1° city blocks at regional scale
   float cityOn = isCityPx * step(hash(selCell + 3.7), lightProg * 1.15 - 0.15);
   float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
-  float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0) * (1.0 - transitionActive);
+  float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0);
   float edgeOuter = selEdgeV * edgeOn;
   // Warm night umber under the selection instead of the cold map grey.
   vec3 selLand = vec3(dot(litRestingColor, vec3(0.299, 0.587, 0.114))) * SELECT_LAND_TINT;
@@ -241,6 +235,10 @@ export const GLITCH_FRAGMENT_BODY = `
     * mix(BLACKOUT_TINT, BLACKOUT_TINT_HOME, uShowcaseLights);
   vec3 unfoundRestColor = mix(litRestingColor, restGrey, restBlackout * 0.88)
     * mix(1.0, mix(0.36, 0.74, uIsRegionalMode), 1.0 - uShowcaseLights);
+  vec4 biomeS = texture2D(uBiomeMap, selUv);
+  float ndv = clamp(dot(sphereDir, normalize(cameraPosition - vWorldPosition)), 0.0, 1.0);
+  unfoundRestColor = mix(unfoundRestColor, biomeS.rgb * (0.88 + 0.18 * (1.0 - ndv)),
+    uShowcaseLights * uIsRegionalMode * biomeS.a * (1.0 - isWall) * 0.92);
   float deselectDone = step(0.994, uFadeProgress);
 
   vec3 finalColor = gl_FragColor.rgb;
@@ -381,7 +379,8 @@ ${SELECT_CITY_DEFS}
       vec3 biomeTone = biomeSample.rgb;
       vec3 biomeLand = biomeTone * (0.88 + 0.18 * (1.0 - ndv));
       float biomeAllowed = biomeSample.a * (1.0 - uIsGhost);
-      float biomeReveal = max(max(isSoloFound, isConquestOwned), showcaseLand * isUnfoundDarkCap) * biomeAllowed;
+      float biomeShown = max(showcaseLand, uIsRegionalMode) * isUnfoundDarkCap; // regional: terrain
+      float biomeReveal = max(max(isSoloFound, isConquestOwned), biomeShown) * biomeAllowed;
       float biomeHint = (1.0 - showcaseLand) * isUnfoundDarkCap * biomeAllowed * (1.0 - uIsRegionalMode);
       landSurface = mix(landSurface, biomeTone * 0.3, biomeHint * 0.34);
       landSurface = mix(landSurface, biomeLand, biomeReveal * 0.92);

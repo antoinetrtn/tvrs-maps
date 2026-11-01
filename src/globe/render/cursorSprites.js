@@ -124,7 +124,10 @@ export function createCursorObject({ name, color }) {
   const anchor = new THREE.Group();
   anchor.name = "conquest-cursor";
   const materials = [];
-  const track = (m) => (materials.push(m), m);
+  const track = (m) => {
+    materials.push(m);
+    return m;
+  };
 
   // « + » reticle lying on the surface.
   const crossMat = track(flat(color));

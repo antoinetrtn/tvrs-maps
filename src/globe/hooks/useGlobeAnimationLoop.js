@@ -1,25 +1,25 @@
 import { useEffect, useRef } from "react";
-import * as THREE from "three";
 
-import {
-  DESELECT_FADE_START,
-  getDeselectGlitchFadeProgress,
-  GLITCH_SELECTION_TRANSITION_MS,
-} from "../../config/gameConfig";
-import { PERFORMANCE } from "../../config/gameConstants";
 import { perfTracker } from "../../utils/perfTracker";
 import { applyPolygonFeedbackUniforms } from "../render/applyPolygonFeedbackUniforms";
 import { loopHasWork } from "../render/globeLoopWork";
-import { isDeselectResettableMaterial } from "../render/globePolygonMaterial";
-import { getCachedMaterial } from "../render/polygonColorResolver";
 import {
   getAnimatedPolygonMaterialCount,
   polygonGlitchUniforms,
 } from "../render/polygonGlitchShader";
-import { syncSelectedCountryShaderUniforms } from "../render/selectionTransitionShader";
+import {
+  checkNeedsSharedTime,
+  getCachedMaterialSafe,
+  handleSelectionChangeMaterials,
+  handleTransitioningPreviousCountry,
+  hasShaderOnSelected,
+  isUrgentAnimation,
+  shouldThrottleFrame,
+  syncSelectedMaterials,
+  updateGraticuleStylesIfNeeded,
+  updateInnerGlow,
+} from "./animationLoopHelpers";
 import { useGlobeShaderClock } from "./useGlobeShaderClock";
-
-const _transitionTargetColor = new THREE.Color();
 
 export function useGlobeAnimationLoop({
   globeEl,
@@ -125,23 +125,18 @@ export function useGlobeAnimationLoop({
       const currentIsError = isErrorRef.current || Boolean(imperativeFeedback?.isError);
       const currentIsSuccess = isSuccessRef.current || Boolean(imperativeFeedback?.isSuccess);
 
-      const isUrgentAnim =
-        currentIsError ||
-        currentIsSuccess ||
-        Boolean(transitioningPreviousCountryRef?.current) ||
-        Boolean(modeTransitionRef?.current?.active);
-      const minFrameMs = isUrgentAnim
-        ? 0
-        : perfProfile?.isMobile
-          ? PERFORMANCE.animationFrameMs.mobile
-          : PERFORMANCE.animationFrameMs.desktop;
-      if (minFrameMs > 0 && lastAnimFrameTimeRef.current) {
-        const elapsed = time - lastAnimFrameTimeRef.current;
-        if (elapsed < minFrameMs) {
-          scheduleFrame();
-          return;
-        }
+      const isUrgentAnim = isUrgentAnimation(
+        currentIsError,
+        currentIsSuccess,
+        transitioningPreviousCountryRef?.current,
+        modeTransitionRef?.current?.active
+      );
+
+      if (shouldThrottleFrame(time, lastAnimFrameTimeRef.current, isUrgentAnim, perfProfile)) {
+        scheduleFrame();
+        return;
       }
+
       const frameDelta = lastAnimFrameTimeRef.current ? time - lastAnimFrameTimeRef.current : 16.67;
       lastAnimFrameTimeRef.current = time;
 
@@ -152,30 +147,25 @@ export function useGlobeAnimationLoop({
 
       const timeSec = time / 1000;
 
-      const capMat = currentSelectedCountry
-        ? getCachedMaterial(
-            polygonMaterialCacheRef.current.cap,
-            currentSelectedCountry,
-            gameDataMap
-          )
-        : null;
-      const sideMat = currentSelectedCountry
-        ? getCachedMaterial(
-            polygonMaterialCacheRef.current.side,
-            currentSelectedCountry,
-            gameDataMap
-          )
-        : null;
-      const selectedHasShader =
-        Boolean(currentSelectedCountry) &&
-        (Boolean(capMat?.userData?.shader) || Boolean(sideMat?.userData?.shader));
+      const capMat = getCachedMaterialSafe(
+        polygonMaterialCacheRef.current.cap,
+        currentSelectedCountry,
+        gameDataMap
+      );
+      const sideMat = getCachedMaterialSafe(
+        polygonMaterialCacheRef.current.side,
+        currentSelectedCountry,
+        gameDataMap
+      );
+      const selectedHasShader = hasShaderOnSelected(currentSelectedCountry, capMat, sideMat);
       const hasAnimatedShaders = getAnimatedPolygonMaterialCount() > 0;
-      const needsSharedTime =
-        hasAnimatedShaders &&
-        (currentIsError ||
-          currentIsSuccess ||
-          Boolean(transitioningPreviousCountryRef?.current) ||
-          selectedHasShader);
+      const needsSharedTime = checkNeedsSharedTime(
+        hasAnimatedShaders,
+        currentIsError,
+        currentIsSuccess,
+        transitioningPreviousCountryRef?.current,
+        selectedHasShader
+      );
 
       needsSharedTimeRef.current = needsSharedTime;
       if (needsSharedTime) {
@@ -183,165 +173,55 @@ export function useGlobeAnimationLoop({
       }
       polygonGlitchUniforms.uSelectStart.value = (selectionTransitionStartRef?.current ?? 0) / 1000;
 
-      if (needsGraticuleStyleRef.current) {
-        if (time - lastGraticuleStyleTimeRef.current > 120) {
-          styleGlobeGraticules();
-          updateGlobeLighting();
-          lastGraticuleStyleTimeRef.current = time;
-        }
-        if (time > graticuleStyleUntilRef.current) {
-          needsGraticuleStyleRef.current = false;
-        }
-      }
+      updateGraticuleStylesIfNeeded(
+        time,
+        needsGraticuleStyleRef,
+        lastGraticuleStyleTimeRef,
+        graticuleStyleUntilRef,
+        styleGlobeGraticules,
+        updateGlobeLighting
+      );
 
-      let glowSettled = true;
-      const lighting = globeLightingRef.current;
-      if (lighting?.innerGlow?.material?.uniforms) {
-        const uniforms = lighting.innerGlow.material.uniforms;
-        const target = targetGlowColorRef.current;
-        const colorDelta =
-          Math.abs(uniforms.glowColor.value.r - target.r) +
-          Math.abs(uniforms.glowColor.value.g - target.g) +
-          Math.abs(uniforms.glowColor.value.b - target.b);
-        const powerDelta = Math.abs(targetGlowPowerRef.current - uniforms.power.value);
-        const coefDelta = Math.abs(targetGlowCoefRef.current - uniforms.coef.value);
-        uniforms.glowColor.value.lerp(target, 0.08);
-        uniforms.power.value += (targetGlowPowerRef.current - uniforms.power.value) * 0.08;
-        uniforms.coef.value += (targetGlowCoefRef.current - uniforms.coef.value) * 0.08;
-        const GLOW_EPS = 0.001;
-        glowSettled = colorDelta < GLOW_EPS && powerDelta < GLOW_EPS && coefDelta < GLOW_EPS;
-      }
+      const glowSettled = updateInnerGlow(
+        globeLightingRef.current,
+        targetGlowColorRef.current,
+        targetGlowPowerRef.current,
+        targetGlowCoefRef.current
+      );
 
-      if (prevSelectedCountryRef.current !== currentSelectedCountry) {
-        const oldAdmin = prevSelectedCountryRef.current;
-        if (oldAdmin) {
-          const oldCapMat = getCachedMaterial(
-            polygonMaterialCacheRef.current.cap,
-            oldAdmin,
-            gameDataMap
-          );
-          const oldSideMat = getCachedMaterial(
-            polygonMaterialCacheRef.current.side,
-            oldAdmin,
-            gameDataMap
-          );
-
-          [oldCapMat, oldSideMat].forEach((mat) => {
-            if (mat && mat.userData.shader) {
-              const shader = mat.userData.shader;
-              if (shader.uniforms.uIsError) shader.uniforms.uIsError.value = 0.0;
-              if (shader.uniforms.uIsSuccess) shader.uniforms.uIsSuccess.value = 0.0;
-              if (shader.uniforms.uIsSelection) shader.uniforms.uIsSelection.value = 0.0;
-              // Enter the deselect fade on this very frame: at 0 the shader still shows the
-              // flat selection umber (the new selection restarted uSelectStart) for a frame.
-              if (mode !== "learn" && shader.uniforms.uFadeProgress) {
-                shader.uniforms.uFadeProgress.value = DESELECT_FADE_START;
-              }
-            }
-          });
-          [oldCapMat, oldSideMat].forEach((mat, index) => {
-            if (!isDeselectResettableMaterial(mat)) return;
-            if (!mat.userData.shader && mat.userData.admin !== oldAdmin) return;
-            const isCap = index === 0;
-
-            if (globeLightingEnabled) {
-              const baseEmissiveIntensity = isCap
-                ? GLOBE_STYLE.lighting.material.capEmissive
-                : GLOBE_STYLE.lighting.material.sideEmissive;
-              const emissiveBoost = 0.18;
-              mat.emissiveIntensity = baseEmissiveIntensity + emissiveBoost;
-            } else if (mat.userData.originalColor) {
-              mat.color.copy(mat.userData.originalColor);
-            }
-          });
-        }
-        prevSelectedCountryRef.current = currentSelectedCountry;
-      }
+      handleSelectionChangeMaterials(
+        prevSelectedCountryRef,
+        currentSelectedCountry,
+        polygonMaterialCacheRef,
+        gameDataMap,
+        mode,
+        globeLightingEnabled,
+        GLOBE_STYLE
+      );
 
       const hasSelectedCountry = Boolean(currentSelectedCountry);
 
-      if (hasSelectedCountry) {
-        [capMat, sideMat].forEach((mat, matIndex) => {
-          if (!mat || mat.userData.admin !== currentSelectedCountry) return;
-          mat.userData.kind = matIndex === 0 ? "cap" : "side";
-          syncSelectedCountryShaderUniforms({
-            shader: mat.userData.shader,
-            isError: currentIsError,
-            isSuccess: currentIsSuccess,
-            isFound: foundSet.has(currentSelectedCountry),
-          });
-        });
-      }
+      syncSelectedMaterials(
+        capMat,
+        sideMat,
+        currentSelectedCountry,
+        currentIsError,
+        currentIsSuccess,
+        foundSet
+      );
 
-      const prevCountry = mode !== "learn" ? transitioningPreviousCountryRef?.current : null;
-      if (prevCountry) {
-        const elapsed = time - selectionTransitionStartRef.current;
-        const TRANSITION_DURATION = GLITCH_SELECTION_TRANSITION_MS;
-
-        const prevCapMat = getCachedMaterial(
-          polygonMaterialCacheRef.current.cap,
-          prevCountry,
-          gameDataMap
-        );
-        const prevSideMat = getCachedMaterial(
-          polygonMaterialCacheRef.current.side,
-          prevCountry,
-          gameDataMap
-        );
-        if (elapsed >= TRANSITION_DURATION) {
-          if (transitioningPreviousCountryRef) {
-            transitioningPreviousCountryRef.current = null;
-          }
-          if (setTransitioningPreviousCountryState) {
-            setTransitioningPreviousCountryState(null);
-          }
-          [prevCapMat, prevSideMat].forEach((mat) => {
-            if (mat && mat.userData.shader) {
-              const shader = mat.userData.shader;
-              if (shader.uniforms.uFadeProgress) {
-                shader.uniforms.uFadeProgress.value = 1.0;
-              }
-            }
-          });
-        } else {
-          const fadeProgress = Math.min(
-            1,
-            Math.max(
-              DESELECT_FADE_START,
-              getDeselectGlitchFadeProgress(elapsed, TRANSITION_DURATION)
-            )
-          );
-
-          if (transitionColorsPrimedRef.current !== prevCountry) {
-            transitionColorsPrimedRef.current = prevCountry;
-            [prevCapMat, prevSideMat].forEach((mat, idx) => {
-              if (mat?.userData?.shader?.uniforms?.uTargetColor) {
-                const targetKind = idx === 0 ? "cap" : "side";
-                mat.userData.shader.uniforms.uTargetColor.value.copy(
-                  _transitionTargetColor.set(getBaseColorForCountryAndKind(prevCountry, targetKind))
-                );
-              }
-            });
-          }
-
-          [prevCapMat, prevSideMat].forEach((mat) => {
-            if (mat && mat.userData.shader) {
-              const shader = mat.userData.shader;
-              if (shader.uniforms.uFadeProgress) {
-                shader.uniforms.uFadeProgress.value = fadeProgress;
-              }
-              if (shader.uniforms.uSelectInTransition) {
-                shader.uniforms.uSelectInTransition.value = 0.0;
-              }
-              if (shader.uniforms.uIsFound) {
-                shader.uniforms.uIsFound.value = foundSet.has(prevCountry) ? 1.0 : 0.0;
-              }
-            }
-          });
-        }
-      } else {
-        transitionColorsPrimedRef.current = null;
-      }
+      handleTransitioningPreviousCountry({
+        time,
+        mode,
+        selectionTransitionStartRef,
+        transitioningPreviousCountryRef,
+        setTransitioningPreviousCountryState,
+        polygonMaterialCacheRef,
+        gameDataMap,
+        transitionColorsPrimedRef,
+        getBaseColorForCountryAndKind,
+        foundSet,
+      });
 
       const hasWork = loopHasWork({
         needsSharedTime,

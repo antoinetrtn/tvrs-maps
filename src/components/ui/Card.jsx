@@ -18,11 +18,14 @@ const Card = React.forwardRef(function Card(
 ) {
   const classes = [
     "ui-card",
-    ...[].concat(look || []).map((l) => {
-      if (!CARD_LOOKS.includes(l) && import.meta.env?.DEV)
-        console.error(`Card: unknown look "${l}"`);
-      return CARD_LOOKS.includes(l) && `ui-card--${l}`;
-    }),
+    ...[look]
+      .flat()
+      .filter(Boolean)
+      .map((l) => {
+        if (!CARD_LOOKS.includes(l) && import.meta.env?.DEV)
+          console.error(`Card: unknown look "${l}"`);
+        return CARD_LOOKS.includes(l) && `ui-card--${l}`;
+      }),
     glass && "glass-panel",
     className,
   ]

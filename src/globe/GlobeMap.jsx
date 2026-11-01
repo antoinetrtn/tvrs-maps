@@ -11,6 +11,7 @@ import {
 } from "../config/designSystem";
 import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
+import { resolveEffectiveMode } from "./effectiveMode";
 import { useFoundProgramWarmup } from "./hooks/useFoundProgramWarmup";
 import { useGlobeBoats } from "./hooks/useGlobeBoats";
 import { useGlobeCamera } from "./hooks/useGlobeCamera";
@@ -55,7 +56,6 @@ const GlobeMap = (props) => {
     viewport,
     isError,
     isSuccess,
-    _hasActiveFeedback,
     perfProfile,
     isHomeScreen,
     isKeyboardMode,
@@ -97,13 +97,14 @@ const GlobeMap = (props) => {
   const {
     selectableFeatureIndex,
     countrySizes,
-    _renderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,
     modeTransitionRef,
     transitionStep,
     transitionLive,
+    effectiveDepartmentMode = isDepartmentMode,
+    effectiveUsStatesMode = isUsStatesMode,
   } = useGlobeRenderPipeline({
     isDepartmentMode,
     isUsStatesMode,
@@ -118,6 +119,12 @@ const GlobeMap = (props) => {
     lastZoomRef,
     perfProfile,
     canonicalRef,
+  });
+  const { effectiveMode, effectiveGameDataMap } = resolveEffectiveMode({
+    mode,
+    gameDataMap,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
   });
   const {
     getPolygonCapMaterial,
@@ -136,7 +143,7 @@ const GlobeMap = (props) => {
     getBaseColorForCountryAndKind,
     lerpColor,
   } = useGlobePolygons({
-    mode,
+    mode: effectiveMode,
     globeLightingEnabled,
     perfProfile,
     selectedCountry,
@@ -145,14 +152,14 @@ const GlobeMap = (props) => {
     conquestOverlay: props.conquestOverlay,
     isHomeScreen,
     isEndScreen,
-    isDepartmentMode,
-    isUsStatesMode,
+    isDepartmentMode: effectiveDepartmentMode,
+    isUsStatesMode: effectiveUsStatesMode,
     isRiversMountainsMode,
     isPerfectScore,
     isError,
     isSuccess,
     selectionTransition,
-    gameDataMap,
+    gameDataMap: effectiveGameDataMap,
     modeTransitionRef,
     transitionStep,
   });
@@ -276,13 +283,7 @@ const GlobeMap = (props) => {
     };
   }, []);
 
-  const {
-    visibleMarkersData: _visibleMarkersData,
-    markersData,
-    getPointColorWrapped,
-    getPointRadius,
-    getPointAltitude,
-  } = useGlobeMarkers({
+  const { markersData, getPointColorWrapped, getPointRadius, getPointAltitude } = useGlobeMarkers({
     mode,
     isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,

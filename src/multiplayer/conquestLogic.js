@@ -234,45 +234,68 @@ export function deriveMatchPhase(match, clientNowMs, offsetMs = 0) {
   return "live";
 }
 
+const FEED_EVENT_FORMATTERS = {
+  capture: (event, { who, country, fr }) =>
+    fr ? `${who} a capturé ${country}` : `${who} captured ${country}`,
+  steal: (event, { who, country, fr, players }) => {
+    const victim = players.find((player) => player.user_id === event.payload?.victim);
+    const from = victim?.display_name || "?";
+    return fr ? `${who} a volé ${country} à ${from}` : `${who} stole ${country} from ${from}`;
+  },
+  lock: (event, { who, country, fr }) =>
+    fr ? `${country} reste à ${who} pour de bon` : `${country} stays with ${who} for good`,
+  steal_fail: (event, { who, country, fr }) =>
+    fr ? `${who} a raté le vol de ${country}` : `${who} failed to steal ${country}`,
+  join: (event, { who, fr }) => (fr ? `${who} a rejoint le salon` : `${who} joined the room`),
+  start: (event, { fr }) => (fr ? "La partie commence !" : "The match begins!"),
+  finish: (event, { fr }) => (fr ? "Fin de la partie" : "Match over"),
+  leave: (event, { who, fr }) => (fr ? `${who} a quitté le salon` : `${who} left the room`),
+  forfeit: (event, { who, fr }) => (fr ? `${who} a abandonné la partie` : `${who} forfeited`),
+};
+
 /** Turns a server event into a feed line, or null when it is not worth showing. */
 export function formatFeedEvent(event, { players = [], countryName = (id) => id, lang = "fr" }) {
+  const kind = event?.kind;
+  if (!Object.hasOwn(FEED_EVENT_FORMATTERS, kind)) return null;
+  const formatter = FEED_EVENT_FORMATTERS[kind];
   const actor = players.find((player) => player.user_id === event.actor_id);
-  const who = actor?.display_name || (lang === "fr" ? "Un joueur" : "A player");
   const fr = lang === "fr";
-  switch (event.kind) {
-    case "capture":
-      return fr
-        ? `${who} a capturé ${countryName(event.country_id)}`
-        : `${who} captured ${countryName(event.country_id)}`;
-    case "steal": {
-      const victim = players.find((player) => player.user_id === event.payload?.victim);
-      const from = victim?.display_name || "?";
-      return fr
-        ? `${who} a volé ${countryName(event.country_id)} à ${from}`
-        : `${who} stole ${countryName(event.country_id)} from ${from}`;
-    }
-    case "lock":
-      return fr
-        ? `${countryName(event.country_id)} reste à ${who} pour de bon`
-        : `${countryName(event.country_id)} stays with ${who} for good`;
-    case "steal_fail":
-      return fr
-        ? `${who} a raté le vol de ${countryName(event.country_id)}`
-        : `${who} failed to steal ${countryName(event.country_id)}`;
-    case "join":
-      return fr ? `${who} a rejoint le salon` : `${who} joined the room`;
-    case "start":
-      return fr ? "La partie commence !" : "The match begins!";
-    case "finish":
-      return fr ? "Fin de la partie" : "Match over";
-    case "leave":
-      return fr ? `${who} a quitté le salon` : `${who} left the room`;
-    case "forfeit":
-      return fr ? `${who} a abandonné la partie` : `${who} forfeited`;
-    default:
-      return null;
-  }
+  const who = actor?.display_name || (fr ? "Un joueur" : "A player");
+  const country = countryName(event.country_id);
+  return formatter(event, { who, country, fr, players });
 }
+
+const formatChangedRefusal = (name, fr) =>
+  fr ? `${name || "Ce pays"} a changé de mains` : `${name || "This country"} changed hands`;
+
+const CLAIM_REFUSAL_HANDLERS = {
+  already_yours: ({ name, fr }) => (fr ? `${name} est déjà à toi` : `${name} is already yours`),
+  already_owned: ({ name, fr, players, result }) => {
+    const owner = players.find((player) => player.user_id === result.owner_id);
+    const by = owner?.display_name || (fr ? "l'adversaire" : "your opponent");
+    return fr ? `${name} est déjà pris par ${by}` : `${name} is already held by ${by}`;
+  },
+  unknown: ({ fr }) => (fr ? "Pays inconnu" : "Unknown country"),
+  shielded: ({ name, fr }) => (fr ? `${name} est sous bouclier` : `${name} is shielded`),
+  locked: ({ name, fr }) =>
+    fr
+      ? `${name} est verrouillé : plus de questions, il reste à son propriétaire`
+      : `${name} is locked: no questions left, it stays with its owner`,
+  cooldown: ({ name, fr }) =>
+    fr ? `Attends avant de re-voler ${name}` : `Wait before stealing ${name} again`,
+  penalty: ({ fr }) => (fr ? "Pénalité en cours, patiente un instant" : "Penalty: wait a moment"),
+  wrong: ({ name, fr }) =>
+    fr ? `Vol raté sur ${name} (pénalité)` : `Steal failed on ${name} (penalty)`,
+  abandoned: ({ fr }) =>
+    fr ? "Vol abandonné : compte comme un échec" : "Steal abandoned: counts as a failure",
+  rate_limited: ({ fr }) => (fr ? "Trop rapide, réessaie" : "Too fast, try again"),
+  expired: ({ fr }) => (fr ? "Défi expiré" : "Challenge expired"),
+  free: ({ name, fr }) => formatChangedRefusal(name, fr),
+  changed: ({ name, fr }) => formatChangedRefusal(name, fr),
+  no_challenge: ({ name, fr }) => formatChangedRefusal(name, fr),
+  not_live: ({ fr }) => (fr ? "La partie n'a pas commencé" : "The match has not started"),
+  finished: ({ fr }) => (fr ? "La partie est terminée" : "The match is over"),
+};
 
 /** Human-readable message for a claim_country refusal. */
 export function describeClaimRefusal(
@@ -285,47 +308,11 @@ export function describeClaimRefusal(
     const fortify = describeFortifyRefusal(result.reason, name, fr);
     if (fortify) return fortify;
   }
-  switch (result?.reason) {
-    case "already_yours":
-      return fr ? `${name} est déjà à toi` : `${name} is already yours`;
-    case "already_owned": {
-      const owner = players.find((player) => player.user_id === result.owner_id);
-      const by = owner?.display_name || (fr ? "l'adversaire" : "your opponent");
-      return fr ? `${name} est déjà pris par ${by}` : `${name} is already held by ${by}`;
-    }
-    case "unknown":
-      return fr ? "Pays inconnu" : "Unknown country";
-    case "shielded":
-      return fr ? `${name} est sous bouclier` : `${name} is shielded`;
-    case "locked":
-      return fr
-        ? `${name} est verrouillé : plus de questions, il reste à son propriétaire`
-        : `${name} is locked: no questions left, it stays with its owner`;
-    case "cooldown":
-      return fr ? `Attends avant de re-voler ${name}` : `Wait before stealing ${name} again`;
-    case "penalty":
-      return fr ? "Pénalité en cours, patiente un instant" : "Penalty: wait a moment";
-    case "wrong":
-      return fr ? `Vol raté sur ${name} (pénalité)` : `Steal failed on ${name} (penalty)`;
-    case "abandoned":
-      return fr ? "Vol abandonné : compte comme un échec" : "Steal abandoned: counts as a failure";
-    case "rate_limited":
-      return fr ? "Trop rapide, réessaie" : "Too fast, try again";
-    case "expired":
-      return fr ? "Défi expiré" : "Challenge expired";
-    case "free":
-    case "changed":
-    case "no_challenge":
-      return fr
-        ? `${name || "Ce pays"} a changé de mains`
-        : `${name || "This country"} changed hands`;
-    case "not_live":
-      return fr ? "La partie n'a pas commencé" : "The match has not started";
-    case "finished":
-      return fr ? "La partie est terminée" : "The match is over";
-    default:
-      return fr ? "Réponse refusée" : "Answer rejected";
+  const reason = result?.reason;
+  if (Object.hasOwn(CLAIM_REFUSAL_HANDLERS, reason)) {
+    return CLAIM_REFUSAL_HANDLERS[reason]({ name, fr, players, result });
   }
+  return fr ? "Réponse refusée" : "Answer rejected";
 }
 
 function describeFortifyRefusal(reason, name, fr) {
@@ -351,7 +338,12 @@ function describeFortifyRefusal(reason, name, fr) {
  * Running shields for the globe countdown: [{ id, ms, level, mine, ownerId }],
  * soonest first. `level` = fortify steps done (0 after a capture).
  */
-export function shieldCountdowns(claims = [], userId, clientNowMs = Date.now(), offsetMs = 0) {
+export function shieldCountdowns(
+  claims = [],
+  userId = null,
+  clientNowMs = Date.now(),
+  offsetMs = 0
+) {
   return claims
     .map((claim) => ({
       id: claim.country_id,
@@ -376,28 +368,51 @@ export function formatShieldSeconds(ms) {
  * already opened one — joining makes me ready), or null when not finished.
  */
 export function rematchState(match) {
-  if (!match || match.status !== "finished") return null;
+  if (match?.status !== "finished") return null;
   return match.rematch_id ? "join" : "offer";
+}
+
+const RPC_ERROR_PATTERNS = [
+  { match: ["match_not_found"], fr: "Salon introuvable", en: "Room not found" },
+  { match: ["match_full"], fr: "Salon complet", en: "Room is full" },
+  {
+    match: ["match_expired", "match_finished"],
+    fr: "Ce salon a expiré",
+    en: "This room has expired",
+  },
+  {
+    match: ["match_already_started"],
+    fr: "La partie a déjà commencé",
+    en: "The match already started",
+  },
+  {
+    match: ["players_not_ready"],
+    fr: "Tous les joueurs doivent être prêts",
+    en: "Every player must be ready",
+  },
+  {
+    match: ["match_not_finished"],
+    fr: "La partie n'est pas terminée",
+    en: "The match is not over yet",
+  },
+  // RPC missing on the server: the migration is not applied yet.
+  {
+    match: ["Could not find the function", "PGRST202"],
+    fr: "Fonction pas encore disponible sur le serveur",
+    en: "Not available on the server yet",
+  },
+  { match: ["not_host"], fr: "Seul l'hôte peut lancer", en: "Only the host can start" },
+];
+
+function findRpcErrorMatch(message) {
+  return RPC_ERROR_PATTERNS.find((pattern) => pattern.match.some((sub) => message.includes(sub)));
 }
 
 /** Maps RPC error messages to user-facing text. */
 export function describeRpcError(error, lang = "fr") {
   const fr = lang === "fr";
   const message = String(error?.message || error || "");
-  if (message.includes("match_not_found")) return fr ? "Salon introuvable" : "Room not found";
-  if (message.includes("match_full")) return fr ? "Salon complet" : "Room is full";
-  if (message.includes("match_expired") || message.includes("match_finished"))
-    return fr ? "Ce salon a expiré" : "This room has expired";
-  if (message.includes("match_already_started"))
-    return fr ? "La partie a déjà commencé" : "The match already started";
-  if (message.includes("players_not_ready"))
-    return fr ? "Tous les joueurs doivent être prêts" : "Every player must be ready";
-  if (message.includes("match_not_finished"))
-    return fr ? "La partie n'est pas terminée" : "The match is not over yet";
-  // RPC missing on the server: the migration is not applied yet.
-  if (message.includes("Could not find the function") || message.includes("PGRST202"))
-    return fr ? "Fonction pas encore disponible sur le serveur" : "Not available on the server yet";
-  if (message.includes("not_host"))
-    return fr ? "Seul l'hôte peut lancer" : "Only the host can start";
+  const pattern = findRpcErrorMatch(message);
+  if (pattern) return fr ? pattern.fr : pattern.en;
   return fr ? "Connexion au serveur impossible" : "Could not reach the server";
 }

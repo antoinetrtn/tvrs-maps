@@ -141,6 +141,9 @@ function useCarouselNavigation({
 }) {
   const [animatingDirection, setAnimatingDirection] = useState(null);
   const isAnimatingRef = useRef(false);
+  const animTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(animTimerRef.current), []);
 
   const triggerAnimatedChange = useCallback(
     (direction, targetIdxOverride = null) => {
@@ -148,15 +151,15 @@ function useCarouselNavigation({
       isAnimatingRef.current = true;
       setAnimatingDirection(direction);
 
-      const nextIdx =
-        targetIdxOverride !== null
-          ? targetIdxOverride
-          : direction === "leftSwipe"
-            ? (activeIndex + 1) % totalModes
-            : (activeIndex - 1 + totalModes) % totalModes;
+      let nextIdx = (activeIndex - 1 + totalModes) % totalModes;
+      if (targetIdxOverride !== null) {
+        nextIdx = targetIdxOverride;
+      } else if (direction === "leftSwipe") {
+        nextIdx = (activeIndex + 1) % totalModes;
+      }
       setHomeMode(gameModesCarousel[nextIdx].key);
 
-      setTimeout(() => {
+      animTimerRef.current = setTimeout(() => {
         setAnimatingDirection(null);
         isAnimatingRef.current = false;
       }, 200);

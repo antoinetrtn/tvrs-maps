@@ -17,6 +17,8 @@ const ROWS = [
 
 export const PixelHeart = ({ width = 24, height = 24, ...props }) => (
   <svg
+    aria-hidden="true"
+    role="presentation"
     xmlns="http://www.w3.org/2000/svg"
     width={width}
     height={height}
@@ -24,8 +26,8 @@ export const PixelHeart = ({ width = 24, height = 24, ...props }) => (
     fill="currentColor"
     {...props}
   >
-    {ROWS.map((r, i) => (
-      <rect key={i} x={r.x} y={r.y} width={r.w} height={r.h} />
+    {ROWS.map((r) => (
+      <rect key={`${r.x}-${r.y}`} x={r.x} y={r.y} width={r.w} height={r.h} />
     ))}
   </svg>
 );

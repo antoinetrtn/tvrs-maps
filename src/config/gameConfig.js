@@ -78,7 +78,7 @@ export const isPlayMode = (mode, { isHomeScreen = false, isEndScreen = false } =
 export function getPlayVisibleCountryKeys(selectedCountry, foundList = []) {
   const keys = [];
   if (selectedCountry) keys.push(selectedCountry);
-  const lastFound = foundList[foundList.length - 1];
+  const lastFound = foundList.at(-1);
   if (lastFound && lastFound !== selectedCountry) keys.push(lastFound);
   return [...new Set(keys)];
 }

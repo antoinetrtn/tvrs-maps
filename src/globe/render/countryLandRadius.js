@@ -15,8 +15,12 @@ export function registerCountryFeature(admin, feature) {
 function forEachVertex(geometry, fn) {
   const { type, coordinates } = geometry || {};
   if (!coordinates) return;
-  const rings =
-    type === "Polygon" ? coordinates : type === "MultiPolygon" ? coordinates.flat() : [];
+  let rings = [];
+  if (type === "Polygon") {
+    rings = coordinates;
+  } else if (type === "MultiPolygon") {
+    rings = coordinates.flat();
+  }
   rings.forEach((ring) => ring.forEach(([lng, lat]) => fn(lat, lng)));
 }
 

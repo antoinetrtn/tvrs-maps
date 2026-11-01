@@ -76,6 +76,53 @@ export const getGameStats = (foundList, countryDataMap, lang = "fr") => {
   return { stats: s, CONTINENT_ORDER };
 };
 
+function getLocalizedCountryName(item, fallbackName, lang) {
+  if (lang === "fr") {
+    return item.name_fr || item.name_en || fallbackName;
+  }
+  return item.name_en || item.name_fr || fallbackName;
+}
+
+function getLocalizedCapital(item, fallbackCapital, lang) {
+  if (lang === "fr") {
+    return item.capital_fr || item.capital || fallbackCapital;
+  }
+  return item.capital || item.capital_fr || fallbackCapital;
+}
+
+function getPanelItemDetail(item, mode, countryName, capital, lang) {
+  const locale = lang === "fr" ? "fr-FR" : "en-US";
+  if (item.type === "mountain_range" || item.type === "mountain") {
+    const heightStr = item.height ? Number(item.height).toLocaleString(locale) : "?";
+    return `🏔️ ${heightStr} m`;
+  }
+  if (item.type === "river") {
+    const lengthStr = item.length ? Number(item.length).toLocaleString(locale) : "?";
+    return `💧 ${lengthStr} km`;
+  }
+  if (mode === "departments" || item.code) {
+    return item.code;
+  }
+  return mode === "capitals" ? countryName : capital;
+}
+
+function buildPanelRow(c, mergedMap, mode, lang, revealAll, region) {
+  const item = mergedMap[c.key] || {};
+  const countryName = getLocalizedCountryName(item, c.name, lang);
+  const capital = getLocalizedCapital(item, c.capital, lang);
+  const isCapitalsMode = mode === "capitals";
+
+  return {
+    key: c.key,
+    name: isCapitalsMode ? capital : countryName,
+    sublabel: getPanelItemDetail(item, mode, countryName, capital, lang),
+    iso2: item.iso2,
+    found: c.found,
+    revealed: revealAll || c.found,
+    region,
+  };
+}
+
 /**
  * Build grouped panel rows for the unified data table (learn + in-game).
  */
@@ -101,37 +148,9 @@ export const getPanelData = ({
     const data = stats[region];
     if (!data || data.total === 0) return;
 
-    rowsByRegion[region] = data.countries.map((c) => {
-      const item = mergedMap[c.key] || {};
-      const countryName =
-        lang === "fr"
-          ? item.name_fr || item.name_en || c.name
-          : item.name_en || item.name_fr || c.name;
-      const capital =
-        lang === "fr"
-          ? item.capital_fr || item.capital || c.capital
-          : item.capital || item.capital_fr || c.capital;
-      const isCapitalsMode = mode === "capitals";
-      const name = isCapitalsMode ? capital : countryName;
-      const sublabel =
-        mode === "departments" || item.code ? item.code : isCapitalsMode ? countryName : capital;
-      const isMtn = item.type === "mountain_range" || item.type === "mountain";
-      const detail = isMtn
-        ? `🏔️ ${item.height ? Number(item.height).toLocaleString(lang === "fr" ? "fr-FR" : "en-US") : "?"} m`
-        : item.type === "river"
-          ? `💧 ${item.length ? Number(item.length).toLocaleString(lang === "fr" ? "fr-FR" : "en-US") : "?"} km`
-          : sublabel;
-
-      return {
-        key: c.key,
-        name,
-        sublabel: detail,
-        iso2: item.iso2,
-        found: c.found,
-        revealed: revealAll || c.found,
-        region,
-      };
-    });
+    rowsByRegion[region] = data.countries.map((c) =>
+      buildPanelRow(c, mergedMap, mode, lang, revealAll, region)
+    );
   });
 
   return { rowsByRegion, CONTINENT_ORDER, total: Object.keys(mergedMap).length };
@@ -147,10 +166,10 @@ export const clientToGlobeCoords = (globeEl, clientX, clientY) => {
 };
 
 export const getFlagEmoji = (iso2) => {
-  if (!iso2 || iso2.length !== 2) return "";
+  if (iso2?.length !== 2) return "";
   return iso2
     .toUpperCase()
-    .replace(/./g, (char) => String.fromCodePoint(char.charCodeAt(0) + 127397));
+    .replace(/./g, (char) => String.fromCodePoint(char.codePointAt(0) + 127397));
 };
 
 export const getFeaturePolygons = (feature) => {
@@ -357,7 +376,7 @@ export const getLabelRenderRadius = (zoomLevel, isMobile) => {
  * Extract administrative code or name from a GeoJSON feature's properties.
  */
 export const getFeatureAdmin = (feature) => {
-  if (!feature || !feature.properties) return undefined;
+  if (!feature?.properties) return undefined;
   const props = feature.properties;
 
   // Custom mapping for Somaliland to Somalia
