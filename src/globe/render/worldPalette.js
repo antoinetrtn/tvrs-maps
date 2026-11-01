@@ -44,6 +44,49 @@ function bayer4(x, y) {
   return (4 * b2(x & 1, y & 1) + b2((x >> 1) & 1, (y >> 1) & 1)) / 16;
 }
 
+function getBaseTone(v) {
+  if (v < 0.34) {
+    return 0;
+  }
+  if (v < 0.68) {
+    return 1;
+  }
+  return 2;
+}
+
+function getForestTone(x, y, base) {
+  const crown = hash2(x >> 1, (y >> 1) + 7.7);
+  if (crown <= 0.84) {
+    return base;
+  }
+  if ((x & 1) === 0 && (y & 1) === 1) {
+    return 3;
+  }
+  if ((x & 1) === 1 && (y & 1) === 0) {
+    return 0;
+  }
+  return 2;
+}
+
+function getSpecialClassTone(name, level, v, grain, base) {
+  if (name === "savanna" || name === "steppe") {
+    return grain > 0.92 ? 3 : base;
+  }
+  if (name === "tundra" || name === "wetland") {
+    return grain > 0.9 ? 3 : base;
+  }
+  if (name === "sand") {
+    return v > 0.95 ? 3 : base;
+  }
+  if (name === "alpine") {
+    return level >= 11 ? 3 : base;
+  }
+  if (name === "ice") {
+    return level <= 1 && grain > 0.5 ? 3 : Math.max(1, base);
+  }
+  return base;
+}
+
 /**
  * Palette slot (0..3) of one texel. `level` (0..15) is the real Blue Marble
  * brightness of that texel inside its class; the Bayer threshold turns it into
@@ -52,20 +95,11 @@ function bayer4(x, y) {
 export function pickTone(name, level, x, y) {
   const grain = hash2(x + 17.3, y + 41.9);
   const v = level / 15 + (bayer4(x, y) - 0.47) * 0.38;
-  const base = v < 0.34 ? 0 : v < 0.68 ? 1 : 2;
+  const base = getBaseTone(v);
   if (FORESTS.has(name)) {
-    // 2x2 canopy crowns: lit top-left pixel, shadowed opposite corner.
-    const crown = hash2(x >> 1, (y >> 1) + 7.7);
-    if (crown > 0.84)
-      return (x & 1) === 0 && (y & 1) === 1 ? 3 : (x & 1) === 1 && (y & 1) === 0 ? 0 : 2;
-    return base;
+    return getForestTone(x, y, base);
   }
-  if (name === "savanna" || name === "steppe") return grain > 0.92 ? 3 : base;
-  if (name === "tundra" || name === "wetland") return grain > 0.9 ? 3 : base;
-  if (name === "sand") return v > 0.95 ? 3 : base;
-  if (name === "alpine") return level >= 11 ? 3 : base;
-  if (name === "ice") return level <= 1 && grain > 0.5 ? 3 : Math.max(1, base);
-  return base;
+  return getSpecialClassTone(name, level, v, grain, base);
 }
 
 /** Grey land-cover levels (row 0 = 90°S) → RGBA pixels; alpha 0 = sea / no data. */

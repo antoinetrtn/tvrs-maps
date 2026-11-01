@@ -72,6 +72,83 @@ export function beaconColor(litFraction, t, phase = 0) {
   return UNFOUND.map((c, i) => (c * (1 - k) + FOUND[i] * k) * gain);
 }
 
+function projectBeaconsToScreen(count, unit, radius, camPos, camera, w, h, p, world, screen) {
+  for (let i = 0; i < count; i++) {
+    p.fromArray(unit[i]).multiplyScalar(radius);
+    world[i * 3] = p.x;
+    world[i * 3 + 1] = p.y;
+    world[i * 3 + 2] = p.z;
+    // Back side of the globe: skip (depth would hide it anyway, but it must
+    // not join a front-side cluster).
+    if (p.dot(camPos) <= radius * radius) {
+      screen[i] = null;
+      continue;
+    }
+    p.project(camera);
+    screen[i] = { x: (p.x * 0.5 + 0.5) * w, y: (-p.y * 0.5 + 0.5) * h };
+  }
+}
+
+function aggregateClusterStats(count, leader, found, litSum, members) {
+  litSum.fill(0);
+  members.fill(0);
+  for (let i = 0; i < count; i++) {
+    if (leader[i] < 0) {
+      continue;
+    }
+    litSum[leader[i]] += found[i];
+    members[leader[i]] += 1;
+  }
+}
+
+function updateBeaconInstances(
+  count,
+  leader,
+  mesh,
+  dim,
+  zero,
+  litSum,
+  members,
+  reducedMotion,
+  now,
+  foundAt,
+  p,
+  world,
+  camPos,
+  fov,
+  h,
+  m,
+  right,
+  up,
+  look,
+  s,
+  t,
+  phases,
+  color
+) {
+  for (let i = 0; i < count; i++) {
+    if (leader[i] !== i) {
+      mesh.setMatrixAt(i, zero);
+      dim.setMatrixAt(i, zero);
+      continue;
+    }
+    const lit = litSum[i] / members[i];
+    const target = lit > 0 ? mesh : dim;
+    const inactive = lit > 0 ? dim : mesh;
+    inactive.setMatrixAt(i, zero);
+    const pop = beaconPop(reducedMotion ? -1 : now - foundAt[i]);
+    p.fromArray(world, i * 3);
+    const worldPerPx = (2 * p.distanceTo(camPos) * Math.tan(fov / 2)) / h;
+    const size = target.userData.texels * PX_PER_TEXEL * pop.scale * worldPerPx;
+    m.makeBasis(right, up, look);
+    m.scale(s.set(size, size, 1));
+    m.setPosition(p);
+    target.setMatrixAt(i, m);
+    const [r, g, b] = beaconColor(lit, t, phases[i]);
+    target.setColorAt(i, color.setRGB(r * pop.gain, g * pop.gain, b * pop.gain));
+  }
+}
+
 /**
  * One InstancedMesh of camera-facing pixel beacons (one draw call), sized in
  * screen px. MeshBasicMaterial + instanceColor: identical in WebGL and WebGPU
@@ -139,48 +216,36 @@ export function createMicroBeaconLayer(globe, admins, dataMap) {
     const w = renderer.domElement?.clientWidth || 800;
     const h = renderer.domElement?.clientHeight || 800;
     const fov = ((camera.fov || 50) * Math.PI) / 180;
-    for (let i = 0; i < count; i++) {
-      p.fromArray(unit[i]).multiplyScalar(radius);
-      world[i * 3] = p.x;
-      world[i * 3 + 1] = p.y;
-      world[i * 3 + 2] = p.z;
-      // Back side of the globe: skip (depth would hide it anyway, but it must
-      // not join a front-side cluster).
-      if (p.dot(camPos) <= radius * radius) {
-        screen[i] = null;
-        continue;
-      }
-      p.project(camera);
-      screen[i] = { x: (p.x * 0.5 + 0.5) * w, y: (-p.y * 0.5 + 0.5) * h };
-    }
+
+    projectBeaconsToScreen(count, unit, radius, camPos, camera, w, h, p, world, screen);
     const leader = clusterScreenPoints(screen);
-    litSum.fill(0);
-    members.fill(0);
-    for (let i = 0; i < count; i++) {
-      if (leader[i] < 0) continue;
-      litSum[leader[i]] += found[i];
-      members[leader[i]] += 1;
-    }
-    for (let i = 0; i < count; i++) {
-      if (leader[i] !== i) {
-        mesh.setMatrixAt(i, zero);
-        dim.setMatrixAt(i, zero);
-        continue;
-      }
-      const lit = litSum[i] / members[i];
-      const target = lit > 0 ? mesh : dim;
-      (lit > 0 ? dim : mesh).setMatrixAt(i, zero);
-      const pop = beaconPop(reducedMotion ? -1 : now - foundAt[i]);
-      p.fromArray(world, i * 3);
-      const worldPerPx = (2 * p.distanceTo(camPos) * Math.tan(fov / 2)) / h;
-      const size = target.userData.texels * PX_PER_TEXEL * pop.scale * worldPerPx;
-      m.makeBasis(right, up, look);
-      m.scale(s.set(size, size, 1));
-      m.setPosition(p);
-      target.setMatrixAt(i, m);
-      const [r, g, b] = beaconColor(lit, t, phases[i]);
-      target.setColorAt(i, color.setRGB(r * pop.gain, g * pop.gain, b * pop.gain));
-    }
+    aggregateClusterStats(count, leader, found, litSum, members);
+    updateBeaconInstances(
+      count,
+      leader,
+      mesh,
+      dim,
+      zero,
+      litSum,
+      members,
+      reducedMotion,
+      now,
+      foundAt,
+      p,
+      world,
+      camPos,
+      fov,
+      h,
+      m,
+      right,
+      up,
+      look,
+      s,
+      t,
+      phases,
+      color
+    );
+
     for (const im of [mesh, dim]) {
       im.instanceMatrix.needsUpdate = true;
       if (im.instanceColor) im.instanceColor.needsUpdate = true;
