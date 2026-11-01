@@ -239,6 +239,39 @@ function resolveIgniteHolder(admin, kind, isShaderCap, isGhostCountry) {
   return null;
 }
 
+function updatePolygonGlitchEnvironment({
+  isHomeScreen,
+  isEndScreen,
+  isDepartmentMode,
+  isRiversMountainsMode,
+}) {
+  polygonGlitchUniforms.uShowcaseLights.value = isHomeScreen || isEndScreen ? 1.0 : 0.0;
+  homeWakeState.polygonsReady = true;
+  polygonGlitchUniforms.uReducedMotion.value =
+    typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      ? 1
+      : 0;
+  polygonGlitchUniforms.uIsRegionalMode.value = isDepartmentMode ? 1.0 : 0.0;
+  if (isDepartmentMode) ensurePaintedTerrain();
+  polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
+}
+
+function resolvePolygonEffectiveColors({
+  isShaderCap,
+  restingColor,
+  color,
+  isFound,
+  isLearnSelected,
+  showFoundOnGlobe,
+  isHighlightedOnGlobe,
+}) {
+  const colorToUse = isShaderCap ? restingColor : color;
+  const isFoundOrLearn = isFound || isLearnSelected;
+  const showFoundOnGlobeToUse = isShaderCap ? isFoundOrLearn : showFoundOnGlobe;
+  const isHighlightedOnGlobeToUse = isShaderCap ? isFoundOrLearn : isHighlightedOnGlobe;
+  return { colorToUse, showFoundOnGlobeToUse, isHighlightedOnGlobeToUse };
+}
+
 export function getPolygonMaterialForFeature({
   d,
   kind,
@@ -269,12 +302,12 @@ export function getPolygonMaterialForFeature({
   lerpColor: _lerpColor,
   restingColor,
 }) {
-  polygonGlitchUniforms.uShowcaseLights.value = isHomeScreen || isEndScreen ? 1.0 : 0.0;
-  homeWakeState.polygonsReady = true;
-  polygonGlitchUniforms.uReducedMotion.value =
-    typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-      ? 1
-      : 0;
+  updatePolygonGlitchEnvironment({
+    isHomeScreen,
+    isEndScreen,
+    isDepartmentMode,
+    isRiversMountainsMode,
+  });
   const isIsolated = isMatchingAdmin(admin, selectedCountry);
   const isPrevTransitioning = isMatchingAdmin(admin, transitioningPreviousCountryState);
   const isIncomingTransitioning = isMatchingAdmin(admin, transitioningIncomingCountryState);
@@ -296,9 +329,16 @@ export function getPolygonMaterialForFeature({
   const isSelectionHighlight = shaderMode.isSelectionHighlight && !isError && !isSuccess;
   const isMobileStr = perfProfile?.isMobile ? "mobile" : "desktop";
 
-  const colorToUse = isShaderCap ? restingColor : color;
-  const showFoundOnGlobeToUse = isShaderCap ? isFound || isLearnSelected : showFoundOnGlobe;
-  const isHighlightedOnGlobeToUse = isShaderCap ? isFound || isLearnSelected : isHighlightedOnGlobe;
+  const { colorToUse, showFoundOnGlobeToUse, isHighlightedOnGlobeToUse } =
+    resolvePolygonEffectiveColors({
+      isShaderCap,
+      restingColor,
+      color,
+      isFound,
+      isLearnSelected,
+      showFoundOnGlobe,
+      isHighlightedOnGlobe,
+    });
 
   const { emissiveHex, emissiveIntensity, specularHex, shininess } = resolvePolygonEmissiveProps({
     color: colorToUse,
@@ -316,9 +356,6 @@ export function getPolygonMaterialForFeature({
   const look = `${color}-${emissiveHex}-${emissiveIntensity}-${specularHex}-${shininess}-${isMobileStr}`;
   const isGhostCountry = Boolean(d?.isGhostCountry);
   const ghostSuffix = isGhostCountry ? "-ghost" : "";
-  polygonGlitchUniforms.uIsRegionalMode.value = isDepartmentMode ? 1.0 : 0.0;
-  if (isDepartmentMode) ensurePaintedTerrain();
-  polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
 
   registerCountryFeature(admin, d);
   if (isShaderCap && isIsolated && kind === "cap") setSelectionOutline(admin, d?.geometry);

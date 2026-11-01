@@ -23,19 +23,13 @@ export function useHudAnswerHandler({
 
       if (!selectedCountry) {
         if (import.meta.env.DEV && (val === "WIN100" || val === "LOSE100")) {
-          return handleInput(val) === true;
+          return Boolean(handleInput(val));
         }
         return false;
       }
 
       const res = specificCountryGuess(val);
-      return (
-        res === "SUCCESS" ||
-        res === true ||
-        res === "ERROR" ||
-        res === "ALREADY_FOUND" ||
-        res === "QUEUED"
-      );
+      return Boolean(res);
     },
     [mode, selectedCountry, handleSearch, specificCountryGuess, handleInput, setPopupError]
   );
