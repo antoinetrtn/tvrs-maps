@@ -192,63 +192,57 @@ function renderGlitchLabel(
   }, 150);
 }
 
-function getScrambledHtml(ratio, ctx) {
-  const {
-    d,
-    mode,
-    isDeptMode,
-    isUsStatesMode,
-    revealAll,
-    isFoundMinimized,
-    flagHtml,
-    labelRowLayout,
-    UI_COLORS,
-    color,
-    itemData,
-    dims,
-    labelBg,
-  } = ctx;
-  let scrambledLine1;
-  let scrambledLine2 = null;
-  const scramble = (txt) => (ratio <= 0.0 ? txt : scrambleTextWithRatio(txt, ratio));
-  const displayName = revealAll ? d.country : "???";
-  const displayCapital = revealAll ? d.capital : "???";
+function buildDeptLabelContent(scramble, ctx) {
+  const { d, revealAll, color, UI_COLORS } = ctx;
+  const rawCode = d.code
+    ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>`
+    : "";
+  const name = scramble(revealAll ? d.country : "???");
+  const cap = d.capital && revealAll ? ` (${scramble(d.capital)})` : "";
+  return { line1: `${rawCode}<span>${name}${cap}</span>`, line2: null };
+}
 
-  if (isDeptMode) {
-    const rawCode = d.code
-      ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>`
-      : "";
-    const capitalStr = d.capital && revealAll ? ` (${scramble(displayCapital)})` : "";
-    scrambledLine1 = `${rawCode}<span>${scramble(displayName)}${capitalStr}</span>`;
-  } else if (isUsStatesMode) {
-    const rawCode = d.code
-      ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>`
-      : "";
-    const capitalStr = d.capital && revealAll ? ` (${scramble(displayCapital)})` : "";
-    const textSpan = `<span>${rawCode}${scramble(displayName)}${capitalStr}</span>`;
-    scrambledLine1 = flagHtml
-      ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
-      : textSpan;
-  } else {
-    const isMtn = itemData?.type === "mountain_range" || itemData?.type === "mountain";
-    let iconSymbol = "";
-    if (d.mode === "rivers_mountains") {
-      iconSymbol = isMtn ? "🏔️ " : "💧 ";
-    }
-    const isCapitalsMode = d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals);
-    let baseLine1Text = isCapitalsMode ? `${d.capital}` : `${d.country}`;
-    if (revealAll && d.capital && !isCapitalsMode && !isFoundMinimized) {
-      baseLine1Text = `${d.country} (${d.capital})`;
-    }
-    const emojiPrefix = d.iso2 ? "" : `${iconSymbol || d.flag || ""}`;
-    const textSpan = `<span>${emojiPrefix}${emojiPrefix ? " " : ""}${scramble(baseLine1Text)}</span>`;
-    scrambledLine1 = flagHtml
-      ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
-      : textSpan;
-    if (isCapitalsMode && !d.hideCountryLine && !isFoundMinimized) {
-      scrambledLine2 = scramble(d.country);
-    }
+function buildUsStateLabelContent(scramble, ctx) {
+  const { d, revealAll, color, UI_COLORS, flagHtml, labelRowLayout } = ctx;
+  const rawCode = d.code
+    ? `<span style="font-weight: 800; background: ${color}; color: ${UI_COLORS.textInverse}; padding: 1px 4px; border-radius: 3px; font-size: calc(12px * var(--ui-scale, 1)); line-height: 1.1; margin-right: 4px;">${d.code}</span>`
+    : "";
+  const name = scramble(revealAll ? d.country : "???");
+  const cap = d.capital && revealAll ? ` (${scramble(d.capital)})` : "";
+  const textSpan = `<span>${rawCode}${name}${cap}</span>`;
+  const line1 = flagHtml
+    ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
+    : textSpan;
+  return { line1, line2: null };
+}
+
+function buildDefaultLabelContent(scramble, ctx) {
+  const { d, mode, revealAll, isFoundMinimized, flagHtml, labelRowLayout, itemData } = ctx;
+  const isMtn = itemData?.type === "mountain_range" || itemData?.type === "mountain";
+  let iconSymbol = "";
+  if (d.mode === "rivers_mountains") iconSymbol = isMtn ? "🏔️ " : "💧 ";
+  const isCapitals = d.mode === "capitals" || (mode === "learn" && d.learnShowCapitals);
+  let baseText = isCapitals ? `${d.capital}` : `${d.country}`;
+  if (revealAll && d.capital && !isCapitals && !isFoundMinimized) {
+    baseText = `${d.country} (${d.capital})`;
   }
+  const prefix = d.iso2 ? "" : `${iconSymbol || d.flag || ""}`;
+  const textSpan = `<span>${prefix}${prefix ? " " : ""}${scramble(baseText)}</span>`;
+  const line1 = flagHtml
+    ? `<div style="display:flex; ${labelRowLayout}">${flagHtml}${textSpan}</div>`
+    : textSpan;
+  const line2 = isCapitals && !d.hideCountryLine && !isFoundMinimized ? scramble(d.country) : null;
+  return { line1, line2 };
+}
+
+function getScrambledHtml(ratio, ctx) {
+  const { isDeptMode, isUsStatesMode, UI_COLORS, dims, labelBg } = ctx;
+  const scramble = (txt) => (ratio <= 0.0 ? txt : scrambleTextWithRatio(txt, ratio));
+
+  let scrambled;
+  if (isDeptMode) scrambled = buildDeptLabelContent(scramble, ctx);
+  else if (isUsStatesMode) scrambled = buildUsStateLabelContent(scramble, ctx);
+  else scrambled = buildDefaultLabelContent(scramble, ctx);
 
   const fontFamily = ratio > 0.0 ? "var(--font-display, monospace) !important" : "inherit";
   const subLineColor = isDeptMode
@@ -256,12 +250,12 @@ function getScrambledHtml(ratio, ctx) {
     : `color-mix(in srgb, ${UI_COLORS.textMain} 88%, transparent)`;
   const subLineMargin = isDeptMode ? "3px" : "2px";
   const subFontWeight = isDeptMode ? 600 : 500;
-  const subLineHtml = scrambledLine2
-    ? `<div style="font-weight: ${subFontWeight}; font-size: calc(${dims.subSize} * var(--ui-scale, 1)); min-height: calc(${dims.subHeight} * var(--ui-scale, 1)); line-height: calc(${dims.subHeight} * var(--ui-scale, 1)); color: ${subLineColor}; margin-top: ${subLineMargin}; font-family: ${fontFamily};">${scrambledLine2}</div>`
+  const subLineHtml = scrambled.line2
+    ? `<div style="font-weight: ${subFontWeight}; font-size: calc(${dims.subSize} * var(--ui-scale, 1)); min-height: calc(${dims.subHeight} * var(--ui-scale, 1)); line-height: calc(${dims.subHeight} * var(--ui-scale, 1)); color: ${subLineColor}; margin-top: ${subLineMargin}; font-family: ${fontFamily};">${scrambled.line2}</div>`
     : "";
 
   return `
-    <div style="${labelBg} font-weight: 700; font-size: calc(${dims.mainSize} * var(--ui-scale, 1)); min-height: calc(${dims.mainHeight} * var(--ui-scale, 1)); line-height: calc(${dims.mainHeight} * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: ${fontFamily};">${scrambledLine1}</div>
+    <div style="${labelBg} font-weight: 700; font-size: calc(${dims.mainSize} * var(--ui-scale, 1)); min-height: calc(${dims.mainHeight} * var(--ui-scale, 1)); line-height: calc(${dims.mainHeight} * var(--ui-scale, 1)); display: flex; align-items: center; justify-content: center; gap: 4px; font-family: ${fontFamily};">${scrambled.line1}</div>
     ${subLineHtml}
   `;
 }

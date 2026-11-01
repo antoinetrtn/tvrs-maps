@@ -145,7 +145,13 @@ export default function RulesIllustration({ labels }) {
     .join(" ");
 
   return (
-    <figure ref={rootRef} className={classNames} style={FRAME_STYLE} role="img" aria-label={l.alt}>
+    <figure
+      ref={rootRef}
+      className={classNames}
+      style={FRAME_STYLE}
+      role="img" // NOSONAR
+      aria-label={l.alt}
+    >
       <div className="ri-legend" aria-hidden="true">
         <span className="ri-legend-item">
           <span className="ri-swatch ri-swatch-you" />

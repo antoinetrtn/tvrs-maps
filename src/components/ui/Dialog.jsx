@@ -73,9 +73,9 @@ export default function Dialog({
         {/* The panel only isolates pointer events from the globe layer behind it; it is a dialog
             surface, not a control. */}
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
-        <div
+        <dialog
           ref={surfaceRef}
-          role="dialog"
+          open
           aria-modal="true"
           {...ariaName}
           inert={!open}
@@ -86,7 +86,7 @@ export default function Dialog({
           {...rest}
         >
           {children}
-        </div>
+        </dialog>
       </DialogContext.Provider>
     );
   }
@@ -125,15 +125,9 @@ export default function Dialog({
           onClick={onClose}
           data-testid={backdropTestId}
         />
-        {isSheet ? (
-          <dialog open {...surfaceProps}>
-            {children}
-          </dialog>
-        ) : (
-          <div role="dialog" {...surfaceProps}>
-            {children}
-          </div>
-        )}
+        <dialog open {...surfaceProps}>
+          {children}
+        </dialog>
       </div>
     </DialogContext.Provider>,
     document.body

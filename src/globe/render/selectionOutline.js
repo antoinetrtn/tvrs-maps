@@ -103,20 +103,25 @@ function findIntersectionsAtLat(pts, lat) {
   return xs;
 }
 
-function rasterizeRow(j, { oy, ox, w, cell, wraps, pts, inside }) {
-  const lat = Math.max(-90 + cell / 2, Math.min(90 - cell / 2, (oy + j + 0.5) * cell));
-  const xs = findIntersectionsAtLat(pts, lat);
+function fillRowCells(j, { ox, w, cell, wraps, xs, inside }) {
   const shift = wraps ? (lng) => lng - Math.floor((lng + 180) / 360) * 360 : (lng) => lng;
-
   let n = 0;
   let prev = -Infinity;
   for (let i = 0; i < w; i++) {
     const lng = shift((ox + i + 0.5) * cell);
     if (lng < prev) n = 0;
     prev = lng;
-    while (n < xs.length && xs[n] < lng) n++;
+    while (n < xs.length && xs[n] < lng) {
+      n++;
+    }
     if (n % 2) inside[j * N + i] = INSIDE_VALUE;
   }
+}
+
+function rasterizeRow(j, { oy, ox, w, cell, wraps, pts, inside }) {
+  const lat = Math.max(-90 + cell / 2, Math.min(90 - cell / 2, (oy + j + 0.5) * cell));
+  const xs = findIntersectionsAtLat(pts, lat);
+  fillRowCells(j, { ox, w, cell, wraps, xs, inside });
 }
 
 function rasterizeMicrostates({ pts, ox, oy, w, h, cell, inside }) {

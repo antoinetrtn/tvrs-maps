@@ -37,6 +37,8 @@
 
 .ui-dialog {
   position: relative;
+  margin: 0;
+  color: inherit;
 }
 
 /* ──── Modal card ──── */

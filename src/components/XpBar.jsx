@@ -19,7 +19,7 @@ const XpBar = ({ percent = 0, variant = "bar", cells, label, className = "", sty
 
   return (
     <div
-      role="progressbar"
+      role="progressbar" // NOSONAR
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={roundedPercent}

@@ -182,14 +182,10 @@ const PlayerList = ({ t, players, match, userId, online }) => (
     ))}
     {players.length < 2 && (
       <SettingsRow>
-        <div
-          className="conquest-player-chip conquest-player-chip--empty"
-          role="status"
-          aria-label={t.waiting}
-        >
+        <output className="conquest-player-chip conquest-player-chip--empty" aria-label={t.waiting}>
           <span className="conquest-swatch conquest-swatch--empty" aria-hidden="true" />
           <span className="conquest-player-waiting">{t.waiting}</span>
-        </div>
+        </output>
       </SettingsRow>
     )}
   </SettingsSection>

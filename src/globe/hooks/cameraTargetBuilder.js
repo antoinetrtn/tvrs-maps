@@ -89,14 +89,11 @@ function resolveTargetAltitude({
   }
 
   if (customPOV && !isAntarctica) {
-    return isHomeScreen
-      ? customPOV.altitude
-      : clampGlobeAltitude(
-          Math.min(
-            preservedAltitude,
-            customPOV.altitude * (hasPreviousSelection ? REGIONAL_PICK_ZOOM : 1)
-          )
-        );
+    if (isHomeScreen) {
+      return customPOV.altitude;
+    }
+    const zoomMultiplier = hasPreviousSelection ? REGIONAL_PICK_ZOOM : 1;
+    return clampGlobeAltitude(Math.min(preservedAltitude, customPOV.altitude * zoomMultiplier));
   }
 
   if (isAntarctica) {
@@ -108,6 +105,13 @@ function resolveTargetAltitude({
   return isHomeScreen ? fallbackAltitude : preservedAltitude;
 }
 
+function resolveDefaultTargetAltitude(isHomeScreen, isMobile) {
+  if (isHomeScreen) {
+    return isMobile ? 2.0 : 1.25;
+  }
+  return isMobile ? 1.8 : 0.68;
+}
+
 const buildSelectedCountryCameraTarget = (opts) => {
   const { data, viewport, isHomeScreen, isKeyboardMode, customPOV } = opts;
   const { hasPreviousSelection, currentPOV, canonicalPositions = {} } = opts;
@@ -115,7 +119,7 @@ const buildSelectedCountryCameraTarget = (opts) => {
 
   const isMobile = viewport.width < BREAKPOINTS.mobile;
   const customModeAltitude = customPOV ? customPOV.altitude : null;
-  const defaultAltitude = isHomeScreen ? (isMobile ? 2.0 : 1.25) : isMobile ? 1.8 : 0.68;
+  const defaultAltitude = resolveDefaultTargetAltitude(isHomeScreen, isMobile);
   const fallbackAltitude = customModeAltitude ?? defaultAltitude;
   const preservedAltitude =
     currentPOV && Number.isFinite(currentPOV.altitude) ? currentPOV.altitude : fallbackAltitude;

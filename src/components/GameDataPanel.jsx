@@ -179,7 +179,7 @@ const GameDataPanel = ({
                   )}
                 </header>
 
-                <div className="data-panel-table" role="table">
+                <div className="data-panel-table">
                   {rows.map((row) => (
                     <GameDataPanelRow
                       key={row.key}
