@@ -45,6 +45,8 @@ export function useGlobeRenderPipeline({
     modeTransitionRef,
     transitionStep,
     transitionLive,
+    effectiveDepartmentMode = isDepartmentMode,
+    effectiveUsStatesMode = isUsStatesMode,
   } = renderDataResult;
 
   canonicalRef.current = canonicalPositions;
@@ -62,5 +64,7 @@ export function useGlobeRenderPipeline({
     modeTransitionRef,
     transitionStep,
     transitionLive,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
   };
 }

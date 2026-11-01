@@ -39,8 +39,7 @@ export const GLSL_BAYER_4X4_FN = `
   }
 `;
 
-// Pass the view-space normal and position through to the fragment stage so the
-// fragment shader can compute a true perspective Fresnel term per pixel.
+// View-space normal/position to the fragment stage (per-pixel perspective Fresnel).
 export const FRESNEL_VERTEX_SHADER = `
   varying vec3 vAtmosphereNormal;
   varying vec3 vAtmosphereViewPos;
@@ -65,17 +64,12 @@ export const FRESNEL_FRAGMENT_SHADER = `
     vec3 normal = normalize(vAtmosphereNormal);
     vec3 viewDir = normalize(vAtmosphereViewPos);
 
-    // True perspective dot product between view direction and surface normal.
-    // For BackSide rendering, normal points outwards, and viewDir points from camera
-    // to the vertex (which is also generally away from the camera).
-    // Thus, the dot product is positive on the back hemisphere.
+    // View/normal dot on the BackSide sphere: positive on the back hemisphere.
     float x = clamp(dot(normal, viewDir), 0.0, 1.0);
 
-    // Ultra-soft gradual atmospheric gradient fading from maximum at the horizon (x = 0.62)
-    // to 0.0 at the outer limit of space (x = 0.0).
+    // Soft gradient: max at the horizon (x = 0.62), 0 in space (x = 0).
     float edgeFade = smoothstep(0.0, 0.62, x);
 
-    // Higher exponent creates a more gentle, soft, and diffuse gradient transition
     float exponent = max(1.8, power * 2.0);
     float rawIntensity = pow(edgeFade, exponent) * coef;
 
@@ -130,6 +124,7 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uIsRegionalMode;
 ${FEAT.FEATURE_DECLARATIONS}
   uniform sampler2D uCapitalLightsMap;
+  uniform sampler2D uBiomeMap;
   uniform sampler2D uSelOutlineMap;
   uniform vec4 uSelOutlineBox;
   ${SELECT_CITY_DEFS}
@@ -204,13 +199,14 @@ export const GLITCH_FRAGMENT_BODY = `
   // ignition) glow dim amber in stepped order, border traced in square pixels.
   float isWall = step(0.5, uIsSide);
   // Flat selection (no extrusion): pixel outline read from the per-selection mask, on
-  // a lat/lng grid of uSelOutlineBox.z degrees (square cells, see selectionOutline.js).
+  // a lat/lng grid of uSelOutlineBox.zw degrees (square cells on the globe, see selectionOutline.js).
   vec2 selDeg = vec2(degrees(atan(sphereDir.x, sphereDir.z)), degrees(sphereLat));
-  vec2 selOc = (selDeg - uSelOutlineBox.xy) / uSelOutlineBox.z;
-  selOc.x = mod(selOc.x, 360.0 / uSelOutlineBox.z);
+  vec2 selCellSize = uSelOutlineBox.zw;
+  vec2 selOc = (selDeg - uSelOutlineBox.xy) / selCellSize;
+  selOc.x = mod(selOc.x, 360.0 / selCellSize.x);
   vec2 selOcCell = floor(selOc);
-  float selInBox = step(selOc.x, uSelOutlineBox.w) * step(0.0, selOc.y) * step(selOc.y, uSelOutlineBox.w);
-  vec2 selOcUv = (selOcCell + 0.5) / max(uSelOutlineBox.w, 1.0);
+  float selInBox = step(0.0, selOc.x) * step(selOc.x, 1024.0) * step(0.0, selOc.y) * step(selOc.y, 1024.0);
+  vec2 selOcUv = (selOcCell + 0.5) / 1024.0;
   float selEdgeV = texture2D(uSelOutlineMap, selOcUv).r * selInBox * (1.0 - isWall);
   float selectIn = clamp((uTime - uSelectStart) / 0.5, 0.0, 1.0);
   float lightProg = (transitionActive > 0.5) ? 1.0 - floor(uFadeProgress * 5.0) / 5.0 : floor(selectIn * 6.0) / 6.0;
@@ -219,7 +215,7 @@ export const GLITCH_FRAGMENT_BODY = `
   float isCityPx = step(0.25, texture2D(uCapitalLightsMap, selUv).r) * (1.0 - isWall);
   float cityOn = isCityPx * step(hash(selCell + 3.7), lightProg * 1.15 - 0.15);
   float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
-  float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0) * (1.0 - transitionActive);
+  float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0);
   float edgeOuter = step(0.9, selEdgeV) * edgeOn;
   float edgeHalo = step(0.15, selEdgeV) * (1.0 - step(0.9, selEdgeV)) * edgeOn;
   // Halo breathes in a few flat steps (pixel-art, no strobe); still under reduced motion.
@@ -241,6 +237,10 @@ export const GLITCH_FRAGMENT_BODY = `
     * mix(BLACKOUT_TINT, BLACKOUT_TINT_HOME, uShowcaseLights);
   vec3 unfoundRestColor = mix(litRestingColor, restGrey, restBlackout * 0.88)
     * mix(1.0, mix(0.36, 0.74, uIsRegionalMode), 1.0 - uShowcaseLights);
+  vec4 biomeS = texture2D(uBiomeMap, selUv);
+  float ndv = clamp(dot(sphereDir, normalize(cameraPosition - vWorldPosition)), 0.0, 1.0);
+  unfoundRestColor = mix(unfoundRestColor, biomeS.rgb * (0.88 + 0.18 * (1.0 - ndv)),
+    uShowcaseLights * uIsRegionalMode * biomeS.a * (1.0 - isWall) * 0.92);
   float deselectDone = step(0.994, uFadeProgress);
 
   vec3 finalColor = gl_FragColor.rgb;
@@ -269,7 +269,7 @@ export const GLITCH_FRAGMENT_BODY = `
   } else if (isFoundSurface) {
     gl_FragColor.rgb = foundRestingColor * sideShade;
   } else if (transitionActive > 0.5) {
-    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter));
+    gl_FragColor.rgb = mix(settleColor, staticVec * sideShade, step(0.01, cityOn + wallOn + edgeOuter + edgeHalo));
   } else {
     gl_FragColor.rgb = mix(staticVec, unfoundRestColor, deselectDone) * sideShade;
   }

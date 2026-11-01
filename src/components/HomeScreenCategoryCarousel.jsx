@@ -141,6 +141,9 @@ function useCarouselNavigation({
 }) {
   const [animatingDirection, setAnimatingDirection] = useState(null);
   const isAnimatingRef = useRef(false);
+  const animTimerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(animTimerRef.current), []);
 
   const triggerAnimatedChange = useCallback(
     (direction, targetIdxOverride = null) => {
@@ -156,7 +159,7 @@ function useCarouselNavigation({
             : (activeIndex - 1 + totalModes) % totalModes;
       setHomeMode(gameModesCarousel[nextIdx].key);
 
-      setTimeout(() => {
+      animTimerRef.current = setTimeout(() => {
         setAnimatingDirection(null);
         isAnimatingRef.current = false;
       }, 200);

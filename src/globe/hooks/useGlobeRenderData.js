@@ -24,7 +24,7 @@ import useModeTransitionSteps from "./useModeTransitionSteps";
 export function buildExitingFeatures(trans, countriesData, departmentsData, usStatesData) {
   const exiting = [];
   const pushRegional = (features, map) =>
-    features
+    (features || [])
       .filter((feature) => map[getFeatureAdmin(feature)])
       .forEach((feature) =>
         exiting.push({
@@ -41,7 +41,7 @@ export function buildExitingFeatures(trans, countriesData, departmentsData, usSt
     const parents = new Set();
     if (trans.toDept) parents.add("France");
     if (trans.toUs) parents.add("United States of America");
-    countriesData
+    (countriesData || [])
       .filter((feature) => parents.has(getFeatureAdmin(feature)))
       .forEach((feature) =>
         exiting.push({
@@ -86,21 +86,50 @@ export function useGlobeRenderData({
     duration: MODE_TRANSITION_MS,
   });
 
-  const prevModeRef = useRef({ isDepartmentMode, isUsStatesMode });
+  const hasDepartments = Boolean(departmentsData && departmentsData.length > 0);
+  const hasUsStates = Boolean(usStatesData && usStatesData.length > 0);
+
+  const targetMode = isDepartmentMode ? "departments" : isUsStatesMode ? "us_states" : "world";
+
+  const isTargetReady =
+    targetMode === "departments" ? hasDepartments : targetMode === "us_states" ? hasUsStates : true;
+
+  const effectiveModeRef = useRef(
+    isDepartmentMode && hasDepartments
+      ? "departments"
+      : isUsStatesMode && hasUsStates
+        ? "us_states"
+        : "world"
+  );
+
+  const currentEffective = effectiveModeRef.current;
+  let nextEffective = currentEffective;
+  if (isTargetReady) {
+    nextEffective = targetMode;
+  } else {
+    // If incoming data is not ready, stay on previous layer if its data is still valid, else fallback to world.
+    if (currentEffective === "departments" && !hasDepartments) nextEffective = "world";
+    if (currentEffective === "us_states" && !hasUsStates) nextEffective = "world";
+  }
+
+  const effectiveDepartmentMode = nextEffective === "departments";
+  const effectiveUsStatesMode = nextEffective === "us_states";
+
   const reducedMotion = usePrefersReducedMotion();
 
   // Started while rendering (not in an effect) so the very first frame of the new
   // layer already carries the transition: an effect landed after the data swap and
   // left the old layer to vanish in a single frame.
-  const prev = prevModeRef.current;
-  if (prev.isDepartmentMode !== isDepartmentMode || prev.isUsStatesMode !== isUsStatesMode) {
-    prevModeRef.current = { isDepartmentMode, isUsStatesMode };
+  if (nextEffective !== currentEffective) {
+    const fromDept = currentEffective === "departments";
+    const fromUs = currentEffective === "us_states";
+    effectiveModeRef.current = nextEffective;
     modeTransitionRef.current = {
       active: !reducedMotion,
-      fromDept: prev.isDepartmentMode,
-      fromUs: prev.isUsStatesMode,
-      toDept: isDepartmentMode,
-      toUs: isUsStatesMode,
+      fromDept,
+      fromUs,
+      toDept: effectiveDepartmentMode,
+      toUs: effectiveUsStatesMode,
       startTime: nowMs(),
       duration: MODE_TRANSITION_MS,
     };
@@ -110,12 +139,20 @@ export function useGlobeRenderData({
   const transitionStep = useModeTransitionSteps(modeTransitionRef, transitionLive);
 
   const selectableCountriesData = useMemo(() => {
-    if (isDepartmentMode)
-      return departmentsData.filter((feature) => departmentsDataMap[getFeatureAdmin(feature)]);
-    if (isUsStatesMode)
-      return usStatesData.filter((feature) => usStatesDataMap[getFeatureAdmin(feature)]);
-    return countriesData.filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
-  }, [countriesData, departmentsData, usStatesData, isDepartmentMode, isUsStatesMode]);
+    if (effectiveDepartmentMode)
+      return (departmentsData || []).filter(
+        (feature) => departmentsDataMap[getFeatureAdmin(feature)]
+      );
+    if (effectiveUsStatesMode)
+      return (usStatesData || []).filter((feature) => usStatesDataMap[getFeatureAdmin(feature)]);
+    return (countriesData || []).filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
+  }, [
+    countriesData,
+    departmentsData,
+    usStatesData,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
+  ]);
 
   const worldCountriesRenderData = useMemo(() => {
     return countriesData.map((feature) => ({
@@ -132,9 +169,9 @@ export function useGlobeRenderData({
   }, [selectableCountriesData]);
 
   const finalRenderCountriesData = useMemo(() => {
-    if (!isDepartmentMode && !isUsStatesMode) return worldCountriesRenderData;
+    if (!effectiveDepartmentMode && !effectiveUsStatesMode) return worldCountriesRenderData;
 
-    const exclusions = isDepartmentMode ? ["France"] : ["United States of America"];
+    const exclusions = effectiveDepartmentMode ? ["France"] : ["United States of America"];
     const exclusionSet = new Set(exclusions);
 
     const ghostWorld = countriesData
@@ -156,8 +193,8 @@ export function useGlobeRenderData({
     worldCountriesRenderData,
     baseRenderCountriesData,
     countriesData,
-    isDepartmentMode,
-    isUsStatesMode,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
   ]);
 
   // While the layers cross-fade, the outgoing features stay in the data; the
@@ -198,13 +235,23 @@ export function useGlobeRenderData({
 
   const countriesWithGeometry = useMemo(() => {
     const set = new Set();
-    const list = isDepartmentMode ? departmentsData : isUsStatesMode ? usStatesData : countriesData;
-    list.forEach((feature) => {
+    const list = effectiveDepartmentMode
+      ? departmentsData
+      : effectiveUsStatesMode
+        ? usStatesData
+        : countriesData;
+    (list || []).forEach((feature) => {
       const admin = getFeatureAdmin(feature);
       if (admin) set.add(admin);
     });
     return set;
-  }, [countriesData, departmentsData, usStatesData, isDepartmentMode, isUsStatesMode]);
+  }, [
+    countriesData,
+    departmentsData,
+    usStatesData,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
+  ]);
 
   const canonicalPositions = useMemo(() => {
     const map = {};
@@ -228,7 +275,10 @@ export function useGlobeRenderData({
   }, [selectableFeatureIndex, gameDataMap]);
 
   return {
-    isDepartmentMode,
+    isDepartmentMode: effectiveDepartmentMode,
+    isUsStatesMode: effectiveUsStatesMode,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
     selectableCountriesData,
     baseRenderCountriesData,
     renderCountriesData,

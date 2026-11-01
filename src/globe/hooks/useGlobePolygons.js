@@ -26,6 +26,7 @@ import {
   isQuietOwnedFocusFor,
   isSameAdmin,
   mutedFoundGreen,
+  REGIONAL_HOME_RESTING_LAND,
   resolveCountryCapColor,
   resolveEndMissedColor,
   resolveFoundCountryColor,
@@ -72,6 +73,10 @@ export function useGlobePolygons({
   transitionStep = 0,
 }) {
   const isRegionalMode = isDepartmentMode || isUsStatesMode;
+  const isHomeScreenRef = useRef(isHomeScreen);
+  isHomeScreenRef.current = isHomeScreen;
+  const isRegionalModeRef = useRef(isRegionalMode);
+  isRegionalModeRef.current = isRegionalMode;
   // Discovery reveal starts on the correct guess, not after the auto-advance delay: the
   // guessed country renders as found right away so its own land/cities reveal (grain
   // shader, discoveryTimeline.js) runs from t = 0 instead of a full-country flash.
@@ -192,6 +197,10 @@ export function useGlobePolygons({
         if (isDeptSelected) {
           if (isError) return UI_COLORS.error;
           return UI_COLORS.accent;
+        }
+
+        if (isHomeScreenRef.current) {
+          return REGIONAL_HOME_RESTING_LAND;
         }
 
         const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
@@ -401,7 +410,16 @@ export function useGlobePolygons({
           isSelected: isSameAdmin(admin, selectedCountry, gameDataMap),
         })
       ) {
+        if (isHomeScreenRef.current && isRegionalModeRef.current) {
+          return REGIONAL_HOME_RESTING_LAND;
+        }
         return getRegionalLandColor(region);
+      }
+
+      if (isHomeScreenRef.current && isRegionalModeRef.current) {
+        return kind === "side"
+          ? lerpColor(REGIONAL_HOME_RESTING_LAND, UI_COLORS.black, 0.08)
+          : REGIONAL_HOME_RESTING_LAND;
       }
 
       const baseColor = resolveCountryCapColor({
@@ -463,6 +481,7 @@ export function useGlobePolygons({
         admin,
         isFound,
         isEndScreen,
+        isHomeScreen,
         isPerfectScore,
         isRegionalMode,
         UI_COLORS,
