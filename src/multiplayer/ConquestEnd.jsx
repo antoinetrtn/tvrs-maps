@@ -19,12 +19,12 @@ import { conquestText } from "./conquestText";
 
 const EndHeader = ({ winner, userId, t, result, elo, onExit }) => {
   const isMe = winner && winner.user_id === userId;
-  const headline = winner ? (isMe ? t.youWin : winner.display_name) : t.draw;
-  const headlineFull = winner
-    ? isMe
-      ? t.youWinFull || t.youWin
-      : `${t.winner} ${winner.display_name}`
-    : t.drawFull || t.draw;
+  let headline = t.draw;
+  let headlineFull = t.drawFull || t.draw;
+  if (winner) {
+    headline = isMe ? t.youWin : winner.display_name;
+    headlineFull = isMe ? t.youWinFull || t.youWin : `${t.winner} ${winner.display_name}`;
+  }
 
   return (
     <header className="conquest-header">

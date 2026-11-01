@@ -100,8 +100,14 @@ const GameDataPanel = ({
     row?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [selectedCountry]);
 
-  const panelTitle =
-    title || (isGameOver ? t("game_over") : isLearnMode ? t("mode_learn") : t("progress_title"));
+  const resolvePanelTitle = () => {
+    if (title) return title;
+    if (isGameOver) return t("game_over");
+    if (isLearnMode) return t("mode_learn");
+    return t("progress_title");
+  };
+
+  const panelTitle = resolvePanelTitle();
 
   const scoreLabel = score !== undefined && total !== undefined ? `${score}/${total}` : null;
 

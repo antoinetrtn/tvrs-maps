@@ -170,6 +170,7 @@ export default function RulesIllustration({ labels }) {
             preload="metadata"
             poster={POSTER_SRC}
             aria-hidden="true"
+            tabIndex={-1}
             onTimeUpdate={handleTimeUpdate}
           >
             {hasEntered && (

@@ -82,8 +82,12 @@ function saveGuestProfile({ cleanUsername, selectedAvatar, selectedColor, userPr
 function buildChallengeAvatarItem(chId, mapping, unlockedBadges, lang) {
   const ch = CHALLENGES.find((c) => c.id === chId);
   const isFrench = lang === "fr";
-  const label = ch ? (isFrench ? ch.titleFr : ch.titleEn) : "Mission";
-  const desc = ch ? (isFrench ? ch.descFr : ch.descEn) : "";
+  let label = "Mission";
+  let desc = "";
+  if (ch) {
+    label = isFrench ? ch.titleFr : ch.titleEn;
+    desc = isFrench ? ch.descFr : ch.descEn;
+  }
   const isLocked = chId === "ch_gen_play_1" ? false : !unlockedBadges.includes(chId);
 
   return {

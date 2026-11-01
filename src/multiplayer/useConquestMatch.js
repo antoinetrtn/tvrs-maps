@@ -341,12 +341,12 @@ export function useConquestMatch({ lang, displayName }) {
   // Still polled on the end screen (slowly) so a rematch offer shows up.
   useEffect(() => {
     if (!status) return undefined;
-    const every =
-      status === "finished"
-        ? RESYNC_FINISHED_MS
-        : realtimeUp
-          ? RESYNC_REALTIME_MS
-          : RESYNC_DEGRADED_MS;
+    let every = RESYNC_DEGRADED_MS;
+    if (status === "finished") {
+      every = RESYNC_FINISHED_MS;
+    } else if (realtimeUp) {
+      every = RESYNC_REALTIME_MS;
+    }
     const id = setInterval(refresh, every);
     return () => clearInterval(id);
   }, [status, refresh, realtimeUp]);

@@ -160,8 +160,7 @@ export function useGameSessionProps({
       isPerfectScore: foundList.length === totalPossible,
       onPreserveInputFocus: preserveInputFocus,
       activeDataMap,
-      learnSubMode:
-        currentScreen === "home" ? (homeMode === "capitals" ? "capitals" : homeMode) : learnSubMode,
+      learnSubMode: currentScreen === "home" ? homeMode : learnSubMode,
       globeFeedbackRef,
       globeFeedbackApplierRef,
     }),

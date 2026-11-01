@@ -31,7 +31,7 @@ export function computeShieldBadge(shield, player) {
   const level = Math.max(0, Math.min(2, Number(shield.level) || 0));
   const text = formatShieldSeconds(ms);
 
-  const maxMs = level === 2 ? 110000 : level === 1 ? 50000 : 20000;
+  const maxMs = [20000, 50000, 110000][level] ?? 20000;
   const fraction = Math.min(1, Math.max(0, ms / maxMs));
   const step = Math.min(8, Math.max(0, Math.ceil(fraction * 8)));
 

@@ -109,18 +109,12 @@ function stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode) {
   }
 }
 
+const TENTACLES_BY_MODE = { secondary: 4, compact: 5, major: 7 };
+const STEPS_BY_MODE = { secondary: 9, compact: 11, major: 23 };
+
 function stampSubBranch(
   data,
-  lng,
-  cosLat,
-  seed,
-  t,
-  s,
-  startLat,
-  startLonScaled,
-  startAngle,
-  remSteps,
-  isFirstFork
+  { lng, cosLat, seed, t, s, startLat, startLonScaled, startAngle, remSteps, isFirstFork }
 ) {
   const forkSign = hash1(seed + t * 307.1 + s) > 0.5 ? 1 : -1;
   let bAngle = startAngle + forkSign * (0.52 + hash1(seed + t * 349.7 + s) * 0.38);
@@ -147,15 +141,7 @@ function stampSubBranch(
 
 function stampTentacleSatellites(
   data,
-  lat,
-  lng,
-  cosLat,
-  scaleMode,
-  seed,
-  t,
-  numTentacles,
-  totalSteps,
-  baseAngle
+  { lat, lng, cosLat, scaleMode, seed, t, numTentacles, totalSteps, baseAngle }
 ) {
   const satCount = scaleMode === "compact" || scaleMode === "secondary" ? 1 : 2;
   for (let k = 0; k < satCount; k++) {
@@ -199,7 +185,10 @@ function getTentacleKeepProbability(progress) {
   return 0.64;
 }
 
-function stampTentaclePoint(data, curLat, curLng, cosLat, progress, isNodeHub, angle, stepRand) {
+function stampTentaclePoint(
+  data,
+  { curLat, curLng, cosLat, progress, isNodeHub, angle, stepRand }
+) {
   const baseIntensity = getTentacleBaseIntensity(progress);
   const targetIntensity = isNodeHub ? Math.max(baseIntensity + 28, 195) : baseIntensity;
   const rVal = Math.max(78, Math.min(248, Math.round(targetIntensity)));
@@ -232,14 +221,7 @@ function checkTentacleForks(s, totalSteps, seed, t, scaleMode) {
 
 function stampPrimaryTentacle(
   data,
-  lat,
-  lng,
-  seed,
-  cosLat,
-  scaleMode,
-  t,
-  numTentacles,
-  maxStepsBase
+  { lat, lng, seed, cosLat, scaleMode, t, numTentacles, maxStepsBase }
 ) {
   const baseAngle = (t / numTentacles) * Math.PI * 2;
   let angle = baseAngle + (hash1(seed + t * 13.7) - 0.5) * 0.52;
@@ -260,29 +242,35 @@ function stampPrimaryTentacle(
     const isNodeHub = isTentacleNodeHub(progress, seed, t);
 
     if (isNodeHub || stepRand <= getTentacleKeepProbability(progress)) {
-      stampTentaclePoint(data, curLat, curLng, cosLat, progress, isNodeHub, angle, stepRand);
+      stampTentaclePoint(data, {
+        curLat,
+        curLng,
+        cosLat,
+        progress,
+        isNodeHub,
+        angle,
+        stepRand,
+      });
     }
 
     const { shouldFork1, shouldFork2 } = checkTentacleForks(s, totalSteps, seed, t, scaleMode);
     if (shouldFork1 || shouldFork2) {
-      stampSubBranch(
-        data,
+      stampSubBranch(data, {
         lng,
         cosLat,
         seed,
         t,
         s,
-        curLat,
-        curLonScaled,
-        angle,
-        totalSteps - s,
-        shouldFork1
-      );
+        startLat: curLat,
+        startLonScaled: curLonScaled,
+        startAngle: angle,
+        remSteps: totalSteps - s,
+        isFirstFork: shouldFork1,
+      });
     }
   }
 
-  stampTentacleSatellites(
-    data,
+  stampTentacleSatellites(data, {
     lat,
     lng,
     cosLat,
@@ -291,20 +279,27 @@ function stampPrimaryTentacle(
     t,
     numTentacles,
     totalSteps,
-    baseAngle
-  );
+    baseAngle,
+  });
 }
 
 function stampCapitalTentacularWeb(data, lat, lng, seed, cosLat, scaleMode) {
   stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode);
 
-  const numTentacles =
-    scaleMode === "secondary" ? 4 : scaleMode === "compact" ? 5 : scaleMode === "major" ? 7 : 6;
-  const maxStepsBase =
-    scaleMode === "secondary" ? 9 : scaleMode === "compact" ? 11 : scaleMode === "major" ? 23 : 17;
+  const numTentacles = TENTACLES_BY_MODE[scaleMode] ?? 6;
+  const maxStepsBase = STEPS_BY_MODE[scaleMode] ?? 17;
 
   for (let t = 0; t < numTentacles; t++) {
-    stampPrimaryTentacle(data, lat, lng, seed, cosLat, scaleMode, t, numTentacles, maxStepsBase);
+    stampPrimaryTentacle(data, {
+      lat,
+      lng,
+      seed,
+      cosLat,
+      scaleMode,
+      t,
+      numTentacles,
+      maxStepsBase,
+    });
   }
 }
 
@@ -360,11 +355,12 @@ export function getCapitalLightsTexture() {
     const lng = info.lng;
     const cosLat = Math.max(0.22, Math.cos((lat * Math.PI) / 180));
     const seed = lat * 13.37 + lng * 7.91;
-    const scaleMode = COMPACT_CAPITALS.has(admin)
-      ? "compact"
-      : MAJOR_METROPOLISES.has(admin)
-        ? "major"
-        : "normal";
+    let scaleMode = "normal";
+    if (COMPACT_CAPITALS.has(admin)) {
+      scaleMode = "compact";
+    } else if (MAJOR_METROPOLISES.has(admin)) {
+      scaleMode = "major";
+    }
     stampCapitalTentacularWeb(data, lat, lng, seed, cosLat, scaleMode);
 
     const secondaryList = SECONDARY_CITIES_BY_COUNTRY[admin];

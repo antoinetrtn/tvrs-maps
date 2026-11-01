@@ -284,6 +284,12 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr" }) => {
     </form>
   );
 
+  const getSubmitButtonLabel = () => {
+    if (loading) return t("saving");
+    if (isCooldown) return "Attendez...";
+    return passwordButtonLabel;
+  };
+
   const renderPasswordStep = () => (
     <form onSubmit={handleSubmit} className="auth-modal-form">
       <TextField
@@ -307,19 +313,19 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr" }) => {
       />
 
       <Button type="submit" variant="primary" loading={loading} disabled={isCooldown} look="submit">
-        {loading ? t("saving") : isCooldown ? "Attendez..." : passwordButtonLabel}
+        {getSubmitButtonLabel()}
       </Button>
     </form>
   );
 
   if (!isOpen) return null;
 
-  const title =
-    step === "initial"
-      ? t("auth_modal_title")
-      : step === "email"
-        ? t("auth_tvrs_account")
-        : t("auth_password");
+  const getModalTitle = () => {
+    if (step === "initial") return t("auth_modal_title");
+    if (step === "email") return t("auth_tvrs_account");
+    return t("auth_password");
+  };
+  const title = getModalTitle();
 
   const renderHeader = () => (
     <div className="panel-header">
@@ -339,15 +345,13 @@ const AuthModal = ({ isOpen, onClose, onGuest, lang = "fr" }) => {
     </div>
   );
 
-  // Compute content outside JSX to reduce brace depth in return statement
-  const stepContent =
-    step === "initial"
-      ? renderInitialFlow()
-      : step === "email"
-        ? renderEmailStep()
-        : !successMsg
-          ? renderPasswordStep()
-          : null;
+  const getStepContent = () => {
+    if (step === "initial") return renderInitialFlow();
+    if (step === "email") return renderEmailStep();
+    if (!successMsg) return renderPasswordStep();
+    return null;
+  };
+  const stepContent = getStepContent();
 
   return (
     <Dialog onClose={onClose}>

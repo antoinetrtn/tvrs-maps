@@ -72,7 +72,7 @@ export function beaconColor(litFraction, t, phase = 0) {
   return UNFOUND.map((c, i) => (c * (1 - k) + FOUND[i] * k) * gain);
 }
 
-function projectBeaconsToScreen(count, unit, radius, camPos, camera, w, h, p, world, screen) {
+function projectBeaconsToScreen({ count, unit, radius, camPos, camera, w, h, p, world, screen }) {
   for (let i = 0; i < count; i++) {
     p.fromArray(unit[i]).multiplyScalar(radius);
     world[i * 3] = p.x;
@@ -101,7 +101,7 @@ function aggregateClusterStats(count, leader, found, litSum, members) {
   }
 }
 
-function updateBeaconInstances(
+function updateBeaconInstances({
   count,
   leader,
   mesh,
@@ -124,8 +124,8 @@ function updateBeaconInstances(
   s,
   t,
   phases,
-  color
-) {
+  color,
+}) {
   for (let i = 0; i < count; i++) {
     if (leader[i] !== i) {
       mesh.setMatrixAt(i, zero);
@@ -217,10 +217,10 @@ export function createMicroBeaconLayer(globe, admins, dataMap) {
     const h = renderer.domElement?.clientHeight || 800;
     const fov = ((camera.fov || 50) * Math.PI) / 180;
 
-    projectBeaconsToScreen(count, unit, radius, camPos, camera, w, h, p, world, screen);
+    projectBeaconsToScreen({ count, unit, radius, camPos, camera, w, h, p, world, screen });
     const leader = clusterScreenPoints(screen);
     aggregateClusterStats(count, leader, found, litSum, members);
-    updateBeaconInstances(
+    updateBeaconInstances({
       count,
       leader,
       mesh,
@@ -243,8 +243,8 @@ export function createMicroBeaconLayer(globe, admins, dataMap) {
       s,
       t,
       phases,
-      color
-    );
+      color,
+    });
 
     for (const im of [mesh, dim]) {
       im.instanceMatrix.needsUpdate = true;

@@ -209,11 +209,12 @@ function computeCountriesWithGeometry(
   countriesData
 ) {
   const set = new Set();
-  const list = effectiveDepartmentMode
-    ? departmentsData
-    : effectiveUsStatesMode
-      ? usStatesData
-      : countriesData;
+  let list = countriesData;
+  if (effectiveDepartmentMode) {
+    list = departmentsData;
+  } else if (effectiveUsStatesMode) {
+    list = usStatesData;
+  }
   (list || []).forEach((feature) => {
     const admin = getFeatureAdmin(feature);
     if (admin) {
@@ -273,18 +274,28 @@ export function useGlobeRenderData({
   const hasDepartments = Boolean(departmentsData && departmentsData.length > 0);
   const hasUsStates = Boolean(usStatesData && usStatesData.length > 0);
 
-  const targetMode = isDepartmentMode ? "departments" : isUsStatesMode ? "us_states" : "world";
+  let targetMode = "world";
+  if (isDepartmentMode) {
+    targetMode = "departments";
+  } else if (isUsStatesMode) {
+    targetMode = "us_states";
+  }
 
-  const isTargetReady =
-    targetMode === "departments" ? hasDepartments : targetMode === "us_states" ? hasUsStates : true;
+  let isTargetReady = true;
+  if (targetMode === "departments") {
+    isTargetReady = hasDepartments;
+  } else if (targetMode === "us_states") {
+    isTargetReady = hasUsStates;
+  }
 
-  const effectiveModeRef = useRef(
-    isDepartmentMode && hasDepartments
-      ? "departments"
-      : isUsStatesMode && hasUsStates
-        ? "us_states"
-        : "world"
-  );
+  let initialEffectiveMode = "world";
+  if (isDepartmentMode && hasDepartments) {
+    initialEffectiveMode = "departments";
+  } else if (isUsStatesMode && hasUsStates) {
+    initialEffectiveMode = "us_states";
+  }
+
+  const effectiveModeRef = useRef(initialEffectiveMode);
 
   const currentEffective = effectiveModeRef.current;
   const nextEffective = resolveNextEffectiveMode(

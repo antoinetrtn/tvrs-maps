@@ -228,7 +228,7 @@ function applyTransitionShaderProgress(mat, fadeProgress, isFound) {
   }
 }
 
-export function handleTransitioningPreviousCountry(
+export function handleTransitioningPreviousCountry({
   time,
   mode,
   selectionTransitionStartRef,
@@ -238,8 +238,8 @@ export function handleTransitioningPreviousCountry(
   gameDataMap,
   transitionColorsPrimedRef,
   getBaseColorForCountryAndKind,
-  foundSet
-) {
+  foundSet,
+}) {
   const prevCountry = mode !== "learn" ? transitioningPreviousCountryRef?.current : null;
   if (!prevCountry) {
     transitionColorsPrimedRef.current = null;

@@ -48,10 +48,8 @@ function getLearnModeName(learnSubMode) {
 
 function getLabelCoords(data, key, ctxCanonical) {
   const canonical = ctxCanonical[key] || getCanonicalPosition(data, null);
-  const lat =
-    data.lat !== undefined && data.lat !== null ? data.lat : canonical ? canonical.lat : 0;
-  const lng =
-    data.lng !== undefined && data.lng !== null ? data.lng : canonical ? canonical.lng : 0;
+  const lat = data.lat ?? canonical?.lat ?? 0;
+  const lng = data.lng ?? canonical?.lng ?? 0;
   return { lat, lng };
 }
 
@@ -61,29 +59,18 @@ function getCenterDistance(lat, lng, pov) {
   return Math.hypot(dLng, lat - pov.lat);
 }
 
-function isCachedLabelMatch(
-  cached,
-  isSelected,
-  lang,
-  isFound,
-  mode,
-  modeName,
-  learnShowCapitals,
-  hideCountryLine,
-  isError,
-  isPanelOpen
-) {
+function isCachedLabelMatch(cached, opts) {
   if (!cached) return false;
   return (
-    cached.isSelected === isSelected &&
-    cached.lang === lang &&
-    cached.isFound === isFound &&
-    cached.globalMode === mode &&
-    cached.mode === modeName &&
-    cached.learnShowCapitals === learnShowCapitals &&
-    cached.hideCountryLine === hideCountryLine &&
-    cached.isError === (isSelected && isError) &&
-    cached.isPanelOpen === isPanelOpen
+    cached.isSelected === opts.isSelected &&
+    cached.lang === opts.lang &&
+    cached.isFound === opts.isFound &&
+    cached.globalMode === opts.mode &&
+    cached.mode === opts.modeName &&
+    cached.learnShowCapitals === opts.learnShowCapitals &&
+    cached.hideCountryLine === opts.hideCountryLine &&
+    cached.isError === (opts.isSelected && opts.isError) &&
+    cached.isPanelOpen === opts.isPanelOpen
   );
 }
 
@@ -277,8 +264,7 @@ function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx
   const cacheKey = `${key}_${modeName}`;
   const cached = labelsCacheRef.current[cacheKey];
   if (
-    isCachedLabelMatch(
-      cached,
+    isCachedLabelMatch(cached, {
       isSelected,
       lang,
       isFound,
@@ -287,8 +273,8 @@ function resolveLabelEntry({ key, data, modeName, hideCountryLine = false }, ctx
       learnShowCapitals,
       hideCountryLine,
       isError,
-      isPanelOpen
-    )
+      isPanelOpen,
+    })
   ) {
     cached.distToCenter = distToCenter;
     return cached;

@@ -93,7 +93,7 @@ function setTexelA(data, texWidth, texHeight, x, y, aVal) {
   if (aVal > data[idx + 3]) data[idx + 3] = aVal;
 }
 
-function stampMountainSpur(
+function stampMountainSpur({
   sLat,
   sLng,
   cosLat,
@@ -102,8 +102,8 @@ function stampMountainSpur(
   baseSpurSteps,
   seed,
   stepId,
-  onPoint
-) {
+  onPoint,
+}) {
   let spurAng = spineAngle + side * (1.22 + (hash1(seed + stepId * 41.3 + side * 7) - 0.5) * 0.48);
   const spurSteps = Math.max(
     3,
@@ -127,7 +127,7 @@ function stampMountainSpur(
   }
 }
 
-function stampMountainStep(
+function stampMountainStep({
   cLat,
   cLng,
   cosLat,
@@ -139,8 +139,8 @@ function stampMountainStep(
   endTaper,
   seed,
   globalStep,
-  onPoint
-) {
+  onPoint,
+}) {
   const crestVal = Math.round(
     Math.min(255, (218 + hash1(seed + globalStep * 23.1) * 37) * elevBoost)
   );
@@ -152,30 +152,30 @@ function stampMountainStep(
   if (globalStep % 2 !== 0) return;
   const currentSpurSteps = Math.max(3, Math.round(baseSpurSteps * (0.55 + 0.45 * endTaper)));
   if (hash1(seed + globalStep * 37.9) > 0.22) {
-    stampMountainSpur(
-      cLat,
-      cLng,
+    stampMountainSpur({
+      sLat: cLat,
+      sLng: cLng,
       cosLat,
       spineAngle,
-      1,
-      currentSpurSteps,
+      side: 1,
+      baseSpurSteps: currentSpurSteps,
       seed,
-      globalStep,
-      onPoint
-    );
+      stepId: globalStep,
+      onPoint,
+    });
   }
   if (hash1(seed + globalStep * 53.7) > 0.22) {
-    stampMountainSpur(
-      cLat,
-      cLng,
+    stampMountainSpur({
+      sLat: cLat,
+      sLng: cLng,
       cosLat,
       spineAngle,
-      -1,
-      currentSpurSteps,
+      side: -1,
+      baseSpurSteps: currentSpurSteps,
       seed,
-      globalStep,
-      onPoint
-    );
+      stepId: globalStep,
+      onPoint,
+    });
   }
 }
 
@@ -218,7 +218,7 @@ export function walkMountainChain(
         Math.sin(p * Math.PI);
       const cLat = lat1 + dLat * p + nx * meander;
       const cLng = lng1 + (dLonScaled * p + ny * meander) / cosLat;
-      stampMountainStep(
+      stampMountainStep({
         cLat,
         cLng,
         cosLat,
@@ -230,12 +230,12 @@ export function walkMountainChain(
         endTaper,
         seed,
         globalStep,
-        (lat, lng, cLatCos, bVal) => {
+        onPoint: (lat, lng, cLatCos, bVal) => {
           const y = Math.floor(((lat + 90) / 180) * texHeight);
           const x = Math.floor(((lng + 180) / 360) * texWidth);
           onIsoPoint(x, y, cLatCos, bVal);
-        }
-      );
+        },
+      });
     }
   }
 }

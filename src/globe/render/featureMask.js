@@ -119,7 +119,7 @@ function toFoundKeysArray(foundKeys) {
 function hashFoundKeys(foundArray) {
   return foundArray
     .slice()
-    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    .sort((a, b) => a.localeCompare(b))
     .join("|");
 }
 

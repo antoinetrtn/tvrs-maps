@@ -193,7 +193,10 @@ export function useGlobeMarkers({
   const getPointRadius = useCallback(
     (d) => {
       const isSelected = isSameAdmin(d.admin, selectedCountry, gameDataMap);
-      return isDepartmentMode ? (isSelected ? 0.12 : 0.055) : isSelected ? 0.22 : 0.12;
+      if (isDepartmentMode) {
+        return isSelected ? 0.12 : 0.055;
+      }
+      return isSelected ? 0.22 : 0.12;
     },
     [isDepartmentMode, selectedCountry, gameDataMap]
   );

@@ -164,6 +164,14 @@ export function triggerSubtleHapticTick(
   return Boolean(vibrated || audioClicked);
 }
 
+function getZoomBoundary(altitude, minAltitude, maxAltitude) {
+  const safeMin = Math.max(0.01, minAltitude);
+  const safeMax = Math.max(safeMin + 0.01, maxAltitude);
+  if (altitude <= safeMin + BOUNDARY_EPS) return "min";
+  if (altitude >= safeMax - BOUNDARY_EPS) return "max";
+  return null;
+}
+
 /**
  * Stateful tracker for globe zoom detents.
  */
@@ -251,11 +259,7 @@ export function createZoomHapticTracker({
       const detent = computeZoomDetentIndex(altitude, { minAltitude, maxAltitude, detents });
       if (detent === null) return { pulsed: false, detent: null };
 
-      const safeMin = Math.max(0.01, minAltitude);
-      const safeMax = Math.max(safeMin + 0.01, maxAltitude);
-      const atMin = altitude <= safeMin + BOUNDARY_EPS;
-      const atMax = altitude >= safeMax - BOUNDARY_EPS;
-      const boundary = atMin ? "min" : atMax ? "max" : null;
+      const boundary = getZoomBoundary(altitude, minAltitude, maxAltitude);
 
       if (now > activeUntil) {
         lastDetent = detent;
