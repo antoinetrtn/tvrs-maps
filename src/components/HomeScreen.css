@@ -56,14 +56,14 @@
 }
 
 .home-screen-overlay.is-exiting {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 .home-screen-overlay.is-exiting .home-hero,
 .home-screen-overlay.is-exiting .home-stage-container,
 .home-screen-overlay.is-exiting .home-bottom-right {
   animation: home-block-exit var(--dur-screen-exit) var(--steps-band) forwards;
-  pointer-events: none !important;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {
@@ -188,26 +188,26 @@
 /* Settings panel (CRT/glass) — desktop-only dimensions; below 1025px the
    shared .sheet-panel fullscreen rules (panelSystem.css) take over. */
 @media (min-width: 1025px) {
-  .settings-panel {
-    width: 380px !important;
-    max-height: calc(100vh - 140px) !important;
-    max-height: calc(100dvh - 140px) !important;
-    overflow: hidden !important;
+  .settings-panel.sheet-panel {
+    width: 380px;
+    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
+    overflow: hidden;
   }
 }
 
 /* Mobile settings layout — fullscreen positioning comes from the shared
    .sheet-panel rules in panelSystem.css; only settings-specific tweaks here. */
 @media (max-width: 1024px) {
-  .settings-panel {
-    display: flex !important;
-    flex-direction: column !important;
+  .settings-panel.sheet-panel {
+    display: flex;
+    flex-direction: column;
   }
 
-  .settings-panel .panel-body {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding-bottom: calc(var(--spacing-md) + var(--safe-bottom)) !important;
+  .settings-panel.sheet-panel .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: calc(var(--spacing-md) + var(--safe-bottom));
   }
 }
 

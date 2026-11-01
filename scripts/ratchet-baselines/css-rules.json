@@ -31,13 +31,7 @@
     "src/styles/panelSystem.css": 1
   },
   "important": {
-    "src/components/GameHUD.css": 23,
-    "src/components/HomeScreen.css": 11,
-    "src/components/LeaderboardScreen.css": 7,
-    "src/components/ProfilePanel.css": 22,
-    "src/components/ui/CardLooks.css": 13,
-    "src/components/ui/ui.css": 1,
-    "src/index.css": 4,
+    "src/index.css": 3,
     "src/styles/motion.css": 6,
     "src/styles/panelSystem.css": 16
   }
