@@ -235,6 +235,27 @@ function getIgniteRefs() {
     landRadius: materialReference("userData.landRadius", "float"),
   });
 }
+function buildCountryGeometryInfo() {
+  const sphereNormal = normalize(positionWorld);
+  const geomNormal = normalize(normalWorld);
+  const isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
+
+  const viewDir = normalize(cameraPosition.sub(positionWorld));
+  const ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
+  const limbFactor = mix(float(0.95), float(1.02), smoothstep(0.0, 0.65, ndv));
+  const rimSheen = pow(float(1.0).sub(ndv), 3.2).mul(0.045);
+
+  const cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
+  const cLng = atan(sphereNormal.x, sphereNormal.z);
+  const cartUv = vec2(cLng.div(6.2831853).add(0.5), cLat.div(3.14159265).add(0.5));
+  const topoGrid = cartUv.mul(vec2(72.0, 36.0));
+  const topoDist = abs(fract(topoGrid.add(0.5)).sub(0.5)).div(max(fwidth(topoGrid), vec2(0.001)));
+  const parallelLine = clamp(float(1.0).sub(topoDist.y), 0.0, 1.0);
+  const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
+
+  return { sphereNormal, isSideWall, ndv, limbFactor, rimSheen, cartUv, parallelLine, crossTick };
+}
+
 /** countryGrainOutputNode: uniform cartographic country relief + architectural side-walls */
 export function countryGrainOutputNode(isGhostCountry = false) {
   if (isGhostCountry && ghostGrainNode) return ghostGrainNode;
@@ -242,22 +263,8 @@ export function countryGrainOutputNode(isGhostCountry = false) {
   const node = Fn(() => {
     const uGhost = float(isGhostCountry ? 1.0 : 0.0);
     const ghostMask = float(1.0).sub(uGhost);
-    const sphereNormal = normalize(positionWorld);
-    const geomNormal = normalize(normalWorld);
-    const isSideWall = step(abs(dot(geomNormal, sphereNormal)), 0.55);
-
-    const viewDir = normalize(cameraPosition.sub(positionWorld));
-    const ndv = clamp(dot(sphereNormal, viewDir), 0.0, 1.0);
-    const limbFactor = mix(float(0.95), float(1.02), smoothstep(0.0, 0.65, ndv));
-    const rimSheen = pow(float(1.0).sub(ndv), 3.2).mul(0.045);
-
-    const cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
-    const cLng = atan(sphereNormal.x, sphereNormal.z);
-    const cartUv = vec2(cLng.div(6.2831853).add(0.5), cLat.div(3.14159265).add(0.5));
-    const topoGrid = cartUv.mul(vec2(72.0, 36.0));
-    const topoDist = abs(fract(topoGrid.add(0.5)).sub(0.5)).div(max(fwidth(topoGrid), vec2(0.001)));
-    const parallelLine = clamp(float(1.0).sub(topoDist.y), 0.0, 1.0);
-    const crossTick = clamp(float(1.0).sub(max(topoDist.x, topoDist.y).mul(0.6)), 0.0, 1.0);
+    const { sphereNormal, isSideWall, ndv, limbFactor, rimSheen, cartUv, parallelLine, crossTick } =
+      buildCountryGeometryInfo();
 
     const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
     const uShowcaseNode = (showcaseLightsNode ||= mirrorUniform(
@@ -323,7 +330,15 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     const baseLand = mix(unfoundLand, conquestAwakenedLand, isConquestOwned);
     const paletteLand = applyBiomePalette({
       landSurface: mix(baseLand, soloAwakenedLand, isSoloFound),
-      ...{ cartUv, ndv, ghostMask, isSoloFound, isConquestOwned, lit, maxC, isUnfoundDarkCap },
+      cartUv,
+      ndv,
+      ghostMask,
+      isSoloFound,
+      isConquestOwned,
+      lit,
+      maxC,
+      isUnfoundDarkCap,
+      isAwakenedCap,
       uShowcaseNode: showcaseLand,
       uRegionalNode,
     });

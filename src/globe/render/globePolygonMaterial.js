@@ -14,6 +14,12 @@ import {
   GLSL_BAYER_4X4_FN,
   GLSL_DISCOVERY_LAND_FN,
 } from "./globeShaders";
+import {
+  ensurePaintedTerrain,
+  PAINTED_GLSL_BODY,
+  PAINTED_GLSL_DECLARATIONS,
+  paintedTerrainUniforms,
+} from "./paintedTerrain";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { resolvePolygonEmissiveProps } from "./polygonEmissiveProps";
 import {
@@ -72,6 +78,7 @@ export function applyCountrySurfaceGrainShader(
   shader.uniforms.uIgniteSelf = igniteHolder ? igniteHolder.self : { value: 0.0 };
   shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
   shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
+  Object.assign(shader.uniforms, paintedTerrainUniforms);
   shader.vertexShader = `
     varying vec3 vDitherWorldNormal;
     varying vec3 vDitherWorldPos;
@@ -111,7 +118,7 @@ export function applyCountrySurfaceGrainShader(
     uniform float uHomeWake;
     uniform sampler2D uCapitalLightsMap;
     uniform sampler2D uBiomeMap;
-    ${GLSL_BAYER_4X4_FN}
+${PAINTED_GLSL_DECLARATIONS}    ${GLSL_BAYER_4X4_FN}
     float cityCellHash(vec2 p) {
       return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
     }
@@ -119,10 +126,16 @@ export function applyCountrySurfaceGrainShader(
     ${GLSL_DISCOVERY_LAND_FN}
     ${shader.fragmentShader.replace(
       "#include <dithering_fragment>",
-      COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY
+      COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY.replace(
+        PAINTED_ANCHOR,
+        PAINTED_GLSL_BODY + PAINTED_ANCHOR
+      )
     )}
   `;
 }
+
+// Painted France goes in right before the found-land reveal mask (globeShaders.js).
+const PAINTED_ANCHOR = "      // Found land (solo tone or Conquête";
 
 export function applyCountryBorderDitherShader(shader) {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
@@ -308,6 +321,7 @@ export function getPolygonMaterialForFeature({
   const isGhostCountry = Boolean(d?.isGhostCountry);
   const ghostSuffix = isGhostCountry ? "-ghost" : "";
   polygonGlitchUniforms.uIsRegionalMode.value = isDepartmentMode ? 1.0 : 0.0;
+  if (isDepartmentMode) ensurePaintedTerrain();
   polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
 
   let cacheKey = `${kind}-${look}${ghostSuffix}`;

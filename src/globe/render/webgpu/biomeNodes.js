@@ -1,10 +1,12 @@
 /**
  * TSL twin of the GLSL biome block in COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY
- * (globeShaders.js): same NearestFilter texture, same weights, line by line.
+ * (globeShaders.js): same NearestFilter texture, same weights, line by line; then the
+ * painted France (PAINTED_GLSL_BODY twin, paintedNodes.js).
  */
 import { dot, float, max, mix, texture, vec3 } from "three/tsl";
 
 import { getBiomeTexture } from "../biomeTexture";
+import { applyPaintedTerrain } from "./paintedNodes";
 
 export function applyBiomePalette(p) {
   const {
@@ -19,7 +21,17 @@ export function applyBiomePalette(p) {
     isUnfoundDarkCap,
     uShowcaseNode,
     uRegionalNode,
+    isAwakenedCap = float(0.0),
   } = p;
+  const painted = (land) =>
+    applyPaintedTerrain(land, {
+      cartUv,
+      ndv,
+      ghostMask,
+      isUnfoundDarkCap,
+      isAwakenedCap,
+      uRegionalNode,
+    });
   const biomeSample = texture(getBiomeTexture(), cartUv);
   const biomeTone = biomeSample.rgb;
   const biomeLand = biomeTone.mul(float(1.0).sub(ndv).mul(0.18).add(0.88));
@@ -35,10 +47,10 @@ export function applyBiomePalette(p) {
     .mul(float(1.0).sub(uRegionalNode));
   const hinted = mix(landSurface, biomeTone.mul(0.3), biomeHint.mul(0.34));
   const revealed = mix(hinted, biomeLand, biomeReveal.mul(0.92));
-  if (!lit || !maxC) return revealed;
+  if (!lit || !maxC) return painted(revealed);
   // Conquête: translucent owner tint over the realistic palette (GLSL ownerTint).
   const ownerHue = lit.div(max(maxC, 0.001));
   const ownerLuma = dot(revealed, vec3(0.299, 0.587, 0.114));
   const ownerTint = ownerHue.mul(ownerLuma.mul(1.1).add(0.3));
-  return mix(revealed, ownerTint, isConquestOwned.mul(biomeAllowed).mul(0.5));
+  return painted(mix(revealed, ownerTint, isConquestOwned.mul(biomeAllowed).mul(0.5)));
 }
