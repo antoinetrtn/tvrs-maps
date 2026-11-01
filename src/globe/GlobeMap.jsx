@@ -56,7 +56,6 @@ const GlobeMap = (props) => {
     viewport,
     isError,
     isSuccess,
-    _hasActiveFeedback,
     perfProfile,
     isHomeScreen,
     isKeyboardMode,
@@ -98,7 +97,6 @@ const GlobeMap = (props) => {
   const {
     selectableFeatureIndex,
     countrySizes,
-    _renderCountriesData,
     countriesWithGeometry,
     canonicalPositions,
     polygonsData,
@@ -285,13 +283,7 @@ const GlobeMap = (props) => {
     };
   }, []);
 
-  const {
-    visibleMarkersData: _visibleMarkersData,
-    markersData,
-    getPointColorWrapped,
-    getPointRadius,
-    getPointAltitude,
-  } = useGlobeMarkers({
+  const { markersData, getPointColorWrapped, getPointRadius, getPointAltitude } = useGlobeMarkers({
     mode,
     isDepartmentMode: isRegionalMode,
     isRiversMountainsMode,

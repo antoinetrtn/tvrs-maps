@@ -166,10 +166,10 @@ export const clientToGlobeCoords = (globeEl, clientX, clientY) => {
 };
 
 export const getFlagEmoji = (iso2) => {
-  if (!iso2 || iso2.length !== 2) return "";
+  if (iso2?.length !== 2) return "";
   return iso2
     .toUpperCase()
-    .replace(/./g, (char) => String.fromCodePoint(char.charCodeAt(0) + 127397));
+    .replace(/./g, (char) => String.fromCodePoint(char.codePointAt(0) + 127397));
 };
 
 export const getFeaturePolygons = (feature) => {
@@ -376,7 +376,7 @@ export const getLabelRenderRadius = (zoomLevel, isMobile) => {
  * Extract administrative code or name from a GeoJSON feature's properties.
  */
 export const getFeatureAdmin = (feature) => {
-  if (!feature || !feature.properties) return undefined;
+  if (!feature?.properties) return undefined;
   const props = feature.properties;
 
   // Custom mapping for Somaliland to Somalia

@@ -32,7 +32,7 @@ function teardownGlobeLighting(globeLightingRef, camera) {
   if (camera) {
     camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
   }
-  if (group && group.parent) {
+  if (group?.parent) {
     group.parent.remove(group);
   }
   innerGlow?.geometry?.dispose();
@@ -251,7 +251,7 @@ export function useGlobeLighting({
         if (camera) {
           camera.remove(keyLight, rimLight, fillLight, studioLight, studioLeft, studioRight);
         }
-        if (group && group.parent) {
+        if (group?.parent) {
           group.parent.remove(group);
         }
         globeLightingRef.current?.innerGlow?.geometry?.dispose();

@@ -30,7 +30,7 @@ export { WORLD_PALETTE };
 const FORESTS = new Set(["taiga", "temperate", "tropical"]);
 
 export function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
+  const n = Number.parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
@@ -68,12 +68,19 @@ function getForestTone(x, y, base) {
   return 2;
 }
 
-function getSpecialClassTone(name, level, v, grain, base) {
+function isGrainAccent(name, grain) {
   if (name === "savanna" || name === "steppe") {
-    return grain > 0.92 ? 3 : base;
+    return grain > 0.92;
   }
   if (name === "tundra" || name === "wetland") {
-    return grain > 0.9 ? 3 : base;
+    return grain > 0.9;
+  }
+  return false;
+}
+
+function getSpecialClassTone(name, level, v, grain, base) {
+  if (isGrainAccent(name, grain)) {
+    return 3;
   }
   if (name === "sand") {
     return v > 0.95 ? 3 : base;

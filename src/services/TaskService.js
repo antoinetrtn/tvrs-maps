@@ -31,8 +31,8 @@ function validatePriority(priority) {
 
 function validateDueDate(dueDate) {
   const date = new Date(dueDate);
-  if (isNaN(date.getTime())) {
-    throw new Error("Invalid dueDate. Must be a valid Date object or ISO string");
+  if (Number.isNaN(date.getTime())) {
+    throw new TypeError("Invalid dueDate. Must be a valid Date object or ISO string");
   }
 }
 
@@ -246,7 +246,7 @@ export class TaskService {
       }
     });
 
-    const completionRate = parseFloat(((completed / total) * 100).toFixed(2));
+    const completionRate = Number.parseFloat(((completed / total) * 100).toFixed(2));
 
     return {
       total,

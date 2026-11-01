@@ -52,7 +52,7 @@ export function useGlobeRings({
     if (countriesWithGeometry?.has(selectedCountry)) return [];
 
     const mapped = countryDataMap[selectedCountry];
-    if (!mapped || mapped.lat === undefined || mapped.lng === undefined) {
+    if (mapped?.lat === undefined || mapped?.lng === undefined) {
       return [];
     }
 

@@ -111,10 +111,10 @@ function App() {
   const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
   const prevHomeModeRef = useRef(globeHomeMode);
 
-  const [peacefulMode, setPeacefulModeRaw] = useState(readInitialPeacefulMode);
+  const [peacefulMode, setPeacefulMode] = useState(readInitialPeacefulMode);
 
-  const setPeacefulMode = useCallback((value) => {
-    setPeacefulModeRaw(value);
+  const persistPeacefulMode = useCallback((value) => {
+    setPeacefulMode(value);
     try {
       localStorage.setItem(STORAGE_KEYS.peacefulMode, String(value));
       localStorage.setItem(STORAGE_KEYS.hardcoreMode, String(!value));
@@ -122,7 +122,10 @@ function App() {
   }, []);
 
   const hardcoreMode = !peacefulMode;
-  const setHardcoreMode = useCallback((value) => setPeacefulMode(!value), [setPeacefulMode]);
+  const setHardcoreMode = useCallback(
+    (value) => persistPeacefulMode(!value),
+    [persistPeacefulMode]
+  );
 
   const [showResultsTable, setShowResultsTable] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -473,7 +476,7 @@ function App() {
           hardcoreMode={hardcoreMode}
           setHardcoreMode={setHardcoreMode}
           peacefulMode={peacefulMode}
-          setPeacefulMode={setPeacefulMode}
+          setPeacefulMode={persistPeacefulMode}
           topExplorers={topExplorers}
           userProfile={userProfile}
           setUserProfile={setUserProfile}

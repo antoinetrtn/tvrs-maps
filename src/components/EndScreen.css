@@ -201,6 +201,7 @@
   margin: 0 auto var(--spacing-md);
   display: flex;
   justify-content: center;
+  gap: var(--spacing-sm);
   --i: 4;
   animation: px-row-in var(--dur-fast) var(--steps-row) calc(var(--i, 0) * var(--stagger)) backwards;
   position: sticky;
@@ -274,10 +275,6 @@
   border-radius: var(--radius-sm);
   background: var(--continent-color);
   transition: width 1s var(--ease-out);
-}
-
-.end-screen-actions {
-  gap: var(--spacing-sm);
 }
 
 .end-screen-actions .end-screen-action {

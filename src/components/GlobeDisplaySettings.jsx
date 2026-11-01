@@ -26,16 +26,14 @@ const GlobeDisplaySettings = ({ t }) => {
   }
 
   return (
-    <>
-      <SettingsRow label={t("renderer_webgpu")} description={visibleDesc} srDescription={srDesc}>
-        <Switch
-          checked={isWebGPU}
-          disabled={!supported || forced}
-          onChange={(on) => setGlobePref("renderer", on ? "webgpu" : "webgl")}
-          label={t("renderer_webgpu")}
-        />
-      </SettingsRow>
-    </>
+    <SettingsRow label={t("renderer_webgpu")} description={visibleDesc} srDescription={srDesc}>
+      <Switch
+        checked={isWebGPU}
+        disabled={!supported || forced}
+        onChange={(on) => setGlobePref("renderer", on ? "webgpu" : "webgl")}
+        label={t("renderer_webgpu")}
+      />
+    </SettingsRow>
   );
 };
 
