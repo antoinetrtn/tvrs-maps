@@ -199,6 +199,46 @@ function buildNewPolygonMaterial(opts) {
   return material;
 }
 
+function isMatchingAdmin(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const cData = countryDataMap[b];
+  if (cData && (cData.admin === a || cData.name_en === a || cData.name_fr === a)) return true;
+  const aData = countryDataMap[a];
+  if (aData && (aData.admin === b || aData.name_en === b || aData.name_fr === b)) return true;
+  return false;
+}
+
+function resolvePolygonCacheKey({
+  kind,
+  look,
+  ghostSuffix,
+  isShaderCap,
+  isFoundCapMaterial,
+  isDepartmentMode,
+  isIsolated,
+  admin,
+  isMobileStr,
+  igniteHolder,
+}) {
+  let cacheKey = `${kind}-${look}${ghostSuffix}`;
+  if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}${ghostSuffix}`;
+  else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}${ghostSuffix}`;
+  else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}${ghostSuffix}`;
+  else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}${ghostSuffix}`;
+  if (igniteHolder) cacheKey = `ignite-${admin}-${cacheKey}`;
+  return cacheKey;
+}
+
+function resolveIgniteHolder(admin, kind, isShaderCap, isGhostCountry) {
+  if (isShaderCap || isGhostCountry || !admin) return null;
+  if (kind !== "cap" && kind !== "side") return null;
+  if (isCountryRevealing(admin, performance.now() / 1000)) {
+    return getIgniteHolder(admin);
+  }
+  return null;
+}
+
 export function getPolygonMaterialForFeature({
   d,
   kind,
@@ -235,18 +275,9 @@ export function getPolygonMaterialForFeature({
     typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
       ? 1
       : 0;
-  const isSameAdmin = (a, b) => {
-    if (!a || !b) return false;
-    if (a === b) return true;
-    const cData = countryDataMap[b];
-    if (cData && (cData.admin === a || cData.name_en === a || cData.name_fr === a)) return true;
-    const aData = countryDataMap[a];
-    if (aData && (aData.admin === b || aData.name_en === b || aData.name_fr === b)) return true;
-    return false;
-  };
-  const isIsolated = isSameAdmin(admin, selectedCountry);
-  const isPrevTransitioning = isSameAdmin(admin, transitioningPreviousCountryState);
-  const isIncomingTransitioning = isSameAdmin(admin, transitioningIncomingCountryState);
+  const isIsolated = isMatchingAdmin(admin, selectedCountry);
+  const isPrevTransitioning = isMatchingAdmin(admin, transitioningPreviousCountryState);
+  const isIncomingTransitioning = isMatchingAdmin(admin, transitioningIncomingCountryState);
   const shaderMode = resolvePolygonShaderMode({
     admin,
     kind,
@@ -289,24 +320,21 @@ export function getPolygonMaterialForFeature({
   if (isDepartmentMode) ensurePaintedTerrain();
   polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
 
-  let cacheKey = `${kind}-${look}${ghostSuffix}`;
-  if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}${ghostSuffix}`;
-  else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}${ghostSuffix}`;
-  else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}${ghostSuffix}`;
-  else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}${ghostSuffix}`;
-  // A country mid-reveal gets a private material bound to its own ignition holder, so
-  // only it restarts from dark and two quick finds each keep their own timeline.
   registerCountryFeature(admin, d);
   if (isShaderCap && isIsolated && kind === "cap") setSelectionOutline(admin, d?.geometry);
-  const igniteHolder =
-    !isShaderCap &&
-    (kind === "cap" || kind === "side") &&
-    !isGhostCountry &&
-    admin &&
-    isCountryRevealing(admin, performance.now() / 1000)
-      ? getIgniteHolder(admin)
-      : null;
-  if (igniteHolder) cacheKey = `ignite-${admin}-${cacheKey}`;
+  const igniteHolder = resolveIgniteHolder(admin, kind, isShaderCap, isGhostCountry);
+  const cacheKey = resolvePolygonCacheKey({
+    kind,
+    look,
+    ghostSuffix,
+    isShaderCap,
+    isFoundCapMaterial,
+    isDepartmentMode,
+    isIsolated,
+    admin,
+    isMobileStr,
+    igniteHolder,
+  });
 
   let material = sharedMaterialsRef.current.get(cacheKey);
 

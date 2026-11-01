@@ -1,16 +1,10 @@
-import { DISCOVERY_DEFS, discoveryLandFn, GLSL_DISCOVERY_LAND_FN } from "./discoveryShaderChunks";
-export { DISCOVERY_DEFS, GLSL_DISCOVERY_LAND_FN };
+import { DISCOVERY_DEFS, discoveryLandFn } from "./discoveryShaderChunks";
 import * as FEAT from "./featureModeShaderChunks";
 import { SELECTION_STYLE_DEFS } from "./selectionStyle";
-/**
- * ==========================================
- * GLOBE GLSL SHADERS
- * ==========================================
- *
- * Raw GLSL for the custom "inner glow" atmosphere halo rendered behind the globe.
- * Extracted from GlobeMap.jsx so the (verbose, rarely-touched) shader source does
- * not clutter the component. Uniforms are driven from GlobeMap.
- */
+
+export { DISCOVERY_DEFS };
+export { GLSL_DISCOVERY_LAND_FN } from "./discoveryShaderChunks";
+/** Raw GLSL for the custom atmosphere halo and globe shaders. */
 
 /**
  * Exact 4x4 Bayer matrix lookup in [0, 15/16].
