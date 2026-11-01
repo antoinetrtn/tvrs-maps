@@ -177,6 +177,61 @@ function splitTriangle(a, b, c, mab, mbc, mca, dist, out) {
   return undefined;
 }
 
+function getUnitDistance(i, j, units) {
+  const u = units[i];
+  const v = units[j];
+  return Math.hypot(u[0] - v[0], u[1] - v[1], u[2] - v[2]);
+}
+
+function isEdgeTooLong(i, j, units, cosStep) {
+  const u = units[i];
+  const v = units[j];
+  return u[0] * v[0] + u[1] * v[1] + u[2] * v[2] < cosStep;
+}
+
+function getOrAddMidpoint(i, j, units, lngs, lats, mids) {
+  const key = i < j ? i * 4194304 + j : j * 4194304 + i;
+  if (mids.has(key)) {
+    return mids.get(key);
+  }
+  const u = units[i];
+  const v = units[j];
+  const m = [u[0] + v[0], u[1] + v[1], u[2] + v[2]];
+  const len = Math.hypot(m[0], m[1], m[2]) || 1;
+  const lng = Math.atan2(m[1], m[0]) / DEG;
+  const id = lngs.length;
+  lngs.push(lng + 360 * Math.round((lngs[i] - lng) / 360));
+  lats.push(Math.asin(m[2] / len) / DEG);
+  units.push([m[0] / len, m[1] / len, m[2] / len]);
+  mids.set(key, id);
+  return id;
+}
+
+function refineCapPass(indices, units, lngs, lats, cosStep, dist) {
+  const mids = new Map();
+  const next = [];
+  let changed = false;
+  for (let t = 0; t < indices.length; t += 3) {
+    const a = indices[t];
+    const b = indices[t + 1];
+    const c = indices[t + 2];
+    const mab = isEdgeTooLong(a, b, units, cosStep)
+      ? getOrAddMidpoint(a, b, units, lngs, lats, mids)
+      : -1;
+    const mbc = isEdgeTooLong(b, c, units, cosStep)
+      ? getOrAddMidpoint(b, c, units, lngs, lats, mids)
+      : -1;
+    const mca = isEdgeTooLong(c, a, units, cosStep)
+      ? getOrAddMidpoint(c, a, units, lngs, lats, mids)
+      : -1;
+    if (mab >= 0 || mbc >= 0 || mca >= 0) {
+      changed = true;
+    }
+    splitTriangle(a, b, c, mab, mbc, mca, dist, next);
+  }
+  return { next, changed };
+}
+
 /**
  * Exact cap tessellation of a GeoJSON polygon (outer ring + holes, lng/lat degrees).
  * Returns the contour (interpolated rings), the points (lng/lat arrays) and the
@@ -195,48 +250,14 @@ export function triangulateRefinedCap(polygon, step) {
 
   const units = lngs.map((lng, i) => toUnit(lng, lats[i]));
   const cosStep = Math.cos(step * DEG);
-  const dist = (i, j) => {
-    const u = units[i];
-    const v = units[j];
-    return Math.hypot(u[0] - v[0], u[1] - v[1], u[2] - v[2]);
-  };
-  const tooLong = (i, j) => {
-    const u = units[i];
-    const v = units[j];
-    return u[0] * v[0] + u[1] * v[1] + u[2] * v[2] < cosStep;
-  };
+  const dist = (i, j) => getUnitDistance(i, j, units);
 
   for (let pass = 0; pass < MAX_REFINE_PASSES; pass++) {
-    const mids = new Map();
-    const midOf = (i, j) => {
-      const key = i < j ? i * 4194304 + j : j * 4194304 + i;
-      if (mids.has(key)) return mids.get(key);
-      const u = units[i];
-      const v = units[j];
-      const m = [u[0] + v[0], u[1] + v[1], u[2] + v[2]];
-      const len = Math.hypot(m[0], m[1], m[2]) || 1;
-      const lng = Math.atan2(m[1], m[0]) / DEG;
-      const id = lngs.length;
-      lngs.push(lng + 360 * Math.round((lngs[i] - lng) / 360));
-      lats.push(Math.asin(m[2] / len) / DEG);
-      units.push([m[0] / len, m[1] / len, m[2] / len]);
-      mids.set(key, id);
-      return id;
-    };
-    const next = [];
-    let changed = false;
-    for (let t = 0; t < indices.length; t += 3) {
-      const a = indices[t];
-      const b = indices[t + 1];
-      const c = indices[t + 2];
-      const mab = tooLong(a, b) ? midOf(a, b) : -1;
-      const mbc = tooLong(b, c) ? midOf(b, c) : -1;
-      const mca = tooLong(c, a) ? midOf(c, a) : -1;
-      if (mab >= 0 || mbc >= 0 || mca >= 0) changed = true;
-      splitTriangle(a, b, c, mab, mbc, mca, dist, next);
-    }
+    const { next, changed } = refineCapPass(indices, units, lngs, lats, cosStep, dist);
     indices = next;
-    if (!changed) break;
+    if (!changed) {
+      break;
+    }
   }
   return { contour, lngs, lats, indices };
 }
