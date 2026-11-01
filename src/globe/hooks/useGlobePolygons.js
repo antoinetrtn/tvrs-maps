@@ -48,6 +48,103 @@ import {
 } from "./useModeTransitionColor";
 
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
+
+function resolveRegionalPolygonColor({
+  d,
+  admin,
+  foundSet,
+  isEndScreen,
+  mode,
+  selectedCountry,
+  gameDataMap,
+  countryDataMap: cdm,
+  isHomeScreen,
+  isError,
+  UI_COLORS,
+  lerpColor,
+  getGhostWorldColor,
+  getRegionSurfaceColorDimmed,
+}) {
+  if (d.isGhostCountry) {
+    return getGhostWorldColor(cdm[admin]?.region || "Americas");
+  }
+  if (isEndScreen && !foundSet.has(admin)) {
+    return resolveEndMissedColor({
+      mapBase: UI_COLORS.mapBase,
+      UI_COLORS,
+      lerpColor,
+    });
+  }
+
+  const isDeptFound = foundSet.has(admin);
+  const isDeptSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
+
+  if (mode === "learn") {
+    const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
+    const baseColor = getRegionSurfaceColorDimmed(regionCode);
+    return getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
+  }
+
+  if (isDeptFound) {
+    if (isDeptSelected) {
+      return isError ? UI_COLORS.error : GLITCH_EFFECT_SETTINGS.selectionHighlight;
+    }
+    const deptTint = getThemeDepartmentColor();
+    return mutedFoundGreen(deptTint, lerpColor);
+  }
+
+  if (isDeptSelected) {
+    return isError ? UI_COLORS.error : UI_COLORS.accent;
+  }
+
+  if (isHomeScreen) {
+    return REGIONAL_HOME_RESTING_LAND;
+  }
+
+  const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
+  const baseColor = getRegionSurfaceColorDimmed(regionCode);
+  return getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
+}
+
+function resolveSelectedStroke({ isError, isSuccess, isFound, UI_COLORS, lerpColor }) {
+  if (isError) return UI_COLORS.error;
+  if (isSuccess) return GLITCH_EFFECT_SETTINGS.selectionHighlight;
+  if (isFound) {
+    return resolveFoundCountryStroke({
+      isSelected: true,
+      UI_COLORS,
+      lerpColor,
+    });
+  }
+  return UI_COLORS.accent;
+}
+
+function resolveUnselectedStroke({
+  d,
+  isRegionalMode,
+  isHomeScreen,
+  isFound,
+  isPerfectScore,
+  isSelected,
+  UI_COLORS,
+  lerpColor,
+}) {
+  if (isHomeScreen && (!isRegionalMode || d.isGhostCountry)) {
+    return UI_COLORS.mapBorder;
+  }
+  if (isRegionalMode) {
+    if (d.isGhostCountry) return lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.13);
+    if (isFound) {
+      if (isPerfectScore) return UI_COLORS.gold;
+      return resolveFoundCountryStroke({ isSelected, UI_COLORS, lerpColor });
+    }
+    return UI_COLORS.accent || UI_COLORS.paper;
+  }
+  if (isFound) {
+    return resolveFoundCountryStroke({ isSelected, UI_COLORS, lerpColor });
+  }
+  return lerpColor(UI_COLORS.borderUnfound, UI_COLORS.paper, 0.28);
+}
 const _lerpColor1 = new THREE.Color();
 const _lerpColor2 = new THREE.Color();
 
@@ -161,51 +258,27 @@ export function useGlobePolygons({
       const ownerColor = conquestOverlay?.colors?.[getFeatureAdmin(d)] || conquestOverlay?.neutral;
       if (ownerColor) return ownerColor; // Conquête: owner, lockout or neutral world
 
+      const admin = getFeatureAdmin(d);
+
       if (isRegionalMode) {
-        const admin = getFeatureAdmin(d);
-        if (d.isGhostCountry)
-          return getGhostWorldColor(countryDataMap[admin]?.region || "Americas");
-        if (isEndScreen && !foundSet.has(admin))
-          return resolveEndMissedColor({
-            mapBase: UI_COLORS.mapBase,
-            UI_COLORS,
-            lerpColor,
-          });
-
-        const isDeptFound = foundSet.has(admin);
-        const isDeptSelected = isSameAdmin(admin, selectedCountry, gameDataMap);
-
-        // Learn = home look: the selection is drawn by the shared selection shader.
-        if (mode === "learn") {
-          const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
-          const baseColor = getRegionSurfaceColorDimmed(regionCode);
-          return getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
-        }
-
-        if (isDeptFound) {
-          if (isDeptSelected) {
-            if (isError) return UI_COLORS.error;
-            return GLITCH_EFFECT_SETTINGS.selectionHighlight;
-          }
-          const deptTint = getThemeDepartmentColor();
-          return mutedFoundGreen(deptTint, lerpColor);
-        }
-
-        if (isDeptSelected) {
-          if (isError) return UI_COLORS.error;
-          return UI_COLORS.accent;
-        }
-
-        if (isHomeScreenRef.current) {
-          return REGIONAL_HOME_RESTING_LAND;
-        }
-
-        const regionCode = gameDataMap[admin]?.region || d.properties?.region || "Americas";
-        const baseColor = getRegionSurfaceColorDimmed(regionCode);
-        return getFeatureMonochromeShade(admin, baseColor, lerpColor, UI_COLORS);
+        return resolveRegionalPolygonColor({
+          d,
+          admin,
+          foundSet,
+          isEndScreen,
+          mode,
+          selectedCountry,
+          gameDataMap,
+          countryDataMap,
+          isHomeScreen: isHomeScreenRef.current,
+          isError,
+          UI_COLORS,
+          lerpColor,
+          getGhostWorldColor,
+          getRegionSurfaceColorDimmed,
+        });
       }
 
-      const admin = getFeatureAdmin(d);
       const region = countryDataMap[admin]?.region || "Unknown";
       const resolved = resolveCountryCapColor({
         admin,
@@ -245,7 +318,6 @@ export function useGlobePolygons({
       selectedCountry,
       mode,
       foundSet,
-      getRegionalLandColor,
       UI_COLORS,
       isError,
       isSuccess,
@@ -296,43 +368,22 @@ export function useGlobePolygons({
       if (conquestOverlay?.strokes?.[admin]) return conquestOverlay.strokes[admin];
       const isSelected =
         !isQuietOwnedFocus(admin) && isSameAdmin(admin, selectedCountry, gameDataMap);
-
-      if (isSelected) {
-        if (isError) return UI_COLORS.error;
-        if (isSuccess) return GLITCH_EFFECT_SETTINGS.selectionHighlight;
-        if (foundSet.has(admin)) {
-          return resolveFoundCountryStroke({
-            isSelected: true,
-            UI_COLORS,
-            lerpColor,
-          });
-        }
-        return UI_COLORS.accent;
-      }
-
-      if (isHomeScreen) {
-        if (isRegionalMode && !d.isGhostCountry) {
-          // Fall through to show correct regional borders on the home screen
-        } else {
-          return UI_COLORS.mapBorder;
-        }
-      }
-      if (isRegionalMode) {
-        if (d.isGhostCountry) return lerpColor(UI_COLORS.mapSea, UI_COLORS.paper, 0.13);
-        if (foundSet.has(admin)) {
-          if (isPerfectScore) return UI_COLORS.gold;
-          return resolveFoundCountryStroke({ isSelected, UI_COLORS, lerpColor });
-        }
-        return UI_COLORS.accent || UI_COLORS.paper;
-      }
-
       const isFound = foundSet.has(admin);
 
-      if (isFound) {
-        return resolveFoundCountryStroke({ isSelected, UI_COLORS, lerpColor });
+      if (isSelected) {
+        return resolveSelectedStroke({ isError, isSuccess, isFound, UI_COLORS, lerpColor });
       }
 
-      return lerpColor(UI_COLORS.borderUnfound, UI_COLORS.paper, 0.28);
+      return resolveUnselectedStroke({
+        d,
+        isRegionalMode,
+        isHomeScreen,
+        isFound,
+        isPerfectScore,
+        isSelected,
+        UI_COLORS,
+        lerpColor,
+      });
     },
     [
       conquestOverlay,
@@ -364,22 +415,21 @@ export function useGlobePolygons({
       const admin = getFeatureAdmin(d);
       const isSelected =
         !isQuietOwnedFocus(admin) && isSameAdmin(admin, selectedCountry, gameDataMap);
-      const darken = isSelected
-        ? GLOBE_STYLE.lighting.sideDarken.selected
-        : foundSet.has(admin)
-          ? GLOBE_STYLE.lighting.sideDarken.found
-          : GLOBE_STYLE.lighting.sideDarken.base;
+      let darken = GLOBE_STYLE.lighting.sideDarken.base;
+      if (isSelected) {
+        darken = GLOBE_STYLE.lighting.sideDarken.selected;
+      } else if (foundSet.has(admin)) {
+        darken = GLOBE_STYLE.lighting.sideDarken.found;
+      }
 
       return lerpColor(getPolygonColor(d), UI_COLORS.black, darken);
     },
     [
-      conquestOverlay,
       getPolygonColor,
       UI_COLORS,
       selectedCountry,
       gameDataMap,
       foundSet,
-      mode,
       isRegionalMode,
       lerpColor,
       isQuietOwnedFocus,
@@ -550,8 +600,6 @@ export function useGlobePolygons({
       gameDataMap,
       REGION_COLORS_ATTENUATED,
       REGION_COLORS_LABELS,
-      modeTransitionRef,
-      transitionStep,
       isQuietOwnedFocus,
     ]
   );

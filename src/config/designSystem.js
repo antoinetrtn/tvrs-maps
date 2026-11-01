@@ -212,7 +212,7 @@ export const getOpaqueThreeColor = (color, fallback = THEME.dark.paper) => {
   const normalized = color.trim();
   if (!normalized || normalized === "transparent") return fallback;
 
-  const rgbaMatch = normalized.match(/^rgba\((.+)\)$/i);
+  const rgbaMatch = /^rgba\((.+)\)$/i.exec(normalized);
   if (rgbaMatch) {
     const channels = rgbaMatch[1].split(",").map((channel) => channel.trim());
     if (channels.length >= 3) {
@@ -237,7 +237,7 @@ const buildColors = (settings, locked = null) => ({
   ...THEME.dark,
   ...settings,
   ...ACCENT_OVERRIDES,
-  ...(locked || {}),
+  ...locked,
 });
 
 /** Globe colours (polygons, ocean, glow, graticule) for the unified theme. */
@@ -308,10 +308,10 @@ export const getThemeCssVariables = ({ uiScale = 1 } = {}) => {
     "--transition-spring": STYLE_TOKENS.transition.spring,
     "--transition-instant": STYLE_TOKENS.transition.instant,
     // Scaled control / layout sizes (root cause of "UI ENORME on 1080p")
-    "--control-sm": s(parseInt(STYLE_TOKENS.size.controlSm)),
-    "--control-md": s(parseInt(STYLE_TOKENS.size.controlMd)),
-    "--control-lg": s(parseInt(STYLE_TOKENS.size.controlLg)),
-    "--island-width": s(parseInt(STYLE_TOKENS.size.islandWidth)),
+    "--control-sm": s(Number.parseInt(STYLE_TOKENS.size.controlSm, 10)),
+    "--control-md": s(Number.parseInt(STYLE_TOKENS.size.controlMd, 10)),
+    "--control-lg": s(Number.parseInt(STYLE_TOKENS.size.controlLg, 10)),
+    "--island-width": s(Number.parseInt(STYLE_TOKENS.size.islandWidth, 10)),
     "--ui-scale": scale, // fluid calc(var(--base-foo) * var(--ui-scale))
     "--globe-flag-scale": Math.max(scale, 1.12),
   };
@@ -336,7 +336,7 @@ export const getThemeRegionColorAttenuated = (region) => {
   const baseColor = getThemeRegionColor(region);
   const factor = 0.72;
   const mix = (i) =>
-    Math.round(parseInt(baseColor.substring(i, i + 2), 16) * factor)
+    Math.round(Number.parseInt(baseColor.substring(i, i + 2), 16) * factor)
       .toString(16)
       .padStart(2, "0");
   return `#${mix(1)}${mix(3)}${mix(5)}`;
