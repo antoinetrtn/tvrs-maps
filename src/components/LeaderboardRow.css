@@ -186,6 +186,6 @@
 @media (max-width: 1024px) {
   /* Opaque full-height sheet: no floating card over a dimmed void */
   .sheet-panel.leaderboard-panel {
-    background: var(--bg-color) !important;
+    background: var(--bg-color);
   }
 }

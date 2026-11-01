@@ -145,11 +145,11 @@ export default function RulesIllustration({ labels }) {
     .join(" ");
 
   return (
-    <figure
+    <figure // NOSONAR
       ref={rootRef}
       className={classNames}
       style={FRAME_STYLE}
-      role="img" // NOSONAR
+      role="img"
       aria-label={l.alt}
     >
       <div className="ri-legend" aria-hidden="true">

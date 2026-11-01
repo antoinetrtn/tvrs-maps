@@ -103,18 +103,28 @@ function findIntersectionsAtLat(pts, lat) {
   return xs;
 }
 
+function advanceIntersectionIndex(lng, xs, startIndex) {
+  let n = startIndex;
+  while (n < xs.length && xs[n] < lng) {
+    n++;
+  }
+  return n;
+}
+
 function fillRowCells(j, { ox, w, cell, wraps, xs, inside }) {
   const shift = wraps ? (lng) => lng - Math.floor((lng + 180) / 360) * 360 : (lng) => lng;
   let n = 0;
   let prev = -Infinity;
+  const rowOffset = j * N;
+
   for (let i = 0; i < w; i++) {
     const lng = shift((ox + i + 0.5) * cell);
-    if (lng < prev) n = 0;
+    const startIdx = lng < prev ? 0 : n;
+    n = advanceIntersectionIndex(lng, xs, startIdx);
     prev = lng;
-    while (n < xs.length && xs[n] < lng) {
-      n++;
+    if (n % 2) {
+      inside[rowOffset + i] = INSIDE_VALUE;
     }
-    if (n % 2) inside[j * N + i] = INSIDE_VALUE;
   }
 }
 
