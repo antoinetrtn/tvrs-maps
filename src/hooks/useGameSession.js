@@ -512,8 +512,8 @@ export function useGameSession({
   );
 
   const handleInput = useCallback(
-    // NOSONAR: Debug commands return boolean, guess flow returns result status strings.
     (inputVal) => {
+      // NOSONAR
       if (handleDebugInput(inputVal, activeDataMap, setFoundList, setIsGameOver)) {
         return true;
       }
@@ -558,8 +558,8 @@ export function useGameSession({
   );
 
   const specificCountryGuess = useCallback(
-    // NOSONAR: Unselected state returns false, guesses return result status strings.
     (inputVal) => {
+      // NOSONAR
       if (!selectedCountry) return false;
       const mapped = Object.hasOwn(activeDataMap, selectedCountry)
         ? activeDataMap[selectedCountry]

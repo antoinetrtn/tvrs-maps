@@ -64,14 +64,14 @@
   .app-container.glitch-active .hud-bottom-right,
   .app-container.glitch-active .bottom-hud-container,
   .app-container.glitch-active .end-screen-overlay {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 
   .app-container.glitch-active::after {
-    animation: none !important;
-    opacity: 0 !important;
+    animation: none;
+    opacity: 0;
   }
 
   .panic-vignette-overlay.life-lost {

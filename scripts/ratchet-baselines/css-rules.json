@@ -31,18 +31,12 @@
     "src/styles/panelSystem.css": 1
   },
   "important": {
-    "src/App.css": 5,
-    "src/components/EndScreen.css": 1,
     "src/components/GameHUD.css": 23,
     "src/components/HomeScreen.css": 11,
-    "src/components/LeaderboardRow.css": 1,
     "src/components/LeaderboardScreen.css": 7,
     "src/components/ProfilePanel.css": 22,
-    "src/components/TrainingSheet.css": 1,
-    "src/components/ui/ButtonLooks.css": 3,
     "src/components/ui/CardLooks.css": 13,
     "src/components/ui/ui.css": 1,
-    "src/dev/DevGallery.css": 4,
     "src/index.css": 4,
     "src/styles/motion.css": 6,
     "src/styles/panelSystem.css": 16

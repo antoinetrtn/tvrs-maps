@@ -233,9 +233,9 @@
   font-size: var(--font-size-sm);
 }
 .ui-btn--form-submit.save-success-glow {
-  background: var(--success) !important;
-  color: var(--bg-color) !important;
-  border-color: var(--success) !important;
+  background: var(--success);
+  color: var(--bg-color);
+  border-color: var(--success);
 }
 
 /* — moved from src/components/GameHUD.css — */

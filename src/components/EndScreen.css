@@ -417,8 +417,8 @@
 }
 
 /* Level Up shake & glitched text animations */
-.level-up-shake {
-  border-color: var(--accent) !important;
+.end-screen .level-up-shake {
+  border-color: var(--accent);
 }
 
 .end-screen-level-up-banner {
