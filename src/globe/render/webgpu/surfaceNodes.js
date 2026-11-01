@@ -137,8 +137,18 @@ function buildTerrainReliefAndRivers(p) {
 
   return {
     terrainLit: applyFeatureMode({
-      ...{ baseLit, valleyGap, ridgeSpur, ridgeCrest, cityHash, riverShimmer, riverBank },
-      ...{ riverCore, cartUv, uTimeNode, uFeatureNode, uReducedMotionNode },
+      baseLit,
+      valleyGap,
+      ridgeSpur,
+      ridgeCrest,
+      cityHash,
+      riverShimmer,
+      riverBank,
+      riverCore,
+      cartUv,
+      uTimeNode,
+      uFeatureNode,
+      uReducedMotionNode,
       terrainLit: mix(darkRiverLit, awakeRiverLit, terrainPower),
     }),
   };
@@ -226,14 +236,17 @@ let igniteSelfNode = null;
 let igniteRefs = null;
 /** Per-material ignition holder values (globePolygonMaterial defineIgniteReferences). */
 function getIgniteRefs() {
-  return (igniteRefs ||= {
-    origin: materialReference("userData.igniteOrigin", "vec3"),
-    start: materialReference("userData.igniteStart", "float"),
-    radius: materialReference("userData.igniteRadius", "float"),
-    duration: materialReference("userData.igniteDuration", "float"),
-    revealStart: materialReference("userData.revealStart", "float"),
-    landRadius: materialReference("userData.landRadius", "float"),
-  });
+  if (!igniteRefs) {
+    igniteRefs = {
+      origin: materialReference("userData.igniteOrigin", "vec3"),
+      start: materialReference("userData.igniteStart", "float"),
+      radius: materialReference("userData.igniteRadius", "float"),
+      duration: materialReference("userData.igniteDuration", "float"),
+      revealStart: materialReference("userData.revealStart", "float"),
+      landRadius: materialReference("userData.landRadius", "float"),
+    };
+  }
+  return igniteRefs;
 }
 function buildCountryGeometryInfo() {
   const sphereNormal = normalize(positionWorld);

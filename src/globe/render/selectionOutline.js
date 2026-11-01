@@ -48,8 +48,11 @@ export function getSelectionOutlineTexture() {
   return tex;
 }
 
-const polysOf = ({ type, coordinates } = {}) =>
-  type === "Polygon" ? [coordinates] : type === "MultiPolygon" ? coordinates : [];
+const polysOf = ({ type, coordinates } = {}) => {
+  if (type === "Polygon") return [coordinates];
+  if (type === "MultiPolygon") return coordinates;
+  return [];
+};
 
 const extentOf = (ring) => {
   let x0 = Infinity,
@@ -67,25 +70,14 @@ const extentOf = (ring) => {
 
 /** Grid cell (degrees) for a geometry: driven by its main landmass, capped by the texture. */
 function pickOutlineCell(mainExtent, fullExtent) {
-  return (
-    CELLS.find((c) => mainExtent / c <= MAX_CELLS && fullExtent / c <= N - 8) ||
-    CELLS[CELLS.length - 1]
-  );
+  return CELLS.find((c) => mainExtent / c <= MAX_CELLS && fullExtent / c <= N - 8) || CELLS.at(-1);
 }
 
-/** Rasterises `geometry` (GeoJSON, [lng, lat]) into the outline texture. Pure data, testable. */
-export function rasterizeOutline(geometry, out = data) {
-  const polys = polysOf(geometry || {}).filter((p) => p?.[0]?.length);
-  out.fill(0);
-  if (!polys.length) return null;
-  // Main landmass = outer ring with the largest bbox; unwrap longitudes around it so
-  // antimeridian countries (Russia, Fiji) stay contiguous.
+function preparePolygonRings(polys) {
   const main = polys
     .map((p) => extentOf(p[0]))
     .reduce((best, e) => (e.w * e.h > best.w * best.h ? e : best));
   const ref = (main.x0 + main.x1) / 2;
-  // Circumpolar feature (Antarctica): already spans -180..180; the grid covers exactly
-  // 360° and wraps (no unwrapping, which would fold its ±180° seam onto itself).
   const wraps = main.w >= 359;
   const wrap = wraps ? (lng) => lng : (lng) => lng + Math.round((ref - lng) / 360) * 360;
   const pts = polys.flat().map((r) => r.map(([lng, lat]) => [wrap(lng), lat]));
@@ -93,44 +85,73 @@ export function rasterizeOutline(geometry, out = data) {
   const cell = wraps
     ? CELLS.find((c) => 360 / c <= N - 8)
     : pickOutlineCell(Math.max(main.w, main.h), Math.max(full.w, full.h));
-  const x0 = wraps ? -180 : full.x0;
-  const x1 = wraps ? 180 : full.x1;
-  const ox = Math.floor(x0 / cell) - 2,
-    oy = Math.floor(full.y0 / cell) - 2;
-  const w = Math.min(N, Math.ceil(x1 / cell) - ox + 3),
-    h = Math.min(N, Math.ceil(full.y1 / cell) - oy + 3);
-  const inside = out;
-  const shift = wraps ? (lng) => lng - Math.floor((lng + 180) / 360) * 360 : (lng) => lng;
-  for (let j = 0; j < h; j++) {
-    // Rows past a pole read the last row on the globe (no fake edge ring at the pole).
-    const lat = Math.max(-90 + cell / 2, Math.min(90 - cell / 2, (oy + j + 0.5) * cell));
-    const xs = [];
-    for (const r of pts)
-      for (let i = 0, k = r.length - 1; i < r.length; k = i++) {
-        const [ax, ay] = r[i],
-          [bx, by] = r[k];
-        if (ay > lat !== by > lat) xs.push(ax + ((lat - ay) / (by - ay)) * (bx - ax));
+  return { pts, full, cell, wraps };
+}
+
+function findIntersectionsAtLat(pts, lat) {
+  const xs = [];
+  for (const r of pts) {
+    for (let i = 0, k = r.length - 1; i < r.length; k = i++) {
+      const [ax, ay] = r[i];
+      const [bx, by] = r[k];
+      if (ay > lat !== by > lat) {
+        xs.push(ax + ((lat - ay) / (by - ay)) * (bx - ax));
       }
-    xs.sort((p, q) => p - q);
-    let n = 0,
-      prev = -Infinity;
-    for (let i = 0; i < w; i++) {
-      const lng = shift((ox + i + 0.5) * cell);
-      if (lng < prev) n = 0;
-      prev = lng;
-      while (n < xs.length && xs[n] < lng) n++;
-      if (n % 2) inside[j * N + i] = INSIDE_VALUE;
     }
   }
-  // Islets/microstates thinner than a cell: light the cell under their centre, so
-  // Monaco or an atoll still shows an amber pixel instead of nothing.
+  xs.sort((p, q) => p - q);
+  return xs;
+}
+
+function rasterizeRow(j, { oy, ox, w, cell, wraps, pts, inside }) {
+  const lat = Math.max(-90 + cell / 2, Math.min(90 - cell / 2, (oy + j + 0.5) * cell));
+  const xs = findIntersectionsAtLat(pts, lat);
+  const shift = wraps ? (lng) => lng - Math.floor((lng + 180) / 360) * 360 : (lng) => lng;
+
+  let n = 0;
+  let prev = -Infinity;
+  for (let i = 0; i < w; i++) {
+    const lng = shift((ox + i + 0.5) * cell);
+    if (lng < prev) n = 0;
+    prev = lng;
+    while (n < xs.length && xs[n] < lng) n++;
+    if (n % 2) inside[j * N + i] = INSIDE_VALUE;
+  }
+}
+
+function rasterizeMicrostates({ pts, ox, oy, w, h, cell, inside }) {
   for (const r of pts) {
     const e = extentOf(r);
-    const i = Math.floor((e.x0 + e.x1) / 2 / cell) - ox,
-      j = Math.floor((e.y0 + e.y1) / 2 / cell) - oy;
-    if (e.w < cell * 2 && e.h < cell * 2 && i >= 0 && j >= 0 && i < w && j < h)
+    const i = Math.floor((e.x0 + e.x1) / 2 / cell) - ox;
+    const j = Math.floor((e.y0 + e.y1) / 2 / cell) - oy;
+    if (e.w < cell * 2 && e.h < cell * 2 && i >= 0 && j >= 0 && i < w && j < h) {
       inside[j * N + i] = INSIDE_VALUE;
+    }
   }
+}
+
+/** Rasterises `geometry` (GeoJSON, [lng, lat]) into the outline texture. Pure data, testable. */
+export function rasterizeOutline(geometry, out = data) {
+  const polys = polysOf(geometry || {}).filter((p) => p?.[0]?.length);
+  out.fill(0);
+  if (!polys.length) return null;
+
+  const { pts, full, cell, wraps } = preparePolygonRings(polys);
+  const x0 = wraps ? -180 : full.x0;
+  const x1 = wraps ? 180 : full.x1;
+  const ox = Math.floor(x0 / cell) - 2;
+  const oy = Math.floor(full.y0 / cell) - 2;
+  const w = Math.min(N, Math.ceil(x1 / cell) - ox + 3);
+  const h = Math.min(N, Math.ceil(full.y1 / cell) - oy + 3);
+
+  for (let j = 0; j < h; j++) {
+    rasterizeRow(j, { oy, ox, w, cell, wraps, pts, inside: out });
+  }
+
+  // Islets/microstates thinner than a cell: light the cell under their centre, so
+  // Monaco or an atoll still shows an amber pixel instead of nothing.
+  rasterizeMicrostates({ pts, ox, oy, w, h, cell, inside: out });
+
   return { ox: ox * cell, oy: oy * cell, cell, period: wraps ? Math.round(360 / cell) : 0 };
 }
 

@@ -133,9 +133,17 @@ export function getAnimatedPolygonMaterialCount() {
   return animatedPolygonMaterials.size;
 }
 
-export function syncPolygonShaderUniforms(
-  shader,
-  {
+const toShaderFlag = (condition) => (condition ? 1.0 : 0.0);
+
+function setUniformValue(uniforms, key, value) {
+  if (uniforms?.[key]) {
+    uniforms[key].value = value;
+  }
+}
+
+export function syncPolygonShaderUniforms(shader, opts) {
+  if (!shader?.uniforms) return;
+  const {
     admin,
     selectedCountry,
     isError,
@@ -146,28 +154,78 @@ export function syncPolygonShaderUniforms(
     kind,
     getBaseColorForCountryAndKind,
     isIsolated,
+  } = opts;
+
+  const isSelected = isIsolated ?? admin === selectedCountry;
+  const u = shader.uniforms;
+
+  setUniformValue(u, "uIsError", toShaderFlag(isSelected && isError));
+  setUniformValue(u, "uIsSuccess", toShaderFlag(isSelected && isSuccess));
+  setUniformValue(u, "uIsFound", toShaderFlag(isFound || isLearnSelected));
+  if (isSelected) {
+    setUniformValue(u, "uFadeProgress", 0.0);
   }
-) {
-  if (!shader) return;
-  const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
-  if (shader.uniforms.uIsError) {
-    shader.uniforms.uIsError.value = isSelected && isError ? 1.0 : 0.0;
+  if (u.uTargetColor) {
+    u.uTargetColor.value.set(getBaseColorForCountryAndKind(admin, kind));
   }
-  if (shader.uniforms.uIsSuccess) {
-    shader.uniforms.uIsSuccess.value = isSelected && isSuccess ? 1.0 : 0.0;
-  }
-  if (shader.uniforms.uIsFound) {
-    shader.uniforms.uIsFound.value = isFound || isLearnSelected ? 1.0 : 0.0;
-  }
-  if (shader.uniforms.uFadeProgress && isSelected) {
-    shader.uniforms.uFadeProgress.value = 0.0;
-  }
-  if (shader.uniforms.uTargetColor) {
-    shader.uniforms.uTargetColor.value.set(getBaseColorForCountryAndKind(admin, kind));
-  }
-  if (shader.uniforms.uSelectInTransition) {
-    shader.uniforms.uSelectInTransition.value = isIncomingTransitioning ? 1.0 : 0.0;
-  }
+  setUniformValue(u, "uSelectInTransition", toShaderFlag(isIncomingTransitioning));
+}
+
+function buildGlitchMaterialUniforms({
+  admin,
+  kind,
+  isSelected,
+  isError,
+  isSuccess,
+  isSelectionHighlight,
+  isFound,
+  isIncomingTransitioning,
+  getBaseColorForCountryAndKind,
+}) {
+  return {
+    ...polygonGlitchUniforms,
+    uFeatureMap: { value: getFeatureMaskTexture() },
+    uCapitalLightsMap: { value: getCapitalLightsTexture() },
+    uBiomeMap: { value: getBiomeTexture() },
+    uSelOutlineMap: { value: getSelectionOutlineTexture() },
+    uSelOutlineBox: selectionOutlineBox,
+    uSelOutlinePx: selectionOutlinePx,
+    uSideShade: { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor },
+    uFadeProgress: { value: 0.0 },
+    uTargetColor: {
+      value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
+    },
+    uIsError: { value: toShaderFlag(isSelected && isError) },
+    uIsSuccess: { value: toShaderFlag(isSelected && isSuccess) },
+    uIsSelection: { value: toShaderFlag(isSelected && isSelectionHighlight) },
+    uIsSide: { value: toShaderFlag(kind === "side") },
+    uIsFound: { value: toShaderFlag(isFound) },
+    uSelectInTransition: { value: toShaderFlag(isIncomingTransitioning) },
+  };
+}
+
+function patchGlitchShaders(shader) {
+  shader.vertexShader = GLITCH_VERTEX_DECLARATIONS + shader.vertexShader;
+  shader.vertexShader = shader.vertexShader.replace(
+    `#include <begin_vertex>`,
+    `#include <begin_vertex>
+      ${GLITCH_VERTEX_BODY}
+    `
+  );
+  shader.vertexShader = shader.vertexShader.replace(
+    `#include <project_vertex>`,
+    `#include <project_vertex>
+      if (length(position) < 10.0) {
+        gl_Position = vec4(9999.0, 9999.0, 9999.0, 1.0);
+      }
+    `
+  );
+
+  shader.fragmentShader = GLITCH_FRAGMENT_DECLARATIONS + shader.fragmentShader;
+  shader.fragmentShader = shader.fragmentShader.replace(
+    `#include <dithering_fragment>`,
+    GLITCH_FRAGMENT_BODY
+  );
 }
 
 export function attachPolygonGlitchShader(
@@ -185,19 +243,19 @@ export function attachPolygonGlitchShader(
     isIsolated,
   }
 ) {
-  const isSelected = isIsolated !== undefined ? isIsolated : admin === selectedCountry;
+  const isSelected = isIsolated ?? admin === selectedCountry;
   if (material.isNodeMaterial) {
     // WebGPU renderer (experimental flag): TSL port with the same uniforms.
     const shader = attachGlitchNodes(material, polygonGlitchUniforms, {
       uSideShade: GLITCH_EFFECT_SETTINGS.sideShadeFactor,
       uFadeProgress: 0,
       uTargetColor: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
-      uIsError: isSelected && isError ? 1 : 0,
-      uIsSuccess: isSelected && isSuccess ? 1 : 0,
-      uIsSelection: isSelected && isSelectionHighlight ? 1 : 0,
-      uIsSide: kind === "side" ? 1 : 0,
-      uIsFound: isFound ? 1 : 0,
-      uSelectInTransition: isIncomingTransitioning ? 1 : 0,
+      uIsError: toShaderFlag(isSelected && isError),
+      uIsSuccess: toShaderFlag(isSelected && isSuccess),
+      uIsSelection: toShaderFlag(isSelected && isSelectionHighlight),
+      uIsSide: toShaderFlag(kind === "side"),
+      uIsFound: toShaderFlag(isFound),
+      uSelectInTransition: toShaderFlag(isIncomingTransitioning),
     });
     material.userData.shader = shader;
     registerAnimatedPolygonMaterial(material);
@@ -205,68 +263,22 @@ export function attachPolygonGlitchShader(
   }
   material.customProgramCacheKey = () => `shader-cap-glitch-v13-${kind}`;
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = polygonGlitchUniforms.uTime;
-    shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
-    shader.uniforms.uGlitchTintA = polygonGlitchUniforms.uGlitchTintA;
-    shader.uniforms.uGlitchTintB = polygonGlitchUniforms.uGlitchTintB;
-    shader.uniforms.uSuccessStart = polygonGlitchUniforms.uSuccessStart;
-    shader.uniforms.uSuccessDuration = polygonGlitchUniforms.uSuccessDuration;
-    shader.uniforms.uRevealStart = polygonGlitchUniforms.uRevealStart;
-    shader.uniforms.uLandRadius = polygonGlitchUniforms.uLandRadius;
-    shader.uniforms.uIgniteOrigin = polygonGlitchUniforms.uIgniteOrigin;
-    shader.uniforms.uReducedMotion = polygonGlitchUniforms.uReducedMotion;
-    shader.uniforms.uSelectStart = polygonGlitchUniforms.uSelectStart;
-    shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
-    shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
-    shader.uniforms.uFeatureMode = polygonGlitchUniforms.uFeatureMode;
-    shader.uniforms.uFeatureMap = { value: getFeatureMaskTexture() };
-    shader.uniforms.uCapitalLightsMap = { value: getCapitalLightsTexture() };
-    shader.uniforms.uBiomeMap = { value: getBiomeTexture() };
-    shader.uniforms.uSelOutlineMap = { value: getSelectionOutlineTexture() };
-    shader.uniforms.uSelOutlineBox = selectionOutlineBox;
-    shader.uniforms.uSelOutlinePx = selectionOutlinePx;
-    shader.uniforms.uSideShade = { value: GLITCH_EFFECT_SETTINGS.sideShadeFactor };
-    shader.uniforms.uFadeProgress = { value: 0.0 };
-    shader.uniforms.uTargetColor = {
-      value: new THREE.Color(getBaseColorForCountryAndKind(admin, kind)),
-    };
-    shader.uniforms.uIsError = {
-      value: isSelected && isError ? 1.0 : 0.0,
-    };
-    shader.uniforms.uIsSuccess = {
-      value: isSelected && isSuccess ? 1.0 : 0.0,
-    };
-    shader.uniforms.uIsSelection = {
-      value: isSelected && isSelectionHighlight ? 1.0 : 0.0,
-    };
-    shader.uniforms.uIsSide = { value: kind === "side" ? 1.0 : 0.0 };
-    shader.uniforms.uIsFound = { value: isFound ? 1.0 : 0.0 };
-    shader.uniforms.uSelectInTransition = {
-      value: isIncomingTransitioning ? 1.0 : 0.0,
-    };
+    Object.assign(
+      shader.uniforms,
+      buildGlitchMaterialUniforms({
+        admin,
+        kind,
+        isSelected,
+        isError,
+        isSuccess,
+        isSelectionHighlight,
+        isFound,
+        isIncomingTransitioning,
+        getBaseColorForCountryAndKind,
+      })
+    );
     material.userData.shader = shader;
     registerAnimatedPolygonMaterial(material);
-
-    shader.vertexShader = GLITCH_VERTEX_DECLARATIONS + shader.vertexShader;
-    shader.vertexShader = shader.vertexShader.replace(
-      `#include <begin_vertex>`,
-      `#include <begin_vertex>
-      ${GLITCH_VERTEX_BODY}
-    `
-    );
-    shader.vertexShader = shader.vertexShader.replace(
-      `#include <project_vertex>`,
-      `#include <project_vertex>
-      if (length(position) < 10.0) {
-        gl_Position = vec4(9999.0, 9999.0, 9999.0, 1.0);
-      }
-    `
-    );
-
-    shader.fragmentShader = GLITCH_FRAGMENT_DECLARATIONS + shader.fragmentShader;
-    shader.fragmentShader = shader.fragmentShader.replace(
-      `#include <dithering_fragment>`,
-      GLITCH_FRAGMENT_BODY
-    );
+    patchGlitchShaders(shader);
   };
 }
