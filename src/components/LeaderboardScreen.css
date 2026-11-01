@@ -3,21 +3,21 @@
 /* Desktop-only dimensions — below 1025px the shared .sheet-panel fullscreen
    rules (panelSystem.css) take over. */
 @media (min-width: 1025px) {
-  .leaderboard-panel {
-    width: 460px !important;
-    height: 800px !important;
-    max-height: calc(100vh - 140px) !important;
-    max-height: calc(100dvh - 140px) !important;
-    overflow: hidden !important;
+  .leaderboard-panel.sheet-panel {
+    width: 460px;
+    height: 800px;
+    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
+    overflow: hidden;
   }
 }
 
-.leaderboard-panel .panel-header {
+.leaderboard-panel.sheet-panel .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-xs) !important;
-  padding-bottom: var(--spacing-xs) !important;
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
 }
 
 .leaderboard-panel .leaderboard-full-layout {

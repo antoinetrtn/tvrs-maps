@@ -217,9 +217,9 @@
 .input-field:focus,
 .input-field:active,
 .input-field:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
+  outline: none;
+  box-shadow: none;
+  border: none;
 }
 
 .input-island:focus-within {
@@ -265,7 +265,7 @@
     row-gap: 14px;
     column-gap: var(--spacing-sm);
     align-items: center;
-    transition: opacity var(--transition-normal) !important;
+    transition: opacity var(--transition-normal);
   }
 
   .top-hud-bar.keyboard-mode {
@@ -287,13 +287,13 @@
   }
 
   .hud-bottom-right {
-    display: none !important;
+    display: none;
   }
 
   .bottom-hud-container {
     bottom: calc(var(--spacing-lg) + var(--safe-bottom)); /* Floating like PC */
     width: 90%;
-    transition: opacity var(--transition-normal) !important;
+    transition: opacity var(--transition-normal);
   }
 }
 
@@ -301,28 +301,28 @@
 
 /* Uniform formatting and display font for score/countries found counters in HUD and Focus pill */
 .score-pill {
-  font-family: var(--font-display) !important;
+  font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-weight: 500 !important;
-  font-size: var(--font-size-lg) !important;
-  color: var(--accent) !important;
+  font-weight: 500;
+  font-size: var(--font-size-lg);
+  color: var(--accent);
 }
 
 .score-pill .mini-pill-val,
 .score-pill .mini-pill-sub {
-  font-family: inherit !important;
-  font-size: inherit !important;
-  font-weight: inherit !important;
-  color: inherit !important;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
 }
 
 .score-pill .mini-pill-sub {
-  opacity: 0.7 !important;
+  opacity: 0.7;
 }
 
 /* Prevents transition lag when mobile keyboard opens/resizes visual viewport */
 .bottom-hud-container.keyboard-mode {
-  transition: none !important;
+  transition: none;
 }
 
 /* Hide Webkit Search decoration and cancel buttons */
@@ -330,8 +330,8 @@
 .input-field[type="search"]::-webkit-search-cancel-button,
 .input-field[type="search"]::-webkit-search-results-button,
 .input-field[type="search"]::-webkit-search-results-decoration {
-  display: none !important;
-  -webkit-appearance: none !important;
+  display: none;
+  -webkit-appearance: none;
 }
 
 /* Minimalist HUD pills for active keyboard entry on mobile */
@@ -366,7 +366,7 @@
   top: var(--spacing-lg);
   left: 50%;
   transform: translateX(-50%);
-  width: 90% !important;
+  width: 90%;
   max-width: 480px;
   padding: 0;
   grid-template-columns: auto 1fr auto;
@@ -410,20 +410,20 @@
 }
 
 .timer-pill.active {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 1px var(--accent-soft) !important;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
 }
 
 /* Timer Low Warning alarm styling */
 .timer-low {
-  color: var(--error) !important;
+  color: var(--error);
   animation: timer-alarm 1s infinite ease-in-out alternate;
 }
 
 /* Score increase: a short ink-stamp "tick" — one bump, no glitch */
 .score-increased-flash {
   animation: score-tick var(--dur-pop) var(--steps-snap);
-  color: var(--success) !important;
+  color: var(--success);
 }
 
 /* Focus Card close button styling */

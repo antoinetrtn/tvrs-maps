@@ -108,12 +108,12 @@
 .cards-deck-wrapper.is-user-dragging .ui-card--mode-deck.is-top-card {
   transform: translate3d(var(--drag-x, 0px), calc(var(--drag-abs-x, 0px) * 0.04), 0)
     rotateZ(var(--drag-rot, 0deg)) scale(calc(1.02 * (1000 / 920)));
-  transition: none !important;
+  transition: none;
 }
 .cards-deck-wrapper.is-user-dragging
   .deck-stage[data-drag-dir="next"]
   .ui-card--mode-deck[data-stack-pos="1"] {
-  z-index: var(--z-carousel-lift) !important;
+  z-index: var(--z-carousel-lift);
   transform: translate3d(
       calc(var(--card-x) * (1 - var(--drag-progress, 0))),
       calc(var(--card-y) * (1 - var(--drag-progress, 0))),
@@ -123,12 +123,12 @@
     scale(
       calc(var(--card-scale-eff) + (1.0869565 - var(--card-scale-eff)) * var(--drag-progress, 0))
     );
-  transition: none !important;
+  transition: none;
 }
 .cards-deck-wrapper.is-user-dragging
   .deck-stage[data-drag-dir="prev"]
   .ui-card--mode-deck[data-is-prev="true"] {
-  z-index: var(--z-carousel-lift) !important;
+  z-index: var(--z-carousel-lift);
   transform: translate3d(
       calc(var(--card-x) * (1 - var(--drag-progress, 0))),
       calc(var(--card-y) * (1 - var(--drag-progress, 0))),
@@ -138,37 +138,37 @@
     scale(
       calc(var(--card-scale-eff) + (1.0869565 - var(--card-scale-eff)) * var(--drag-progress, 0))
     );
-  transition: none !important;
+  transition: none;
 }
 .deck-stage[data-release="fling"] .ui-card--mode-deck {
   transition:
     transform var(--dur-fling) var(--ease-fling),
     border-color var(--dur-fling) ease,
-    box-shadow var(--dur-fling) ease !important;
+    box-shadow var(--dur-fling) ease;
 }
 
 .deck-stage[data-release="settle"] .ui-card--mode-deck {
   transition:
     transform var(--dur-settle) var(--ease-out),
     border-color var(--dur-settle) ease,
-    box-shadow var(--dur-settle) ease !important;
+    box-shadow var(--dur-settle) ease;
 }
 .cards-deck-wrapper.is-reduced-motion .ui-card--mode-deck {
-  transform: none !important;
-  transition: opacity var(--dur-fast) linear !important;
+  transform: none;
+  transition: opacity var(--dur-fast) linear;
 }
 
 .cards-deck-wrapper.is-reduced-motion .ui-card--mode-deck.is-stacked-card {
-  opacity: 0 !important;
-  pointer-events: none !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .cards-deck-wrapper.is-reduced-motion .ui-card--mode-deck.is-top-card {
-  opacity: 1 !important;
+  opacity: 1;
 }
 
 .cards-deck-wrapper.is-reduced-motion.is-user-dragging .ui-card--mode-deck.is-top-card {
-  transform: translate3d(var(--drag-x, 0px), 0, 0) !important;
+  transform: translate3d(var(--drag-x, 0px), 0, 0);
 }
 
 /* — moved from src/components/HomeScreenDesktop.css — */

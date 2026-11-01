@@ -2,21 +2,21 @@
    Desktop-only dimensions — below 1025px the shared .sheet-panel fullscreen
    rules (panelSystem.css) take over. */
 @media (min-width: 1025px) {
-  .profile-panel {
-    width: clamp(320px, 42vw, 460px) !important;
-    height: min(82dvh, 780px) !important;
-    max-height: calc(100vh - 140px) !important;
-    max-height: calc(100dvh - 140px) !important;
-    overflow: hidden !important;
+  .profile-panel.sheet-panel {
+    width: clamp(320px, 42vw, 460px);
+    height: min(82dvh, 780px);
+    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
+    overflow: hidden;
   }
 }
 
-.profile-panel .panel-body {
+.profile-panel.sheet-panel .panel-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden !important;
-  padding-bottom: 0 !important;
+  overflow: hidden;
+  padding-bottom: 0;
   min-height: 0;
 }
 
@@ -411,31 +411,31 @@
 /* Mobile profile layout — fullscreen positioning comes from the shared
    .sheet-panel rules in panelSystem.css; only profile-specific tweaks here. */
 @media (max-width: 1024px) {
-  .profile-panel {
-    display: flex !important;
-    flex-direction: column !important;
+  .profile-panel.sheet-panel {
+    display: flex;
+    flex-direction: column;
   }
 
-  .profile-panel .panel-body {
-    padding-bottom: 0 !important;
-    flex: 1 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+  .profile-panel.sheet-panel .panel-body {
+    padding-bottom: 0;
+    flex: 1;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .profile-panel .profile-tab-content,
   .profile-panel .profile-customization-container,
   .profile-panel form.profile-form,
   .profile-panel .stats-tab-content {
-    flex: 1 !important;
-    min-height: 0 !important;
-    height: auto !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Remove nested scrolling inside the avatar selector on mobile */
