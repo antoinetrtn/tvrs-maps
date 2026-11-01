@@ -110,6 +110,140 @@ const _pin = new THREE.Vector3();
 const _cam = [0, 0, 0];
 const _dir = [0, 0, 0];
 
+function getOrCreateCursorEntry(state, target, color) {
+  const { userId, player } = target;
+  let entry = state.entries.get(userId);
+  if (entry && entry.color !== color) {
+    disposeEntry(entry);
+    state.entries.delete(userId);
+    entry = null;
+  }
+  if (!entry) {
+    const object = createCursorObject({ name: player.display_name, color });
+    state.group.add(object.anchor);
+    entry = {
+      color,
+      object,
+      motion: createCursorMotion(target),
+      placement: { left: false, below: false },
+      hl: null,
+      hlKey: "",
+      link: null,
+    };
+    state.entries.set(userId, entry);
+  }
+  entry.object.setName(player.display_name);
+  return entry;
+}
+
+function computeCursorOpacity(age) {
+  if (age > CURSOR_STALE_MS - STALE_FADE_MS) {
+    return Math.max(0, (CURSOR_STALE_MS - age) / STALE_FADE_MS);
+  }
+  return 1;
+}
+
+function isCursorOnScreen(beyond, z, sx, sy, rect) {
+  return !beyond && z < 1 && sx > 6 && sx < rect.width - 6 && sy > 6 && sy < rect.height - 6;
+}
+
+function updateOpponentCursor(state, target, frameCtx) {
+  const {
+    camera,
+    box,
+    rect,
+    viewH,
+    fovTan,
+    now,
+    dt,
+    reduced,
+    slots,
+    features,
+    selfCountry,
+    resolve,
+  } = frameCtx;
+  const { userId, player } = target;
+  const color = getPaletteEntry(player.color).hex;
+  const entry = getOrCreateCursorEntry(state, target, color);
+
+  // Motion: extrapolate the last sample, then spring toward it at display rate.
+  const goal = extrapolateTarget(target, now - target.at);
+  const ll = entry.motion.step(dt, reduced ? toUnit(target) : goal, { reduced });
+  const opacity = computeCursorOpacity(now - target.at);
+
+  const anchor = entry.object.anchor;
+  cursorPosition(ll.lat, ll.lng, anchor.position);
+  _n.copy(anchor.position).normalize();
+  anchor.quaternion.setFromUnitVectors(_up, _n);
+  const dist = camera.position.distanceTo(anchor.position);
+  const unit = (2 * dist * fovTan) / viewH;
+  entry.object.setUnit(unit);
+  anchor.updateMatrixWorld(true);
+
+  _dir[0] = _n.x;
+  _dir[1] = _n.y;
+  _dir[2] = _n.z;
+  const beyond = isBeyondHorizon(_dir, _cam, GLOBE_RADIUS);
+
+  // Projected top of the pin → screen position (for label side + on-screen test).
+  // The pin is a billboard: its « up » is the screen's up, not the surface normal.
+  _pin
+    .copy(_up)
+    .applyQuaternion(camera.quaternion)
+    .multiplyScalar(CURSOR_PIN_HEIGHT_PX * unit)
+    .add(anchor.position);
+  _v.copy(_pin).project(camera);
+  const sx = box.left + (_v.x * 0.5 + 0.5) * box.width;
+  const sy = box.top + (-_v.y * 0.5 + 0.5) * box.height;
+  const onScreen = isCursorOnScreen(beyond, _v.z, sx, sy, rect);
+
+  const showCursor = !beyond;
+  anchor.visible = showCursor && onScreen;
+  if (showCursor) {
+    entry.placement = labelPlacement(sx, sy, entry.object.tagWidth(), rect, entry.placement);
+    entry.object.update({ camera, t: now, placement: entry.placement, reduced });
+    entry.object.setOpacity(opacity);
+  }
+
+  // Edge hint: cursor out of sight (behind the globe or off-screen).
+  if (onScreen) {
+    state.hints.hide(userId);
+  } else {
+    _v.copy(_pin).applyMatrix4(camera.matrixWorldInverse);
+    const place = edgeHintPlacement(_v.x, -_v.y, rect, hintInset(rect.width));
+    state.hints.show(userId, {
+      name: player.display_name,
+      color,
+      x: place.x,
+      y: place.y,
+      dir: place.dir,
+      leftSide: place.x > rect.width / 2,
+    });
+  }
+
+  updateHighlight(state, entry, {
+    target,
+    slots,
+    features,
+    selfCountry,
+    resolve,
+    opacity,
+    anchor,
+    onScreen,
+    unit,
+    camera,
+  });
+}
+
+function pruneStaleCursorEntries(state, seen) {
+  for (const [userId, entry] of state.entries) {
+    if (seen.has(userId)) continue;
+    disposeEntry(entry);
+    state.entries.delete(userId);
+  }
+  state.hints.prune(seen);
+}
+
 /** Per-frame update of every opponent's cursor, highlight, link and edge hint. */
 function updateFrame(state, ctx, dt) {
   const { camera, canvas, players, features, resolve } = ctx;
@@ -136,113 +270,27 @@ function updateFrame(state, ctx, dt) {
     selfCountry
   );
   const seen = new Set();
+  const frameCtx = {
+    camera,
+    box,
+    rect,
+    viewH,
+    fovTan,
+    now,
+    dt,
+    reduced,
+    slots,
+    features,
+    selfCountry,
+    resolve,
+  };
 
   for (const target of targets) {
-    const { userId, player } = target;
-    seen.add(userId);
-    const color = getPaletteEntry(player.color).hex;
-    let entry = state.entries.get(userId);
-    if (entry && entry.color !== color) {
-      disposeEntry(entry);
-      state.entries.delete(userId);
-      entry = null;
-    }
-    if (!entry) {
-      const object = createCursorObject({ name: player.display_name, color });
-      state.group.add(object.anchor);
-      entry = {
-        color,
-        object,
-        motion: createCursorMotion(target),
-        placement: { left: false, below: false },
-        hl: null,
-        hlKey: "",
-        link: null,
-      };
-      state.entries.set(userId, entry);
-    }
-    entry.object.setName(player.display_name);
-
-    // Motion: extrapolate the last sample, then spring toward it at display rate.
-    const goal = extrapolateTarget(target, now - target.at);
-    const ll = entry.motion.step(dt, reduced ? toUnit(target) : goal, { reduced });
-    const age = now - target.at;
-    const opacity =
-      age > CURSOR_STALE_MS - STALE_FADE_MS
-        ? Math.max(0, (CURSOR_STALE_MS - age) / STALE_FADE_MS)
-        : 1;
-
-    const anchor = entry.object.anchor;
-    cursorPosition(ll.lat, ll.lng, anchor.position);
-    _n.copy(anchor.position).normalize();
-    anchor.quaternion.setFromUnitVectors(_up, _n);
-    const dist = camera.position.distanceTo(anchor.position);
-    const unit = (2 * dist * fovTan) / viewH;
-    entry.object.setUnit(unit);
-    anchor.updateMatrixWorld(true);
-
-    _dir[0] = _n.x;
-    _dir[1] = _n.y;
-    _dir[2] = _n.z;
-    const beyond = isBeyondHorizon(_dir, _cam, GLOBE_RADIUS);
-
-    // Projected top of the pin → screen position (for label side + on-screen test).
-    // The pin is a billboard: its « up » is the screen's up, not the surface normal.
-    _pin
-      .copy(_up)
-      .applyQuaternion(camera.quaternion)
-      .multiplyScalar(CURSOR_PIN_HEIGHT_PX * unit)
-      .add(anchor.position);
-    _v.copy(_pin).project(camera);
-    const sx = box.left + (_v.x * 0.5 + 0.5) * box.width;
-    const sy = box.top + (-_v.y * 0.5 + 0.5) * box.height;
-    const onScreen =
-      !beyond && _v.z < 1 && sx > 6 && sx < rect.width - 6 && sy > 6 && sy < rect.height - 6;
-
-    const showCursor = !beyond;
-    anchor.visible = showCursor && onScreen;
-    if (showCursor) {
-      entry.placement = labelPlacement(sx, sy, entry.object.tagWidth(), rect, entry.placement);
-      entry.object.update({ camera, t: now, placement: entry.placement, reduced });
-      entry.object.setOpacity(opacity);
-    }
-
-    // Edge hint: cursor out of sight (behind the globe or off-screen).
-    if (onScreen) {
-      state.hints.hide(userId);
-    } else {
-      _v.copy(_pin).applyMatrix4(camera.matrixWorldInverse);
-      const place = edgeHintPlacement(_v.x, -_v.y, rect, hintInset(rect.width));
-      state.hints.show(userId, {
-        name: player.display_name,
-        color,
-        x: place.x,
-        y: place.y,
-        dir: place.dir,
-        leftSide: place.x > rect.width / 2,
-      });
-    }
-
-    updateHighlight(state, entry, {
-      target,
-      slots,
-      features,
-      selfCountry,
-      resolve,
-      opacity,
-      anchor,
-      onScreen,
-      unit,
-      camera,
-    });
+    seen.add(target.userId);
+    updateOpponentCursor(state, target, frameCtx);
   }
 
-  for (const [userId, entry] of state.entries) {
-    if (seen.has(userId)) continue;
-    disposeEntry(entry);
-    state.entries.delete(userId);
-  }
-  state.hints.prune(seen);
+  pruneStaleCursorEntries(state, seen);
 }
 
 /** Country surface + outline + link line of one opponent's selection. */
