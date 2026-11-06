@@ -9,7 +9,6 @@ import { blackoutOceanOutputNode, createStandardMaterial } from "../render/webgp
 const applyBlackoutOceanShader = (shader) => {
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
-  shader.uniforms.uSunDir = polygonGlitchUniforms.uSunDir;
   shader.uniforms.uGlobeMotion = polygonGlitchUniforms.uGlobeMotion;
   shader.uniforms.uGlobeVelocity = polygonGlitchUniforms.uGlobeVelocity;
   shader.vertexShader = `
@@ -30,7 +29,6 @@ const applyBlackoutOceanShader = (shader) => {
     uniform float uRimStrength;
     uniform float uPixelScale;
     uniform float uTime;
-    uniform vec3 uSunDir;
     uniform float uGlobeMotion;
     uniform vec2 uGlobeVelocity;
 
@@ -47,9 +45,6 @@ const applyBlackoutOceanShader = (shader) => {
       // Latitude-compensated spherical cell grid (~7.5 CSS px cells at default zoom,
       // subdivided into a crisp 5x5 pixel-art bitmap for ~, -, and · wavelets)
       vec3 sphereDir = normalize(vWorldNormal);
-      float sunNdotL = clamp(dot(sphereDir, normalize(uSunDir)), -1.0, 1.0);
-      float dayAmt = smoothstep(-0.08, 0.18, sunNdotL);
-      float oceanSunMod = mix(0.82, 1.14, dayAmt);
       float rawLat = asin(clamp(sphereDir.y, -1.0, 1.0));
       float rawLng = atan(sphereDir.z, sphereDir.x);
       float latNorm = rawLat / 3.14159265 + 0.5;
@@ -124,7 +119,6 @@ const applyBlackoutOceanShader = (shader) => {
       vec3 graticuleColor = mix(vec3(0.55, 0.65, 0.75), uRimColor, 0.45);
       vec3 graticuleRgb = graticuleColor * (specialDither * (0.07 + uRimStrength * 0.28));
 
-      gl_FragColor.rgb *= oceanSunMod;
       gl_FragColor.rgb += waveRgb + graticuleRgb;
       `
     )}
@@ -149,7 +143,6 @@ export function useGlobeMaterial({ UI_COLORS = getThemeColors() } = {}) {
         shader.uniforms.uRimStrength = { value: rimStrength };
         shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
         shader.uniforms.uTime = polygonGlitchUniforms.uTime;
-        shader.uniforms.uSunDir = polygonGlitchUniforms.uSunDir;
         mat.userData.shader = shader;
         applyBlackoutOceanShader(shader);
       };

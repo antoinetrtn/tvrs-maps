@@ -115,7 +115,6 @@ export const GLITCH_FRAGMENT_DECLARATIONS = `
   uniform float uSuccessStart;
   uniform float uSelectStart;
   uniform float uShowcaseLights;
-  uniform vec3 uSunDir;
   uniform float uIsRegionalMode;
 ${FEAT.FEATURE_DECLARATIONS}
   uniform sampler2D uCapitalLightsMap;
@@ -285,10 +284,6 @@ ${SELECT_CITY_DEFS}
       float limbFactor = mix(0.95, 1.02, smoothstep(0.0, 0.65, ndv));
       float rimSheen = pow(1.0 - ndv, 3.2) * 0.045;
 
-      float sunNdotL = clamp(dot(sphereNormal, normalize(uSunDir)), -1.0, 1.0);
-      float dayAmt = smoothstep(-0.08, 0.18, sunNdotL);
-      float sunLightMod = mix(0.82, 1.12, dayAmt);
-      float cityDayAtten = mix(mix(1.0, 0.88, dayAmt), 1.0, uShowcaseLights);
       float cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
       float cLng = atan(sphereNormal.x, sphereNormal.z);
       vec2 cartUv = vec2(cLng / 6.2831853 + 0.5, cLat / 3.14159265 + 0.5);
@@ -391,7 +386,7 @@ ${SELECT_CITY_DEFS}
       // Found land (solo tone or Conquête player colour) follows the same reveal mask.
       landSurface = mix(DISC_DARK_LAND, landSurface, mix(1.0, landMask, isAwakenedCap));
       vec3 engrave = landSurface * (parallelLine * 0.04 + crossTick * 0.09) + vec3(rimSheen);
-      vec3 baseLit = (landSurface * limbFactor + engrave) * sunLightMod;
+      vec3 baseLit = landSurface * limbFactor + engrave;
 
       vec2 cityCellId = floor(cartUv * vec2(3600.0, 1800.0));
       vec4 capitalSample = texture2D(uCapitalLightsMap, cartUv);
@@ -456,7 +451,7 @@ ${FEAT.FEATURE_SURFACE_CHUNK}
         max(activeTerrainLit * 1.35, vec3(0.75, 0.55, 0.22)),
         isConquestOwned * 0.5
       );
-      float auraW = effectiveAura * 0.28 * cityPower * cityDayAtten;
+      float auraW = effectiveAura * 0.28 * cityPower;
       vec3 withAura = mix(activeTerrainLit, max(activeTerrainLit, auraColor), auraW);
       vec3 colorOuterTentacle = mix(
         vec3(0.90, 0.50, 0.15),
@@ -484,16 +479,16 @@ ${FEAT.FEATURE_SURFACE_CHUNK}
       );
       float regionalSparkAlpha = isRegionalPin * regMicroSpark * (0.88 + 0.12 * satTwinkle);
       float sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uIsRegionalMode)
-        * cityPower * (1.0 - uFeatureMode) * cityDayAtten;
+        * cityPower * (1.0 - uFeatureMode);
       // Leading edge of the ignition wave burns in the existing win gold.
       sparkColor = mix(sparkColor, vec3(0.96, 0.68, 0.22) * 1.25, igniteFlash);
       vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
       // Ahead of the front, the found country's city pixels keep their dim selection
       // glow, so the ignition only brightens them (no blackout, no restart).
       float preLit = isAwakenedCap * (1.0 - igniteMask) * (1.0 - uIsRegionalMode) * step(0.25, cityDensity);
-      capRgb = mix(capRgb, SELECT_CITY_AMBER, preLit * SELECT_CITY_ALPHA * cityDayAtten);
+      capRgb = mix(capRgb, SELECT_CITY_AMBER, preLit * SELECT_CITY_ALPHA);
       capRgb = mix(capRgb, SELECT_CITY_AMBER, haloBand * isAwakenedCap * DISC_HALO_ALPHA);
 
-      vec3 sideRgb = landSurface * 0.58 * sunLightMod;
+      vec3 sideRgb = landSurface * 0.58;
       sideRgb = mix(sideRgb, SELECT_CITY_AMBER, max(haloAmt, outlineAmt) * isAwakenedCap);
       gl_FragColor.rgb = mix(capRgb, sideRgb, isSideWall);`;
