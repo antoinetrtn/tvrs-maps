@@ -42,6 +42,7 @@ export function applyCountrySurfaceGrainShader(
   const g = polygonGlitchUniforms;
   shader.uniforms.uPixelScale = polygonGlitchUniforms.uPixelScale;
   shader.uniforms.uTime = polygonGlitchUniforms.uTime;
+  shader.uniforms.uSunDir = polygonGlitchUniforms.uSunDir;
   shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
   shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
   shader.uniforms.uFeatureMode = polygonGlitchUniforms.uFeatureMode;
@@ -82,6 +83,7 @@ export function applyCountrySurfaceGrainShader(
     varying vec3 vViewDir;
     uniform float uPixelScale;
     uniform float uTime;
+    uniform vec3 uSunDir;
     uniform float uShowcaseLights;
     uniform float uIsRegionalMode;
     uniform float uFeatureMode;

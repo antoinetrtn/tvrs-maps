@@ -1,7 +1,12 @@
 import { useEffect } from "react";
+import * as THREE from "three";
 
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { homeWakeState, polygonGlitchUniforms } from "../render/polygonGlitchShader";
+
+// Directional sun light oblique in camera space: upper-right headlight (X=0.35, Y=0.55, Z=0.75).
+const SUN_DIR_CAMERA = new THREE.Vector3(0.35, 0.55, 0.75).normalize();
+const scratchSunWorld = new THREE.Vector3();
 
 const stepGlobeMotionState = (state, cam, dt, reduced) => {
   if (reduced) {
@@ -111,6 +116,10 @@ export function useGlobeShaderClock({ globeEl, globeMaterialRef, needsSharedTime
         polygonGlitchUniforms.uReducedMotion.value = reduced ? 1 : 0;
         polygonGlitchUniforms.uHomeWake.value = showcase ? motionState.wake : 0;
         const cam = args[2] || globeEl.current?.camera?.();
+        if (cam?.matrixWorld) {
+          scratchSunWorld.copy(SUN_DIR_CAMERA).transformDirection(cam.matrixWorld);
+          polygonGlitchUniforms.uSunDir.value.copy(scratchSunWorld);
+        }
         stepGlobeMotionState(motionState, cam, dt, reduced);
 
         polygonGlitchUniforms.uGlobeMotion.value = motionState.smoothMotion;
