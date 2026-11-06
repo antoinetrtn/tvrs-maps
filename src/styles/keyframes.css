@@ -191,6 +191,17 @@
   }
 }
 
+/* — pixel logo stars (Logo.css) — */
+@keyframes pixel-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
 /* — from src/components/PassportStamp.css — */
 @keyframes stamp-in {
   0% {

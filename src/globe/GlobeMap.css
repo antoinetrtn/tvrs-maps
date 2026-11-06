@@ -30,9 +30,10 @@
 }
 
 .globe-backdrop-grid {
-  background-image: radial-gradient(var(--grid-dot) 1.1px, transparent 0);
-  background-size: 20px 20px;
-  opacity: 1;
+  background-image:
+    repeating-linear-gradient(0deg, var(--grid-dot) 0 1px, transparent 1px 20px),
+    repeating-linear-gradient(90deg, var(--grid-dot) 0 1px, transparent 1px 20px);
+  opacity: 0.75;
 }
 
 .globe-backdrop-vignette {

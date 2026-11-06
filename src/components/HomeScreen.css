@@ -224,13 +224,15 @@
 
 .home-hero .home-hero-logo.logo-container.medium {
   width: var(--hero-logo-w);
-  height: calc(var(--hero-logo-w) * 0.746);
+  height: calc(var(--hero-logo-w) * 0.75);
   margin-left: calc(var(--hero-logo-w) * -0.028);
 }
 
 .home-hero-logo .main-logo-svg {
   color: var(--text-main);
   animation: home-logo-fade var(--dur-slow) var(--ease-out) both;
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
 }
 
 .home-hero-logo .logo-stars .star {
