@@ -171,16 +171,18 @@ function buildCityLightsLayer(p) {
   const effectiveAura = mix(worldAura, isRegionalPin.mul(0.42), uRegionalNode).mul(
     float(1.0).sub(uFeatureNode)
   );
-  const dayCityDim = mix(float(1.0), float(0.35), p.dayAmt || float(0.0));
+  // Soft day atten; homepage showcase (uShowcase≈1) keeps full city power.
+  const dayCityDim = mix(float(1.0), float(0.88), p.dayAmt || float(0.0));
+  const cityDayAtten = mix(dayCityDim, float(1.0), p.uShowcaseNode || float(0.0));
   const trafficWave = sin(uTimeNode.mul(2.8).sub(worldAura.mul(8.5)).add(cityHash.mul(6.2831853)))
-    .mul(0.12)
-    .add(0.88);
+    .mul(0.15)
+    .add(0.85);
   const satTwinkle = sin(uTimeNode.mul(4.2).add(cityHash2.mul(6.2831853)))
-    .mul(0.12)
-    .add(0.88);
+    .mul(0.16)
+    .add(0.84);
   const tierPinpoint = step(0.82, cityDensity);
   const tierArterial = float(1.0).sub(tierPinpoint).mul(step(0.55, cityDensity));
-  const tierTentacle = float(1.0).sub(max(tierPinpoint, tierArterial)).mul(step(0.32, cityDensity));
+  const tierTentacle = float(1.0).sub(max(tierPinpoint, tierArterial)).mul(step(0.27, cityDensity));
 
   const auraColor = mix(
     vec3(0.68, 0.4, 0.12),
@@ -190,10 +192,10 @@ function buildCityLightsLayer(p) {
   const withAura = mix(
     terrainLit,
     max(terrainLit, auraColor),
-    effectiveAura.mul(0.22).mul(cityPower).mul(dayCityDim)
+    effectiveAura.mul(0.28).mul(cityPower).mul(cityDayAtten)
   );
   const colorOuterTentacle = mix(
-    vec3(0.86, 0.48, 0.14),
+    vec3(0.9, 0.5, 0.15),
     vec3(1.0, 0.84, 0.48),
     isConquestOwned.mul(0.45)
   );
@@ -218,12 +220,12 @@ function buildCityLightsLayer(p) {
   const worldSparkAlpha = tierPinpoint
     .mul(0.98)
     .add(tierArterial.mul(cityHash2.mul(0.16).add(0.78)).mul(trafficWave))
-    .add(tierTentacle.mul(cityHash2.mul(0.18).add(0.38)).mul(satTwinkle));
+    .add(tierTentacle.mul(cityHash2.mul(0.2).add(0.46)).mul(satTwinkle));
   const regionalSparkAlpha = isRegionalPin.mul(satTwinkle.mul(0.12).add(0.88));
   const sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uRegionalNode)
     .mul(cityPower)
     .mul(float(1.0).sub(uFeatureNode))
-    .mul(dayCityDim);
+    .mul(cityDayAtten);
   return { capRgb: mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0)) };
 }
 
@@ -369,6 +371,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       cartUv,
       baseLit: sunBaseLit,
       dayAmt,
+      uShowcaseNode,
       cityPower,
       terrainPower,
       isSoloFound,

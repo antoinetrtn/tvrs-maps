@@ -34,9 +34,13 @@ describe("Sun terminator & oblique headlight lighting", () => {
     );
     expect(glsl).toContain("float dayAmt = smoothstep(-0.08, 0.18, sunNdotL);");
     expect(glsl).toContain("float sunLightMod = mix(0.82, 1.12, dayAmt);");
-    expect(glsl).toContain("float dayCityDim = mix(1.0, 0.35, dayAmt);");
+    expect(glsl).toContain(
+      "float cityDayAtten = mix(mix(1.0, 0.88, dayAmt), 1.0, uShowcaseLights);"
+    );
     expect(glsl).toContain("baseLit = (landSurface * limbFactor + engrave) * sunLightMod;");
-    expect(glsl).toContain("dayCityDim");
+    expect(glsl).toContain("cityDayAtten");
+    // Regression: day floor must stay high so camera-facing day side keeps cities.
+    expect(glsl).toMatch(/mix\(1\.0,\s*0\.8[0-9],\s*dayAmt\)/);
   });
 
   it("wires uSunDir into the WebGL country polygon material onBeforeCompile", () => {
@@ -102,50 +106,48 @@ describe("Sun terminator & oblique headlight lighting", () => {
 describe("Urban lights refinements (less noisy, chic amber)", () => {
   it("applies refined thresholds and amplitudes in GLSL", () => {
     const glsl = COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY;
-    // tierTentacle threshold 0.32
-    expect(glsl).toContain("step(0.32, cityDensity)");
-    // effectiveAura mix factor 0.22
-    expect(glsl).toContain("effectiveAura * 0.22 * cityPower");
-    // trafficWave amplitude 0.12 (base 0.88)
-    expect(glsl).toContain("0.88 + 0.12 * sin(");
-    // satTwinkle amplitude 0.12 (base 0.88)
-    expect(glsl).toContain("0.88 + 0.12 * sin(uTime * 4.2");
-    // tierTentacle sparkAlpha base 0.38 + 0.18
-    expect(glsl).toContain("tierTentacle * (0.38 + 0.18 * cityHash2) * satTwinkle");
-    // colorOuterTentacle darker amber
-    expect(glsl).toContain("vec3(0.86, 0.48, 0.14)");
+    expect(glsl).toContain("step(0.27, cityDensity)");
+    expect(glsl).toContain("effectiveAura * 0.28 * cityPower");
+    expect(glsl).toContain("0.85 + 0.15 * sin(uTime * 2.8");
+    expect(glsl).toContain("0.84 + 0.16 * sin(uTime * 4.2");
+    expect(glsl).toContain("tierTentacle * (0.46 + 0.20 * cityHash2) * satTwinkle");
+    expect(glsl).toContain("vec3(0.90, 0.50, 0.15)");
+    expect(glsl).toContain("cityDayAtten");
   });
 
   it("applies refined thresholds in WebGPU TSL layer", () => {
     const surfaceNodesPath = path.resolve(__dirname, "../globe/render/webgpu/surfaceNodes.js");
     const surfaceSource = fs.readFileSync(surfaceNodesPath, "utf8");
-    expect(surfaceSource).toContain("step(0.32, cityDensity)");
-    expect(surfaceSource).toContain("mul(0.12)\n    .add(0.88)");
-    expect(surfaceSource).toContain("vec3(0.86, 0.48, 0.14)");
+    expect(surfaceSource).toContain("step(0.27, cityDensity)");
+    expect(surfaceSource).toMatch(/\.mul\(0\.15\)/);
+    expect(surfaceSource).toMatch(/\.add\(0\.85\)/);
+    expect(surfaceSource).toMatch(/\.mul\(0\.16\)/);
+    expect(surfaceSource).toMatch(/\.add\(0\.84\)/);
+    expect(surfaceSource).toContain("0.9, 0.5, 0.15");
+    expect(surfaceSource).toContain("cityDayAtten");
+    expect(surfaceSource).toContain("0.88");
   });
 
   it("applies refined capital lights texture parameters", () => {
     const texPath = path.resolve(__dirname, "../globe/render/capitalLightsTexture.js");
     const texSource = fs.readFileSync(texPath, "utf8");
-    // Reduced tentacles: secondary 3, compact 4, major 5, default 4
-    expect(texSource).toContain("TENTACLES_BY_MODE = { secondary: 3, compact: 4, major: 5 };");
-    expect(texSource).toContain("TENTACLES_BY_MODE[scaleMode] ?? 4;");
-    // Reduced maxStepsBase: secondary 7, compact 9, major 16, default 12
-    expect(texSource).toContain("STEPS_BY_MODE = { secondary: 7, compact: 9, major: 16 };");
-    expect(texSource).toContain("STEPS_BY_MODE[scaleMode] ?? 12;");
-    // Selective keepProb
-    expect(texSource).toContain("0.86");
-    expect(texSource).toContain("0.72");
-    expect(texSource).toContain("0.56");
-    // Aura steps: secondary 3, compact 4, major 6, default 5
-    expect(texSource).toContain(
-      "AURA_STEPS_BY_SCALE = {\n  secondary: 3,\n  compact: 4,\n  major: 6,\n};"
-    );
-    expect(texSource).toContain("return 5;");
-    // Corridors max distDeg 7.5, isTownBead rarer
-    expect(texSource).toContain("distDeg > 7.5");
-    expect(texSource).toContain("i % 5 === 0 || rRand > 0.68");
-    // satCount: 0 for compact/secondary, else 1
-    expect(texSource).toContain('scaleMode === "compact" || scaleMode === "secondary" ? 0 : 1');
+    expect(texSource).toContain("TENTACLES_BY_MODE = { secondary: 4, compact: 5, major: 6 };");
+    expect(texSource).toContain("TENTACLES_BY_MODE[scaleMode] ?? 5;");
+    expect(texSource).toContain("STEPS_BY_MODE = { secondary: 8, compact: 10, major: 20 };");
+    expect(texSource).toContain("STEPS_BY_MODE[scaleMode] ?? 14;");
+    expect(texSource).toContain("return 0.9;");
+    expect(texSource).toContain("return 0.76;");
+    expect(texSource).toContain("return 0.6;");
+    expect(texSource).toContain("secondary: 4,\n  compact: 5,\n  major: 7,");
+    expect(texSource).toContain("distDeg > 8.5");
+    expect(texSource).toContain("i % 4 === 0 || rRand > 0.6");
+    expect(texSource).toContain('scaleMode === "compact" || scaleMode === "secondary" ? 1 : 2');
+  });
+
+  it("does not multiply city spark by a harsh day floor below 0.8", () => {
+    const glsl = COUNTRY_SURFACE_GRAIN_FRAGMENT_BODY;
+    expect(glsl).not.toMatch(/mix\(1\.0,\s*0\.[0-7][0-9],\s*dayAmt\)/);
+    expect(glsl).toContain("* cityDayAtten");
+    expect(glsl).toContain("mix(mix(1.0, 0.88, dayAmt), 1.0, uShowcaseLights)");
   });
 });
