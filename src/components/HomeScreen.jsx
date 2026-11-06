@@ -4,6 +4,7 @@ import "./HomeDock.css";
 import { Settings2, User } from "pixelarticons/react";
 import React, { useCallback, useEffect, useState } from "react";
 
+import { isDevMarkEnabled } from "../config/deployEnv";
 import { useTranslation } from "../config/i18n";
 import useMountedOnce from "../hooks/useMountedOnce";
 import { getLevelAndProgress } from "../utils/gamification";
@@ -103,7 +104,18 @@ const HomeScreen = ({
         aria-hidden={exiting ? "true" : undefined}
       >
         <header className="home-hero">
-          <Logo size="medium" className="home-hero-logo" />
+          <div className="home-hero-brand">
+            <Logo size="medium" className="home-hero-logo" />
+            {isDevMarkEnabled() && (
+              <span
+                className="home-dev-badge"
+                title="Environnement de développement"
+                aria-label="Environnement de développement"
+              >
+                DEV
+              </span>
+            )}
+          </div>
           <h1 className="home-hero-title">{hero.title}</h1>
           <p className="home-hero-sub sr-only">{hero.sub}</p>
         </header>

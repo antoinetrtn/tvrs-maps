@@ -46,9 +46,120 @@
       href="https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
+    <style>
+      #tvrs-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #0e1116;
+        color: #ede6d6;
+        opacity: 1;
+        transition:
+          opacity 160ms steps(3, end),
+          visibility 160ms steps(3, end);
+        pointer-events: auto;
+      }
+      #tvrs-boot.tvrs-boot-done {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .tvrs-boot-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .tvrs-boot-logo {
+        color: #ede6d6;
+        animation: tvrs-boot-pulse 1200ms steps(4, end) infinite alternate;
+      }
+      .tvrs-boot-track {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .tvrs-boot-cell {
+        width: 10px;
+        height: 3px;
+        background-color: rgba(237, 230, 214, 0.16);
+        animation: tvrs-boot-cell-run 900ms steps(3, end) infinite;
+        animation-delay: calc(var(--i, 0) * 120ms);
+      }
+      .tvrs-boot-text {
+        margin: 0;
+        font-family:
+          "Space Grotesk",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+        color: #8f948f;
+      }
+      @keyframes tvrs-boot-pulse {
+        0% {
+          opacity: 0.45;
+        }
+        100% {
+          opacity: 0.95;
+        }
+      }
+      @keyframes tvrs-boot-cell-run {
+        0%,
+        100% {
+          background-color: rgba(237, 230, 214, 0.16);
+        }
+        50% {
+          background-color: #ede6d6;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .tvrs-boot-logo,
+        .tvrs-boot-cell {
+          animation: none !important;
+        }
+        .tvrs-boot-logo {
+          opacity: 0.85;
+        }
+        .tvrs-boot-cell {
+          background-color: #ede6d6;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="tvrs-boot" role="status" aria-busy="true" aria-live="polite">
+      <div class="tvrs-boot-inner">
+        <svg
+          class="tvrs-boot-logo"
+          aria-hidden="true"
+          viewBox="0 0 100 75"
+          width="75"
+          height="56"
+          shape-rendering="crispEdges"
+        >
+          <path
+            fill="currentColor"
+            d="M64,5h1v1h-1zM50,6h1v1h-1zM65,6h1v2h-1zM49,7h2v1h-2zM70,7h3v1h-3zM49,8h3v1h-3zM65,8h2v2h-2zM72,8h1v2h-1zM45,9h10v1h-10zM48,10h4v1h-4zM64,10h4v1h-4zM24,11h1v1h-1zM49,11h2v1h-2zM59,11h11v1h-11zM23,12h1v1h-1zM61,12h12v1h-12zM50,12h1v2h-1zM22,13h4v1h-4zM65,13h5v1h-5zM21,14h3v1h-3zM65,14h3v1h-3zM77,14h1v1h-1zM77,15h2v1h-2zM22,15h1v2h-1zM66,15h2v2h-2zM77,16h3v1h-3zM78,17h1v2h-1zM53,18h2v1h-2zM67,17h1v3h-1zM37,19h7v1h-7zM51,19h5v1h-5zM35,20h10v1h-10zM50,20h7v1h-7zM33,21h12v1h-12zM49,21h8v1h-8zM80,21h4v1h-4zM31,22h14v1h-14zM49,22h9v1h-9zM78,22h7v1h-7zM87,22h5v1h-5zM29,23h16v1h-16zM48,23h10v1h-10zM63,23h7v1h-7zM78,23h8v1h-8zM90,23h6v1h-6zM15,24h3v1h-3zM28,24h17v1h-17zM62,24h9v1h-9zM77,24h9v1h-9zM95,24h2v1h-2zM14,25h5v1h-5zM25,25h19v1h-19zM61,25h11v1h-11zM77,25h10v1h-10zM48,24h9v3h-9zM13,26h29v1h-29zM60,26h13v1h-13zM76,26h11v1h-11zM96,25h1v3h-1zM13,27h24v1h-24zM76,27h6v1h-6zM84,27h3v1h-3zM47,27h9v2h-9zM59,27h15v2h-15zM13,28h19v1h-19zM95,28h1v1h-1zM12,29h17v1h-17zM58,29h7v1h-7zM68,29h6v1h-6zM94,29h2v1h-2zM76,28h5v3h-5zM46,29h9v2h-9zM12,30h15v1h-15zM57,30h7v1h-7zM93,30h1v1h-1zM69,30h6v2h-6zM18,31h8v1h-8zM31,31h6v1h-6zM46,31h8v1h-8zM57,31h6v1h-6zM76,31h6v1h-6zM91,31h2v1h-2zM85,28h3v5h-3zM12,31h3v2h-3zM29,32h8v1h-8zM45,32h8v1h-8zM56,32h6v1h-6zM89,32h3v1h-3zM19,32h6v2h-6zM70,32h5v2h-5zM77,32h5v2h-5zM28,33h10v1h-10zM44,33h9v1h-9zM85,33h1v1h-1zM87,33h3v1h-3zM55,33h6v2h-6zM27,34h11v1h-11zM44,34h8v1h-8zM77,34h6v1h-6zM85,34h3v1h-3zM12,33h2v3h-2zM19,34h5v2h-5zM43,35h8v1h-8zM54,35h6v1h-6zM78,35h4v1h-4zM83,35h3v1h-3zM69,34h6v3h-6zM26,35h11v2h-11zM43,36h7v1h-7zM53,36h7v1h-7zM78,36h2v1h-2zM81,36h3v1h-3zM19,36h4v2h-4zM25,37h10v1h-10zM42,37h7v1h-7zM52,37h7v1h-7zM79,37h3v1h-3zM84,37h1v1h-1zM68,37h6v2h-6zM16,38h1v1h-1zM25,38h7v1h-7zM41,38h7v1h-7zM51,38h9v1h-9zM76,38h4v1h-4zM81,38h5v1h-5zM14,39h3v1h-3zM40,39h7v1h-7zM50,39h10v1h-10zM66,39h5v1h-5zM73,39h4v1h-4zM80,39h6v1h-6zM25,39h5v2h-5zM12,40h3v1h-3zM39,40h7v1h-7zM49,40h19v1h-19zM70,40h4v1h-4zM81,40h5v1h-5zM18,38h5v4h-5zM10,41h3v1h-3zM38,41h7v1h-7zM48,41h17v1h-17zM67,41h4v1h-4zM82,41h5v2h-5zM8,42h3v1h-3zM18,42h4v1h-4zM37,42h7v1h-7zM47,42h15v1h-15zM64,42h4v1h-4zM7,43h2v1h-2zM17,43h5v1h-5zM36,43h7v1h-7zM46,43h12v1h-12zM61,43h4v1h-4zM67,43h3v1h-3zM74,43h1v1h-1zM25,41h4v4h-4zM6,44h1v1h-1zM34,44h8v1h-8zM45,44h9v1h-9zM57,44h5v1h-5zM64,44h4v1h-4zM72,44h4v1h-4zM5,45h1v1h-1zM25,45h6v1h-6zM32,45h9v1h-9zM44,45h6v1h-6zM53,45h5v1h-5zM61,45h4v1h-4zM71,45h6v1h-6zM4,46h1v1h-1zM25,46h14v1h-14zM43,46h3v1h-3zM49,46h5v1h-5zM57,46h6v1h-6zM71,46h7v1h-7zM83,43h4v5h-4zM17,44h6v4h-6zM25,47h13v1h-13zM45,47h5v1h-5zM53,47h10v1h-10zM71,47h8v1h-8zM25,48h11v1h-11zM40,48h6v1h-6zM49,48h15v1h-15zM71,48h9v1h-9zM82,48h4v1h-4zM3,47h1v3h-1zM16,48h7v2h-7zM25,49h5v1h-5zM34,49h7v1h-7zM45,49h6v1h-6zM55,49h12v1h-12zM72,49h14v2h-14zM3,50h3v1h-3zM16,50h6v1h-6zM28,50h8v1h-8zM40,50h9v1h-9zM57,50h11v1h-11zM5,51h4v1h-4zM20,51h14v1h-14zM58,51h11v1h-11zM73,51h12v1h-12zM39,51h9v2h-9zM8,52h15v1h-15zM27,52h5v1h-5zM59,52h11v1h-11zM74,52h10v1h-10zM17,53h6v1h-6zM29,53h1v1h-1zM39,53h8v1h-8zM60,53h10v1h-10zM75,53h8v1h-8zM18,54h4v1h-4zM39,54h7v1h-7zM61,54h9v1h-9zM77,54h5v1h-5zM19,55h3v1h-3zM40,55h5v1h-5zM62,55h7v1h-7zM63,56h5v1h-5zM32,58h1v2h-1zM22,59h2v1h-2zM22,60h3v1h-3zM32,60h2v2h-2zM23,61h1v1h-1zM74,61h1v2h-1zM32,62h3v1h-3zM49,62h1v1h-1zM28,63h8v1h-8zM72,63h4v1h-4zM49,63h2v2h-2zM30,64h10v1h-10zM73,64h2v1h-2zM33,65h3v1h-3zM45,65h10v1h-10zM73,65h1v1h-1zM33,66h2v1h-2zM47,66h6v1h-6zM28,67h2v1h-2zM34,67h1v2h-1zM49,67h2v2h-2zM29,68h2v1h-2zM40,69h1v1h-1zM39,70h3v1h-3z"
+          />
+        </svg>
+        <div class="tvrs-boot-track" aria-hidden="true">
+          <span class="tvrs-boot-cell" style="--i: 0"></span>
+          <span class="tvrs-boot-cell" style="--i: 1"></span>
+          <span class="tvrs-boot-cell" style="--i: 2"></span>
+          <span class="tvrs-boot-cell" style="--i: 3"></span>
+          <span class="tvrs-boot-cell" style="--i: 4"></span>
+        </div>
+        <p class="tvrs-boot-text">Chargement du globe…</p>
+      </div>
+    </div>
+    <div id="root" aria-busy="true"></div>
     <script type="module" src="/src/main.jsx" charset="UTF-8"></script>
   </body>
 </html>

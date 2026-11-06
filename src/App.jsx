@@ -2,6 +2,7 @@ import "./App.css";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
+import { useBootGate } from "./boot/useBootGate";
 import AchievementStack from "./components/AchievementStack.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import GeoDataStatus from "./components/GeoDataStatus.jsx";
@@ -35,55 +36,17 @@ import useSettledValue from "./hooks/useSettledValue";
 import { useTrainingRun } from "./hooks/useTrainingRun";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
-import { isGuestLaunch } from "./multiplayer/conquestLink";
 import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
-import { isSupabaseConfigured } from "./services/supabaseClient";
-import { secureRandomInt } from "./utils/secureRandom";
+import {
+  pickNextAutorotateKey,
+  pickRandomHomeKey,
+  readInitialPeacefulMode,
+  shouldShowInitialAuthModal,
+  tryFocusGameInput,
+} from "./utils/appHelpers";
 
 const AuthModal = React.lazy(() => import("./components/AuthModal.jsx"));
 const ConfirmationModal = React.lazy(() => import("./components/ConfirmationModal.jsx"));
-
-function readInitialPeacefulMode() {
-  try {
-    const p = localStorage.getItem(STORAGE_KEYS.peacefulMode);
-    if (p !== null) return p === "true";
-    const h = localStorage.getItem(STORAGE_KEYS.hardcoreMode);
-    if (h !== null) return h === "false";
-  } catch {}
-  return false;
-}
-
-function tryFocusGameInput(input) {
-  if (!input || document.activeElement === input) return;
-  try {
-    input.focus({ preventScroll: true });
-  } catch {
-    input.focus();
-  }
-}
-
-function pickRandomHomeKey(activeDataMap) {
-  if (!activeDataMap) return null;
-  const keys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
-  if (keys.length === 0) return null;
-  const index = secureRandomInt(0, keys.length);
-  return keys[index];
-}
-
-function pickNextAutorotateKey(activeDataMap) {
-  if (!activeDataMap) return null;
-  const freshKeys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
-  if (freshKeys.length === 0) return null;
-  const nextIndex = secureRandomInt(0, freshKeys.length);
-  return freshKeys[nextIndex];
-}
-
-function shouldShowInitialAuthModal(session) {
-  if (isSupabaseConfigured && session === null) {
-    return !isGuestLaunch();
-  }
-  return false;
-}
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("home");
@@ -181,6 +144,8 @@ function App() {
     mode: currentScreen === "home" ? getHomeGeoMode(globeHomeMode) : mode,
     learnSubMode: currentScreen === "home" ? getHomeLearnSubMode(globeHomeMode) : learnSubMode,
   });
+
+  const { isBootReady, onGlobeReady } = useBootGate({ geoStatus });
 
   if (
     currentScreen === "home" &&
@@ -452,6 +417,7 @@ function App() {
     livesLeft,
     isHardcoreRun,
     homeMode: getHomeGeoMode(globeHomeMode),
+    onGlobeReady,
   });
 
   const cq = useConquestLayer({ currentScreen, setCurrentScreen, lang, userProfile, sessionView });
@@ -465,7 +431,7 @@ function App() {
       {(panicActive || lifeLostFlash) && (
         <div className={`panic-vignette-overlay${panicActive ? "" : " life-lost"}`} />
       )}
-      {showHome ? (
+      {showHome && isBootReady ? (
         <HomeScreen
           onStartGame={startGame}
 

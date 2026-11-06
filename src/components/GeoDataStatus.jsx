@@ -1,42 +1,14 @@
 import "./GeoDataStatus.css";
 
-import { useEffect, useState } from "react";
-
 import { useTranslation } from "../config/i18n";
 import ErrorState from "./ui/ErrorState";
-import LoadingState from "./ui/LoadingState";
 
+/**
+ * GeoDataStatus — Error boundary overlay for geo data loading failures.
+ * The previous 400ms LoadingState has been superseded by the unified #tvrs-boot overlay.
+ */
 export default function GeoDataStatus({ status, onRetry, lang }) {
   const t = useTranslation(lang);
-  const [showLoading, setShowLoading] = useState(false);
-
-  useEffect(() => {
-    if (status !== "loading") {
-      setShowLoading(false);
-      return undefined;
-    }
-    const timer = setTimeout(() => {
-      setShowLoading(true);
-    }, 400);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [status]);
-
-  if (status === "ready" || status === "idle") {
-    return null;
-  }
-
-  if (status === "loading") {
-    if (!showLoading) {
-      return null;
-    }
-    return (
-      <div className="geo-status-wrapper">
-        <LoadingState title={t("geo_loading")} />
-      </div>
-    );
-  }
 
   if (status === "error") {
     return (

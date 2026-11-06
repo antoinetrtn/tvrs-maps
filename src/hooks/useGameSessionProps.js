@@ -60,6 +60,7 @@ export function useGameSessionProps({
   livesLeft,
   isHardcoreRun,
   homeMode,
+  onGlobeReady = null,
 }) {
   const hudProps = useMemo(
     () => ({
@@ -163,6 +164,7 @@ export function useGameSessionProps({
       learnSubMode: currentScreen === "home" ? homeMode : learnSubMode,
       globeFeedbackRef,
       globeFeedbackApplierRef,
+      onGlobeReady,
     }),
     [
       currentScreen,
@@ -187,6 +189,7 @@ export function useGameSessionProps({
       learnSubMode,
       globeFeedbackRef,
       globeFeedbackApplierRef,
+      onGlobeReady,
     ]
   );
 

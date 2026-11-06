@@ -1,6 +1,6 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import GeoDataStatus from "../components/GeoDataStatus";
 
@@ -9,33 +9,21 @@ describe("GeoDataStatus", () => {
     vi.restoreAllMocks();
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
+  it("renders nothing when status is ready or idle", () => {
+    const { container: readyContainer } = render(
+      <GeoDataStatus status="ready" onRetry={vi.fn()} lang="fr" />
+    );
+    expect(readyContainer.firstChild).toBeNull();
+
+    const { container: idleContainer } = render(
+      <GeoDataStatus status="idle" onRetry={vi.fn()} lang="fr" />
+    );
+    expect(idleContainer.firstChild).toBeNull();
   });
 
-  it("renders nothing when status is ready", () => {
-    const { container } = render(<GeoDataStatus status="ready" onRetry={vi.fn()} lang="fr" />);
-    expect(container.firstChild).toBeNull();
-  });
-
-  it("loading renders nothing before 400 ms and role=status after", () => {
-    vi.useFakeTimers();
+  it("renders nothing when status is loading (loading state superseded by boot overlay)", () => {
     const { container } = render(<GeoDataStatus status="loading" onRetry={vi.fn()} lang="fr" />);
-
     expect(container.firstChild).toBeNull();
-
-    act(() => {
-      vi.advanceTimersByTime(390);
-    });
-    expect(container.firstChild).toBeNull();
-
-    act(() => {
-      vi.advanceTimersByTime(20);
-    });
-    const statusEl = screen.getByRole("status");
-    expect(statusEl).toBeTruthy();
-    expect(statusEl.getAttribute("aria-live")).toBe("polite");
-    expect(screen.getByText("Chargement de la carte")).toBeTruthy();
   });
 
   it("error renders role=alert, fr and en texts, and clicking button calls onRetry once", () => {
