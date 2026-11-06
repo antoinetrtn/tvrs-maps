@@ -188,7 +188,7 @@ const HomeScreen = ({
             label={t("profile")}
           >
             <div className="profile-icon">
-              <User width={20} height={20} />
+              <User width={18} height={18} aria-hidden />
             </div>
             <XpBar
               variant="mini"
@@ -213,7 +213,7 @@ const HomeScreen = ({
             label={t("settings")}
           >
             <div className="settings-icon">
-              <Settings2 width={20} height={20} />
+              <Settings2 width={18} height={18} aria-hidden />
             </div>
           </GlassIconButton>
         </div>

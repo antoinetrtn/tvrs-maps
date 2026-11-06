@@ -43,19 +43,8 @@
     border-right: 1px solid color-mix(in srgb, var(--text-main) 12%, transparent);
   }
 
-  .home-bottom-right .profile-icon,
-  .home-bottom-right .settings-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    color: inherit;
-  }
-
-  .home-bottom-right svg {
-    shape-rendering: crispEdges;
-  }
+  /* .profile-icon / .settings-icon sizing + SVG centering live in HomeScreen.css
+     (all breakpoints). Desktop keeps color inherit via base rule. */
 }
 
 /* >= 1440px: clamp margin up to 32px */

@@ -169,8 +169,11 @@
   color: currentColor;
 }
 
-/* Profile trigger icon */
-.profile-icon {
+/* Dock trigger icons (profile + settings) — flex + block SVG kill the
+   inline-SVG baseline gap that optically shifts the glyph inside the
+   square tap target. Size matches the crisp 18px pixel cell. */
+.profile-icon,
+.settings-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -178,11 +181,17 @@
   width: 18px;
   height: 18px;
   pointer-events: none;
+  line-height: 0;
+  color: inherit;
 }
 
-.profile-icon svg {
+.profile-icon svg,
+.settings-icon svg {
   display: block;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  shape-rendering: crispEdges;
 }
 
 /* Settings panel (CRT/glass) — desktop-only dimensions; below 1025px the
