@@ -288,8 +288,7 @@ ${SELECT_CITY_DEFS}
       float sunNdotL = clamp(dot(sphereNormal, normalize(uSunDir)), -1.0, 1.0);
       float dayAmt = smoothstep(-0.08, 0.18, sunNdotL);
       float sunLightMod = mix(0.82, 1.12, dayAmt);
-      float dayCityDim = mix(1.0, 0.35, dayAmt);
-
+      float cityDayAtten = mix(mix(1.0, 0.88, dayAmt), 1.0, uShowcaseLights);
       float cLat = asin(clamp(sphereNormal.y, -1.0, 1.0));
       float cLng = atan(sphereNormal.x, sphereNormal.z);
       vec2 cartUv = vec2(cLng / 6.2831853 + 0.5, cLat / 3.14159265 + 0.5);
@@ -446,20 +445,21 @@ ${FEAT.FEATURE_SURFACE_CHUNK}
       float worldAura = (isRegionalPin > 0.5 && cityDensity < 0.25) ? 0.0 : cityAura;
       float effectiveAura = mix(worldAura, isRegionalPin * 0.28, uIsRegionalMode) * (1.0 - uFeatureMode);
 
-      float trafficWave = 0.88 + 0.12 * sin(uTime * 2.8 - worldAura * 8.5 + cityHash * 6.2831853);
-      float satTwinkle = 0.88 + 0.12 * sin(uTime * 4.2 + cityHash2 * 6.2831853);
+      float trafficWave = 0.85 + 0.15 * sin(uTime * 2.8 - worldAura * 8.5 + cityHash * 6.2831853);
+      float satTwinkle = 0.84 + 0.16 * sin(uTime * 4.2 + cityHash2 * 6.2831853);
       float tierPinpoint = step(0.82, cityDensity);
       float tierArterial = (1.0 - tierPinpoint) * step(0.55, cityDensity);
-      float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.32, cityDensity);
+      float tierTentacle = (1.0 - max(tierPinpoint, tierArterial)) * step(0.27, cityDensity);
 
       vec3 auraColor = mix(
         vec3(0.68, 0.40, 0.12),
         max(activeTerrainLit * 1.35, vec3(0.75, 0.55, 0.22)),
         isConquestOwned * 0.5
       );
-      vec3 withAura = mix(activeTerrainLit, max(activeTerrainLit, auraColor), effectiveAura * 0.22 * cityPower * dayCityDim);
+      float auraW = effectiveAura * 0.28 * cityPower * cityDayAtten;
+      vec3 withAura = mix(activeTerrainLit, max(activeTerrainLit, auraColor), auraW);
       vec3 colorOuterTentacle = mix(
-        vec3(0.86, 0.48, 0.14),
+        vec3(0.90, 0.50, 0.15),
         vec3(1.0, 0.84, 0.48),
         isConquestOwned * 0.45
       );
@@ -480,18 +480,18 @@ ${FEAT.FEATURE_SURFACE_CHUNK}
       float worldSparkAlpha = (
         tierPinpoint * 0.98 +
         tierArterial * (0.78 + 0.16 * cityHash2) * trafficWave +
-        tierTentacle * (0.38 + 0.18 * cityHash2) * satTwinkle
+        tierTentacle * (0.46 + 0.20 * cityHash2) * satTwinkle
       );
       float regionalSparkAlpha = isRegionalPin * regMicroSpark * (0.88 + 0.12 * satTwinkle);
       float sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uIsRegionalMode)
-        * cityPower * (1.0 - uFeatureMode) * dayCityDim;
+        * cityPower * (1.0 - uFeatureMode) * cityDayAtten;
       // Leading edge of the ignition wave burns in the existing win gold.
       sparkColor = mix(sparkColor, vec3(0.96, 0.68, 0.22) * 1.25, igniteFlash);
       vec3 capRgb = mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0));
       // Ahead of the front, the found country's city pixels keep their dim selection
       // glow, so the ignition only brightens them (no blackout, no restart).
       float preLit = isAwakenedCap * (1.0 - igniteMask) * (1.0 - uIsRegionalMode) * step(0.25, cityDensity);
-      capRgb = mix(capRgb, SELECT_CITY_AMBER, preLit * SELECT_CITY_ALPHA * dayCityDim);
+      capRgb = mix(capRgb, SELECT_CITY_AMBER, preLit * SELECT_CITY_ALPHA * cityDayAtten);
       capRgb = mix(capRgb, SELECT_CITY_AMBER, haloBand * isAwakenedCap * DISC_HALO_ALPHA);
 
       vec3 sideRgb = landSurface * 0.58 * sunLightMod;
