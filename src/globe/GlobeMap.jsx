@@ -66,6 +66,7 @@ const GlobeMap = (props) => {
     activeDataMap,
     learnSubMode = DEFAULT_LEARN_SUB_MODE,
     isPanelOpen = false,
+    onGlobeReady: onGlobeReadyProp,
   } = props;
   const t = useTranslation(lang);
 
@@ -392,7 +393,14 @@ const GlobeMap = (props) => {
       window.__TVRS_GLOBE_EL__ = globeEl.current;
       window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
     }
-  }, [attachContextLossHandlers, styleGlobeGraticules, updateGlobeLighting, sharedMaterialsRef]);
+    onGlobeReadyProp?.();
+  }, [
+    attachContextLossHandlers,
+    styleGlobeGraticules,
+    updateGlobeLighting,
+    sharedMaterialsRef,
+    onGlobeReadyProp,
+  ]);
 
   if (typeof window !== "undefined") {
     window.__TVRS_SHARED_MATERIALS__ = sharedMaterialsRef.current;
