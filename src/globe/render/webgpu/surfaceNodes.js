@@ -40,7 +40,6 @@ import { applyDiscoveryAmber, revealLand, wakePower } from "./discoveryNodes";
 import { applyFeatureMode } from "./featureNodes";
 import { buildIgnition, homeShowcase, igniteSpark } from "./igniteNodes";
 import { blackoutOceanOutputNode } from "./oceanNodes";
-import { getSunDirNode, landSunMods } from "./sunNodes";
 import { displayOutput, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 export { blackoutOceanOutputNode };
@@ -171,9 +170,6 @@ function buildCityLightsLayer(p) {
   const effectiveAura = mix(worldAura, isRegionalPin.mul(0.42), uRegionalNode).mul(
     float(1.0).sub(uFeatureNode)
   );
-  // Soft day atten; homepage showcase (uShowcase≈1) keeps full city power.
-  const dayCityDim = mix(float(1.0), float(0.88), p.dayAmt || float(0.0));
-  const cityDayAtten = mix(dayCityDim, float(1.0), p.uShowcaseNode || float(0.0));
   const trafficWave = sin(uTimeNode.mul(2.8).sub(worldAura.mul(8.5)).add(cityHash.mul(6.2831853)))
     .mul(0.15)
     .add(0.85);
@@ -192,7 +188,7 @@ function buildCityLightsLayer(p) {
   const withAura = mix(
     terrainLit,
     max(terrainLit, auraColor),
-    effectiveAura.mul(0.28).mul(cityPower).mul(cityDayAtten)
+    effectiveAura.mul(0.28).mul(cityPower)
   );
   const colorOuterTentacle = mix(
     vec3(0.9, 0.5, 0.15),
@@ -224,8 +220,7 @@ function buildCityLightsLayer(p) {
   const regionalSparkAlpha = isRegionalPin.mul(satTwinkle.mul(0.12).add(0.88));
   const sparkAlpha = mix(worldSparkAlpha, regionalSparkAlpha, uRegionalNode)
     .mul(cityPower)
-    .mul(float(1.0).sub(uFeatureNode))
-    .mul(cityDayAtten);
+    .mul(float(1.0).sub(uFeatureNode));
   return { capRgb: mix(withAura, sparkColor, clamp(sparkAlpha, 0.0, 1.0)) };
 }
 
@@ -359,19 +354,15 @@ export function countryGrainOutputNode(isGhostCountry = false) {
       uShowcaseNode: showcaseLand,
       uRegionalNode,
     });
-    const { dayAmt, sunLightMod } = landSunMods(sphereNormal, getSunDirNode());
     const { landSurface, baseLit } = revealLand(paletteLand, ign.landMask, isAwakenedCap, {
       parallelLine,
       crossTick,
       rimSheen,
       limbFactor,
     });
-    const sunBaseLit = baseLit.mul(sunLightMod);
     const { capRgb } = buildCityLightsLayer({
       cartUv,
-      baseLit: sunBaseLit,
-      dayAmt,
-      uShowcaseNode,
+      baseLit,
       cityPower,
       terrainPower,
       isSoloFound,
@@ -386,7 +377,7 @@ export function countryGrainOutputNode(isGhostCountry = false) {
     });
     const rgb = applyDiscoveryAmber({
       capRgb,
-      landSurface: landSurface.mul(sunLightMod),
+      landSurface,
       ign,
       isAwakenedCap,
       uRegionalNode,

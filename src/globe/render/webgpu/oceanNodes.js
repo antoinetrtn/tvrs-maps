@@ -33,7 +33,6 @@ import {
 } from "three/tsl";
 
 import { polygonGlitchUniforms } from "../polygonGlitchShader";
-import { getOceanSunDirNode, oceanSunMultiplier } from "./sunNodes";
 import { bayer4x4, displayOutput, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 let oceanTimeNode = null;
@@ -46,7 +45,6 @@ export function blackoutOceanOutputNode(
   const uTimeNode = (oceanTimeNode ||= mirrorUniform(polygonGlitchUniforms.uTime));
   return Fn(() => {
     const sphereDir = normalize(normalWorld);
-    const oceanSunMod = oceanSunMultiplier(sphereDir, getOceanSunDirNode());
     const rawLat = asin(clamp(sphereDir.y, -1.0, 1.0));
     const rawLng = atan(sphereDir.z, sphereDir.x);
     const latNorm = rawLat.div(3.14159265).add(0.5);
@@ -139,6 +137,6 @@ export function blackoutOceanOutputNode(
       specialDither.mul(float(rimStrength).mul(0.28).add(0.07))
     );
 
-    return displayOutput(litDisplayColor().mul(oceanSunMod).add(waveRgb).add(graticuleRgb));
+    return displayOutput(litDisplayColor().add(waveRgb).add(graticuleRgb));
   })();
 }
