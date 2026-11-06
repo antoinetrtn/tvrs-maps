@@ -22,6 +22,8 @@ import { attachGlitchNodes } from "./webgpu/glitchNode";
 /** Shared GPU uniforms — one write per frame updates every polygon glitch shader. */
 export const polygonGlitchUniforms = {
   uTime: { value: 0 },
+  // Directional sun light for terminator & day/night city lights attenuation (world space).
+  uSunDir: { value: new THREE.Vector3(0.35, 0.55, 0.75).normalize() },
   // 1 when on Home/End screen (planet-wide city-lights showcase), 0 during active gameplay (blackout -> awaken).
   uShowcaseLights: { value: 1 },
   // 1 when in French Departments or US States regional mode (clean micro-scale hydrography + 1px capital pinpoints).

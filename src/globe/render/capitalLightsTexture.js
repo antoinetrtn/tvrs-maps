@@ -47,16 +47,16 @@ function stampIsoPoint(data, lat, lng, cosLat, rVal, gVal) {
 }
 
 const AURA_STEPS_BY_SCALE = {
-  secondary: 4,
-  compact: 5,
-  major: 8,
+  secondary: 3,
+  compact: 4,
+  major: 6,
 };
 
 function getAuraSteps(scaleMode) {
   if (scaleMode && Object.hasOwn(AURA_STEPS_BY_SCALE, scaleMode)) {
     return AURA_STEPS_BY_SCALE[scaleMode];
   }
-  return 6;
+  return 5;
 }
 
 function computeMetroRVal(dist, scaleMode, seed, dx, dy) {
@@ -109,8 +109,8 @@ function stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode) {
   }
 }
 
-const TENTACLES_BY_MODE = { secondary: 4, compact: 5, major: 7 };
-const STEPS_BY_MODE = { secondary: 9, compact: 11, major: 23 };
+const TENTACLES_BY_MODE = { secondary: 3, compact: 4, major: 5 };
+const STEPS_BY_MODE = { secondary: 7, compact: 9, major: 16 };
 
 function stampSubBranch(
   data,
@@ -143,7 +143,7 @@ function stampTentacleSatellites(
   data,
   { lat, lng, cosLat, scaleMode, seed, t, numTentacles, totalSteps, baseAngle }
 ) {
-  const satCount = scaleMode === "compact" || scaleMode === "secondary" ? 1 : 2;
+  const satCount = scaleMode === "compact" || scaleMode === "secondary" ? 0 : 1;
   for (let k = 0; k < satCount; k++) {
     const satDist = (0.35 + hash1(seed + t * 521.7 + k * 67.3) * 0.58) * totalSteps * STEP_DEG;
     const satAng =
@@ -177,12 +177,12 @@ function getTentacleBaseIntensity(progress) {
 
 function getTentacleKeepProbability(progress) {
   if (progress < 0.35) {
-    return 0.94;
+    return 0.86;
   }
   if (progress < 0.75) {
-    return 0.8;
+    return 0.72;
   }
-  return 0.64;
+  return 0.56;
 }
 
 function stampTentaclePoint(
@@ -286,8 +286,8 @@ function stampPrimaryTentacle(
 function stampCapitalTentacularWeb(data, lat, lng, seed, cosLat, scaleMode) {
   stampMetroCoreAndAura(data, lat, lng, seed, cosLat, scaleMode);
 
-  const numTentacles = TENTACLES_BY_MODE[scaleMode] ?? 6;
-  const maxStepsBase = STEPS_BY_MODE[scaleMode] ?? 17;
+  const numTentacles = TENTACLES_BY_MODE[scaleMode] ?? 4;
+  const maxStepsBase = STEPS_BY_MODE[scaleMode] ?? 12;
 
   for (let t = 0; t < numTentacles; t++) {
     stampPrimaryTentacle(data, {
@@ -308,7 +308,7 @@ function stampInterCityCorridor(data, lat1, lng1, lat2, lng2, seed) {
   const dLat = lat2 - lat1;
   const dLonScaled = (lng2 - lng1) * cosLat;
   const distDeg = Math.hypot(dLat, dLonScaled);
-  if (distDeg < 0.7 || distDeg > 9.5) return;
+  if (distDeg < 0.7 || distDeg > 7.5) return;
 
   const steps = Math.max(8, Math.round(distDeg / 0.14));
   const nx = -dLat / distDeg;
@@ -323,10 +323,10 @@ function stampInterCityCorridor(data, lat1, lng1, lat2, lng2, seed) {
     const curLng = lng1 + (dLonScaled * p + ny * (wave + jitter)) / cosLat;
 
     const rRand = hash1(seed + i * 53.1);
-    const isTownBead = i % 4 === 0 || rRand > 0.55;
+    const isTownBead = i % 5 === 0 || rRand > 0.68;
     if (isTownBead) {
       const endFade = 1 - Math.abs(p - 0.5) * 0.55;
-      const rVal = Math.round((i % 4 === 0 ? 155 : 112) * endFade);
+      const rVal = Math.round((i % 5 === 0 ? 155 : 112) * endFade);
       const gVal = Math.round(52 * endFade);
       stampIsoPoint(data, curLat, curLng, cosLat, rVal, gVal);
     }
