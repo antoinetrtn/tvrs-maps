@@ -24,6 +24,12 @@
   color: var(--text-main);
 }
 
+.variant-pixel .main-logo-svg,
+.logo-container:not(.variant-vector) .main-logo-svg {
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
+
 /* Sizes */
 .logo-container.small {
   width: 64px;
@@ -41,8 +47,10 @@
 }
 
 /* Effects */
-.logo-container:hover .main-logo-svg {
-  filter: brightness(1.1);
+@media (hover: hover) {
+  .logo-container:hover .main-logo-svg {
+    filter: brightness(1.1);
+  }
 }
 
 /* Bouncy effect for Desktop HUD Logo */
@@ -53,8 +61,10 @@
   justify-content: center;
 }
 
-.hud-logo-clickable:hover {
-  transform: scale(1.15);
+@media (hover: hover) {
+  .hud-logo-clickable:hover {
+    transform: scale(1.15);
+  }
 }
 
 .hud-logo-clickable:active {
@@ -65,41 +75,52 @@
 .logo-stars .star {
   opacity: 0.2;
   fill: currentColor;
-  animation: twinkle-goat 3s infinite ease-in-out;
+  animation: pixel-star-twinkle var(--dur-ambient-slow) steps(2, start) infinite;
   transform-box: fill-box;
   transform-origin: center;
 }
 
+.variant-vector .logo-stars .star {
+  animation: twinkle-goat var(--dur-ambient-slow) infinite ease-in-out;
+}
+
 .star-2 {
-  animation-delay: 0.2s;
+  animation-delay: calc(var(--dur-step) * 2);
 }
 .star-3 {
-  animation-delay: 1.2s;
+  animation-delay: calc(var(--dur-step) * 12);
 }
 .star-4 {
-  animation-delay: 0.8s;
+  animation-delay: calc(var(--dur-step) * 8);
 }
 .star-5 {
-  animation-delay: 2.1s;
+  animation-delay: calc(var(--dur-step) * 21);
 }
 .star-6 {
-  animation-delay: 0.5s;
+  animation-delay: calc(var(--dur-step) * 5);
 }
 .star-7 {
-  animation-delay: 1.5s;
+  animation-delay: calc(var(--dur-step) * 15);
 }
 .star-8 {
-  animation-delay: 0.9s;
+  animation-delay: calc(var(--dur-step) * 9);
 }
 .star-9 {
-  animation-delay: 1.8s;
+  animation-delay: calc(var(--dur-step) * 18);
 }
 .star-10 {
-  animation-delay: 2.4s;
+  animation-delay: calc(var(--dur-step) * 24);
 }
 .star-11 {
-  animation-delay: 0.3s;
+  animation-delay: calc(var(--dur-step) * 3);
 }
 .star-12 {
-  animation-delay: 1.4s;
+  animation-delay: calc(var(--dur-step) * 14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-stars .star {
+    animation: none;
+    opacity: 0.5;
+  }
 }
