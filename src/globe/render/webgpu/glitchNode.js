@@ -386,9 +386,9 @@ function createGlitchOutputNode(u) {
       const rShimmer = sin(u.uTime.mul(2.2).add(selUv.x.mul(140.0).add(selUv.y.mul(90.0))))
         .mul(0.22)
         .add(0.78);
-      const fCrest = vec3(0.92, 0.78, 0.48);
-      const fSpur = vec3(0.68, 0.5, 0.24);
-      const fRiver = mix(vec3(0.22, 0.68, 0.92), vec3(0.45, 0.88, 1.0), rShimmer);
+      const fCrest = vec3(0.42, 1.0, 0.74);
+      const fSpur = vec3(0.12, 0.7, 0.46);
+      const fRiver = mix(vec3(0.18, 0.9, 0.62), vec3(0.5, 1.0, 0.8), rShimmer);
 
       rgb.assign(mix(rgb, fSpur, isFeatFound.mul(rSpur)));
       rgb.assign(mix(rgb, fCrest, isFeatFound.mul(rCrest)));
