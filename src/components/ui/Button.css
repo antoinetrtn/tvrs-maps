@@ -241,6 +241,7 @@
 
   .ui-btn:active:not(:disabled):not(.is-loading),
   .ui-icon-btn:active:not(:disabled) {
+    transform: none;
     animation: none;
   }
 
