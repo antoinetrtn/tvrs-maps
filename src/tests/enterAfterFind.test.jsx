@@ -39,7 +39,7 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 describe("Entrée juste après avoir trouvé un pays", () => {
-  it("rejoue sur le pays suivant une réponse validée pendant le flash de réussite", () => {
+  it("la cible suivante est sélectionnée tout de suite : la réponse suivante compte sans attendre", () => {
     const { result } = renderHook(() => useHarness());
 
     let res;
@@ -47,21 +47,28 @@ describe("Entrée juste après avoir trouvé un pays", () => {
       res = result.current.specificCountryGuess("France");
     });
     expect(res).toBe("SUCCESS");
+    expect(result.current.foundList).toEqual(["France"]);
+    expect(result.current.selectedCountry).toBe("Belgium");
 
-    // Le joueur enchaîne avant l'auto-avance : la sélection pointe encore la France.
     act(() => {
       res = result.current.specificCountryGuess("Belgique");
     });
-    expect(res).toBe("QUEUED");
+    expect(res).toBe("SUCCESS");
+    expect(result.current.foundList).toEqual(["France", "Belgium"]);
     expect(result.current.mistakes).toBe(0);
+  });
 
+  it("une réponse arrivée avant le rendu de la cible suivante est rejouée dessus", () => {
+    const { result } = renderHook(() => useHarness());
+    let first;
+    let second;
     act(() => {
-      vi.advanceTimersByTime(FEEDBACK_TIMING.successFlashMs + 50);
+      const guess = result.current.specificCountryGuess;
+      first = guess("France");
+      second = guess("Belgique"); // même rendu : la sélection pointe encore la France
     });
-    act(() => {
-      vi.advanceTimersByTime(FEEDBACK_TIMING.successFlashMs + 50);
-    });
-
+    expect(first).toBe("SUCCESS");
+    expect(second).toBe("QUEUED");
     expect(result.current.foundList).toEqual(["France", "Belgium"]);
     expect(result.current.mistakes).toBe(0);
   });

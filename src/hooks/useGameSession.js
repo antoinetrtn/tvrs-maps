@@ -7,6 +7,11 @@ import { CHALLENGES } from "../data/challenges";
 import { nextTrainingTarget } from "../services/countryStats";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 import { normalizeString } from "../utils/utils";
+import {
+  handleGuessErrorFeedback,
+  isRepeatOfPendingFind,
+  scheduleSuccessFlashEnd,
+} from "./guessFeedback";
 import { useGameEpoch } from "./useGameEpoch";
 
 function resolveTrailCountry({
@@ -118,21 +123,6 @@ function checkSpecificCountryMatch({ mapped, lang, mode, normalizedInput }) {
   );
 }
 
-function handleGuessErrorFeedback({
-  selectedCountry,
-  registerMistake,
-  triggerGlobeFeedback,
-  setPopupError,
-}) {
-  registerMistake();
-  triggerGlobeFeedback(selectedCountry, { isError: true, isSuccess: false });
-  setPopupError(true);
-  setTimeout(() => {
-    triggerGlobeFeedback(selectedCountry, { isError: false, isSuccess: false });
-    setPopupError(false);
-  }, FEEDBACK_TIMING.flashMs);
-}
-
 export function useGameSession({
   mode,
   allCountryKeys,
@@ -206,9 +196,7 @@ export function useGameSession({
   const lastGuessTimeRef = useRef(0);
   const lightningCountRef = useRef(0);
   const successPendingRef = useRef(new Set());
-  // Saisie validée pendant le flash de réussite (successFlashMs) : la sélection
-  // pointe encore le pays tout juste trouvé, donc on garde la réponse et on la
-  // rejoue sur le pays suivant dès l'auto-avance, au lieu de l'avaler (bug Entrée).
+  // Saisie arrivée avant le rendu de la cible suivante : rejouée dessus (bug Entrée).
   const queuedGuessRef = useRef(null);
   const gameEpochRef = useGameEpoch();
 
@@ -468,32 +456,29 @@ export function useGameSession({
         });
       });
 
-      const epoch = gameEpochRef.current;
-      setTimeout(() => {
-        if (epoch !== gameEpochRef.current) return;
-        successPendingRef.current.delete(guessedKey);
-        triggerGlobeFeedback(guessedKey, { isError: false, isSuccess: false });
-        setFoundList(newFound);
-        setPopupSuccess(false);
-        setSelectedCountry((prev) => {
-          if (prev === guessedKey) {
-            const nextCountry = getClosestUnfound(guessedKey, newFound);
-            navigationTrailRef.current = nextCountry ? [guessedKey, nextCountry] : [guessedKey];
-            navigationTrailIndexRef.current = nextCountry ? 1 : 0;
-            if (
-              extInputRef?.current &&
-              effectiveKeyboardMode &&
-              document.activeElement !== extInputRef.current
-            ) {
-              extInputRef.current.focus();
-            }
-            return nextCountry || null;
-          }
-          return prev;
-        });
-      }, FEEDBACK_TIMING.successFlashMs);
+      // Progression now; only the cosmetic flash waits (reveal runs on the found surface).
+      setFoundList((prev) => (prev.includes(guessedKey) ? prev : [...prev, guessedKey]));
+      setSelectedCountry((prev) => {
+        if (prev !== guessedKey) return prev;
+        const next = getClosestUnfound(guessedKey, newFound);
+        navigationTrailRef.current = next ? [guessedKey, next] : [guessedKey];
+        navigationTrailIndexRef.current = next ? 1 : 0;
+        const input = extInputRef?.current;
+        if (input && effectiveKeyboardMode && document.activeElement !== input) input.focus();
+        return next || null;
+      });
+      scheduleSuccessFlashEnd({
+        key: guessedKey,
+        epochRef: gameEpochRef,
+        pendingRef: successPendingRef,
+        feedbackRef: globeFeedbackRef,
+        applierRef: globeFeedbackApplierRef,
+        setFeedback,
+      });
     },
     [
+      gameEpochRef,
+      globeFeedbackApplierRef,
       foundList,
       effectiveKeyboardMode,
       getClosestUnfound,
@@ -579,7 +564,11 @@ export function useGameSession({
         return "QUEUED";
       }
 
-      if (!isSuccessVal) {
+      // Re-sending an answer just found (flash window) is a repeat, not a mistake.
+      const repeatsFind = isRepeatOfPendingFind(successPendingRef.current, selectedCountry, (k) =>
+        checkSpecificCountryMatch({ mapped: activeDataMap[k], lang, mode, normalizedInput })
+      );
+      if (!isSuccessVal && !repeatsFind) {
         handleGuessErrorFeedback({
           selectedCountry,
           registerMistake,
@@ -589,7 +578,11 @@ export function useGameSession({
         return "ERROR";
       }
 
-      if (foundList.includes(selectedCountry) || successPendingRef.current.has(selectedCountry)) {
+      if (
+        repeatsFind ||
+        foundList.includes(selectedCountry) ||
+        successPendingRef.current.has(selectedCountry)
+      ) {
         setPopupWarning(true);
         setTimeout(() => setPopupWarning(false), FEEDBACK_TIMING.flashMs);
         return "ALREADY_FOUND";
@@ -654,12 +647,14 @@ export function useGameSession({
   );
 
   useEffect(() => {
-    if (isPlaying && !isGameOver && foundList.length > 0 && foundList.length >= totalPossible) {
+    if (!isPlaying || isGameOver || !foundList.length || foundList.length < totalPossible) return;
+    const timer = setTimeout(() => {
       setIsGameOver(true);
       setIsPlaying(false);
       setShowEndScreen(true);
       handleGameFinished(foundList.length);
-    }
+    }, FEEDBACK_TIMING.successFlashMs);
+    return () => clearTimeout(timer);
   }, [foundList.length, isPlaying, isGameOver, totalPossible, handleGameFinished]);
 
   useEffect(() => {
