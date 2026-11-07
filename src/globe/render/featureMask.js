@@ -6,6 +6,13 @@ import { getFeatureSeed, walkMountainChain, walkRiverPolyline } from "./globeTop
 const FEATURE_MASK_WIDTH = 3600;
 const FEATURE_MASK_HEIGHT = 1800;
 export const FEATURE_FOUND_VALUE = 40;
+/** The single feature found during this session view: same found look + one-off pulse. */
+export const FEATURE_NEW_FOUND_VALUE = 48;
+/**
+ * Start (performance.now() seconds, same clock as uTime) of the newly-found pulse.
+ * Shared by reference as polygonGlitchUniforms.uFeatureFoundStart (GLSL + TSL).
+ */
+export const featureFoundPulseStart = { value: -100 };
 export const FEATURE_SELECTED_VALUE = 255;
 export const FEATURE_HALO_VALUES = [170, 115, 60];
 /** Cells of a feature that exists in the game dataset (others are hidden in this mode). */
@@ -25,6 +32,33 @@ let memberMap;
 let memberBase = null;
 let hoverKey = null;
 let hoverSaved = null; // [idx, previousValue] pairs restored when the hover moves
+// Newly found feature: armed only when exactly one key joins an already-seen found list.
+let prevFoundSet = null;
+let pulseKey = null;
+let pulseStamped = false;
+
+const nowSec = () => (typeof performance !== "undefined" ? performance.now() : Date.now()) / 1000;
+
+/**
+ * Tracks which found key is new. The first list seen after a (re)mount, mode switch or
+ * dataset change is a restore and never pulses; several keys at once (resync) neither.
+ */
+function updatePulseKey(foundArray, dataMapChanged) {
+  const next = new Set(foundArray);
+  if (prevFoundSet && !dataMapChanged) {
+    const added = foundArray.filter((k) => !prevFoundSet.has(k));
+    if (added.length === 1) {
+      pulseKey = added[0];
+      pulseStamped = false;
+    } else if (added.length > 1) {
+      pulseKey = null;
+    }
+  } else {
+    pulseKey = null;
+  }
+  if (pulseKey && !next.has(pulseKey)) pulseKey = null;
+  prevFoundSet = next;
+}
 
 /**
  * Lazily creates and returns the 3600x1800 R8 DataTexture for feature highlight mask.
@@ -131,9 +165,16 @@ function writeFoundFeatureCells(fKey, selectedKey, activeDataMap) {
   if (!item) {
     return;
   }
+  const isPulse = fKey === pulseKey;
+  const value = isPulse ? FEATURE_NEW_FOUND_VALUE : FEATURE_FOUND_VALUE;
   const cells = getFeatureCells(fKey, item);
   for (const cell of cells) {
-    maskData[cell] = FEATURE_FOUND_VALUE;
+    maskData[cell] = value;
+  }
+  // Stamp once, when the feature first shows as found (after its selection has moved on).
+  if (isPulse && !pulseStamped && cells.length) {
+    pulseStamped = true;
+    featureFoundPulseStart.value = nowSec();
   }
 }
 
@@ -175,6 +216,10 @@ export function setFeatureMask({
     return;
   }
 
+  const dataMapChanged = dataMap !== lastDataMap;
+  if (foundHash !== lastFoundKeysHash || dataMapChanged) {
+    updatePulseKey(foundArray, dataMapChanged);
+  }
   lastSelectedKey = selectedKey;
   lastFoundKeysHash = foundHash;
   lastDataMap = dataMap;
@@ -420,4 +465,8 @@ export function clearFeatureMask() {
   lastSelectedKey = undefined;
   lastFoundKeysHash = undefined;
   lastDataMap = undefined;
+  prevFoundSet = null;
+  pulseKey = null;
+  pulseStamped = false;
+  featureFoundPulseStart.value = -100;
 }

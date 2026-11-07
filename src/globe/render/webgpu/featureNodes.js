@@ -1,13 +1,37 @@
 // TSL twin of featureModeShaderChunks.js (FEATURE_SURFACE_CHUNK): Rivers & Mountains mode.
-import { float, floor, mix, sin, step, texture, vec3 } from "three/tsl";
+import { clamp, float, floor, mix, sin, step, texture, vec3 } from "three/tsl";
 
-import { getFeatureMaskTexture } from "../featureMask";
+import { featureFoundPulseStart, getFeatureMaskTexture } from "../featureMask";
 import {
+  FEATURE_FOUND_PULSE_ALPHA,
+  FEATURE_FOUND_PULSE_RGB,
+  FEATURE_FOUND_PULSE_S_VALUE,
+  FEATURE_NEW_FOUND_THRESHOLD,
   SELECT_EDGE_RGB_VALUE,
   SELECT_HALO_ALPHA_VALUE,
   SELECT_PULSE_S_VALUE,
   SELECT_PULSE_STEPS_VALUE,
 } from "../selectionStyle";
+import { mirrorUniform } from "./tslCommon";
+
+let foundPulseStartNode = null;
+/** Shared uniform node mirroring featureFoundPulseStart (uFeatureFoundStart in GLSL). */
+export const getFeatureFoundStartNode = () =>
+  (foundPulseStartNode ||= mirrorUniform(featureFoundPulseStart));
+
+/** TSL twin of featureFoundPulseGlsl: one-off stepped fade on the newly found feature only. */
+export function featureFoundPulseNode(featSample, uTime, uStart, uReduced) {
+  const t = uTime.sub(uStart);
+  const isNew = step(FEATURE_NEW_FOUND_THRESHOLD, featSample).mul(
+    float(1.0).sub(step(0.2, featSample))
+  );
+  const live = step(0.0, t).mul(float(1.0).sub(step(FEATURE_FOUND_PULSE_S_VALUE, t)));
+  const k = float(1.0).sub(clamp(t.div(FEATURE_FOUND_PULSE_S_VALUE), 0.0, 1.0));
+  const stepped = floor(k.mul(SELECT_PULSE_STEPS_VALUE).add(0.5)).div(SELECT_PULSE_STEPS_VALUE);
+  return isNew.mul(live).mul(stepped).mul(FEATURE_FOUND_PULSE_ALPHA).mul(float(1.0).sub(uReduced));
+}
+
+export const FEATURE_FOUND_PULSE_VEC = () => vec3(...FEATURE_FOUND_PULSE_RGB);
 
 /** Land darker, rivers/relief readable, found tint, selected outline + pulsing halo. */
 export function applyFeatureMode(p) {
@@ -63,6 +87,16 @@ export function applyFeatureMode(p) {
   litTerrain = mix(litTerrain, foundReliefSpur, ridgeSpur.mul(isFeatFound));
   litTerrain = mix(litTerrain, foundReliefCrest, ridgeCrest.mul(isFeatFound));
   litTerrain = mix(litTerrain, foundRiverColor, riverCore.mul(isFeatFound));
+  litTerrain = mix(
+    litTerrain,
+    FEATURE_FOUND_PULSE_VEC(),
+    featureFoundPulseNode(
+      featSample,
+      uTimeNode,
+      getFeatureFoundStartNode(),
+      uReducedMotionNode
+    ).mul(clamp(ridgeSpur.add(ridgeCrest).add(riverCore), 0.0, 1.0))
+  );
   litTerrain = mix(litTerrain, selectEdgeRgb, featHaloAmt);
   litTerrain = mix(litTerrain, selectEdgeRgb, isFeatHover.mul(0.6));
   litTerrain = mix(litTerrain, selectEdgeRgb, isFeatCore);

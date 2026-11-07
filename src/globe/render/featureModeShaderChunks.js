@@ -3,8 +3,20 @@
  * TSL twin: webgpu/featureNodes.js. Relies on the SELECT_* defines of globeShaders.
  */
 
+/**
+ * One-off stepped fade on the newly found feature only (mask band [NEW_FOUND_T, 0.20)):
+ * 0 outside its FEATURE_FOUND_PULSE_S window and under reduced motion (static found colour).
+ * Inline (no function) because the surface chunk is spliced inside main().
+ */
+const featureFoundPulseGlsl = (sample) => `(
+      step(FEATURE_NEW_FOUND_T, ${sample}) * (1.0 - step(0.20, ${sample}))
+      * step(0.0, uTime - uFeatureFoundStart) * (1.0 - step(FEATURE_FOUND_PULSE_S, uTime - uFeatureFoundStart))
+      * floor((1.0 - clamp((uTime - uFeatureFoundStart) / FEATURE_FOUND_PULSE_S, 0.0, 1.0)) * SELECT_PULSE_STEPS + 0.5) / SELECT_PULSE_STEPS
+      * FEATURE_FOUND_PULSE_ALPHA * (1.0 - uReducedMotion))`;
+
 export const FEATURE_DECLARATIONS = `
   uniform float uFeatureMode;
+  uniform float uFeatureFoundStart;
   uniform sampler2D uFeatureMap;`;
 
 /** Glitch (selected/transitioning cap) pass: found features + selected outline/halo. */
@@ -33,6 +45,8 @@ export const FEATURE_GLITCH_CHUNK = `
     gl_FragColor.rgb = mix(gl_FragColor.rgb, fSpur, isFeatFound * rSpur);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, fCrest, isFeatFound * rCrest);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, fRiver, isFeatFound * rCore);
+    gl_FragColor.rgb = mix(gl_FragColor.rgb, FEATURE_FOUND_PULSE_RGB,
+      ${featureFoundPulseGlsl("featSample")} * clamp(rSpur + rCrest + rCore, 0.0, 1.0));
     gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_EDGE_RGB, featHaloAmt);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_EDGE_RGB, isFeatHover * 0.6);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, SELECT_EDGE_RGB, isFeatCore);
@@ -78,6 +92,8 @@ export const FEATURE_SURFACE_CHUNK = `
       featFoundLit = mix(featFoundLit, foundReliefCrest, ridgeCrest * isFeatFound);
       featFoundLit = mix(featFoundLit, foundRiverColor, riverCore * isFeatFound);
       activeTerrainLit = mix(activeTerrainLit, featFoundLit, isFeatFound);
+      activeTerrainLit = mix(activeTerrainLit, FEATURE_FOUND_PULSE_RGB,
+        ${featureFoundPulseGlsl("featSample")} * clamp(ridgeSpur + ridgeCrest + riverCore, 0.0, 1.0));
 
       activeTerrainLit = mix(activeTerrainLit, SELECT_EDGE_RGB, featHaloAmt);
       activeTerrainLit = mix(activeTerrainLit, SELECT_EDGE_RGB, isFeatHover * 0.6);

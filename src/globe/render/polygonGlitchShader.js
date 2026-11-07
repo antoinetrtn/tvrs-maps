@@ -5,7 +5,7 @@ import { FEEDBACK_TIMING } from "../../config/gameConstants";
 import { getBiomeTexture } from "./biomeTexture";
 import { getCapitalLightsTexture } from "./capitalLightsTexture";
 import { DISCOVERY } from "./discoveryTimeline";
-import { getFeatureMaskTexture } from "./featureMask";
+import { featureFoundPulseStart, getFeatureMaskTexture } from "./featureMask";
 import {
   GLITCH_FRAGMENT_BODY,
   GLITCH_FRAGMENT_DECLARATIONS,
@@ -28,6 +28,8 @@ export const polygonGlitchUniforms = {
   uIsRegionalMode: { value: 0 },
   // 1 when in rivers & mountains mode (pixel rivers and relief on all land caps + feature mask).
   uFeatureMode: { value: 0 },
+  // Rivers & mountains: start of the one-off pulse on the newly found feature (featureMask.js).
+  uFeatureFoundStart: featureFoundPulseStart,
   // Screen-noise DPR compensation: referencePixelRatio / renderer pixel ratio.
   uPixelScale: { value: 1 },
   // Deselection tear colours, derived from the globe palette.
