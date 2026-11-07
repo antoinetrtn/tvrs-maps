@@ -29,14 +29,16 @@
   font-family: var(--font-display);
 }
 
-.ui-btn--cta:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 2px 2px 0 var(--text-main);
+@media (hover: hover) {
+  .ui-btn--cta:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 2px 2px 0 var(--text-main);
+  }
 }
 
-.ui-btn--cta:active {
+.ui-btn--cta:active:not(:disabled) {
   transform: var(--press-offset);
   box-shadow: 1px 1px 0 var(--text-main);
   animation: px-press-flash var(--dur-micro) steps(1, end);
@@ -58,15 +60,17 @@
   color: var(--text-muted);
 }
 
-.ui-btn--tile:hover,
-.ui-btn.ui-btn--tile:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
-  color: var(--text-main);
-  background: color-mix(in srgb, var(--text-main) 10%, transparent);
-  transform: none;
+@media (hover: hover) {
+  .ui-btn--tile:hover,
+  .ui-btn.ui-btn--tile:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--text-main) 28%, transparent);
+    color: var(--text-main);
+    background: color-mix(in srgb, var(--text-main) 10%, transparent);
+    transform: none;
+  }
 }
 
-.ui-btn--tile:active {
+.ui-btn--tile:active:not(:disabled) {
   transform: var(--press-offset);
   animation: px-press-flash var(--dur-micro) steps(1, end);
 }
@@ -83,8 +87,10 @@
   transition: transform var(--dur-micro) var(--steps-press);
 }
 
-.ui-btn--tile-train:hover svg {
-  transform: translate(1px, 1px);
+@media (hover: hover) {
+  .ui-btn--tile-train:hover svg {
+    transform: translate(1px, 1px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -146,10 +152,12 @@
   color: var(--text-main);
 }
 
-.ui-btn--row.ui-btn--row-tvrs:hover {
-  background: var(--glass-hover);
-  border-color: var(--text-main);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .ui-btn--row.ui-btn--row-tvrs:hover {
+    background: var(--glass-hover);
+    border-color: var(--text-main);
+    transform: translateY(-1px);
+  }
 }
 .ui-btn--row.ui-btn--row-google {
   background: var(--glass-bg);
@@ -157,10 +165,12 @@
   color: var(--text-main);
 }
 
-.ui-btn--row.ui-btn--row-google:hover {
-  background: var(--glass-hover);
-  border-color: var(--text-main);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .ui-btn--row.ui-btn--row-google:hover {
+    background: var(--glass-hover);
+    border-color: var(--text-main);
+    transform: translateY(-1px);
+  }
 }
 .ui-btn--row.ui-btn--row-guest {
   background: var(--glass-bg);
@@ -168,10 +178,12 @@
   color: var(--text-main);
 }
 
-.ui-btn--row.ui-btn--row-guest:hover {
-  background: var(--glass-hover);
-  border-color: var(--text-main);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .ui-btn--row.ui-btn--row-guest:hover {
+    background: var(--glass-hover);
+    border-color: var(--text-main);
+    transform: translateY(-1px);
+  }
 }
 
 .ui-btn--submit {
@@ -222,9 +234,11 @@
     transform var(--transition-fast);
 }
 
-.ui-btn--form-submit:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .ui-btn--form-submit:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
 }
 
 .ui-btn--profile-unlock {
@@ -260,26 +274,31 @@
     border-color var(--transition-spring);
 }
 
-.ui-btn--hud-island:hover {
-  transform: scale(1.015) translateY(-1.5px);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-soft);
-  color: var(--accent);
-  background: var(--glass-bg);
+@media (hover: hover) {
+  .ui-btn--hud-island:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-soft);
+    color: var(--accent);
+    background: var(--glass-bg);
+  }
 }
 
 .ui-btn--hud-island:active,
 .ui-btn.ui-btn--hud-island:active {
-  transform: scale(0.985) translateY(0.5px);
+  transform: var(--press-offset);
   background: var(--accent);
   box-shadow: none;
   text-shadow: none;
   transition: transform var(--transition-instant);
+  animation: px-press-flash var(--dur-micro) steps(1, end);
 }
 
-.ui-btn--hud-island:hover .island-font {
-  color: inherit;
-  text-shadow: inherit;
+@media (hover: hover) {
+  .ui-btn--hud-island:hover .island-font {
+    color: inherit;
+    text-shadow: inherit;
+  }
 }
 
 .ui-btn--hud-island:active .island-font {
@@ -421,4 +440,27 @@
 
 .ui-btn--ready-cta.is-quiet .conquest-ready-cta-sub {
   display: none;
+}
+
+/* Reduced motion: looks keep their colour/contrast feedback but never move or flash. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-btn--cta,
+  .ui-btn--tile,
+  .ui-btn--row,
+  .ui-btn--form-submit,
+  .ui-btn--hud-island {
+    transition: none;
+  }
+
+  .ui-btn--cta:hover,
+  .ui-btn--cta:active,
+  .ui-btn--tile:active,
+  .ui-btn--row:hover,
+  .ui-btn--form-submit:hover,
+  .ui-btn--hud-island:hover,
+  .ui-btn--hud-island:active,
+  .ui-btn.ui-btn--hud-island:active {
+    transform: none;
+    animation: none;
+  }
 }

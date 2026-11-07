@@ -7,6 +7,7 @@ import { CHALLENGES } from "../data/challenges";
 import { nextTrainingTarget } from "../services/countryStats";
 import { recordSuccessfulGuessSideEffects } from "../utils/recordSuccessfulGuessSideEffects";
 import { normalizeString } from "../utils/utils";
+import { useGameEpoch } from "./useGameEpoch";
 
 function resolveTrailCountry({
   direction,
@@ -209,6 +210,7 @@ export function useGameSession({
   // pointe encore le pays tout juste trouvé, donc on garde la réponse et on la
   // rejoue sur le pays suivant dès l'auto-avance, au lieu de l'avaler (bug Entrée).
   const queuedGuessRef = useRef(null);
+  const gameEpochRef = useGameEpoch();
 
   const navigationTrailRef = useRef([]);
   const navigationTrailIndexRef = useRef(-1);
@@ -417,9 +419,10 @@ export function useGameSession({
       lightningCountRef.current = 0;
       successPendingRef.current.clear();
       queuedGuessRef.current = null;
+      gameEpochRef.current += 1;
       setMistakes(0);
     },
-    [activeDataMap, resetNavigationTrail, gameDuration, setSelectedCountry]
+    [activeDataMap, resetNavigationTrail, gameDuration, setSelectedCountry, gameEpochRef]
   );
 
   const handleSuccessfulGuess = useCallback(
@@ -465,7 +468,9 @@ export function useGameSession({
         });
       });
 
+      const epoch = gameEpochRef.current;
       setTimeout(() => {
+        if (epoch !== gameEpochRef.current) return;
         successPendingRef.current.delete(guessedKey);
         triggerGlobeFeedback(guessedKey, { isError: false, isSuccess: false });
         setFoundList(newFound);

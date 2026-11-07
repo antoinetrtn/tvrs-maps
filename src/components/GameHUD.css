@@ -245,6 +245,32 @@
   background: var(--warning-soft);
 }
 
+/* Answer state is also carried by a glyph (not colour alone), with empty alt text so
+   screen readers skip it. Appears instantly, no animation. */
+.input-island.success::after,
+.input-island.error::after,
+.input-island.warning::after {
+  flex-shrink: 0;
+  margin-left: var(--spacing-sm);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.input-island.success::after {
+  content: "\2713" / "";
+  color: var(--success);
+}
+
+.input-island.error::after {
+  content: "\2717" / "";
+  color: var(--error);
+}
+
+.input-island.warning::after {
+  content: "!" / "";
+  color: var(--warning);
+}
+
 .input-island.is-rejected {
   animation: input-reject var(--dur-base) steps(4, end);
   border-color: var(--warning);
