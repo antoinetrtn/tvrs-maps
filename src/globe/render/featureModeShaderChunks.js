@@ -26,9 +26,9 @@ export const FEATURE_GLITCH_CHUNK = `
     float rCrest = step(0.76, mRelief);
     float rSpur = (1.0 - rCrest) * step(0.38, mRelief);
     float rShimmer = 0.78 + 0.22 * sin(uTime * 2.2 + (selUv.x * 140.0 + selUv.y * 90.0));
-    vec3 fCrest = vec3(0.92, 0.78, 0.48);
-    vec3 fSpur = vec3(0.68, 0.50, 0.24);
-    vec3 fRiver = mix(vec3(0.22, 0.68, 0.92), vec3(0.45, 0.88, 1.0), rShimmer);
+    vec3 fCrest = vec3(0.42, 1.0, 0.74);
+    vec3 fSpur = vec3(0.12, 0.70, 0.46);
+    vec3 fRiver = mix(vec3(0.18, 0.90, 0.62), vec3(0.50, 1.0, 0.80), rShimmer);
 
     gl_FragColor.rgb = mix(gl_FragColor.rgb, fSpur, isFeatFound * rSpur);
     gl_FragColor.rgb = mix(gl_FragColor.rgb, fCrest, isFeatFound * rCrest);
@@ -70,9 +70,9 @@ export const FEATURE_SURFACE_CHUNK = `
       float featPulse = mix(floor(featPulseWave * SELECT_PULSE_STEPS + 0.5) / SELECT_PULSE_STEPS, 0.6, uReducedMotion);
       float featHaloAmt = isFeatHalo * featSample * SELECT_HALO_ALPHA * (0.35 + 0.65 * featPulse);
 
-      vec3 foundReliefCrest = vec3(0.92, 0.78, 0.48);
-      vec3 foundReliefSpur = vec3(0.68, 0.50, 0.24);
-      vec3 foundRiverColor = mix(vec3(0.22, 0.68, 0.92), vec3(0.45, 0.88, 1.0), riverShimmer);
+      vec3 foundReliefCrest = vec3(0.42, 1.0, 0.74);
+      vec3 foundReliefSpur = vec3(0.12, 0.70, 0.46);
+      vec3 foundRiverColor = mix(vec3(0.18, 0.90, 0.62), vec3(0.50, 1.0, 0.80), riverShimmer);
 
       vec3 featFoundLit = mix(activeTerrainLit, foundReliefSpur, ridgeSpur * isFeatFound);
       featFoundLit = mix(featFoundLit, foundReliefCrest, ridgeCrest * isFeatFound);

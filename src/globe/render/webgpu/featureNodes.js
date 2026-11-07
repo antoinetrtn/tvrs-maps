@@ -54,9 +54,9 @@ export function applyFeatureMode(p) {
     .mul(SELECT_HALO_ALPHA_VALUE)
     .mul(featPulse.mul(0.65).add(0.35));
 
-  const foundReliefCrest = vec3(0.92, 0.78, 0.48);
-  const foundReliefSpur = vec3(0.68, 0.5, 0.24);
-  const foundRiverColor = mix(vec3(0.22, 0.68, 0.92), vec3(0.45, 0.88, 1.0), riverShimmer);
+  const foundReliefCrest = vec3(0.42, 1.0, 0.74);
+  const foundReliefSpur = vec3(0.12, 0.7, 0.46);
+  const foundRiverColor = mix(vec3(0.18, 0.9, 0.62), vec3(0.5, 1.0, 0.8), riverShimmer);
   const selectEdgeRgb = vec3(...SELECT_EDGE_RGB_VALUE);
 
   let litTerrain = activeTerrainLit;
