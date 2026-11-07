@@ -152,7 +152,9 @@ export function useGameSessionProps({
       onCountrySelect: handleCountrySelect,
       viewport,
       isError: popupError,
-      isSuccess: popupSuccess,
+      // The island keeps the success flash while the globe already targets the next
+      // country: only the just-found selection (rare: no next target) may read as success.
+      isSuccess: popupSuccess && foundList.includes(selectedCountry),
       hasActiveFeedback: popupError || popupSuccess,
       perfProfile,
       isHomeScreen: currentScreen === "home",
