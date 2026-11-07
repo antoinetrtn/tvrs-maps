@@ -58,6 +58,11 @@ import {
   SELECT_PULSE_S_VALUE,
   SELECT_PULSE_STEPS_VALUE,
 } from "../selectionStyle";
+import {
+  FEATURE_FOUND_PULSE_VEC,
+  featureFoundPulseNode,
+  getFeatureFoundStartNode,
+} from "./featureNodes";
 import { discoveryLandStep } from "./igniteNodes";
 import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
@@ -79,6 +84,7 @@ function getSharedNodes(polygonGlitchUniforms) {
       uShowcaseLights: mirrorUniform(polygonGlitchUniforms.uShowcaseLights),
       uIsRegionalMode: mirrorUniform(polygonGlitchUniforms.uIsRegionalMode),
       uFeatureMode: mirrorUniform(polygonGlitchUniforms.uFeatureMode),
+      uFeatureFoundStart: getFeatureFoundStartNode(),
       uSuccessDuration: mirrorUniform(polygonGlitchUniforms.uSuccessDuration),
       uRevealStart: mirrorUniform(polygonGlitchUniforms.uRevealStart),
       uLandRadius: mirrorUniform(polygonGlitchUniforms.uLandRadius),
@@ -393,6 +399,15 @@ function createGlitchOutputNode(u) {
       rgb.assign(mix(rgb, fSpur, isFeatFound.mul(rSpur)));
       rgb.assign(mix(rgb, fCrest, isFeatFound.mul(rCrest)));
       rgb.assign(mix(rgb, fRiver, isFeatFound.mul(rCore)));
+      rgb.assign(
+        mix(
+          rgb,
+          FEATURE_FOUND_PULSE_VEC(),
+          featureFoundPulseNode(featSample, u.uTime, u.uFeatureFoundStart, u.uReducedMotion).mul(
+            clamp(rSpur.add(rCrest).add(rCore), 0.0, 1.0)
+          )
+        )
+      );
       rgb.assign(mix(rgb, EDGE_RGB, featHaloAmt));
       rgb.assign(mix(rgb, EDGE_RGB, isFeatHover.mul(0.6)));
       rgb.assign(mix(rgb, EDGE_RGB, isFeatCore));

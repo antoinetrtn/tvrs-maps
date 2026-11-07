@@ -45,6 +45,7 @@ export function applyCountrySurfaceGrainShader(
   shader.uniforms.uShowcaseLights = polygonGlitchUniforms.uShowcaseLights;
   shader.uniforms.uIsRegionalMode = polygonGlitchUniforms.uIsRegionalMode;
   shader.uniforms.uFeatureMode = polygonGlitchUniforms.uFeatureMode;
+  shader.uniforms.uFeatureFoundStart = polygonGlitchUniforms.uFeatureFoundStart;
   shader.uniforms.uFeatureMap = { value: getFeatureMaskTexture() };
   shader.uniforms.uIgniteOrigin = igniteHolder ? igniteHolder.origin : g.uIgniteOrigin;
   shader.uniforms.uIgniteStart = igniteHolder ? igniteHolder.start : g.uIgniteStart;
@@ -85,6 +86,7 @@ export function applyCountrySurfaceGrainShader(
     uniform float uShowcaseLights;
     uniform float uIsRegionalMode;
     uniform float uFeatureMode;
+    uniform float uFeatureFoundStart;
     uniform sampler2D uFeatureMap;
     uniform float uIsGhost;
     uniform float uIgniteSelf;

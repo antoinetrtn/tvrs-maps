@@ -6,6 +6,12 @@ export const SELECT_EDGE_RGB_VALUE = [1.0, 0.76, 0.32];
 export const SELECT_HALO_ALPHA_VALUE = 0.55;
 export const SELECT_PULSE_S_VALUE = 2.4;
 export const SELECT_PULSE_STEPS_VALUE = 4;
+// Rivers & mountains: one-off brightening of the feature just found (seconds, stepped like the halo).
+export const FEATURE_FOUND_PULSE_S_VALUE = 0.6;
+// Mask band of the newly found feature (inside the found band [0.10, 0.20)).
+export const FEATURE_NEW_FOUND_THRESHOLD = 0.18;
+export const FEATURE_FOUND_PULSE_RGB = [0.86, 1.0, 0.92];
+export const FEATURE_FOUND_PULSE_ALPHA = 0.6;
 // Unfound land in game: warm night umber; Home/End keep the original cool grey.
 export const BLACKOUT_TINT_RGB = [1.08, 0.97, 0.8];
 export const BLACKOUT_TINT_HOME_RGB = [0.97, 0.99, 1.03];
@@ -19,4 +25,8 @@ export const SELECTION_STYLE_DEFS = `
   #define SELECT_HALO_ALPHA ${SELECT_HALO_ALPHA_VALUE.toFixed(3)}
   #define SELECT_PULSE_S ${SELECT_PULSE_S_VALUE.toFixed(3)}
   #define SELECT_PULSE_STEPS ${SELECT_PULSE_STEPS_VALUE.toFixed(1)}
+  #define FEATURE_FOUND_PULSE_S ${FEATURE_FOUND_PULSE_S_VALUE.toFixed(3)}
+  #define FEATURE_NEW_FOUND_T ${FEATURE_NEW_FOUND_THRESHOLD.toFixed(3)}
+  #define FEATURE_FOUND_PULSE_RGB ${v3(FEATURE_FOUND_PULSE_RGB)}
+  #define FEATURE_FOUND_PULSE_ALPHA ${FEATURE_FOUND_PULSE_ALPHA.toFixed(3)}
 `;
