@@ -67,6 +67,7 @@ const GlobeMap = (props) => {
     learnSubMode = DEFAULT_LEARN_SUB_MODE,
     isPanelOpen = false,
     onGlobeReady: onGlobeReadyProp,
+    cameraMode,
   } = props;
   const t = useTranslation(lang);
 
@@ -195,6 +196,7 @@ const GlobeMap = (props) => {
       perfProfile,
       isPanelOpen,
       mode,
+      cameraMode,
       selectionTransition,
       canonicalPositions: canonicalRef.current,
     });

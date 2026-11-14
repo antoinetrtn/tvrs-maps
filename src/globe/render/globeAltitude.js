@@ -1,3 +1,5 @@
+import { publishCameraFly } from "../../dev/cameraTestHook";
+
 const GLOBE_RADIUS = 100;
 
 const GLOBE_CAMERA_NEAR = 1;
@@ -322,6 +324,7 @@ export function animateGlobePov(globeEl, pov, durationMs = 0) {
   povTweenEndsAt = ms ? nowMs() + ms : 0;
   syncCameraMapProjection(globeEl, pov.altitude);
   globeEl.pointOfView(pov, ms);
+  publishCameraFly(pov, ms);
 }
 
 export function isGlobePovTweenActive() {
