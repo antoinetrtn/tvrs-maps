@@ -18,6 +18,8 @@ import {
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
 import { countryDataMap } from "./data/gameData";
+import PerfSwitchOverlay from "./dev/PerfSwitchOverlay";
+import { markHomeModeSwitch } from "./dev/perfSwitchTracker";
 import useAchievementToasts from "./hooks/useAchievementToasts.jsx";
 import { useAppTheme } from "./hooks/useAppTheme";
 import { useCountrySelectHandler } from "./hooks/useCountrySelectHandler";
@@ -72,6 +74,13 @@ function App() {
   // Globe layer for the home screen: follows the carousel only once it settles.
   const isHomeScreenActive = currentScreen === "home";
   const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
+  const prevHomeModeRef = useRef(homeMode);
+  useEffect(() => {
+    if (prevHomeModeRef.current !== homeMode) {
+      markHomeModeSwitch(homeMode);
+      prevHomeModeRef.current = homeMode;
+    }
+  }, [homeMode]);
 
   const [peacefulMode, setPeacefulMode] = useState(readInitialPeacefulMode);
 
@@ -449,6 +458,7 @@ function App() {
       <ToastViewport />
       <AchievementStack achievements={achievements} onDismiss={dismissAchievement} />
       <GeoDataStatus status={geoStatus.status} onRetry={geoStatus.retry} lang={lang} />
+      <PerfSwitchOverlay />
       {authMounted && (
         <React.Suspense fallback={null}>
           <AuthModal

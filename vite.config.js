@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import process from "node:process";
 import { fileURLToPath, URL } from "node:url";
 
 const fromRoot = (p) => fileURLToPath(new URL(p, import.meta.url));
@@ -16,6 +17,14 @@ export const globeAliases = [
     replacement: fromRoot(
       "./node_modules/three-conic-polygon-geometry/dist/three-conic-polygon-geometry.mjs"
     ),
+  },
+  {
+    find: /^three-geojson-geometry$/,
+    replacement: fromRoot("./src/globe/render/cachedGeoJsonGeometry.js"),
+  },
+  {
+    find: /^three-geojson-geometry-original$/,
+    replacement: fromRoot("./node_modules/three-geojson-geometry/dist/three-geojson-geometry.mjs"),
   },
   // three-globe hex layers are unused: drop the ~550 kB h3-js blob.
   { find: /^h3-js$/, replacement: fromRoot("./src/globe/render/h3Stub.js") },

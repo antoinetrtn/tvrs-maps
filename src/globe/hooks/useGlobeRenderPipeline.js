@@ -16,7 +16,7 @@ export function useGlobeRenderPipeline({
   perfProfile,
   canonicalRef,
 }) {
-  useGlobeIdlePrewarm({
+  const residentLayers = useGlobeIdlePrewarm({
     countriesData,
     departmentsData,
     usStatesData,
@@ -34,6 +34,7 @@ export function useGlobeRenderPipeline({
     gameDataMap,
     selectedCountry,
     perfProfile,
+    residentLayers,
   });
 
   const {
