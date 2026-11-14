@@ -9,9 +9,10 @@
 // This wrapper memoizes the triangulated buffers per source ring array and
 // parameter set, and hands each new geometry its own BufferAttributes over the
 // shared (read-only) typed arrays. Output is identical to a fresh build of the same geometry.
-import { BufferAttribute, BufferGeometry } from "three";
+import { BufferGeometry } from "three";
 import OriginalConicPolygonGeometry from "three-conic-polygon-geometry-original";
 
+import { disposePooledGeometry, initPooledGeometry, takePooledGeometry } from "./geometryPool";
 import RefinedConicPolygonGeometry, { shouldRefine } from "./refinedConicPolygonGeometry";
 
 // Shared through globalThis: the dev-server dependency optimizer can bundle this
@@ -30,12 +31,6 @@ const buildGeometry = (args) => {
 };
 
 const paramsKey = (...args) => args.map(String).join("|");
-
-const shareAttribute = (attr) => {
-  const shared = new BufferAttribute(attr.array, attr.itemSize, attr.normalized);
-  shared.name = attr.name;
-  return shared;
-};
 
 function getEntry(polygonGeoJson, args) {
   const isCacheable = polygonGeoJson !== null && typeof polygonGeoJson === "object";
@@ -61,33 +56,12 @@ export default class ConicPolygonGeometry extends BufferGeometry {
   constructor(...args) {
     super();
     const entry = getEntry(args[0], args);
-    if (entry.pool && entry.pool.length > 0) {
-      const recycled = entry.pool.pop();
-      recycled.__inPool = false;
-      return recycled;
-    }
-    const { template } = entry;
-    this.__pool = entry.pool;
-    this.__inPool = false;
-    this.type = template.type;
-    this.parameters = { ...template.parameters };
-    if (template.index) this.setIndex(shareAttribute(template.index));
-    Object.entries(template.attributes).forEach(([name, attr]) => {
-      this.setAttribute(name, shareAttribute(attr));
-    });
-    template.groups.forEach((g) => this.addGroup(g.start, g.count, g.materialIndex));
-    if (template.boundingSphere) this.boundingSphere = template.boundingSphere.clone();
-    if (template.boundingBox) this.boundingBox = template.boundingBox.clone();
+    const recycled = takePooledGeometry(entry);
+    if (recycled) return recycled;
+    initPooledGeometry(this, entry, entry.template.type, { ...entry.template.parameters });
   }
 
   dispose() {
-    if (this.__pool) {
-      if (!this.__inPool) {
-        this.__inPool = true;
-        this.__pool.push(this);
-      }
-      return;
-    }
-    super.dispose();
+    disposePooledGeometry(this, () => super.dispose());
   }
 }
