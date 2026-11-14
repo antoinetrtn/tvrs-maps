@@ -27,7 +27,6 @@ export function useModeTransitionColor({
 }) {
   return useCallback(
     (d) => {
-      if (d?.isDormantLayerFeature) return UI_COLORS.mapSea;
       const transState = getTransitionState(modeTransitionRef, transitionStep);
       if (!transState) return getBasePolygonColor(d);
       const transColor = resolveModeTransitionColor({
@@ -95,7 +94,6 @@ export function useModeTransitionStrokeWidth({
 }) {
   return useCallback(
     (d) => {
-      if (d?.isDormantLayerFeature) return 0;
       const transState = getTransitionState(modeTransitionRef, transitionStep);
       if (transState) {
         const transWidth = resolveModeTransitionStrokeWidth({

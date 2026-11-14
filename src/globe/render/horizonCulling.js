@@ -17,43 +17,6 @@ const HORIZON_MARGIN = 4 * DEG;
 
 const capCache = new WeakMap();
 
-let polygonCullRevision = 0;
-
-export function bumpPolygonCullRevision() {
-  polygonCullRevision += 1;
-}
-
-export function getPolygonCullRevision() {
-  return polygonCullRevision;
-}
-
-// Warm at most 48 dormant polygon VBOs per frame so WebGL buffer uploads stay tiny.
-const MAX_VBO_WARM_PER_FRAME = 48;
-
-function hideCapMaterial(obj) {
-  const cap = obj.children?.[1]?.material;
-  if (cap) cap.visible = false;
-}
-
-function showCapMaterial(obj) {
-  const cap = obj.children?.[1]?.material;
-  if (cap && !cap.visible) cap.visible = true;
-}
-
-function warmDormantPolygon(obj, scene, budget) {
-  if (obj.__vboWarm || budget.warmed >= MAX_VBO_WARM_PER_FRAME) {
-    if (!obj.__vboWarm && scene) scene.__tvrsForceNextCull = true;
-    if (obj.visible) obj.visible = false;
-    return true;
-  }
-  budget.warmed += 1;
-  obj.__vboWarm = true;
-  hideCapMaterial(obj);
-  if (!obj.visible) obj.visible = true;
-  if (scene) scene.__tvrsForceNextCull = true;
-  return false;
-}
-
 function forEachCoordinate(geometry, fn) {
   if (!geometry) return;
   const { type, coordinates } = geometry;
@@ -124,18 +87,9 @@ export function isCapVisible(cap, camPos, globeRadius) {
  */
 export function cullPolygonsBeyondHorizon(scene, camera, globeRadius = 100) {
   let hidden = 0;
-  const budget = { warmed: 0 };
   const camPos = camera.position;
-  if (scene) scene.__tvrsForceNextCull = false;
   const visit = (obj) => {
     if (obj.__globeObjType === "polygon") {
-      const d = obj.__data?.data;
-      if (d?.isDormantLayerFeature) {
-        const stillHidden = warmDormantPolygon(obj, scene, budget);
-        if (stillHidden) hidden += 1;
-        return;
-      }
-      showCapMaterial(obj);
       const visible = isCapVisible(featureCap(obj.__data), camPos, globeRadius);
       if (obj.visible !== visible) obj.visible = visible;
       if (!visible) {

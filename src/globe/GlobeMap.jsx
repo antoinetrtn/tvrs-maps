@@ -133,7 +133,6 @@ const GlobeMap = (props) => {
     getPolygonAltitude,
     getPolygonStrokeWidth,
     getPolygonCurvatureResolution,
-    getStablePolygonCurvatureResolution,
     getPolygonCapColorWrapped,
     getPolygonSideColorWrapped,
     getPolygonStrokeColorWrapped,
@@ -501,9 +500,7 @@ const GlobeMap = (props) => {
             enablePointerInteraction={hoverRaycastEnabled}
             polygonsData={polygonsData}
             polygonGeoJsonGeometry="renderGeometry"
-            polygonCapCurvatureResolution={
-              getStablePolygonCurvatureResolution ?? getPolygonCurvatureResolution
-            }
+            polygonCapCurvatureResolution={getPolygonCurvatureResolution}
             polygonAltitude={getPolygonAltitude}
             polygonCapColor={getPolygonCapColorWrapped}
             polygonCapMaterial={globeLightingEnabled ? getPolygonCapMaterial : undefined}

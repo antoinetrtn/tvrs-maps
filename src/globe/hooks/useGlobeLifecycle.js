@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
-import { cullPolygonsBeyondHorizon, getPolygonCullRevision } from "../render/horizonCulling";
+import { cullPolygonsBeyondHorizon } from "../render/horizonCulling";
 import { swapLineMaterialsForWebGPU } from "../render/webgpu/lineMaterialSwap";
 
 /**
@@ -44,7 +44,7 @@ function useGlobeHorizonCulling(globeEl) {
     let scene = null;
     let previous = null;
     let waitId = null;
-    const last = { x: Number.NaN, y: Number.NaN, z: Number.NaN, at: 0, rev: -1 };
+    const last = { x: Number.NaN, y: Number.NaN, z: Number.NaN, at: 0 };
     const install = () => {
       waitId = null;
       const globe = globeEl.current;
@@ -61,21 +61,14 @@ function useGlobeHorizonCulling(globeEl) {
         if (renderer?.isWebGPURenderer) swapLineMaterialsForWebGPU(sc);
         const p = camera.position;
         const now = performance.now();
-        const rev = getPolygonCullRevision();
         const moved =
           Math.abs(p.x - last.x) + Math.abs(p.y - last.y) + Math.abs(p.z - last.z) > 0.01;
-        if (
-          moved ||
-          rev !== last.rev ||
-          sc.__tvrsForceNextCull ||
-          now - last.at > CULL_REFRESH_MS
-        ) {
+        if (moved || now - last.at > CULL_REFRESH_MS) {
           cullPolygonsBeyondHorizon(sc, camera, radius);
           last.x = p.x;
           last.y = p.y;
           last.z = p.z;
           last.at = now;
-          last.rev = rev;
         }
         return previous?.call(this, renderer, sc, camera, ...rest);
       };
