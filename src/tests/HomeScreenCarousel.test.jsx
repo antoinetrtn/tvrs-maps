@@ -209,4 +209,46 @@ describe("HomeScreenCategoryCarousel & ModeCard", () => {
     expect(topCardPrev.getAttribute("data-mode")).toBe("countries");
     vi.useRealTimers();
   });
+
+  it("manual click on arrow, dot, or side card settles immediately at front pose without snapping back after 200ms", () => {
+    const CarouselContainer = () => {
+      const [mode, setMode] = useState("countries");
+      return (
+        <HomeScreenCategoryCarousel
+          homeMode={mode}
+          setHomeMode={setMode}
+          lang="fr"
+          onStartGame={vi.fn()}
+        />
+      );
+    };
+
+    vi.useFakeTimers();
+    render(<CarouselContainer />);
+
+    const nextButton = screen.getByRole("button", { name: "Suivant" });
+    fireEvent.click(nextButton);
+
+    const topCardAfterClick = document.querySelector(".ui-card--mode-deck.is-top-card");
+    expect(topCardAfterClick.getAttribute("data-mode")).toBe("capitals");
+    // Must sit at front pose (--card-x: 0px, z-index 100), not flown out to +/-140px
+    expect(topCardAfterClick.style.getPropertyValue("--card-x")).toBe("0px");
+    expect(topCardAfterClick.style.zIndex).toBe("100");
+
+    // Rapid second manual click within 200ms is honored (not dropped by a lock)
+    fireEvent.click(nextButton);
+    const topCardSecondClick = document.querySelector(".ui-card--mode-deck.is-top-card");
+    expect(topCardSecondClick.getAttribute("data-mode")).toBe("departments");
+    expect(topCardSecondClick.style.getPropertyValue("--card-x")).toBe("0px");
+
+    // Advancing past 200ms does not snap or change the card pose
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    const topCardAfterTimer = document.querySelector(".ui-card--mode-deck.is-top-card");
+    expect(topCardAfterTimer.getAttribute("data-mode")).toBe("departments");
+    expect(topCardAfterTimer.style.getPropertyValue("--card-x")).toBe("0px");
+
+    vi.useRealTimers();
+  });
 });

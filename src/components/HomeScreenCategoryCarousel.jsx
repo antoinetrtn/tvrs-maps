@@ -3,7 +3,7 @@ import "./HomeScreenCarouselMotion.css";
 import "./HomeScreenDesktop.css";
 
 import { ChevronLeft, ChevronRight } from "pixelarticons/react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useTranslation } from "../config/i18n";
 import { departmentsDataMap } from "../data/departmentsData";
@@ -139,30 +139,20 @@ function useCarouselNavigation({
   setHomeMode,
   exiting,
 }) {
-  const [animatingDirection, setAnimatingDirection] = useState(null);
-  const isAnimatingRef = useRef(false);
-  const animTimerRef = useRef(null);
-
-  useEffect(() => () => clearTimeout(animTimerRef.current), []);
-
   const triggerAnimatedChange = useCallback(
     (direction, targetIdxOverride = null) => {
-      if (isAnimatingRef.current || exiting) return;
-      isAnimatingRef.current = true;
-      setAnimatingDirection(direction);
+      if (exiting || !totalModes) return;
 
       let nextIdx = (activeIndex - 1 + totalModes) % totalModes;
       if (targetIdxOverride !== null) {
-        nextIdx = targetIdxOverride;
+        nextIdx = ((targetIdxOverride % totalModes) + totalModes) % totalModes;
       } else if (direction === "leftSwipe") {
         nextIdx = (activeIndex + 1) % totalModes;
       }
-      setHomeMode(gameModesCarousel[nextIdx].key);
-
-      animTimerRef.current = setTimeout(() => {
-        setAnimatingDirection(null);
-        isAnimatingRef.current = false;
-      }, 200);
+      const nextMode = gameModesCarousel[nextIdx]?.key;
+      if (nextMode) {
+        setHomeMode(nextMode);
+      }
     },
     [totalModes, activeIndex, gameModesCarousel, setHomeMode, exiting]
   );
@@ -177,9 +167,14 @@ function useCarouselNavigation({
 
   const onSelectIndex = useCallback(
     (nextIdx) => {
-      setHomeMode(gameModesCarousel[nextIdx].key);
+      if (exiting || !totalModes) return;
+      const safeIdx = ((nextIdx % totalModes) + totalModes) % totalModes;
+      const nextMode = gameModesCarousel[safeIdx]?.key;
+      if (nextMode) {
+        setHomeMode(nextMode);
+      }
     },
-    [gameModesCarousel, setHomeMode]
+    [exiting, totalModes, gameModesCarousel, setHomeMode]
   );
 
   const handleSelectSideCard = useCallback(
@@ -192,7 +187,7 @@ function useCarouselNavigation({
   );
 
   return {
-    animatingDirection,
+    animatingDirection: null,
     triggerAnimatedChange,
     goToNext,
     goToPrev,

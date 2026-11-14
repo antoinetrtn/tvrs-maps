@@ -13,6 +13,11 @@ import {
   GLITCH_VERTEX_DECLARATIONS,
 } from "./globeShaders";
 import {
+  PAINTED_GLSL_DECLARATIONS,
+  PAINTED_SELECTION_GLSL_BODY,
+  paintedTerrainUniforms,
+} from "./paintedTerrain";
+import {
   getSelectionOutlineTexture,
   selectionOutlineBox,
   selectionOutlinePx,
@@ -186,6 +191,7 @@ function buildGlitchMaterialUniforms({
 }) {
   return {
     ...polygonGlitchUniforms,
+    ...paintedTerrainUniforms,
     uFeatureMap: { value: getFeatureMaskTexture() },
     uCapitalLightsMap: { value: getCapitalLightsTexture() },
     uBiomeMap: { value: getBiomeTexture() },
@@ -223,10 +229,15 @@ function patchGlitchShaders(shader) {
     `
   );
 
-  shader.fragmentShader = GLITCH_FRAGMENT_DECLARATIONS + shader.fragmentShader;
+  const paintedSelectionAnchor = "  vec3 selNight =";
+  shader.fragmentShader =
+    GLITCH_FRAGMENT_DECLARATIONS + PAINTED_GLSL_DECLARATIONS + shader.fragmentShader;
   shader.fragmentShader = shader.fragmentShader.replace(
     `#include <dithering_fragment>`,
-    GLITCH_FRAGMENT_BODY
+    GLITCH_FRAGMENT_BODY.replace(
+      paintedSelectionAnchor,
+      PAINTED_SELECTION_GLSL_BODY + paintedSelectionAnchor
+    )
   );
 }
 

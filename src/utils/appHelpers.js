@@ -28,7 +28,7 @@ export function tryFocusGameInput(input) {
   }
 }
 
-export function pickRandomHomeKey(activeDataMap) {
+export function pickRandomHomeKey(activeDataMap, excludeKey = null) {
   if (!activeDataMap) {
     return null;
   }
@@ -36,20 +36,18 @@ export function pickRandomHomeKey(activeDataMap) {
   if (keys.length === 0) {
     return null;
   }
+  if (excludeKey && keys.length > 1) {
+    const candidates = keys.filter((k) => k !== excludeKey);
+    if (candidates.length > 0) {
+      return candidates[secureRandomInt(0, candidates.length)];
+    }
+  }
   const index = secureRandomInt(0, keys.length);
   return keys[index];
 }
 
-export function pickNextAutorotateKey(activeDataMap) {
-  if (!activeDataMap) {
-    return null;
-  }
-  const freshKeys = Object.keys(activeDataMap).filter((k) => activeDataMap[k]?.lat !== undefined);
-  if (freshKeys.length === 0) {
-    return null;
-  }
-  const nextIndex = secureRandomInt(0, freshKeys.length);
-  return freshKeys[nextIndex];
+export function pickNextAutorotateKey(activeDataMap, currentKey = null) {
+  return pickRandomHomeKey(activeDataMap, currentKey);
 }
 
 export function shouldShowInitialAuthModal(session) {

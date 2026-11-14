@@ -215,24 +215,25 @@ export const GLITCH_FRAGMENT_BODY = `
   float wallOn = isWall * step(hash(floor(fragPx * 0.5) + 7.0), lightProg * 2.0);
   float edgeOn = step(hash(selOcCell + 7.0), lightProg * 2.0);
   float edgeOuter = selEdgeV * edgeOn;
-  // Warm night umber under the selection instead of the cold map grey.
-  vec3 selLand = vec3(dot(litRestingColor, vec3(0.299, 0.587, 0.114))) * SELECT_LAND_TINT;
+  // Resting unfound land (surface blackout + biome): shared by selection and settle.
+  float restBlackout = (1.0 - uShowcaseLights) * (1.0 - uIsRegionalMode);
+  float restLuma = dot(litRestingColor, vec3(0.299, 0.587, 0.114));
+  vec3 restGrey = vec3(restLuma) * mix(BLACKOUT_TINT, BLACKOUT_TINT_HOME, uShowcaseLights);
+  vec3 unfoundRestColor = mix(litRestingColor, restGrey, restBlackout * 0.88)
+    * mix(1.0, mix(0.36, 0.74, uIsRegionalMode), 1.0 - uShowcaseLights);
+  vec4 biomeS = texture2D(uBiomeMap, selUv);
+  float ndv = clamp(dot(sphereDir, normalize(cameraPosition - vWorldPosition)), 0.0, 1.0);
+  float biomeAllowed = biomeS.a * (1.0 - isWall);
+  float biomeShown = max(uShowcaseLights, uIsRegionalMode);
+  unfoundRestColor = mix(unfoundRestColor, biomeS.rgb * 0.3, restBlackout * biomeAllowed * 0.34);
+  unfoundRestColor = mix(unfoundRestColor, biomeS.rgb * (0.88 + 0.18 * (1.0 - ndv)), biomeShown * biomeAllowed * 0.92);
+  vec3 selNight = mix(vec3(restLuma) * SELECT_LAND_TINT, biomeS.rgb * 0.3, biomeAllowed * 0.34);
+  vec3 selLand = mix(unfoundRestColor, selNight, restBlackout);
   vec3 wallTone = vec3(1.0, 0.74, 0.3) / max(uSideShade, 0.001);
   vec3 staticVec = mix(mix(litRestingColor, selLand, 1.0 - isWall), wallTone, wallOn);
   staticVec = mix(staticVec, SELECT_CITY_AMBER, cityOn * SELECT_CITY_ALPHA);
   staticVec = mix(staticVec, SELECT_EDGE_RGB, edgeOuter);
   vec3 foundRestingColor = vec3(0.48, 0.34, 0.15);
-  // Resting unfound land, same formula as the surface blackout pass (unfoundLand): the
-  // deselect fade settles to it instead of the raw lit grey (grey flash on deselect).
-  float restBlackout = (1.0 - uShowcaseLights) * (1.0 - uIsRegionalMode);
-  vec3 restGrey = vec3(dot(litRestingColor, vec3(0.299, 0.587, 0.114)))
-    * mix(BLACKOUT_TINT, BLACKOUT_TINT_HOME, uShowcaseLights);
-  vec3 unfoundRestColor = mix(litRestingColor, restGrey, restBlackout * 0.88)
-    * mix(1.0, mix(0.36, 0.74, uIsRegionalMode), 1.0 - uShowcaseLights);
-  vec4 biomeS = texture2D(uBiomeMap, selUv);
-  float ndv = clamp(dot(sphereDir, normalize(cameraPosition - vWorldPosition)), 0.0, 1.0);
-  unfoundRestColor = mix(unfoundRestColor, biomeS.rgb * (0.88 + 0.18 * (1.0 - ndv)),
-    uShowcaseLights * uIsRegionalMode * biomeS.a * (1.0 - isWall) * 0.92);
   float deselectDone = step(0.994, uFadeProgress);
 
   vec3 finalColor = gl_FragColor.rgb;

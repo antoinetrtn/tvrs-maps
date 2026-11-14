@@ -13,7 +13,6 @@ import { isValidLearnSubMode } from "./config/gameConfig";
 import {
   DEFAULT_GAME_DURATION_SEC,
   DEFAULT_MODE,
-  HOME_AUTOROTATE_INTERVAL_MS,
   HOME_GLOBE_SETTLE_MS,
   STORAGE_KEYS,
 } from "./config/gameConstants";
@@ -27,6 +26,7 @@ import { useGameDataPanelState } from "./hooks/useGameDataPanelState";
 import { useGameSession } from "./hooks/useGameSession";
 import { useGameSessionProps } from "./hooks/useGameSessionProps";
 import { useGeoData } from "./hooks/useGeoData";
+import { useHomeGlobeShowcase } from "./hooks/useHomeGlobeShowcase";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
 import useMountedOnce from "./hooks/useMountedOnce";
 import { usePerfProfile } from "./hooks/usePerfProfile";
@@ -36,10 +36,9 @@ import useSettledValue from "./hooks/useSettledValue";
 import { useTrainingRun } from "./hooks/useTrainingRun";
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useViewport } from "./hooks/useViewport";
+import { isConquestEnabled } from "./multiplayer/conquestConfig";
 import { useConquestLayer } from "./multiplayer/useConquestLayer.jsx";
 import {
-  pickNextAutorotateKey,
-  pickRandomHomeKey,
   readInitialPeacefulMode,
   shouldShowInitialAuthModal,
   tryFocusGameInput,
@@ -67,12 +66,12 @@ function App() {
   const [gameDuration, setGameDuration] = useState(DEFAULT_GAME_DURATION_SEC);
   const [lang, setLang] = useState("fr");
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [homeMode, setHomeMode] = useState(HOME_CONQUEST_KEY);
-  const prevActiveDataMapRef = useRef(null);
+  const [homeMode, setHomeMode] = useState(() =>
+    isConquestEnabled() ? HOME_CONQUEST_KEY : DEFAULT_MODE
+  );
   // Globe layer for the home screen: follows the carousel only once it settles.
   const isHomeScreenActive = currentScreen === "home";
   const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
-  const prevHomeModeRef = useRef(globeHomeMode);
 
   const [peacefulMode, setPeacefulMode] = useState(readInitialPeacefulMode);
 
@@ -147,17 +146,14 @@ function App() {
 
   const { isBootReady, onGlobeReady } = useBootGate({ geoStatus });
 
-  if (
-    currentScreen === "home" &&
-    (activeDataMap !== prevActiveDataMapRef.current || globeHomeMode !== prevHomeModeRef.current)
-  ) {
-    prevActiveDataMapRef.current = activeDataMap;
-    prevHomeModeRef.current = globeHomeMode;
-    const randomKey = pickRandomHomeKey(activeDataMap);
-    if (randomKey) {
-      setSelectedCountry(randomKey);
-    }
-  }
+  useHomeGlobeShowcase({
+    currentScreen,
+    homeMode,
+    globeHomeMode,
+    activeDataMap,
+    selectedCountry,
+    setSelectedCountry,
+  });
 
   const { trainingPool, setTrainingPool, clearTraining, sessionKeys, sessionTotal } =
     useTrainingRun({ allCountryKeys, totalPossible });
@@ -268,34 +264,13 @@ function App() {
     clearTraining();
     setSelectedCountry(null);
     setMode(DEFAULT_MODE);
-    setHomeMode(HOME_CONQUEST_KEY);
+    setHomeMode(isConquestEnabled() ? HOME_CONQUEST_KEY : DEFAULT_MODE);
     setShowLearnPanel(false);
     setLearnSearchQuery("");
     setShowInfoModal(false);
     setShowResultsTable(false);
     setCurrentScreen("home");
   }, [resetGame, setSelectedCountry, clearTraining]);
-
-  useEffect(() => {
-    if (currentScreen === "home") {
-      setSelectedCountry(null);
-    }
-  }, [currentScreen]);
-
-  useEffect(() => {
-    if (currentScreen !== "home" || !activeDataMap) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const nextKey = pickNextAutorotateKey(activeDataMap);
-      if (nextKey) setSelectedCountry(nextKey);
-    }, HOME_AUTOROTATE_INTERVAL_MS);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [currentScreen, activeDataMap, globeHomeMode]);
 
   const handleCustomConfirm = (message, action) =>
     setConfirmState({

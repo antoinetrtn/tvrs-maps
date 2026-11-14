@@ -64,6 +64,7 @@ import {
   getFeatureFoundStartNode,
 } from "./featureNodes";
 import { discoveryLandStep } from "./igniteNodes";
+import { applyPaintedTerrain } from "./paintedNodes";
 import { fromDisplay, hash, litDisplayColor, mirrorUniform } from "./tslCommon";
 
 const PI = 3.14159;
@@ -261,7 +262,16 @@ function glitchBase(u, lit) {
   const edgeV = step(mask, fw.mul(u.uSelOutlinePx).add(0.5)).mul(inBox).mul(float(1).sub(side));
   const edgeOn = step(hash(ocCell.add(7.0)), lightProg.mul(2.0));
   const edgeOuter = edgeV.mul(edgeOn);
-  const selLand = vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(LAND_TINT);
+  const restColor = unfoundRestColor(u, lit, sphereDir, selUv, side);
+  const restBlackout = float(1).sub(u.uShowcaseLights).mul(float(1).sub(u.uIsRegionalMode));
+  const biomeSample = texture(getBiomeTexture(), selUv);
+  const biomeAllowed = biomeSample.a.mul(float(1).sub(side));
+  const selNight = mix(
+    vec3(dot(lit, vec3(0.299, 0.587, 0.114))).mul(LAND_TINT),
+    biomeSample.rgb.mul(0.3),
+    biomeAllowed.mul(0.34)
+  );
+  const selLand = mix(restColor, selNight, restBlackout);
   const staticVec = mix(
     mix(mix(lit, selLand, float(1).sub(side)), wallTone, wallOn),
     CITY_AMBER,
@@ -299,11 +309,11 @@ function glitchBase(u, lit) {
     pixelOn: step(0.01, cityOn.add(wallOn).add(edgeOuter)),
     sideShade,
     foundRestingColor,
-    unfoundRestColor: unfoundRestColor(u, lit, sphereDir, selUv, side),
+    unfoundRestColor: restColor,
   };
 }
 
-/** GLSL parity: resting unfound land (surface blackout formula) the deselect settles to. */
+/** GLSL parity: resting unfound land (surface blackout formula) shared by selection & settle. */
 function unfoundRestColor(u, lit, sphereDir, selUv, side) {
   const showcase = u.uShowcaseLights;
   const regional = u.uIsRegionalMode;
@@ -319,8 +329,19 @@ function unfoundRestColor(u, lit, sphereDir, selUv, side) {
   const viewDir = normalize(cameraPosition.sub(positionWorld));
   const ndv = clamp(dot(sphereDir, viewDir), 0.0, 1.0);
   const biomeLand = biomeTone.mul(float(1.0).sub(ndv).mul(0.18).add(0.88));
-  const homeRegional = showcase.mul(regional).mul(biomeSample.a).mul(float(1).sub(side));
-  return mix(baseRest, biomeLand, homeRegional.mul(0.92));
+  const capMask = float(1).sub(side);
+  const biomeAllowed = biomeSample.a.mul(capMask);
+  const biomeShown = max(showcase, regional);
+  const hinted = mix(baseRest, biomeTone.mul(0.3), restBlackout.mul(biomeAllowed).mul(0.34));
+  const revealed = mix(hinted, biomeLand, biomeShown.mul(biomeAllowed).mul(0.92));
+  return applyPaintedTerrain(revealed, {
+    cartUv: selUv,
+    ndv,
+    ghostMask: capMask,
+    isUnfoundDarkCap: float(1.0),
+    isAwakenedCap: float(0.0),
+    uRegionalNode: regional,
+  });
 }
 
 /** Smooth crossfade state (no checkerboard). */
