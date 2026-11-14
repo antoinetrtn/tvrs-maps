@@ -9,6 +9,7 @@
  * spherical cap (centre direction + angular radius) per feature.
  */
 
+import { publishLayerTestVisible } from "../../dev/layerTestHook";
 import { stylePolygonBorderLine } from "./globePolygonMaterial";
 
 const DEG = Math.PI / 180;
@@ -16,6 +17,80 @@ const DEG = Math.PI / 180;
 const HORIZON_MARGIN = 4 * DEG;
 
 const capCache = new WeakMap();
+
+let polygonCullRevision = 0;
+
+export function bumpPolygonCullRevision() {
+  polygonCullRevision += 1;
+}
+
+export function getPolygonCullRevision() {
+  return polygonCullRevision;
+}
+
+// three-globe's ThreeDigest writes obj.__data only when a mesh is *created*.
+// Resident layers reuse the same __id, so after a dormant→active switch
+// `__data.data.isDormantLayerFeature` stays true even though the digest
+// already applied the active material. Visibility must follow this live set
+// of feature __ids, not the stale flag on __data.
+let dormantLayerIds = new Set();
+export function setDormantLayerIds(ids) {
+  const next = ids instanceof Set ? ids : new Set(ids || []);
+  let same = next.size === dormantLayerIds.size;
+  if (same) {
+    for (const id of next) {
+      if (!dormantLayerIds.has(id)) {
+        same = false;
+        break;
+      }
+    }
+  }
+  dormantLayerIds = next;
+  if (!same) bumpPolygonCullRevision();
+}
+
+/** Feature __id on a three-globe polygon group, even when __data is stale. */
+function getPolygonFeatureId(obj) {
+  return obj?.__data?.data?.__id || null;
+}
+
+/**
+ * Whether this mesh should stay hidden as a dormant resident layer.
+ * Uses the live id registry. Falls back to the flag only when the feature
+ * has no __id (tests / non-stamped objects).
+ */
+export function isDormantForCull(obj) {
+  const id = getPolygonFeatureId(obj);
+  if (id) return dormantLayerIds.has(id);
+  return Boolean(obj?.__data?.data?.isDormantLayerFeature);
+}
+
+// Warm at most 48 dormant polygon VBOs per frame so WebGL buffer uploads stay tiny.
+const MAX_VBO_WARM_PER_FRAME = 48;
+
+function hideCapMaterial(obj) {
+  const cap = obj.children?.[1]?.material;
+  if (cap) cap.visible = false;
+}
+
+function showCapMaterial(obj) {
+  const cap = obj.children?.[1]?.material;
+  if (cap && !cap.visible) cap.visible = true;
+}
+
+function warmDormantPolygon(obj, scene, budget) {
+  if (obj.__vboWarm || budget.warmed >= MAX_VBO_WARM_PER_FRAME) {
+    if (!obj.__vboWarm && scene) scene.__tvrsForceNextCull = true;
+    if (obj.visible) obj.visible = false;
+    return true;
+  }
+  budget.warmed += 1;
+  obj.__vboWarm = true;
+  hideCapMaterial(obj);
+  if (!obj.visible) obj.visible = true;
+  if (scene) scene.__tvrsForceNextCull = true;
+  return false;
+}
 
 function forEachCoordinate(geometry, fn) {
   if (!geometry) return;
@@ -81,26 +156,47 @@ export function isCapVisible(cap, camPos, globeRadius) {
   return angle - cap.radius < horizon + HORIZON_MARGIN;
 }
 
+function classifyVisibleMesh(obj, counts) {
+  const id = getPolygonFeatureId(obj) || "";
+  if (id.startsWith("d")) counts.departments += 1;
+  else if (id.startsWith("u")) counts.us += 1;
+  else counts.world += 1;
+}
+
 /**
  * Hide/show polygon objects of `scene` for `camera`. Returns the number of
  * polygons hidden. Objects are matched by three-globe's `__globeObjType`.
  */
 export function cullPolygonsBeyondHorizon(scene, camera, globeRadius = 100) {
   let hidden = 0;
+  const budget = { warmed: 0 };
+  const counts = { departments: 0, us: 0, world: 0, dormant: 0 };
   const camPos = camera.position;
+  if (scene) scene.__tvrsForceNextCull = false;
   const visit = (obj) => {
     if (obj.__globeObjType === "polygon") {
+      if (isDormantForCull(obj)) {
+        const stillHidden = warmDormantPolygon(obj, scene, budget);
+        if (stillHidden) {
+          hidden += 1;
+          counts.dormant += 1;
+        }
+        return;
+      }
+      showCapMaterial(obj);
       const visible = isCapVisible(featureCap(obj.__data), camPos, globeRadius);
       if (obj.visible !== visible) obj.visible = visible;
       if (!visible) {
         hidden += 1;
-      } else if (obj.children?.[1]) {
-        stylePolygonBorderLine(obj.children[1]);
+      } else {
+        classifyVisibleMesh(obj, counts);
+        if (obj.children?.[1]) stylePolygonBorderLine(obj.children[1]);
       }
       return;
     }
     for (const child of obj.children) visit(child);
   };
   visit(scene);
+  publishLayerTestVisible(counts);
   return hidden;
 }

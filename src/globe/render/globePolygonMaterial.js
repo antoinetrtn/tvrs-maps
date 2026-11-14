@@ -190,8 +190,7 @@ function buildNewPolygonMaterial(opts) {
     defineIgniteReferences(material, igniteHolder);
     material.outputNode = countryGrainOutputNode(isGhostCountry);
   } else {
-    material.customProgramCacheKey = () =>
-      isGhostCountry ? "country-grain-ghost" : "country-grain-land";
+    material.customProgramCacheKey = () => "country-grain-land";
     material.onBeforeCompile = (shader) =>
       applyCountrySurfaceGrainShader(shader, { isGhostCountry, igniteHolder });
   }
@@ -215,7 +214,7 @@ function resolvePolygonCacheKey({
   ghostSuffix,
   isShaderCap,
   isFoundCapMaterial,
-  isDepartmentMode,
+  isDepartmentMode: _isDepartmentMode,
   isIsolated,
   admin,
   isMobileStr,
@@ -224,7 +223,6 @@ function resolvePolygonCacheKey({
   let cacheKey = `${kind}-${look}${ghostSuffix}`;
   if (isShaderCap) cacheKey = `shader-${admin}-${kind}-${isMobileStr}${ghostSuffix}`;
   else if (isFoundCapMaterial) cacheKey = `found-cap-${isMobileStr}${ghostSuffix}`;
-  else if (isDepartmentMode) cacheKey = `dept-${admin}-${kind}-${look}${ghostSuffix}`;
   else if (isIsolated) cacheKey = `iso-${admin}-${kind}-${look}${ghostSuffix}`;
   if (igniteHolder) cacheKey = `ignite-${admin}-${cacheKey}`;
   return cacheKey;
