@@ -15,7 +15,6 @@ import {
   GAME_REGIONS,
   getFeatureCapResolution,
   getPolygonAltitudeFor,
-  getStableGlobeCapResolution,
   POLYGON_ALTITUDE,
 } from "../../config/gameConfig";
 import { countryDataMap } from "../../data/gameData";
@@ -49,7 +48,6 @@ import {
 } from "./useModeTransitionColor";
 
 const invisibleMaterial = new THREE.MeshBasicMaterial({ visible: false });
-invisibleMaterial.dispose = () => {};
 
 function resolveRegionalPolygonColor({
   d,
@@ -257,7 +255,6 @@ export function useGlobePolygons({
 
   const getBasePolygonColor = useCallback(
     (d) => {
-      if (d?.isDormantLayerFeature) return UI_COLORS.mapSea;
       const ownerColor = conquestOverlay?.colors?.[getFeatureAdmin(d)] || conquestOverlay?.neutral;
       if (ownerColor) return ownerColor; // Conquête: owner, lockout or neutral world
 
@@ -354,7 +351,6 @@ export function useGlobePolygons({
 
   const getPolygonStroke = useCallback(
     (d) => {
-      if (d?.isDormantLayerFeature) return UI_COLORS.mapSea;
       const transState = getTransitionState(modeTransitionRef, transitionStep);
       if (transState) {
         const transStroke = resolveModeTransitionStroke({
@@ -411,7 +407,6 @@ export function useGlobePolygons({
 
   const getPolygonSideColor = useCallback(
     (d) => {
-      if (d?.isDormantLayerFeature) return UI_COLORS.mapSea;
       if (isRegionalMode) {
         if (d.isGhostCountry) return UI_COLORS.mapSea;
         return lerpColor(getPolygonColor(d), UI_COLORS.black, 0.02);
@@ -610,7 +605,7 @@ export function useGlobePolygons({
   );
 
   const getPolygonCapMaterial = useCallback(
-    (d) => (d?.isDormantLayerFeature ? invisibleMaterial : getPolygonMaterial(d, "cap")),
+    (d) => getPolygonMaterial(d, "cap"),
     [getPolygonMaterial]
   );
 
@@ -642,7 +637,6 @@ export function useGlobePolygons({
 
   const getPolygonAltitude = useCallback(
     (d) => {
-      if (d?.isDormantLayerFeature) return POLYGON_ALTITUDE.parentBackdrop;
       if (d.isExitingDepartmentFeature) return POLYGON_ALTITUDE.exitingRegional;
       if (d.isParentCountryFeature && isRegionalMode) return POLYGON_ALTITUDE.parentBackdrop;
       const admin = getFeatureAdmin(d);
@@ -681,11 +675,6 @@ export function useGlobePolygons({
     [perfProfile?.polygonCapCurvatureResolution]
   );
 
-  const getStablePolygonCurvatureResolution = useCallback(
-    (d) => getStableGlobeCapResolution(d, perfProfile?.polygonCapCurvatureResolution ?? 1.5),
-    [perfProfile?.polygonCapCurvatureResolution]
-  );
-
   const wrapColor = useCallback((fn) => (d) => safeColor(fn(d)), [safeColor]);
   const getPolygonCapColorWrapped = useMemo(
     () => wrapColor(getPolygonColor),
@@ -706,7 +695,6 @@ export function useGlobePolygons({
     getPolygonAltitude,
     getPolygonStrokeWidth,
     getPolygonCurvatureResolution,
-    getStablePolygonCurvatureResolution,
     getPolygonCapColorWrapped,
     getPolygonSideColorWrapped,
     getPolygonStrokeColorWrapped,
