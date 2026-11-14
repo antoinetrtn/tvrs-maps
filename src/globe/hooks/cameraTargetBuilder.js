@@ -15,6 +15,7 @@ import {
   frameBoundsAltitude,
   isGlobePovTweenActive,
 } from "../render/globeAltitude";
+import { beginHomeCardFly } from "../render/homeCardFly";
 import { CAMERA_MS, cameraDuration, selectCameraDuration } from "./cameraTiming";
 import { getHomeDesktopPov } from "./homePov";
 
@@ -59,6 +60,7 @@ export const getHomeCardPointOfView = ({ mode, learnSubMode, viewport, isPanelOp
 /** Interruptible fly: stop on the current pose (no snap), then tween to target. */
 export const flyHomeCardCamera = (globe, target, durationMs) => {
   if (!globe || !target) return;
+  beginHomeCardFly(durationMs);
   if (isGlobePovTweenActive()) cancelGlobePovTween(globe);
   animateGlobePov(globe, target, durationMs);
 };

@@ -4,6 +4,7 @@ import { getLearnLabelLimit, getPlayVisibleCountryKeys } from "../../config/game
 import { countryDataMap } from "../../data/gameData";
 import { getCanonicalPosition, getFlagEmoji, getLabelRenderRadius } from "../../utils/utils";
 import { createGlobeLabelElement } from "../render/globeLabelBuilder";
+import { isHomeCardFlyActive } from "../render/homeCardFly";
 
 function getLabelVisibilityThreshold({
   isDepartmentMode,
@@ -327,6 +328,7 @@ export function useGlobeLabels({
 }) {
   const labelsCacheRef = useRef({});
   const labelSourceKeysRef = useRef({ map: null, keys: [] });
+  const lastLabelsRef = useRef([]);
 
   const getLabelSourceKeys = () => {
     if (labelSourceKeysRef.current.map === gameDataMap) {
@@ -338,6 +340,7 @@ export function useGlobeLabels({
   };
 
   const labelsData = useMemo(() => {
+    if (isHomeCardFlyActive()) return lastLabelsRef.current;
     if (perfProfile?.maxLabels === 0 || !globeEl.current) return [];
 
     const labelsToProcess = collectLabelsToProcess({
@@ -376,7 +379,9 @@ export function useGlobeLabels({
       .filter((d) => d !== null)
       .sort(sortLabels);
 
-    return sliceLabelsToLimit(filtered, mode, isDepartmentMode, perfProfile);
+    const next = sliceLabelsToLimit(filtered, mode, isDepartmentMode, perfProfile);
+    lastLabelsRef.current = next;
+    return next;
   }, [
     foundList,
     countrySizes,

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { isHomeCardFlyActive } from "../render/homeCardFly";
+
 // How long after a state change we keep looking for freshly assigned
 // materials (globe.gl applies data/accessor changes on a debounced digest).
 const WARM_WINDOW_MS = 900;
@@ -72,8 +74,10 @@ function shouldHoldForWarmup(renderer, scene, camera, state, now) {
   return true;
 }
 
-export function useGlobeShaderWarmup(globeEl, warmKey) {
+export function useGlobeShaderWarmup(globeEl, warmKey, { holdFrames = true } = {}) {
   const stateRef = useRef({ armedUntil: 0, lastCheck: 0, pending: false, holdSince: 0 });
+  const holdRef = useRef(holdFrames);
+  holdRef.current = holdFrames;
 
   useEffect(() => {
     let restore = null;
@@ -104,7 +108,10 @@ export function useGlobeShaderWarmup(globeEl, warmKey) {
       target.render = function warmRender(...args) {
         const scene = target === renderer ? args[0] : globe.scene?.();
         const camera = target === renderer ? args[1] : globe.camera?.();
-        if (shouldHoldForWarmup(renderer, scene, camera, state, performance.now())) {
+        if (
+          holdRef.current &&
+          shouldHoldForWarmup(renderer, scene, camera, state, performance.now())
+        ) {
           return undefined;
         }
         return originalRender.apply(this, args);
@@ -121,7 +128,57 @@ export function useGlobeShaderWarmup(globeEl, warmKey) {
   }, [globeEl]);
 
   useEffect(() => {
+    if (!holdRef.current) return;
     stateRef.current.armedUntil = performance.now() + WARM_WINDOW_MS;
     stateRef.current.lastCheck = 0;
   }, [warmKey]);
+}
+
+/** Compile programs for resident but hidden regional meshes at idle (no on-screen flash). */
+function compileResidentLayerPrograms(globe) {
+  const renderer = globe?.renderer?.();
+  const scene = globe?.scene?.();
+  const camera = globe?.camera?.();
+  if (!renderer?.compile || !scene || !camera) return 0;
+  const hidden = [];
+  scene.traverse((obj) => {
+    if (obj.visible === false && (obj.isMesh || obj.isLine || obj.isLineSegments)) {
+      hidden.push(obj);
+      obj.visible = true;
+    }
+  });
+  try {
+    renderer.compile(scene, camera);
+  } catch {
+    /* WebGPU / missing context: skip */
+  }
+  hidden.forEach((obj) => {
+    obj.visible = false;
+  });
+  return hidden.length;
+}
+
+export function useResidentLayerCompile(globeEl, residentLayers) {
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (doneRef.current) return undefined;
+    if (!residentLayers?.departmentsReady) return undefined;
+    let tries = 0;
+    let id = 0;
+    const run = () => {
+      if (isHomeCardFlyActive()) {
+        id = setTimeout(run, 200);
+        return;
+      }
+      const n = compileResidentLayerPrograms(globeEl.current);
+      tries += 1;
+      if (n > 0) {
+        doneRef.current = true;
+        return;
+      }
+      if (tries < 8) id = setTimeout(run, 200);
+    };
+    id = setTimeout(run, 80);
+    return () => clearTimeout(id);
+  }, [globeEl, residentLayers?.departmentsReady, residentLayers?.usStatesReady]);
 }

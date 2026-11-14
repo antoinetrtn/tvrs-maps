@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { countryDataMap } from "../../data/gameData";
+import { noteMaterialNeedsUpdate } from "../../dev/switchTrace";
 import { registerCountryFeature } from "./countryLandRadius";
 import { getFoundCapEmissiveIntensity } from "./foundGreenPalette";
 import {
@@ -10,6 +11,7 @@ import {
   defineIgniteReferences,
 } from "./globePolygonShaders";
 import { isGlobeWebGPU } from "./globeRendererFlag";
+import { setRegionalModeTarget } from "./homeCardFly";
 import { ensurePaintedTerrain } from "./paintedTerrain";
 import { resolvePolygonShaderMode } from "./polygonColorResolver";
 import { resolvePolygonEmissiveProps } from "./polygonEmissiveProps";
@@ -48,6 +50,7 @@ function lockBorderTransparency(mat) {
   });
   mat.userData.borderTransparencyLocked = true;
   mat.needsUpdate = true;
+  noteMaterialNeedsUpdate();
 }
 
 function styleBorderMaterial(lineObj, m, allowSwap) {
@@ -112,6 +115,7 @@ function syncExistingShaderMaterial(material, opts) {
   applyShaderCapTransparency(material, opts);
   if (material.transparent !== oldTransparent) {
     material.needsUpdate = true;
+    noteMaterialNeedsUpdate();
   }
   syncPolygonShaderUniforms(material.userData.shader, opts);
 }
@@ -249,8 +253,11 @@ function updatePolygonGlitchEnvironment({
     typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
       ? 1
       : 0;
-  polygonGlitchUniforms.uIsRegionalMode.value = isDepartmentMode ? 1.0 : 0.0;
-  if (isDepartmentMode) ensurePaintedTerrain();
+  // Preload at first material use (idle home included). During a home card fly
+  // the camera hook already set the blend target; do not snap it back to the
+  // still-settled world mode.
+  ensurePaintedTerrain();
+  setRegionalModeTarget(Boolean(isDepartmentMode), { durationMs: 420 });
   polygonGlitchUniforms.uFeatureMode.value = isRiversMountainsMode ? 1.0 : 0.0;
 }
 

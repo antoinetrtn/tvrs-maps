@@ -4,6 +4,7 @@ import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { getActiveModeConfig } from "../../config/gameConfig";
 import { BREAKPOINTS, getDataPanelLayoutWidth } from "../../config/gameConstants";
 import { bindCameraTestGlobe } from "../../dev/cameraTestHook";
+import { bindSwitchTraceGlobe } from "../../dev/switchTrace";
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { createZoomHapticTracker, primeHapticsOnUserGesture } from "../../utils/haptics";
 import {
@@ -19,6 +20,7 @@ import {
   syncGlobeCameraAndZoomLimits,
   syncGlobeControlsForAltitude,
 } from "../render/globeAltitude";
+import { isHomeCardFlyActive } from "../render/homeCardFly";
 import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 import { setSelectionOutlineDpr } from "../render/selectionOutline";
 import {
@@ -62,6 +64,7 @@ const createOrbitControlHandlers = (ctx) => {
       });
     }
     if (isInteractingRef.current) return;
+    if (isHomeCardFlyActive()) return;
     const pov = readClampedGlobePov(globeEl.current);
     if (!pov) return;
     setZoomLevel((prev) => (Math.abs(prev - pov.altitude) > 0.08 ? pov.altitude : prev));
@@ -240,7 +243,10 @@ export function useGlobeCamera(props) {
 
   // Layout effect so a home card click starts the camera fly before paint / layer work.
   useLayoutEffect(() => {
-    if (globeEl.current) bindCameraTestGlobe(globeEl.current);
+    if (globeEl.current) {
+      bindCameraTestGlobe(globeEl.current);
+      bindSwitchTraceGlobe(globeEl.current);
+    }
     const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
     const customPOV = getCustomModePointOfView(modeForCamera, learnSubMode, viewport, isPanelOpen);
     const modeKey = `${modeForCamera}|${learnSubMode}`;
@@ -277,6 +283,14 @@ export function useGlobeCamera(props) {
       flyHomeCardCamera(globeEl.current, target, ms);
       lastTargetRef.current = target;
       homeModeFlyUntilRef.current = now + ms;
+      if (ms > 0) {
+        window.setTimeout(() => {
+          const pov = readClampedGlobePov(globeEl.current);
+          if (!pov) return;
+          setZoomLevel(pov.altitude);
+          setCameraPOV({ lat: pov.lat, lng: pov.lng });
+        }, ms);
+      }
     } else if (selectedCountry && globeEl.current && !isHomeModeFlyActive()) {
       handleSelectedCountryCamera({
         globeEl,

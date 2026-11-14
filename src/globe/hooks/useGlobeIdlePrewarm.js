@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getPolygonCapResolution, getStableGlobeCapResolution } from "../../config/gameConfig";
 import ConicPolygonGeometry from "../render/cachedConicPolygonGeometry";
 import GeoJsonGeometry from "../render/cachedGeoJsonGeometry";
+import { ensurePaintedTerrain } from "../render/paintedTerrain";
 
 // Must match three-globe's polygon layer call:
 // new ConicPolygonGeometry(coords, 0, GLOBE_RADIUS, false, hasCap, hasSide, res)
@@ -86,6 +87,8 @@ export function useGlobeIdlePrewarm({ countriesData, departmentsData, usStatesDa
     if (Array.isArray(countriesData) && countriesData.length > 0) {
       enqueueRingJobs(countriesData, (f) => getStableGlobeCapResolution(f, resolution), jobs);
     }
+
+    ensurePaintedTerrain();
 
     if (jobs.length === 0) return undefined;
 

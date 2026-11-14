@@ -11,6 +11,7 @@ import {
 } from "../config/designSystem";
 import { DEFAULT_LEARN_SUB_MODE, GLITCH_SELECTION_TRANSITION_MS } from "../config/gameConfig";
 import { useTranslation } from "../config/i18n";
+import { noteGlobeMapRender } from "../dev/switchTrace";
 import { resolveEffectiveMode } from "./effectiveMode";
 import { useFoundProgramWarmup } from "./hooks/useFoundProgramWarmup";
 import { useGlobeBoats } from "./hooks/useGlobeBoats";
@@ -32,7 +33,7 @@ import { useGlobeRenderPipeline } from "./hooks/useGlobeRenderPipeline";
 import { useGlobeRings } from "./hooks/useGlobeRings";
 import { useGlobeSceneAnimation } from "./hooks/useGlobeSceneAnimation";
 import { useGlobeSelectionTransition } from "./hooks/useGlobeSelectionTransition";
-import { useGlobeShaderWarmup } from "./hooks/useGlobeShaderWarmup";
+import { useGlobeShaderWarmup, useResidentLayerCompile } from "./hooks/useGlobeShaderWarmup";
 import { useMicroBeacons } from "./hooks/useMicroBeacons";
 import { usePolygonMaterialEviction } from "./hooks/usePolygonMaterialEviction";
 import { clearFeatureMask, setFeatureMask } from "./render/featureMask";
@@ -43,6 +44,7 @@ import { polygonGlitchUniforms } from "./render/polygonGlitchShader";
 const safeOpaqueColor = (c) => getOpaqueThreeColor(c);
 
 const GlobeMap = (props) => {
+  noteGlobeMapRender();
   const {
     mode,
     lang,
@@ -107,6 +109,7 @@ const GlobeMap = (props) => {
     transitionLive,
     effectiveDepartmentMode = isDepartmentMode,
     effectiveUsStatesMode = isUsStatesMode,
+    residentLayers,
   } = useGlobeRenderPipeline({
     isDepartmentMode,
     isUsStatesMode,
@@ -243,8 +246,10 @@ const GlobeMap = (props) => {
   });
   useGlobeShaderWarmup(
     globeEl,
-    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}`
+    `${mode}|${learnSubMode}|${isHomeScreen}|${isEndScreen}|${selectedCountry}|${isError}|${isSuccess}`,
+    { holdFrames: !isHomeScreen }
   );
+  useResidentLayerCompile(globeEl, residentLayers);
 
   // Life: pixel boats between found coastal countries (lazy, world modes only).
   useGlobeBoats(globeEl, {
@@ -513,16 +518,18 @@ const GlobeMap = (props) => {
             polygonSideMaterial={getPolygonSideMaterial}
             polygonStrokeColor={getPolygonStrokeColorWrapped}
             polygonStrokeWidth={getPolygonStrokeWidth}
-            polygonAltitudeUpdateMs={50}
-            // No altitude tween while a layer cross-fade is live (new polygons start at full height).
-            polygonsTransitionDuration={transitionLive ? 0 : GLITCH_SELECTION_TRANSITION_MS}
+            polygonAltitudeUpdateMs={isHomeScreen ? 0 : 50}
+            // Homepage switches must not tween polygon geometry (main-thread hitch + pop).
+            polygonsTransitionDuration={
+              isHomeScreen ? 0 : transitionLive ? 0 : GLITCH_SELECTION_TRANSITION_MS
+            }
             pointsData={markersData}
             pointLat="lat"
             pointLng="lng"
             pointColor={getPointColorWrapped}
             pointRadius={getPointRadius}
             pointAltitude={getPointAltitude}
-            pointsTransitionDuration={GLITCH_SELECTION_TRANSITION_MS}
+            pointsTransitionDuration={isHomeScreen ? 0 : GLITCH_SELECTION_TRANSITION_MS}
             htmlElementsData={labelsData}
             htmlElement={createLabelElement}
             htmlLat={getLatWrapped}
