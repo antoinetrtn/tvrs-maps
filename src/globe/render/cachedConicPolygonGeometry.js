@@ -37,27 +37,38 @@ const shareAttribute = (attr) => {
   return shared;
 };
 
-function getTemplate(polygonGeoJson, args) {
+function getEntry(polygonGeoJson, args) {
   const isCacheable = polygonGeoJson !== null && typeof polygonGeoJson === "object";
-  if (!isCacheable) return buildGeometry(args);
+  if (!isCacheable) return { template: buildGeometry(args), pool: null };
   let byParams = cache.get(polygonGeoJson);
   if (!byParams) {
     byParams = new Map();
     cache.set(polygonGeoJson, byParams);
   }
   const key = paramsKey(...args.slice(1));
-  let template = byParams.get(key);
-  if (!template) {
-    template = buildGeometry(args);
-    byParams.set(key, template);
+  let entry = byParams.get(key);
+  if (!entry) {
+    entry = { template: buildGeometry(args), pool: [] };
+    byParams.set(key, entry);
+  } else if (!entry.template) {
+    entry = { template: entry, pool: [] };
+    byParams.set(key, entry);
   }
-  return template;
+  return entry;
 }
 
 export default class ConicPolygonGeometry extends BufferGeometry {
   constructor(...args) {
     super();
-    const template = getTemplate(args[0], args);
+    const entry = getEntry(args[0], args);
+    if (entry.pool && entry.pool.length > 0) {
+      const recycled = entry.pool.pop();
+      recycled.__inPool = false;
+      return recycled;
+    }
+    const { template } = entry;
+    this.__pool = entry.pool;
+    this.__inPool = false;
     this.type = template.type;
     this.parameters = { ...template.parameters };
     if (template.index) this.setIndex(shareAttribute(template.index));
@@ -67,5 +78,16 @@ export default class ConicPolygonGeometry extends BufferGeometry {
     template.groups.forEach((g) => this.addGroup(g.start, g.count, g.materialIndex));
     if (template.boundingSphere) this.boundingSphere = template.boundingSphere.clone();
     if (template.boundingBox) this.boundingBox = template.boundingBox.clone();
+  }
+
+  dispose() {
+    if (this.__pool) {
+      if (!this.__inPool) {
+        this.__inPool = true;
+        this.__pool.push(this);
+      }
+      return;
+    }
+    super.dispose();
   }
 }

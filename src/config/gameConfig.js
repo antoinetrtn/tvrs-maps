@@ -165,6 +165,34 @@ export const getFeatureCapResolution = (d, baseResolution) =>
     ),
   });
 
+/**
+ * Only the 4 highest-latitude / largest-span world countries dip deeper than
+ * POLYGON_ALTITUDE.ghostCountry × 100 (0.05) at 2° cap resolution. Keeping
+ * those 4 at 1° in both world and ghost modes (and all other 237 countries at
+ * 2°) makes every polygon's capCurvatureResolution 100% mode-invariant, so
+ * three-globe never disposes or rebuilds world country meshes on mode switches.
+ */
+export const HIGH_LAT_GHOST_COUNTRIES = new Set([
+  "Canada",
+  "Greenland",
+  "Russia",
+  "United States of America",
+]);
+
+export const getStableGlobeCapResolution = (d, baseResolution = 1.5) => {
+  const isRegional = Boolean(
+    d?.isDepartmentFeature || d?.isEnteringDepartmentFeature || d?.isExitingDepartmentFeature
+  );
+  if (isRegional) {
+    return getPolygonCapResolution({ baseResolution, isGhost: false, isRegional: true });
+  }
+  const admin = d?.properties?.ADMIN || d?.admin || "";
+  if (HIGH_LAT_GHOST_COUNTRIES.has(admin)) {
+    return getPolygonCapResolution({ baseResolution, isGhost: true, isRegional: false });
+  }
+  return getPolygonCapResolution({ baseResolution, isGhost: false, isRegional: false });
+};
+
 export const getPolygonAltitudeFor = ({ isDepartmentMode, isGhostCountry, isSelected }) => {
   if (isDepartmentMode && isGhostCountry) return POLYGON_ALTITUDE.ghostCountry;
   if (isSelected)
