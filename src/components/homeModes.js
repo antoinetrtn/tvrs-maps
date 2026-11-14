@@ -10,3 +10,13 @@ export const getHomeLearnSubMode = (homeMode) => {
   const geoMode = getHomeGeoMode(homeMode);
   return geoMode === "capitals" ? "countries" : geoMode;
 };
+
+/** Datasets to *load* on the home screen. Follows the visible card immediately
+ *  (not the settled globe layer) so regional GeoJSON is fetching/parsing during
+ *  the carousel settle window and is ready when the crossfade starts. */
+export function getHomeGeoRequest(homeMode) {
+  return {
+    mode: getHomeGeoMode(homeMode),
+    learnSubMode: getHomeLearnSubMode(homeMode),
+  };
+}

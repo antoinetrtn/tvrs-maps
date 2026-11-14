@@ -1,11 +1,17 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { FETCH_TIMEOUT_MS, RETRY_DELAYS_MS, useGeoResource } from "../hooks/useGeoResource";
+import {
+  FETCH_TIMEOUT_MS,
+  resetGeoResourceCache,
+  RETRY_DELAYS_MS,
+  useGeoResource,
+} from "../hooks/useGeoResource";
 
 describe("useGeoResource", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    resetGeoResourceCache();
   });
 
   afterEach(() => {
@@ -253,5 +259,36 @@ describe("useGeoResource", () => {
 
     consoleSpy.mockRestore();
     vi.useRealTimers();
+  });
+
+  it("second enable or remount of the same URL reuses the transformed cache and does not refetch", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ features: [{ id: "cached-feat" }] }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+
+    const { result, rerender, unmount } = renderHook(
+      ({ enabled }) => useGeoResource({ url: "/data/cache-me.json", enabled }),
+      { initialProps: { enabled: true } }
+    );
+    await act(async () => {});
+    expect(result.current.status).toBe("ready");
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    rerender({ enabled: false });
+    rerender({ enabled: true });
+    await act(async () => {});
+    expect(result.current.status).toBe("ready");
+    expect(result.current.data).toEqual([{ id: "cached-feat" }]);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+
+    unmount();
+    const second = renderHook(() => useGeoResource({ url: "/data/cache-me.json", enabled: true }));
+    expect(second.result.current.status).toBe("ready");
+    expect(second.result.current.data).toEqual([{ id: "cached-feat" }]);
+    await act(async () => {});
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    second.unmount();
   });
 });

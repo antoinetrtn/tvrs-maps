@@ -9,9 +9,11 @@ const GLOBE_RADIUS = 100;
 const GHOST_CURVATURE_RESOLUTION = 1;
 const IDLE_SLICE_MS = 8;
 
+// 400ms cap: a busy globe RAF (or software GPU) almost never goes idle, so the
+// previous 2000ms cap left triangulation unfinished before the first layer switch.
 const scheduleIdle = (cb) =>
   typeof window.requestIdleCallback === "function"
-    ? window.requestIdleCallback(cb, { timeout: 2000 })
+    ? window.requestIdleCallback(cb, { timeout: 400 })
     : window.setTimeout(() => cb({ timeRemaining: () => IDLE_SLICE_MS }), 50);
 
 const cancelIdle = (id) =>

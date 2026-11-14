@@ -13,25 +13,37 @@ import { useGeoResource } from "./useGeoResource";
 // (and stamps a random one otherwise). Every render-data wrapper spreads the
 // source feature, so the id survives mode switches and the existing meshes,
 // triangulated geometries and strokes are reused instead of rebuilt.
-const REGIONAL_PREFETCH_DELAY_MS = 600;
 
-/** True once the page has been idle for `delayMs` after mount. */
-function useIdleAfter(delayMs) {
+/** Delay after countries are ready before regional prefetch may start. */
+export const REGIONAL_PREFETCH_DELAY_MS = 200;
+/** Cap on requestIdleCallback so a busy globe render loop cannot defer prefetch for seconds. */
+const REGIONAL_PREFETCH_IDLE_TIMEOUT_MS = 800;
+
+/**
+ * True once countries have been ready for `delayMs`, then at most
+ * `idleTimeoutMs` of requestIdleCallback (or immediately if rIC is missing).
+ * Used to prefetch département / US GeoJSON without waiting up to several
+ * seconds for a true idle (the globe RAF loop rarely goes idle).
+ */
+function useRegionalPrefetch(countriesReady) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
+    if (!countriesReady) return undefined;
     let idleId = null;
     const timer = setTimeout(() => {
       if (typeof window.requestIdleCallback === "function") {
-        idleId = window.requestIdleCallback(() => setReady(true), { timeout: 4000 });
+        idleId = window.requestIdleCallback(() => setReady(true), {
+          timeout: REGIONAL_PREFETCH_IDLE_TIMEOUT_MS,
+        });
       } else {
         setReady(true);
       }
-    }, delayMs);
+    }, REGIONAL_PREFETCH_DELAY_MS);
     return () => {
       clearTimeout(timer);
       if (idleId != null) window.cancelIdleCallback?.(idleId);
     };
-  }, [delayMs]);
+  }, [countriesReady]);
   return ready;
 }
 
@@ -42,18 +54,18 @@ export function useGeoData({ mode, learnSubMode = DEFAULT_LEARN_SUB_MODE }) {
     mode === "rivers_mountains" || (isLearn && learnSubMode === "rivers_mountains");
   const isUsStatesMode = mode === "us_states" || (isLearn && learnSubMode === "us_states");
 
-  // Regional maps (≈1 MB of GeoJSON, parsed and triangulated on the main
-  // thread) are no longer loaded at startup: they load when their mode opens,
-  // or once the browser is idle a few seconds after start, whichever comes first.
-  const idleRegional = useIdleAfter(REGIONAL_PREFETCH_DELAY_MS);
-  const wantDepartments = isDepartmentsMode || idleRegional;
-  const wantUsStates = isUsStatesMode || idleRegional;
-
   const countriesResource = useGeoResource({
     url: DATA_URLS.countriesGeoJson,
     enabled: true,
     transform: transformCountries,
   });
+
+  // Regional maps (≈1 MB of GeoJSON, parsed and triangulated on the main
+  // thread) are no longer loaded at startup: they load when their mode opens,
+  // or shortly after countries are ready, whichever comes first.
+  const idleRegional = useRegionalPrefetch(countriesResource.status === "ready");
+  const wantDepartments = isDepartmentsMode || idleRegional;
+  const wantUsStates = isUsStatesMode || idleRegional;
 
   const departmentsResource = useGeoResource({
     url: DATA_URLS.departmentsGeoJson,

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { getGameModesMetadata, getHomeHeroText } from "../components/homeHeroText";
-import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "../components/homeModes";
+import {
+  getHomeGeoMode,
+  getHomeGeoRequest,
+  getHomeLearnSubMode,
+  HOME_CONQUEST_KEY,
+} from "../components/homeModes";
 
 describe("homeModes", () => {
   it("la carte Conquête utilise le globe monde (pays)", () => {
@@ -51,5 +56,24 @@ describe("homeModes", () => {
     const en = getHomeHeroText("en");
     expect(en.title).toContain("The world");
     expect(en.sub).toContain("236 countries");
+  });
+});
+
+it("getHomeGeoRequest follows the card mode immediately (not a settled globe layer)", () => {
+  expect(getHomeGeoRequest(HOME_CONQUEST_KEY)).toEqual({
+    mode: "countries",
+    learnSubMode: "countries",
+  });
+  expect(getHomeGeoRequest("departments")).toEqual({
+    mode: "departments",
+    learnSubMode: "departments",
+  });
+  expect(getHomeGeoRequest("us_states")).toEqual({
+    mode: "us_states",
+    learnSubMode: "us_states",
+  });
+  expect(getHomeGeoRequest("capitals")).toEqual({
+    mode: "capitals",
+    learnSubMode: "countries",
   });
 });
