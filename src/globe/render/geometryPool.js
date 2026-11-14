@@ -1,13 +1,13 @@
 import { BufferAttribute } from "three";
 
-export function shareAttribute(attr) {
+function shareAttribute(attr) {
   const shared = new BufferAttribute(attr.array, attr.itemSize, attr.normalized);
   shared.name = attr.name;
   return shared;
 }
 
 /** Copy index, attributes, groups and bounds from a cached template onto `geom`. */
-export function adoptTemplateBuffers(geom, template) {
+function adoptTemplateBuffers(geom, template) {
   if (template.index) geom.setIndex(shareAttribute(template.index));
   Object.entries(template.attributes).forEach(([name, attr]) => {
     geom.setAttribute(name, shareAttribute(attr));
