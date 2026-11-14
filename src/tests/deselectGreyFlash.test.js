@@ -3,12 +3,20 @@ import { describe, expect, it } from "vitest";
 import { DESELECT_FADE_START } from "../config/gameConfig";
 import { WORLD_PALETTE } from "../config/worldPaletteTokens";
 import { GLITCH_FRAGMENT_BODY, GLITCH_FRAGMENT_DECLARATIONS } from "../globe/render/globeShaders";
+import { PAINTED_SELECTION_GLSL_BODY } from "../globe/render/paintedTerrain";
 import {
   REGIONAL_HOME_RESTING_LAND,
   resolvePolygonShaderMode,
   resolveRestingColorForFeature,
 } from "../globe/render/polygonColorResolver";
 import glitchNodeSrc from "../globe/render/webgpu/glitchNode.js?raw";
+import {
+  FEATURE_FRANCE,
+  FEATURE_SPAIN,
+  renderPolygons,
+  resetGlobePolygonTestGlobals,
+  summarizeFeatureOutput,
+} from "./globePolygons/testHelpers";
 
 // Regression: deselecting an unfound country (France → Belgium) flashed the raw lit grey
 // (cold, undimmed) during the fade, then the selection umber for one frame, before the
@@ -28,12 +36,21 @@ describe("deselect fade settles to the unfound blackout look", () => {
     expect(GLITCH_FRAGMENT_BODY).toMatch(/mix\(staticVec, unfoundRestColor, deselectDone\)/);
     expect(GLITCH_FRAGMENT_BODY).toMatch(/mix\(0\.36, 0\.74, uIsRegionalMode\)/);
     expect(GLITCH_FRAGMENT_BODY).toMatch(/uBiomeMap/);
+    expect(GLITCH_FRAGMENT_BODY).toMatch(
+      /float biomeShown = max\(uShowcaseLights, uIsRegionalMode\);/
+    );
+    expect(GLITCH_FRAGMENT_BODY).toMatch(
+      /vec3 selLand = mix\(unfoundRestColor, selNight, restBlackout\);/
+    );
+    expect(PAINTED_SELECTION_GLSL_BODY).toMatch(
+      /unfoundRestColor = mix\(unfoundRestColor, paintedNight/
+    );
     // Outline and halo dissolve progressively without abruptly vanishing on frame 1 of deselect
     expect(GLITCH_FRAGMENT_BODY).not.toMatch(/edgeOn = .*\(1\.0 - transitionActive\)/);
     expect(GLITCH_FRAGMENT_BODY).toMatch(/step\(0\.01, cityOn \+ wallOn \+ edgeOuter\)/);
   });
 
-  it("WebGPU TSL mirrors the same settle colour", () => {
+  it("WebGPU TSL mirrors the same settle colour and textured selection surface", () => {
     expect(glitchNodeSrc).toMatch(/uShowcaseLights: mirrorUniform/);
     expect(glitchNodeSrc).toMatch(/uIsRegionalMode: mirrorUniform/);
     expect(glitchNodeSrc).toMatch(/getBiomeTexture/);
@@ -41,6 +58,9 @@ describe("deselect fade settles to the unfound blackout look", () => {
     expect(glitchNodeSrc).toMatch(/mix\(staticVec, restColor, deselectDone\)/);
     expect(glitchNodeSrc).toMatch(/mix\(float\(0\.36\), float\(0\.74\), regional\)/);
     expect(glitchNodeSrc).toMatch(/biomeLand/);
+    expect(glitchNodeSrc).toMatch(/const biomeShown = max\(showcase, regional\);/);
+    expect(glitchNodeSrc).toMatch(/const selLand = mix\(restColor, selNight, restBlackout\);/);
+    expect(glitchNodeSrc).toMatch(/applyPaintedTerrain\(revealed/);
     // Parity: no abrupt cut of outline on transition start, halo included in pixelOn
     expect(glitchNodeSrc).not.toMatch(/edgeOn = .*sub\(transitionActive\)/);
     expect(glitchNodeSrc).toMatch(
@@ -104,13 +124,59 @@ describe("deselect in play: straight back to the grain night look", () => {
     isHomeScreen: false,
   };
 
-  it("a deselected unfound country leaves the selection shader at once (no black dip)", () => {
+  it("a deselected unfound country leaves the selection shader at once on play, home, and learn", () => {
     expect(resolvePolygonShaderMode({ ...base, mode: "countries" }).useShader).toBe(false);
     expect(resolvePolygonShaderMode({ ...base, mode: "capitals" }).useShader).toBe(false);
+    expect(
+      resolvePolygonShaderMode({ ...base, mode: "countries", isHomeScreen: true }).useShader
+    ).toBe(false);
+    expect(resolvePolygonShaderMode({ ...base, mode: "learn", isHomeScreen: true }).useShader).toBe(
+      false
+    );
   });
 
-  it("the newly selected country still uses the selection shader", () => {
+  it("the newly selected country still uses the selection shader on play, home, and learn", () => {
     const sel = { ...base, isIsolated: true, isPrevTransitioning: false, mode: "countries" };
     expect(resolvePolygonShaderMode(sel).useShader).toBe(true);
+    expect(resolvePolygonShaderMode({ ...sel, isHomeScreen: true }).useShader).toBe(true);
+    expect(resolvePolygonShaderMode({ ...sel, mode: "learn", isHomeScreen: true }).useShader).toBe(
+      true
+    );
+  });
+
+  it("homepage deselection swaps the deselected country directly back to the shared grain material", () => {
+    resetGlobePolygonTestGlobals();
+    try {
+      const { result: selectedHome } = renderPolygons({
+        isHomeScreen: true,
+        mode: "countries",
+        selectedCountry: "France",
+      });
+      const franceSelected = summarizeFeatureOutput(selectedHome.current, FEATURE_FRANCE);
+      expect(franceSelected.capMaterial.userData.isGlitchShaderCap).toBe(true);
+      expect(franceSelected.capMaterial.color).toBe(selectedHome.current.REGION_COLORS.Europe);
+
+      // When selection moves from France to Spain on the homepage, France leaves the glitch shader
+      // immediately (matching in-game deselection) while Spain enters the selection shader.
+      const { result: deselectedHome } = renderPolygons({
+        isHomeScreen: true,
+        mode: "countries",
+        selectedCountry: "Spain",
+        selectionTransition: {
+          state: {
+            transitioningPreviousCountryState: "France",
+            transitioningIncomingCountryState: "Spain",
+          },
+        },
+      });
+      const franceDeselected = summarizeFeatureOutput(deselectedHome.current, FEATURE_FRANCE);
+      const spainSelected = summarizeFeatureOutput(deselectedHome.current, FEATURE_SPAIN);
+
+      expect(franceDeselected.capMaterial.userData.isGlitchShaderCap).toBe(false);
+      expect(franceDeselected.capMaterial.color).toBe(deselectedHome.current.REGION_COLORS.Europe);
+      expect(spainSelected.capMaterial.userData.isGlitchShaderCap).toBe(true);
+    } finally {
+      resetGlobePolygonTestGlobals();
+    }
   });
 });

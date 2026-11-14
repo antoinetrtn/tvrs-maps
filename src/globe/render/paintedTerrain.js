@@ -85,3 +85,12 @@ export const PAINTED_GLSL_BODY = `
       landSurface = mix(landSurface, paintedNight, paintedAmt * isUnfoundDarkCap * 0.94);
       landSurface *= mix(1.0, 0.7 + paintedLuma * 1.2, paintedAmt * isAwakenedCap * 0.6);
 `;
+
+export const PAINTED_SELECTION_GLSL_BODY = `
+  vec2 paintedUv = (selUv - uPaintedRect.xy) / uPaintedRect.zw;
+  float paintedIn = step(0.0, paintedUv.x) * step(paintedUv.x, 1.0) * step(0.0, paintedUv.y) * step(paintedUv.y, 1.0);
+  vec4 paintedSample = texture2D(uPaintedMap, clamp(paintedUv, 0.0, 1.0));
+  float paintedAmt = uPaintedReady * uIsRegionalMode * (1.0 - isWall) * paintedIn * paintedSample.a;
+  vec3 paintedNight = paintedSample.rgb * (0.78 + 0.16 * (1.0 - ndv)) * vec3(0.94, 0.98, 1.06);
+  unfoundRestColor = mix(unfoundRestColor, paintedNight, paintedAmt * 0.94);
+`;

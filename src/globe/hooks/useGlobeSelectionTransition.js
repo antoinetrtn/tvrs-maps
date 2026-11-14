@@ -33,6 +33,13 @@ export function useGlobeSelectionTransition(selectedCountry, mode, gameDataMap =
     setTransitioningIncomingCountryState(null);
     currentIncomingState = null;
     selectionTransitionStartRef.current = performance.now();
+  } else if (
+    currentPrevState &&
+    (mode === "learn" || (gameDataMap && !gameDataMap[currentPrevState]))
+  ) {
+    transitioningPreviousCountryRef.current = null;
+    setTransitioningPreviousCountryState(null);
+    currentPrevState = null;
   }
 
   return useMemo(

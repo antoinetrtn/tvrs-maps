@@ -34,6 +34,14 @@ const resetStageStyles = (stage) => {
   stage.dataset.dragDir = "none";
 };
 
+const SWIPE_DISTANCE_PX = 20;
+const FLICK_MIN_DISTANCE_PX = 12;
+const FLICK_VELOCITY_PX_PER_MS = 0.35;
+
+const isSwipeGesture = (dx, velocity) =>
+  Math.abs(dx) > SWIPE_DISTANCE_PX ||
+  (velocity > FLICK_VELOCITY_PX_PER_MS && Math.abs(dx) > FLICK_MIN_DISTANCE_PX);
+
 export default function useCarouselDrag({
   activeIndex,
   totalModes,
@@ -49,6 +57,11 @@ export default function useCarouselDrag({
   const wasDraggingRef = useRef(false);
   const rafIdRef = useRef(null);
   const releaseTimerRef = useRef(null);
+  const dragResetTimerRef = useRef(null);
+  const cleanupListenersRef = useRef(null);
+
+  const latestRef = useRef({ activeIndex, totalModes, onSelectIndex });
+  latestRef.current = { activeIndex, totalModes, onSelectIndex };
 
   const scheduleRaf = useCallback(() => {
     if (!rafIdRef.current) {
@@ -65,6 +78,9 @@ export default function useCarouselDrag({
       const startX = getEventClientX(e);
       if (!startX) return;
 
+      cleanupListenersRef.current?.();
+      clearTimeout(dragResetTimerRef.current);
+
       startXRef.current = startX;
       currentDxRef.current = 0;
       startTimeRef.current = Date.now();
@@ -76,16 +92,21 @@ export default function useCarouselDrag({
         if (!currentX) return;
         const dx = currentX - startXRef.current;
         currentDxRef.current = dx;
-        if (Math.abs(dx) > 8) wasDraggingRef.current = true;
+        if (Math.abs(dx) > FLICK_MIN_DISTANCE_PX) wasDraggingRef.current = true;
         scheduleRaf();
       };
 
-      const onUp = () => {
+      const removeWindowListeners = () => {
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
         window.removeEventListener("pointercancel", onUp);
         window.removeEventListener("touchmove", onMove);
         window.removeEventListener("touchend", onUp);
+        cleanupListenersRef.current = null;
+      };
+
+      const onUp = () => {
+        removeWindowListeners();
 
         if (rafIdRef.current) {
           cancelAnimationFrame(rafIdRef.current);
@@ -111,31 +132,41 @@ export default function useCarouselDrag({
 
         setIsDragging(false);
 
-        if (Math.abs(dx) > 20 || (velocity > 0.15 && Math.abs(dx) > 6)) {
-          const nextIdx =
-            dx < 0 ? (activeIndex + 1) % totalModes : (activeIndex - 1 + totalModes) % totalModes;
-          onSelectIndex(nextIdx);
+        if (isSwipeGesture(dx, velocity)) {
+          wasDraggingRef.current = true;
+          const {
+            activeIndex: curIdx,
+            totalModes: curTotal,
+            onSelectIndex: selectIdx,
+          } = latestRef.current;
+          if (curTotal > 0) {
+            const nextIdx = dx < 0 ? (curIdx + 1) % curTotal : (curIdx - 1 + curTotal) % curTotal;
+            selectIdx(nextIdx);
+          }
         }
 
         currentDxRef.current = 0;
-        setTimeout(() => {
+        dragResetTimerRef.current = setTimeout(() => {
           wasDraggingRef.current = false;
         }, 100);
       };
 
+      cleanupListenersRef.current = removeWindowListeners;
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
       window.addEventListener("pointercancel", onUp);
       window.addEventListener("touchmove", onMove, { passive: true });
       window.addEventListener("touchend", onUp);
     },
-    [exiting, reducedMotion, activeIndex, totalModes, onSelectIndex, scheduleRaf]
+    [exiting, reducedMotion, scheduleRaf]
   );
 
   useEffect(() => {
     return () => {
+      cleanupListenersRef.current?.();
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current);
+      if (dragResetTimerRef.current) clearTimeout(dragResetTimerRef.current);
     };
   }, []);
 
