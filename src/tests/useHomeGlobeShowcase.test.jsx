@@ -107,10 +107,12 @@ describe("useHomeGlobeShowcase & carousel settle synchronization", () => {
       result.current.setHomeMode("capitals");
     });
     act(() => {
-      vi.advanceTimersByTime(120);
+      vi.advanceTimersByTime(HOME_GLOBE_SETTLE_MS - 20);
     });
-    // Even though 120ms passed (> 100ms remaining on the old interval), the old interval
-    // was cleared when homeMode diverged from globeHomeMode: no stale world pick fired!
+    // Even though more than the remaining 100ms of the old autorotate interval would
+    // have elapsed if we waited longer, the interval was cleared when homeMode
+    // diverged from globeHomeMode: no stale world pick fired, and the globe has
+    // not yet settled.
     expect(result.current.globeHomeMode).toBe("countries");
     expect(result.current.selectedCountry).toBe(initialKey);
 

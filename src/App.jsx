@@ -6,7 +6,7 @@ import { useBootGate } from "./boot/useBootGate";
 import AchievementStack from "./components/AchievementStack.jsx";
 import GameSessionView from "./components/GameSessionView.jsx";
 import GeoDataStatus from "./components/GeoDataStatus.jsx";
-import { getHomeGeoMode, getHomeLearnSubMode, HOME_CONQUEST_KEY } from "./components/homeModes";
+import { getHomeGeoMode, getHomeGeoRequest, HOME_CONQUEST_KEY } from "./components/homeModes";
 import HomeScreen from "./components/HomeScreen.jsx";
 import { ToastViewport } from "./components/ui/Toast.jsx";
 import { isValidLearnSubMode } from "./config/gameConfig";
@@ -139,10 +139,7 @@ function App() {
     allCountryKeys,
     totalPossible,
     geoStatus,
-  } = useGeoData({
-    mode: currentScreen === "home" ? getHomeGeoMode(globeHomeMode) : mode,
-    learnSubMode: currentScreen === "home" ? getHomeLearnSubMode(globeHomeMode) : learnSubMode,
-  });
+  } = useGeoData(currentScreen === "home" ? getHomeGeoRequest(homeMode) : { mode, learnSubMode });
 
   const { isBootReady, onGlobeReady } = useBootGate({ geoStatus });
 

@@ -3,6 +3,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export const RETRY_DELAYS_MS = [800, 2000];
 export const FETCH_TIMEOUT_MS = 20000;
 
+/** Transformed features by URL. Survives hook remounts and mode revisits so
+ *  JSON.parse + transform never rerun on the main thread for the same file. */
+const successCache = new Map();
+
+/** Test-only: isolation between cases that share a URL. */
+export function resetGeoResourceCache() {
+  successCache.clear();
+}
+
 function validateFeatures(payload) {
   if (!payload || !Array.isArray(payload.features) || payload.features.length === 0) {
     throw new Error("invalid geodata");
@@ -41,14 +50,15 @@ async function fetchWithTimeout(url, controller, timeoutMs) {
 }
 
 export function useGeoResource({ url, enabled = true, transform }) {
-  const [data, setData] = useState([]);
-  const [status, setStatus] = useState(enabled ? "loading" : "idle");
+  const cached = enabled ? successCache.get(url) : undefined;
+  const [data, setData] = useState(() => cached ?? []);
+  const [status, setStatus] = useState(() => (cached ? "ready" : enabled ? "loading" : "idle"));
   const [error, setError] = useState(null);
   const [retryNonce, setRetryNonce] = useState(0);
 
   const transformRef = useRef(transform);
   transformRef.current = transform;
-  const readyRef = useRef(false);
+  const readyRef = useRef(Boolean(cached));
   const statusRef = useRef(status);
   statusRef.current = status;
   const prevUrlRef = useRef(url);
@@ -81,6 +91,15 @@ export function useGeoResource({ url, enabled = true, transform }) {
     }
     if (readyRef.current) return undefined;
 
+    const hit = successCache.get(url);
+    if (hit) {
+      readyRef.current = true;
+      setData(hit);
+      setStatus("ready");
+      setError(null);
+      return undefined;
+    }
+
     setStatus("loading");
     setError(null);
 
@@ -96,6 +115,7 @@ export function useGeoResource({ url, enabled = true, transform }) {
         if (cancelled) return;
         const transformed = transformRef.current ? transformRef.current(features) : features;
         readyRef.current = true;
+        successCache.set(url, transformed);
         setData(transformed);
         setStatus("ready");
       } catch (err) {

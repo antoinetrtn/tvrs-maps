@@ -1,7 +1,7 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useGeoData } from "../hooks/useGeoData";
+import { REGIONAL_PREFETCH_DELAY_MS, useGeoData } from "../hooks/useGeoData";
 import { useGeoResource } from "../hooks/useGeoResource";
 
 vi.mock("../hooks/useGeoResource");
@@ -62,5 +62,45 @@ describe("useGeoData geoStatus aggregation", () => {
 
     expect(geoStatus.status).toBe("loading");
     expect(geoStatus.failed).toEqual([]);
+  });
+
+  it("enables département and US prefetch shortly after countries are ready, without opening those modes", () => {
+    vi.useFakeTimers();
+    // jsdom has no requestIdleCallback — prefetch should arm after the delay alone.
+    mockResources({ countries: "ready", departments: "idle", usStates: "idle" });
+    renderHook(() => useGeoData({ mode: "countries" }));
+
+    const enabledOf = (urlPart) => {
+      const calls = vi.mocked(useGeoResource).mock.calls;
+      const last = [...calls].reverse().find(([opts]) => opts.url.includes(urlPart));
+      return last?.[0]?.enabled;
+    };
+
+    expect(enabledOf("departements")).toBe(false);
+    expect(enabledOf("us-states")).toBe(false);
+
+    act(() => {
+      vi.advanceTimersByTime(REGIONAL_PREFETCH_DELAY_MS);
+    });
+
+    expect(enabledOf("departements")).toBe(true);
+    expect(enabledOf("us-states")).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it("opens a regional mode: that dataset is enabled immediately, before the prefetch delay", () => {
+    vi.useFakeTimers();
+    mockResources({ countries: "ready", departments: "idle", usStates: "idle" });
+    renderHook(() => useGeoData({ mode: "departments" }));
+
+    const enabledOf = (urlPart) => {
+      const calls = vi.mocked(useGeoResource).mock.calls;
+      const last = [...calls].reverse().find(([opts]) => opts.url.includes(urlPart));
+      return last?.[0]?.enabled;
+    };
+
+    expect(enabledOf("departements")).toBe(true);
+    expect(enabledOf("us-states")).toBe(false);
+    vi.useRealTimers();
   });
 });
