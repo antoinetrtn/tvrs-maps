@@ -67,5 +67,6 @@ export function useGlobeRenderPipeline({
     transitionLive,
     effectiveDepartmentMode,
     effectiveUsStatesMode,
+    residentLayers,
   };
 }

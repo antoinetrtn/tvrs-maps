@@ -12,6 +12,7 @@
 import { BufferGeometry } from "three";
 import OriginalConicPolygonGeometry from "three-conic-polygon-geometry-original";
 
+import { noteGeometryBuild } from "../../dev/switchTrace";
 import { disposePooledGeometry, initPooledGeometry, takePooledGeometry } from "./geometryPool";
 import RefinedConicPolygonGeometry, { shouldRefine } from "./refinedConicPolygonGeometry";
 
@@ -58,6 +59,7 @@ export default class ConicPolygonGeometry extends BufferGeometry {
     const entry = getEntry(args[0], args);
     const recycled = takePooledGeometry(entry);
     if (recycled) return recycled;
+    noteGeometryBuild();
     initPooledGeometry(this, entry, entry.template.type, { ...entry.template.parameters });
   }
 

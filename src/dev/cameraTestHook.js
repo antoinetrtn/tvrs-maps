@@ -25,6 +25,7 @@ export function bindCameraTestGlobe(globe) {
       return null;
     }
   };
+  store.getGlobe = () => globe || null;
 }
 
 export function publishCameraFly(target, durationMs) {

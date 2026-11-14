@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
+import { stepRegionalModeUniform } from "../render/homeCardFly";
 import { homeWakeState, polygonGlitchUniforms } from "../render/polygonGlitchShader";
 
 const stepGlobeMotionState = (state, cam, dt, reduced) => {
@@ -108,6 +109,7 @@ export function useGlobeShaderClock({ globeEl, globeMaterialRef, needsSharedTime
           motionState.prevWakeSec != null ? Math.min(0.25, timeSec - motionState.prevWakeSec) : 0;
         motionState.prevWakeSec = timeSec;
         motionState.wake = stepHomeWake(motionState.wake, wakeDt, reduced);
+        stepRegionalModeUniform();
         polygonGlitchUniforms.uReducedMotion.value = reduced ? 1 : 0;
         polygonGlitchUniforms.uHomeWake.value = showcase ? motionState.wake : 0;
         const cam = args[2] || globeEl.current?.camera?.();
