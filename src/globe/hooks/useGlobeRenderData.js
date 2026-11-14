@@ -1,8 +1,10 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { departmentsDataMap } from "../../data/departmentsData";
 import { countryDataMap } from "../../data/gameData";
 import { usStatesDataMap } from "../../data/usStatesData";
+import { publishLayerTestState } from "../../dev/layerTestHook";
+import { recordLayerSwitch } from "../../dev/perfSwitchTracker";
 import usePrefersReducedMotion from "../../hooks/usePrefersReducedMotion";
 import {
   getCanonicalPosition,
@@ -11,7 +13,15 @@ import {
   getLngLatBounds,
   getRenderGeometry,
 } from "../../utils/utils";
+import { bumpPolygonCullRevision, setDormantLayerIds } from "../render/horizonCulling";
 import { isModeTransitionLive, MODE_TRANSITION_MS, nowMs } from "../render/modeTransition";
+import { getTransitionState } from "../render/polygonColorResolver";
+import {
+  buildRegionalSlices,
+  buildWorldSlices,
+  computeResidentRenderCountriesData,
+  stampFeatures,
+} from "./residentRenderCountriesData";
 import useModeTransitionSteps from "./useModeTransitionSteps";
 
 /**
@@ -52,16 +62,6 @@ export function buildExitingFeatures(trans, countriesData, departmentsData, usSt
       );
   }
   return exiting;
-}
-
-/** Leaving a regional layer: France / USA of the world layer fade in under the exiting states. */
-function flagIncomingParents(worldData, trans) {
-  const parents = new Set();
-  if (trans.fromDept) parents.add("France");
-  if (trans.fromUs) parents.add("United States of America");
-  return worldData.map((feature) =>
-    parents.has(getFeatureAdmin(feature)) ? { ...feature, isParentCountryFeature: true } : feature
-  );
 }
 
 function resolveNextEffectiveMode(
@@ -108,75 +108,6 @@ function updateModeTransition(
     startTime: nowMs(),
     duration: MODE_TRANSITION_MS,
   };
-}
-
-function computeSelectableCountriesData(
-  effectiveDepartmentMode,
-  effectiveUsStatesMode,
-  departmentsData,
-  usStatesData,
-  countriesData
-) {
-  if (effectiveDepartmentMode) {
-    return (departmentsData || []).filter(
-      (feature) => departmentsDataMap[getFeatureAdmin(feature)]
-    );
-  }
-  if (effectiveUsStatesMode) {
-    return (usStatesData || []).filter((feature) => usStatesDataMap[getFeatureAdmin(feature)]);
-  }
-  return (countriesData || []).filter((feature) => countryDataMap[getFeatureAdmin(feature)]);
-}
-
-function computeFinalRenderCountriesData(
-  worldCountriesRenderData,
-  baseRenderCountriesData,
-  countriesData,
-  effectiveDepartmentMode,
-  effectiveUsStatesMode
-) {
-  if (!effectiveDepartmentMode && !effectiveUsStatesMode) {
-    return worldCountriesRenderData;
-  }
-
-  const exclusions = effectiveDepartmentMode ? ["France"] : ["United States of America"];
-  const exclusionSet = new Set(exclusions);
-
-  const ghostWorld = countriesData
-    .filter((feature) => !exclusionSet.has(getFeatureAdmin(feature)))
-    .map((feature) => ({
-      ...feature,
-      isGhostCountry: true,
-      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-    }));
-
-  return [
-    ...ghostWorld,
-    ...baseRenderCountriesData.map((feature) => ({
-      ...feature,
-      isDepartmentFeature: true,
-    })),
-  ];
-}
-
-function computeRenderCountriesData(
-  transitionKey,
-  modeTransitionRef,
-  finalRenderCountriesData,
-  countriesData,
-  departmentsData,
-  usStatesData
-) {
-  if (!transitionKey) {
-    return finalRenderCountriesData;
-  }
-  const trans = modeTransitionRef.current;
-  const exiting = buildExitingFeatures(trans, countriesData, departmentsData, usStatesData);
-  const incoming =
-    trans.toDept || trans.toUs
-      ? finalRenderCountriesData
-      : flagIncomingParents(finalRenderCountriesData, trans);
-  return [...incoming, ...exiting];
 }
 
 function computeSelectableFeatureIndex(selectableCountriesData) {
@@ -260,6 +191,7 @@ export function useGlobeRenderData({
   gameDataMap,
   selectedCountry: _selectedCountry,
   perfProfile: _perfProfile,
+  residentLayers,
 }) {
   const modeTransitionRef = useRef({
     active: false,
@@ -323,69 +255,125 @@ export function useGlobeRenderData({
     effectiveDepartmentMode,
     effectiveUsStatesMode
   );
+  if (nextEffective !== currentEffective) {
+    recordLayerSwitch(nextEffective, { from: currentEffective });
+  }
   const transitionLive = isModeTransitionLive(modeTransitionRef.current);
   // Stepped colour updates while live (see useModeTransitionSteps).
   const transitionStep = useModeTransitionSteps(modeTransitionRef, transitionLive);
 
-  const selectableCountriesData = useMemo(
-    () =>
-      computeSelectableCountriesData(
-        effectiveDepartmentMode,
-        effectiveUsStatesMode,
-        departmentsData,
-        usStatesData,
-        countriesData
-      ),
-    [countriesData, departmentsData, usStatesData, effectiveDepartmentMode, effectiveUsStatesMode]
+  // Track which regional layers have been prewarmed or visited so their meshes stay resident.
+  const residentFlagsRef = useRef({ departments: false, usStates: false });
+  if (!hasDepartments) residentFlagsRef.current.departments = false;
+  else if (effectiveDepartmentMode || residentLayers?.departmentsReady) {
+    residentFlagsRef.current.departments = true;
+  }
+  if (!hasUsStates) residentFlagsRef.current.usStates = false;
+  else if (effectiveUsStatesMode || residentLayers?.usStatesReady) {
+    residentFlagsRef.current.usStates = true;
+  }
+
+  const worldCountriesRenderData = useMemo(
+    () => stampFeatures(countriesData, "c"),
+    [countriesData]
   );
 
-  const worldCountriesRenderData = useMemo(() => {
-    return countriesData.map((feature) => ({
-      ...feature,
-      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-    }));
-  }, [countriesData]);
+  const validCountriesData = useMemo(
+    () => worldCountriesRenderData.filter((feature) => countryDataMap[getFeatureAdmin(feature)]),
+    [worldCountriesRenderData]
+  );
 
-  const baseRenderCountriesData = useMemo(() => {
-    return selectableCountriesData.map((feature) => ({
-      ...feature,
-      renderGeometry: feature.renderGeometry || getRenderGeometry(feature),
-    }));
-  }, [selectableCountriesData]);
-
-  const finalRenderCountriesData = useMemo(
+  const validDepartmentsData = useMemo(
     () =>
-      computeFinalRenderCountriesData(
-        worldCountriesRenderData,
-        baseRenderCountriesData,
-        countriesData,
-        effectiveDepartmentMode,
-        effectiveUsStatesMode
+      stampFeatures(departmentsData, "d").filter(
+        (feature) => departmentsDataMap[getFeatureAdmin(feature)]
       ),
+    [departmentsData]
+  );
+
+  const validUsStatesData = useMemo(
+    () =>
+      stampFeatures(usStatesData, "u").filter(
+        (feature) => usStatesDataMap[getFeatureAdmin(feature)]
+      ),
+    [usStatesData]
+  );
+
+  const selectableCountriesData = useMemo(() => {
+    if (effectiveDepartmentMode) return validDepartmentsData;
+    if (effectiveUsStatesMode) return validUsStatesData;
+    return validCountriesData;
+  }, [
+    validCountriesData,
+    validDepartmentsData,
+    validUsStatesData,
+    effectiveDepartmentMode,
+    effectiveUsStatesMode,
+  ]);
+
+  const baseRenderCountriesData = selectableCountriesData;
+
+  const worldSlices = useMemo(
+    () => buildWorldSlices(worldCountriesRenderData),
+    [worldCountriesRenderData]
+  );
+  const deptSlices = useMemo(
+    () => buildRegionalSlices(validDepartmentsData),
+    [validDepartmentsData]
+  );
+  const usSlices = useMemo(() => buildRegionalSlices(validUsStatesData), [validUsStatesData]);
+
+  const transitionKey = transitionLive ? modeTransitionRef.current.startTime : 0;
+  const keepDepartmentsResident = hasDepartments && residentFlagsRef.current.departments;
+  const keepUsStatesResident = hasUsStates && residentFlagsRef.current.usStates;
+
+  const renderCountriesData = useMemo(
+    () =>
+      computeResidentRenderCountriesData({
+        transitionKey,
+        modeTransitionRef,
+        effectiveDepartmentMode,
+        effectiveUsStatesMode,
+        worldSlices,
+        deptSlices,
+        usSlices,
+        keepDepartmentsResident,
+        keepUsStatesResident,
+      }),
     [
-      worldCountriesRenderData,
-      baseRenderCountriesData,
-      countriesData,
+      transitionKey,
       effectiveDepartmentMode,
       effectiveUsStatesMode,
+      worldSlices,
+      deptSlices,
+      usSlices,
+      keepDepartmentsResident,
+      keepUsStatesResident,
     ]
   );
 
-  // While the layers cross-fade, the outgoing features stay in the data; the
-  // incoming ones are the final objects, so the end only removes meshes.
-  const transitionKey = transitionLive ? modeTransitionRef.current.startTime : 0;
-  const renderCountriesData = useMemo(
-    () =>
-      computeRenderCountriesData(
-        transitionKey,
-        modeTransitionRef,
-        finalRenderCountriesData,
-        countriesData,
-        departmentsData,
-        usStatesData
-      ),
-    [transitionKey, finalRenderCountriesData, countriesData, departmentsData, usStatesData]
+  const dormantIds = new Set(
+    renderCountriesData.filter((f) => f.isDormantLayerFeature && f.__id).map((f) => f.__id)
   );
+  setDormantLayerIds(dormantIds);
+  const transState = getTransitionState(modeTransitionRef, transitionStep);
+  publishLayerTestState({
+    effectiveMode: nextEffective,
+    transitionLive,
+    transitionProgress: transState ? transState.progress : 1,
+    counts: {
+      dormant: dormantIds.size,
+      departmentsActive: renderCountriesData.filter(
+        (f) =>
+          f.isDepartmentFeature && !f.isDormantLayerFeature && String(f.__id || "").startsWith("d")
+      ).length,
+      usActive: renderCountriesData.filter(
+        (f) =>
+          f.isDepartmentFeature && !f.isDormantLayerFeature && String(f.__id || "").startsWith("u")
+      ).length,
+      world: renderCountriesData.filter((f) => !f.isDepartmentFeature).length,
+    },
+  });
 
   const selectableFeatureIndex = useMemo(
     () => computeSelectableFeatureIndex(selectableCountriesData),
@@ -413,6 +401,10 @@ export function useGlobeRenderData({
     () => computeCanonicalPositions(selectableFeatureIndex, gameDataMap),
     [selectableFeatureIndex, gameDataMap]
   );
+
+  useEffect(() => {
+    bumpPolygonCullRevision();
+  }, [renderCountriesData]);
 
   return {
     isDepartmentMode: effectiveDepartmentMode,
