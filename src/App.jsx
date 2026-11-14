@@ -13,7 +13,7 @@ import { isValidLearnSubMode } from "./config/gameConfig";
 import {
   DEFAULT_GAME_DURATION_SEC,
   DEFAULT_MODE,
-  HOME_GLOBE_SETTLE_MS,
+  HOME_LAYER_COMMIT_MS,
   STORAGE_KEYS,
 } from "./config/gameConstants";
 import { useTranslation } from "./config/i18n";
@@ -32,6 +32,7 @@ import { useHomeGlobeShowcase } from "./hooks/useHomeGlobeShowcase";
 import { useHudAnswerHandler } from "./hooks/useHudAnswerHandler";
 import useMountedOnce from "./hooks/useMountedOnce";
 import { usePerfProfile } from "./hooks/usePerfProfile";
+import { prefersReducedMotion } from "./hooks/usePrefersReducedMotion";
 import useScreenExit, { EXIT_MS } from "./hooks/useScreenExit";
 import useScreenGlitch from "./hooks/useScreenGlitch";
 import useSettledValue from "./hooks/useSettledValue";
@@ -73,7 +74,8 @@ function App() {
   );
   // Globe layer for the home screen: follows the carousel only once it settles.
   const isHomeScreenActive = currentScreen === "home";
-  const globeHomeMode = useSettledValue(homeMode, HOME_GLOBE_SETTLE_MS, isHomeScreenActive);
+  const layerCommitMs = prefersReducedMotion() ? 0 : HOME_LAYER_COMMIT_MS;
+  const globeHomeMode = useSettledValue(homeMode, layerCommitMs, isHomeScreenActive);
   const prevHomeModeRef = useRef(homeMode);
   useEffect(() => {
     if (prevHomeModeRef.current !== homeMode) {
@@ -398,6 +400,7 @@ function App() {
     livesLeft,
     isHardcoreRun,
     homeMode: getHomeGeoMode(globeHomeMode),
+    cameraHomeMode: getHomeGeoMode(homeMode),
     onGlobeReady,
   });
 

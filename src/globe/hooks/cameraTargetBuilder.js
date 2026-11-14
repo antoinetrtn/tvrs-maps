@@ -8,7 +8,13 @@ import { countryDataMap } from "../../data/gameData";
 import { riversMountainsDataMap } from "../../data/riversMountainsData";
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { getCanonicalPosition } from "../../utils/utils";
-import { animateGlobePov, clampGlobeAltitude, frameBoundsAltitude } from "../render/globeAltitude";
+import {
+  animateGlobePov,
+  cancelGlobePovTween,
+  clampGlobeAltitude,
+  frameBoundsAltitude,
+  isGlobePovTweenActive,
+} from "../render/globeAltitude";
 import { CAMERA_MS, cameraDuration, selectCameraDuration } from "./cameraTiming";
 import { getHomeDesktopPov } from "./homePov";
 
@@ -40,6 +46,21 @@ export const getCustomModePointOfView = (mode, learnSubMode, viewport, isPanelOp
     lng: config.viewPoint.lng,
     altitude: isMobile ? config.viewPoint.altitude.mobile : config.viewPoint.altitude.desktop,
   };
+};
+
+/** Homepage card framing: regional bounds (France / USA) or the default world home POV. */
+export const getHomeCardPointOfView = ({ mode, learnSubMode, viewport, isPanelOpen }) => {
+  const customPOV = getCustomModePointOfView(mode, learnSubMode, viewport, isPanelOpen);
+  if (customPOV) return customPOV;
+  const isMobile = viewport.width < BREAKPOINTS.mobile;
+  return isMobile ? { lat: 18, lng: 20, altitude: 2.2 } : getHomeDesktopPov(viewport);
+};
+
+/** Interruptible fly: stop on the current pose (no snap), then tween to target. */
+export const flyHomeCardCamera = (globe, target, durationMs) => {
+  if (!globe || !target) return;
+  if (isGlobePovTweenActive()) cancelGlobePovTween(globe);
+  animateGlobePov(globe, target, durationMs);
 };
 
 export const getKeyboardShift = ({ viewport, isKeyboardMode, isHomeScreen, canvasHeight }) => {

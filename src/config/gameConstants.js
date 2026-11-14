@@ -25,6 +25,9 @@ export const HOME_AUTOROTATE_INTERVAL_MS = 5500;
  *  long enough to coalesce rapid hops. Load of the target dataset starts immediately
  *  via getHomeGeoRequest(homeMode), not this timer. */
 export const HOME_GLOBE_SETTLE_MS = 80;
+/** Delay before the home globe commits the layer/mesh swap. Mid-zoom of the
+ *  550ms home card camera fly, so the hitch is masked. Reduced-motion uses 0. */
+export const HOME_LAYER_COMMIT_MS = 300;
 
 // Mobile soft-keyboard open/close debounce.
 export const KEYBOARD_CLOSE_DELAY_MS = 180;

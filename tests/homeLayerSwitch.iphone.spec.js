@@ -37,7 +37,7 @@ async function waitForMode(page, mode, timeout = 8_000) {
   });
 }
 
-async function startProgressLog(page, ms = 800) {
+async function startProgressLog(page, ms = 1500) {
   await page.evaluate((duration) => {
     window.__TVRS_PROGRESS_LOG__ = [];
     const t0 = performance.now();
@@ -66,9 +66,9 @@ test.describe("Homepage layer switch (iPhone viewport, touch)", () => {
     await page.waitForTimeout(2000); // prefetch + prewarm
 
     // world → départements: click and sample transition progress immediately
-    await startProgressLog(page, 800);
+    await startProgressLog(page, 1500);
     await clickModeDot(page, "departments");
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(1500);
     const deptProgress = await readProgressLog(page);
 
     await waitForMode(page, "departments");
@@ -88,9 +88,9 @@ test.describe("Homepage layer switch (iPhone viewport, touch)", () => {
       "crossfade should report progress between 0 and 1"
     ).toBeGreaterThan(0);
 
-    await startProgressLog(page, 800);
+    await startProgressLog(page, 1500);
     await clickModeDot(page, "us_states");
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(1500);
     const usProgress = await readProgressLog(page);
     await waitForMode(page, "us_states");
     await page.waitForTimeout(200);

@@ -60,6 +60,7 @@ export function useGameSessionProps({
   livesLeft,
   isHardcoreRun,
   homeMode,
+  cameraHomeMode,
   onGlobeReady = null,
 }) {
   const hudProps = useMemo(
@@ -142,6 +143,7 @@ export function useGameSessionProps({
   const globeProps = useMemo(
     () => ({
       mode: currentScreen === "home" ? homeMode : mode,
+      cameraMode: currentScreen === "home" ? (cameraHomeMode ?? homeMode) : mode,
       lang,
       countriesData,
       departmentsData,
@@ -192,6 +194,7 @@ export function useGameSessionProps({
       globeFeedbackRef,
       globeFeedbackApplierRef,
       onGlobeReady,
+      cameraHomeMode,
     ]
   );
 

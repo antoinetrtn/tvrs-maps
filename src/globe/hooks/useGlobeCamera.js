@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { GLITCH_EFFECT_SETTINGS } from "../../config/designSystem";
 import { getActiveModeConfig } from "../../config/gameConfig";
 import { BREAKPOINTS, getDataPanelLayoutWidth } from "../../config/gameConstants";
+import { bindCameraTestGlobe } from "../../dev/cameraTestHook";
 import { prefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { createZoomHapticTracker, primeHapticsOnUserGesture } from "../../utils/haptics";
 import {
@@ -22,11 +23,13 @@ import { polygonGlitchUniforms } from "../render/polygonGlitchShader";
 import { setSelectionOutlineDpr } from "../render/selectionOutline";
 import {
   applyIdleCameraPointOfView,
+  flyHomeCardCamera,
   getCustomModePointOfView,
+  getHomeCardPointOfView,
   getKeyboardShift,
   handleSelectedCountryCamera,
 } from "./cameraTargetBuilder";
-import { cameraDuration } from "./cameraTiming";
+import { CAMERA_MS, cameraDuration } from "./cameraTiming";
 
 export { getKeyboardShift };
 
@@ -92,7 +95,8 @@ const createOrbitControlHandlers = (ctx) => {
 export function useGlobeCamera(props) {
   const { globeEl, selectedCountry, shouldAutoRotate, viewport, isHomeScreen } = props;
   const { isKeyboardMode, isEndScreen, learnSubMode, gameDataMap, perfProfile } = props;
-  const { isPanelOpen = false, mode = "countries" } = props;
+  const { isPanelOpen = false, mode = "countries", cameraMode } = props;
+  const modeForCamera = cameraMode ?? mode;
   const [zoomLevel, setZoomLevel] = useState(2.5);
   const [cameraPOV, setCameraPOV] = useState({ lat: 0, lng: 0 });
 
@@ -105,7 +109,7 @@ export function useGlobeCamera(props) {
   const previousSelectedCountryRef = useRef(null),
     previousModeKeyRef = useRef(null),
     wasRegionalMapRef = useRef(false);
-  const isRegionalMap = Boolean(getActiveModeConfig(mode, learnSubMode)?.bounds);
+  const isRegionalMap = Boolean(getActiveModeConfig(modeForCamera, learnSubMode)?.bounds);
   isRegionalMapRef.current = isRegionalMap;
   const isMobileRef = useRef(false);
   isMobileRef.current = Boolean(perfProfile?.isMobile);
@@ -113,7 +117,22 @@ export function useGlobeCamera(props) {
   zoomHapticTrackerRef.current ||= createZoomHapticTracker();
 
   useEffect(() => {
-    setGlobeMinAltitude(isRegionalMap ? REGIONAL_MIN_ALTITUDE : GLOBE_MIN_ALTITUDE);
+    if (isRegionalMap) {
+      setGlobeMinAltitude(REGIONAL_MIN_ALTITUDE);
+    } else if (!isGlobePovTweenActive()) {
+      setGlobeMinAltitude(GLOBE_MIN_ALTITUDE);
+    } else {
+      const raiseId = setTimeout(() => setGlobeMinAltitude(GLOBE_MIN_ALTITUDE), CAMERA_MS.home);
+      const controls = globeEl.current?.controls?.();
+      if (controls) {
+        syncGlobeCameraAndZoomLimits(globeEl.current, controls);
+        syncGlobeControlsForAltitude(controls, readGlobeAltitude(globeEl.current), {
+          isMobile: isMobileRef.current,
+          isRegionalMap,
+        });
+      }
+      return () => clearTimeout(raiseId);
+    }
     const controls = globeEl.current?.controls?.();
     if (!controls) return;
     syncGlobeCameraAndZoomLimits(globeEl.current, controls);
@@ -214,19 +233,25 @@ export function useGlobeCamera(props) {
     };
   }, [shouldAutoRotate, perfProfile?.pixelRatio, perfProfile?.isMobile, isHomeScreen, globeEl]);
 
-  useEffect(() => {
+  const homeModeFlyUntilRef = useRef(0);
+  const isHomeModeFlyActive = () =>
+    homeModeFlyUntilRef.current >
+    (typeof performance !== "undefined" ? performance.now() : Date.now());
+
+  // Layout effect so a home card click starts the camera fly before paint / layer work.
+  useLayoutEffect(() => {
+    if (globeEl.current) bindCameraTestGlobe(globeEl.current);
     const selectionChanged = selectedCountry !== previousSelectedCountryRef.current;
-    const customPOV = getCustomModePointOfView(mode, learnSubMode, viewport, isPanelOpen);
-    const modeKey = `${mode}|${learnSubMode}`;
-    const modeChanged = previousModeKeyRef.current !== modeKey;
+    const customPOV = getCustomModePointOfView(modeForCamera, learnSubMode, viewport, isPanelOpen);
+    const modeKey = `${modeForCamera}|${learnSubMode}`;
+    const prevKey = previousModeKeyRef.current;
+    const modeChanged = prevKey !== modeKey;
+    const isInitial = prevKey == null;
     previousModeKeyRef.current = modeKey;
     const isEnteringHomeFromGame = isHomeScreen && !wasHomeScreenRef.current;
-    // Home card switch into/out of a regional map: cut straight to the new view; a world→France
-    // tween showed the blacked-out world zoomed out for its first frames.
-    const cutToRegional =
-      isHomeScreen && modeChanged && isRegionalMap !== wasRegionalMapRef.current;
-    wasRegionalMapRef.current = isRegionalMap;
-    const camMs = (ms) => (cutToRegional ? 0 : cameraDuration(ms, prefersReducedMotion()));
+    const reduced = prefersReducedMotion();
+    const camMs = (ms) => cameraDuration(ms, reduced);
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
 
     if (isEnteringHomeFromGame && globeEl.current) {
       applyIdleCameraPointOfView({
@@ -238,7 +263,21 @@ export function useGlobeCamera(props) {
         wasHomeScreen: false,
       });
       lastTargetRef.current = null;
-    } else if (selectedCountry && globeEl.current) {
+    } else if (isHomeScreen && modeChanged && !isInitial && globeEl.current) {
+      const targetIsRegional = Boolean(getActiveModeConfig(modeForCamera, learnSubMode)?.bounds);
+      // Lower the zoom floor before computing the target so France/USA altitudes are not clamped.
+      if (targetIsRegional) setGlobeMinAltitude(REGIONAL_MIN_ALTITUDE);
+      const target = getHomeCardPointOfView({
+        mode: modeForCamera,
+        learnSubMode,
+        viewport,
+        isPanelOpen,
+      });
+      const ms = camMs(CAMERA_MS.home);
+      flyHomeCardCamera(globeEl.current, target, ms);
+      lastTargetRef.current = target;
+      homeModeFlyUntilRef.current = now + ms;
+    } else if (selectedCountry && globeEl.current && !isHomeModeFlyActive()) {
       handleSelectedCountryCamera({
         globeEl,
         selectedCountry,
@@ -255,7 +294,8 @@ export function useGlobeCamera(props) {
       });
     } else if (
       (selectionChanged || modeChanged || isHomeScreen !== wasHomeScreenRef.current) &&
-      globeEl.current
+      globeEl.current &&
+      !isHomeModeFlyActive()
     ) {
       applyIdleCameraPointOfView({
         globeEl,
@@ -270,6 +310,7 @@ export function useGlobeCamera(props) {
 
     wasHomeScreenRef.current = isHomeScreen;
     previousSelectedCountryRef.current = selectedCountry;
+    wasRegionalMapRef.current = isRegionalMap;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedCountry,
@@ -280,6 +321,7 @@ export function useGlobeCamera(props) {
     isEndScreen,
     gameDataMap,
     mode,
+    cameraMode,
     learnSubMode,
     isPanelOpen,
     globeEl,
